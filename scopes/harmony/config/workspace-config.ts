@@ -80,6 +80,10 @@ export class WorkspaceConfig implements HostConfig {
     return this._extensions;
   }
 
+  get extensionsIds(): string[] {
+    return Object.keys(omit(this.raw, INTERNAL_CONFIG_PROPS));
+  }
+
   private loadExtensions() {
     const withoutInternalConfig = omit(this.raw, INTERNAL_CONFIG_PROPS);
     this._extensions = ExtensionDataList.fromConfigObject(withoutInternalConfig);

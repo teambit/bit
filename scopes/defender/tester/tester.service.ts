@@ -150,6 +150,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       watch: options.watch,
       ui: options.ui,
       coverage: options.coverage,
+      updateSnapshot: options.updateSnapshot,
       additionalHostDependencies,
     });
 

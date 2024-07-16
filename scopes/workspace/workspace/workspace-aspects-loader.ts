@@ -450,9 +450,9 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   async getConfiguredUserAspectsPackages(
     options: GetConfiguredUserAspectsPackagesOptions = {}
   ): Promise<AspectPackage[]> {
-    const configuredAspects = this.aspectLoader.getConfiguredAspects();
+    const rawConfiguredAspects = this.workspace.getWorkspaceConfig()?.extensionsIds;
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
-    const userAspectsIds: string[] = difference(configuredAspects, coreAspectsIds);
+    const userAspectsIds: string[] = difference(rawConfiguredAspects, coreAspectsIds);
     const componentIdsToResolve = await this.workspace.resolveMultipleComponentIds(
       userAspectsIds.filter((id) => !id.startsWith('file:'))
     );
