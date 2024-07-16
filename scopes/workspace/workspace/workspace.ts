@@ -1713,13 +1713,17 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   async getComponentPackagePath(component: Component) {
-    const inInWs = this.hasId(component.id);
-    const relativePath = this.dependencyResolver.getRuntimeModulePath(
-      component,
-      inInWs,
-      path.relative(this.path, this.rootComponentsPath)
-    );
-    return path.join(this.path, relativePath);
+    return path.join(this.path, await this._getComponentRelativePath(component));
+  }
+
+  async _getComponentRelativePath(component: Component) {
+    if (this.hasId(component.id)) {
+      return this.dependencyResolver.getRuntimeModulePathInWorkspace(component, {
+        workspacePath: this.path,
+        rootComponentsPath: this.rootComponentsPath,
+      });
+    }
+    return this.dependencyResolver.getRuntimeModulePathInCapsules(component);
   }
 
   // TODO: should we return here the dir as it defined (aka components) or with /{name} prefix (as it used in legacy)
