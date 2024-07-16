@@ -29,14 +29,16 @@ export class ListerMain {
     {
       namespacesUsingWildcards,
       includeDeprecated = true,
+      includeDeleted = false,
     }: {
       namespacesUsingWildcards?: string;
       includeDeprecated?: boolean;
+      includeDeleted?: boolean;
     }
   ): Promise<ListScopeResult[]> {
     const remote: Remote = await getRemoteByName(scopeName, this.workspace?.consumer);
     this.logger.setStatusLine(BEFORE_REMOTE_LIST);
-    const listResult = await remote.list(namespacesUsingWildcards);
+    const listResult = await remote.list(namespacesUsingWildcards, includeDeleted);
     return includeDeprecated ? listResult : listResult.filter((r) => !r.deprecated);
   }
 

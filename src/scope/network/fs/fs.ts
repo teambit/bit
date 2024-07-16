@@ -64,9 +64,9 @@ export default class Fs implements Network {
       .then((componentsIds) => componentsIds.map((componentId) => componentId.toString()));
   }
 
-  list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
+  list(namespacesUsingWildcards?: string, includeDeleted = false): Promise<ListScopeResult[]> {
     // @ts-ignore todo: remove after deleting teambit.legacy
-    return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards);
+    return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards, includeDeleted);
   }
 
   show(bitId: ComponentID): Promise<Component> {
