@@ -59,6 +59,7 @@ import {
   getComponentsWithOptionToUntag,
   removeLocalVersionsForMultipleComponents,
 } from './reset-component';
+import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 
 export type TagDataPerComp = {
   componentId: ComponentID;
@@ -122,7 +123,8 @@ export class SnappingMain {
     private exporter: ExportMain,
     private builder: BuilderMain,
     private importer: ImporterMain,
-    private deps: DependenciesMain
+    private deps: DependenciesMain,
+    private application: ApplicationMain
   ) {
     this.objectsRepo = this.scope?.legacyScope?.objects;
   }
@@ -1018,10 +1020,13 @@ another option, in case this dependency is not in main yet is to remove all refe
   }
 
   private async loadComponentsForTagOrSnap(ids: ComponentIdList, shouldClearCacheFirst = true): Promise<Component[]> {
+    const appIds = await this.application.loadAllAppsAsAspects(ids);
     if (shouldClearCacheFirst) {
       await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
       // don't clear only the cache of these ids. we need also the auto-tag. so it's safer to just clear all.
       this.workspace.clearAllComponentsCache();
+    } else {
+      appIds.forEach((id) => this.workspace.clearComponentCache(id));
     }
 
     return this.workspace.getMany(ids.map((id) => id.changeVersion(undefined)));
@@ -1244,6 +1249,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     ImporterAspect,
     GlobalConfigAspect,
     DependenciesAspect,
+    ApplicationAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1259,6 +1265,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     importer,
     globalConfig,
     deps,
+    application,
   ]: [
     Workspace,
     CLIMain,
@@ -1271,7 +1278,8 @@ another option, in case this dependency is not in main yet is to remove all refe
     BuilderMain,
     ImporterMain,
     GlobalConfigMain,
-    DependenciesMain
+    DependenciesMain,
+    ApplicationMain
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(
@@ -1284,7 +1292,8 @@ another option, in case this dependency is not in main yet is to remove all refe
       exporter,
       builder,
       importer,
-      deps
+      deps,
+      application
     );
     const snapCmd = new SnapCmd(snapping, logger, globalConfig);
     const tagCmd = new TagCmd(snapping, logger, globalConfig);
