@@ -12,6 +12,7 @@ import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { getGitExecutablePath, GitNotFound } from '@teambit/git.modules.git-executable';
 import { join } from 'path';
+import { compact, some } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import { GitAspect, GitMain } from '@teambit/git';
 import { InstallAspect, InstallMain } from '@teambit/install';
@@ -67,6 +68,7 @@ export class WorkspaceGenerator {
       // the workspace will be in install context until the end of the generation install process
       this.workspace.inInstallContext = true;
       await this.setupGitBitmapMergeDriver();
+      await this.installBeforeCreateComponentsIfNeeded();
       await this.createComponentsFromRemote();
       await this.forkComponentsFromRemote();
       await this.importComponentsFromRemote();
@@ -150,6 +152,34 @@ export class WorkspaceGenerator {
     this.git = this.harmony.get<GitMain>(GitAspect.id);
     this.wsConfigFiles = this.harmony.get<WorkspaceConfigFilesMain>(WorkspaceConfigFilesAspect.id);
     this.generator = this.harmony.get<GeneratorMain>(GeneratorAspect.id);
+  }
+
+  private async installBeforeCreateComponentsIfNeeded() {
+    if (this.options.empty || !this.template.create) return;
+    const configuredEnvs = this.generator.getConfiguredEnvs();
+    if (!configuredEnvs.length) return;
+    const workspaceContext = this.getWorkspaceContext();
+    const componentsToCreate = this.template.create(workspaceContext);
+    const aspectsForComponentsToCreate = compact(
+      componentsToCreate.map((componentToCreate) => componentToCreate.aspect)
+    );
+    const needInstall = some(aspectsForComponentsToCreate, (aspect) => {
+      return configuredEnvs.includes(aspect);
+    });
+    if (needInstall) {
+      this.logger?.console(
+        `installing dependencies in workspace using to load components templates from the following envs: ${configuredEnvs.join(
+          ', '
+        )}`
+      );
+      await this.install.install(undefined, {
+        dedupe: true,
+        import: false,
+        copyPeerToRuntimeOnRoot: true,
+        copyPeerToRuntimeOnComponents: false,
+        updateExisting: false,
+      });
+    }
   }
 
   private async createComponentsFromRemote() {
