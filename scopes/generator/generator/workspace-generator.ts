@@ -68,9 +68,9 @@ export class WorkspaceGenerator {
       // the workspace will be in install context until the end of the generation install process
       this.workspace.inInstallContext = true;
       await this.setupGitBitmapMergeDriver();
+      await this.forkComponentsFromRemote();
       await this.installBeforeCreateComponentsIfNeeded();
       await this.createComponentsFromRemote();
-      await this.forkComponentsFromRemote();
       await this.importComponentsFromRemote();
       await this.workspace.clearCache();
       await this.install.install(undefined, {
