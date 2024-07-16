@@ -50,8 +50,8 @@ export default class Remote {
     });
   }
 
-  list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
-    return this.connect().then((network) => network.list(namespacesUsingWildcards));
+  list(namespacesUsingWildcards?: string, includeDeleted = false): Promise<ListScopeResult[]> {
+    return this.connect().then((network) => network.list(namespacesUsingWildcards, includeDeleted));
   }
 
   show(bitId: ComponentID): Promise<Component | null | undefined> {
