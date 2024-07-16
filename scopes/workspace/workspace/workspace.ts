@@ -276,6 +276,11 @@ export class Workspace implements ComponentFactory {
       );
     const defaultScope = this.config.defaultScope;
     if (!defaultScope) throw new BitError('defaultScope is missing');
+    if (this.config.rootComponentsDirectory === '') {
+      throw new BitError(
+        'rootComponentsDirectory cannot be empty. Root components directory location cannot be the same as the workspace directory path'
+      );
+    }
     if (!isValidScopeName(defaultScope)) throw new InvalidScopeName(defaultScope);
   }
 
