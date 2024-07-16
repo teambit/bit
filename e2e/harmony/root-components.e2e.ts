@@ -1684,17 +1684,32 @@ describe('create with root components on', function () {
 describe('custom root components directory', function () {
   let helper: Helper;
   this.timeout(0);
-  before(() => {
-    helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.extensions.workspaceJsonc.addKeyValToWorkspace('rootComponentsDirectory', '__bit_roots__');
-    helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
-    helper.command.create('react', 'card', '--env teambit.react/react');
-    helper.command.install();
+  describe('set a valid custom location', () => {
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.extensions.workspaceJsonc.addKeyValToWorkspace('rootComponentsDirectory', '__bit_roots__');
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.command.create('react', 'card', '--env teambit.react/react');
+      helper.command.install();
+    });
+    it('should create the root component directory at the specified location', () => {
+      expect(
+        getRootComponentDir(path.join(helper.scopes.localPath, '__bit_roots__'), 'teambit.react/react')
+      ).to.be.a.path();
+    });
   });
-  it('should create the root component directory at the specified location', () => {
-    expect(
-      getRootComponentDir(path.join(helper.scopes.localPath, '__bit_roots__'), 'teambit.react/react')
-    ).to.be.a.path();
+  describe('set an invalid custom location', () => {
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.extensions.workspaceJsonc.addKeyValToWorkspace('rootComponentsDirectory', '');
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+    });
+    it('should create the root component directory at the specified location', () => {
+      expect(() => helper.command.install()).throws(
+        'rootComponentsDirectory cannot be empty. Root components directory location cannot be the same as the workspace directory path'
+      );
+    });
   });
 });
