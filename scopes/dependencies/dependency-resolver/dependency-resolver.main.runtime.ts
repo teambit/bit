@@ -1,5 +1,6 @@
 import multimatch from 'multimatch';
 import mapSeries from 'p-map-series';
+import { BitError } from '@teambit/bit-error';
 import { MainRuntime } from '@teambit/cli';
 import { getAllCoreAspectsIds } from '@teambit/bit';
 import { getRootComponentDir } from '@teambit/workspace.root-components.location';
@@ -513,7 +514,7 @@ export class DependencyResolverMain {
     }
     const pkgName = this.getPackageName(component);
     if (isInWorkspace && rootComponentsRelativePath == null) {
-      throw new Error(
+      throw new BitError(
         'rootComponentsRelativePath not passed to getRuntimeModulePath even though it is called for a workspace'
       );
     }
