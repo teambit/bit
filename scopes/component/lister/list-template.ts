@@ -16,10 +16,13 @@ export function listTemplate(listScopeResults: ListScopeResult[], json: boolean,
       version = color ? c[color](version) : version;
     }
     const getFormattedId = () => {
-      const { deprecated, laneReadmeOf } = listScopeResult;
+      const { deprecated, laneReadmeOf, removed } = listScopeResult;
       let formattedId = c.white(`${id}`);
       if (deprecated) {
-        formattedId = c.white(`${formattedId} [Deprecated]`);
+        formattedId = c.yellow(`${formattedId} [Deprecated]`);
+      }
+      if (removed) {
+        formattedId = c.red(`${formattedId} [Deleted]`);
       }
       if (laneReadmeOf && laneReadmeOf.length > 0) {
         formattedId = `${formattedId}\n`;
@@ -58,6 +61,7 @@ export function listTemplate(listScopeResults: ListScopeResult[], json: boolean,
       deprecated: listScopeResult.deprecated,
       currentVersion: listScopeResult.currentlyUsedVersion || 'N/A',
       remoteVersion: listScopeResult.remoteVersion || 'N/A',
+      removed: listScopeResult.removed,
     };
     return data;
   }
