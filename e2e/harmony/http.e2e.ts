@@ -75,10 +75,16 @@ import { HttpHelper } from '../http-helper';
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
     });
-    it('bit list -r should show not show the removed component', () => {
+    it('bit list should not show the removed component', () => {
       const list = helper.command.listRemoteScopeParsed();
       expect(list).to.have.lengthOf(1);
       expect(list[0].id).to.not.have.string('comp2');
+    });
+    it('bit list --include-deleted should show the removed component', () => {
+      const list = helper.command.listRemoteScopeParsed('--include-deleted');
+      expect(list).to.have.lengthOf(2);
+      const ids = list.map((c) => c.id);
+      expect(ids).to.include(`${helper.scopes.remote}/comp2`);
     });
     it('bit import of the entire scope should not bring in the deleted components', () => {
       helper.command.importComponent('*', '-x');

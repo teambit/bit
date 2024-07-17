@@ -188,21 +188,31 @@ describe('sign command', function () {
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
       signOutput = helper.command.sign(
         [`${secondScopeName}/comp1@${snapHash}`],
-        `--lane ${helper.scopes.remote}/dev`,
+        `--lane ${helper.scopes.remote}/dev --save-locally`,
         signRemote.scopePath
       );
       expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
       expect(signOutput).to.not.include('tag pipe');
       expect(signOutput).to.include('snap pipe');
+
+      const obj = helper.command.catObject(snapHash, true, signRemote.scopePath);
+      const pkgAspectData = helper.command.getAspectsData(obj, Extensions.pkg);
+      const version = pkgAspectData.data.pkgJson.version;
+      expect(version).to.equal(`0.0.0-${snapHash}`);
     });
     it('should be able to sign previous snaps on this lane successfully', () => {
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
       signOutput = helper.command.sign(
         [`${secondScopeName}/comp1@${firstSnapHash}`],
-        `--lane ${helper.scopes.remote}/dev`,
+        `--lane ${helper.scopes.remote}/dev --save-locally`,
         signRemote.scopePath
       );
       expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
+
+      const obj = helper.command.catObject(firstSnapHash, true, signRemote.scopePath);
+      const pkgAspectData = helper.command.getAspectsData(obj, Extensions.pkg);
+      const version = pkgAspectData.data.pkgJson.version;
+      expect(version).to.equal(`0.0.0-${firstSnapHash}`);
     });
     // todo: support exporting to a non-hub
     it.skip('should sign the last successfully and export', () => {

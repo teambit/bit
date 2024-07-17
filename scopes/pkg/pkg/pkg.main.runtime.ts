@@ -206,7 +206,7 @@ export class PkgMain {
    * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
    */
   getRuntimeModulePath(component: Component, options: GetModulePathOptions = {}) {
-    const relativePath = this.dependencyResolver.getRuntimeModulePath(component);
+    const relativePath = this.dependencyResolver.getRuntimeModulePathInCapsules(component);
     if (options?.absPath) {
       if (this.workspace) {
         return join(this.workspace.path, relativePath);

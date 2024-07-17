@@ -466,7 +466,7 @@ export class Http implements Network {
     });
   }
 
-  async list(namespacesUsingWildcards?: string | undefined): Promise<ListScopeResult[]> {
+  async listBackwardCompatible(namespacesUsingWildcards?: string | undefined): Promise<ListScopeResult[]> {
     const LIST_HARMONY = gql`
       query list($namespaces: [String!]) {
         scope {
@@ -491,6 +491,58 @@ export class Http implements Network {
     data.scope.components.forEach((comp) => {
       comp.id = ComponentID.fromObject(comp.id);
       comp.deprecated = comp.deprecation.isDeprecate;
+    });
+
+    return data.scope.components;
+  }
+
+  async list(namespacesUsingWildcards?: string | undefined, includeDeleted = false): Promise<ListScopeResult[]> {
+    if (!includeDeleted) return this.listBackwardCompatible(namespacesUsingWildcards);
+    const LIST_HARMONY = gql`
+      query list($namespaces: [String!], $includeDeleted: Boolean) {
+        scope {
+          components(namespaces: $namespaces, includeDeleted: $includeDeleted) {
+            id {
+              scope
+              version
+              name
+            }
+            aspects(include: ["teambit.component/remove"]) {
+              id
+              config
+            }
+            deprecation {
+              isDeprecate
+            }
+          }
+        }
+      }
+    `;
+
+    let data: any;
+    try {
+      data = await this.graphClientRequest(LIST_HARMONY, Verb.READ, {
+        namespaces: namespacesUsingWildcards ? [namespacesUsingWildcards] : undefined,
+        includeDeleted,
+      });
+    } catch (err: any) {
+      if (err.message.includes('Unknown argument' && err.message.includes('includeDeleted'))) {
+        loader.stop();
+        logger.console(
+          `error: the remote does not support the include-deleted flag yet, falling back to listing without deleted components`,
+          'error',
+          'red'
+        );
+        return this.listBackwardCompatible(namespacesUsingWildcards);
+      }
+      throw err;
+    }
+
+    data.scope.components.forEach((comp) => {
+      const removeAspect = comp.aspects.find((aspect) => aspect.id === 'teambit.component/remove');
+      comp.id = ComponentID.fromObject(comp.id);
+      comp.deprecated = comp.deprecation.isDeprecate;
+      comp.removed = removeAspect?.config?.removed;
     });
 
     return data.scope.components;

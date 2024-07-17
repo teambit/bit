@@ -16,7 +16,7 @@ import { BitError } from '@teambit/bit-error';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { TrackerAspect, TrackerMain } from '@teambit/tracker';
 import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-component-helper';
-import { compact } from 'lodash';
+import { compact, uniq } from 'lodash';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
@@ -479,7 +479,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       remoteEnvsAspect = globals.remoteEnvsAspect;
       fullAspectId = globals.fullAspectId;
     }
-    const allIds = configEnvs?.concat(ids).concat([aspectId, fullAspectId]).filter(Boolean);
+    const allIds = uniq(configEnvs?.concat(ids).concat([aspectId, fullAspectId]).filter(Boolean));
     const envs = await this.loadEnvs(allIds, remoteEnvsAspect);
     const templates = envs.flatMap((env) => {
       if (!env.env.getGeneratorTemplates) return [];

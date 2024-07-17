@@ -46,7 +46,6 @@ import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/m
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
-import { ComponentsHaveIssues } from './components-have-issues';
 import ResetCmd from './reset-cmd';
 import { tagModelComponent, updateComponentsVersions, BasicTagParams, BasicTagSnapParams } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
@@ -60,6 +59,7 @@ import {
   getComponentsWithOptionToUntag,
   removeLocalVersionsForMultipleComponents,
 } from './reset-component';
+import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 
 export type TagDataPerComp = {
   componentId: ComponentID;
@@ -123,7 +123,8 @@ export class SnappingMain {
     private exporter: ExportMain,
     private builder: BuilderMain,
     private importer: ImporterMain,
-    private deps: DependenciesMain
+    private deps: DependenciesMain,
+    private application: ApplicationMain
   ) {
     this.objectsRepo = this.scope?.legacyScope?.objects;
   }
@@ -767,7 +768,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     const componentsToCheck = components.filter((c) => !c.isDeleted());
     const consumerComponents = componentsToCheck.map((c) => c.state._consumer) as ConsumerComponent[];
     await this.throwForLegacyDependenciesInsideHarmony(consumerComponents);
-    await this.throwForComponentIssues(componentsToCheck, ignoreIssues);
+    await this.builder.throwForComponentIssues(componentsToCheck, ignoreIssues);
     this.throwForPendingImport(consumerComponents);
   }
 
@@ -777,6 +778,10 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     lane?: Lane,
     throwForMissingObjects = false
   ) {
+    const depsFromModel = component.componentFromModel?.getAllDependencies();
+    const depsFromModelIds = depsFromModel
+      ? ComponentIdList.fromArray(depsFromModel.map((d) => d.id))
+      : new ComponentIdList();
     const deps = component.getAllDependencies();
     const missingDeps: ComponentID[] = [];
     await Promise.all(
@@ -784,11 +789,11 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
         if (!this.scope.isExported(dep.id) || !dep.id.hasVersion()) return;
         if (isTag(dep.id.version)) return;
         if (allIds.hasWithoutVersion(dep.id)) return; // it's tagged/snapped now.
+        if (depsFromModelIds.has(dep.id)) return; // this dep is not new, it was already snapped/tagged with it before.
         let isPartOfHistory: boolean | undefined;
         try {
           isPartOfHistory = lane
-            ? (await this.scope.legacyScope.isPartOfLaneHistory(dep.id, lane)) ||
-              (await this.scope.legacyScope.isPartOfMainHistory(dep.id))
+            ? await this.scope.legacyScope.isPartOfLaneHistoryOrMain(dep.id, lane)
             : await this.scope.legacyScope.isPartOfMainHistory(dep.id);
         } catch (err) {
           if (throwForMissingObjects) throw err;
@@ -1019,36 +1024,17 @@ another option, in case this dependency is not in main yet is to remove all refe
   }
 
   private async loadComponentsForTagOrSnap(ids: ComponentIdList, shouldClearCacheFirst = true): Promise<Component[]> {
+    const idsWithoutVersions = ids.map((id) => id.changeVersion(undefined));
+    const appIds = await this.application.loadAllAppsAsAspects(idsWithoutVersions);
     if (shouldClearCacheFirst) {
       await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
       // don't clear only the cache of these ids. we need also the auto-tag. so it's safer to just clear all.
       this.workspace.clearAllComponentsCache();
+    } else {
+      appIds.forEach((id) => this.workspace.clearComponentCache(id));
     }
 
-    return this.workspace.getMany(ids.map((id) => id.changeVersion(undefined)));
-  }
-
-  private async throwForComponentIssues(components: Component[], ignoreIssues?: string) {
-    if (ignoreIssues === '*') {
-      // ignore all issues
-      return;
-    }
-    const issuesToIgnoreFromFlag = ignoreIssues?.split(',').map((issue) => issue.trim()) || [];
-    const issuesToIgnoreFromConfig = this.issues.getIssuesToIgnoreGlobally();
-    const issuesToIgnore = [...issuesToIgnoreFromFlag, ...issuesToIgnoreFromConfig];
-    await this.issues.triggerAddComponentIssues(components, issuesToIgnore);
-    this.issues.removeIgnoredIssuesFromComponents(components, issuesToIgnore);
-    const legacyComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
-    const componentsWithBlockingIssues = legacyComponents.filter((component) => component.issues?.shouldBlockTagging());
-    if (componentsWithBlockingIssues.length) {
-      throw new ComponentsHaveIssues(componentsWithBlockingIssues);
-    }
-
-    const workspaceIssues = this.workspace.getWorkspaceIssues();
-    if (workspaceIssues.length) {
-      const issuesStr = workspaceIssues.map((issueErr) => issueErr.message).join('\n');
-      throw new BitError(`the workspace has the following issues:\n${issuesStr}`);
-    }
+    return this.workspace.getMany(idsWithoutVersions);
   }
 
   private throwForPendingImport(components: ConsumerComponent[]) {
@@ -1268,6 +1254,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     ImporterAspect,
     GlobalConfigAspect,
     DependenciesAspect,
+    ApplicationAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1283,6 +1270,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     importer,
     globalConfig,
     deps,
+    application,
   ]: [
     Workspace,
     CLIMain,
@@ -1295,7 +1283,8 @@ another option, in case this dependency is not in main yet is to remove all refe
     BuilderMain,
     ImporterMain,
     GlobalConfigMain,
-    DependenciesMain
+    DependenciesMain,
+    ApplicationMain
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(
@@ -1308,7 +1297,8 @@ another option, in case this dependency is not in main yet is to remove all refe
       exporter,
       builder,
       importer,
-      deps
+      deps,
+      application
     );
     const snapCmd = new SnapCmd(snapping, logger, globalConfig);
     const tagCmd = new TagCmd(snapping, logger, globalConfig);
