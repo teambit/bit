@@ -384,4 +384,24 @@ describe('bit lane command', function () {
       expect(bitmap.comp1.version).to.equal(firstSnap);
     });
   });
+  describe('switch with --force-ours', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(1, undefined, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x --force-ours');
+    });
+    it('should switch successfully', () => {
+      helper.command.expectCurrentLaneToBe('main');
+    });
+    it('should not change the files and keep them same as the lane', () => {
+      const fileContent = helper.fs.readFile('comp1/index.js');
+      expect(fileContent).to.include('v2');
+    });
+  });
 });
