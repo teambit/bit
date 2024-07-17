@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import * as path from 'path';
-import { linkPkgsToBitRoots } from '@teambit/workspace.root-components.location';
+import { linkPkgsToRootComponents } from '@teambit/workspace.root-components';
 import { ComponentID } from '@teambit/component-id';
 import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy/dist/constants';
 import { BitMap } from '@teambit/legacy.bit-map';
@@ -69,7 +69,7 @@ export default class NodeModuleLinker {
       this.workspace.clearAllComponentsCache();
     }
 
-    await linkPkgsToBitRoots(
+    await linkPkgsToRootComponents(
       {
         rootComponentsPath: this.workspace.rootComponentsPath,
         workspacePath,

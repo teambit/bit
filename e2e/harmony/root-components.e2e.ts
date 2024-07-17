@@ -1,4 +1,4 @@
-import { getRootComponentDir } from '@teambit/workspace.root-components.location';
+import { getRootComponentDir } from '@teambit/workspace.root-components';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';

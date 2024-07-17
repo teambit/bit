@@ -2,7 +2,7 @@ import multimatch from 'multimatch';
 import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import { getAllCoreAspectsIds } from '@teambit/bit';
-import { getRootComponentDir } from '@teambit/workspace.root-components.location';
+import { getRootComponentDir } from '@teambit/workspace.root-components';
 import { ComponentAspect, Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
 import { join, relative } from 'path';

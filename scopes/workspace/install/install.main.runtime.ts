@@ -1,6 +1,6 @@
 import fs, { pathExists } from 'fs-extra';
 import path from 'path';
-import { getRootComponentDir, linkPkgsToBitRoots } from '@teambit/workspace.root-components.location';
+import { getRootComponentDir, linkPkgsToRootComponents } from '@teambit/workspace.root-components';
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
@@ -930,7 +930,7 @@ export class InstallMain {
         await fs.mkdirp(dir);
       })
     );
-    await linkPkgsToBitRoots(
+    await linkPkgsToRootComponents(
       {
         rootComponentsPath: this.workspace.rootComponentsPath,
         workspacePath: this.workspace.path,
