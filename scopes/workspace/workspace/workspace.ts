@@ -35,18 +35,17 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName, BitId } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
-import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
-import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
-import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
-import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import { GetBitMapComponentOptions, MissingBitMapComponent } from '@teambit/legacy.bit-map';
+import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { ComponentsList } from '@teambit/legacy.component-list';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { pathIsInside } from '@teambit/legacy/dist/utils';
 import {
   PathOsBased,
   PathOsBasedRelative,
   PathOsBasedAbsolute,
   pathNormalizeToLinux,
-} from '@teambit/legacy/dist/utils/path';
+} from '@teambit/toolbox.path.path';
+import { isPathInside } from '@teambit/toolbox.path.is-path-inside';
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact, uniqBy } from 'lodash';
@@ -59,18 +58,15 @@ import path from 'path';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile, DataToPersist, JsonVinyl } from '@teambit/component.sources';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
-import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane } from '@teambit/legacy/dist/scope/models';
-import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
+import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
 import { isHash } from '@teambit/component-version';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { getAuthHeader, fetchWithAgent as fetch } from '@teambit/legacy/dist/scope/network/http/http';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import { JsonVinyl } from '@teambit/legacy/dist/consumer/component/json-vinyl';
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,
@@ -256,6 +252,7 @@ export class Workspace implements ComponentFactory {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
     this.validateConfig();
+    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     // memoize this method to improve performance.
     this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized = memoize(
@@ -279,6 +276,11 @@ export class Workspace implements ComponentFactory {
       );
     const defaultScope = this.config.defaultScope;
     if (!defaultScope) throw new BitError('defaultScope is missing');
+    if (this.config.rootComponentsDirectory === '') {
+      throw new BitError(
+        'rootComponentsDirectory cannot be empty. Root components directory location cannot be the same as the workspace directory path'
+      );
+    }
     if (!isValidScopeName(defaultScope)) throw new InvalidScopeName(defaultScope);
   }
 
@@ -287,6 +289,13 @@ export class Workspace implements ComponentFactory {
    */
   get path() {
     return this.consumer.getPath();
+  }
+
+  /**
+   * Get the location of the bit roots folder
+   */
+  get rootComponentsPath() {
+    return this.config.rootComponentsDirectory ?? path.join(this.modulesPath, '.bit_roots');
   }
 
   /** get the `node_modules` folder of this workspace */
@@ -1535,7 +1544,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   private isVendorComponentByComponentDir(relativeComponentDir: PathOsBasedRelative): boolean {
     const vendorDir = this.config.vendor?.directory || DEFAULT_VENDOR_DIR;
-    if (pathIsInside(relativeComponentDir, vendorDir)) {
+    if (isPathInside(relativeComponentDir, vendorDir)) {
       return true;
     }
     // TODO: implement
@@ -1703,14 +1712,23 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   async _reloadConsumer() {
     this.consumer = await loadConsumer(this.path, true);
+    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     await this.clearCache();
   }
 
   async getComponentPackagePath(component: Component) {
-    const inInWs = await this.hasId(component.id);
-    const relativePath = this.dependencyResolver.getRuntimeModulePath(component, inInWs);
-    return path.join(this.path, relativePath);
+    return path.join(this.path, await this._getComponentRelativePath(component));
+  }
+
+  async _getComponentRelativePath(component: Component) {
+    if (this.hasId(component.id)) {
+      return this.dependencyResolver.getRuntimeModulePathInWorkspace(component, {
+        workspacePath: this.path,
+        rootComponentsPath: this.rootComponentsPath,
+      });
+    }
+    return this.dependencyResolver.getRuntimeModulePathInCapsules(component);
   }
 
   // TODO: should we return here the dir as it defined (aka components) or with /{name} prefix (as it used in legacy)

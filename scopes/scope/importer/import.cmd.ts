@@ -1,15 +1,17 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { compact, uniq } from 'lodash';
-import { installationErrorOutput, compilationErrorOutput, getWorkspaceConfigUpdateOutput } from '@teambit/merging';
 import {
+  installationErrorOutput,
+  compilationErrorOutput,
+  getWorkspaceConfigUpdateOutput,
   FileStatus,
   MergeOptions,
   MergeStrategy,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
+} from '@teambit/merging';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { immutableUnshift } from '@teambit/legacy/dist/utils';
+import { immutableUnshift } from '@teambit/legacy.utils';
 import { ImporterMain } from './importer.main.runtime';
 import { ImportOptions, ImportDetails, ImportStatus, ImportResult } from './import-components';
 

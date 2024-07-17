@@ -1,5 +1,4 @@
-import { CustomJestResolveEnv } from './custom-jest-resolve-env.aspect';
+import { CustomJestResolveTesterEnv } from './custom-jest-resolve-env.bit-env';
 
-export type { CustomJestResolveEnvMain } from './custom-jest-resolve-env.main.runtime';
-export default CustomJestResolveEnv;
-export { CustomJestResolveEnv };
+export default CustomJestResolveTesterEnv;
+export { CustomJestResolveTesterEnv };

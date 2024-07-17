@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { CompFiles, Workspace, FilesStatus } from '@teambit/workspace';
-import { PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy.utils';
 import pMap from 'p-map';
 import { SnappingMain } from '@teambit/snapping';
 import { LanesMain } from '@teambit/lanes';

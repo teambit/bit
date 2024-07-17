@@ -36,7 +36,6 @@ export class Plugins {
     const aspect = Aspect.create({
       id: this.component.id.toString(),
     });
-
     aspect.addRuntime({
       provider: async () => {
         await Promise.all(
@@ -63,10 +62,10 @@ export class Plugins {
   }
 
   async registerPluginWithTryCatch(plugin: Plugin, aspect: Aspect) {
-    const isModule = isEsmModule(plugin.path);
-    const module = isModule ? await this.loadModule(plugin.path) : undefined;
-
     try {
+      const isModule = isEsmModule(plugin.path);
+      const module = isModule ? await this.loadModule(plugin.path) : undefined;
+
       if (isModule && !module) {
         this.logger.consoleFailure(
           `failed to load plugin ${plugin.path}, make sure to use 'export default' to expose your plugin`
@@ -124,7 +123,8 @@ export class Plugins {
           : component.filesystem.byRegex(pluginDef.pattern);
 
       return files.map((file) => {
-        return new Plugin(pluginDef, resolvePath ? resolvePath(file.relative) : file.path);
+        const resolvedPath = resolvePath ? resolvePath(file.relative) : file.path;
+        return new Plugin(pluginDef, resolvedPath);
       });
     });
 

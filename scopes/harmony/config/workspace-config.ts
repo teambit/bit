@@ -1,11 +1,10 @@
 import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
 import { ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
 import LegacyWorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { currentDateAndTimeToFileName } from '@teambit/legacy/dist/consumer/consumer';
 import { assign, parse, stringify, CommentJSONValue } from 'comment-json';
 import * as fs from 'fs-extra';
@@ -79,6 +78,10 @@ export class WorkspaceConfig implements HostConfig {
 
   get extensions(): ExtensionDataList {
     return this._extensions;
+  }
+
+  get extensionsIds(): string[] {
+    return Object.keys(omit(this.raw, INTERNAL_CONFIG_PROPS));
   }
 
   private loadExtensions() {

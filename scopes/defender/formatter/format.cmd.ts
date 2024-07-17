@@ -1,4 +1,4 @@
-import { TimerResponse, Timer } from '@teambit/legacy/dist/toolbox/timer';
+import { TimerResponse, Timer } from '@teambit/toolbox.time.timer';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentFactory, ComponentID } from '@teambit/component';

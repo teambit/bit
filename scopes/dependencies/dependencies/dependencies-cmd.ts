@@ -3,9 +3,9 @@ import { Command, CommandOptions } from '@teambit/cli';
 import Table from 'cli-table';
 import chalk from 'chalk';
 import archy from 'archy';
-import { generateDependenciesInfoTable } from '@teambit/legacy/dist/cli/templates/component-template';
 import { ComponentIdGraph } from '@teambit/graph';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { generateDependenciesInfoTable } from './template';
 import { DependenciesMain } from './dependencies.main.runtime';
 
 type GetDependenciesFlags = {

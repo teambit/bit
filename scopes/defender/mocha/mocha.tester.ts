@@ -5,7 +5,7 @@ import babelRegister from '@babel/register';
 import type { TransformOptions } from '@babel/core';
 import { TestResult, TestsFiles, TestsResult } from '@teambit/tests-results';
 import pMapSeries from 'p-map-series';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 import { compact } from 'lodash';
 
 export class MochaTester implements Tester {

@@ -6,8 +6,8 @@ process.on('uncaughtException', (err) => {
 });
 
 import './hook-require';
-import { bootstrap } from '@teambit/legacy/dist/bootstrap';
-import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
+import { bootstrap } from './bootstrap';
+import { handleErrorAndExit } from '@teambit/cli';
 import { runCLI } from './load-bit';
 import { autocomplete } from './autocomplete';
 

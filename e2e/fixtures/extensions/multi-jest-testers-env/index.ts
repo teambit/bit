@@ -1,5 +1,4 @@
-import { MultiJestTestersEnv } from './multi-jest-testers-env.aspect';
+import { MultiJestTesterEnv } from './multi-jest-tester-env.bit-env';
 
-export type { MultiJestTestersEnvMain } from './multi-jest-testers-env.main.runtime';
-export default MultiJestTestersEnv;
-export { MultiJestTestersEnv };
+export default MultiJestTesterEnv;
+export { MultiJestTesterEnv };

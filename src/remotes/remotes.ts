@@ -3,19 +3,19 @@ import { forEach } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import pMap from 'p-map';
-import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '../api/scope/lib/fetch';
+import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import GlobalRemotes from '../global-config/global-remotes';
 import logger from '../logger/logger';
 import { ScopeNotFound } from '../scope/exceptions';
 import DependencyGraph from '../scope/graph/scope-graph';
 import Scope from '../scope/scope';
-import { prependBang } from '../utils';
+import { prependBang } from '@teambit/legacy.utils';
+import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
 import { PrimaryOverloaded } from './exceptions';
 import Remote from './remote';
 import remoteResolver from './remote-resolver/remote-resolver';
 import { UnexpectedNetworkError } from '../scope/network/exceptions';
 import { ObjectItemsStream } from '../scope/objects/object-list';
-import { concurrentFetchLimit } from '../utils/concurrency';
 import { ScopeNotFoundOrDenied } from './exceptions/scope-not-found-or-denied';
 
 export default class Remotes extends Map<string, Remote> {

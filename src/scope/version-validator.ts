@@ -9,13 +9,11 @@ import { DEPENDENCIES_FIELDS } from '../constants';
 import { SchemaName } from '../consumer/component/component-schema';
 import { Dependencies } from '../consumer/component/dependencies';
 import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
-import PackageJsonFile from '../consumer/component/package-json-file';
-import { getArtifactsFiles } from '../consumer/component/sources/artifact-files';
+import { getArtifactsFiles, PackageJsonFile } from '@teambit/component.sources';
 import { componentOverridesForbiddenFields, nonPackageJsonFields } from '../consumer/config/component-overrides';
 import { ExtensionDataEntry, ExtensionDataList } from '../consumer/config/extension-data';
-import { isValidPath } from '../utils';
-import { PathLinux } from '../utils/path';
-import validateType from '../utils/validate-type';
+import { PathLinux, isValidPath } from '@teambit/legacy.utils';
+import { validateType } from './validate-type';
 import VersionInvalid from './exceptions/version-invalid';
 import Version from './models/version';
 

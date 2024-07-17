@@ -91,7 +91,7 @@ describe('peer-dependencies functionality', function () {
       helper.workspaceJsonc.addPolicyToDependencyResolver({
         peerDependencies: { [`@${helper.scopes.remote}/comp2`]: '*' },
       });
-      helper.command.build();
+      helper.command.build(undefined, '--ignore-issues="DuplicateComponentAndPackage"');
       workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
     });
     it('should save the peer dependency in the model', () => {

@@ -1,6 +1,6 @@
 import getCredentialsByURI from 'credentials-by-uri';
 import { RegistriesMap } from '@teambit/dependency-resolver';
-import { stripTrailingChar } from '@teambit/legacy/dist/utils';
+import { stripTrailingChar } from '@teambit/toolbox.string.strip-trailing-char';
 import { Config } from '@pnpm/config';
 import { isEmpty } from 'lodash';
 import toNerfDart from 'nerf-dart';

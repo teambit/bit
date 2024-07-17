@@ -4,9 +4,9 @@ import { BitIdStr } from '@teambit/legacy-bit-id';
 import ValidationError from '../../../error/validation-error';
 import Scope from '../../../scope/scope';
 import { fetchRemoteVersions } from '../../../scope/scope-remotes';
-import { isValidPath } from '../../../utils';
-import validateType from '../../../utils/validate-type';
+import { isValidPath } from '@teambit/legacy.utils';
 import Dependency from './dependency';
+import { validateType } from '../../../scope/validate-type';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
 export const DEPENDENCIES_TYPES_UI_MAP = {

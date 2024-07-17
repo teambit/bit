@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import uidNumber from 'uid-number';
 import { Mutex } from 'async-mutex';
 import { compact, uniqBy, differenceWith, isEqual } from 'lodash';
 import { BitError } from '@teambit/bit-error';
@@ -6,12 +7,12 @@ import { ComponentID } from '@teambit/component-id';
 import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
 import pMap from 'p-map';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { OBJECTS_DIR } from '../../constants';
 import logger from '../../logger/logger';
-import { glob, resolveGroupId, writeFile } from '../../utils';
-import removeEmptyDir from '../../utils/fs/remove-empty-dir';
-import { ChownOptions } from '../../utils/fs-write-file';
-import { PathOsBasedAbsolute } from '../../utils/path';
+import { glob, writeFile, ChownOptions, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { removeEmptyDir } from '@teambit/toolbox.fs.remove-empty-dir';
+import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import { HashNotFound, OutdatedIndexJson } from '../exceptions';
 import RemoteLanes from '../lanes/remote-lanes';
 import UnmergedComponents from '../lanes/unmerged-components';
@@ -23,13 +24,10 @@ import { ObjectItem, ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
 import { ContentTransformer, onPersist, onRead } from './repository-hooks';
-import { concurrentIOLimit } from '../../utils/concurrency';
-import { createInMemoryCache } from '../../cache/cache-factory';
-import { getMaxSizeForObjects, InMemoryCache } from '../../cache/in-memory-cache';
+import { getMaxSizeForObjects, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { Types } from '../object-registrar';
 import { Lane, ModelComponent } from '../models';
 import { ComponentFsCache } from '../../consumer/component/component-fs-cache';
-import { pMapPool } from '../../utils/promise-with-concurrent';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
@@ -709,4 +707,27 @@ async function removeFile(filePath: string, propagateDirs = false): Promise<bool
   const { dir } = path.parse(filePath);
   await removeEmptyDir(dir);
   return true;
+}
+
+function resolveGroupId(groupName: string): Promise<number | null | undefined> {
+  return new Promise((resolve, reject) => {
+    uidNumber(null, groupName, (err, uid, gid) => {
+      if (err) {
+        logger.error('resolveGroupId', err);
+        if (err.message.includes('EPERM')) {
+          return reject(
+            new BitError(
+              `unable to resolve group id of "${groupName}", current user does not have sufficient permissions`
+            )
+          );
+        }
+        if (err.message.includes('group id does not exist')) {
+          return reject(new BitError(`unable to resolve group id of "${groupName}", the group does not exist`));
+        }
+        return reject(new BitError(`unable to resolve group id of "${groupName}", got an error ${err.message}`));
+      }
+      // on Windows it'll always be null
+      return resolve(gid);
+    });
+  });
 }

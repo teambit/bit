@@ -1,6 +1,6 @@
 import fs, { pathExists } from 'fs-extra';
 import path from 'path';
-import { getRootComponentDir, getBitRootsDir, linkPkgsToBitRoots } from '@teambit/bit-roots';
+import { getRootComponentDir, linkPkgsToRootComponents } from '@teambit/workspace.root-components';
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
@@ -8,7 +8,7 @@ import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/worksp
 import { compact, mapValues, omit, uniq, intersection } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import { GenerateResult, GeneratorAspect, GeneratorMain } from '@teambit/generator';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
 import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
@@ -371,6 +371,11 @@ export class InstallMain {
           cacheCleared = true;
         }
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
+        // Right now we don't need to load extensions/execute load slot at this point
+        // await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install }, undefined, {
+        //   executeLoadSlot: true,
+        //   loadExtensions: true,
+        // });
         this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
       if (options?.writeConfigFiles ?? true) {
@@ -609,11 +614,10 @@ export class InstallMain {
 
   private async _updateRootDirs(rootDirs: string[]) {
     try {
-      const bitRootCompsDir = getBitRootsDir(this.workspace.path);
-      const existingDirs = await fs.readdir(bitRootCompsDir);
+      const existingDirs = await fs.readdir(this.workspace.rootComponentsPath);
       await Promise.all(
         existingDirs.map(async (dirName) => {
-          const dirPath = path.join(bitRootCompsDir, dirName);
+          const dirPath = path.join(this.workspace.rootComponentsPath, dirName);
           if (!rootDirs.includes(dirPath)) {
             await fs.remove(dirPath);
           }
@@ -651,7 +655,7 @@ export class InstallMain {
       await Promise.all(
         envs.map(async (envId) => {
           return [
-            await this.getRootComponentDirByRootId(this.workspace.path, envId),
+            await this.getRootComponentDirByRootId(this.workspace.rootComponentsPath, envId),
             {
               dependencies: {
                 ...(await this._getEnvDependencies(envId)),
@@ -713,7 +717,7 @@ export class InstallMain {
             if (!appManifest) return null;
             const envId = await this.envs.calculateEnvId(app);
             return [
-              await this.getRootComponentDirByRootId(this.workspace.path, app.id),
+              await this.getRootComponentDirByRootId(this.workspace.rootComponentsPath, app.id),
               {
                 ...omit(appManifest, ['name', 'version']),
                 dependencies: {
@@ -922,23 +926,26 @@ export class InstallMain {
     const apps = (await this.app.listAppsComponents()).map((component) => component.id);
     await Promise.all(
       [...envs, ...apps].map(async (id) => {
-        const dir = await this.getRootComponentDirByRootId(this.workspace.path, id);
+        const dir = await this.getRootComponentDirByRootId(this.workspace.rootComponentsPath, id);
         await fs.mkdirp(dir);
       })
     );
-    await linkPkgsToBitRoots(
-      this.workspace.path,
+    await linkPkgsToRootComponents(
+      {
+        rootComponentsPath: this.workspace.rootComponentsPath,
+        workspacePath: this.workspace.path,
+      },
       compDirMap.components.map((component) => this.dependencyResolver.getPackageName(component))
     );
   }
 
-  private async getRootComponentDirByRootId(workspacePath: string, rootComponentId: ComponentID): Promise<string> {
+  private async getRootComponentDirByRootId(rootComponentsPath: string, rootComponentId: ComponentID): Promise<string> {
     // Root directories for local envs and apps are created without their version number.
     // This is done in order to avoid changes to the lockfile after such components are tagged.
-    const id = (await this.workspace.hasId(rootComponentId))
+    const id = this.workspace.hasId(rootComponentId)
       ? rootComponentId.toStringWithoutVersion()
       : rootComponentId.toString();
-    return getRootComponentDir(workspacePath, id);
+    return getRootComponentDir(rootComponentsPath, id);
   }
 
   /**
