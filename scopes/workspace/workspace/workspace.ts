@@ -276,11 +276,6 @@ export class Workspace implements ComponentFactory {
       );
     const defaultScope = this.config.defaultScope;
     if (!defaultScope) throw new BitError('defaultScope is missing');
-    if (this.config.rootComponentsDirectory === '') {
-      throw new BitError(
-        'rootComponentsDirectory cannot be empty. Root components directory location cannot be the same as the workspace directory path'
-      );
-    }
     if (!isValidScopeName(defaultScope)) throw new InvalidScopeName(defaultScope);
   }
 
@@ -289,13 +284,6 @@ export class Workspace implements ComponentFactory {
    */
   get path() {
     return this.consumer.getPath();
-  }
-
-  /**
-   * Get the location of the bit roots folder
-   */
-  get rootComponentsPath() {
-    return this.config.rootComponentsDirectory ?? path.join(this.modulesPath, '.bit_roots');
   }
 
   /** get the `node_modules` folder of this workspace */
@@ -1718,17 +1706,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   async getComponentPackagePath(component: Component) {
-    return path.join(this.path, await this._getComponentRelativePath(component));
-  }
-
-  async _getComponentRelativePath(component: Component) {
-    if (this.hasId(component.id)) {
-      return this.dependencyResolver.getRuntimeModulePathInWorkspace(component, {
-        workspacePath: this.path,
-        rootComponentsPath: this.rootComponentsPath,
-      });
-    }
-    return this.dependencyResolver.getRuntimeModulePathInCapsules(component);
+    const inInWs = await this.hasId(component.id);
+    const relativePath = this.dependencyResolver.getRuntimeModulePath(component, inInWs);
+    return path.join(this.path, relativePath);
   }
 
   // TODO: should we return here the dir as it defined (aka components) or with /{name} prefix (as it used in legacy)
