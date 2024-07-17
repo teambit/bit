@@ -119,25 +119,33 @@ needed-for: ${neededFor || '<unknown>'}`);
     opts: {
       packageManagerConfigRootDir?: string;
       workspaceName?: string;
+      loadCustomEnvs?: string;
     } = {}
   ): Promise<{ manifests: ManifestOrAspect[]; potentialPluginsIds: string[] }> {
     ids = uniq(ids);
+    const optsWithDefaults = { loadCustomEnvs: false, ...opts };
     this.logger.debug(`getManifestsGraphRecursively, ids:\n${ids.join('\n')}`);
     const nonVisitedId = ids.filter((id) => !visited.includes(id));
     if (!nonVisitedId.length) {
       return { manifests: [], potentialPluginsIds: [] };
     }
     const components = await this.getNonLoadedAspects(nonVisitedId, lane);
-    // Removing this part for now as it's not needed for now
-    // If you see a case where it's needed, please consult Gilad.
-    // Adding all the envs ids to the array to support case when one (or more) of the aspects has custom aspect env
-    // const customEnvsIds = components
-    //   .map((component) => this.envs.getEnvId(component))
-    //   .filter((envId) => !this.aspectLoader.isCoreEnv(envId));
-    // // In case there is custom env we need to load it right away, otherwise we will fail during the require aspects
-    // await this.getManifestsAndLoadAspects(customEnvsIds, undefined, lane);
+    // This is usually not required, right now it required when signing aspects with custom envs.
+    // if you see another case where it's required, please consult @Gilad before passing it as true
+    // as it might have performance implications (like creating unnecessary capsules for aspects that are not needed
+    // during bit create for example, like loading the env of the env (aka bitdev.general/envs/bit-env) when
+    // loading the component's env.)
+    if (optsWithDefaults.loadCustomEnvs) {
+      // Adding all the envs ids to the array to support case when one (or more) of the aspects has custom aspect env
+      const customEnvsIds = components
+        .map((component) => this.envs.getEnvId(component))
+        .filter((envId) => !this.aspectLoader.isCoreEnv(envId));
+
+      // In case there is custom env we need to load it right away, otherwise we will fail during the require aspects
+      await this.getManifestsAndLoadAspects(customEnvsIds, undefined, lane);
+    }
     visited.push(...nonVisitedId);
-    const manifests = await this.requireAspects(components, throwOnError, opts);
+    const manifests = await this.requireAspects(components, throwOnError, optsWithDefaults);
     const potentialPluginsIds = compact(
       manifests.map((manifest, index) => {
         if (this.aspectLoader.isValidAspect(manifest)) return undefined;
@@ -157,7 +165,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       this.logger.debug(
         `getManifestsGraphRecursively, id: ${manifest.id || '<unknown>'}, found ${depIds.length}: ${depIds.join(', ')}`
       );
-      const { manifests: loaded } = await this.getManifestsGraphRecursively(depIds, visited, throwOnError, lane);
+      const { manifests: loaded } = await this.getManifestsGraphRecursively(depIds, visited, throwOnError, lane, opts);
       manifests.push(...loaded);
     });
 
