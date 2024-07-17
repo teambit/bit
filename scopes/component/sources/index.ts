@@ -25,3 +25,4 @@ export {
   reStructureBuildArtifacts,
 } from './artifact-files';
 export { JsonVinyl } from './json-vinyl';
+export { removeFilesAndEmptyDirsRecursively } from './remove-files-and-empty-dirs-recursively';
