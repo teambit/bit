@@ -24,6 +24,12 @@ export interface WorkspaceExtConfig {
   defaultDirectory: string;
 
   /**
+   * sets the location of the root components directory.
+   * The location is a relative path to the workspace root and should use linux path separators (/).
+   */
+  rootComponentsDirectory?: string;
+
+  /**
    * set the default structure of components in your project
    */
   vendor: VendorConfig;
