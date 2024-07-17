@@ -101,6 +101,13 @@ export type LoadOptions = {
    * as aspect but not its aspects)
    */
   loadCompAspects?: boolean;
+
+  /**
+   * Should we load the components' custom envs when loading from the scope
+   * This is usually not required unless you load an aspect with custom env from the scope
+   * usually when signing aspects
+   */
+  loadCustomEnvs?: boolean;
 };
 
 export type ScopeConfig = {
@@ -803,7 +810,7 @@ export class ScopeMain implements ComponentFactory {
   async loadMany(
     ids: ComponentID[],
     lane?: Lane,
-    opts: LoadOptions = { loadApps: true, loadEnvs: true, loadCompAspects: true }
+    opts: LoadOptions = { loadApps: true, loadEnvs: true, loadCompAspects: true, loadCustomEnvs: false }
   ): Promise<Component[]> {
     const components = await mapSeries(ids, (id) => this.load(id, lane, opts));
     return compact(components);
@@ -1083,7 +1090,7 @@ export class ScopeMain implements ComponentFactory {
   async load(
     id: ComponentID,
     lane?: Lane,
-    opts: LoadOptions = { loadApps: true, loadEnvs: true, loadCompAspects: true }
+    opts: LoadOptions = { loadApps: true, loadEnvs: true, loadCompAspects: true, loadCustomEnvs: false }
   ): Promise<Component | undefined> {
     const component = await this.get(id);
     if (!component) return undefined;
@@ -1094,7 +1101,7 @@ export class ScopeMain implements ComponentFactory {
   async loadCompAspects(
     component: Component,
     lane?: Lane,
-    opts: LoadOptions = { loadApps: true, loadEnvs: true, loadCompAspects: true }
+    opts: LoadOptions = { loadApps: true, loadEnvs: true, loadCompAspects: true, loadCustomEnvs: false }
   ): Promise<Component> {
     const optsWithDefaults = { loadApps: true, loadEnvs: true, loadCompAspects: true, ...opts };
     const aspectIds = optsWithDefaults.loadCompAspects ? component.state.aspects.ids : [];
@@ -1114,7 +1121,9 @@ export class ScopeMain implements ComponentFactory {
       }
     }
     if (aspectIds && aspectIds.length) {
-      await this.loadAspects(aspectIds, true, component.id.toString(), lane);
+      await this.loadAspects(aspectIds, true, component.id.toString(), lane, {
+        loadCustomEnvs: optsWithDefaults.loadCustomEnvs,
+      });
     }
 
     return component;
