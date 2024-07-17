@@ -1347,6 +1347,7 @@ this command does the following:
 | `--ids`                |       `-i`       | show only component ids, unformatted                                                          |
 | `--scope`              |       `-s`       | show only components stored in the local scope, including indirect dependencies               |
 | `--outdated`           |       `-o`       | highlight outdated components, in comparison with their latest remote version (if one exists) |
+| `--include-deleted`    |       `-d`       | EXPERIMENTAL. show also deleted components                                                    |
 | `--json`               |       `-j`       | show the output in JSON format                                                                |
 | `--namespace <string>` |       `-n`       | show only components in the specified namespace/s e.g. '-n ui' or '\*/ui'                     |
 
@@ -2072,6 +2073,7 @@ list components templates when inside bit-workspace (for bit-create), otherwise,
 | `--junit <filepath>`   |                  | write tests results as JUnit XML format into the specified file path                    |
 | `--coverage`           |                  | show code coverage data                                                                 |
 | `--env <id>`           |       `-e`       | test only components assigned the given env                                             |
+| `--update-snapshot`    |                  | if supported by the tester, re-record every snapshot that fails during the test run     |
 | `--scope <scope-name>` |       `-s`       | DEPRECATED. (use the pattern instead, e.g. "scopeName/\*\*"). name of the scope to test |
 
 ---
