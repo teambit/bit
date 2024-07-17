@@ -115,10 +115,13 @@ export class ApplicationMain {
   /**
    * instead of adding apps to workspace.jsonc, this method gets all apps components and load them as aspects so then
    * they could register to the apps slots and be available to list/run etc.
+   * if poolIds is provided, it will load only the apps that are part of the pool.
    */
-  async loadAllAppsAsAspects() {
-    const apps = await this.listAppsComponents();
-    await this.componentAspect.getHost().loadAspects(apps.map((a) => a.id.toString()));
+  async loadAllAppsAsAspects(poolIds?: ComponentID[]): Promise<ComponentID[]> {
+    const apps = await this.listAppsComponents(poolIds);
+    const appIds = apps.map((app) => app.id);
+    await this.componentAspect.getHost().loadAspects(appIds.map((id) => id.toString()));
+    return appIds;
   }
 
   /**
@@ -162,8 +165,14 @@ export class ApplicationMain {
     return this.listAppsComponents();
   }
 
-  async listAppsComponents(): Promise<Component[]> {
-    const components = await this.componentAspect.getHost().list();
+  /**
+   * list all components that are apps.
+   * if poolIds is provided, it will load only the apps that are part of the pool.
+   */
+  async listAppsComponents(poolIds?: ComponentID[]): Promise<Component[]> {
+    const components = poolIds
+      ? await this.componentAspect.getHost().getMany(poolIds)
+      : await this.componentAspect.getHost().list();
     const appTypesPatterns = this.getAppPatterns();
     const appsComponents = components.filter((component) => this.hasAppTypePattern(component, appTypesPatterns));
     return appsComponents;

@@ -11,6 +11,7 @@ type ListFlags = {
   json?: boolean;
   outdated?: boolean;
   namespace?: string;
+  includeDeleted?: boolean;
 };
 
 export class ListCmd implements Command {
@@ -23,6 +24,7 @@ export class ListCmd implements Command {
     ['i', 'ids', 'show only component ids, unformatted'],
     ['s', 'scope', 'show only components stored in the local scope, including indirect dependencies'],
     ['o', 'outdated', 'highlight outdated components, in comparison with their latest remote version (if one exists)'],
+    ['d', 'include-deleted', 'EXPERIMENTAL. show also deleted components'],
     ['j', 'json', 'show the output in JSON format'],
     ['n', 'namespace <string>', "show only components in the specified namespace/s e.g. '-n ui' or '*/ui'"],
   ] as CommandOptions;
@@ -65,7 +67,7 @@ export class ListCmd implements Command {
 
   private async getListResults(
     scopeName?: string,
-    { namespace, scope, outdated }: ListFlags = {}
+    { namespace, scope, outdated, includeDeleted }: ListFlags = {}
   ): Promise<ListScopeResult[]> {
     const getNamespaceWithWildcard = () => {
       if (!namespace) return undefined;
@@ -75,7 +77,7 @@ export class ListCmd implements Command {
     const namespacesUsingWildcards = getNamespaceWithWildcard();
 
     return scopeName
-      ? this.lister.remoteList(scopeName, { namespacesUsingWildcards })
+      ? this.lister.remoteList(scopeName, { namespacesUsingWildcards, includeDeleted })
       : this.lister.localList(scope, outdated, namespacesUsingWildcards);
   }
 }

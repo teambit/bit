@@ -260,7 +260,7 @@ export class AspectLoaderMain {
   }
 
   /**
-   * get all the configured aspects in the config file (workspace.jsonc / bit.jsonc)
+   * get all the configured aspects in the config file (workspace.jsonc / scope.jsonc)
    */
   getConfiguredAspects(): string[] {
     const configuredAspects = Array.from(this.harmony.config.raw.keys());

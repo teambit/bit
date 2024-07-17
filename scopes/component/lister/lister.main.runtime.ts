@@ -29,15 +29,18 @@ export class ListerMain {
     {
       namespacesUsingWildcards,
       includeDeprecated = true,
+      includeDeleted = false,
     }: {
       namespacesUsingWildcards?: string;
       includeDeprecated?: boolean;
+      includeDeleted?: boolean;
     }
   ): Promise<ListScopeResult[]> {
     const remote: Remote = await getRemoteByName(scopeName, this.workspace?.consumer);
     this.logger.setStatusLine(BEFORE_REMOTE_LIST);
-    const listResult = await remote.list(namespacesUsingWildcards);
-    return includeDeprecated ? listResult : listResult.filter((r) => !r.deprecated);
+    const listResult = await remote.list(namespacesUsingWildcards, includeDeleted);
+    const results = includeDeprecated ? listResult : listResult.filter((r) => !r.deprecated);
+    return this.sortListScopeResults(results);
   }
 
   async getRemoteCompIdsByWildcards(idStr: string, includeDeprecated = true): Promise<ComponentID[]> {
@@ -64,7 +67,12 @@ export class ListerMain {
     }
     this.logger.setStatusLine(BEFORE_LOCAL_LIST);
     const componentsList = new ComponentsList(this.workspace.consumer);
-    return componentsList.listAll(showRemoteVersion, showAll, namespacesUsingWildcards);
+    const results = await componentsList.listAll(showRemoteVersion, showAll, namespacesUsingWildcards);
+    return this.sortListScopeResults(results);
+  }
+
+  private sortListScopeResults(listScopeResults: ListScopeResult[]): ListScopeResult[] {
+    return listScopeResults.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
   }
 
   static slots = [];

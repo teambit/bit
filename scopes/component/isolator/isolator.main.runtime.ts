@@ -1097,7 +1097,7 @@ export class IsolatorMain {
         const depCapsule = capsules.getCapsule(dep.componentId);
         let version = dep.version;
         if (depCapsule) {
-          version = getComponentPackageVersion(depCapsule?.component);
+          version = getComponentPackageVersion(depCapsule.component);
         } else {
           version = snapToSemver(version);
         }
