@@ -3,8 +3,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import { statusWorkspaceIsCleanMsg } from '../../../src/constants';
 import { LANE_KEY } from '@teambit/legacy.bit-map';
-import Helper from '../../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../../src/fixtures/fixtures';
+import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 

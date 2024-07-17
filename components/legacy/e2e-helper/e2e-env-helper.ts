@@ -6,12 +6,66 @@ import FixtureHelper, { GenerateEnvJsoncOptions } from './e2e-fixtures-helper';
 import FsHelper from './e2e-fs-helper';
 import ScopeHelper from './e2e-scope-helper';
 import ScopesData from './e2e-scopes';
-import { ENV_POLICY } from '../../e2e/harmony/dependencies/env-jsonc-policies.e2e';
 
 type SetCustomEnvOpts = {
   skipInstall?: boolean;
   skipCompile?: boolean;
   skipLink?: boolean;
+};
+
+export const ENV_POLICY = {
+  peers: [
+    {
+      name: 'react',
+      version: '^18.0.0',
+      supportedRange: '^17.0.0 || ^18.0.0',
+    },
+    {
+      name: 'react-dom',
+      version: '^18.0.0',
+      supportedRange: '^17.0.0 || ^18.0.0',
+    },
+    {
+      name: 'graphql',
+      version: '14.7.0',
+      supportedRange: '^14.7.0',
+    },
+  ],
+  dev: [
+    {
+      name: '@types/react',
+      version: '18.0.25',
+      hidden: true,
+      force: true,
+    },
+    {
+      name: '@types/react-dom',
+      version: '^18.0.0',
+      hidden: true,
+      force: true,
+    },
+    {
+      name: '@types/jest',
+      version: '29.2.2',
+      hidden: true,
+      force: true,
+    },
+  ],
+  runtime: [
+    {
+      name: 'is-positive',
+      version: '2.0.0',
+    },
+    {
+      name: 'is-string',
+      version: '1.0.7',
+    },
+    {
+      name: 'is-odd',
+      version: '3.0.1',
+      force: true,
+    },
+  ],
 };
 
 export default class EnvHelper {

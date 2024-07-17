@@ -5,8 +5,14 @@ import { compact } from 'lodash';
 import tar from 'tar';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
-import defaultErrorHandler from '../cli/default-error-handler';
-import { BIT_HIDDEN_DIR, BIT_VERSION, MergeConfigFilename, REMOTE_REFS_DIR, WORKSPACE_JSONC } from '../constants';
+import defaultErrorHandler from '@teambit/legacy/dist/cli/default-error-handler';
+import {
+  BIT_HIDDEN_DIR,
+  BIT_VERSION,
+  MergeConfigFilename,
+  REMOTE_REFS_DIR,
+  WORKSPACE_JSONC,
+} from '@teambit/legacy/dist/constants';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
 import CommandHelper from './e2e-command-helper';
 import { ensureAndWriteJson } from './e2e-helper';

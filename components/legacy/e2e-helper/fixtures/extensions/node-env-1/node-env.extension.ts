@@ -1,3 +1,5 @@
+// @bit-no-check
+// @ts-nocheck
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { NodeMain, NodeAspect } from '@teambit/node';
 import get from 'lodash.get'

@@ -9,7 +9,7 @@ import tar from 'tar';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { NOTHING_TO_TAG_MSG } from '@teambit/snapping';
 import { ENV_VAR_FEATURE_TOGGLE } from '@teambit/harmony.modules.feature-toggle';
-import { Extensions, NOTHING_TO_SNAP_MSG } from '../constants';
+import { Extensions, NOTHING_TO_SNAP_MSG } from '@teambit/legacy/dist/constants';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
 import ScopesData from './e2e-scopes';
 

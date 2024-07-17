@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 
-import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../src/fixtures/fixtures';
+import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
 import { MergeConflict, MergeConflictOnRemote } from '../../src/scope/exceptions';
 
 describe('merge functionality', function () {

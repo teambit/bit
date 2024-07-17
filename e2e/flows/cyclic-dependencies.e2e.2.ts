@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { IssuesClasses } from '@teambit/component-issues';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 const fixtureA = `const b = require('../b/b');
 console.log('got ' + b() + ' and got A')`;

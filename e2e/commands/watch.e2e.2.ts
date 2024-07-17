@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai';
 import { IS_WINDOWS } from '../../src/constants';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 import WatchRunner from '../watch-runner';
 
 chai.use(require('chai-fs'));
