@@ -681,6 +681,8 @@ getCompiler() {
 Returns a linter to be used by the Linter service.
 
 ```ts
+import { ESLintLinter } from '@teambit/defender.eslint-linter';
+
 export class ReactNativeEnv implements Environment {
     constructor(){
         // ...
@@ -689,11 +691,10 @@ export class ReactNativeEnv implements Environment {
     }
     // ...
     getLinter() {
-        const eslintConfig = require.resolve('./eslint/eslintrc')
-        return this.eslint.createLinter({
-            config: eslintConfig,
-            // resolve all plugins from the react environment
-            pluginPath: __dirname,
+        return ESLintLinter.from({
+          configPath: require.resolve('./eslint/eslintrc'),
+          // resolve all plugins from the react environment.
+          pluginsPath: __dirname,
         });
     }
 }
@@ -813,16 +814,16 @@ export class ReactNativeEnv implements Environment {
 You may need an appropriate loader to handle this file type...
 ```
 
-This error can show up for multiple reason, and one of the most popular is because we use a library in a React Native component that uses Native API's.  
-As the local Bit Dev Server runs on the Web it can't work properly with API's that are meant to be run on a mobile cloudice.  
+This error can show up for multiple reason, and one of the most popular is because we use a library in a React Native component that uses Native API's.
+As the local Bit Dev Server runs on the Web it can't work properly with API's that are meant to be run on a mobile cloudice.
 So components that are using a library that use Native API's cannot be rendered on the web, because the Native API's are unavailable.
 
-One way to solve it is to see if the library has support for Web and update your code to also be Web compatible.  
+One way to solve it is to see if the library has support for Web and update your code to also be Web compatible.
 If not, the second way to solve this is to search for a parallel library with Web support and make a Webpack aliases in a Bit React Native extension inside your project, and then configure the extension to make a Webpack alises.
 
 If for some reason a library doesn't have a parallel library for the web and doesn't have built in Websupport, you can't make the composition work on the local Bit cloud server.
 
-For example, [`react-native-svg`](https://github.com/react-native-svg/react-native-svg) library has a parallel library called [`react-native-svg-web`](https://github.com/bakerface/react-native-svg-web).  
+For example, [`react-native-svg`](https://github.com/react-native-svg/react-native-svg) library has a parallel library called [`react-native-svg-web`](https://github.com/bakerface/react-native-svg-web).
 Let's [create a React Native extension](#create-an-extension) and add a `webpack-transformers.ts` file in the extension under `webpack` folder, the file looks like this:
 
 ```ts
@@ -903,7 +904,7 @@ export class CustomReactNativeExtension {
 }
 ```
 
-This will add the Webpack aliases to the Webpack configurations and solve the issue.  
+This will add the Webpack aliases to the Webpack configurations and solve the issue.
 One last thing we need to do, is to add the peer dependencies of the parallel library we use to the dependency resolver of the extension in the variants section in `workspace.jsonc` file:
 
 ```json
@@ -940,5 +941,5 @@ In this case `react-native-svg-web` has these dependencies in the peer dependenc
 },
 ```
 
-So we need to add them as the dependencies of the extension so it will work properly.  
+So we need to add them as the dependencies of the extension so it will work properly.
 Now every component that will use the `react-native-svg` library will work fine with the compositions, and this solution can be used for every other library that use Native API's.
