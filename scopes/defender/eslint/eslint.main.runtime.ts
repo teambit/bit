@@ -8,6 +8,7 @@ import {
   EslintConfigTransformContext,
   EslintConfigTransformer,
 } from '@teambit/defender.eslint.config-mutator';
+import { getCloudDomain } from '@teambit/legacy/dist/constants';
 import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { ESLintAspect } from './eslint.aspect';
 import { ESLintLinter } from './eslint.linter';
@@ -48,6 +49,7 @@ export class ESLintMain {
   constructor(private logger: Logger) {}
 
   /**
+   * @deprecated use eslint linter from https://bit.cloud/teambit/defender/eslint-linter
    * create a eslint linter instance.
    * @param options eslint options.
    * @param ESLintModule reference to an `eslint` module.
@@ -58,6 +60,9 @@ export class ESLintMain {
     transformers: EslintConfigTransformer[] = [],
     ESLintModule?: any
   ): Linter {
+    this.logger.consoleWarning(
+      `The 'Eslint' aspect is deprecated. Please use the 'Eslint linter' component instead. For more details, visit: https://${getCloudDomain()}/teambit/defender/eslint-linter`
+    );
     const mergedOptions = getOptions(options, context);
     const configMutator = new EslintConfigMutator(mergedOptions);
     const transformerContext: EslintConfigTransformContext = { fix: !!context.fix };

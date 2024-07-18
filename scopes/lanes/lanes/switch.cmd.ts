@@ -24,6 +24,8 @@ export class SwitchCmd implements Command {
       'auto-merge-resolve <merge-strategy>',
       'merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"',
     ],
+    ['', 'force-ours', 'do not merge, preserve local files as is'],
+    ['', 'force-theirs', 'do not merge, just overwrite with incoming files'],
     ['a', 'get-all', 'DEPRECATED. this is currently the default behavior'],
     ['', 'workspace-only', 'checkout only the components in the workspace to the selected lane'],
     ['x', 'skip-dependency-installation', 'do not install dependencies of the imported components'],
@@ -50,6 +52,8 @@ ${COMPONENT_PATTERN_HELP}`,
       head,
       alias,
       autoMergeResolve,
+      forceOurs,
+      forceTheirs,
       getAll = false,
       workspaceOnly = false,
       skipDependencyInstallation = false,
@@ -59,6 +63,8 @@ ${COMPONENT_PATTERN_HELP}`,
       head?: boolean;
       alias?: string;
       autoMergeResolve?: MergeStrategy;
+      forceOurs?: boolean;
+      forceTheirs?: boolean;
       getAll?: boolean;
       workspaceOnly?: boolean;
       skipDependencyInstallation?: boolean;
@@ -71,6 +77,8 @@ ${COMPONENT_PATTERN_HELP}`,
       head,
       alias,
       merge: autoMergeResolve,
+      forceOurs,
+      forceTheirs,
       workspaceOnly,
       pattern,
       skipDependencyInstallation,

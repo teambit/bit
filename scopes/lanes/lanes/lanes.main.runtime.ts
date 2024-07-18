@@ -90,6 +90,8 @@ export type SwitchLaneOptions = {
   head?: boolean;
   alias?: string;
   merge?: MergeStrategy;
+  forceOurs?: boolean;
+  forceTheirs?: boolean;
   workspaceOnly?: boolean;
   pattern?: string;
   skipDependencyInstallation?: boolean;
@@ -562,7 +564,16 @@ please create a new lane instead, which will include all components of this lane
    */
   async switchLanes(
     laneName: string,
-    { alias, merge, pattern, workspaceOnly, skipDependencyInstallation = false, head }: SwitchLaneOptions
+    {
+      alias,
+      merge,
+      forceOurs,
+      forceTheirs,
+      pattern,
+      workspaceOnly,
+      skipDependencyInstallation = false,
+      head,
+    }: SwitchLaneOptions
   ) {
     if (!this.workspace) {
       throw new BitError(`unable to switch lanes outside of Bit workspace`);
@@ -588,6 +599,8 @@ please create a new lane instead, which will include all components of this lane
     };
     const checkoutProps = {
       mergeStrategy,
+      forceOurs,
+      forceTheirs,
       skipNpmInstall: skipDependencyInstallation,
       isLane: true,
       promptMergeOptions: false,
