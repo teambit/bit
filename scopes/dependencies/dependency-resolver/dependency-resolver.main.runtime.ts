@@ -503,35 +503,29 @@ export class DependencyResolverMain {
   }
 
   /*
-   * Returns the location where the component is installed with its peer dependencies inside a workspace.
-   * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
-   */
-  getRuntimeModulePathInWorkspace(component: Component, opts: { workspacePath: string; rootComponentsPath: string }) {
-    const rootComponentsRelativePath = relative(opts.workspacePath, opts.rootComponentsPath);
-    return this._getRuntimeModulePath(component, rootComponentsRelativePath);
-  }
-
-  /*
-   * Returns the location where the component is installed with its peer dependencies inside capsules.
-   * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
-   */
-  getRuntimeModulePathInCapsules(component: Component) {
-    return this._getRuntimeModulePath(component);
-  }
-
-  /*
    * Returns the location where the component is installed with its peer dependencies
    * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
    */
-  _getRuntimeModulePath(component: Component, rootComponentsRelativePath?: string) {
+  getRuntimeModulePath(
+    component: Component,
+    options: {
+      workspacePath?: string;
+      rootComponentsPath?: string;
+      isInWorkspace?: boolean;
+    }
+  ) {
     if (!this.hasRootComponents()) {
       const modulePath = this.getModulePath(component);
       return modulePath;
     }
     const pkgName = this.getPackageName(component);
+    const rootComponentsRelativePath =
+      options.workspacePath && options.rootComponentsPath
+        ? relative(options.workspacePath, options.rootComponentsPath)
+        : '';
     const getRelativeRootComponentDir = getRootComponentDir.bind(null, rootComponentsRelativePath ?? '');
     const selfRootDir = getRelativeRootComponentDir(
-      rootComponentsRelativePath == null ? component.id.toString() : component.id.toStringWithoutVersion()
+      options.isInWorkspace ? component.id.toStringWithoutVersion() : component.id.toString()
     );
     // In case the component is it's own root we want to load it from it's own root folder
     if (fs.pathExistsSync(selfRootDir)) {
