@@ -2,10 +2,10 @@ import multimatch from 'multimatch';
 import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import { getAllCoreAspectsIds } from '@teambit/bit';
-import { getRelativeRootComponentDir } from '@teambit/bit-roots';
+import { getRootComponentDir } from '@teambit/workspace.root-components';
 import { ComponentAspect, Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
-import { join } from 'path';
+import { join, relative } from 'path';
 import { compact, get, pick, uniq, omit, cloneDeep } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect } from '@teambit/envs';
@@ -503,17 +503,35 @@ export class DependencyResolverMain {
   }
 
   /*
+   * Returns the location where the component is installed with its peer dependencies inside a workspace.
+   * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
+   */
+  getRuntimeModulePathInWorkspace(component: Component, opts: { workspacePath: string; rootComponentsPath: string }) {
+    const rootComponentsRelativePath = relative(opts.workspacePath, opts.rootComponentsPath);
+    return this._getRuntimeModulePath(component, rootComponentsRelativePath);
+  }
+
+  /*
+   * Returns the location where the component is installed with its peer dependencies inside capsules.
+   * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
+   */
+  getRuntimeModulePathInCapsules(component: Component) {
+    return this._getRuntimeModulePath(component);
+  }
+
+  /*
    * Returns the location where the component is installed with its peer dependencies
    * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
    */
-  getRuntimeModulePath(component: Component, isInWorkspace = false) {
+  _getRuntimeModulePath(component: Component, rootComponentsRelativePath?: string) {
     if (!this.hasRootComponents()) {
       const modulePath = this.getModulePath(component);
       return modulePath;
     }
     const pkgName = this.getPackageName(component);
+    const getRelativeRootComponentDir = getRootComponentDir.bind(null, rootComponentsRelativePath ?? '');
     const selfRootDir = getRelativeRootComponentDir(
-      !isInWorkspace ? component.id.toString() : component.id.toStringWithoutVersion()
+      rootComponentsRelativePath == null ? component.id.toString() : component.id.toStringWithoutVersion()
     );
     // In case the component is it's own root we want to load it from it's own root folder
     if (fs.pathExistsSync(selfRootDir)) {
