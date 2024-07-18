@@ -3707,6 +3707,16 @@
             "merge local changes with the checked out version. strategy should be \"theirs\", \"ours\" or \"manual\""
           ],
           [
+            "",
+            "force-ours",
+            "do not merge, preserve local files as is"
+          ],
+          [
+            "",
+            "force-theirs",
+            "do not merge, just overwrite with incoming files"
+          ],
+          [
             "a",
             "get-all",
             "DEPRECATED. this is currently the default behavior"
@@ -4189,6 +4199,16 @@
         "r",
         "auto-merge-resolve <merge-strategy>",
         "merge local changes with the checked out version. strategy should be \"theirs\", \"ours\" or \"manual\""
+      ],
+      [
+        "",
+        "force-ours",
+        "do not merge, preserve local files as is"
+      ],
+      [
+        "",
+        "force-theirs",
+        "do not merge, just overwrite with incoming files"
       ],
       [
         "a",
