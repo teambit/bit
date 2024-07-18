@@ -509,8 +509,8 @@ export class DependencyResolverMain {
   getRuntimeModulePath(
     component: Component,
     options: {
-      workspacePath?: string;
-      rootComponentsPath?: string;
+      workspacePath: string;
+      rootComponentsPath: string;
       isInWorkspace?: boolean;
     }
   ) {
@@ -519,10 +519,7 @@ export class DependencyResolverMain {
       return modulePath;
     }
     const pkgName = this.getPackageName(component);
-    const rootComponentsRelativePath =
-      options.workspacePath && options.rootComponentsPath
-        ? relative(options.workspacePath, options.rootComponentsPath)
-        : '';
+    const rootComponentsRelativePath = relative(options.workspacePath, options.rootComponentsPath);
     const getRelativeRootComponentDir = getRootComponentDir.bind(null, rootComponentsRelativePath ?? '');
     const selfRootDir = getRelativeRootComponentDir(
       options.isInWorkspace ? component.id.toStringWithoutVersion() : component.id.toString()
