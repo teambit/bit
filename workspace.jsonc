@@ -262,7 +262,7 @@
         "@teambit/react.instructions.react-native.adding-tests": "0.0.1",
         "@teambit/react.instructions.react.adding-compositions": "0.0.6",
         "@teambit/react.instructions.react.adding-tests": "0.0.6",
-        "@teambit/react.jest.react-jest": "^1.0.22",
+        "@teambit/react.jest.react-jest": "^1.0.27",
         "@teambit/react.rendering.ssr": "0.0.3",
         "@teambit/react.ui.component-highlighter": "0.2.2",
         "@teambit/react.webpack.react-webpack": "^1.0.25",
