@@ -51,6 +51,7 @@ import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact, uniqBy } from 'lodash';
 import {
   MergeConfigFilename,
+  BIT_ROOTS_DIR,
   CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS,
   CFG_USER_TOKEN_KEY,
 } from '@teambit/legacy/dist/constants';
@@ -276,11 +277,6 @@ export class Workspace implements ComponentFactory {
       );
     const defaultScope = this.config.defaultScope;
     if (!defaultScope) throw new BitError('defaultScope is missing');
-    if (this.config.rootComponentsDirectory === '') {
-      throw new BitError(
-        'rootComponentsDirectory cannot be empty. Root components directory location cannot be the same as the workspace directory path'
-      );
-    }
     if (!isValidScopeName(defaultScope)) throw new InvalidScopeName(defaultScope);
   }
 
@@ -295,7 +291,7 @@ export class Workspace implements ComponentFactory {
    * Get the location of the bit roots folder
    */
   get rootComponentsPath() {
-    return this.config.rootComponentsDirectory ?? path.join(this.modulesPath, '.bit_roots');
+    return path.join(this.config.rootComponentsDirectory ?? this.modulesPath, BIT_ROOTS_DIR);
   }
 
   /** get the `node_modules` folder of this workspace */
