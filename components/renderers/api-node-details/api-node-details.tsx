@@ -10,7 +10,6 @@ import { APIRefQueryParams } from '@teambit/api-reference.hooks.use-api-ref-url'
 import { useNavigate } from 'react-router-dom';
 import { APINode } from '@teambit/api-reference.models.api-reference-model';
 import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
-// import { OnMount } from '@monaco-editor/react';
 
 import styles from './api-node-details.module.scss';
 

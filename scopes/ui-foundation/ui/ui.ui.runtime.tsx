@@ -56,8 +56,6 @@ export class UiUI {
 
   /** render dehydrated server-side */
   async renderSsr(rootExtension: string, ssrContent: SsrSession): Promise<string> {
-    console.log('🚀 ~ file: ui.ui.runtime.tsx:60 ~ UiUI ~ renderSsr ~ ssrContent:', ssrContent);
-
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
 
