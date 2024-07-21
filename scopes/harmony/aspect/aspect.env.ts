@@ -122,7 +122,7 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
 
   private getJestTesterTask(jestModifier: PipeServiceModifier = {}): TesterTask {
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
-    const jestConfigPath = jestModifier?.transformers?.[0]() || join(pathToSource, './jest/jest.cjs.config.js');
+    const jestConfigPath = jestModifier?.transformers?.[0]() || join(pathToSource, './jest/jest.config.js');
     const jestPath = jestModifier?.module || require.resolve('jest');
     const worker = this.getJestWorker();
     const testerTask = JestTask.create(
