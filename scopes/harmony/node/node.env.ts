@@ -41,8 +41,7 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
    */
   getBuildPipe(modifiers: GetBuildPipeModifiers = {}): BuildTask[] {
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
-    const jestConfigPath =
-      modifiers?.jestModifier?.transformers?.[0]() || join(pathToSource, './jest/jest.cjs.config.js');
+    const jestConfigPath = modifiers?.jestModifier?.transformers?.[0]() || join(pathToSource, './jest/jest.config.js');
     modifiers.jestModifier = modifiers.jestModifier || {};
     modifiers.jestModifier.transformers = [() => jestConfigPath];
     return this.reactAspect.reactEnv.getBuildPipe(modifiers);
