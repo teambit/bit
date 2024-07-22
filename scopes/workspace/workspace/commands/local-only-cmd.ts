@@ -60,7 +60,7 @@ export class LocalOnlyListCmd implements Command {
   constructor(private workspace: Workspace) {}
 
   async report() {
-    const ids = this.workspace.bitMap.listLocalOnly();
+    const ids = this.workspace.listLocalOnly();
     if (ids.length === 0) {
       return chalk.yellow('no local-only components were found');
     }

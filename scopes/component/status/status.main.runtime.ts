@@ -124,7 +124,7 @@ export class StatusMain {
     const currentLane = await consumer.getCurrentLaneObject();
     const forkedLaneId = currentLane?.forkedFrom;
     const workspaceIssues = this.workspace.getWorkspaceIssues();
-    const localOnly = this.workspace.bitMap.listLocalOnly();
+    const localOnly = this.workspace.listLocalOnly();
 
     const sortObjectsWithId = <T>(objectsWithId: Array<T & { id: ComponentID }>): Array<T & { id: ComponentID }> => {
       return objectsWithId.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));

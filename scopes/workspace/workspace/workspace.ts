@@ -2153,6 +2153,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     await this.bitMap.write('unsetLocalOnly');
     return successfullyUnset;
   }
+  listLocalOnly(): ComponentIdList {
+    return ComponentIdList.fromArray(this.bitMap.listLocalOnly());
+  }
 }
 
 /**

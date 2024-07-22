@@ -764,7 +764,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const filterLocalOnlyIfNeeded = async (
       bitIds: ComponentIdList
     ): Promise<{ idsToExport: ComponentIdList; missingScope: ComponentID[]; idsWithFutureScope: ComponentIdList }> => {
-      const localOnlyComponents = ComponentIdList.fromArray(this.workspace.filter.byLocalOnly(bitIds));
+      const localOnlyComponents = this.workspace.listLocalOnly();
       const idsToExport = bitIds.filter((id) => !localOnlyComponents.hasWithoutScopeAndVersion(id));
       return { idsToExport: ComponentIdList.fromArray(idsToExport), missingScope: [], idsWithFutureScope: bitIds };
     };

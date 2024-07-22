@@ -165,7 +165,7 @@ describe('Snapping aspect', function () {
       await destroyWorkspace(workspaceData);
     });
     it('should be able to list it', async () => {
-      const list = workspace.bitMap.listLocalOnly();
+      const list = workspace.listLocalOnly();
       expect(list).to.have.lengthOf(1);
       expect(list[0].toString()).to.include('comp1');
     });
