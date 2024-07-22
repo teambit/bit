@@ -28,7 +28,7 @@ import {
   UpdateAspectCmd,
 } from './aspect.cmd';
 import { getTemplates } from './aspect.templates';
-import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
+import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 
 export type AspectSource = { aspectName: string; source: string; level: string };
 
