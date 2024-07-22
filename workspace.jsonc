@@ -151,6 +151,7 @@
         "@teambit/defender.eslint-linter": "^1.0.35",
         "@teambit/defender.jest-tester": "^2.0.4",
         "@teambit/defender.prettier-formatter": "1.0.12",
+        "@teambit/defender.tester-task": "^1.0.12",
         "@teambit/defender.ui.test-compare-section": "^0.0.100",
         "@teambit/defender.ui.test-loader": "^0.0.504",
         "@teambit/defender.ui.test-row": "^0.0.503",
