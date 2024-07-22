@@ -39,6 +39,7 @@ export type BasicTagSnapParams = {
   build?: boolean;
   ignoreBuildErrors?: boolean;
   rebuildDepsGraph?: boolean;
+  includeLocalOnly?: boolean;
 };
 
 export type BasicTagParams = BasicTagSnapParams & {

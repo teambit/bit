@@ -21,6 +21,7 @@ import { mockComponents } from '@teambit/component.testing.mock-components';
 import { SnappingMain } from './snapping.main.runtime';
 import { SnappingAspect } from './snapping.aspect';
 import { SnapDataPerCompRaw } from './snap-from-scope.cmd';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 
 describe('Snapping aspect', function () {
   this.timeout(0);
@@ -145,6 +146,51 @@ describe('Snapping aspect', function () {
     });
     after(async () => {
       await destroyWorkspace(workspaceData);
+    });
+  });
+  describe('local-only', () => {
+    let harmony: Harmony;
+    let workspace: Workspace;
+    let workspaceData: WorkspaceData;
+    before(async () => {
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      await mockComponents(workspacePath, { numOfComponents: 3 });
+      harmony = await loadManyAspects([WorkspaceAspect, SnappingAspect], workspacePath);
+      workspace = harmony.get<Workspace>(WorkspaceAspect.id);
+      const comp1Id = await workspace.idsByPattern('comp1');
+      await workspace.setLocalOnly(comp1Id);
+    });
+    after(async () => {
+      await destroyWorkspace(workspaceData);
+    });
+    it('should be able to list it', async () => {
+      const list = workspace.listLocalOnly();
+      expect(list).to.have.lengthOf(1);
+      expect(list[0].toString()).to.include('comp1');
+    });
+    it('should be ignored by tag command', async () => {
+      const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
+      const tagResults = await snapping.tag({});
+      expect(tagResults?.taggedComponents).to.have.lengthOf(2);
+      const taggedNames = tagResults?.taggedComponents.map((c) => c.name);
+      expect(taggedNames).to.not.include('comp1');
+    });
+    it('should be ignored by snap command', async () => {
+      const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
+      const tagResults = await snapping.snap({ unmodified: true });
+      expect(tagResults?.snappedComponents).to.have.lengthOf(2);
+      const taggedNames = tagResults?.snappedComponents.map((c) => c.name);
+      expect(taggedNames).to.not.include('comp1');
+    });
+    it('should never be exported even when tagged with --include-local-only', async () => {
+      const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
+      const tagResults = await snapping.tag({ unmodified: true, includeLocalOnly: true });
+      expect(tagResults?.taggedComponents).to.have.lengthOf(3);
+
+      const exportAspect = harmony.get<ExportMain>(ExportAspect.id);
+      const result = await exportAspect.export();
+      expect(result.componentsIds).to.have.lengthOf(2);
     });
   });
 });

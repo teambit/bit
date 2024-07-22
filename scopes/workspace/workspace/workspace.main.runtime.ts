@@ -39,6 +39,7 @@ import { ScopeSetCmd } from './scope-subcommands/scope-set.cmd';
 import { UseCmd } from './use.cmd';
 import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
 import { UnuseCmd } from './unuse.cmd';
+import { LocalOnlyCmd, LocalOnlyListCmd, LocalOnlySetCmd, LocalOnlyUnsetCmd } from './commands/local-only-cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -269,6 +270,13 @@ export class WorkspaceMain {
     ];
 
     commands.push(new PatternCommand(workspace));
+    const localOnlyCmd = new LocalOnlyCmd();
+    localOnlyCmd.commands = [
+      new LocalOnlySetCmd(workspace),
+      new LocalOnlyUnsetCmd(workspace),
+      new LocalOnlyListCmd(workspace),
+    ];
+    commands.push(localOnlyCmd);
     cli.register(...commands);
     component.registerHost(workspace);
 

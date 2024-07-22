@@ -409,6 +409,7 @@ export class Workspace implements ComponentFactory {
 
   /**
    * get ids of all workspace components.
+   * deleted components are filtered out. (use this.listIdsIncludeRemoved() if you need them)
    */
   listIds(): ComponentIdList {
     return this.consumer.bitmapIdsFromCurrentLane;
@@ -514,7 +515,7 @@ export class Workspace implements ComponentFactory {
    */
   async listPotentialTagIds(): Promise<ComponentID[]> {
     const deletedIds = await this.locallyDeletedIds();
-    const allIdsWithoutDeleted = await this.listIds();
+    const allIdsWithoutDeleted = this.listIds();
     return [...deletedIds, ...allIdsWithoutDeleted];
   }
 
@@ -2141,6 +2142,19 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   async getComponentStatusById(id: ComponentID): Promise<ComponentStatusLegacy> {
     return this.componentStatusLoader.getComponentStatusById(id);
+  }
+
+  async setLocalOnly(ids: ComponentID[]) {
+    this.bitMap.setLocalOnly(ids);
+    await this.bitMap.write('setLocalOnly');
+  }
+  async unsetLocalOnly(ids: ComponentID[]): Promise<ComponentID[]> {
+    const successfullyUnset = this.bitMap.unsetLocalOnly(ids);
+    await this.bitMap.write('unsetLocalOnly');
+    return successfullyUnset;
+  }
+  listLocalOnly(): ComponentIdList {
+    return ComponentIdList.fromArray(this.bitMap.listLocalOnly());
   }
 }
 
