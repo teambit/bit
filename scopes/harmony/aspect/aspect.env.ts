@@ -1,10 +1,20 @@
-import { Compiler } from '@teambit/compiler';
-import type { DependenciesEnv, PackageEnv, PreviewEnv } from '@teambit/envs';
+import { JestTask, jestWorkerPath } from '@teambit/defender.jest-tester';
+import type { JestWorker } from '@teambit/defender.jest-tester';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
+import { BabelCompiler } from '@teambit/compilation.babel-compiler';
+import { Compiler, CompilerMain } from '@teambit/compiler';
+import type {
+  DependenciesEnv,
+  PackageEnv,
+  PipeServiceModifier,
+  PipeServiceModifiersMap,
+  PreviewEnv,
+} from '@teambit/envs';
 import { merge } from 'lodash';
 import { PackageJsonProps } from '@teambit/pkg';
 import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
-import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
+import { BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Bundler, BundlerContext } from '@teambit/bundler';
 import { WebpackConfigTransformer } from '@teambit/webpack';
@@ -15,16 +25,36 @@ import { PrettierConfigWriter } from '@teambit/defender.prettier-formatter';
 import { TypescriptConfigWriter } from '@teambit/typescript.typescript-compiler';
 import { EslintConfigWriter } from '@teambit/defender.eslint-linter';
 import { Logger } from '@teambit/logger';
+import { join } from 'path';
+import { WorkerMain } from '@teambit/worker';
+
+import { DevFilesMain } from '@teambit/dev-files';
+import { TsConfigTransformer } from '@teambit/typescript';
+import { TesterTask } from '@teambit/defender.tester-task';
+
+import { babelConfig } from './babel/babel-config';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
 export const AspectEnvType = 'aspect';
 
+type GetBuildPipeModifiers = PipeServiceModifiersMap & {
+  tsModifier?: PipeServiceModifier;
+  jestModifier?: PipeServiceModifier;
+};
+
 /**
  * a component environment built for Aspects .
  */
 export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
-  constructor(private reactEnv: ReactEnv, private aspectLoader: AspectLoaderMain, private logger: Logger) {}
+  constructor(
+    private reactEnv: ReactEnv,
+    private aspectLoader: AspectLoaderMain,
+    private devFiles: DevFilesMain,
+    private compiler: CompilerMain,
+    private worker: WorkerMain,
+    private logger: Logger
+  ) {}
 
   icon = 'https://static.bit.dev/extensions-icons/default.svg';
 
@@ -45,12 +75,65 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
     return this.reactEnv.getTsCjsCompiler(this.getTsConfig(tsConfig));
   }
 
+  getCompiler(): Compiler {
+    return this.getBabelCompiler();
+  }
+
+  private getBabelCompiler() {
+    const options = {
+      babelTransformOptions: babelConfig,
+      distDir: 'dist',
+      distGlobPatterns: [`dist/**`, `!dist/**/*.d.ts`, `!dist/tsconfig.tsbuildinfo`],
+    };
+
+    const babelCompiler = BabelCompiler.create(options, { logger: this.logger });
+    return babelCompiler;
+  }
+
   /**
    * returns a component tester.
    */
   getTester(jestConfigPath: string, jestModulePath?: string): Tester {
     const config = jestConfigPath || require.resolve('./jest/jest.config');
-    return this.reactEnv.getCjsJestTester(config, jestModulePath);
+    return this.reactEnv.createCjsJestTester(config, jestModulePath);
+  }
+
+  /**
+   * returns the component build pipeline.
+   */
+  getBuildPipe(modifiers: GetBuildPipeModifiers = {}): BuildTask[] {
+    const transformer = (tsConfigMutator) => {
+      tsConfigMutator
+        .mergeTsConfig(tsconfig)
+        .setArtifactName('declaration')
+        .setDistGlobPatterns([`dist/**/*.d.ts`])
+        .setShouldCopyNonSupportedFiles(false);
+      return tsConfigMutator;
+    };
+    // @ts-ignore
+    const externalTransformer: TsConfigTransformer[] = modifiers?.tsModifier?.transformers || [];
+    const tsCompilerTask = this.reactEnv.getCjsCompilerTask([transformer, ...externalTransformer]);
+    const babelCompiler = this.getBabelCompiler();
+    const babelCompilerTask = this.compiler.createTask('BabelCompiler', babelCompiler);
+    const jestTesterTask = this.getJestTesterTask();
+
+    return [babelCompilerTask, tsCompilerTask, jestTesterTask];
+  }
+
+  private getJestTesterTask(jestModifier: PipeServiceModifier = {}): TesterTask {
+    const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
+    const jestConfigPath = jestModifier?.transformers?.[0]() || join(pathToSource, './jest/jest.config.js');
+    const jestPath = jestModifier?.module || require.resolve('jest');
+    const worker = this.getJestWorker();
+    const testerTask = JestTask.create(
+      { config: jestConfigPath, jest: jestPath },
+      { logger: this.logger, worker, devFiles: this.devFiles }
+    );
+    return testerTask;
+  }
+
+  private getJestWorker() {
+    return this.worker.declareWorker<JestWorker>('jest', jestWorkerPath);
   }
 
   async getTemplateBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
