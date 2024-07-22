@@ -267,6 +267,15 @@ export default class CommandHelper {
   renameScopeOwner(oldScope: string, newScope: string, flags = '') {
     return this.runCmd(`bit scope rename-owner ${oldScope} ${newScope} ${flags}`);
   }
+  setLocalOnly(pattern: string) {
+    return this.runCmd(`bit local-only set ${pattern}`);
+  }
+  unsetLocalOnly(pattern: string) {
+    return this.runCmd(`bit local-only unset ${pattern}`);
+  }
+  listLocalOnly() {
+    return this.runCmd(`bit local-only list`);
+  }
   envs() {
     return this.runCmd(`bit envs`);
   }

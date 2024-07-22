@@ -135,6 +135,29 @@ export class BitMap {
     this.legacyBitMap.markAsChanged();
   }
 
+  setLocalOnly(ids: ComponentID[]) {
+    ids.forEach((id) => {
+      const bitMapEntry = this.getBitmapEntry(id);
+      bitMapEntry.localOnly = true;
+    });
+    this.legacyBitMap.markAsChanged();
+  }
+  unsetLocalOnly(ids: ComponentID[]): ComponentID[] {
+    const successfullyUnset: ComponentID[] = [];
+    ids.forEach((id) => {
+      const bitMapEntry = this.getBitmapEntry(id);
+      if (!bitMapEntry.localOnly) return;
+      bitMapEntry.localOnly = false;
+      successfullyUnset.push(id);
+    });
+    this.legacyBitMap.markAsChanged();
+    return successfullyUnset;
+  }
+  listLocalOnly() {
+    const allIds = this.legacyBitMap.getAllBitIds();
+    return allIds.filter((id) => this.getBitmapEntry(id).localOnly);
+  }
+
   /**
    * write .bitmap object to the filesystem
    * optionally pass a reason for the change to be saved in the local scope `bitmap-history-metadata.txt` file.

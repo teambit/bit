@@ -761,16 +761,12 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
     const idsHaveWildcard = hasWildcard(ids);
-    const filterNonScopeIfNeeded = async (
+    const filterLocalOnlyIfNeeded = async (
       bitIds: ComponentIdList
     ): Promise<{ idsToExport: ComponentIdList; missingScope: ComponentID[]; idsWithFutureScope: ComponentIdList }> => {
-      const idsWithFutureScope = await this.getIdsWithFutureScope(bitIds);
-      // const [idsToExport, missingScope] = R.partition((id) => {
-      // const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(id);
-      // if (!idWithFutureScope) throw new Error(`idsWithFutureScope is missing ${id.toString()}`);
-      // return idWithFutureScope.hasScope();
-      // }, bitIds);
-      return { idsToExport: ComponentIdList.fromArray(bitIds), missingScope: [], idsWithFutureScope };
+      const localOnlyComponents = ComponentIdList.fromArray(this.workspace.filter.byLocalOnly(bitIds));
+      const idsToExport = bitIds.filter((id) => !localOnlyComponents.hasWithoutScopeAndVersion(id));
+      return { idsToExport: ComponentIdList.fromArray(idsToExport), missingScope: [], idsWithFutureScope: bitIds };
     };
     if (isUserTryingToExportLanes(consumer)) {
       if (ids.length) {
@@ -779,7 +775,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       const { componentsToExport, laneObject } = await this.getLaneCompIdsToExport(consumer, includeNonStaged);
       const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
       loader.start(loaderMsg);
-      const filtered = await filterNonScopeIfNeeded(componentsToExport);
+      const filtered = await filterLocalOnlyIfNeeded(componentsToExport);
       return { ...filtered, laneObject };
     }
     if (!ids.length || idsHaveWildcard) {
@@ -792,32 +788,14 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         : exportPendingComponents;
       const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
       loader.start(loaderMsg);
-      return filterNonScopeIfNeeded(componentsToExport);
+      return filterLocalOnlyIfNeeded(componentsToExport);
     }
     loader.start(BEFORE_EXPORT); // show single export
     const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
     // load the components for fixing any out-of-sync issues.
     await consumer.loadComponents(ComponentIdList.fromArray(parsedIds));
 
-    return filterNonScopeIfNeeded(ComponentIdList.fromArray(parsedIds));
-  }
-
-  /**
-   * remove the entire "idsWithFutureScope" thing. is not relevant anymore.
-   */
-  private async getIdsWithFutureScope(ids: ComponentIdList): Promise<ComponentIdList> {
-    return ids;
-    // const idsArrayP = ids.map(async (id) => {
-    //   if (id.hasScope()) return id;
-    //   const componentId = await this.workspace.resolveComponentId(id);
-    //   const finalScope = await this.workspace.componentDefaultScope(componentId);
-    //   if (finalScope) {
-    //     return id.changeScope(finalScope);
-    //   }
-    //   return id;
-    // });
-    // const idsArray = await Promise.all(idsArrayP);
-    // return ComponentIdList.fromArray(idsArray);
+    return filterLocalOnlyIfNeeded(ComponentIdList.fromArray(parsedIds));
   }
 
   private async getLaneCompIdsToExport(

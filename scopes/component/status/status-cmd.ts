@@ -50,6 +50,7 @@ type StatusJsonResults = {
   componentsDuringMergeState: string[];
   softTaggedComponents: string[];
   snappedComponents: string[];
+  localOnly: string[];
   pendingUpdatesFromMain: Array<{
     id: string;
     divergeData: any;
@@ -103,6 +104,7 @@ export class StatusCmd implements Command {
       currentLaneId,
       forkedLaneId,
       workspaceIssues,
+      localOnly,
     }: StatusResult = await this.status.status({ lanes, ignoreCircularDependencies });
     return {
       newComponents: newComponents.map((c) => c.toStringWithoutVersion()),
@@ -123,6 +125,7 @@ export class StatusCmd implements Command {
       componentsDuringMergeState: componentsDuringMergeState.map((id) => id.toStringWithoutVersion()),
       softTaggedComponents: softTaggedComponents.map((s) => s.toStringWithoutVersion()),
       snappedComponents: snappedComponents.map((s) => s.toStringWithoutVersion()),
+      localOnly: localOnly.map((id) => id.toStringWithoutVersion()),
       pendingUpdatesFromMain: pendingUpdatesFromMain.map((p) => ({
         id: p.id.toStringWithoutVersion(),
         divergeData: p.divergeData,
@@ -155,6 +158,7 @@ export class StatusCmd implements Command {
       softTaggedComponents,
       snappedComponents,
       pendingUpdatesFromMain,
+      localOnly,
       updatesFromForked,
       unavailableOnMain,
       currentLaneId,
@@ -316,6 +320,10 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
     const stagedComps = stagedComponents.map((c) => format(c.id, false, undefined, c.versions));
     const stagedComponentsOutput = formatCategory('staged components', stagedDesc, stagedComps);
 
+    const localOnlyDesc = '(these components are excluded from tag/snap/export commands)';
+    const localOnlyComps = localOnly.map((c) => format(c)).sort();
+    const localOnlyComponentsOutput = formatCategory('local-only components', localOnlyDesc, localOnlyComps);
+
     const softTaggedDesc = '(use "bit tag --persist" to complete the tag)';
     const softTaggedComps = softTaggedComponents.map((id) => format(id, false, undefined, undefined, false));
     const softTaggedComponentsOutput = formatCategory('soft-tagged components', softTaggedDesc, softTaggedComps);
@@ -395,6 +403,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
         updatesFromMainOutput,
         updatesFromForkedOutput,
         compDuringMergeStr,
+        localOnlyComponentsOutput,
         newComponentsOutput,
         modifiedComponentOutput,
         snappedComponentsOutput,
