@@ -1,3 +1,4 @@
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { DependenciesEnv, PackageEnv, PipeServiceModifier, PipeServiceModifiersMap } from '@teambit/envs';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
@@ -7,11 +8,13 @@ import { BuildTask } from '@teambit/builder';
 import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
 import { SchemaExtractor } from '@teambit/schema';
 import { TsConfigSourceFile } from 'typescript';
+import { join } from 'path';
 
 export const NodeEnvType = 'node';
 
 type GetBuildPipeModifiers = PipeServiceModifiersMap & {
   tsModifier?: PipeServiceModifier;
+  jestModifier?: PipeServiceModifier;
 };
 export class NodeEnv implements DependenciesEnv, PackageEnv {
   constructor(protected tsAspect: TypescriptMain, protected reactAspect: ReactMain) {}
@@ -37,12 +40,11 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
    * returns the component build pipeline.
    */
   getBuildPipe(modifiers: GetBuildPipeModifiers = {}): BuildTask[] {
-    const tsTransformers: TsConfigTransformer[] =
-      (modifiers?.tsModifier?.transformers as any as TsConfigTransformer[]) || [];
-    const compilerTask = this.reactAspect.reactEnv.getCjsCompilerTask(tsTransformers, modifiers?.tsModifier?.module);
-
-    const pipeWithoutCompiler = this.reactAspect.reactEnv.getBuildPipeWithoutCompiler();
-    return [compilerTask, ...pipeWithoutCompiler];
+    const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist', '');
+    const jestConfigPath = modifiers?.jestModifier?.transformers?.[0]() || join(pathToSource, './jest/jest.config.js');
+    modifiers.jestModifier = modifiers.jestModifier || {};
+    modifiers.jestModifier.transformers = [() => jestConfigPath];
+    return this.reactAspect.reactEnv.getBuildPipe(modifiers);
   }
 
   /**
