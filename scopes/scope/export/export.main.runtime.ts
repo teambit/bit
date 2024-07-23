@@ -761,12 +761,17 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
     const idsHaveWildcard = hasWildcard(ids);
-    const filterLocalOnlyIfNeeded = async (
+    const throwForLocalOnlyIfNeeded = async (
       bitIds: ComponentIdList
     ): Promise<{ idsToExport: ComponentIdList; missingScope: ComponentID[]; idsWithFutureScope: ComponentIdList }> => {
       const localOnlyComponents = this.workspace.listLocalOnly();
-      const idsToExport = bitIds.filter((id) => !localOnlyComponents.hasWithoutScopeAndVersion(id));
-      return { idsToExport: ComponentIdList.fromArray(idsToExport), missingScope: [], idsWithFutureScope: bitIds };
+      const localOnlyExportPending = bitIds.filter((id) => localOnlyComponents.hasWithoutScopeAndVersion(id));
+      if (localOnlyExportPending.length) {
+        throw new BitError(`unable to export the following components as they are local only:
+(either bit-reset them or run "bit local-only unset" to make them non local only)
+${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
+      }
+      return { idsToExport: ComponentIdList.fromArray(bitIds), missingScope: [], idsWithFutureScope: bitIds };
     };
     if (isUserTryingToExportLanes(consumer)) {
       if (ids.length) {
@@ -775,7 +780,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       const { componentsToExport, laneObject } = await this.getLaneCompIdsToExport(consumer, includeNonStaged);
       const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
       loader.start(loaderMsg);
-      const filtered = await filterLocalOnlyIfNeeded(componentsToExport);
+      const filtered = await throwForLocalOnlyIfNeeded(componentsToExport);
       return { ...filtered, laneObject };
     }
     if (!ids.length || idsHaveWildcard) {
@@ -788,14 +793,14 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         : exportPendingComponents;
       const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
       loader.start(loaderMsg);
-      return filterLocalOnlyIfNeeded(componentsToExport);
+      return throwForLocalOnlyIfNeeded(componentsToExport);
     }
     loader.start(BEFORE_EXPORT); // show single export
     const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
     // load the components for fixing any out-of-sync issues.
     await consumer.loadComponents(ComponentIdList.fromArray(parsedIds));
 
-    return filterLocalOnlyIfNeeded(ComponentIdList.fromArray(parsedIds));
+    return throwForLocalOnlyIfNeeded(ComponentIdList.fromArray(parsedIds));
   }
 
   private async getLaneCompIdsToExport(

@@ -159,7 +159,6 @@ export class SnappingMain {
     incrementBy = 1,
     disableTagAndSnapPipelines = false,
     failFast = false,
-    includeLocalOnly,
   }: {
     ids?: string[];
     all?: boolean | string;
@@ -193,8 +192,7 @@ export class SnappingMain {
       persist,
       ids,
       snapped,
-      unmerged,
-      includeLocalOnly
+      unmerged
     );
     if (!bitIds.length) return null;
 
@@ -550,7 +548,6 @@ if you're willing to lose the history from the head to the specified version, us
     rebuildDepsGraph,
     unmodified = false,
     exitOnFirstFailedTask = false,
-    includeLocalOnly,
   }: Partial<BasicTagSnapParams> & {
     pattern?: string;
     legacyBitIds?: ComponentIdList;
@@ -619,7 +616,7 @@ if you're willing to lose the history from the head to the specified version, us
       if (unmerged) {
         return componentsList.listDuringMergeStateComponents();
       }
-      const tagPendingComponentsIds = await self.getTagPendingComponentsIds(unmodified, includeLocalOnly);
+      const tagPendingComponentsIds = await self.getTagPendingComponentsIds(unmodified);
       if (!tagPendingComponentsIds.length) return null;
       // when unmodified, we ask for all components, throw if no matching. if not unmodified and no matching, see error
       // below, suggesting to use --unmodified flag.
@@ -1178,13 +1175,10 @@ another option, in case this dependency is not in main yet is to remove all refe
     component.config.extensions.push(extension);
   }
 
-  private async getTagPendingComponentsIds(includeUnmodified = false, includeLocalOnly = false) {
+  private async getTagPendingComponentsIds(includeUnmodified = false) {
     const ids = includeUnmodified
       ? await this.workspace.listPotentialTagIds()
       : await this.workspace.listTagPendingIds();
-    if (includeLocalOnly) {
-      return ids;
-    }
     const localOnlyIds = this.workspace.filter.byLocalOnly(ids);
     if (!localOnlyIds.length) {
       return ids;
@@ -1199,8 +1193,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     persist: boolean,
     ids: string[],
     snapped: boolean,
-    unmerged: boolean,
-    includeLocalOnly = false
+    unmerged: boolean
   ): Promise<{ bitIds: ComponentID[]; warnings: string[] }> {
     const warnings: string[] = [];
     const componentsList = new ComponentsList(this.workspace.consumer);
@@ -1209,13 +1202,13 @@ another option, in case this dependency is not in main yet is to remove all refe
       return { bitIds: softTaggedComponents, warnings: [] };
     }
 
-    const tagPendingComponentsIds = await this.getTagPendingComponentsIds(includeUnmodified, includeLocalOnly);
+    const tagPendingComponentsIds = await this.getTagPendingComponentsIds(includeUnmodified);
 
     const snappedComponentsIds = (await this.workspace.filter.bySnappedOnMain()).map((id) =>
       id.changeVersion(undefined)
     );
 
-    if (snappedComponentsIds.length && !includeLocalOnly) {
+    if (snappedComponentsIds.length) {
       const localOnlyIds = this.workspace.filter.byLocalOnly(snappedComponentsIds);
       const localOnlyListIds = ComponentIdList.fromArray(localOnlyIds);
       snappedComponentsIds.forEach((id) => {
