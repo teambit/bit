@@ -2160,6 +2160,19 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   async setLocalOnly(ids: ComponentID[]) {
+    const staged = compact(
+      await mapSeries(ids, async (id) => {
+        const componentStatus = await this.getComponentStatusById(id);
+        if (componentStatus.staged) return id;
+      })
+    );
+    if (staged.length) {
+      throw new BitError(
+        `unable to set the following component(s) as local-only because they have local snaps/tags: ${staged.join(
+          ', '
+        )}`
+      );
+    }
     this.bitMap.setLocalOnly(ids);
     await this.bitMap.write('setLocalOnly');
   }
