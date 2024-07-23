@@ -46,14 +46,14 @@ function TypeRefComponent(props: APINodeRenderProps) {
       <>{children}</>
     );
 
-  const exportedTypeFromSameComp = typeRefNode.isFromThisComponent()
-    ? apiRefModel.apiByName.get(typeRefNode.name)
-    : undefined;
+  const exportedTypeFromSameComp = typeRefNode.isFromThisComponent() ? apiRefModel.getByName(typeRefNode) : undefined;
 
   const exportedTypeUrlFromSameComp =
     exportedTypeFromSameComp &&
     useUpdatedUrlFromQuery({
-      selectedAPI: exportedTypeFromSameComp.api.name,
+      selectedAPI: typeRefNode.isInternalReference()
+        ? apiRefModel.internalAPIKey(typeRefNode)
+        : exportedTypeFromSameComp.api.name,
     });
 
   const exportedTypeUrlFromAnotherComp = typeRefNode.componentId

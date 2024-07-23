@@ -109,6 +109,11 @@ export class APIReferenceModel {
     return this.apiByType.get(type) ?? [];
   }
 
+  getByName(node: SchemaNode): APINode | undefined {
+    if (!node.name) return undefined;
+    return this.apiByName.get(node.name) ?? this.apiByName.get(this.internalAPIKey(node));
+  }
+
   groupByType(apiNodes: APINode[]): Map<string, APINode[]> {
     return apiNodes.reduce((accum, next) => {
       const existing = accum.get(next.renderer.nodeType) || [];
