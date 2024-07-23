@@ -361,6 +361,23 @@ describe('tag components on Harmony', function () {
       expect(tagOutput).to.have.string('comp1@0.0.2-dev.0');
     });
   });
+  describe('invalid pre-release after normal tag', () => {
+    let result: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      result = helper.general.runWithTryCatch(`bit tag --unmodified --pre-release "h?h"`);
+    });
+    it('should throw an error', () => {
+      expect(result).to.have.string('is not a valid semantic version');
+    });
+    it('should not create a new version', () => {
+      const comp = helper.command.catComponent('comp1');
+      const ver1Hash = comp.versions['0.0.1'];
+      expect(comp.head).to.equal(ver1Hash);
+    });
+  });
   describe('soft-tag pre-release', () => {
     let tagOutput: string;
     before(() => {
