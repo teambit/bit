@@ -179,7 +179,8 @@ export class WorkspaceConfig implements HostConfig {
     const workspaceAspectConf = assign(template[WorkspaceAspect.id], props[WorkspaceAspect.id]);
     const merged = assign(template, { [WorkspaceAspect.id]: workspaceAspectConf });
     if (generator) {
-      merged['teambit.generator/generator'] = { envs: [generator] };
+      const generators = generator.split(',').map((g) => g.trim());
+      merged['teambit.generator/generator'] = { envs: generators };
     }
     return new WorkspaceConfig(merged, WorkspaceConfig.composeWorkspaceJsoncPath(dirPath), scopePath);
   }

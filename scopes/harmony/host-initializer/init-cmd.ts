@@ -23,7 +23,7 @@ export class InitCmd implements Command {
     [
       '',
       'generator <env-id>',
-      'add env-id into the generators field in the workspace config for future "bit create" templates',
+      'for multiple, separate by a comma. add env-ids into the generators field in the workspace config for future "bit create" templates',
     ],
     [
       'T',
