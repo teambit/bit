@@ -291,7 +291,11 @@ export class Workspace implements ComponentFactory {
    * Get the location of the bit roots folder
    */
   get rootComponentsPath() {
-    return path.join(this.config.rootComponentsDirectory ?? this.modulesPath, BIT_ROOTS_DIR);
+    const baseDir =
+      this.config.rootComponentsDirectory != null
+        ? path.join(this.path, this.config.rootComponentsDirectory)
+        : this.modulesPath;
+    return path.join(baseDir, BIT_ROOTS_DIR);
   }
 
   /** get the `node_modules` folder of this workspace */
