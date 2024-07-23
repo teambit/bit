@@ -1,6 +1,6 @@
 import React from 'react';
 import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
-import { InferenceTypeSchema, ParameterSchema } from '@teambit/semantics.entities.semantic-schema';
+import { InferenceTypeSchema, ParameterSchema, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import { TableRow } from '@teambit/documenter.ui.table-row';
 import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
 
@@ -43,7 +43,13 @@ function ParameterComponent(props: APINodeRenderProps) {
             const matchesAlias = (_bindingNode as any).alias && node.name === (_bindingNode as any).alias;
             return matchesName || matchesAlias;
           });
-          const bindingNode = typeRefCorrespondingNode || _bindingNode;
+          const isTypeRefCorrespondingNodeReference =
+            (typeRefCorrespondingNode as any)?.type?.__schema === TypeRefSchema.name;
+
+          const bindingNode = isTypeRefCorrespondingNodeReference
+            ? (typeRefCorrespondingNode as any).type
+            : _bindingNode;
+
           const bindingNodeRenderer = renderers.find((renderer) => renderer.predicate(bindingNode));
 
           const customBindingNodeTypeRow = (bindingNodeRenderer && (
