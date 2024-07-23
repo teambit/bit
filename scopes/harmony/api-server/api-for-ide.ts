@@ -19,6 +19,7 @@ import { RemoveMain } from '@teambit/remove';
 import { compact } from 'lodash';
 import { getCloudDomain } from '@teambit/legacy/dist/constants';
 import { ConfigMain } from '@teambit/config';
+import { LANE_REMOTE_DELIMITER, LaneId } from '@teambit/lane-id';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -171,6 +172,10 @@ export class APIForIDE {
   }
 
   async createLane(name: string) {
+    if (name.includes(LANE_REMOTE_DELIMITER)) {
+      const laneId = LaneId.parse(name);
+      return this.lanes.createLane(laneId.name, { scope: laneId.scope });
+    }
     return this.lanes.createLane(name);
   }
 
