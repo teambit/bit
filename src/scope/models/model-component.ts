@@ -17,7 +17,7 @@ import ComponentOverrides from '../../consumer/config/component-overrides';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
 import { getStringifyArgs } from '@teambit/legacy.utils';
-import { getLatestVersion } from '@teambit/pkg.modules.semver-helper';
+import { getLatestVersion, validateVersion } from '@teambit/pkg.modules.semver-helper';
 import ComponentObjects from '../component-objects';
 import { SnapsDistance } from '../component-ops/snaps-distance';
 import { getDivergeData } from '../component-ops/get-diverge-data';
@@ -602,7 +602,9 @@ export default class Component extends BitObject {
     if (exactVersion && this.versions[exactVersion]) {
       throw new VersionAlreadyExists(exactVersion, this.id());
     }
-    return exactVersion || this.version(releaseType, incrementBy, preReleaseId);
+    const version = exactVersion || this.version(releaseType, incrementBy, preReleaseId);
+    validateVersion(version);
+    return version;
   }
 
   isEqual(component: Component, considerOrphanedVersions = true): boolean {
