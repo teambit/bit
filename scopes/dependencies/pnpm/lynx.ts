@@ -16,6 +16,7 @@ import {
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
+import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
 import {
   MutatedProject,
   mutateModules,
@@ -30,7 +31,7 @@ import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
 import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
 import { Logger } from '@teambit/logger';
-import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path'
+import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import toNerfDart from 'nerf-dart';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
@@ -410,7 +411,7 @@ function readPackageHook(pkg: PackageManifest, workspaceDir?: string): PackageMa
     return pkg;
   }
   // workspaceDir is set only for workspace packages
-  if (workspaceDir && !workspaceDir.includes('.bit_roots')) {
+  if (workspaceDir && !workspaceDir.includes(BIT_ROOTS_DIR)) {
     return readWorkspacePackageHook(pkg);
   }
   return readDependencyPackageHook(pkg);
@@ -458,8 +459,10 @@ function readWorkspacePackageHook(pkg: PackageManifest): PackageManifest {
 }
 
 function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>, opts: { update?: boolean }) {
-  const pkgs = Object.entries(manifestsByPaths)
-    .map(([rootDir, manifest]) => ({ rootDir: rootDir as ProjectRootDir, manifest }));
+  const pkgs = Object.entries(manifestsByPaths).map(([rootDir, manifest]) => ({
+    rootDir: rootDir as ProjectRootDir,
+    manifest,
+  }));
   const { graph } = createPkgGraph(pkgs);
   const chunks = sortPackages(graph as any);
 
