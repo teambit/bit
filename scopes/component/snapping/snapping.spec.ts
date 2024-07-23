@@ -183,14 +183,24 @@ describe('Snapping aspect', function () {
       const taggedNames = tagResults?.snappedComponents.map((c) => c.name);
       expect(taggedNames).to.not.include('comp1');
     });
-    it('should never be exported even when tagged with --include-local-only', async () => {
+    it('should be ignored when it is an auto-tag candidate', async () => {
       const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
-      const tagResults = await snapping.tag({ unmodified: true, includeLocalOnly: true });
-      expect(tagResults?.taggedComponents).to.have.lengthOf(3);
-
-      const exportAspect = harmony.get<ExportMain>(ExportAspect.id);
-      const result = await exportAspect.export();
-      expect(result.componentsIds).to.have.lengthOf(2);
+      await snapping.tag({ unmodified: true });
+      const tagResults = await snapping.tag({ ids: ['comp3'], unmodified: true });
+      expect(tagResults?.autoTaggedResults).to.have.lengthOf(1); // only comp3 should be auto-tagged
+      const taggedNames = tagResults?.autoTaggedResults.map((c) => c.component.name);
+      expect(taggedNames).to.not.include('comp1');
+    });
+    it('should block setting local-only when a component is staged', async () => {
+      const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
+      await snapping.tag({ unmodified: true });
+      const comp2Id = await workspace.idsByPattern('comp2');
+      try {
+        await workspace.setLocalOnly(comp2Id);
+        expect.fail('should have thrown an error');
+      } catch (err: any) {
+        expect(err.message).to.include('unable to set the following component(s) as local-only');
+      }
     });
   });
 });

@@ -93,7 +93,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
     ['b', 'build', 'locally run the build pipeline (i.e. not via rippleCI) and complete the tag'],
-    ['', 'include-local-only', 'include local-only components in the tag process'],
   ] as CommandOptions;
   remoteOp = true; // In case a compiler / tester is not installed
   examples = [{ cmd: 'tag --ver 1.0.0', description: 'tag all components to version 1.0.0' }];
@@ -130,7 +129,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       rebuildDepsGraph,
       failFast = false,
       incrementBy = 1,
-      includeLocalOnly,
     }: {
       snapped?: boolean;
       unmerged?: boolean;
@@ -234,7 +232,6 @@ To undo local tag use the "bit reset" command.`
       incrementBy,
       version: ver,
       failFast,
-      includeLocalOnly,
     };
 
     const results = await this.snapping.tag(params);

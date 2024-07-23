@@ -39,7 +39,6 @@ export type BasicTagSnapParams = {
   build?: boolean;
   ignoreBuildErrors?: boolean;
   rebuildDepsGraph?: boolean;
-  includeLocalOnly?: boolean;
 };
 
 export type BasicTagParams = BasicTagSnapParams & {
@@ -243,8 +242,12 @@ export async function tagModelComponent({
   // ids without versions are new. it's impossible that tagged (and not-modified) components has
   // them as dependencies.
   const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
-  const autoTagData =
+  const autoTagDataWithLocalOnly =
     skipAutoTag || !consumer ? [] : await getAutoTagInfo(consumer, ComponentIdList.fromArray(idsToTriggerAutoTag));
+  const localOnly = workspace?.listLocalOnly();
+  const autoTagData = localOnly
+    ? autoTagDataWithLocalOnly.filter((autoTagItem) => !localOnly.hasWithoutVersion(autoTagItem.component.id))
+    : autoTagDataWithLocalOnly;
   const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
   const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
   const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
