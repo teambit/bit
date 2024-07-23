@@ -159,6 +159,7 @@ export class SnappingMain {
     incrementBy = 1,
     disableTagAndSnapPipelines = false,
     failFast = false,
+    includeLocalOnly,
   }: {
     ids?: string[];
     all?: boolean | string;
@@ -192,7 +193,8 @@ export class SnappingMain {
       persist,
       ids,
       snapped,
-      unmerged
+      unmerged,
+      includeLocalOnly
     );
     if (!bitIds.length) return null;
 
@@ -548,6 +550,7 @@ if you're willing to lose the history from the head to the specified version, us
     rebuildDepsGraph,
     unmodified = false,
     exitOnFirstFailedTask = false,
+    includeLocalOnly,
   }: Partial<BasicTagSnapParams> & {
     pattern?: string;
     legacyBitIds?: ComponentIdList;
@@ -564,7 +567,9 @@ if you're willing to lose the history from the head to the specified version, us
     const consumer: Consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
     const newComponents = (await componentsList.listNewComponents()) as ComponentIdList;
-    const ids = legacyBitIds || (await getIdsToSnap(this.workspace));
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    const ids = legacyBitIds || (await getIdsToSnap());
     if (!ids) return null;
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
     const components = await this.loadComponentsForTagOrSnap(ids);
@@ -610,13 +615,11 @@ if you're willing to lose the history from the head to the specified version, us
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return snapResults;
 
-    async function getIdsToSnap(workspace: Workspace): Promise<ComponentIdList | null> {
+    async function getIdsToSnap(): Promise<ComponentIdList | null> {
       if (unmerged) {
         return componentsList.listDuringMergeStateComponents();
       }
-      const tagPendingComponentsIds = unmodified
-        ? await workspace.listPotentialTagIds()
-        : await workspace.listTagPendingIds();
+      const tagPendingComponentsIds = await self.getTagPendingComponentsIds(unmodified, includeLocalOnly);
       if (!tagPendingComponentsIds.length) return null;
       // when unmodified, we ask for all components, throw if no matching. if not unmodified and no matching, see error
       // below, suggesting to use --unmodified flag.
@@ -624,14 +627,14 @@ if you're willing to lose the history from the head to the specified version, us
       const getCompIds = async () => {
         if (!pattern) return tagPendingComponentsIds;
         if (!pattern.includes('*') && !pattern.includes(',')) {
-          const compId = await workspace.resolveComponentId(pattern);
+          const compId = await self.workspace.resolveComponentId(pattern);
           return [compId];
         }
-        return workspace.filterIdsFromPoolIdsByPattern(pattern, tagPendingComponentsIds, shouldThrowForNoMatching);
+        return self.workspace.filterIdsFromPoolIdsByPattern(pattern, tagPendingComponentsIds, shouldThrowForNoMatching);
       };
       const componentIds = await getCompIds();
       if (!componentIds.length && pattern) {
-        const allTagPending = await workspace.listPotentialTagIds();
+        const allTagPending = await self.workspace.listPotentialTagIds();
         if (allTagPending.length) {
           throw new BitError(`unable to find matching for "${pattern}" pattern among modified/new components.
 there are matching among unmodified components though. consider using --unmodified flag if needed.
@@ -1175,13 +1178,29 @@ another option, in case this dependency is not in main yet is to remove all refe
     component.config.extensions.push(extension);
   }
 
+  private async getTagPendingComponentsIds(includeUnmodified = false, includeLocalOnly = false) {
+    const ids = includeUnmodified
+      ? await this.workspace.listPotentialTagIds()
+      : await this.workspace.listTagPendingIds();
+    if (includeLocalOnly) {
+      return ids;
+    }
+    const localOnlyIds = this.workspace.filter.byLocalOnly(ids);
+    if (!localOnlyIds.length) {
+      return ids;
+    }
+    const localOnlyListIds = ComponentIdList.fromArray(localOnlyIds);
+    return ids.filter((id) => !localOnlyListIds.hasWithoutVersion(id));
+  }
+
   private async getComponentsToTag(
     includeUnmodified: boolean,
     exactVersion: string | undefined,
     persist: boolean,
     ids: string[],
     snapped: boolean,
-    unmerged: boolean
+    unmerged: boolean,
+    includeLocalOnly = false
   ): Promise<{ bitIds: ComponentID[]; warnings: string[] }> {
     const warnings: string[] = [];
     const componentsList = new ComponentsList(this.workspace.consumer);
@@ -1190,13 +1209,22 @@ another option, in case this dependency is not in main yet is to remove all refe
       return { bitIds: softTaggedComponents, warnings: [] };
     }
 
-    const tagPendingComponentsIds = includeUnmodified
-      ? await this.workspace.listPotentialTagIds()
-      : await this.workspace.listTagPendingIds();
+    const tagPendingComponentsIds = await this.getTagPendingComponentsIds(includeUnmodified, includeLocalOnly);
 
     const snappedComponentsIds = (await this.workspace.filter.bySnappedOnMain()).map((id) =>
       id.changeVersion(undefined)
     );
+
+    if (snappedComponentsIds.length && !includeLocalOnly) {
+      const localOnlyIds = this.workspace.filter.byLocalOnly(snappedComponentsIds);
+      const localOnlyListIds = ComponentIdList.fromArray(localOnlyIds);
+      snappedComponentsIds.forEach((id) => {
+        if (localOnlyListIds.hasWithoutVersion(id)) {
+          const index = snappedComponentsIds.findIndex((c) => c.isEqual(id));
+          snappedComponentsIds.splice(index, 1);
+        }
+      });
+    }
 
     if (ids.length) {
       const componentIds = await pMapSeries(ids, async (id) => {
@@ -1225,11 +1253,13 @@ another option, in case this dependency is not in main yet is to remove all refe
       return { bitIds: componentsList.listDuringMergeStateComponents(), warnings };
     }
 
-    const tagPendingBitIds = tagPendingComponentsIds.map((id) => id);
-    const tagPendingBitIdsIncludeSnapped = [...tagPendingBitIds, ...snappedComponentsIds];
+    const tagPendingBitIdsIncludeSnapped = [...tagPendingComponentsIds, ...snappedComponentsIds];
 
     if (includeUnmodified && exactVersion) {
-      const tagPendingComponentsLatest = await this.workspace.scope.legacyScope.latestVersions(tagPendingBitIds, false);
+      const tagPendingComponentsLatest = await this.workspace.scope.legacyScope.latestVersions(
+        tagPendingComponentsIds,
+        false
+      );
       tagPendingComponentsLatest.forEach((componentId) => {
         if (componentId.version && semver.valid(componentId.version) && semver.gt(componentId.version, exactVersion)) {
           warnings.push(`warning: ${componentId.toString()} has a version greater than ${exactVersion}`);

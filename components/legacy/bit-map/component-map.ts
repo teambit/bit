@@ -54,6 +54,7 @@ export type ComponentMapData = {
   wrapDir?: PathLinux;
   exported?: boolean;
   onLanesOnly?: boolean;
+  localOnly?: boolean;
   isAvailableOnCurrentLane?: boolean;
   nextVersion?: NextVersion;
   config?: Config;
@@ -86,6 +87,7 @@ export class ComponentMap {
    * this is still here for projects that loaded .bitmap with schema 16 and then downgraded bit to a version with schema 15.
    */
   onLanesOnly? = false;
+  localOnly?: boolean; // whether the component is local only and should not be snapped/tagged/exported
   nextVersion?: NextVersion; // for soft-tag (harmony only), this data is used in the CI to persist
   recentlyTracked?: boolean; // eventually the timestamp is saved in the filesystem cache so it won't be re-tracked if not changed
   name: string; // name of the component (including namespace)
@@ -102,6 +104,7 @@ export class ComponentMap {
     trackDir,
     wrapDir,
     onLanesOnly,
+    localOnly,
     isAvailableOnCurrentLane,
     nextVersion,
     config,
@@ -114,6 +117,7 @@ export class ComponentMap {
     this.trackDir = trackDir;
     this.wrapDir = wrapDir;
     this.onLanesOnly = onLanesOnly;
+    this.localOnly = localOnly;
     this.isAvailableOnCurrentLane = typeof isAvailableOnCurrentLane === 'undefined' ? true : isAvailableOnCurrentLane;
     this.nextVersion = nextVersion;
     this.config = config;
@@ -138,6 +142,7 @@ export class ComponentMap {
       onLanesOnly: this.onLanesOnly || null, // if false, change to null so it won't be written
       isAvailableOnCurrentLane: this.isAvailableOnCurrentLane,
       nextVersion: this.nextVersion,
+      localOnly: this.localOnly || null, // if false, change to null so it won't be written
       config: this.configToObject(),
     };
     const notNil = (val) => {

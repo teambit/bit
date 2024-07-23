@@ -1355,6 +1355,40 @@ this command does the following:
 
 ---
 
+## local-only
+
+**Description**: manage local-only components, which reside only in the workspace and are not snapped/tagged
+
+`bit local-only <sub-command>`
+
+### local-only set
+
+**Usage**: `local-only set <component-pattern>`
+
+**Description**: set a component as local-only
+
+| **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
+| ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
+
+### local-only unset
+
+**Usage**: `local-only unset <component-pattern>`
+
+**Description**: remove a component from local-only
+
+| **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
+| ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
+
+### local-only list
+
+**Usage**: `local-only list`
+
+**Description**: list all local-only components
+
+---
+
 ## log
 
 **Description**: show components(s) version history
@@ -1540,7 +1574,7 @@ to exclude, use '!'. e.g. 'ui/**, !ui/button'
 the matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch).
 
 to filter by a state or attribute, prefix the pattern with "$". e.g. '$deprecated', '$modified'.  
-list of supported states: [new, modified, deprecated, deleted, snappedOnMain, softTagged, codeModified].  
+list of supported states: [new, modified, deprecated, deleted, snappedOnMain, softTagged, codeModified, localOnly].  
 to filter by multi-params state/attribute, separate the params with ":", e.g. '$env:teambit.react/react'.  
 list of supported multi-params states: [env].  
 to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/\*\*'. note that the state must be first.
@@ -2038,6 +2072,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
 | `--ignore-newest-version`    |       `-I`       | allow tagging even when the component has newer versions e.g. for hotfixes (default = false)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `--fail-fast`                |                  | stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `--build`                    |       `-b`       | locally run the build pipeline (i.e. not via rippleCI) and complete the tag                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `--include-local-only`       |                  | include local-only components in the tag process                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
 ---
 
