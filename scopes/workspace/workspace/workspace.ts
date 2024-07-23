@@ -51,6 +51,7 @@ import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact, uniqBy } from 'lodash';
 import {
   MergeConfigFilename,
+  BIT_ROOTS_DIR,
   CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS,
   CFG_USER_TOKEN_KEY,
 } from '@teambit/legacy/dist/constants';
@@ -284,6 +285,17 @@ export class Workspace implements ComponentFactory {
    */
   get path() {
     return this.consumer.getPath();
+  }
+
+  /**
+   * Get the location of the bit roots folder
+   */
+  get rootComponentsPath() {
+    const baseDir =
+      this.config.rootComponentsDirectory != null
+        ? path.join(this.path, this.config.rootComponentsDirectory)
+        : this.modulesPath;
+    return path.join(baseDir, BIT_ROOTS_DIR);
   }
 
   /** get the `node_modules` folder of this workspace */
@@ -1707,8 +1719,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   async getComponentPackagePath(component: Component) {
-    const inInWs = await this.hasId(component.id);
-    const relativePath = this.dependencyResolver.getRuntimeModulePath(component, inInWs);
+    const relativePath = this.dependencyResolver.getRuntimeModulePath(component, {
+      workspacePath: this.path,
+      rootComponentsPath: this.rootComponentsPath,
+      isInWorkspace: this.hasId(component.id),
+    });
     return path.join(this.path, relativePath);
   }
 
