@@ -628,12 +628,12 @@ export class WorkspaceComponentLoader {
       loadOpts || {}
     );
     const id = getOpts?.resolveIdVersion ? this.resolveVersion(componentId) : componentId;
-    const fromCache = this.getFromCache(componentId, loadOptsWithDefaults);
+    const fromCache = this.getFromCache(id, loadOptsWithDefaults);
     if (fromCache && useCache) {
       return fromCache;
     }
     let consumerComponent = legacyComponent;
-    const inWs = await this.isInWsIncludeDeleted(componentId);
+    const inWs = await this.isInWsIncludeDeleted(id);
     if (inWs && !consumerComponent) {
       consumerComponent = await this.getConsumerComponent(id, loadOptsWithDefaults);
     }

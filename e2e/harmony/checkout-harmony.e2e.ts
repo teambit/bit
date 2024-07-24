@@ -20,13 +20,13 @@ describe('bit checkout command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.reInitLocalScope();
   });
   after(() => {
     helper.scopeHelper.destroy();
   });
   describe('for non existing component', () => {
     it('show an error saying the component was not found', () => {
+      helper.scopeHelper.reInitLocalScope();
       const useFunc = () => helper.command.runCmd('bit checkout 1.0.0 utils/non-exist');
       const error = new MissingBitMapComponent('utils/non-exist');
       helper.general.expectToThrow(useFunc, error);
@@ -34,6 +34,7 @@ describe('bit checkout command', function () {
   });
   describe('after the component was created', () => {
     before(() => {
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo(barFooV1);
       helper.fixtures.addComponentBarFoo();
     });
@@ -658,6 +659,25 @@ describe('bit checkout command', function () {
     it('status should not show the component as modified', () => {
       const status = helper.command.statusJson();
       expect(status.modifiedComponents).to.have.lengthOf(0);
+    });
+  });
+  describe('checkout with a short hash', () => {
+    let snap1: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.snapAllComponentsWithoutBuild();
+      snap1 = helper.command.getHead('comp1');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.checkoutVersion(snap1.substring(0, 8), 'comp1', '-x');
+    });
+    it('bitmap should contain the full hash, not the short one', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp1.version).to.equal(snap1);
+    });
+    it('bit status should not throw an error', () => {
+      expect(() => helper.command.status()).to.not.throw();
     });
   });
 });

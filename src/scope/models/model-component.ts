@@ -2,7 +2,7 @@ import { clone, equals, forEachObjIndexed } from 'ramda';
 import { forEach, isEmpty, pickBy, mapValues } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
-import { versionParser, isHash, isTag } from '@teambit/component-version';
+import { versionParser, isHash, isTag, isSnap, LATEST_VERSION } from '@teambit/component-version';
 import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -1005,8 +1005,17 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
    */
   async toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
     logger.trace(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
-    const componentVersion = this.toComponentVersion(versionStr);
+    let componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
+    // in case the the version is a short-hash, it should be converted to a full hash.
+    if (
+      versionStr !== LATEST_VERSION &&
+      !isTag(versionStr) &&
+      !isSnap(versionStr) &&
+      version.hash().toString() !== versionStr
+    ) {
+      componentVersion = new ComponentVersion(this, version.hash().toString());
+    }
     const loadFileInstance = (ClassName) => async (file) => {
       const loadP = file.file.load(repository);
       const content: Source = await loadP;
