@@ -31,7 +31,7 @@ import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-di
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
-import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
+import { ComponentsList, DivergeDataPerId } from '@teambit/legacy.component-list';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
@@ -90,6 +90,8 @@ export type SwitchLaneOptions = {
   head?: boolean;
   alias?: string;
   merge?: MergeStrategy;
+  forceOurs?: boolean;
+  forceTheirs?: boolean;
   workspaceOnly?: boolean;
   pattern?: string;
   skipDependencyInstallation?: boolean;
@@ -562,7 +564,16 @@ please create a new lane instead, which will include all components of this lane
    */
   async switchLanes(
     laneName: string,
-    { alias, merge, pattern, workspaceOnly, skipDependencyInstallation = false, head }: SwitchLaneOptions
+    {
+      alias,
+      merge,
+      forceOurs,
+      forceTheirs,
+      pattern,
+      workspaceOnly,
+      skipDependencyInstallation = false,
+      head,
+    }: SwitchLaneOptions
   ) {
     if (!this.workspace) {
       throw new BitError(`unable to switch lanes outside of Bit workspace`);
@@ -588,6 +599,8 @@ please create a new lane instead, which will include all components of this lane
     };
     const checkoutProps = {
       mergeStrategy,
+      forceOurs,
+      forceTheirs,
       skipNpmInstall: skipDependencyInstallation,
       isLane: true,
       promptMergeOptions: false,

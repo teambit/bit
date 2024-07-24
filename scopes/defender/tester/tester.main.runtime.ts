@@ -64,6 +64,11 @@ export type TesterOptions = {
    */
   coverage?: boolean;
 
+  /**
+   * update snapshot if supported by the tester
+   */
+  updateSnapshot?: boolean;
+
   callback?: CallbackFn;
 };
 

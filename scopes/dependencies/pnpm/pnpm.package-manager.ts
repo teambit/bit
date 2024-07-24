@@ -29,6 +29,7 @@ import {
 import { renderTree } from '@pnpm/list';
 import { readWantedLockfile } from '@pnpm/lockfile-file';
 import { ProjectManifest } from '@pnpm/types';
+import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
 import { join } from 'path';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
@@ -305,7 +306,7 @@ export class PnpmPackageManager implements PackageManager {
     const search = createPackagesSearcher([depName]);
     const lockfile = await readWantedLockfile(opts.lockfileDir, { ignoreIncompatible: false });
     const projectPaths = Object.keys(lockfile?.importers ?? {})
-      .filter((id) => !id.startsWith('node_modules/.bit_roots'))
+      .filter((id) => !id.includes(`${BIT_ROOTS_DIR}/`))
       .map((id) => join(opts.lockfileDir, id));
     const cache = new Map();
     const modulesManifest = await this._readModulesManifest(opts.lockfileDir);

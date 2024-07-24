@@ -123,9 +123,10 @@ export function GroupedSchemaNodesSummary({
               groupedMembersByType.map((member) => {
                 if (!type) return null;
                 const params =
-                  (member as any).params || (member as any).props || (member as any).param
-                    ? [(member as any).param]
-                    : [];
+                  (member as any).params ||
+                  (member as any).props ||
+                  ((member as any).param && [(member as any).param]) ||
+                  [];
 
                 return (
                   <FunctionNodeSummary

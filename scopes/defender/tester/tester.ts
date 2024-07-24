@@ -108,6 +108,11 @@ export interface TesterContext extends ExecutionContext {
   coverage?: boolean;
 
   /**
+   * re-record every snapshot that fails during the test run
+   */
+  updateSnapshot?: boolean;
+
+  /**
    * array of patterns to test.
    */
   patterns: ComponentPatternsMap;

@@ -80,6 +80,10 @@ export class WorkspaceConfig implements HostConfig {
     return this._extensions;
   }
 
+  get extensionsIds(): string[] {
+    return Object.keys(omit(this.raw, INTERNAL_CONFIG_PROPS));
+  }
+
   private loadExtensions() {
     const withoutInternalConfig = omit(this.raw, INTERNAL_CONFIG_PROPS);
     this._extensions = ExtensionDataList.fromConfigObject(withoutInternalConfig);
@@ -175,7 +179,8 @@ export class WorkspaceConfig implements HostConfig {
     const workspaceAspectConf = assign(template[WorkspaceAspect.id], props[WorkspaceAspect.id]);
     const merged = assign(template, { [WorkspaceAspect.id]: workspaceAspectConf });
     if (generator) {
-      merged['teambit.generator/generator'] = { envs: [generator] };
+      const generators = generator.split(',').map((g) => g.trim());
+      merged['teambit.generator/generator'] = { envs: generators };
     }
     return new WorkspaceConfig(merged, WorkspaceConfig.composeWorkspaceJsoncPath(dirPath), scopePath);
   }

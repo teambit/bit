@@ -37,7 +37,7 @@ import { LaneId } from '@teambit/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions, MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import { ComponentsList } from '@teambit/legacy.component-list';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import {
   PathOsBased,
@@ -51,6 +51,7 @@ import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact, uniqBy } from 'lodash';
 import {
   MergeConfigFilename,
+  BIT_ROOTS_DIR,
   CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS,
   CFG_USER_TOKEN_KEY,
 } from '@teambit/legacy/dist/constants';
@@ -286,6 +287,17 @@ export class Workspace implements ComponentFactory {
     return this.consumer.getPath();
   }
 
+  /**
+   * Get the location of the bit roots folder
+   */
+  get rootComponentsPath() {
+    const baseDir =
+      this.config.rootComponentsDirectory != null
+        ? path.join(this.path, this.config.rootComponentsDirectory)
+        : this.modulesPath;
+    return path.join(baseDir, BIT_ROOTS_DIR);
+  }
+
   /** get the `node_modules` folder of this workspace */
   private get modulesPath() {
     return path.join(this.path, 'node_modules');
@@ -409,6 +421,7 @@ export class Workspace implements ComponentFactory {
 
   /**
    * get ids of all workspace components.
+   * deleted components are filtered out. (use this.listIdsIncludeRemoved() if you need them)
    */
   listIds(): ComponentIdList {
     return this.consumer.bitmapIdsFromCurrentLane;
@@ -514,7 +527,7 @@ export class Workspace implements ComponentFactory {
    */
   async listPotentialTagIds(): Promise<ComponentID[]> {
     const deletedIds = await this.locallyDeletedIds();
-    const allIdsWithoutDeleted = await this.listIds();
+    const allIdsWithoutDeleted = this.listIds();
     return [...deletedIds, ...allIdsWithoutDeleted];
   }
 
@@ -1706,8 +1719,11 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   async getComponentPackagePath(component: Component) {
-    const inInWs = await this.hasId(component.id);
-    const relativePath = this.dependencyResolver.getRuntimeModulePath(component, inInWs);
+    const relativePath = this.dependencyResolver.getRuntimeModulePath(component, {
+      workspacePath: this.path,
+      rootComponentsPath: this.rootComponentsPath,
+      isInWorkspace: this.hasId(component.id),
+    });
     return path.join(this.path, relativePath);
   }
 
@@ -2141,6 +2157,32 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   async getComponentStatusById(id: ComponentID): Promise<ComponentStatusLegacy> {
     return this.componentStatusLoader.getComponentStatusById(id);
+  }
+
+  async setLocalOnly(ids: ComponentID[]) {
+    const staged = compact(
+      await mapSeries(ids, async (id) => {
+        const componentStatus = await this.getComponentStatusById(id);
+        if (componentStatus.staged) return id;
+      })
+    );
+    if (staged.length) {
+      throw new BitError(
+        `unable to set the following component(s) as local-only because they have local snaps/tags: ${staged.join(
+          ', '
+        )}`
+      );
+    }
+    this.bitMap.setLocalOnly(ids);
+    await this.bitMap.write('setLocalOnly');
+  }
+  async unsetLocalOnly(ids: ComponentID[]): Promise<ComponentID[]> {
+    const successfullyUnset = this.bitMap.unsetLocalOnly(ids);
+    await this.bitMap.write('unsetLocalOnly');
+    return successfullyUnset;
+  }
+  listLocalOnly(): ComponentIdList {
+    return ComponentIdList.fromArray(this.bitMap.listLocalOnly());
   }
 }
 

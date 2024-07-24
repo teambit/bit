@@ -267,6 +267,15 @@ export default class CommandHelper {
   renameScopeOwner(oldScope: string, newScope: string, flags = '') {
     return this.runCmd(`bit scope rename-owner ${oldScope} ${newScope} ${flags}`);
   }
+  setLocalOnly(pattern: string) {
+    return this.runCmd(`bit local-only set ${pattern}`);
+  }
+  unsetLocalOnly(pattern: string) {
+    return this.runCmd(`bit local-only unset ${pattern}`);
+  }
+  listLocalOnly() {
+    return this.runCmd(`bit local-only list`);
+  }
   envs() {
     return this.runCmd(`bit envs`);
   }
@@ -481,6 +490,11 @@ export default class CommandHelper {
     const artifacts = builderExt.data.artifacts;
     if (!artifacts) throw new Error(`unable to find artifacts data for ${id}`);
     return artifacts;
+  }
+  getAspectsData(versionObject: Record<string, any>, aspectId: string) {
+    const builder = versionObject.extensions.find((e) => e.name === Extensions.builder);
+    if (!builder) throw new Error(`getAspectsData: unable to find builder data`);
+    return builder.data.aspectsData.find((a) => a.aspectId === aspectId);
   }
   reset(id: string, head = false, flag = '') {
     return this.runCmd(`bit reset ${id} ${head ? '--head' : ''} ${flag}`);

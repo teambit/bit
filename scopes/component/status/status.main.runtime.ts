@@ -11,7 +11,7 @@ import { BEFORE_STATUS } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
-import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import { ComponentsList } from '@teambit/legacy.component-list';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
@@ -43,6 +43,7 @@ export type StatusResult = {
   currentLaneId: LaneId;
   forkedLaneId?: LaneId;
   workspaceIssues: string[];
+  localOnly: ComponentID[];
 };
 
 export type MiniStatusResults = {
@@ -123,6 +124,7 @@ export class StatusMain {
     const currentLane = await consumer.getCurrentLaneObject();
     const forkedLaneId = currentLane?.forkedFrom;
     const workspaceIssues = this.workspace.getWorkspaceIssues();
+    const localOnly = this.workspace.listLocalOnly();
 
     const sortObjectsWithId = <T>(objectsWithId: Array<T & { id: ComponentID }>): Array<T & { id: ComponentID }> => {
       return objectsWithId.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
@@ -158,6 +160,7 @@ export class StatusMain {
       currentLaneId,
       forkedLaneId,
       workspaceIssues: workspaceIssues.map((err) => err.message),
+      localOnly,
     };
   }
 

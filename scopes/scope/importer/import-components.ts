@@ -32,7 +32,7 @@ import { compact, difference, fromPairs } from 'lodash';
 import { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import { Logger } from '@teambit/logger';
 import { DependentsGetter } from './dependents-getter';
-import { ListerMain } from '@teambit/lister';
+import { ListerMain, NoIdMatchWildcard } from '@teambit/lister';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -292,9 +292,8 @@ export default class ImportComponents {
       await Promise.all(
         bitIds.map(async (bitId) => {
           const isOnCurrentLane =
-            (await this.scope.isPartOfLaneHistory(bitId, currentRemoteLane)) ||
-            (currentLane && (await this.scope.isPartOfLaneHistory(bitId, currentLane))) ||
-            (await this.scope.isPartOfMainHistory(bitId));
+            (await this.scope.isPartOfLaneHistoryOrMain(bitId, currentRemoteLane)) ||
+            (currentLane && (await this.scope.isPartOfLaneHistoryOrMain(bitId, currentLane)));
           if (!isOnCurrentLane) idsFromAnotherLane.push(bitId);
         })
       );
@@ -426,8 +425,16 @@ if you just want to get a quick look into this snap, create a new workspace and 
     await Promise.all(
       this.options.ids.map(async (idStr: string) => {
         if (hasWildcard(idStr)) {
-          const ids = await this.lister.getRemoteCompIdsByWildcards(idStr, this.options.includeDeprecated);
-          this.logger.setStatusLine(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
+          let ids: ComponentID[] = [];
+          try {
+            ids = await this.lister.getRemoteCompIdsByWildcards(idStr, this.options.includeDeprecated);
+          } catch (err: any) {
+            if (err instanceof NoIdMatchWildcard) {
+              this.logger.consoleWarning(err.message);
+            } else {
+              throw err;
+            }
+          }
           bitIds.push(...ids);
         } else {
           const id = await this.getIdFromStr(idStr);
@@ -435,6 +442,8 @@ if you just want to get a quick look into this snap, create a new workspace and 
         }
       })
     );
+
+    this.logger.setStatusLine(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
 
     return bitIds;
   }

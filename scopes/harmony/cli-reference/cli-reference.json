@@ -131,7 +131,7 @@
       [
         "",
         "generator <env-id>",
-        "add env-id into the generators field in the workspace config for future \"bit create\" templates"
+        "for multiple, separate by a comma. add env-ids into the generators field in the workspace config for future \"bit create\" templates"
       ],
       [
         "T",
@@ -1117,7 +1117,7 @@
       ]
     ],
     "description": "list the component ids matching the given pattern",
-    "extendedDescription": "this command helps validating a pattern before using it in other commands.\nNOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes.\na pattern can be a simple component-id or component-name. e.g. 'ui/button'.\na pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes.\nto enter multiple patterns, separate them by a comma, e.g. 'ui/*, lib/*'\nto exclude, use '!'. e.g. 'ui/**, !ui/button'\nthe matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch).\n\nto filter by a state or attribute, prefix the pattern with \"$\". e.g. '$deprecated', '$modified'.\nlist of supported states: [new, modified, deprecated, deleted, snappedOnMain, softTagged, codeModified].\nto filter by multi-params state/attribute, separate the params with \":\", e.g. '$env:teambit.react/react'.\nlist of supported multi-params states: [env].\nto match a state and another criteria, use \" AND \" keyword. e.g. '$modified AND teambit.workspace/**'. note that the state must be first.\n",
+    "extendedDescription": "this command helps validating a pattern before using it in other commands.\nNOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes.\na pattern can be a simple component-id or component-name. e.g. 'ui/button'.\na pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes.\nto enter multiple patterns, separate them by a comma, e.g. 'ui/*, lib/*'\nto exclude, use '!'. e.g. 'ui/**, !ui/button'\nthe matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch).\n\nto filter by a state or attribute, prefix the pattern with \"$\". e.g. '$deprecated', '$modified'.\nlist of supported states: [new, modified, deprecated, deleted, snappedOnMain, softTagged, codeModified, localOnly].\nto filter by multi-params state/attribute, separate the params with \":\", e.g. '$env:teambit.react/react'.\nlist of supported multi-params states: [env].\nto match a state and another criteria, use \" AND \" keyword. e.g. '$modified AND teambit.workspace/**'. note that the state must be first.\n",
     "group": "development",
     "private": false,
     "examples": [
@@ -1140,6 +1140,56 @@
       {
         "cmd": "bit pattern 'my-scope.org/**'",
         "description": "matches all components of the scope \"my-scope.org\""
+      }
+    ]
+  },
+  {
+    "name": "local-only <sub-command>",
+    "alias": "",
+    "options": [],
+    "description": "manage local-only components, which reside only in the workspace and are not snapped/tagged",
+    "extendedDescription": "",
+    "group": "development",
+    "private": false,
+    "commands": [
+      {
+        "name": "set <component-pattern>",
+        "alias": "",
+        "options": [],
+        "description": "set a component as local-only",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false,
+        "arguments": [
+          {
+            "name": "component-pattern",
+            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          }
+        ]
+      },
+      {
+        "name": "unset <component-pattern>",
+        "alias": "",
+        "options": [],
+        "description": "remove a component from local-only",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false,
+        "arguments": [
+          {
+            "name": "component-pattern",
+            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          }
+        ]
+      },
+      {
+        "name": "list",
+        "alias": "",
+        "options": [],
+        "description": "list all local-only components",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false
       }
     ]
   },
@@ -1179,324 +1229,39 @@
     ]
   },
   {
-    "name": "deps <sub-command>",
-    "alias": "dependencies",
-    "options": [],
-    "description": "manage dependencies",
-    "extendedDescription": "",
-    "group": "info",
-    "private": false,
-    "commands": [
-      {
-        "name": "get <component-name>",
-        "alias": "",
-        "options": [
-          [
-            "",
-            "scope",
-            "get the data from the scope instead of the workspace"
-          ],
-          [
-            "t",
-            "tree",
-            "EXPERIMENTAL. render dependencies as a tree, similar to \"npm ls\""
-          ]
-        ],
-        "description": "show direct and indirect dependencies of the given component",
-        "extendedDescription": "",
-        "group": "info",
-        "private": false,
-        "arguments": [
-          {
-            "name": "component-name",
-            "description": "component name or component id"
-          }
-        ]
-      },
-      {
-        "name": "remove <component-pattern> <package...>",
-        "alias": "",
-        "options": [
-          [
-            "d",
-            "dev",
-            "remove from devDependencies"
-          ],
-          [
-            "p",
-            "peer",
-            "remove from peerDependencies"
-          ]
-        ],
-        "description": "remove a dependency to component(s)",
-        "extendedDescription": "",
-        "group": "info",
-        "private": false,
-        "arguments": [
-          {
-            "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-          },
-          {
-            "name": "package...",
-            "description": "package name with or without a version, e.g. \"lodash@1.0.0\" or just \"lodash\" which will remove all lodash instances of any version"
-          }
-        ]
-      },
-      {
-        "name": "unset <component-pattern> <package...>",
-        "alias": "",
-        "options": [
-          [
-            "d",
-            "dev",
-            "unset from devDependencies"
-          ],
-          [
-            "p",
-            "peer",
-            "unset from peerDependencies"
-          ]
-        ],
-        "description": "unset a dependency to component(s) that was previously set by \"bit deps set\"",
-        "extendedDescription": "",
-        "group": "info",
-        "private": false,
-        "arguments": [
-          {
-            "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-          },
-          {
-            "name": "package...",
-            "description": "package name with or without a version, e.g. \"lodash@1.0.0\" or just \"lodash\" which will remove all lodash instances of any version"
-          }
-        ]
-      },
-      {
-        "name": "debug <component-name>",
-        "alias": "",
-        "options": [],
-        "description": "show the immediate dependencies and how their versions were determined",
-        "extendedDescription": "",
-        "group": "info",
-        "private": false,
-        "arguments": [
-          {
-            "name": "component-name",
-            "description": "component name or component id"
-          }
-        ]
-      },
-      {
-        "name": "set <component-pattern> <package...>",
-        "alias": "",
-        "options": [
-          [
-            "d",
-            "dev",
-            "add to the devDependencies"
-          ],
-          [
-            "o",
-            "optional",
-            "add to the optionalDependencies"
-          ],
-          [
-            "p",
-            "peer",
-            "add to the peerDependencies"
-          ]
-        ],
-        "description": "set a dependency to component(s)",
-        "extendedDescription": "",
-        "group": "info",
-        "private": false,
-        "arguments": [
-          {
-            "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-          },
-          {
-            "name": "package...",
-            "description": "package name with or without a version, e.g. \"lodash@1.0.0\" or just \"lodash\" which will be resolved to the latest"
-          }
-        ]
-      },
-      {
-        "name": "reset <component-pattern>",
-        "alias": "",
-        "options": [],
-        "description": "reset dependencies to the default values (revert any previously \"bit deps set\")",
-        "extendedDescription": "",
-        "group": "info",
-        "private": false,
-        "arguments": [
-          {
-            "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-          }
-        ]
-      },
-      {
-        "name": "eject <component-pattern>",
-        "alias": "",
-        "options": [],
-        "description": "write dependencies that were previously set via \"bit deps set\" into .bitmap",
-        "extendedDescription": "",
-        "group": "info",
-        "private": false,
-        "arguments": [
-          {
-            "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-          }
-        ]
-      },
-      {
-        "name": "blame <component-name> <dependency-name>",
-        "alias": "",
-        "options": [],
-        "description": "EXPERIMENTAL. find out which snap/tag changed a dependency version",
-        "extendedDescription": "",
-        "group": "info",
-        "private": false,
-        "arguments": [
-          {
-            "name": "dependency-name",
-            "description": "package-name. for components, you can use either component-id or package-name"
-          }
-        ]
-      },
-      {
-        "name": "usage <dependency-name>",
-        "alias": "",
-        "options": [
-          [
-            "",
-            "depth <number>",
-            "max display depth of the dependency graph"
-          ]
-        ],
-        "description": "EXPERIMENTAL. find components that use the specified dependency",
-        "extendedDescription": "",
-        "group": "info",
-        "private": false,
-        "arguments": [
-          {
-            "name": "dependency-name",
-            "description": "package-name. for components, you can use either component-id or package-name. if version is specified, it will search for the exact version"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "name": "why <dependency-name>",
+    "name": "watch",
     "alias": "",
     "options": [
+      [
+        "v",
+        "verbose",
+        "show all watch events and compiler verbose output"
+      ],
       [
         "",
-        "depth <number>",
-        "max display depth of the dependency graph"
-      ]
-    ],
-    "description": "EXPERIMENTAL. find components that use the specified dependency",
-    "extendedDescription": "",
-    "group": "info",
-    "private": false,
-    "arguments": [
-      {
-        "name": "dependency-name",
-        "description": "package-name. for components, you can use either component-id or package-name. if version is specified, it will search for the exact version"
-      }
-    ]
-  },
-  {
-    "name": "set-peer <component-id> <range>",
-    "alias": "",
-    "options": [],
-    "description": "set a component as always peer",
-    "extendedDescription": "",
-    "group": "info",
-    "private": false,
-    "arguments": [
-      {
-        "name": "component-id",
-        "description": "the component to set as always peer"
-      },
-      {
-        "name": "range",
-        "description": "the default range to use for the componnent, when added to peerDependencies"
-      }
-    ]
-  },
-  {
-    "name": "unset-peer <component-id>",
-    "alias": "",
-    "options": [],
-    "description": "unset a component as always peer",
-    "extendedDescription": "",
-    "group": "info",
-    "private": false,
-    "arguments": [
-      {
-        "name": "component-id",
-        "description": "the component to unset as always peer"
-      }
-    ]
-  },
-  {
-    "name": "dependents <component-name>",
-    "alias": "",
-    "options": [],
-    "description": "show dependents of the given component",
-    "extendedDescription": "",
-    "group": "info",
-    "private": false,
-    "arguments": [
-      {
-        "name": "component-name",
-        "description": "component name or component id"
-      }
-    ]
-  },
-  {
-    "name": "list [remote-scope]",
-    "alias": "ls",
-    "options": [
+        "skip-pre-compilation",
+        "skip compilation step before starting to watch"
+      ],
+      [
+        "t",
+        "check-types [string]",
+        "EXPERIMENTAL. show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project"
+      ],
       [
         "i",
-        "ids",
-        "show only component ids, unformatted"
+        "import",
+        "DEPRECATED. it is now the default. helpful when using git. import component objects if .bitmap changed not by bit"
       ],
       [
-        "s",
-        "scope",
-        "show only components stored in the local scope, including indirect dependencies"
-      ],
-      [
-        "o",
-        "outdated",
-        "highlight outdated components, in comparison with their latest remote version (if one exists)"
-      ],
-      [
-        "j",
-        "json",
-        "show the output in JSON format"
-      ],
-      [
-        "n",
-        "namespace <string>",
-        "show only components in the specified namespace/s e.g. '-n ui' or '*/ui'"
+        "",
+        "skip-import",
+        "do not import component objects if .bitmap changed not by bit"
       ]
     ],
-    "description": "list components on a workspace or a remote scope (with flag).",
-    "extendedDescription": "",
-    "group": "discover",
-    "private": false,
-    "remoteOp": true,
-    "skipWorkspace": true
+    "description": "automatically recompile modified components (on save)",
+    "extendedDescription": "by default, the watcher doesn't use polling, to keep the CPU idle.\nif this doesn't work well for you, run \"bit config set watch_use_polling true\" to use polling.",
+    "group": "development",
+    "private": false
   },
   {
     "name": "ws-config <sub-command>",
@@ -1808,41 +1573,6 @@
     ]
   },
   {
-    "name": "watch",
-    "alias": "",
-    "options": [
-      [
-        "v",
-        "verbose",
-        "show all watch events and compiler verbose output"
-      ],
-      [
-        "",
-        "skip-pre-compilation",
-        "skip compilation step before starting to watch"
-      ],
-      [
-        "t",
-        "check-types [string]",
-        "EXPERIMENTAL. show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project"
-      ],
-      [
-        "i",
-        "import",
-        "DEPRECATED. it is now the default. helpful when using git. import component objects if .bitmap changed not by bit"
-      ],
-      [
-        "",
-        "skip-import",
-        "do not import component objects if .bitmap changed not by bit"
-      ]
-    ],
-    "description": "automatically recompile modified components (on save)",
-    "extendedDescription": "by default, the watcher doesn't use polling, to keep the CPU idle.\nif this doesn't work well for you, run \"bit config set watch_use_polling true\" to use polling.",
-    "group": "development",
-    "private": false
-  },
-  {
     "name": "build [component-pattern]",
     "alias": "",
     "options": [
@@ -1910,6 +1640,11 @@
         "",
         "include-tag",
         "EXPERIMENTAL. include tag pipeline tasks. Warning: this may deploy/publish if you have such tasks"
+      ],
+      [
+        "i",
+        "ignore-issues <issues>",
+        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
       ]
     ],
     "description": "run set of tasks for build.",
@@ -2081,6 +1816,331 @@
         ]
       }
     ]
+  },
+  {
+    "name": "deps <sub-command>",
+    "alias": "dependencies",
+    "options": [],
+    "description": "manage dependencies",
+    "extendedDescription": "",
+    "group": "info",
+    "private": false,
+    "commands": [
+      {
+        "name": "get <component-name>",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "scope",
+            "get the data from the scope instead of the workspace"
+          ],
+          [
+            "t",
+            "tree",
+            "EXPERIMENTAL. render dependencies as a tree, similar to \"npm ls\""
+          ]
+        ],
+        "description": "show direct and indirect dependencies of the given component",
+        "extendedDescription": "",
+        "group": "info",
+        "private": false,
+        "arguments": [
+          {
+            "name": "component-name",
+            "description": "component name or component id"
+          }
+        ]
+      },
+      {
+        "name": "remove <component-pattern> <package...>",
+        "alias": "",
+        "options": [
+          [
+            "d",
+            "dev",
+            "remove from devDependencies"
+          ],
+          [
+            "p",
+            "peer",
+            "remove from peerDependencies"
+          ]
+        ],
+        "description": "remove a dependency to component(s)",
+        "extendedDescription": "",
+        "group": "info",
+        "private": false,
+        "arguments": [
+          {
+            "name": "component-pattern",
+            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          },
+          {
+            "name": "package...",
+            "description": "package name with or without a version, e.g. \"lodash@1.0.0\" or just \"lodash\" which will remove all lodash instances of any version"
+          }
+        ]
+      },
+      {
+        "name": "unset <component-pattern> <package...>",
+        "alias": "",
+        "options": [
+          [
+            "d",
+            "dev",
+            "unset from devDependencies"
+          ],
+          [
+            "p",
+            "peer",
+            "unset from peerDependencies"
+          ]
+        ],
+        "description": "unset a dependency to component(s) that was previously set by \"bit deps set\"",
+        "extendedDescription": "",
+        "group": "info",
+        "private": false,
+        "arguments": [
+          {
+            "name": "component-pattern",
+            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          },
+          {
+            "name": "package...",
+            "description": "package name with or without a version, e.g. \"lodash@1.0.0\" or just \"lodash\" which will remove all lodash instances of any version"
+          }
+        ]
+      },
+      {
+        "name": "debug <component-name>",
+        "alias": "",
+        "options": [],
+        "description": "show the immediate dependencies and how their versions were determined",
+        "extendedDescription": "",
+        "group": "info",
+        "private": false,
+        "arguments": [
+          {
+            "name": "component-name",
+            "description": "component name or component id"
+          }
+        ]
+      },
+      {
+        "name": "set <component-pattern> <package...>",
+        "alias": "",
+        "options": [
+          [
+            "d",
+            "dev",
+            "add to the devDependencies"
+          ],
+          [
+            "o",
+            "optional",
+            "add to the optionalDependencies"
+          ],
+          [
+            "p",
+            "peer",
+            "add to the peerDependencies"
+          ]
+        ],
+        "description": "set a dependency to component(s)",
+        "extendedDescription": "",
+        "group": "info",
+        "private": false,
+        "arguments": [
+          {
+            "name": "component-pattern",
+            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          },
+          {
+            "name": "package...",
+            "description": "package name with or without a version, e.g. \"lodash@1.0.0\" or just \"lodash\" which will be resolved to the latest"
+          }
+        ]
+      },
+      {
+        "name": "reset <component-pattern>",
+        "alias": "",
+        "options": [],
+        "description": "reset dependencies to the default values (revert any previously \"bit deps set\")",
+        "extendedDescription": "",
+        "group": "info",
+        "private": false,
+        "arguments": [
+          {
+            "name": "component-pattern",
+            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          }
+        ]
+      },
+      {
+        "name": "eject <component-pattern>",
+        "alias": "",
+        "options": [],
+        "description": "write dependencies that were previously set via \"bit deps set\" into .bitmap",
+        "extendedDescription": "",
+        "group": "info",
+        "private": false,
+        "arguments": [
+          {
+            "name": "component-pattern",
+            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          }
+        ]
+      },
+      {
+        "name": "blame <component-name> <dependency-name>",
+        "alias": "",
+        "options": [],
+        "description": "EXPERIMENTAL. find out which snap/tag changed a dependency version",
+        "extendedDescription": "",
+        "group": "info",
+        "private": false,
+        "arguments": [
+          {
+            "name": "dependency-name",
+            "description": "package-name. for components, you can use either component-id or package-name"
+          }
+        ]
+      },
+      {
+        "name": "usage <dependency-name>",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "depth <number>",
+            "max display depth of the dependency graph"
+          ]
+        ],
+        "description": "EXPERIMENTAL. find components that use the specified dependency",
+        "extendedDescription": "",
+        "group": "info",
+        "private": false,
+        "arguments": [
+          {
+            "name": "dependency-name",
+            "description": "package-name. for components, you can use either component-id or package-name. if version is specified, it will search for the exact version"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "why <dependency-name>",
+    "alias": "",
+    "options": [
+      [
+        "",
+        "depth <number>",
+        "max display depth of the dependency graph"
+      ]
+    ],
+    "description": "EXPERIMENTAL. find components that use the specified dependency",
+    "extendedDescription": "",
+    "group": "info",
+    "private": false,
+    "arguments": [
+      {
+        "name": "dependency-name",
+        "description": "package-name. for components, you can use either component-id or package-name. if version is specified, it will search for the exact version"
+      }
+    ]
+  },
+  {
+    "name": "set-peer <component-id> <range>",
+    "alias": "",
+    "options": [],
+    "description": "set a component as always peer",
+    "extendedDescription": "",
+    "group": "info",
+    "private": false,
+    "arguments": [
+      {
+        "name": "component-id",
+        "description": "the component to set as always peer"
+      },
+      {
+        "name": "range",
+        "description": "the default range to use for the componnent, when added to peerDependencies"
+      }
+    ]
+  },
+  {
+    "name": "unset-peer <component-id>",
+    "alias": "",
+    "options": [],
+    "description": "unset a component as always peer",
+    "extendedDescription": "",
+    "group": "info",
+    "private": false,
+    "arguments": [
+      {
+        "name": "component-id",
+        "description": "the component to unset as always peer"
+      }
+    ]
+  },
+  {
+    "name": "dependents <component-name>",
+    "alias": "",
+    "options": [],
+    "description": "show dependents of the given component",
+    "extendedDescription": "",
+    "group": "info",
+    "private": false,
+    "arguments": [
+      {
+        "name": "component-name",
+        "description": "component name or component id"
+      }
+    ]
+  },
+  {
+    "name": "list [remote-scope]",
+    "alias": "ls",
+    "options": [
+      [
+        "i",
+        "ids",
+        "show only component ids, unformatted"
+      ],
+      [
+        "s",
+        "scope",
+        "show only components stored in the local scope, including indirect dependencies"
+      ],
+      [
+        "o",
+        "outdated",
+        "highlight outdated components, in comparison with their latest remote version (if one exists)"
+      ],
+      [
+        "d",
+        "include-deleted",
+        "EXPERIMENTAL. show also deleted components"
+      ],
+      [
+        "j",
+        "json",
+        "show the output in JSON format"
+      ],
+      [
+        "n",
+        "namespace <string>",
+        "show only components in the specified namespace/s e.g. '-n ui' or '*/ui'"
+      ]
+    ],
+    "description": "list components on a workspace or a remote scope (with flag).",
+    "extendedDescription": "",
+    "group": "discover",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true
   },
   {
     "name": "compile [component-names...]",
@@ -3391,6 +3451,11 @@
         "test only components assigned the given env"
       ],
       [
+        "",
+        "update-snapshot",
+        "if supported by the tester, re-record every snapshot that fails during the test run"
+      ],
+      [
         "s",
         "scope <scope-name>",
         "DEPRECATED. (use the pattern instead, e.g. \"scopeName/**\"). name of the scope to test"
@@ -3690,6 +3755,16 @@
             "r",
             "auto-merge-resolve <merge-strategy>",
             "merge local changes with the checked out version. strategy should be \"theirs\", \"ours\" or \"manual\""
+          ],
+          [
+            "",
+            "force-ours",
+            "do not merge, preserve local files as is"
+          ],
+          [
+            "",
+            "force-theirs",
+            "do not merge, just overwrite with incoming files"
           ],
           [
             "a",
@@ -4174,6 +4249,16 @@
         "r",
         "auto-merge-resolve <merge-strategy>",
         "merge local changes with the checked out version. strategy should be \"theirs\", \"ours\" or \"manual\""
+      ],
+      [
+        "",
+        "force-ours",
+        "do not merge, preserve local files as is"
+      ],
+      [
+        "",
+        "force-theirs",
+        "do not merge, just overwrite with incoming files"
       ],
       [
         "a",

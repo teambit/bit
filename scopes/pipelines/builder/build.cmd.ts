@@ -5,6 +5,7 @@ import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import chalk from 'chalk';
 import { BuilderMain } from './builder.main.runtime';
+import { IssuesClasses } from '@teambit/component-issues';
 
 type BuildOpts = {
   unmodified?: boolean;
@@ -21,6 +22,7 @@ type BuildOpts = {
   failFast?: boolean;
   includeSnap?: boolean;
   includeTag?: boolean;
+  ignoreIssues?: string;
 };
 
 export class BuilderCmd implements Command {
@@ -81,6 +83,13 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       'include-tag',
       'EXPERIMENTAL. include tag pipeline tasks. Warning: this may deploy/publish if you have such tasks',
     ],
+    [
+      'i',
+      'ignore-issues <issues>',
+      `ignore component issues (shown in "bit status" as "issues found"), issues to ignore:
+[${Object.keys(IssuesClasses).join(', ')}]
+to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
+    ],
   ] as CommandOptions;
 
   constructor(private builder: BuilderMain, private workspace: Workspace, private logger: Logger) {}
@@ -101,6 +110,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       failFast,
       includeSnap,
       includeTag,
+      ignoreIssues,
     }: BuildOpts
   ): Promise<string> {
     if (rewrite && !reuseCapsules) throw new Error('cannot use --rewrite without --reuse-capsules');
@@ -141,6 +151,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       {
         includeSnap,
         includeTag,
+        ignoreIssues,
       }
     );
     this.logger.console(`build output can be found in path: ${envsExecutionResults.capsuleRootDir}`);
