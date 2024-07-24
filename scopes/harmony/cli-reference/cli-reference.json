@@ -131,7 +131,7 @@
       [
         "",
         "generator <env-id>",
-        "add env-id into the generators field in the workspace config for future \"bit create\" templates"
+        "for multiple, separate by a comma. add env-ids into the generators field in the workspace config for future \"bit create\" templates"
       ],
       [
         "T",
@@ -2914,11 +2914,6 @@
         "b",
         "build",
         "locally run the build pipeline (i.e. not via rippleCI) and complete the tag"
-      ],
-      [
-        "",
-        "include-local-only",
-        "include local-only components in the tag process"
       ]
     ],
     "description": "create an immutable and exportable component snapshot, tagged with a release version.",
