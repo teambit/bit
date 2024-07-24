@@ -26,6 +26,7 @@ describe('bit checkout command', function () {
   });
   describe('for non existing component', () => {
     it('show an error saying the component was not found', () => {
+      helper.scopeHelper.reInitLocalScope();
       const useFunc = () => helper.command.runCmd('bit checkout 1.0.0 utils/non-exist');
       const error = new MissingBitMapComponent('utils/non-exist');
       helper.general.expectToThrow(useFunc, error);
@@ -33,6 +34,7 @@ describe('bit checkout command', function () {
   });
   describe('after the component was created', () => {
     before(() => {
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo(barFooV1);
       helper.fixtures.addComponentBarFoo();
     });
