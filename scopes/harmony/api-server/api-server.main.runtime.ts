@@ -15,6 +15,8 @@ import { InstallAspect, InstallMain } from '@teambit/install';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { Component } from '@teambit/component';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import cors from 'cors';
+import { createProxyMiddleware, fixRequestBody } from 'http-proxy-middleware';
 import { ApiServerAspect } from './api-server.aspect';
 import { CLIRoute } from './cli.route';
 import { ServerCmd } from './server.cmd';
@@ -83,7 +85,39 @@ export class ApiServerMain {
       });
 
     const port = options.port || 3000;
-    const server = await this.express.listen(port);
+
+    const app = this.express.createApp();
+
+    app.use(
+      // @ts-ignore todo: it's not clear what's the issue.
+      cors({
+        origin(origin, callback) {
+          callback(null, true);
+        },
+        credentials: true,
+      })
+    );
+    app.use(
+      '/api/cloud-graphql',
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      createProxyMiddleware({
+        target: 'https://api.main.lanes.bit.cloud/graphql',
+        changeOrigin: true,
+        on: {
+          error: (err, req, res) => {
+            this.logger.error('graphql cloud proxy error', err);
+            // @ts-ignore
+            res.writeHead(500, {
+              'Content-Type': 'text/plain',
+            });
+            res.end('Something went wrong with the proxy server of bit cloud graphql');
+          },
+          proxyReq: fixRequestBody,
+        },
+      })
+    );
+
+    const server = await app.listen(port);
 
     return new Promise((resolve, reject) => {
       server.on('error', (err) => {
