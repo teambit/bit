@@ -1738,6 +1738,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-compare"
     },
+    "ui/code-editor": {
+        "name": "ui/code-editor",
+        "scope": "teambit.code",
+        "version": "0.0.8",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/code-editor"
+    },
     "ui/code-tab-page": {
         "name": "ui/code-tab-page",
         "scope": "teambit.code",
