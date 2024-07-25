@@ -347,6 +347,15 @@ it was probably created on another lane and if so, consider removing this compon
         newId = currentId.changeVersion(undefined);
       }
     }
+    // in case the component was loaded using a short-hash, replace the id with the full-hash
+    if (
+      componentFromModel?.version &&
+      currentId.hasVersion() &&
+      componentFromModel.version !== currentId.version &&
+      componentFromModel.version.startsWith(currentId.version)
+    ) {
+      newId = currentId.changeVersion(componentFromModel.version);
+    }
 
     if (newId) {
       this.consumer.bitMap.updateComponentId(newId);

@@ -727,7 +727,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       this.envs.isUsingEnvEnv(component) &&
       !this.aspectLoader.isCoreAspect(component.id.toStringWithoutVersion()) &&
       !this.aspectLoader.isAspectLoaded(component.id.toString()) &&
-      (await this.hasId(component.id))
+      this.hasId(component.id)
       // !config.extension(component.id.toStringWithoutVersion(), true)
     ) {
       try {
