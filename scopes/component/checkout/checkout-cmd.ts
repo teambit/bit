@@ -125,6 +125,7 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       forceOurs,
       forceTheirs,
     };
+    to = String(to); // it can be a number in case short-hash is used
     if (to === HEAD) checkoutProps.head = true;
     else if (to === LATEST) checkoutProps.latest = true;
     else if (to === 'reset') checkoutProps.reset = true;

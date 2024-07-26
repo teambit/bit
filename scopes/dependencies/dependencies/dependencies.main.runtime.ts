@@ -146,6 +146,11 @@ export class DependenciesMain {
     options: RemoveDependenciesFlags = {},
     removeOnlyIfExists = false // unset
   ): Promise<RemoveDependencyResult[]> {
+    const getLifeCycle = () => {
+      if (options.dev) return 'dev';
+      if (options.peer) return 'peer';
+      return 'runtime';
+    };
     const compIds = await this.workspace.idsByPattern(componentPattern);
     const results = await pMapSeries(compIds, async (compId) => {
       const component = await this.workspace.get(compId);
@@ -163,14 +168,9 @@ export class DependenciesMain {
       const newDepResolverConfig = cloneDeep(currentDepResolverConfig || {});
       const removedPackagesWithNulls = await pMapSeries(packages, async (pkg) => {
         const [name, version] = this.splitPkgToNameAndVer(pkg);
-        const dependency = depList.findByPkgNameOrCompId(name, version);
+        const dependency = depList.findByPkgNameOrCompId(name, version, getLifeCycle());
         if (!dependency) return null;
         const depName = dependency.getPackageName?.() || dependency.id;
-        const getLifeCycle = () => {
-          if (options.dev) return 'dev';
-          if (options.peer) return 'peer';
-          return dependency.lifecycle;
-        };
         const depField = KEY_NAME_BY_LIFECYCLE_TYPE[getLifeCycle()];
         const existsInSpecificConfig = newDepResolverConfig.policy?.[depField]?.[depName];
         if (existsInSpecificConfig) {
