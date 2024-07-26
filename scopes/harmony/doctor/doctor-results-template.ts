@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { table } from 'table';
-import { DoctorMetaData, DoctorRunAllResults } from './doctor';
+import { DoctorMetaData, DoctorRunAllResults } from './doctor.main.runtime';
 import { ExamineResult } from './diagnosis';
 
 // const NAME_COLUMN_WIDTH = 100;

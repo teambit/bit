@@ -1,7 +1,7 @@
-import runAll, { DoctorOptions, listDiagnoses, runOne } from './doctor';
 import { Command, CommandOptions } from '@teambit/cli';
 import formatDiagnosesList from './diagnosis-list-template';
 import formatDiagnosesResult from './doctor-results-template';
+import { DoctorMain, DoctorOptions } from './doctor.main.runtime';
 
 type Flags = {
   list?: boolean;
@@ -31,6 +31,8 @@ export class DoctorCmd implements Command {
     ['p', 'include-public', 'relevant for --archive. include public folder in the archive file'],
     ['e', 'exclude-local-scope', 'relevant for --archive. exclude .bit or .git/bit from the archive file'],
   ] as CommandOptions;
+
+  constructor(private doctor: DoctorMain) {}
 
   async report([diagnosisName]: string[], flags: Flags) {
     const res = await this.runDiag(diagnosisName, flags);
@@ -70,7 +72,7 @@ export class DoctorCmd implements Command {
     } = flags;
 
     if (list) {
-      return listDiagnoses();
+      return this.doctor.listDiagnoses();
     }
     if ((includeNodeModules || excludeLocalScope) && !archive) {
       throw new Error('to use --include-node-modules or --exclude-local-scope please specify --archive');
@@ -92,6 +94,6 @@ export class DoctorCmd implements Command {
       includePublic,
       excludeLocalScope,
     };
-    return diagnosisName ? runOne(doctorOptions) : runAll(doctorOptions);
+    return diagnosisName ? this.doctor.runOne(doctorOptions) : this.doctor.runAll(doctorOptions);
   }
 }
