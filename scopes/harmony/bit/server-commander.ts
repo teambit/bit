@@ -69,7 +69,6 @@ export class ServerCommander {
       throw new Error(`failed to run command "${cmd}" on the server. ${err.message}`);
     }
 
-    // console.log("🚀 ~ ServerCommander ~ runCommand ~ res:", res)
     if (res.ok) {
       const results = await res.json();
       return results;

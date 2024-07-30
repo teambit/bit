@@ -1131,9 +1131,8 @@
     },
     "modules/send-server-sent-events": {
         "name": "modules/send-server-sent-events",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.harmony",
+        "scope": "teambit.harmony",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/send-server-sent-events"
     },
