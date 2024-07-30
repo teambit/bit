@@ -12,6 +12,7 @@ export class BundlerService implements EnvService<any> {
     // Old env
     if (!env?.preview) return undefined;
     const preview = env.preview()(envContext);
+    if (!preview) return undefined;
 
     return {
       getBundler: (context) => preview.getBundler(context)(envContext),
