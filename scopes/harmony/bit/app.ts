@@ -10,14 +10,20 @@ import { bootstrap } from './bootstrap';
 import { handleErrorAndExit } from '@teambit/cli';
 import { runCLI } from './load-bit';
 import { autocomplete } from './autocomplete';
+import { ServerCommander, shouldUseBitServer } from './server-commander';
 
 if (process.argv.includes('--get-yargs-completions')) {
   autocomplete();
   process.exit(0);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
-initApp();
+if (shouldUseBitServer()) {
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  new ServerCommander().execute();
+} else {
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  initApp();
+}
 
 async function initApp() {
   try {

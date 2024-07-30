@@ -1,4 +1,3 @@
-import cliSpinners from 'cli-spinners';
 import * as path from 'path';
 import { homedir, platform } from 'os';
 
@@ -145,8 +144,6 @@ export const NULL_BYTE = '\u0000';
 export const SPACE_DELIMITER = ' ';
 
 export const VERSION_DELIMITER = '@';
-
-export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.dots : cliSpinners.dots12;
 
 /**
  * URLS

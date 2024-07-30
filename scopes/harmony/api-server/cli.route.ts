@@ -1,5 +1,6 @@
 import { CLIMain } from '@teambit/cli';
 import prettyTime from 'pretty-time';
+import chalk from 'chalk';
 import { Route, Request, Response } from '@teambit/express';
 import { Logger } from '@teambit/logger';
 import { camelCase } from 'lodash';
@@ -31,7 +32,7 @@ export class CLIRoute implements Route {
         const command = this.cli.getCommand(req.params.cmd);
         if (!command) throw new Error(`command "${req.params.cmd}" was not found`);
         const body = req.body;
-        const { args, options, format } = body;
+        const { args, options, format, isTerminal } = body;
         if (format && format !== 'json' && format !== 'report') throw new Error(`format "${format}" is not supported`);
         const outputMethod: 'json' | 'report' = format || 'json';
         if (!command[outputMethod])
@@ -42,7 +43,7 @@ export class CLIRoute implements Route {
         const argsStr = args ? ` ${args.join(' ')}` : '';
         const optsStr = optsToString ? ` ${optsToString}` : '';
         const cmdStr = req.params.cmd + argsStr + optsStr;
-        this.logger.console(`[*] started a new ${outputMethod} command: ${cmdStr}`);
+        if (!isTerminal) this.logger.console(`[*] started a new ${outputMethod} command: ${cmdStr}`);
         const randomNumber = Math.floor(Math.random() * 10000); // helps to distinguish between commands in the log
         cmdStrLog = `${randomNumber} ${cmdStr}`;
         await this.apiForIDE.logStartCmdHistory(cmdStrLog);
@@ -52,11 +53,21 @@ export class CLIRoute implements Route {
           return acc;
         }, {});
         const startTask = process.hrtime();
+        // because this gets called from the express server, which gets spawn from a script, chalk defaults to false.
+        // changing only the "level" is not enough, it must be enabled as well.
+        // only when calling this route from the terminal, we want colors. on the IDE, we don't want colors.
+        if (isTerminal) {
+          chalk.enabled = true;
+          chalk.level = 3;
+        }
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const result = await command[outputMethod]!(args || [], optionsAsCamelCase);
+        this.logger.clearStatusLine();
         const duration = prettyTime(process.hrtime(startTask));
-        this.logger.consoleSuccess(`command "${req.params.cmd}" had been completed in ${duration}`);
+        if (!isTerminal) this.logger.consoleSuccess(`command "${req.params.cmd}" had been completed in ${duration}`);
         await this.apiForIDE.logFinishCmdHistory(cmdStrLog, 0);
+        // change chalk back to false, otherwise, the IDE will have colors. (this is a global setting)
+        chalk.enabled = false;
         if (outputMethod === 'json') {
           res.json(result);
         } else {
@@ -68,6 +79,7 @@ export class CLIRoute implements Route {
         this.logger.error(`command "${req.params.cmd}" had failed`, err);
         this.logger.consoleFailure(`command "${req.params.cmd}" had failed. ${err.message}`);
         if (cmdStrLog) await this.apiForIDE.logFinishCmdHistory(cmdStrLog, 1);
+        chalk.enabled = false;
         res.status(500);
         res.jsonp({
           message: err.message,
