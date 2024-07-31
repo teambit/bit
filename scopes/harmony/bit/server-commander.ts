@@ -46,8 +46,11 @@ export class ServerCommander {
     const url = `http://localhost:${port}/api`;
     this.initSSE(url);
     // parse the args and options from the command
-    const command = process.argv.slice(2).join(' ');
-
+    const args = process.argv.slice(2);
+    if (!args.includes('--json') && !args.includes('-j')) {
+      loader.on();
+    }
+    const command = args.join(' ');
     const endpoint = `cli-raw`;
     const pwd = process.cwd();
     const body = { command, pwd };
