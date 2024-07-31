@@ -29,10 +29,12 @@ export class CLIRoute implements Route {
       this.logger.debug(`cli server: got request for ${req.params.cmd}`);
       let cmdStrLog: string | undefined;
       try {
-        const command = this.cli.getCommand(req.params.cmd);
+        const command = this.cli.getCommandByNameOrAlias(req.params.cmd);
         if (!command) throw new Error(`command "${req.params.cmd}" was not found`);
         const body = req.body;
-        const { args, options, format, isTerminal } = body;
+        const { args, options, format, isTerminal, pwd } = body;
+        if (pwd && !process.cwd().startsWith(pwd))
+          throw new Error(`bit-server is running on a different directory. bit-server: ${process.cwd()}, pwd: ${pwd}`);
         if (format && format !== 'json' && format !== 'report') throw new Error(`format "${format}" is not supported`);
         const outputMethod: 'json' | 'report' = format || 'json';
         if (!command[outputMethod])

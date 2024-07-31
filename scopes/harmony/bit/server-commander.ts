@@ -66,7 +66,8 @@ export class ServerCommander {
     if (!this.isJson) loader.on();
     const endpoint = `cli/${cmd}`;
     const format = this.isJson ? 'json' : 'report';
-    const body = { args, options, format, isTerminal: true };
+    const pwd = process.cwd();
+    const body = { args, options, format, isTerminal: true, pwd };
     let res;
     try {
       res = await fetch(`${url}/${endpoint}`, {
@@ -92,10 +93,7 @@ export class ServerCommander {
     } catch (e: any) {
       // the response is not json, ignore the body.
     }
-    const errMsg = `${jsonResponse?.message || jsonResponse || res.statusText}. (error from bit-server, endpoint: ${
-      res.url
-    })`;
-    throw new Error(errMsg);
+    throw new Error(jsonResponse?.message || jsonResponse || res.statusText);
   }
 
   /**
@@ -111,9 +109,11 @@ export class ServerCommander {
    */
   private initSSE(url: string) {
     const eventSource = new EventSource(`${url}/sse-events`);
-    eventSource.onerror = (error: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    eventSource.onerror = (_error: any) => {
       // eslint-disable-next-line no-console
-      console.error('Error occurred in SSE connection:', error);
+      // console.error('Error occurred in SSE connection:', _error);
+      // probably was unable to connect to the server and will throw ServerNotFound right after. no need to show this error.
       eventSource.close();
     };
     eventSource.addEventListener('onLoader', (event: any) => {
@@ -146,7 +146,7 @@ export class ServerCommander {
 }
 
 export function shouldUseBitServer() {
-  const commandsToSkip = ['start', 'run', 'watch', 'init'];
+  const commandsToSkip = ['start', 'run', 'watch', 'init', 'server'];
   return (
     process.env.BIT_CLI_SERVER &&
     !process.argv.includes('--help') &&

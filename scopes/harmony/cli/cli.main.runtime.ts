@@ -74,6 +74,12 @@ export class CLIMain {
     return this.commands.find((command) => getCommandId(command.name) === name);
   }
 
+  getCommandByNameOrAlias(name: string): Command | undefined {
+    const command = this.getCommand(name);
+    if (command) return command;
+    return this.commands.find((cmd) => cmd.alias === name);
+  }
+
   /**
    * when running `bit help`, commands are grouped by categories.
    * this method helps registering a new group by providing its name and a description.
