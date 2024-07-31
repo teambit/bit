@@ -66,7 +66,8 @@ export class ServerCommander {
     if (!this.isJson) loader.on();
     const endpoint = `cli/${cmd}`;
     const format = this.isJson ? 'json' : 'report';
-    const body = { args, options, format, isTerminal: true };
+    const pwd = process.cwd();
+    const body = { args, options, format, isTerminal: true, pwd };
     let res;
     try {
       res = await fetch(`${url}/${endpoint}`, {
@@ -92,10 +93,7 @@ export class ServerCommander {
     } catch (e: any) {
       // the response is not json, ignore the body.
     }
-    const errMsg = `${jsonResponse?.message || jsonResponse || res.statusText}. (error from bit-server, endpoint: ${
-      res.url
-    })`;
-    throw new Error(errMsg);
+    throw new Error(jsonResponse?.message || jsonResponse || res.statusText);
   }
 
   /**
