@@ -1,19 +1,12 @@
 import { CLIMain } from '@teambit/cli';
 import { Route, Request, Response } from '@teambit/express';
 import { Logger } from '@teambit/logger';
+import { addClient, removeClient } from '@teambit/harmony.modules.send-server-sent-events';
 
 type CLIENT = {
   id: number;
   response: Response;
 };
-
-let clients: CLIENT[] = [];
-
-type EventName = 'onComponentChange' | 'onBitmapChange' | 'onWorkspaceConfigChange' | 'onPostInstall';
-
-export function sendEventsToClients(eventName: EventName, data: any) {
-  clients.forEach((client) => client.response.write(`event:${eventName}\ndata: ${JSON.stringify(data)}\n\n`));
-}
 
 /**
  * Server-Sent Events (SSE).
@@ -36,16 +29,16 @@ export class SSEEventsRoute implements Route {
 
       const clientId = Date.now();
 
-      const newClient = {
+      const newClient: CLIENT = {
         id: clientId,
         response,
       };
 
-      clients.push(newClient);
+      addClient(newClient);
 
       request.on('close', () => {
         this.logger.debug(`${clientId} SSE Connection closed`);
-        clients = clients.filter((client) => client.id !== clientId);
+        removeClient(newClient);
       });
     },
   ];

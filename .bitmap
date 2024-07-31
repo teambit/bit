@@ -1129,6 +1129,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/pkg/modules/semver-helper"
     },
+    "modules/send-server-sent-events": {
+        "name": "modules/send-server-sent-events",
+        "scope": "teambit.harmony",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/modules/send-server-sent-events"
+    },
     "modules/style-regexps": {
         "name": "modules/style-regexps",
         "scope": "teambit.webpack",

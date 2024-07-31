@@ -1,4 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import fs from 'fs-extra';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { LanesAspect, LanesMain } from '@teambit/lanes';
@@ -15,6 +16,7 @@ import { InstallAspect, InstallMain } from '@teambit/install';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { Component } from '@teambit/component';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 import cors from 'cors';
 import { createProxyMiddleware, fixRequestBody } from 'http-proxy-middleware';
 import { ApiServerAspect } from './api-server.aspect';
@@ -22,7 +24,8 @@ import { CLIRoute } from './cli.route';
 import { ServerCmd } from './server.cmd';
 import { IDERoute } from './ide.route';
 import { APIForIDE } from './api-for-ide';
-import { SSEEventsRoute, sendEventsToClients } from './sse-events.route';
+import { SSEEventsRoute } from './sse-events.route';
+import { join } from 'path';
 
 export class ApiServerMain {
   constructor(
@@ -125,9 +128,32 @@ export class ApiServerMain {
       });
       server.on('listening', () => {
         this.logger.consoleSuccess(`Bit Server is listening on port ${port}`);
-        resolve(true);
+        this.writeUsedPort(port);
+        resolve(port);
       });
     });
+  }
+
+  writeUsedPort(port: number) {
+    const filePath = this.getServerPortFilePath();
+    fs.writeFileSync(filePath, port.toString());
+  }
+
+  async getExistingUsedPort(): Promise<number | undefined> {
+    const filePath = this.getServerPortFilePath();
+    try {
+      const fileContent = await fs.readFile(filePath, 'utf8');
+      return parseInt(fileContent, 10);
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        return undefined;
+      }
+      throw err;
+    }
+  }
+
+  private getServerPortFilePath() {
+    return join(this.workspace.scope.path, 'server-port.txt');
   }
 
   static dependencies = [

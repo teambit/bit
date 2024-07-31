@@ -135,6 +135,7 @@
     "@teambit/toolbox.fs.remove-empty-dir": "~0.0.1",
     "@teambit/harmony.modules.in-memory-cache": "~0.0.1",
     "@teambit/harmony.modules.feature-toggle": "~0.0.4",
+    "@teambit/harmony.modules.send-server-sent-events": "~0.0.1",
     "@teambit/legacy.scope-api": "~0.0.1",
     "@teambit/bit-error": "~0.0.404",
     "@teambit/lane-id": "~0.0.311",
