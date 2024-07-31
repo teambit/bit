@@ -6,6 +6,17 @@ import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import chalk from 'chalk';
 import loader from '@teambit/legacy/dist/cli/loader';
 
+export class ServerPortFileNotFound extends Error {
+  constructor(filePath: string) {
+    super(`server port file not found at ${filePath}`);
+  }
+}
+export class ServerNotFound extends Error {
+  constructor(port: number) {
+    super(`bit server is not running on port ${port}`);
+  }
+}
+
 export class ServerCommander {
   private isJson = false;
   async execute() {
@@ -28,6 +39,7 @@ export class ServerCommander {
 
       process.exit(0);
     } catch (err: any) {
+      if (err instanceof ServerPortFileNotFound || err instanceof ServerNotFound) throw err;
       // eslint-disable-next-line no-console
       console.error(chalk.red(err.message));
       process.exit(1);
@@ -64,7 +76,7 @@ export class ServerCommander {
       });
     } catch (err: any) {
       if (err.code === 'ECONNREFUSED') {
-        throw new Error(`bit server is not running on port ${port}`);
+        throw new ServerNotFound(port);
       }
       throw new Error(`failed to run command "${cmd}" on the server. ${err.message}`);
     }
@@ -118,7 +130,7 @@ export class ServerCommander {
       return parseInt(fileContent, 10);
     } catch (err: any) {
       if (err.code === 'ENOENT') {
-        throw new Error(`server port file not found at ${filePath}`);
+        throw new ServerPortFileNotFound(filePath);
       }
       throw err;
     }
@@ -134,12 +146,12 @@ export class ServerCommander {
 }
 
 export function shouldUseBitServer() {
-  const longRunningCommands = ['start', 'run', 'watch'];
+  const commandsToSkip = ['start', 'run', 'watch', 'init'];
   return (
     process.env.BIT_CLI_SERVER &&
     !process.argv.includes('--help') &&
     !process.argv.includes('-h') &&
     process.argv.length > 2 && // if it has no args, it shows the help
-    !longRunningCommands.includes(process.argv[2])
+    !commandsToSkip.includes(process.argv[2])
   );
 }

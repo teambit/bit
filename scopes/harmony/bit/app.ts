@@ -18,8 +18,10 @@ if (process.argv.includes('--get-yargs-completions')) {
 }
 
 if (shouldUseBitServer()) {
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
-  new ServerCommander().execute();
+  new ServerCommander().execute().catch(() => {
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    initApp();
+  });
 } else {
   // eslint-disable-next-line @typescript-eslint/no-floating-promises
   initApp();
