@@ -109,9 +109,11 @@ export class ServerCommander {
    */
   private initSSE(url: string) {
     const eventSource = new EventSource(`${url}/sse-events`);
-    eventSource.onerror = (error: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    eventSource.onerror = (_error: any) => {
       // eslint-disable-next-line no-console
-      console.error('Error occurred in SSE connection:', error);
+      // console.error('Error occurred in SSE connection:', _error);
+      // probably was unable to connect to the server and will throw ServerNotFound right after. no need to show this error.
       eventSource.close();
     };
     eventSource.addEventListener('onLoader', (event: any) => {
