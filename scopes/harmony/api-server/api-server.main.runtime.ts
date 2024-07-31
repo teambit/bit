@@ -26,6 +26,7 @@ import { IDERoute } from './ide.route';
 import { APIForIDE } from './api-for-ide';
 import { SSEEventsRoute } from './sse-events.route';
 import { join } from 'path';
+import { CLIRawRoute } from './cli-raw.route';
 
 export class ApiServerMain {
   constructor(
@@ -228,11 +229,12 @@ export class ApiServerMain {
       config
     );
     const cliRoute = new CLIRoute(logger, cli, apiForIDE);
-    const vscodeRoute = new IDERoute(logger, apiForIDE);
+    const cliRawRoute = new CLIRawRoute(logger, cli, apiForIDE);
+    const ideRoute = new IDERoute(logger, apiForIDE);
     const sseEventsRoute = new SSEEventsRoute(logger, cli);
     // register only when the workspace is available. don't register this on a remote-scope, for security reasons.
     if (workspace) {
-      express.register([cliRoute, vscodeRoute, sseEventsRoute]);
+      express.register([cliRoute, cliRawRoute, ideRoute, sseEventsRoute]);
     }
 
     return apiServer;

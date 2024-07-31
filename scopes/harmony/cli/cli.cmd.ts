@@ -72,7 +72,8 @@ export class CliCmd implements Command {
       rl.on('line', async (line) => {
         const cmd = line.trim().split(' ');
         try {
-          await cliParser.parse(cmd);
+          const commandRunner = await cliParser.parse(cmd);
+          await commandRunner.runCommand();
         } catch (err: any) {
           await handleErrorAndExit(err, cmd[0]);
         }

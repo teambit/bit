@@ -138,7 +138,8 @@ export class CLIMain {
   async run(hasWorkspace: boolean) {
     await this.invokeOnStart(hasWorkspace);
     const CliParser = new CLIParser(this.commands, this.groups, this.onCommandStartSlot);
-    await CliParser.parse();
+    const commandRunner = await CliParser.parse();
+    await commandRunner.runCommand();
   }
 
   private async invokeOnStart(hasWorkspace: boolean) {

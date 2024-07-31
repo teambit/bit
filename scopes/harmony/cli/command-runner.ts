@@ -8,6 +8,8 @@ import { Analytics } from '@teambit/legacy.analytics';
 import { OnCommandStartSlot } from './cli.main.runtime';
 import pMapSeries from 'p-map-series';
 
+type CommandResult = { data: any; exitCode: number };
+
 export class CommandRunner {
   private commandName: string;
   constructor(
@@ -22,21 +24,22 @@ export class CommandRunner {
   /**
    * run command using one of the handler, "json"/"report"/"render". once done, exit the process.
    */
-  async runCommand() {
+  async runCommand(shouldReturnResult = false): Promise<void | CommandResult> {
     try {
       this.bootstrapCommand();
       await this.invokeOnCommandStart();
       this.determineConsoleWritingDuringCommand();
       if (this.flags.json) {
-        return await this.runJsonHandler();
+        return await this.runJsonHandler(shouldReturnResult);
       }
       if (this.command.report) {
-        return await this.runReportHandler();
+        return await this.runReportHandler(shouldReturnResult);
       }
       if (this.command.wait) {
         return await this.runWaitHandler();
       }
     } catch (err: any) {
+      if (shouldReturnResult) throw err;
       return handleErrorAndExit(err, this.commandName);
     }
 
@@ -64,22 +67,24 @@ export class CommandRunner {
    * this works for both, Harmony commands and Legacy commands (the legacy-command-adapter
    * implements json() method)
    */
-  private async runJsonHandler() {
-    if (!this.flags.json) return null;
+  private async runJsonHandler(shouldReturnResult = false): Promise<CommandResult | undefined> {
+    if (!this.flags.json) return undefined;
     if (!this.command.json) throw new Error(`command "${this.commandName}" doesn't implement "json" method`);
     const result = await this.command.json(this.args, this.flags);
     const code = result.code || 0;
     const data = result.data || result;
-    return this.writeAndExit(JSON.stringify(data, null, 2), code);
+    if (shouldReturnResult) return { data, exitCode: code };
+    await this.writeAndExit(JSON.stringify(data, null, 2), code);
   }
 
-  private async runReportHandler() {
+  private async runReportHandler(shouldReturnResult = false): Promise<CommandResult | undefined> {
     if (!this.command.report) throw new Error('runReportHandler expects command.report to be implemented');
     const result = await this.command.report(this.args, this.flags);
     loader.off();
     const data = typeof result === 'string' ? result : result.data;
     const exitCode = typeof result === 'string' ? 0 : result.code;
-    return this.writeAndExit(`${data}\n`, exitCode);
+    if (shouldReturnResult) return { data, exitCode };
+    await this.writeAndExit(`${data}\n`, exitCode);
   }
 
   private async runWaitHandler() {

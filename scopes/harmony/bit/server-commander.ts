@@ -17,24 +17,19 @@ export class ServerNotFound extends Error {
   }
 }
 
+type CommandResult = { data: any; exitCode: number };
+
 export class ServerCommander {
-  private isJson = false;
   async execute() {
     try {
       const results = await this.runCommandWithHttpServer();
       if (results) {
-        if (this.isJson) {
-          const code = results.code || 0;
-          const data = results.data || results;
-          // eslint-disable-next-line no-console
-          console.log(JSON.stringify(data, null, 2));
-          process.exit(code);
-        } else {
-          loader.off();
-          // eslint-disable-next-line no-console
-          console.log(results.data);
-          process.exit(results.exitCode);
-        }
+        const { data, exitCode } = results;
+        loader.off();
+        const dataToPrint = typeof data === 'string' ? data : JSON.stringify(data, undefined, 2);
+        // eslint-disable-next-line no-console
+        console.log(dataToPrint);
+        process.exit(exitCode);
       }
 
       process.exit(0);
@@ -46,28 +41,19 @@ export class ServerCommander {
     }
   }
 
-  async runCommandWithHttpServer(): Promise<Record<string, any> | undefined> {
+  async runCommandWithHttpServer(): Promise<CommandResult | undefined> {
     const port = await this.getExistingUsedPort();
     const url = `http://localhost:${port}/api`;
     this.initSSE(url);
     // parse the args and options from the command
-    const [cmd, ...rest] = process.argv.slice(2);
-    const args = rest.filter((arg) => !arg.startsWith('-'));
-    const options = rest
-      .filter((arg) => arg.startsWith('-'))
-      .reduce((acc, curr) => {
-        const opt = curr.startsWith('--') ? curr.slice(2) : curr.slice(1);
-        const [key, val] = opt.split('=');
-        acc[key] = val || true;
-        return acc;
-      }, {} as Record<string, boolean | string>);
-
-    this.isJson = Boolean(options.json || options.j);
-    if (!this.isJson) loader.on();
-    const endpoint = `cli/${cmd}`;
-    const format = this.isJson ? 'json' : 'report';
+    const args = process.argv.slice(2);
+    if (!args.includes('--json') && !args.includes('-j')) {
+      loader.on();
+    }
+    const command = args.join(' ');
+    const endpoint = `cli-raw`;
     const pwd = process.cwd();
-    const body = { args, options, format, isTerminal: true, pwd };
+    const body = { command, pwd };
     let res;
     try {
       res = await fetch(`${url}/${endpoint}`, {
@@ -79,7 +65,7 @@ export class ServerCommander {
       if (err.code === 'ECONNREFUSED') {
         throw new ServerNotFound(port);
       }
-      throw new Error(`failed to run command "${cmd}" on the server. ${err.message}`);
+      throw new Error(`failed to run command "${command}" on the server. ${err.message}`);
     }
 
     if (res.ok) {
