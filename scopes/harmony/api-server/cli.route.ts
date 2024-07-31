@@ -29,7 +29,7 @@ export class CLIRoute implements Route {
       this.logger.debug(`cli server: got request for ${req.params.cmd}`);
       let cmdStrLog: string | undefined;
       try {
-        const command = this.cli.getCommand(req.params.cmd);
+        const command = this.cli.getCommandByNameOrAlias(req.params.cmd);
         if (!command) throw new Error(`command "${req.params.cmd}" was not found`);
         const body = req.body;
         const { args, options, format, isTerminal } = body;
