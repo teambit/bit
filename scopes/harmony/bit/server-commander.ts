@@ -67,7 +67,7 @@ export class ServerCommander {
     const endpoint = `cli/${cmd}`;
     const format = this.isJson ? 'json' : 'report';
     const pwd = process.cwd();
-    const body = { args, options, format, isTerminal: true, pwd };
+    const body = { args, options, format, isTerminal: true, pwd, raw: process.argv.slice(2) };
     let res;
     try {
       res = await fetch(`${url}/${endpoint}`, {

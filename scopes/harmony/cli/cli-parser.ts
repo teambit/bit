@@ -12,16 +12,18 @@ import { formatHelp } from './help';
 import { GLOBAL_GROUP, STANDARD_GROUP, YargsAdapter } from './yargs-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
 import { OnCommandStartSlot } from './cli.main.runtime';
+import { CommandRunner } from './command-runner';
 
 export class CLIParser {
   public parser = yargs;
+  private yargsCommands: YargsAdapter[] = [];
   constructor(
     private commands: Command[],
     private groups: GroupsType,
     private onCommandStartSlot: OnCommandStartSlot
   ) {}
 
-  async parse(args = process.argv.slice(2)) {
+  async parse(args = process.argv.slice(2)): Promise<CommandRunner> {
     this.throwForNonExistsCommand(args[0]);
     logger.debug(`[+] CLI-INPUT: ${args.join(' ')}`);
     logger.writeCommandHistoryStart();
@@ -33,7 +35,7 @@ export class CLIParser {
         this.parseCommandWithSubCommands(command);
       } else {
         const yargsCommand = this.getYargsCommand(command);
-        yargs.command(yargsCommand);
+        this.addYargsCommand(yargsCommand);
       }
     });
     this.configureGlobalFlags();
@@ -47,6 +49,15 @@ export class CLIParser {
       .wrap(null);
 
     await yargs.parse();
+
+    const currentYargsCommand = this.yargsCommands.find((y) => y.commandRunner);
+    if (!currentYargsCommand) throw new Error(`unable to find the matched yargs command`);
+    return currentYargsCommand.commandRunner as CommandRunner;
+  }
+
+  private addYargsCommand(yargsCommand: YargsAdapter) {
+    this.yargsCommands.push(yargsCommand);
+    yargs.command(yargsCommand);
   }
 
   private setHelpMiddleware() {
@@ -132,22 +143,22 @@ export class CLIParser {
     const builderFunc = () => {
       command.commands?.forEach((cmd) => {
         const subCommand = this.getYargsCommand(cmd);
-        yargs.command(subCommand);
+        this.addYargsCommand(subCommand);
       });
       // since the "builder" method is overridden, the global flags of the main command are gone, this fixes it.
       yargs.options(YargsAdapter.getGlobalOptions(command));
       return yargs;
     };
     yarnCommand.builder = builderFunc;
-    yargs.command(yarnCommand);
+    this.addYargsCommand(yarnCommand);
   }
 
   private getYargsCommand(command: Command): YargsAdapter {
-    const yarnCommand = new YargsAdapter(command, this.onCommandStartSlot);
-    yarnCommand.builder = yarnCommand.builder.bind(yarnCommand);
-    yarnCommand.handler = yarnCommand.handler.bind(yarnCommand);
+    const yargsCommand = new YargsAdapter(command, this.onCommandStartSlot);
+    yargsCommand.builder = yargsCommand.builder.bind(yargsCommand);
+    yargsCommand.handler = yargsCommand.handler.bind(yargsCommand);
 
-    return yarnCommand;
+    return yargsCommand;
   }
 
   private configureGlobalFlags() {

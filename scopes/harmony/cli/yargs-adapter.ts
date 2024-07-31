@@ -12,6 +12,7 @@ export class YargsAdapter implements CommandModule {
   command: string;
   describe?: string;
   aliases?: string;
+  commandRunner?: CommandRunner;
   constructor(private commanderCommand: Command, private onCommandStartSlot: OnCommandStartSlot) {
     this.command = commanderCommand.name;
     this.describe = commanderCommand.description;
@@ -45,7 +46,7 @@ export class YargsAdapter implements CommandModule {
     this.commanderCommand._packageManagerArgs = (argv['--'] || []) as string[];
 
     const commandRunner = new CommandRunner(this.commanderCommand, argsValues, flags, this.onCommandStartSlot);
-    return commandRunner.runCommand();
+    this.commandRunner = commandRunner;
   }
 
   get positional() {

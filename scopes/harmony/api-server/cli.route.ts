@@ -1,8 +1,9 @@
-import { CLIMain } from '@teambit/cli';
+import { CLIMain, CLIParser } from '@teambit/cli';
 import prettyTime from 'pretty-time';
 import chalk from 'chalk';
 import { Route, Request, Response } from '@teambit/express';
 import { Logger } from '@teambit/logger';
+import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { camelCase } from 'lodash';
 import { APIForIDE } from './api-for-ide';
 
@@ -32,7 +33,7 @@ export class CLIRoute implements Route {
         const command = this.cli.getCommandByNameOrAlias(req.params.cmd);
         if (!command) throw new Error(`command "${req.params.cmd}" was not found`);
         const body = req.body;
-        const { args, options, format, isTerminal, pwd } = body;
+        const { args, options, format, isTerminal, pwd, raw } = body;
         if (pwd && !process.cwd().startsWith(pwd))
           throw new Error(`bit-server is running on a different directory. bit-server: ${process.cwd()}, pwd: ${pwd}`);
         if (format && format !== 'json' && format !== 'report') throw new Error(`format "${format}" is not supported`);
@@ -62,20 +63,37 @@ export class CLIRoute implements Route {
           chalk.enabled = true;
           chalk.level = 3;
         }
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const result = await command[outputMethod]!(args || [], optionsAsCamelCase);
-        this.logger.clearStatusLine();
-        const duration = prettyTime(process.hrtime(startTask));
-        if (!isTerminal) this.logger.consoleSuccess(`command "${req.params.cmd}" had been completed in ${duration}`);
-        await this.apiForIDE.logFinishCmdHistory(cmdStrLog, 0);
-        // change chalk back to false, otherwise, the IDE will have colors. (this is a global setting)
-        chalk.enabled = false;
-        if (outputMethod === 'json') {
-          res.json(result);
+
+        if (isTerminal && raw) {
+          legacyLogger.isDaemon = true;
+          const cliParser = new CLIParser(this.cli.commands, this.cli.groups, this.cli.onCommandStartSlot);
+          try {
+            const commandRunner = await cliParser.parse(raw);
+            const result = await commandRunner.runCommand(true);
+            res.json(result);
+          } catch (err: any) {
+            res.status(500);
+            res.jsonp({
+              message: err.message,
+              error: err,
+            });
+          }
         } else {
-          const data = typeof result === 'string' ? result : result.data;
-          const exitCode = typeof result === 'string' ? 0 : result.code;
-          res.json({ data, exitCode });
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          const result = await command[outputMethod]!(args || [], optionsAsCamelCase);
+          this.logger.clearStatusLine();
+          const duration = prettyTime(process.hrtime(startTask));
+          if (!isTerminal) this.logger.consoleSuccess(`command "${req.params.cmd}" had been completed in ${duration}`);
+          await this.apiForIDE.logFinishCmdHistory(cmdStrLog, 0);
+          // change chalk back to false, otherwise, the IDE will have colors. (this is a global setting)
+          chalk.enabled = false;
+          if (outputMethod === 'json') {
+            res.json(result);
+          } else {
+            const data = typeof result === 'string' ? result : result.data;
+            const exitCode = typeof result === 'string' ? 0 : result.code;
+            res.json({ data, exitCode });
+          }
         }
       } catch (err: any) {
         this.logger.error(`command "${req.params.cmd}" had failed`, err);
