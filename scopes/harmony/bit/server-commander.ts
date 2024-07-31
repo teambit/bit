@@ -146,7 +146,7 @@ export class ServerCommander {
 }
 
 export function shouldUseBitServer() {
-  const commandsToSkip = ['start', 'run', 'watch', 'init'];
+  const commandsToSkip = ['start', 'run', 'watch', 'init', 'server'];
   return (
     process.env.BIT_CLI_SERVER &&
     !process.argv.includes('--help') &&
