@@ -8,6 +8,8 @@ import { Analytics } from '@teambit/legacy.analytics';
 import { OnCommandStartSlot } from './cli.main.runtime';
 import pMapSeries from 'p-map-series';
 
+type CommandResult = { data: any; exitCode: number };
+
 export class CommandRunner {
   private commandName: string;
   constructor(
@@ -22,7 +24,7 @@ export class CommandRunner {
   /**
    * run command using one of the handler, "json"/"report"/"render". once done, exit the process.
    */
-  async runCommand(shouldReturnResult = false) {
+  async runCommand(shouldReturnResult = false): Promise<void | CommandResult> {
     try {
       this.bootstrapCommand();
       await this.invokeOnCommandStart();
@@ -65,24 +67,24 @@ export class CommandRunner {
    * this works for both, Harmony commands and Legacy commands (the legacy-command-adapter
    * implements json() method)
    */
-  private async runJsonHandler(shouldReturnResult = false) {
-    if (!this.flags.json) return null;
+  private async runJsonHandler(shouldReturnResult = false): Promise<CommandResult | undefined> {
+    if (!this.flags.json) return undefined;
     if (!this.command.json) throw new Error(`command "${this.commandName}" doesn't implement "json" method`);
     const result = await this.command.json(this.args, this.flags);
     const code = result.code || 0;
     const data = result.data || result;
     if (shouldReturnResult) return { data, exitCode: code };
-    return this.writeAndExit(JSON.stringify(data, null, 2), code);
+    await this.writeAndExit(JSON.stringify(data, null, 2), code);
   }
 
-  private async runReportHandler(shouldReturnResult = false) {
+  private async runReportHandler(shouldReturnResult = false): Promise<CommandResult | undefined> {
     if (!this.command.report) throw new Error('runReportHandler expects command.report to be implemented');
     const result = await this.command.report(this.args, this.flags);
     loader.off();
     const data = typeof result === 'string' ? result : result.data;
     const exitCode = typeof result === 'string' ? 0 : result.code;
     if (shouldReturnResult) return { data, exitCode };
-    return this.writeAndExit(`${data}\n`, exitCode);
+    await this.writeAndExit(`${data}\n`, exitCode);
   }
 
   private async runWaitHandler() {
