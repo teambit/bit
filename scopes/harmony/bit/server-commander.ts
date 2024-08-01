@@ -71,6 +71,7 @@ export class ServerCommander {
       });
     } catch (err: any) {
       if (err.code === 'ECONNREFUSED') {
+        await this.deleteServerPortFile();
         throw new ServerNotFound(port);
       }
       throw new Error(`failed to run command "${command}" on the server. ${err.message}`);
@@ -128,6 +129,11 @@ export class ServerCommander {
       }
       throw err;
     }
+  }
+
+  async deleteServerPortFile() {
+    const filePath = this.getServerPortFilePath();
+    await fs.remove(filePath);
   }
 
   private getServerPortFilePath() {
