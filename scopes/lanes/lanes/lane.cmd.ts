@@ -568,9 +568,13 @@ export class LaneCmd implements Command {
   }
 }
 
+/**
+ * @deprecated - only use it to revert the add-readme command changes
+ */
 export class LaneRemoveReadmeCmd implements Command {
   name = 'remove-readme [laneName]';
-  description = 'EXPERIMENTAL. remove lane readme component';
+  description =
+    'DEPRECATED (only use it if you have used add-readme and want to undo it). remove lane readme component';
   options = [] as CommandOptions;
   loader = true;
   skipWorkspace = false;
