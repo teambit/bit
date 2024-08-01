@@ -20,6 +20,7 @@ import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS } from '../constant
 import { getWinstonLogger } from './winston-logger';
 import { getPinoLogger } from './pino-logger';
 import { Profiler } from './profiler';
+import loader from '../cli/loader';
 
 export { Level as LoggerLevel };
 
@@ -152,7 +153,7 @@ class BitLogger implements IBitLogger {
         this.trace('a wrong color provided to logger.console method');
       }
     }
-    console.log(messageStr); // eslint-disable-line no-console
+    loader.stopAndPersist({ text: messageStr });
   }
 
   /**

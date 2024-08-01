@@ -1,4 +1,4 @@
-import { CLIMain, CLIParser } from '@teambit/cli';
+import { CLIMain, CLIParser, YargsExitWorkaround } from '@teambit/cli';
 import chalk from 'chalk';
 import { Route, Request, Response } from '@teambit/express';
 import { Logger } from '@teambit/logger';
@@ -40,12 +40,17 @@ export class CLIRawRoute implements Route {
         await this.apiForIDE.logFinishCmdHistory(cmdStrLog, 0);
         res.json(result);
       } catch (err: any) {
-        await this.apiForIDE.logFinishCmdHistory(cmdStrLog, 1);
-        res.status(500);
-        res.jsonp({
-          message: err.message,
-          error: err,
-        });
+        if (err instanceof YargsExitWorkaround) {
+          res.json({ data: err.helpMsg, exitCode: err.exitCode });
+        } else {
+          this.logger.error(`cli-raw server: got an error for ${command}`, err);
+          await this.apiForIDE.logFinishCmdHistory(cmdStrLog, 1);
+          res.status(500);
+          res.jsonp({
+            message: err.message,
+            error: err,
+          });
+        }
       } finally {
         this.logger.clearStatusLine();
         // change chalk back to false, otherwise, the IDE will have colors. (this is a global setting)

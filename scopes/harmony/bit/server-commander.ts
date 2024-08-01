@@ -5,6 +5,7 @@ import EventSource from 'eventsource';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import chalk from 'chalk';
 import loader from '@teambit/legacy/dist/cli/loader';
+import { printBitVersionIfAsked } from './bootstrap';
 
 export class ServerPortFileNotFound extends Error {
   constructor(filePath: string) {
@@ -42,6 +43,7 @@ export class ServerCommander {
   }
 
   async runCommandWithHttpServer(): Promise<CommandResult | undefined> {
+    printBitVersionIfAsked();
     const port = await this.getExistingUsedPort();
     const url = `http://localhost:${port}/api`;
     this.initSSE(url);
@@ -132,11 +134,10 @@ export class ServerCommander {
 }
 
 export function shouldUseBitServer() {
-  const commandsToSkip = ['start', 'run', 'watch', 'init', 'server'];
+  const commandsToSkip = ['start', 'run', 'watch', 'init', 'server', 'new'];
+  const hasFlag = process.env.BIT_CLI_SERVER === 'true' || process.env.BIT_CLI_SERVER === '1';
   return (
-    process.env.BIT_CLI_SERVER &&
-    !process.argv.includes('--help') &&
-    !process.argv.includes('-h') &&
+    hasFlag &&
     process.argv.length > 2 && // if it has no args, it shows the help
     !commandsToSkip.includes(process.argv[2])
   );

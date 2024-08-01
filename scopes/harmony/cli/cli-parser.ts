@@ -13,6 +13,7 @@ import { GLOBAL_GROUP, STANDARD_GROUP, YargsAdapter } from './yargs-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
 import { OnCommandStartSlot } from './cli.main.runtime';
 import { CommandRunner } from './command-runner';
+import { YargsExitWorkaround } from './exceptions/yargs-exit-workaround';
 
 export class CLIParser {
   public parser = yargs;
@@ -42,6 +43,7 @@ export class CLIParser {
     this.setHelpMiddleware();
     this.handleCommandFailure();
     this.configureCompletion();
+    // yargs.showHelpOnFail(false); // doesn't help. it still shows the help on failure.
     yargs.strict(); // don't allow non-exist flags and non-exist commands
 
     yargs
@@ -51,7 +53,12 @@ export class CLIParser {
     await yargs.parse();
 
     const currentYargsCommand = this.yargsCommands.find((y) => y.commandRunner);
-    if (!currentYargsCommand) throw new Error(`unable to find the matched yargs command`);
+    if (!currentYargsCommand) {
+      // this happens when the args/flags are wrong. in this case, it prints the help of the command and in most cases
+      // exits the process before reaching this line. however, in case logger.isDaemon is true, which is for bit-cli-server,
+      // it doesn't exits the process, so we need to return undefined here.
+      throw new Error(`yargs failed to parse the command "${args.join(' ')}" and also failed to catch it properly`);
+    }
     return currentYargsCommand.commandRunner as CommandRunner;
   }
 
@@ -72,7 +79,7 @@ export class CLIParser {
         loader.off(); // stop the "loading bit..." before showing help if needed
         // this is a command help page
         yargs.showHelp(this.logCommandHelp.bind(this));
-        if (!logger.isDaemon) process.exit(0);
+        process.exit(0);
       }
     }, true);
   }
@@ -83,16 +90,27 @@ export class CLIParser {
       if (err) {
         throw err;
       }
-      yargs.showHelp(this.logCommandHelp.bind(this));
       const args = process.argv.slice(2);
       const isHelpFlagEntered = args.includes('--help') || args.includes('-h');
+      let msgForDaemon = '';
+      try {
+        yargs.showHelp(this.logCommandHelp.bind(this));
+      } catch (error: any) {
+        if (error instanceof YargsExitWorkaround) {
+          msgForDaemon = error.helpMsg;
+        } else {
+          throw error;
+        }
+      }
       const isMsgAboutMissingArgs = msg.startsWith('Not enough non-option arguments');
       // avoid showing the "Not enough non-option arguments" message when the user is trying to get the command help
       if (!isMsgAboutMissingArgs || !isHelpFlagEntered) {
         // eslint-disable-next-line no-console
         console.log(`\n${chalk.yellow(msg)}`);
+        msgForDaemon += `\n${chalk.yellow(msg)}`;
       }
-      if (!logger.isDaemon) process.exit(1);
+      if (logger.isDaemon) throw new YargsExitWorkaround(1, msgForDaemon);
+      process.exit(1);
     });
   }
 
@@ -125,8 +143,8 @@ export class CLIParser {
 
   private printHelp(shouldShowInternalCommands = false) {
     const help = formatHelp(this.commands, this.groups, shouldShowInternalCommands);
-    // eslint-disable-next-line no-console
-    console.log(help);
+    if (logger.isDaemon) throw new YargsExitWorkaround(0, help);
+    else console.log(help); // eslint-disable-line no-console
   }
 
   private configureParser() {
@@ -281,8 +299,8 @@ ${argumentsStr}${subCommandsStr}${optionsStr}${examplesStr}
 ${GLOBAL_GROUP}
 ${globalOptionsStr}`;
 
-    // eslint-disable-next-line no-console
-    console.log(finalOutput);
+    if (logger.isDaemon) throw new YargsExitWorkaround(0, finalOutput);
+    else console.log(finalOutput); // eslint-disable-line no-console
   }
 }
 

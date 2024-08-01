@@ -74,7 +74,7 @@ function warnIfRunningAsRoot() {
   }
 }
 
-function printBitVersionIfAsked() {
+export function printBitVersionIfAsked() {
   if (process.argv[2]) {
     if (['-V', '-v', '--version'].includes(process.argv[2])) {
       const harmonyVersion = getBitVersionGracefully();
