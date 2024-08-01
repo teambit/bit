@@ -9,10 +9,10 @@ import {
   compilationErrorOutput,
   getRemovedOutput,
   getAddedOutput,
+  MergeStrategy,
   getWorkspaceConfigUpdateOutput,
 } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP, HEAD, LATEST } from '@teambit/legacy/dist/constants';
-import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
@@ -23,7 +23,7 @@ export class CheckoutCmd implements Command {
     {
       name: 'to',
       description:
-        "permitted values: [head, latest, reset, specific-version]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes",
+        "permitted values: [head, latest, reset, {specific-version}, {head~x}]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes",
     },
     {
       name: 'component-pattern',
@@ -36,6 +36,7 @@ export class CheckoutCmd implements Command {
   extendedDescription = `
 \`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version
 \`bit checkout head [component-pattern]\` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all
+\`bit checkout head~x [component-pattern]\` => go backward x generations from the head and checkout to that version
 \`bit checkout latest [component-pattern]\` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all
 \`bit checkout reset [component-pattern]\` => remove local modifications from the specified ids (or all components when --all is used). also, if a component dir is deleted from the filesystem, it'll be restored
 when on a lane, "checkout head" only checks out components on this lane. to update main components, run "bit lane merge main"`;
@@ -47,7 +48,7 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
       'when a component is modified and the merge process found conflicts, display options to resolve them',
     ],
     [
-      '',
+      'r',
       'auto-merge-resolve <merge-strategy>',
       'in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
     ],
@@ -128,7 +129,12 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
     else if (to === LATEST) checkoutProps.latest = true;
     else if (to === 'reset') checkoutProps.reset = true;
     else if (to === 'main') checkoutProps.main = true;
-    else {
+    else if (to.startsWith(`${HEAD}~`)) {
+      const ancestor = parseInt(to.split('~')[1]);
+      if (Number.isNaN(ancestor))
+        throw new BitError(`the character after "${HEAD}~" must be a number, got ${ancestor}`);
+      checkoutProps.ancestor = ancestor;
+    } else {
       if (!ComponentID.isValidVersion(to)) throw new BitError(`the specified version "${to}" is not a valid version`);
       checkoutProps.version = to;
     }

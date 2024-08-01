@@ -93,6 +93,10 @@ export class Component implements IComponent {
     return this._state._consumer.buildStatus;
   }
 
+  get homepage(): string | undefined {
+    return this._state._consumer._getHomepage();
+  }
+
   get headTag() {
     if (!this.head) return undefined;
     return this.tags.byHash(this.head.hash);
@@ -198,6 +202,8 @@ export class Component implements IComponent {
 
   /**
    * whether a component is marked as deleted.
+   * warning! if this component is not the head, it might be deleted by a range later on.
+   * to get accurate results, please use teambit.component/remove aspect, "isDeleted" method.
    */
   isDeleted(): boolean {
     return this.state._consumer.isRemoved();
@@ -219,6 +225,13 @@ export class Component implements IComponent {
    */
   isNew(): Promise<boolean> {
     return Promise.resolve(this.head === null);
+  }
+
+  /**
+   * whether the component exists on the remote.
+   */
+  isExported(): boolean {
+    return this.factory.isExported(this.id);
   }
 
   // TODO: @david after snap we need to make sure to refactor here.

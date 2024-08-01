@@ -1,3 +1,3 @@
-import AbstractError from '../../error/abstract-error';
+import { BitError } from '@teambit/bit-error';
 
-export default class InvalidRemote extends AbstractError {}
+export default class InvalidRemote extends BitError {}

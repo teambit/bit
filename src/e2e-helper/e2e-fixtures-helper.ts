@@ -13,6 +13,7 @@ import ScopeHelper from './e2e-scope-helper';
 import ScopesData from './e2e-scopes';
 
 export type GenerateEnvJsoncOptions = {
+  extends?: string;
   policy?: Record<string, any>;
   patterns?: Record<string, string[]>;
 };
@@ -295,10 +296,13 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
       docs: ['**/*.docs.*'],
       tests: ['**/*.spec.*', '**/*.test.*'],
     };
-    const envJsoncFileContentJson = {
+    const envJsoncFileContentJson: GenerateEnvJsoncOptions = {
       policy: options.policy || {},
       patterns: options.patterns || defaultPatterns,
     };
+    if (options.extends) {
+      envJsoncFileContentJson.extends = options.extends;
+    }
     this.fs.outputFile(envJsoncFile, JSON.stringify(envJsoncFileContentJson, null, 2));
   }
 

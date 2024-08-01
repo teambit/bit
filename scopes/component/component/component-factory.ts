@@ -168,7 +168,7 @@ export interface ComponentFactory {
    */
   idsByPattern(pattern: string, throwForNoMatch?: boolean): Promise<ComponentID[]>;
 
-  hasId(componentId: ComponentID): Promise<boolean>;
+  hasId(componentId: ComponentID): Promise<boolean> | boolean;
 
   /**
    * Check if the host has the id, if no, search for the id in inner host (for example, workspace will search in the scope)
@@ -182,6 +182,11 @@ export interface ComponentFactory {
    * this is relevant for component from the workspace, where it can be locally changed. on the scope it's always false
    */
   isModified(component: Component): Promise<boolean>;
+
+  /**
+   * whether the component exists on the remote.
+   */
+  isExported(componentId: ComponentID): boolean;
 
   /**
    * write the component to the filesystem when applicable (no-op for scope).

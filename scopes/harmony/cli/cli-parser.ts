@@ -200,7 +200,7 @@ export class CLIParser {
    * Examples
    */
   private logCommandHelp(help: string) {
-    const command = this.findCommandByArgv();
+    const command = findCommandByArgv(this.commands);
 
     const replacer = (_, p1, p2) => `${p1}${chalk.green(p2)}`;
     const lines = help.split('\n');
@@ -273,29 +273,29 @@ ${globalOptionsStr}`;
     // eslint-disable-next-line no-console
     console.log(finalOutput);
   }
+}
 
-  private findCommandByArgv(): Command | undefined {
-    const args = process.argv.slice(2);
-    const enteredCommand = args[0];
-    const enteredSubCommand = args[1];
-    if (!enteredCommand) {
-      return undefined;
-    }
-    const isCommandMatch = (cmd: Command, str: string) => {
-      return (
-        cmd.name.startsWith(`${str} `) || // e.g. "tag <id>".startsWith("tag ")
-        cmd.name === str || // e.g. "globals" === "globals"
-        cmd.alias === str
-      ); // e.g. "t" === "t"
-    };
-    const command = this.commands.find((cmd) => isCommandMatch(cmd, enteredCommand));
-    if (!command) {
-      return undefined;
-    }
-    if (!command.commands || !enteredSubCommand) {
-      return command; // no sub-commands.
-    }
-    const subCommand = command.commands.find((cmd) => isCommandMatch(cmd, enteredSubCommand));
-    return subCommand || command;
+export function findCommandByArgv(commands: Command[]): Command | undefined {
+  const args = process.argv.slice(2);
+  const enteredCommand = args[0];
+  const enteredSubCommand = args[1];
+  if (!enteredCommand) {
+    return undefined;
   }
+  const isCommandMatch = (cmd: Command, str: string) => {
+    return (
+      cmd.name.startsWith(`${str} `) || // e.g. "tag <id>".startsWith("tag ")
+      cmd.name === str || // e.g. "globals" === "globals"
+      cmd.alias === str
+    ); // e.g. "t" === "t"
+  };
+  const command = commands.find((cmd) => isCommandMatch(cmd, enteredCommand));
+  if (!command) {
+    return undefined;
+  }
+  if (!command.commands || !enteredSubCommand) {
+    return command; // no sub-commands.
+  }
+  const subCommand = command.commands.find((cmd) => isCommandMatch(cmd, enteredSubCommand));
+  return subCommand || command;
 }

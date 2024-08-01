@@ -26,7 +26,12 @@ this command marks the components as deleted, and after snap/tag and export they
   alias = '';
   options = [
     ['', 'lane', 'when on a lane, delete the component from this lane only. avoid merging it to main or other lanes'],
-    ['', 'update-main', 'EXPERIMENTAL. delete component/s on the main lane after merging this lane into main'],
+    ['', 'update-main', 'delete component/s on the main lane after merging this lane into main'],
+    [
+      '',
+      'range <string>',
+      'EXPERIMENTAL. enter a Semver range to delete specific tags (cannot be used for snaps). see https://www.npmjs.com/package/semver#ranges for the range syntax',
+    ],
     ['s', 'silent', 'skip confirmation'],
     [
       '',
@@ -52,12 +57,14 @@ this command marks the components as deleted, and after snap/tag and export they
       updateMain = false,
       hard = false,
       silent = false,
+      range,
     }: {
       force?: boolean;
       lane?: boolean;
       updateMain?: boolean;
       hard?: boolean;
       silent?: boolean;
+      range?: string;
     }
   ) {
     if (this.workspace?.isOnLane() && !hard && !lane && !updateMain) {
@@ -72,6 +79,7 @@ this command marks the components as deleted, and after snap/tag and export they
     }
 
     if (hard) {
+      if (range) throw new BitError(`--range is not supported with --hard flag`);
       const { localResult, remoteResult = [] } = await this.remove.remove({ componentsPattern, remote: true, force });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       let localMessage = removeTemplate(localResult, false);
@@ -79,7 +87,7 @@ this command marks the components as deleted, and after snap/tag and export they
       return `${localMessage}${this.paintArray(remoteResult)}`;
     }
 
-    const removedComps = await this.remove.deleteComps(componentsPattern, { updateMain });
+    const removedComps = await this.remove.deleteComps(componentsPattern, { updateMain, range });
     const removedCompIds = removedComps.map((comp) => comp.id.toString());
     return `${chalk.green('successfully deleted the following components:')}
 ${removedCompIds.join('\n')}

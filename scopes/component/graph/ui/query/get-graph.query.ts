@@ -2,7 +2,20 @@ import { gql } from 'graphql-tag';
 import { DocumentNode } from '@apollo/client';
 import { EdgeType } from '../../edge-type';
 
-// please update types when updating query, for added safety
+export const GET_GRAPH_IDS = gql`
+  query graph($ids: [String], $filter: String) {
+    graph(ids: $ids, filter: $filter) {
+      nodes {
+        id
+      }
+      edges {
+        sourceId
+        targetId
+        dependencyLifecycleType
+      }
+    }
+  }
+`;
 
 export const GET_GRAPH: DocumentNode = gql`
   query graph($ids: [String], $filter: String) {
@@ -47,19 +60,16 @@ export type RawGraph = {
 
 export type RawNode = {
   id: string;
-  component: {
+  component?: {
     id: {
       name: string;
       scope: string;
       version: string;
     };
-
     displayName: string;
-
     deprecation: {
       isDeprecate: boolean;
     };
-
     env: {
       id: string;
       icon: string;

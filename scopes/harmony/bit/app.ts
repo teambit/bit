@@ -1,4 +1,3 @@
-/* eslint-disable import/no-dynamic-require */
 /* eslint-disable import/first */
 process.on('uncaughtException', (err) => {
   // eslint-disable-next-line no-console
@@ -6,15 +5,16 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-import { nativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
-
-// Enable v8 compile cache, keep this before other imports
-nativeCompileCache?.install();
-
 import './hook-require';
-import { bootstrap } from '@teambit/legacy/dist/bootstrap';
-import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
+import { bootstrap } from './bootstrap';
+import { handleErrorAndExit } from '@teambit/cli';
 import { runCLI } from './load-bit';
+import { autocomplete } from './autocomplete';
+
+if (process.argv.includes('--get-yargs-completions')) {
+  autocomplete();
+  process.exit(0);
+}
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 initApp();

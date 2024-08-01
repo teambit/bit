@@ -1,9 +1,8 @@
 import cliSpinners from 'cli-spinners';
 import * as path from 'path';
-import format from 'string-format';
 import { homedir, platform } from 'os';
 
-import { PathOsBased } from './utils/path';
+import type { PathOsBased } from '@teambit/toolbox.path.path';
 import { getSync } from './api/consumer/lib/global-config';
 
 const packageFile = require('../package.json');
@@ -71,6 +70,8 @@ export const GIT_IGNORE = '.gitignore';
 export const BIT_MAP = '.bitmap';
 
 export const OLD_BIT_MAP = '.bit.map.json';
+
+export const BIT_ROOTS_DIR = '.bit_roots';
 
 export const TESTS_FORK_LEVEL = {
   NONE: 'NONE',
@@ -236,14 +237,12 @@ export const IGNORE_LIST = [
   '**/.env.**.local',
   '**/.bit.map.json',
   '**/.bitmap',
-  '**/.gitignore',
   '**/bit.json',
   '**/component.json',
   '**/bitBindings.js',
   '**/node_modules/**',
   '**/package-lock.json',
   '**/yarn.lock',
-  '**/LICENSE',
 ];
 
 /**
@@ -261,9 +260,6 @@ export const BITMAP_PREFIX_MESSAGE = `/**
  * If you want to delete components you can use the "bit remove <component-id>" command.
  * See the docs (${BASE_DOCS_DOMAIN}reference/components/removing-components) for more information, or use "bit remove --help".
  */\n\n`;
-
-export const BIT_DESCRIPTION =
-  'bit is a free and open source tool designed for easy use, maintenance and discovery of code components.';
 
 /**
  * bit commands
@@ -321,7 +317,6 @@ export const CFG_INTERACTIVE = 'interactive';
 // Template for interactive config for specific command like interactive.init
 export const CFG_COMMAND_INTERACTIVE_TEMPLATE = 'interactive.{commandName}';
 
-export const CFG_INIT_INTERACTIVE = format(CFG_COMMAND_INTERACTIVE_TEMPLATE, { commandName: INIT_COMMAND });
 export const CFG_INIT_DEFAULT_SCOPE = 'default_scope';
 export const CFG_INIT_DEFAULT_DIRECTORY = 'default_directory';
 
@@ -405,69 +400,6 @@ export const POST_CHECKOUT = 'post-checkout';
 export const POST_MERGE = 'post-merge';
 
 export const GIT_HOOKS_NAMES = [POST_CHECKOUT, POST_MERGE];
-
-/**
- * bit hooks
- */
-export const PRE_TAG_HOOK = 'pre-tag';
-
-export const POST_TAG_HOOK = 'post-tag';
-
-export const POST_ADD_HOOK = 'post-add';
-
-export const PRE_TAG_ALL_HOOK = 'pre-tag-all';
-
-export const POST_TAG_ALL_HOOK = 'post-tag-all';
-
-export const PRE_IMPORT_HOOK = 'pre-import';
-
-export const POST_IMPORT_HOOK = 'post-import';
-
-export const PRE_EXPORT_HOOK = 'pre-export';
-
-export const POST_EXPORT_HOOK = 'post-export';
-
-export const PRE_SEND_OBJECTS = 'pre-send-objects'; // pre-fetch
-
-export const POST_SEND_OBJECTS = 'post-send-objects'; // post-fetch
-
-export const PRE_RECEIVE_OBJECTS = 'pre-receive-objects'; // pre-put
-
-export const POST_RECEIVE_OBJECTS = 'post-receive-objects'; // post-put
-
-export const PRE_DEPRECATE_REMOTE = 'pre-deprecate-remote';
-
-export const PRE_UNDEPRECATE_REMOTE = 'pre-undeprecate-remote';
-
-export const POST_DEPRECATE_REMOTE = 'post-deprecate-remote';
-
-export const POST_UNDEPRECATE_REMOTE = 'post-undeprecate-remote';
-
-export const PRE_REMOVE_REMOTE = 'pre-remove-remote';
-
-export const POST_REMOVE_REMOTE = 'post-remove-remote';
-
-export const HOOKS_NAMES = [
-  PRE_TAG_HOOK,
-  POST_TAG_HOOK,
-  POST_ADD_HOOK,
-  PRE_TAG_ALL_HOOK,
-  POST_TAG_ALL_HOOK,
-  PRE_IMPORT_HOOK,
-  POST_IMPORT_HOOK,
-  PRE_EXPORT_HOOK,
-  POST_EXPORT_HOOK,
-  PRE_SEND_OBJECTS,
-  POST_SEND_OBJECTS,
-  PRE_RECEIVE_OBJECTS,
-  POST_RECEIVE_OBJECTS,
-  PRE_DEPRECATE_REMOTE,
-  PRE_UNDEPRECATE_REMOTE,
-  POST_DEPRECATE_REMOTE,
-  POST_UNDEPRECATE_REMOTE,
-  PRE_REMOVE_REMOTE,
-  POST_REMOVE_REMOTE,
-];
 
 /**
  * bit registry default URL.
@@ -562,6 +494,7 @@ export const PREVIOUS_DEFAULT_LANE = 'master';
 
 export const statusInvalidComponentsMsg = 'invalid components';
 export const statusFailureMsg = 'issues found';
+export const statusWarningsMsg = 'warnings found';
 export const statusWorkspaceIsCleanMsg =
   'nothing to tag or export (use "bit create <template> <component>" to generate a new component)';
 

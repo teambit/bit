@@ -1,6 +1,6 @@
-import AbstractError from '../../error/abstract-error';
+import { BitError } from '@teambit/bit-error';
 
-export default class ComponentNeedsUpdate extends AbstractError {
+export default class ComponentNeedsUpdate extends BitError {
   id: string;
   hash: string;
   lane?: string;

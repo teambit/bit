@@ -12,8 +12,9 @@ export const statesFilter = [
   'snappedOnMain',
   'softTagged',
   'codeModified',
+  'localOnly',
 ] as const;
-export type StatesFilter = typeof statesFilter[number];
+export type StatesFilter = (typeof statesFilter)[number];
 
 export class Filter {
   constructor(private workspace: Workspace) {}
@@ -31,6 +32,7 @@ export class Filter {
       snappedOnMain: this.bySnappedOnMain,
       softTagged: this.bySoftTagged,
       codeModified: this.byCodeModified,
+      localOnly: this.byLocalOnly,
     };
     if (!statePerMethod[state]) {
       throw new Error(`state ${state} is not recognized, possible values: ${statesFilter.join(', ')}`);
@@ -73,6 +75,11 @@ export class Filter {
     const compFiles = await pMapSeries(ids, (id) => this.workspace.getFilesModification(id));
     const modifiedIds = compFiles.filter((c) => c.isModified()).map((c) => c.id);
     return compact(modifiedIds);
+  }
+
+  byLocalOnly(withinIds?: ComponentID[]): ComponentID[] {
+    const ids = withinIds || this.workspace.listIds();
+    return ids.filter((id) => this.workspace.bitMap.getBitmapEntry(id, { ignoreVersion: true }).localOnly);
   }
 
   async byNew(withinIds?: ComponentID[]): Promise<ComponentID[]> {

@@ -31,6 +31,7 @@ this command only checks source code changes, it doesn't check for config/aspect
     ],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
+  loadAspects = false;
   loader = true;
 
   constructor(private status: StatusMain) {}
@@ -55,7 +56,7 @@ this command only checks source code changes, it doesn't check for config/aspect
     return `${modifiedOutput}\n\n${newOutput}${compWithIssuesOutput}`;
   }
 
-  async json([pattern]: [string], opts: MiniStatusOpts) {
+  async json([pattern]: [string], opts: MiniStatusOpts): Promise<Record<string, any>> {
     const { modified, newComps, compWithIssues } = await this.status.statusMini(pattern, opts);
     return {
       modified: modified.map((m) => m.toStringWithoutVersion()),

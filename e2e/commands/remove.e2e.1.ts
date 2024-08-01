@@ -281,7 +281,7 @@ describe('bit remove command', function () {
             importOutput = helper.command.importComponent('comp2');
           });
           it('should indicate that the component is removed', () => {
-            expect(importOutput).to.have.string('removed');
+            expect(importOutput).to.have.string('deleted');
           });
           it('bit status should show them as remotelySoftRemoved', () => {
             const status = helper.command.statusJson();

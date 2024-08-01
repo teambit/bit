@@ -1,5 +1,5 @@
 import { AspectAspect } from '@teambit/aspect';
-import AspectLoaderAspect from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { BuilderAspect } from '@teambit/builder';
 import { BundlerAspect } from '@teambit/bundler';
 import { CacheAspect } from '@teambit/cache';
@@ -58,11 +58,11 @@ import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
 import { PrettierAspect } from '@teambit/prettier';
 import { SignAspect } from '@teambit/sign';
-import WorkerAspect from '@teambit/worker';
+import { WorkerAspect } from '@teambit/worker';
 import { GlobalConfigAspect } from '@teambit/global-config';
-import MultiCompilerAspect from '@teambit/multi-compiler';
-import MDXAspect from '@teambit/mdx';
-import ReadmeAspect from '@teambit/readme';
+import { MultiCompilerAspect } from '@teambit/multi-compiler';
+import { MDXAspect } from '@teambit/mdx';
+import { ReadmeAspect } from '@teambit/readme';
 import { ApplicationAspect } from '@teambit/application';
 import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
 import { ExportAspect } from '@teambit/export';
@@ -102,6 +102,8 @@ import { GitAspect } from '@teambit/git';
 import { IpcEventsAspect } from '@teambit/ipc-events';
 import { ConfigMergerAspect } from '@teambit/config-merger';
 import { VersionHistoryAspect } from '@teambit/version-history';
+import { HostInitializerAspect } from '@teambit/host-initializer';
+import { DoctorAspect } from '@teambit/doctor';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -208,6 +210,8 @@ export const manifestsMap = {
   [IpcEventsAspect.id]: IpcEventsAspect,
   [ConfigMergerAspect.id]: ConfigMergerAspect,
   [VersionHistoryAspect.id]: VersionHistoryAspect,
+  [HostInitializerAspect.id]: HostInitializerAspect,
+  [DoctorAspect.id]: DoctorAspect,
 };
 
 export function isCoreAspect(id: string) {

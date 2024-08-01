@@ -1,3 +1,4 @@
+import { getRootComponentDir } from '@teambit/workspace.root-components';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
@@ -1677,5 +1678,25 @@ describe('create with root components on', function () {
   });
   it('should create the runtime component directory for the created component', () => {
     expect(path.join(helper.env.rootCompDirDep('teambit.react/react', 'my-button'), 'index.ts')).to.be.a.path();
+  });
+});
+
+describe('custom root components directory', function () {
+  let helper: Helper;
+  this.timeout(0);
+  describe('set a valid custom location', () => {
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.extensions.workspaceJsonc.addKeyValToWorkspace('rootComponentsDirectory', '');
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.command.create('react', 'card', '--env teambit.react/react');
+      helper.command.install();
+    });
+    it('should create the root component directory at the specified location', () => {
+      expect(
+        getRootComponentDir(path.join(helper.scopes.localPath, '.bit_roots'), 'teambit.react/react')
+      ).to.be.a.path();
+    });
   });
 });

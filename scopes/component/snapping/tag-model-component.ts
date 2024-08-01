@@ -11,13 +11,13 @@ import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-m
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
-import { getBasicLog } from '@teambit/legacy/dist/utils/bit/basic-log';
 import { Component } from '@teambit/component';
-import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
+import { deleteComponentsFiles } from '@teambit/remove';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { sha1 } from '@teambit/legacy/dist/utils';
+import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
+import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
-import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
 import { BuilderMain, OnTagOpts } from '@teambit/builder';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
 import {
@@ -242,8 +242,12 @@ export async function tagModelComponent({
   // ids without versions are new. it's impossible that tagged (and not-modified) components has
   // them as dependencies.
   const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
-  const autoTagData =
+  const autoTagDataWithLocalOnly =
     skipAutoTag || !consumer ? [] : await getAutoTagInfo(consumer, ComponentIdList.fromArray(idsToTriggerAutoTag));
+  const localOnly = workspace?.listLocalOnly();
+  const autoTagData = localOnly
+    ? autoTagDataWithLocalOnly.filter((autoTagItem) => !localOnly.hasWithoutVersion(autoTagItem.component.id))
+    : autoTagDataWithLocalOnly;
   const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
   const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
   const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));

@@ -3,13 +3,11 @@
 process.on('uncaughtException', (err) => {
   // eslint-disable-next-line no-console
   console.error('uncaughtException', err);
+
   process.exit(1);
 });
 
-import { nativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
-
-// Enable v8 compile cache, keep this before other imports
-nativeCompileCache?.install();
+process.env.BROWSERSLIST_IGNORE_OLD_DATA = 'true';
 
 import './hook-require';
 // need it for graphql modules to work. https://the-guild.dev/graphql/modules/docs/di/introduction
@@ -31,21 +29,21 @@ import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
 import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
 import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { ConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
-import BitMap from '@teambit/legacy/dist/consumer/bit-map';
+import { BitMap } from '@teambit/legacy.bit-map';
 import { BitError } from '@teambit/bit-error';
 import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { satisfies } from 'semver';
-import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
-import ClearCacheAspect from '@teambit/clear-cache';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
+import { ClearCacheAspect } from '@teambit/clear-cache';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
+import { ExternalActions } from '@teambit/legacy.scope-api';
 import { readdir, readFile } from 'fs-extra';
 import { resolve, join } from 'path';
 import { manifestsMap } from './manifests';
@@ -215,10 +213,20 @@ function getMainAspect() {
  */
 function shouldLoadInSafeMode() {
   const currentCommand = process.argv[2];
-  const safeModeCommands = ['init', 'cat-scope', 'cat-object', 'cat-component', 'cmp', 'cat-lane', 'config', 'remote'];
+  // harmony commands need the aspects to be loaded and register to the CLI aspect in order to work properly.
+  const commandsThatCanRunInSafeMode = [
+    'dependents',
+    'remote',
+    'doctor',
+    'cat-version-history',
+    'cat-component',
+    'cat-scope',
+    'cat-object',
+    'config',
+    'run-action',
+  ];
   const hasSafeModeFlag = process.argv.includes('--safe-mode');
-  const isSafeModeCommand = safeModeCommands.includes(currentCommand) || isClearCacheCommand();
-  return isSafeModeCommand || hasSafeModeFlag;
+  return isClearCacheCommand() || (hasSafeModeFlag && commandsThatCanRunInSafeMode.includes(currentCommand));
 }
 
 function isClearCacheCommand() {
@@ -263,11 +271,12 @@ function verifyEngine(bitConfig: BitConfig) {
   if (!bitConfig.engine) {
     return;
   }
-  const bitVersion = getHarmonyVersion(true);
+  const bitVersion = getBitVersion();
   if (satisfies(bitVersion, bitConfig.engine)) {
     return;
   }
-  const msg = `your bit version "${bitVersion}" doesn't satisfies the required "${bitConfig.engine}" version`;
+  const msg = `your bit version "${bitVersion}" doesn't satisfies the required "${bitConfig.engine}" version
+please run "bvm install ${bitConfig.engine}" to install and use a specific version of Bit.`;
   if (bitConfig.engineStrict) {
     throw new Error(`error: ${msg}`);
   }
@@ -338,12 +347,6 @@ export function takeLegacyGlobalsSnapshot(): LegacyGlobal[] {
       methodName: 'toModelObjectsHook',
       value: ExtensionDataList.toModelObjectsHook,
       empty: [],
-    },
-    {
-      classInstance: WorkspaceConfig,
-      methodName: 'workspaceConfigEnsuringRegistry',
-      value: WorkspaceConfig.workspaceConfigEnsuringRegistry,
-      empty: undefined,
     },
     {
       classInstance: WorkspaceConfig,

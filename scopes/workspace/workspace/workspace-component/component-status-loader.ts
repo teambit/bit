@@ -5,10 +5,9 @@ import { VERSION_ZERO } from '@teambit/legacy/dist/scope/models/model-component'
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { LATEST } from '@teambit/legacy/dist/constants';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
-import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
-import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
+import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
 import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
-import MissingFilesFromComponent from '@teambit/legacy/dist/consumer/component/exceptions/missing-files-from-component';
 import ComponentOutOfSync from '@teambit/legacy/dist/consumer/exceptions/component-out-of-sync';
 import { Workspace } from '..';
 
@@ -82,11 +81,7 @@ export class ComponentStatusLoader {
       }
       componentFromFileSystem = components[0];
     } catch (err: any) {
-      if (
-        err instanceof MissingFilesFromComponent ||
-        err instanceof ComponentNotFoundInPath ||
-        err instanceof MissingBitMapComponent
-      ) {
+      if (err instanceof ComponentNotFoundInPath || err instanceof MissingBitMapComponent) {
         // the file/s have been deleted or the component doesn't exist in bit.map file
         if (componentFromModel) status.deleted = true;
         else status.notExist = true;

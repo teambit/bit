@@ -3,7 +3,7 @@ import { RouteProps } from 'react-router-dom';
 import { ComponentID, UseComponentType } from '@teambit/component';
 import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
 import { ComponentCompareState } from '@teambit/component.ui.component-compare.models.component-compare-state';
-import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
+import type { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import { MaybeLazyLoaded } from '@teambit/component.ui.component-compare.utils.lazy-loading';
 import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
 import { StateAndHooks } from '@teambit/component.ui.component-compare.context';

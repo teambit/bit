@@ -49,7 +49,7 @@ export class EnvPolicy extends VariantPolicy {
   }
 
   static fromConfigObject(
-    configObject,
+    configObject: EnvPolicyConfigObject,
     { includeLegacyPeersInSelfPolicy }: VariantPolicyFromConfigObjectOptions = {}
   ): EnvPolicy {
     validateEnvPolicyConfigObject(configObject);
@@ -59,9 +59,12 @@ export class EnvPolicy extends VariantPolicy {
      * Always force it for the env itself
      */
     let selfPeersEntries: VariantPolicyEntry[];
+    // @ts-ignore TODO: need to fix this, the | confusing the compiler
     if (includeLegacyPeersInSelfPolicy && !configObject.peers && configObject.peerDependencies) {
+      // @ts-ignore TODO: need to fix this, the | confusing the compiler
       selfPeersEntries = handleLegacyPeers(configObject);
     } else {
+      // @ts-ignore TODO: need to fix this, the | confusing the compiler
       selfPeersEntries = entriesFromKey(configObject, 'peers', 'version', 'runtime', {
         source: 'env-own',
         force: true,
@@ -75,10 +78,12 @@ export class EnvPolicy extends VariantPolicy {
      * Those were always forced on the components as visible dependencies.
      */
     const legacyPolicy = VariantPolicy.fromConfigObject(configObject, { source: 'env', force: true, hidden: false });
+    // @ts-ignore TODO: need to fix this, the | confusing the compiler
     const componentPeersEntries = entriesFromKey(configObject, 'peers', 'supportedRange', 'peer', { source: 'env' });
     const otherKeyNames: EnvJsoncPolicyConfigKey[] = ['dev', 'runtime'];
     const otherEntries: VariantPolicyEntry[] = otherKeyNames.reduce(
       (acc: VariantPolicyEntry[], keyName: EnvJsoncPolicyConfigKey) => {
+        // @ts-ignore TODO: need to fix this, the | confusing the compiler
         const currEntries = entriesFromKey(configObject, keyName, 'version', keyName as DependencyLifecycleType, {
           source: 'env',
         });

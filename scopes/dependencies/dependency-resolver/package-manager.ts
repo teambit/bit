@@ -30,6 +30,11 @@ export type PackageManagerInstallOptions = {
 
   lockfileOnly?: boolean;
 
+  /**
+   * When false, the package manager will not write the node_modules directory
+   */
+  enableModulesDir?: boolean;
+
   nodeLinker?: 'hoisted' | 'isolated';
 
   packageManagerConfigRootDir?: string;

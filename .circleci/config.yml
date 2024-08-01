@@ -395,6 +395,7 @@ jobs:
           name: 'Run unit tests'
           command: 'cd bit && npm run test-circle'
           environment:
+            FORCE_COLOR: 1
             MOCHA_FILE: junit/unit-test-results.xml
           when: always
       - store_test_results:
@@ -439,6 +440,9 @@ jobs:
           name: 'make sure there is no "ramda" imported to Harmony'
           command: 'cd bit && ./scripts/validate-no-ramda.sh'
       - run:
+          name: 'make sure there is no import aspects from default export'
+          command: 'cd bit && ./scripts/validate-import-named-aspects.sh'
+      - run:
           name: 'make sure the packages used in legacy are specified in package.json'
           command: 'cd bit && node scripts/validate-pkg-exist-in-pkg-json.js'
       - persist_to_workspace:
@@ -457,7 +461,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.31-v1
+          key: core-aspect-env-v0.0.42-v2
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
@@ -471,9 +475,8 @@ jobs:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
-      # - run: bvm install 0.0.910
-      - run: bvm upgrade
-      # - run: bvm install 1.5.36
+      # - run: bvm upgrade
+      - run: bvm install 1.7.41
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
@@ -483,13 +486,14 @@ jobs:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
+      - run: cd bit && bbit init
       - run:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.0.31-v1
+          key: core-aspect-env-v0.0.42-v2
           paths:
-            - /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088
+            - /home/circleci/Library/Caches/Bit/capsules/caec9a107
       - run: cd bit && npm run link-bit-legacy
       # - run: cd bit && bbit compile
 
@@ -533,7 +537,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.31-v1
+          key: core-aspect-env-v0.0.42-v2
       # - update_ssh_agent
       # temporary, check if we can remove it
       - run: cd bit && bit cc
@@ -570,7 +574,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.31-v1
+          key: core-aspect-env-v0.0.42-v2
       - bit_config:
           env: "hub"
       - restore_cache:
@@ -629,6 +633,7 @@ jobs:
             - bit/.git/bit
             - bit/.bitmap
             - bit/workspace.jsonc
+            - bit/scopes/harmony/cli-reference
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
@@ -882,7 +887,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.31-v1
+          key: core-aspect-env-v0.0.42-v2
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -900,7 +905,6 @@ jobs:
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
-            NODE_OPTIONS: --no-warnings --max-old-space-size=5000
           when: always
       - store_test_results:
           path: bit/junit

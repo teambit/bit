@@ -11,15 +11,14 @@ import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import { MergeStrategy, MergeOptions } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { DiffOptions } from '@teambit/legacy.component-diff';
+import { MergeStrategy, MergeOptions, MergingMain, MergingAspect } from '@teambit/merging';
 import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
 import { HistoryItem } from '@teambit/legacy/dist/scope/models/lane-history';
 import { FetchCmd, ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
-import removeLanes from '@teambit/legacy/dist/consumer/lanes/remove-lanes';
 import { Lane, LaneHistory, Version } from '@teambit/legacy/dist/scope/models';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
 import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
@@ -30,13 +29,13 @@ import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { MergingMain, MergingAspect } from '@teambit/merging';
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
-import ComponentsList, { DivergeDataPerId } from '@teambit/legacy/dist/consumer/component/components-list';
+import { ComponentsList, DivergeDataPerId } from '@teambit/legacy.component-list';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
-import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
-import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
+import { removeLanes } from './remove-lanes';
 import { LanesAspect } from './lanes.aspect';
 import {
   LaneCmd,
@@ -66,7 +65,7 @@ import { createLane, createLaneInScope, throwForInvalidLaneName } from './create
 import { LanesCreateRoute } from './lanes.create.route';
 import { LanesDeleteRoute } from './lanes.delete.route';
 import { LanesRestoreRoute } from './lanes.restore.route';
-import InstallAspect, { InstallMain } from '@teambit/install';
+import { InstallAspect, InstallMain } from '@teambit/install';
 
 export { Lane };
 
@@ -88,8 +87,11 @@ export type CreateLaneOptions = {
 };
 
 export type SwitchLaneOptions = {
+  head?: boolean;
   alias?: string;
   merge?: MergeStrategy;
+  forceOurs?: boolean;
+  forceTheirs?: boolean;
   workspaceOnly?: boolean;
   pattern?: string;
   skipDependencyInstallation?: boolean;
@@ -562,7 +564,16 @@ please create a new lane instead, which will include all components of this lane
    */
   async switchLanes(
     laneName: string,
-    { alias, merge, pattern, workspaceOnly, skipDependencyInstallation = false }: SwitchLaneOptions
+    {
+      alias,
+      merge,
+      forceOurs,
+      forceTheirs,
+      pattern,
+      workspaceOnly,
+      skipDependencyInstallation = false,
+      head,
+    }: SwitchLaneOptions
   ) {
     if (!this.workspace) {
       throw new BitError(`unable to switch lanes outside of Bit workspace`);
@@ -584,9 +595,12 @@ please create a new lane instead, which will include all components of this lane
       existingOnWorkspaceOnly: workspaceOnly,
       pattern,
       alias,
+      head,
     };
     const checkoutProps = {
       mergeStrategy,
+      forceOurs,
+      forceTheirs,
       skipNpmInstall: skipDependencyInstallation,
       isLane: true,
       promptMergeOptions: false,
@@ -714,7 +728,7 @@ please create a new lane instead, which will include all components of this lane
           )
         : [];
 
-    await this.importer.importObjectsFromMainIfExist(targetMainHeads);
+    await this.importer.importObjectsFromMainIfExist(targetMainHeads, { cache: true });
 
     const diffProps = compact(
       await Promise.all(

@@ -1,11 +1,17 @@
+import { join } from 'path';
+import findRoot from 'find-root';
+import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { isCoreAspect } from '@teambit/bit';
+import { existsSync, readFileSync } from 'fs-extra';
 import pLocate from 'p-locate';
 import { parse } from 'comment-json';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
+import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
+import type { EnvJsoncPatterns } from '@teambit/dev-files';
 import pMapSeries from 'p-map-series';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
@@ -29,7 +35,16 @@ import { EnvFragment } from './env.fragment';
 import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
 import { EnvPlugin } from './env.plugin';
 
+export type EnvJsonc = {
+  extends?: string;
+  policy?: EnvPolicyConfigObject;
+  patterns?: EnvJsoncPatterns;
+};
+
+export type EnvJsoncMergeCustomizer = (parentObj: EnvJsonc, childObj: EnvJsonc) => Partial<EnvJsonc>;
+
 export type EnvsRegistry = SlotRegistry<Environment>;
+export type EnvJsoncMergeCustomizerRegistry = SlotRegistry<EnvJsoncMergeCustomizer>;
 
 export type EnvsConfig = {
   env: string;
@@ -131,7 +146,9 @@ export class EnvsMain {
 
     private loggerMain: LoggerMain,
 
-    private workerMain: WorkerMain
+    private workerMain: WorkerMain,
+
+    private envJsoncMergeCustomizerSlot: EnvJsoncMergeCustomizerRegistry
   ) {}
 
   /**
@@ -272,7 +289,7 @@ export class EnvsMain {
     return true;
   }
 
-  getEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): Object | undefined {
+  getEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): EnvJsonc | undefined {
     // TODO: maybe throw an error here?
     if (!envComponent && !legacyFiles) return undefined;
     // @ts-ignore
@@ -283,8 +300,51 @@ export class EnvsMain {
 
     if (!envJson) return undefined;
 
-    const object = parse(envJson.contents.toString('utf8'));
-    return object;
+    const object: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true);
+    const resolvedObject = this.recursivelyMergeWithParentManifest(object, envJson.path);
+    return resolvedObject;
+  }
+
+  recursivelyMergeWithParentManifest(object: EnvJsonc, originPath: string): EnvJsonc {
+    if (!object.extends) return object;
+    const parentPackageName = object.extends;
+    const parentPath = resolveFrom(originPath, [parentPackageName]);
+    const parentResolvedPath = findRoot(parentPath);
+    if (!parentResolvedPath || !existsSync(parentResolvedPath)) {
+      this.logger.info(`failed finding parent manifest for ${parentPackageName} at ${parentResolvedPath}`);
+    }
+    const parentEnvJsoncPath = ['env.jsonc', 'env.json']
+      .map((fileName) => join(parentResolvedPath, fileName))
+      .find((filePath) => {
+        return existsSync(filePath);
+      });
+    if (!parentEnvJsoncPath) {
+      this.logger.consoleWarning(
+        `failed finding parent manifest for ${parentPackageName} at ${parentResolvedPath} referred from ${originPath}`
+      );
+      return object;
+    }
+    const parentStr = readFileSync(parentEnvJsoncPath).toString('utf8');
+    const parentObject: EnvJsonc = parse(parentStr, undefined, true);
+    const mergedObject = this.mergeEnvManifests(parentObject, object);
+    if (mergedObject.extends) {
+      return this.recursivelyMergeWithParentManifest(mergedObject, parentEnvJsoncPath);
+    }
+    return mergedObject;
+  }
+
+  mergeEnvManifests(parent: EnvJsonc, child: EnvJsonc): EnvJsonc {
+    let merged: EnvJsonc = {};
+    const mergeCustomizer = this.getAllRegisteredEnvJsoncCustomizers();
+    for (const customizer of mergeCustomizer) {
+      const oneMerged = customizer(parent, child);
+      merged = { ...merged, ...oneMerged };
+    }
+    // Take extends specifically from the parent so we can propagate it to the next parent
+    if (parent.extends) {
+      merged.extends = parent.extends;
+    }
+    return merged;
   }
 
   async hasEnvManifestById(envId: string, requesting: string): Promise<boolean | undefined> {
@@ -621,6 +681,10 @@ export class EnvsMain {
     return this.envSlot.toArray().map((envData) => envData[0]);
   }
 
+  getAllRegisteredEnvJsoncCustomizers(): EnvJsoncMergeCustomizer[] {
+    return this.envJsoncMergeCustomizerSlot.toArray().map((customizerEntry) => customizerEntry[1]);
+  }
+
   getEnvPlugin() {
     return new EnvPlugin(this.envSlot, this.servicesRegistry, this.loggerMain, this.workerMain, this.harmony);
   }
@@ -941,6 +1005,13 @@ export class EnvsMain {
     return this.envSlot.register(env);
   }
 
+  /**
+   * register an env.jsonc merge customizer.
+   */
+  registerEnvJsoncMergeCustomizer(customizer: EnvJsoncMergeCustomizer) {
+    return this.envJsoncMergeCustomizerSlot.register(customizer);
+  }
+
   async addNonLoadedEnvAsComponentIssues(components: Component[]) {
     await pMapSeries(components, async (component) => {
       const envId = await this.calculateEnvId(component);
@@ -1019,7 +1090,11 @@ export class EnvsMain {
     }
   }
 
-  static slots = [Slot.withType<Environment>(), Slot.withType<EnvService<any>>()];
+  static slots = [
+    Slot.withType<Environment>(),
+    Slot.withType<EnvService<any>>(),
+    Slot.withType<EnvJsoncMergeCustomizerRegistry>(),
+  ];
 
   static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect, CLIAspect, WorkerAspect, IssuesAspect];
 
@@ -1033,11 +1108,25 @@ export class EnvsMain {
       IssuesMain
     ],
     config: EnvsConfig,
-    [envSlot, servicesRegistry]: [EnvsRegistry, ServicesRegistry],
+    [envSlot, servicesRegistry, envJsoncMergeCustomizerSlot]: [
+      EnvsRegistry,
+      ServicesRegistry,
+      EnvJsoncMergeCustomizerRegistry
+    ],
     context: Harmony
   ) {
     const logger = loggerAspect.createLogger(EnvsAspect.id);
-    const envs = new EnvsMain(config, context, envSlot, logger, servicesRegistry, component, loggerAspect, worker);
+    const envs = new EnvsMain(
+      config,
+      context,
+      envSlot,
+      logger,
+      servicesRegistry,
+      component,
+      loggerAspect,
+      worker,
+      envJsoncMergeCustomizerSlot
+    );
     component.registerShowFragments([new EnvFragment(envs)]);
     if (issues) issues.registerAddComponentsIssues(envs.addNonLoadedEnvAsComponentIssues.bind(envs));
 

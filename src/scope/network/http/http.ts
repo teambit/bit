@@ -7,12 +7,12 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
 import { HttpProxyAgent } from 'http-proxy-agent';
+import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { LaneId } from '@teambit/lane-id';
 import { getAgent, AgentOptions } from '@teambit/toolbox.network.agent';
+import { ListScopeResult } from '@teambit/legacy.component-list';
 import { Network } from '../network';
-import { getHarmonyVersion } from '../../../bootstrap';
 import Component from '../../../consumer/component';
-import { ListScopeResult } from '../../../consumer/component/components-list';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLog } from '../../models/model-component';
@@ -47,15 +47,14 @@ import {
 } from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
-import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
+import { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
 import { remoteErrorHandler } from '../remote-error-handler';
-import { PushOptions } from '../../../api/scope/lib/put';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
 import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
 import loader from '../../../cli/loader';
 import { UnexpectedNetworkError } from '../exceptions';
-import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '../../../api/consumer/lib/feature-toggle';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 
 const _fetch: typeof fetch = nodeFetch as unknown as typeof fetch;
 
@@ -467,7 +466,7 @@ export class Http implements Network {
     });
   }
 
-  async list(namespacesUsingWildcards?: string | undefined): Promise<ListScopeResult[]> {
+  async listBackwardCompatible(namespacesUsingWildcards?: string | undefined): Promise<ListScopeResult[]> {
     const LIST_HARMONY = gql`
       query list($namespaces: [String!]) {
         scope {
@@ -492,6 +491,58 @@ export class Http implements Network {
     data.scope.components.forEach((comp) => {
       comp.id = ComponentID.fromObject(comp.id);
       comp.deprecated = comp.deprecation.isDeprecate;
+    });
+
+    return data.scope.components;
+  }
+
+  async list(namespacesUsingWildcards?: string | undefined, includeDeleted = false): Promise<ListScopeResult[]> {
+    if (!includeDeleted) return this.listBackwardCompatible(namespacesUsingWildcards);
+    const LIST_HARMONY = gql`
+      query list($namespaces: [String!], $includeDeleted: Boolean) {
+        scope {
+          components(namespaces: $namespaces, includeDeleted: $includeDeleted) {
+            id {
+              scope
+              version
+              name
+            }
+            aspects(include: ["teambit.component/remove"]) {
+              id
+              config
+            }
+            deprecation {
+              isDeprecate
+            }
+          }
+        }
+      }
+    `;
+
+    let data: any;
+    try {
+      data = await this.graphClientRequest(LIST_HARMONY, Verb.READ, {
+        namespaces: namespacesUsingWildcards ? [namespacesUsingWildcards] : undefined,
+        includeDeleted,
+      });
+    } catch (err: any) {
+      if (err.message.includes('Unknown argument' && err.message.includes('includeDeleted'))) {
+        loader.stop();
+        logger.console(
+          `error: the remote does not support the include-deleted flag yet, falling back to listing without deleted components`,
+          'error',
+          'red'
+        );
+        return this.listBackwardCompatible(namespacesUsingWildcards);
+      }
+      throw err;
+    }
+
+    data.scope.components.forEach((comp) => {
+      const removeAspect = comp.aspects.find((aspect) => aspect.id === 'teambit.component/remove');
+      comp.id = ComponentID.fromObject(comp.id);
+      comp.deprecated = comp.deprecation.isDeprecate;
+      comp.removed = removeAspect?.config?.removed;
     });
 
     return data.scope.components;
@@ -645,7 +696,7 @@ export class Http implements Network {
   }
 
   private getClientVersion(): string {
-    return getHarmonyVersion(true);
+    return getBitVersion();
   }
 
   private addAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {
@@ -701,7 +752,7 @@ export async function getFetcherWithAgent(uri: string): Promise<typeof fetch> {
 export function wrapFetcherWithAgent(agent: Agent) {
   return (url, opts) => {
     const actualOpts = Object.assign({}, opts, { agent });
-    return fetch(url, actualOpts);
+    return _fetch(url, actualOpts);
   };
 }
 

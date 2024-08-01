@@ -6,7 +6,7 @@ import { LaneId } from '@teambit/lane-id';
 import { compact, set } from 'lodash';
 import { Mutex } from 'async-mutex';
 import { PREVIOUS_DEFAULT_LANE, REMOTE_REFS_DIR } from '../../constants';
-import { glob } from '../../utils';
+import { glob } from '@teambit/legacy.utils';
 import { Lane, ModelComponent } from '../models';
 import { LaneComponent } from '../models/lane';
 import { Ref } from '../objects';

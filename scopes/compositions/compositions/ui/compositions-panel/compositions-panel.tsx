@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import { useSearchParams } from 'react-router-dom';
 import React, { useCallback } from 'react';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 import { useNavigate, useLocation } from '@teambit/base-react.navigation.link';
 import { Composition } from '../../composition';
 import styles from './compositions-panel.module.scss';
@@ -92,9 +93,11 @@ export function CompositionsPanel({
                 tooltipContent="Code"
                 onClick={onCompositionCodeClicked(composition)}
               />
-              <a className={styles.panelLink} target="_blank" rel="noopener noreferrer" href={href}>
-                <Icon className={styles.icon} of="open-tab" />
-              </a>
+              <Tooltip content="Open in new tab" placement="bottom">
+                <a className={styles.panelLink} target="_blank" rel="noopener noreferrer" href={href}>
+                  <Icon className={styles.icon} of="open-tab" />
+                </a>
+              </Tooltip>
             </div>
           </li>
         );

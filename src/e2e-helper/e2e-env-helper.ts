@@ -1,11 +1,12 @@
 import * as path from 'path';
-import { getRootComponentDir } from '@teambit/bit-roots';
+import { getRootComponentDir } from '@teambit/workspace.root-components';
 import CommandHelper from './e2e-command-helper';
 import ExtensionsHelper from './e2e-extensions-helper';
 import FixtureHelper, { GenerateEnvJsoncOptions } from './e2e-fixtures-helper';
 import FsHelper from './e2e-fs-helper';
 import ScopeHelper from './e2e-scope-helper';
 import ScopesData from './e2e-scopes';
+import { ENV_POLICY } from '../../e2e/harmony/dependencies/env-jsonc-policies.e2e';
 
 type SetCustomEnvOpts = {
   skipInstall?: boolean;
@@ -46,7 +47,7 @@ export default class EnvHelper {
   }
 
   rootCompDir(envName: string) {
-    return getRootComponentDir(this.scopes.localPath, envName);
+    return getRootComponentDir(path.join(this.scopes.localPath, 'node_modules/.bit_roots'), envName);
   }
 
   getTypeScriptSettingsForES5() {
@@ -101,12 +102,12 @@ export default class EnvHelper {
   /**
    * This will generate env in the new format (using the *.bit-env.* plugin)
    * @param extensionsBaseFolder
-   * @returns
+   * @returns env name
    */
   setCustomNewEnv(
     extensionsBaseFolder = 'react-based-env',
     basePackages: string[] = ['@teambit/react.react-env'],
-    envJsoncOptions: GenerateEnvJsoncOptions,
+    envJsoncOptions: GenerateEnvJsoncOptions = { policy: ENV_POLICY },
     runInstall = true,
     targetFolder?: string,
     id?: string

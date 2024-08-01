@@ -1,7 +1,7 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { BuilderAspect } from '@teambit/builder';
@@ -20,13 +20,14 @@ import {
   FieldsDiff,
   FileDiff,
   getFilesDiff,
-} from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import { diffBetweenComponentsObjects } from '@teambit/legacy/dist/consumer/component-ops/components-object-diff';
+  diffBetweenComponentsObjects,
+} from '@teambit/legacy.component-diff';
 import { TesterMain, TesterAspect } from '@teambit/tester';
 import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
 import { componentCompareSchema } from './component-compare.graphql';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { DiffCmd } from './diff-cmd';
+import { ImporterAspect, ImporterMain } from '@teambit/importer';
 
 export type ComponentCompareResult = {
   id: string;
@@ -48,6 +49,7 @@ export class ComponentCompareMain {
     private logger: Logger,
     private tester: TesterMain,
     private depResolver: DependencyResolverMain,
+    private importer: ImporterMain,
     private workspace?: Workspace
   ) {}
 
@@ -59,6 +61,11 @@ export class ComponentCompareMain {
     if (!modelComponent) {
       throw new BitError(`component ${compareCompId.toString()} doesn't have any version yet`);
     }
+
+    // import missing components that might be on main
+    await this.importer.importObjectsFromMainIfExist([baseCompId, compareCompId], {
+      cache: true,
+    });
 
     const baseVersion = baseCompId.version as string;
     const compareVersion = compareCompId.version as string;
@@ -183,6 +190,8 @@ export class ComponentCompareMain {
         throw new BitError(`component ${component.id.toString()} doesn't have any version yet`);
       }
       const repository = consumer.scope.objects;
+      const idList = ComponentIdList.fromArray([component.id.changeVersion(version)]);
+      await consumer.scope.scopeImporter.importWithoutDeps(idList, { cache: true, reason: 'to show diff' });
       const fromVersionObject: Version = await modelComponent.loadVersion(version, repository);
       const versionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
       const fsFiles = consumerComponent.files;
@@ -205,7 +214,8 @@ export class ComponentCompareMain {
         throw new BitError(`component ${id.toString()} doesn't have any version yet`);
       }
       const repository = consumer.scope.objects;
-
+      const idList = ComponentIdList.fromArray([id.changeVersion(version), id.changeVersion(toVersion)]);
+      await consumer.scope.scopeImporter.importWithoutDeps(idList, { cache: true, reason: 'to show diff' });
       const fromVersionObject: Version = await modelComponent.loadVersion(version, repository);
       const toVersionObject: Version = await modelComponent.loadVersion(toVersion, repository);
       const fromVersionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
@@ -292,9 +302,10 @@ export class ComponentCompareMain {
     WorkspaceAspect,
     TesterAspect,
     DependencyResolverAspect,
+    ImporterAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([graphql, component, scope, loggerMain, cli, workspace, tester, depResolver]: [
+  static async provider([graphql, component, scope, loggerMain, cli, workspace, tester, depResolver, importer]: [
     GraphqlMain,
     ComponentMain,
     ScopeMain,
@@ -302,10 +313,19 @@ export class ComponentCompareMain {
     CLIMain,
     Workspace,
     TesterMain,
-    DependencyResolverMain
+    DependencyResolverMain,
+    ImporterMain
   ]) {
     const logger = loggerMain.createLogger(ComponentCompareAspect.id);
-    const componentCompareMain = new ComponentCompareMain(component, scope, logger, tester, depResolver, workspace);
+    const componentCompareMain = new ComponentCompareMain(
+      component,
+      scope,
+      logger,
+      tester,
+      depResolver,
+      importer,
+      workspace
+    );
     cli.register(new DiffCmd(componentCompareMain));
     graphql.register(componentCompareSchema(componentCompareMain));
     return componentCompareMain;

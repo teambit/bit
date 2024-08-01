@@ -1,11 +1,12 @@
 import { ApolloClient, InMemoryCache, HttpLink, split, NormalizedCacheObject, ApolloLink } from '@apollo/client';
-import { WebSocketLink } from '@apollo/client/link/ws';
 import { setContext } from '@apollo/client/link/context';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { fetch as crossFetch } from 'cross-fetch';
 import { getIntrospectionQuery, buildClientSchema, GraphQLSchema } from 'graphql';
 import { wrapSchema } from '@graphql-tools/wrap';
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import ws from 'ws';
+import { createClient } from 'graphql-ws';
 import { GraphQLServer } from '../graphql-server';
 
 async function createApolloClient(
@@ -40,14 +41,15 @@ async function createApolloClient(
     };
   });
 
-  const link = contextLink.concat(httpLink).concat(wrappingLink);
+  const link = contextLink.concat(wrappingLink).concat(httpLink);
 
   if (subscriptionsUri) {
-    const wsLink = new WebSocketLink({
-      uri: subscriptionsUri,
-      options: { reconnect: true },
-      webSocketImpl: ws,
-    });
+    const wsLink = new GraphQLWsLink(
+      createClient({
+        url: subscriptionsUri,
+        webSocketImpl: ws,
+      })
+    );
 
     const splitLink = split(
       ({ query }) => {
@@ -89,7 +91,7 @@ async function getRemoteSchema({
     schema: remoteSchema,
     executor: async ({ document, variables }) => {
       const fetchResult = await client.query({ query: document, variables, fetchPolicy: 'network-only' });
-      return fetchResult;
+      return fetchResult as any;
     },
   });
 }

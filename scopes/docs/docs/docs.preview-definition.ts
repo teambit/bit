@@ -1,7 +1,7 @@
 import { Component, ComponentMap } from '@teambit/component';
 import type { Environment, ExecutionContext } from '@teambit/envs';
 import { PreviewDefinition } from '@teambit/preview';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 
 import { DocsMain } from './docs.main.runtime';
 

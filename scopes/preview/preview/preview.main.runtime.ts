@@ -20,7 +20,7 @@ import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
 import { uniq } from 'lodash';
-import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
+import { writeFileSync, existsSync, mkdirSync, ensureDirSync, writeJSONSync } from 'fs-extra';
 import { join } from 'path';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { AspectLoaderAspect, getAspectDir, getAspectDirFromBvm } from '@teambit/aspect-loader';
@@ -29,11 +29,11 @@ import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFiles } from '@teambit/component.sources';
 import { WatcherAspect, WatcherMain } from '@teambit/watcher';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { ONLY_OVERVIEW, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { ONLY_OVERVIEW, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { BundlingStrategyNotFound } from './exceptions';
 import { generateLink, MainModulesMap } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
@@ -639,6 +639,17 @@ export class PreviewMain {
   private writeHash = new Map<string, string>();
   private timestamp = Date.now();
 
+  private ensureTempPackage() {
+    const workspacePath = this.workspace?.path;
+    const tempPackageDir = workspacePath ? join(workspacePath, 'node_modules', '@teambit', '_local') : '';
+    if (tempPackageDir) {
+      ensureDirSync(tempPackageDir);
+      writeJSONSync(join(tempPackageDir, 'package.json'), { name: '@teambit/_local' });
+      writeFileSync(join(tempPackageDir, 'index.js'), 'module.exports = {};');
+      return tempPackageDir;
+    }
+  }
+
   /**
    * write a link to load custom modules dynamically.
    * @param prefix write
@@ -653,7 +664,8 @@ export class PreviewMain {
     dirName: string,
     isSplitComponentBundle: boolean
   ) {
-    const contents = generateLink(prefix, moduleMap, mainModulesMap, isSplitComponentBundle);
+    const tempPackageDir = this.ensureTempPackage();
+    const contents = generateLink(prefix, moduleMap, mainModulesMap, isSplitComponentBundle, tempPackageDir);
     return this.writeLinkContents(contents, dirName, prefix);
   }
 

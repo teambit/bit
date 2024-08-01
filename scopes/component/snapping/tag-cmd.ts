@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Command, CommandOptions } from '@teambit/cli';
-import { NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '@teambit/legacy/dist/api/consumer/lib/tag';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import {
   DEFAULT_BIT_RELEASE_TYPE,
@@ -15,6 +14,9 @@ import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { TagResults, SnappingMain } from './snapping.main.runtime';
 import { BasicTagParams } from './tag-model-component';
+
+export const NOTHING_TO_TAG_MSG = 'nothing to tag';
+export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
 
 const RELEASE_TYPES = ['major', 'premajor', 'minor', 'preminor', 'patch', 'prepatch', 'prerelease'];
 

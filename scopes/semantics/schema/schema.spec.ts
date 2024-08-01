@@ -9,7 +9,7 @@ import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspa
 import { ComponentID } from '@teambit/component-id';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { SchemaMain } from './schema.main.runtime';
-import { SchemaAspect } from '.';
+import { SchemaAspect } from './schema.aspect';
 
 chai.use(chaiSubset);
 

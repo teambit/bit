@@ -10,12 +10,18 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 import { MoverAspect, MoverMain } from '@teambit/mover';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { isDir, isDirEmptySync } from '@teambit/legacy/dist/utils';
-import { PathLinuxRelative, pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import {
+  isDir,
+  isDirEmptySync,
+  PathLinuxRelative,
+  pathNormalizeToLinux,
+  PathOsBasedAbsolute,
+} from '@teambit/legacy.utils';
+import { ComponentMap } from '@teambit/legacy.bit-map';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { DataToPersist } from '@teambit/component.sources';
 import { ConfigMergerAspect, ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
+import { MergeStrategy } from '@teambit/merging';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import ComponentWriter, { ComponentWriterProps } from './component-writer';
 import { ComponentWriterAspect } from './component-writer.aspect';
@@ -33,6 +39,7 @@ export interface ManyComponentsWriterParams {
   skipWriteConfigFiles?: boolean;
   reasonForBitmapChange?: string; // optional. will be written in the bitmap-history-metadata
   shouldUpdateWorkspaceConfig?: boolean; // whether it should update dependencies policy (or leave conflicts) in workspace.jsonc
+  mergeStrategy?: MergeStrategy; // needed for workspace.jsonc conflicts
 }
 
 export type ComponentWriterResults = {
@@ -66,7 +73,10 @@ export class ComponentWriterMain {
     let compilationError: Error | undefined;
     let workspaceConfigUpdateResult: WorkspaceConfigUpdateResult | undefined;
     if (opts.shouldUpdateWorkspaceConfig) {
-      workspaceConfigUpdateResult = await this.configMerge.updateDepsInWorkspaceConfig(opts.components);
+      workspaceConfigUpdateResult = await this.configMerge.updateDepsInWorkspaceConfig(
+        opts.components,
+        opts.mergeStrategy
+      );
     }
     if (!opts.skipDependencyInstallation) {
       installationError = await this.installPackagesGracefully(opts.skipWriteConfigFiles);
@@ -241,6 +251,7 @@ export class ComponentWriterMain {
     };
     return {
       workspace: this.workspace,
+      // @ts-ignore todo: remove after deleting teambit.legacy
       bitMap: this.consumer.bitMap,
       component,
       writeToPath: componentRootDir,

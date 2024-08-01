@@ -232,9 +232,9 @@ describe('tag components on Harmony', function () {
       beforeTagScope = helper.scopeHelper.cloneLocalScope();
     });
     it('should fail without --skip-tests', () => {
-      expect(() => helper.command.tagAllComponents()).to.throw(
-        'Failed task 1: "teambit.defender/tester:TestComponents" of env "teambit.harmony/node"'
-      );
+      const cmd = () => helper.command.tagAllComponents();
+      const error = new Error('Failed task 1: "teambit.defender/tester:JestTest" of env "teambit.harmony/node"');
+      helper.general.expectToThrow(cmd, error);
       const stagedConfigPath = helper.general.getStagedConfigPath();
       expect(stagedConfigPath).to.not.be.a.path();
     });
@@ -359,6 +359,23 @@ describe('tag components on Harmony', function () {
     });
     it('should auto-tag dependents according to the pre-release version', () => {
       expect(tagOutput).to.have.string('comp1@0.0.2-dev.0');
+    });
+  });
+  describe('invalid pre-release after normal tag', () => {
+    let result: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      result = helper.general.runWithTryCatch(`bit tag --unmodified --pre-release "h?h"`);
+    });
+    it('should throw an error', () => {
+      expect(result).to.have.string('is not a valid semantic version');
+    });
+    it('should not create a new version', () => {
+      const comp = helper.command.catComponent('comp1');
+      const ver1Hash = comp.versions['0.0.1'];
+      expect(comp.head).to.equal(ver1Hash);
     });
   });
   describe('soft-tag pre-release', () => {

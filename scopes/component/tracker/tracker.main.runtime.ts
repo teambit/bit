@@ -1,10 +1,10 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import path from 'path';
 import { ComponentID } from '@teambit/component-id';
-import EnvsAspect from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { AddCmd } from './add-cmd';
 import AddComponents, { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
 import { TrackerAspect } from './tracker.aspect';

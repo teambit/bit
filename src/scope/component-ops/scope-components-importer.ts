@@ -6,10 +6,10 @@ import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import groupArray from 'group-array';
 import R from 'ramda';
+import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { compact, flatten, partition, uniq } from 'lodash';
 import { Scope } from '..';
 import ConsumerComponent from '../../consumer/component';
-import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import ComponentVersion from '../component-version';
@@ -22,14 +22,13 @@ import { getScopeRemotes } from '../scope-remotes';
 import VersionDependencies from '../version-dependencies';
 import { BitObjectList } from '../objects/bit-object-list';
 import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
-import { concurrentComponentsLimit } from '../../utils/concurrency';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { BuildStatus } from '../../constants';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
 import { getAllVersionHashes } from './traverse-versions';
-import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
-import { pMapPool } from '../../utils/promise-with-concurrent';
-import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
+import { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 
 type HashesPerRemote = { [remoteName: string]: string[] };
 
@@ -821,7 +820,6 @@ export default class ScopeComponentsImporter {
       if (this.isIdLocal(id, includeUnexported))
         throw new Error(`getExternalMany expects to get external ids only, got ${id.toString()}`);
     });
-    enrichContextFromGlobal(Object.assign({}, { requestedBitIds: ids.map((id) => id.toString()) }));
     // avoid re-fetching the components with all deps if they're still un-built
     const onlyIfBuilt = ids.every((id) => this.sources.isUnBuiltInCache(id));
     await new ObjectFetcher(
@@ -909,7 +907,6 @@ export default class ScopeComponentsImporter {
     logger.debug(`getExternalManyWithoutDeps, ${left.length} left. Fetching them from a remote. ids: ${leftIdsStr}`);
     const context = { requestedBitIds: leftIds.map((id) => id.toString()) };
     lane = await this.getLaneForFetcher(lane);
-    enrichContextFromGlobal(context);
     const isUsingImporter = isFeatureEnabled(CLOUD_IMPORTER) || isFeatureEnabled(CLOUD_IMPORTER_V2);
     await new ObjectFetcher(
       this.repo,

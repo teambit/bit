@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { mergeReport } from '@teambit/merging';
+import { mergeReport, MergeStrategy } from '@teambit/merging';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
@@ -45,7 +44,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       'same as "--auto-merge-resolve manual". in case of merge conflict, write the files with the conflict markers',
     ],
     [
-      '',
+      'r',
       'auto-merge-resolve <merge-strategy>',
       'in case of a merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
     ],

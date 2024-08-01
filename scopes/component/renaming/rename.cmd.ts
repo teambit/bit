@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { RenamingMain } from '.';
+import { RenamingMain } from './renaming.main.runtime';
 
 export type RenameOptions = {
   scope?: string;

@@ -66,13 +66,25 @@ export function graphSchema(graphBuilder: GraphBuilder, componentAspect: Compone
         },
       },
       Query: {
-        graph: async (_parent, { ids, filter }: { ids?: string[]; filter?: GraphFilter }) => {
+        graph: async (_parent, { ids, filter }: { ids?: string[]; filter?: GraphFilter }, _context, info) => {
           const componentsHost = componentAspect.getHost();
           const resolvedIds = ids
             ? await componentsHost.resolveMultipleComponentIds(ids)
             : (await componentsHost.list()).map((x) => x.id);
 
-          const graph = await graphBuilder.getGraph(resolvedIds);
+          const isComponentFieldQueried = info.fieldNodes[0].selectionSet?.selections.some(
+            (selection: any) =>
+              selection.kind === 'Field' &&
+              selection.name.value === 'nodes' &&
+              selection.selectionSet?.selections.some(
+                (subSelection: any) => subSelection.kind === 'Field' && subSelection.name.value === 'component'
+              )
+          );
+
+          const graph = isComponentFieldQueried
+            ? await graphBuilder.getGraph(resolvedIds)
+            : await graphBuilder.getGraphIds(resolvedIds);
+
           if (!graph) return undefined;
 
           if (filter === 'runtimeOnly') {

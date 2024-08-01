@@ -1,16 +1,16 @@
 import { ComponentID } from '@teambit/component-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import { ScopeMain } from '@teambit/scope';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { Component } from '@teambit/component';
 import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/component-schema';
 import { DependenciesMain } from '@teambit/dependencies';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { FileData } from './snap-from-scope.cmd';
-import type { SnappingMain, SnapDataParsed } from './snapping.main.runtime';
+import { SnappingMain, SnapDataParsed } from './snapping.main.runtime';
 
 export type CompData = {
   componentId: ComponentID;
@@ -79,7 +79,8 @@ export async function addDeps(
   snapData: SnapDataParsed,
   scope: ScopeMain,
   deps: DependenciesMain,
-  depsResolver: DependencyResolverMain
+  depsResolver: DependencyResolverMain,
+  snapping: SnappingMain
 ) {
   const newDeps = snapData.newDependencies || [];
   const updateDeps = snapData.dependencies || [];
@@ -160,11 +161,5 @@ export async function addDeps(
   // it takes care of both: given dependencies (from the cli) and the overrides, which are coming from the env.
   await deps.loadDependenciesFromScope(consumerComponent, dependenciesData);
 
-  // add the dependencies data to the dependency-resolver aspect
-  const dependenciesListSerialized = (await depsResolver.extractDepsFromLegacy(component)).serialize();
-  const extId = DependencyResolverAspect.id;
-  const data = { dependencies: dependenciesListSerialized };
-  const existingExtension = component.config.extensions.findExtension(extId);
-  if (!existingExtension) throw new Error('unable to find DependencyResolver extension');
-  Object.assign(existingExtension.data, data);
+  await snapping.UpdateDepsAspectsSaveIntoDepsResolver(component, updateDeps);
 }

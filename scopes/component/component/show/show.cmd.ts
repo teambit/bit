@@ -1,11 +1,13 @@
+import open from 'open';
 import { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
 // import { Logger } from '@teambit/logger';
 // import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
-import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { ComponentID } from '@teambit/component-id';
-import LegacyShow from '@teambit/legacy/dist/cli/commands/public-cmds/show-cmd';
+import { Logger } from '@teambit/logger';
+import { reportLegacy, actionLegacy } from './legacy-show/show-legacy-cmd';
 import { ComponentMain } from '../component.main.runtime';
 
 export class ShowCmd implements Command {
@@ -18,6 +20,7 @@ export class ShowCmd implements Command {
     ['j', 'json', 'return the component data in json format'],
     ['l', 'legacy', 'use the legacy bit show.'],
     ['r', 'remote', 'show data for a remote component'],
+    ['b', 'browser', 'open the component page in the browser'],
     [
       'c',
       'compare',
@@ -25,7 +28,7 @@ export class ShowCmd implements Command {
     ],
   ] as CommandOptions;
 
-  constructor(private component: ComponentMain) {}
+  constructor(private component: ComponentMain, private logger: Logger) {}
 
   private async getComponent(idStr: string, remote: boolean) {
     if (remote) {
@@ -48,18 +51,19 @@ to see the legacy bit show, please use "--legacy" flag`);
   }
 
   async useLegacy(id: string, json = false, remote = false, compare = false) {
-    const legacyShow = new LegacyShow();
-    const showData = await legacyShow.action([id], {
+    const showData = await actionLegacy([id], {
       json,
-      versions: undefined,
       remote,
       compare,
     });
 
-    return legacyShow.report(showData);
+    return reportLegacy(showData);
   }
 
-  async report([idStr]: [string], { legacy, remote, compare }: { legacy: boolean; remote: boolean; compare: boolean }) {
+  async report(
+    [idStr]: [string],
+    { legacy, remote, compare, browser }: { legacy: boolean; remote: boolean; compare: boolean; browser: boolean }
+  ) {
     if (legacy) return this.useLegacy(idStr, false, remote, compare);
     const component = await this.getComponent(idStr, remote);
     const fragments = this.component.getShowFragments();
@@ -72,7 +76,23 @@ to see the legacy bit show, please use "--legacy" flag`);
     );
 
     const table = new CLITable([], compact(rows));
-    return table.render();
+    const renderedTable = table.render();
+    if (browser) {
+      const isExported = component.isExported();
+      if (!isExported) {
+        this.logger.consoleWarning(`unable to open the browser, the component "${idStr}" has not been exported yet`);
+        return renderedTable;
+      }
+      const homepageUrl = component.homepage;
+      if (!homepageUrl || homepageUrl === '') {
+        this.logger.consoleWarning(`unable to open browser, the component ${idStr} does not have a homepage`);
+        return renderedTable;
+      }
+      open(homepageUrl).catch((err) => {
+        this.logger.error(`failed to open browser for component ${idStr}, err: ${err}`);
+      });
+    }
+    return renderedTable;
   }
 
   async json([idStr]: [string], { remote, legacy }: { remote: boolean; legacy: boolean }) {

@@ -71,8 +71,6 @@ import {
   LiteralValueTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
-import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
-import WriteTsconfigCmd from './cmds/write-tsconfig.cmd';
 import { RemoveTypesTask } from './remove-types-task';
 
 export type TsMode = 'build' | 'dev';
@@ -106,7 +104,6 @@ export class TypescriptMain {
     readonly scope: ScopeMain,
     readonly depResolver: DependencyResolverMain,
     private envs: EnvsMain,
-    private tsConfigWriter: TsconfigWriter,
     private aspectLoader: AspectLoaderMain
   ) {}
 
@@ -294,34 +291,6 @@ export class TypescriptMain {
     return files.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
   }
 
-  async cleanTsconfigJson(options: TsconfigWriterOptions = {}) {
-    const components = await this.workspace.list();
-    const runtime = await this.envs.createEnvironment(components);
-    const execContext = runtime.getEnvExecutionContext();
-
-    const results = await new TsconfigWriter(this.workspace, this.logger).clean(execContext, options);
-
-    return results;
-  }
-
-  async writeTsconfigJson(options: TsconfigWriterOptions = {}): Promise<{
-    cleanResults?: string[];
-    writeResults: TsconfigPathsPerEnv[];
-  }> {
-    const components = await this.workspace.list();
-    const runtime = await this.envs.createEnvironment(components);
-    const execContext = runtime.getEnvExecutionContext();
-
-    let cleanResults: string[] | undefined;
-    if (options.clean) {
-      cleanResults = await this.tsConfigWriter.clean(execContext, options);
-    }
-
-    const writeResults = await this.tsConfigWriter.write(execContext, options);
-
-    return { writeResults, cleanResults };
-  }
-
   private async onPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
     const workspace = this.workspace;
     if (!workspace || !watchOpts.spawnTSServer) {
@@ -380,7 +349,6 @@ export class TypescriptMain {
     const logger = loggerExt.createLogger(TypescriptAspect.id);
 
     aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
-    const tsconfigWriter = new TsconfigWriter(workspace, logger);
     const tsMain = new TypescriptMain(
       logger,
       schemaTransformerSlot,
@@ -389,7 +357,6 @@ export class TypescriptMain {
       scope,
       depResolver,
       envs,
-      tsconfigWriter,
       aspectLoader
     );
     tsMain.registerSchemaTransformer([
@@ -449,8 +416,7 @@ export class TypescriptMain {
     builder.registerTagTasks([removeTypesTask]);
 
     const checkTypesCmd = new CheckTypesCmd(tsMain, workspace, logger);
-    const writeTsconfigCmd = new WriteTsconfigCmd(tsMain);
-    cli.register(checkTypesCmd, writeTsconfigCmd);
+    cli.register(checkTypesCmd);
 
     return tsMain;
   }

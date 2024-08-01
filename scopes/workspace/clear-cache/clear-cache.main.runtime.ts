@@ -1,9 +1,9 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { clearCache, CacheClearResult } from '@teambit/legacy/dist/api/consumer/lib/clear-cache';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import { loadConsumerIfExist, Consumer } from '@teambit/legacy/dist/consumer';
 import ClearCacheCmd from './clear-cache-cmd';
 import { ClearCacheAspect } from './clear-cache.aspect';
+import { clearCache, CacheClearResult } from './clear-cache';
 
 /**
  * avoid adding `workspace` / `scope` aspects as dependencies to this aspect.

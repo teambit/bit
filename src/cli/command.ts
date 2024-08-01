@@ -1,5 +1,7 @@
 import { Group } from './command-groups';
-import { CommandOptions } from './legacy-command';
+
+type CommandOption = [string, string, string];
+export type CommandOptions = Array<CommandOption>;
 
 export interface Command {
   /**
@@ -88,6 +90,12 @@ export interface Command {
    * optionally, give some examples how to use the command.
    */
   examples?: Example[];
+
+  /**
+   * whether to load aspects set in workspace.jsonc before running the command.
+   * default is true.
+   */
+  loadAspects?: boolean;
 
   /**
    * do not set this. it is being set once the command run.

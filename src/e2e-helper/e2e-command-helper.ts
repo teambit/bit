@@ -7,14 +7,12 @@ import rightpad from 'pad-right';
 import * as path from 'path';
 import tar from 'tar';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
-import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
-import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
+import { NOTHING_TO_TAG_MSG } from '@teambit/snapping';
+import { ENV_VAR_FEATURE_TOGGLE } from '@teambit/harmony.modules.feature-toggle';
 import { Extensions, NOTHING_TO_SNAP_MSG } from '../constants';
-import runInteractive, { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
-import { removeChalkCharacters } from '../utils';
+import { removeChalkCharacters } from '@teambit/legacy.utils';
 import ScopesData from './e2e-scopes';
 
-const DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS = 200;
 // The default value of maxBuffer is 1024*1024, which is not enough for some of the tests.
 // If a command has a lot of output, it will throw this error:
 // Error: spawnSync /bin/sh ENOBUFS
@@ -269,6 +267,15 @@ export default class CommandHelper {
   renameScopeOwner(oldScope: string, newScope: string, flags = '') {
     return this.runCmd(`bit scope rename-owner ${oldScope} ${newScope} ${flags}`);
   }
+  setLocalOnly(pattern: string) {
+    return this.runCmd(`bit local-only set ${pattern}`);
+  }
+  unsetLocalOnly(pattern: string) {
+    return this.runCmd(`bit local-only unset ${pattern}`);
+  }
+  listLocalOnly() {
+    return this.runCmd(`bit local-only list`);
+  }
   envs() {
     return this.runCmd(`bit envs`);
   }
@@ -344,6 +351,9 @@ export default class CommandHelper {
   }
   setPeer(componentId: string, range = '') {
     return this.runCmd(`bit set-peer ${componentId} ${range}`);
+  }
+  unsetPeer(componentId: string) {
+    return this.runCmd(`bit unset-peer ${componentId}`);
   }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
@@ -480,6 +490,11 @@ export default class CommandHelper {
     const artifacts = builderExt.data.artifacts;
     if (!artifacts) throw new Error(`unable to find artifacts data for ${id}`);
     return artifacts;
+  }
+  getAspectsData(versionObject: Record<string, any>, aspectId: string) {
+    const builder = versionObject.extensions.find((e) => e.name === Extensions.builder);
+    if (!builder) throw new Error(`getAspectsData: unable to find builder data`);
+    return builder.data.aspectsData.find((a) => a.aspectId === aspectId);
   }
   reset(id: string, head = false, flag = '') {
     return this.runCmd(`bit reset ${id} ${head ? '--head' : ''} ${flag}`);
@@ -838,6 +853,9 @@ export default class CommandHelper {
   runApp(name: string) {
     return this.runCmd(`bit app run ${name}`);
   }
+  listApps() {
+    return this.runCmd(`bit app list`);
+  }
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
   }
@@ -954,37 +972,5 @@ export default class CommandHelper {
 
   init(options = '') {
     return this.runCmd(`bit init ${options}`);
-  }
-
-  async runInteractiveCmd({
-    args = [],
-    inputs = [],
-    // Options for the process (execa)
-    processOpts = {
-      cwd: this.scopes.localPath,
-    },
-    // opts for interactive
-    opts = {
-      defaultIntervalBetweenInputs: DEFAULT_DEFAULT_INTERVAL_BETWEEN_INPUTS,
-      verbose: false,
-    },
-  }: {
-    args: string[];
-    inputs: InteractiveInputs;
-    processOpts: Record<string, any>;
-    opts: {
-      // Default interval between inputs in case there is no specific interval
-      defaultIntervalBetweenInputs: number;
-      verbose: boolean;
-    };
-  }) {
-    const processName = this.bitBin || 'bit';
-    opts.verbose = !!this.debugMode;
-    const { stdout } = await runInteractive({ processName, args, inputs, processOpts, opts });
-    if (this.debugMode) {
-      console.log(rightpad(chalk.green('output: \n'), 20, ' ')); // eslint-disable-line no-console
-      console.log(chalk.cyan(stdout)); // eslint-disable-line no-console
-    }
-    return stdout;
   }
 }

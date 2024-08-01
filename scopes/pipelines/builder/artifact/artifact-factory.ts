@@ -1,9 +1,9 @@
 import { join } from 'path';
 import globby from 'globby';
 import { flatten } from 'lodash';
-import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
+import { ArtifactFiles } from '@teambit/component.sources';
 import { Component, ComponentMap } from '@teambit/component';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import { pathNormalizeToLinux, PathLinux } from '@teambit/legacy.utils';
 import { ArtifactDefinition } from './artifact-definition';
 import { DefaultResolver } from '../storage';
 import { ArtifactList } from './artifact-list';
@@ -18,7 +18,7 @@ export type ArtifactMap = ComponentMap<ArtifactList<FsArtifact>>;
 export class ArtifactFactory {
   resolvePaths(root: string, def: ArtifactDefinition): string[] {
     const patternsFlattened = flatten(def.globPatterns);
-    const patternsFlattenedLinux = patternsFlattened.map(pathNormalizeToLinux);
+    const patternsFlattenedLinux: PathLinux[] = patternsFlattened.map(pathNormalizeToLinux);
     const paths = globby.sync(patternsFlattenedLinux, { cwd: root });
     return paths;
   }

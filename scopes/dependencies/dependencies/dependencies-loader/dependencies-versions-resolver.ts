@@ -14,7 +14,7 @@ import { DebugComponentsDependency, getValidVersion } from './auto-detect-deps';
 
 type DepType = 'dependencies' | 'devDependencies' | 'peerDependencies';
 
-export function updateDependenciesVersions(
+export async function updateDependenciesVersions(
   depsResolver: DependencyResolverMain,
   workspace: Workspace,
   component: Component,
@@ -25,6 +25,7 @@ export function updateDependenciesVersions(
 ) {
   const consumer: Consumer = workspace.consumer;
   const autoDetectConfigMerge = workspace.getAutoDetectConfigMerge(component.id) || {};
+  const currentLane = await workspace.getCurrentLaneObject();
 
   updateDependencies(component.dependencies, 'dependencies');
   updateDependencies(component.devDependencies, 'devDependencies');
@@ -44,6 +45,7 @@ export function updateDependenciesVersions(
     const idFromComponentConfig = getIdFromComponentConfig(id);
     const getFromComponentConfig = () => idFromComponentConfig;
     const getFromBitMap = () => idFromBitMap || null;
+    const getFromUpdateDependentsOnLane = () => getIdFromUpdateDependentsOnLane(id);
     // later, change this to return the version from the overrides.
     const getFromOverrides = () => resolveFromOverrides(id, depType, pkg);
     const debugDep = debugDependencies?.find((dep) => dep.id.isEqualWithoutVersion(id));
@@ -67,6 +69,7 @@ export function updateDependenciesVersions(
       getFromComponentConfig,
       getFromOverrides,
       getFromBitMap,
+      getFromUpdateDependentsOnLane,
       getFromDepPackageJsonDueToWorkspacePolicy,
       getFromMergeConfig,
       getFromDepPackageJsonDueToAutoDetectOverrides,
@@ -124,6 +127,12 @@ export function updateDependenciesVersions(
   function getIdFromBitMap(componentId: ComponentID): ComponentID | null | undefined {
     const existingIds = consumer.bitmapIdsFromCurrentLane.filterWithoutVersion(componentId);
     return existingIds.length === 1 ? existingIds[0] : undefined;
+  }
+
+  function getIdFromUpdateDependentsOnLane(id: ComponentID) {
+    const updateDependents = currentLane?.updateDependents;
+    if (!updateDependents) return undefined;
+    return updateDependents.find((dep) => dep.isEqualWithoutVersion(id));
   }
 
   function getIdFromComponentConfig(componentId: ComponentID): ComponentID | undefined {

@@ -1,7 +1,8 @@
 import { Graph, Edge, Node } from '@teambit/graph.cleargraph';
 import { ComponentID } from '@teambit/component-id';
+import { BitError } from '@teambit/bit-error';
 import { compact, difference, uniqBy } from 'lodash';
-import getStringifyArgs from '../../utils/string/get-stringify-args';
+import { getStringifyArgs } from '@teambit/legacy.utils';
 import Ref from '../objects/ref';
 import BitObject from '../objects/object';
 import type Version from './version';
@@ -160,6 +161,17 @@ export default class VersionHistory extends BitObject {
     const versionsDataOnExistingOnly = this.versions.filter((v) => hashesInExistingOnly.includes(v.hash.toString()));
     const newVersions = [...versionHistory.versions, ...versionsDataOnExistingOnly];
     this.versionsObj = this.versionParentsToObject(newVersions);
+  }
+
+  getAncestor(numOfGenerationsToGoBack: number, ref: Ref): Ref {
+    const errorMsg = `unable to get an older parent of ${this.compId.toString()}`;
+    const versionData = this.getVersionData(ref);
+    if (!versionData)
+      throw new BitError(`${errorMsg}, version "${ref.toString()}" was not found in the version history`);
+    if (numOfGenerationsToGoBack === 0) return versionData.hash;
+    if (!versionData.parents.length) throw new BitError(`${errorMsg}, version "${ref.toString()}" has no parents`);
+    const parent = versionData.parents[0];
+    return this.getAncestor(numOfGenerationsToGoBack - 1, parent);
   }
 
   getGraph(

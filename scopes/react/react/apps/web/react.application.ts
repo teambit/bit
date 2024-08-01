@@ -14,7 +14,7 @@ import { prerenderPlugin } from './plugins';
 import { ReactAppBuildResult } from './react-build-result';
 import { ReactAppPrerenderOptions } from './react-app-options';
 import { html } from '../../webpack';
-import { ReactDeployContext } from '.';
+import { ReactDeployContext } from './deploy-context';
 import { computeResults } from './compute-results';
 import { clientConfig, ssrConfig, calcOutputPath, ssrBuildConfig, buildConfig } from './webpack/webpack.app.ssr.config';
 import { addDevServer, setOutput, replaceTerserPlugin } from './webpack/mutators';

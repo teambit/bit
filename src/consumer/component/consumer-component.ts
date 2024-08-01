@@ -12,12 +12,12 @@ import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
 import { ScopeListItem } from '../../scope/models/model-component';
 import Version, { DepEdge, Log } from '../../scope/models/version';
-import { pathNormalizeToLinux, sha1 } from '../../utils';
-import { PathLinux, PathOsBased, PathOsBasedRelative } from '../../utils/path';
-import ComponentMap from '../bit-map/component-map';
-import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
-import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
-import { Dist, License, SourceFile } from '../component/sources';
+import { pathNormalizeToLinux, PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
+import { ComponentMap } from '@teambit/legacy.bit-map';
+import { IgnoredDirectory } from './exceptions/ignored-directory';
+import ComponentsPendingImport from '../exceptions/components-pending-import';
+import { Dist, License, SourceFile, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
 import ComponentConfig, { ComponentConfigLoadOptions, ILegacyWorkspaceConfig } from '../config';
 import ComponentOverrides from '../config/component-overrides';
 import { ExtensionDataList } from '../config/extension-data';
@@ -28,10 +28,6 @@ import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './co
 import { Dependencies, Dependency } from './dependencies';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import MainFileRemoved from './exceptions/main-file-removed';
-import MissingFilesFromComponent from './exceptions/missing-files-from-component';
-import { NoComponentDir } from './exceptions/no-component-dir';
-import PackageJsonFile from './package-json-file';
-import DataToPersist from './sources/data-to-persist';
 import { ModelComponent } from '../../scope/models';
 import { ComponentLoadOptions } from './component-loader';
 import { getBindingPrefixByDefaultScope } from '../config/component-config';
@@ -423,11 +419,9 @@ export default class Component {
   static isComponentInvalidByErrorType(err: Error): boolean {
     const invalidComponentErrors = [
       MainFileRemoved,
-      MissingFilesFromComponent,
       ComponentNotFoundInPath,
       ComponentOutOfSync,
       ComponentsPendingImport,
-      NoComponentDir,
       IgnoredDirectory,
     ];
     return invalidComponentErrors.some((errorType) => err instanceof errorType);
@@ -490,13 +484,6 @@ export default class Component {
     const object = JSON.parse(str);
     object.files = SourceFile.loadFromParsedStringArray(object.files);
 
-    // added if statement to support new and old version of remote ls
-    // old version of bit returns from server array of dists  and new version return object
-    if (object.dists && Array.isArray(object.dists)) {
-      object.dists = Dist.loadFromParsedStringArray(object.dists);
-    } else if (object.dists && object.dists.dists) {
-      object.dists = Dist.loadFromParsedStringArray(object.dists.dists);
-    }
     return this.fromObject(object);
   }
 
@@ -603,6 +590,7 @@ async function getLoadedFiles(
     logger.error(`rethrowing an error of ${componentMap.noFilesError.message}`);
     throw componentMap.noFilesError;
   }
+  // @ts-ignore todo: remove after deleting teambit.legacy
   await componentMap.trackDirectoryChangesHarmony(consumer);
   const sourceFiles = componentMap.files.map((file) => {
     const filePath = path.join(bitDir, file.relativePath);

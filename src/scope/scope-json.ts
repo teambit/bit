@@ -6,7 +6,7 @@ import { DEFAULT_LANE } from '@teambit/lane-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { SCOPE_JSON, SCOPE_JSONC } from '../constants';
 import { Remote } from '../remotes';
-import { cleanObject, writeFile } from '../utils';
+import { cleanObject, writeFile } from '@teambit/legacy.utils';
 import { ScopeJsonNotFound } from './exceptions';
 
 export function getPath(scopePath: string): string {

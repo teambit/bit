@@ -38,14 +38,14 @@ export interface DependencyResolverWorkspaceConfig {
 
   /**
    * A client certificate to pass when accessing the registry. Values should be in PEM format (Windows calls it "Base-64 encoded X.509 (.CER)") with newlines replaced by the string "\n". For example:
-   * cert="-----BEGIN CERTIFICATE-----\nXXXX\nXXXX\n-----END CERTIFICATE-----"
+   * cert="----BEGIN CERTIFICATE-----\nXXXX\nXXXX\n-----END CERTIFICATE----"
    * It is not the path to a certificate file (and there is no "certfile" option).
    */
   cert?: string;
 
   /**
    * A client key to pass when accessing the registry. Values should be in PEM format with newlines replaced by the string "\n". For example:
-   * key="-----BEGIN PRIVATE KEY-----\nXXXX\nXXXX\n-----END PRIVATE KEY-----"
+   * key="----BEGIN PRIVATE KEY-----\nXXXX\nXXXX\n-----END PRIVATE KEY----"
    * It is not the path to a key file (and there is no "keyfile" option).
    */
   key?: string;

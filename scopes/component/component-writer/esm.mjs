@@ -2,6 +2,7 @@
 import cjsModule from './index.js';
 
 export const ComponentWriterAspect = cjsModule.ComponentWriterAspect;
+export const incrementPathRecursively = cjsModule.incrementPathRecursively;
 
 export default cjsModule;
 

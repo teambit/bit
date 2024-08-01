@@ -1,18 +1,16 @@
+import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
 import { ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
-import LegacyWorkspaceConfig, {
-  WorkspaceConfigProps as LegacyWorkspaceConfigProps,
-} from '@teambit/legacy/dist/consumer/config/workspace-config';
+import LegacyWorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { currentDateAndTimeToFileName } from '@teambit/legacy/dist/consumer/consumer';
 import { assign, parse, stringify, CommentJSONValue } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { isEmpty, omit } from 'lodash';
-import WorkspaceAspect from '@teambit/workspace';
+import { omit } from 'lodash';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { SetExtensionOptions } from './config.main.runtime';
 import { ExtensionAlreadyConfigured } from './exceptions';
 import InvalidConfigFile from './exceptions/invalid-config-file';
@@ -28,7 +26,7 @@ export type WorkspaceConfigFileProps = {
   // TODO: make it no optional
   $schema?: string;
   $schemaVersion?: string;
-} & ExtensionsDefs;
+} & WorkspaceSettingsNewProps;
 
 export type ComponentScopeDirMapEntry = {
   defaultScope?: string;
@@ -38,6 +36,7 @@ export type ComponentScopeDirMapEntry = {
 export type ComponentScopeDirMap = Array<ComponentScopeDirMapEntry>;
 
 export type WorkspaceExtensionProps = {
+  name?: string;
   defaultScope?: string;
   defaultDirectory?: string;
   components?: ComponentScopeDirMap;
@@ -59,8 +58,6 @@ export type WorkspaceSettingsNewProps = {
   'teambit.dependencies/dependency-resolver': DependencyResolverExtensionProps;
 };
 
-export type ExtensionsDefs = WorkspaceSettingsNewProps;
-
 export class WorkspaceConfig implements HostConfig {
   raw?: any;
   _extensions: ExtensionDataList;
@@ -81,6 +78,10 @@ export class WorkspaceConfig implements HostConfig {
 
   get extensions(): ExtensionDataList {
     return this._extensions;
+  }
+
+  get extensionsIds(): string[] {
+    return Object.keys(omit(this.raw, INTERNAL_CONFIG_PROPS));
   }
 
   private loadExtensions() {
@@ -122,10 +123,12 @@ export class WorkspaceConfig implements HostConfig {
     return isChanged;
   }
 
-  removeExtension(extId: string): boolean {
+  removeExtension(extCompId: ComponentID): boolean {
+    const extId = extCompId.toStringWithoutVersion();
     let isChanged = false;
-    if (this.raw[extId]) {
-      delete this.raw[extId];
+    const existingKey = this.getExistingKeyIgnoreVersion(extCompId);
+    if (existingKey) {
+      delete this.raw[existingKey];
       isChanged = true;
     }
     const generatorEnvs = this.raw?.['teambit.generator/generator']?.envs;
@@ -135,6 +138,13 @@ export class WorkspaceConfig implements HostConfig {
     }
     if (isChanged) this.loadExtensions();
     return isChanged;
+  }
+
+  getExistingKeyIgnoreVersion(id: ComponentID): string | undefined {
+    const idStr = id.toStringWithoutVersion();
+    if (this.raw[idStr]) return idStr;
+    const keys = Object.keys(this.raw);
+    return keys.find((key) => key.startsWith(`${idStr}@`));
   }
 
   /**
@@ -157,12 +167,21 @@ export class WorkspaceConfig implements HostConfig {
    * @returns
    * @memberof WorkspaceConfig
    */
-  static async create(props: WorkspaceConfigFileProps, dirPath: PathOsBasedAbsolute, scopePath: PathOsBasedAbsolute) {
+  static async create(
+    props: WorkspaceConfigFileProps,
+    dirPath: PathOsBasedAbsolute,
+    scopePath: PathOsBasedAbsolute,
+    generator?: string
+  ) {
     const template = await getWorkspaceConfigTemplateParsed();
     // previously, we just did `assign(template, props)`, but it was replacing the entire workspace config with the "props".
     // so for example, if the props only had defaultScope, it was removing the defaultDirectory.
     const workspaceAspectConf = assign(template[WorkspaceAspect.id], props[WorkspaceAspect.id]);
     const merged = assign(template, { [WorkspaceAspect.id]: workspaceAspectConf });
+    if (generator) {
+      const generators = generator.split(',').map((g) => g.trim());
+      merged['teambit.generator/generator'] = { envs: generators };
+    }
     return new WorkspaceConfig(merged, WorkspaceConfig.composeWorkspaceJsoncPath(dirPath), scopePath);
   }
 
@@ -179,18 +198,19 @@ export class WorkspaceConfig implements HostConfig {
   static async ensure(
     dirPath: PathOsBasedAbsolute,
     scopePath: PathOsBasedAbsolute,
-    workspaceConfigProps: WorkspaceConfigFileProps = {} as any
+    workspaceConfigProps: WorkspaceConfigFileProps = {} as any,
+    generator?: string
   ): Promise<WorkspaceConfig> {
     try {
       let workspaceConfig = await this.loadIfExist(dirPath, scopePath);
       if (workspaceConfig) {
         return workspaceConfig;
       }
-      workspaceConfig = await this.create(workspaceConfigProps, dirPath, scopePath);
+      workspaceConfig = await this.create(workspaceConfigProps, dirPath, scopePath, generator);
       return workspaceConfig;
     } catch (err: any) {
       if (err instanceof InvalidConfigFile) {
-        const workspaceConfig = this.create(workspaceConfigProps, dirPath, scopePath);
+        const workspaceConfig = this.create(workspaceConfigProps, dirPath, scopePath, generator);
         return workspaceConfig;
       }
       throw err;
@@ -358,42 +378,6 @@ export class WorkspaceConfig implements HostConfig {
       _legacyPlainObject: () => undefined,
     };
   }
-}
-
-export function transformLegacyPropsToExtensions(
-  legacyConfig: LegacyWorkspaceConfig | LegacyWorkspaceConfigProps
-): ExtensionsDefs {
-  // TODO: move to utils
-  const removeUndefined = (obj) => {
-    // const res = omit(mapObjIndexed((val) => val === undefined))(obj);
-    // return res;
-    Object.entries(obj).forEach((e) => {
-      if (e[1] === undefined) delete obj[e[0]];
-    });
-    return obj;
-  };
-
-  const workspace = removeUndefined({
-    defaultScope: legacyConfig.defaultScope,
-    defaultDirectory: legacyConfig.componentsDefaultDirectory,
-  });
-  const dependencyResolver = removeUndefined({
-    packageManager: legacyConfig.packageManager,
-    // strictPeerDependencies: false,
-    extraArgs: legacyConfig.packageManagerArgs,
-    packageManagerProcessOptions: legacyConfig.packageManagerProcessOptions,
-    manageWorkspaces: legacyConfig.manageWorkspaces,
-    useWorkspaces: legacyConfig.useWorkspaces,
-  });
-  const data = {};
-  if (workspace && !isEmpty(workspace)) {
-    data['teambit.workspace/workspace'] = workspace;
-  }
-  if (dependencyResolver && !isEmpty(dependencyResolver)) {
-    data['teambit.dependencies/dependency-resolver'] = dependencyResolver;
-  }
-  // @ts-ignore
-  return data;
 }
 
 export async function getWorkspaceConfigTemplateParsed(): Promise<CommentJSONValue> {

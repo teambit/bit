@@ -100,6 +100,19 @@ describe('set-peer', function () {
         });
       });
     });
+    describe('unset-peer', () => {
+      before(() => {
+        helper.command.unsetPeer('comp2');
+        helper.command.snapAllComponents();
+        helper.command.build();
+      });
+      it('should remove the always peer fields from the scope data', () => {
+        const comp = helper.command.catComponent(`comp2@latest`);
+        const depResolver = comp.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
+        expect(depResolver.config.peer).to.eq(undefined);
+        expect(depResolver.config.defaultPeerRange).to.eq(undefined);
+      });
+    });
   });
 });
 

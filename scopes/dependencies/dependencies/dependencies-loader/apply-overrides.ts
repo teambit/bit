@@ -4,14 +4,14 @@ import { cloneDeep, difference, forEach, isEmpty, pick, pickBy, uniq } from 'lod
 import { IssuesList, IssuesClasses, MissingPackagesData } from '@teambit/component-issues';
 import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy/dist/constants';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
-import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
-import { ResolvedPackageData, resolvePackageData, resolvePackagePath } from '@teambit/legacy/dist/utils/packages';
-import { PathLinux } from '@teambit/legacy/dist/utils/path';
+import { PackageJsonFile } from '@teambit/component.sources';
+import { PathLinux, resolvePackagePath } from '@teambit/legacy.utils';
+import { ResolvedPackageData, resolvePackageData } from '../resolve-pkg-data';
 import { Workspace } from '@teambit/workspace';
 import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import { ComponentMap } from '@teambit/legacy.bit-map';
 import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';
 import { DebugDependencies, FileType } from './auto-detect-deps';
@@ -128,6 +128,26 @@ export class ApplyOverrides {
     this.applyWorkspacePolicy();
     this.makeLegacyAsPeer();
     await this.applyAutoDetectOverridesOnComponent();
+    // This was moved here (it used to be after this.manuallyAddDependencies) to fix an issue with a case where
+    // an env define the same dependency defined by its own env, in both places:
+    // its env.jsonc, and via bit deps set, with different versions.
+    // before this fix the env.jsonc version was taken, and the deps set version was ignored for - bit show and
+    // package.json
+    // but it was taken into account for the actual dependency installation.
+    // now we take the version from the deps set in both cases.
+    // It make more sense to have it here before manually add dependencies, but the reason it wasn't like this is
+    // because (pasting the original comment here):
+    // ------ORIGINAL COMMENT------
+    // Doing this here (after manuallyAddDependencies) because usually the env of the env is adding dependencies as peer of the env
+    // which will make this not work if it come before
+    // example:
+    // custom react has peers with react 16.4.0.
+    // the custom react uses the "teambit.envs/env" env, which will add react ^17.0.0 to every component that uses it
+    // we want to make sure that the custom react is using 16.4.0 not 17.
+    // ------END OF ORIGINAL COMMENT------
+    // Since we did a massive refactor to the way we handle dependencies, we can now move it here now, as the original
+    // issue doesn't seems like an issue any more.
+    await this.applyAutoDetectedPeersFromEnvOnEnvItSelf();
     this.manuallyAddDependencies();
     // Doing this here (after manuallyAddDependencies) because usually the env of the env is adding dependencies as peer of the env
     // which will make this not work if it come before
@@ -135,7 +155,6 @@ export class ApplyOverrides {
     // custom react has peers with react 16.4.0.
     // the custom react uses the "teambit.envs/env" env, which will add react ^17.0.0 to every component that uses it
     // we want to make sure that the custom react is using 16.4.0 not 17.
-    await this.applyAutoDetectedPeersFromEnvOnEnvItSelf();
     this.coreAspects = uniq(this.coreAspects);
   }
 

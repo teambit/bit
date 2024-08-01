@@ -8,7 +8,7 @@ export type ScopeForkOptions = {
   skipDependencyInstallation?: boolean;
 };
 export class ScopeForkCmd implements Command {
-  name = 'fork <original-scope> <new-scope> [pattern]';
+  name = 'fork <original-scope> [new-scope] [pattern]';
   arguments = [
     {
       name: 'original-scope',
@@ -16,7 +16,7 @@ export class ScopeForkCmd implements Command {
     },
     {
       name: 'new-scope',
-      description: 'the new scope to fork to',
+      description: 'the new scope to fork to, default to the default-scope of the workspace',
     },
     {
       name: 'pattern',
@@ -37,7 +37,7 @@ export class ScopeForkCmd implements Command {
     const forkedIds = await this.forking.forkScope(originalScope, newScope, pattern, options);
     const title = chalk.green(
       `successfully forked ${chalk.bold(originalScope)} into ${chalk.bold(
-        newScope
+        newScope || forkedIds[0].scope
       )}. the following components were created`
     );
     return `${title}\n${forkedIds.map((id) => id.toString()).join('\n')}`;

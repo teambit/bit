@@ -1,4 +1,5 @@
 import { mergeSchemas } from '@graphql-tools/schema';
+import { GraphQLUUID, GraphQLJSONObject } from 'graphql-scalars';
 import { WebSocketServer } from 'ws';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
@@ -122,7 +123,17 @@ export class GraphqlMain {
     const subscribe = application.createSubscription();
     const execute = application.createExecution();
 
-    const schemas = [application.schema].concat(remoteSchemas).filter((x) => x);
+    const schemas = compact(
+      [application.schema].concat(remoteSchemas).filter((x) => {
+        return Boolean(x && (x.getQueryType() || x.getMutationType() || x.getSubscriptionType()));
+      })
+    );
+
+    // if there is no schema with at least a query, mutation or subscription, return the http server without spinning up a graphql server
+    if (schemas.length === 0) {
+      return httpServer;
+    }
+
     const mergedSchema = mergeSchemas({
       schemas,
     });
@@ -286,6 +297,13 @@ export class GraphqlMain {
     return createApplication({
       modules,
     });
+  }
+
+  get scalars() {
+    return {
+      GraphQLUUID,
+      GraphQLJSONObject,
+    };
   }
 
   private buildModules(schemaSlot?: SchemaSlot) {

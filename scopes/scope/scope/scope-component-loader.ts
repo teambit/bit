@@ -6,8 +6,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { VERSION_ZERO } from '@teambit/legacy/dist/scope/models/model-component';
-import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
-import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
+import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import type { ScopeMain } from './scope.main.runtime';
 
 export class ScopeComponentLoader {

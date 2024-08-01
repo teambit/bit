@@ -1,23 +1,22 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { buildRegistry } from '@teambit/legacy/dist/cli';
 import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { CLIArgs, Flags, Command } from '@teambit/legacy/dist/cli/command';
 import pMapSeries from 'p-map-series';
 import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
-import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
+import { HostInitializerMain } from '@teambit/host-initializer';
+import { loadConsumerIfExist, getConsumerInfo } from '@teambit/legacy/dist/consumer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { getCommandId } from './get-command-id';
-import { LegacyCommandAdapter } from './legacy-command-adapter';
-import { CLIParser } from './cli-parser';
+import { CLIParser, findCommandByArgv } from './cli-parser';
 import { CompletionCmd } from './completion.cmd';
 import { CliCmd, CliGenerateCmd } from './cli.cmd';
 import { HelpCmd } from './help.cmd';
 import { VersionCmd } from './version.cmd';
 
 export type CommandList = Array<Command>;
-export type OnStart = (hasWorkspace: boolean, currentCommand: string) => Promise<void>;
+export type OnStart = (hasWorkspace: boolean, currentCommand: string, commandObject?: Command) => Promise<void>;
 export type OnCommandStart = (commandName: string, args: CLIArgs, flags: Flags) => Promise<void>;
 export type OnBeforeExitFn = () => Promise<void>;
 
@@ -138,8 +137,9 @@ export class CLIMain {
 
   private async invokeOnStart(hasWorkspace: boolean) {
     const onStartFns = this.onStartSlot.values();
-    const currentCommand = process.argv[2];
-    await pMapSeries(onStartFns, (onStart) => onStart(hasWorkspace, currentCommand));
+    const foundCmd = findCommandByArgv(this.commands);
+    const currentCommandName = process.argv[2];
+    await pMapSeries(onStartFns, (onStart) => onStart(hasWorkspace, currentCommandName, foundCmd));
   }
 
   private setDefaults(command: Command) {
@@ -153,6 +153,9 @@ export class CLIMain {
     command.name = command.name.trim();
     if (command.loader === undefined) {
       command.loader = true;
+    }
+    if (command.loadAspects === undefined) {
+      command.loadAspects = true;
     }
     if (command.helpUrl && !isFullUrl(command.helpUrl)) {
       command.helpUrl = `https://bit.dev/${command.helpUrl}`;
@@ -180,15 +183,12 @@ export class CLIMain {
   ) {
     const logger = loggerMain.createLogger(CLIAspect.id);
     const cliMain = new CLIMain(commandsSlot, onStartSlot, onCommandStartSlot, onBeforeExitSlot, logger);
-    const legacyRegistry = buildRegistry();
     await ensureWorkspaceAndScope();
-    const legacyCommands = legacyRegistry.commands;
-    const legacyCommandsAdapters = legacyCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
     const cliGenerateCmd = new CliGenerateCmd(cliMain);
     const cliCmd = new CliCmd(cliMain);
     const helpCmd = new HelpCmd(cliMain);
     cliCmd.commands.push(cliGenerateCmd);
-    cliMain.register(...legacyCommandsAdapters, new CompletionCmd(), cliCmd, helpCmd, new VersionCmd());
+    cliMain.register(new CompletionCmd(), cliCmd, helpCmd, new VersionCmd());
     return cliMain;
   }
 }
@@ -205,6 +205,11 @@ async function ensureWorkspaceAndScope() {
   try {
     await loadConsumerIfExist();
   } catch (err) {
+    const potentialWsPath = process.cwd();
+    const consumerInfo = await getConsumerInfo(potentialWsPath);
+    if (consumerInfo && !consumerInfo.hasScope && consumerInfo.hasBitMap && consumerInfo.hasConsumerConfig) {
+      await HostInitializerMain.init(potentialWsPath);
+    }
     // do nothing. it could fail for example with ScopeNotFound error, which is taken care of in "bit init".
   }
 }

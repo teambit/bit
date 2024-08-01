@@ -195,6 +195,7 @@ describe('bit lane command', function () {
         helper.command.export();
         helper.command.switchLocalLane('dev', '--skip-dependency-installation');
         helper.fs.deletePath('.bit');
+        helper.command.init();
         helper.scopeHelper.addRemoteScope();
         helper.command.import();
         localScope = helper.scopeHelper.cloneLocalScope();

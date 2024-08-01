@@ -9,10 +9,9 @@ import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { TrackerMain } from '@teambit/tracker';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
-import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
+import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
 import { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ComponentID } from '@teambit/component-id';
 import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
@@ -169,9 +168,6 @@ export class ComponentGenerator {
     });
     const component = await this.workspace.get(componentId);
     const hasEnvConfiguredOriginally = this.envs.hasEnvConfigured(component);
-    if (this.template.isApp) {
-      await this.workspace.use(componentId.toString());
-    }
     const envBeforeConfigChanges = this.envs.getEnv(component);
     let config = this.template.config;
     if (config && typeof config === 'function') {

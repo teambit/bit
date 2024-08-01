@@ -5,15 +5,16 @@ import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { ApplyVersionResults, FailedComponents } from '@teambit/merging';
+import {
+  ApplyVersionResults,
+  FailedComponents,
+  threeWayMerge,
+  getMergeStrategyInteractive,
+  MergeStrategy,
+} from '@teambit/merging';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import {
-  getMergeStrategyInteractive,
-  MergeStrategy,
-  threeWayMerge,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import mapSeries from 'p-map-series';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Version, ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
@@ -28,10 +29,11 @@ export type CheckoutProps = {
   version?: string; // if reset/head/latest is true, the version is undefined
   ids?: ComponentID[];
   head?: boolean;
+  ancestor?: number; // how many generations to go backward
   latest?: boolean;
   main?: boolean; // relevant for "revert" only
   promptMergeOptions?: boolean;
-  mergeStrategy?: MergeStrategy | null; // strategy to use in case of conflicts
+  mergeStrategy?: MergeStrategy; // strategy to use in case of conflicts
   forceOurs?: boolean; // regardless of conflicts, use ours
   forceTheirs?: boolean; // regardless of conflicts, use theirs
   verbose?: boolean;
@@ -167,6 +169,7 @@ export class CheckoutMain {
         skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap || checkoutProps.revert,
         shouldUpdateWorkspaceConfig: true,
         reasonForBitmapChange: 'checkout',
+        mergeStrategy: checkoutProps.mergeStrategy,
       };
       componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
     }
@@ -332,6 +335,7 @@ export class CheckoutMain {
     const {
       version,
       head: headVersion,
+      ancestor,
       reset,
       revert,
       main,
@@ -388,6 +392,10 @@ export class CheckoutMain {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (reset) return component!.id.version as string;
       if (headVersion) return componentModel.headIncludeRemote(repo);
+      if (ancestor) {
+        const previousParent = await componentModel.getRefOfAncestor(repo, ancestor);
+        return componentModel.getTagOfRefIfExists(previousParent)?.toString() || previousParent.toString();
+      }
       // we verified previously that head exists in case of "main"
       if (main) return componentModel.head?.toString() as string;
       if (latestVersion) {

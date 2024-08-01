@@ -1,7 +1,7 @@
 import { ComponentID } from '@teambit/component-id';
 import semver from 'semver';
 import { Logger } from '@teambit/logger';
-import BuilderAspect from '@teambit/builder';
+import { BuilderAspect } from '@teambit/builder';
 import { isHash } from '@teambit/component-version';
 import {
   DependencyResolverAspect,
@@ -12,7 +12,7 @@ import {
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { MergeStrategy } from '@teambit/merging';
 import { compact, omit, uniqBy } from 'lodash';
 import { ConfigMergeResult } from './config-merge-result';
 

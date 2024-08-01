@@ -1,5 +1,5 @@
 import { getWorkspaceConfigTemplateParsed, stringifyWorkspaceConfig } from '@teambit/config';
-import { WorkspaceContext } from '../../../..';
+import { WorkspaceContext } from '../../../../workspace-template';
 
 export async function workspaceConfig({ name, defaultScope }: WorkspaceContext) {
   const configParsed = await getWorkspaceConfigTemplateParsed();

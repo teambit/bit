@@ -4,10 +4,10 @@ import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { InvalidScopeName } from '@teambit/legacy-bit-id';
 import path from 'path';
 import { AUTO_SNAPPED_MSG, IMPORT_PENDING_MSG } from '../../../src/constants';
-import { LANE_KEY } from '../../../src/consumer/bit-map/bit-map';
+import { LANE_KEY } from '@teambit/legacy.bit-map';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../../src/fixtures/fixtures';
-import { removeChalkCharacters } from '../../../src/utils';
+import { removeChalkCharacters } from '@teambit/legacy.utils';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../../npm-ci-registry';
 import { FetchMissingHistory } from '../../../src/scope/actions';
 
@@ -1294,6 +1294,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.exportLane();
       helper.fs.deletePath('.bit');
+      helper.command.init();
       helper.scopeHelper.addRemoteScope();
     });
     it('should re-create scope.json with checkout to the lane specified in the .bitmap file', () => {
@@ -1349,6 +1350,7 @@ describe('bit lane command', function () {
       helper.command.export();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.fs.deletePath('.bit');
+      helper.command.init();
       helper.scopeHelper.addRemoteScope();
     });
     it('bit status should not throw', () => {

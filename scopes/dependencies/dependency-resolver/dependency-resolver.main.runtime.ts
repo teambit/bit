@@ -2,13 +2,14 @@ import multimatch from 'multimatch';
 import mapSeries from 'p-map-series';
 import { MainRuntime } from '@teambit/cli';
 import { getAllCoreAspectsIds } from '@teambit/bit';
-import { getRelativeRootComponentDir } from '@teambit/bit-roots';
+import { getRootComponentDir } from '@teambit/workspace.root-components';
 import { ComponentAspect, Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
-import { join } from 'path';
-import { compact, get, pick, uniq, omit } from 'lodash';
+import { join, relative } from 'path';
+import { compact, get, pick, uniq, omit, cloneDeep } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
-import { DependenciesEnv, EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { DependenciesEnv, EnvDefinition, EnvJsonc, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { LoggerMain } from '@teambit/logger';
@@ -22,15 +23,15 @@ import {
   getCloudDomain,
 } from '@teambit/legacy/dist/constants';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
+import { DetectorHook } from '@teambit/dependencies';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
 import { onTagIdTransformer } from '@teambit/snapping';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import { ProjectManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
@@ -505,14 +506,23 @@ export class DependencyResolverMain {
    * Returns the location where the component is installed with its peer dependencies
    * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
    */
-  getRuntimeModulePath(component: Component, isInWorkspace = false) {
+  getRuntimeModulePath(
+    component: Component,
+    options: {
+      workspacePath: string;
+      rootComponentsPath: string;
+      isInWorkspace?: boolean;
+    }
+  ) {
     if (!this.hasRootComponents()) {
       const modulePath = this.getModulePath(component);
       return modulePath;
     }
     const pkgName = this.getPackageName(component);
+    const rootComponentsRelativePath = relative(options.workspacePath, options.rootComponentsPath);
+    const getRelativeRootComponentDir = getRootComponentDir.bind(null, rootComponentsRelativePath ?? '');
     const selfRootDir = getRelativeRootComponentDir(
-      !isInWorkspace ? component.id.toString() : component.id.toStringWithoutVersion()
+      options.isInWorkspace ? component.id.toStringWithoutVersion() : component.id.toString()
     );
     // In case the component is it's own root we want to load it from it's own root folder
     if (fs.pathExistsSync(selfRootDir)) {
@@ -1013,6 +1023,33 @@ export class DependencyResolverMain {
     return allPoliciesFromEnv;
   }
 
+  /**
+   * Merge policy from parent and child env.jsonc files
+   * The rule is that for each type of dependency (dev, runtime, peer) we check each item.
+   * if a dep with a name exists on the child we will take the entire object from the child (including the version,
+   * supported range, force etc')
+   * if a dep exists with a version value "-" we will remove it from the policy
+   */
+  mergeEnvManifestPolicy(parent: EnvJsonc, child: EnvJsonc): Object {
+    const policy = {};
+    ['peers', 'dev', 'runtime'].forEach((key) => {
+      policy[key] = cloneDeep(parent.policy?.[key] || []);
+      const childEntries = cloneDeep(child.policy?.[key] || []);
+
+      policy[key] = policy[key].filter((entry) => {
+        const foundChildEntry = childEntries.find((childEntry) => {
+          return childEntry.name === entry.name;
+        });
+        return !foundChildEntry;
+      });
+      policy[key] = policy[key].concat(childEntries);
+      policy[key] = policy[key].filter((entry) => {
+        return entry.version !== '-';
+      });
+    });
+    return { policy };
+  }
+
   private async getEnvPolicyFromFile(envId: string, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
     if (isCoreEnv) return undefined;
@@ -1487,6 +1524,7 @@ export class DependencyResolverMain {
 
     graphql.register(dependencyResolverSchema(dependencyResolver));
     envs.registerService(new DependenciesService());
+    envs.registerEnvJsoncMergeCustomizer(dependencyResolver.mergeEnvManifestPolicy.bind(dependencyResolver));
 
     // this is needed because during tag process, the data.dependencies can be loaded and the componentId can become
     // an instance of ComponentID class. it needs to be serialized before saved into objects.

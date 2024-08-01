@@ -2,7 +2,7 @@ import path from 'path';
 import { uniq } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { getLastModifiedComponentTimestampMs } from '@teambit/legacy/dist/utils/fs/last-modified';
+import { getLastModifiedComponentTimestampMs } from '@teambit/toolbox.fs.last-modified';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { DependencyLoaderOpts } from '@teambit/legacy/dist/consumer/component/component-loader';
@@ -39,7 +39,7 @@ export class DependenciesLoader {
     applyOverrides.issues = dependenciesData.issues;
     const results = await applyOverrides.getDependenciesData();
     this.setDependenciesDataOnComponent(results.dependenciesData, results.overridesDependencies);
-    updateDependenciesVersions(
+    await updateDependenciesVersions(
       this.depsResolver,
       workspace,
       this.component,

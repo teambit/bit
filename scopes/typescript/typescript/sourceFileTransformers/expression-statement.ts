@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { SourceFileTransformer } from '.';
+import { SourceFileTransformer } from './index';
 import { replaceName } from './replaceName';
 
 export const expressionStatementTransformer: SourceFileTransformer = (mapping: Record<string, string>) => {
