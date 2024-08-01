@@ -5,6 +5,7 @@ import EventSource from 'eventsource';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import chalk from 'chalk';
 import loader from '@teambit/legacy/dist/cli/loader';
+import { printBitVersionIfAsked } from './bootstrap';
 
 export class ServerPortFileNotFound extends Error {
   constructor(filePath: string) {
@@ -14,6 +15,11 @@ export class ServerPortFileNotFound extends Error {
 export class ServerNotFound extends Error {
   constructor(port: number) {
     super(`bit server is not running on port ${port}`);
+  }
+}
+export class ScopeNotFound extends Error {
+  constructor(scopePath: string) {
+    super(`scope not found at ${scopePath}`);
   }
 }
 
@@ -34,7 +40,8 @@ export class ServerCommander {
 
       process.exit(0);
     } catch (err: any) {
-      if (err instanceof ServerPortFileNotFound || err instanceof ServerNotFound) throw err;
+      if (err instanceof ServerPortFileNotFound || err instanceof ServerNotFound || err instanceof ScopeNotFound)
+        throw err;
       // eslint-disable-next-line no-console
       console.error(chalk.red(err.message));
       process.exit(1);
@@ -42,6 +49,7 @@ export class ServerCommander {
   }
 
   async runCommandWithHttpServer(): Promise<CommandResult | undefined> {
+    printBitVersionIfAsked();
     const port = await this.getExistingUsedPort();
     const url = `http://localhost:${port}/api`;
     this.initSSE(url);
@@ -125,18 +133,17 @@ export class ServerCommander {
   private getServerPortFilePath() {
     const scopePath = findScopePath(process.cwd());
     if (!scopePath) {
-      throw new Error(`scope not found at ${process.cwd()}`);
+      throw new ScopeNotFound(process.cwd());
     }
     return join(scopePath, 'server-port.txt');
   }
 }
 
 export function shouldUseBitServer() {
-  const commandsToSkip = ['start', 'run', 'watch', 'init', 'server'];
+  const commandsToSkip = ['start', 'run', 'watch', 'server'];
+  const hasFlag = process.env.BIT_CLI_SERVER === 'true' || process.env.BIT_CLI_SERVER === '1';
   return (
-    process.env.BIT_CLI_SERVER &&
-    !process.argv.includes('--help') &&
-    !process.argv.includes('-h') &&
+    hasFlag &&
     process.argv.length > 2 && // if it has no args, it shows the help
     !commandsToSkip.includes(process.argv[2])
   );
