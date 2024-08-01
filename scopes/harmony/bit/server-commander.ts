@@ -17,6 +17,11 @@ export class ServerNotFound extends Error {
     super(`bit server is not running on port ${port}`);
   }
 }
+export class ScopeNotFound extends Error {
+  constructor(scopePath: string) {
+    super(`scope not found at ${scopePath}`);
+  }
+}
 
 type CommandResult = { data: any; exitCode: number };
 
@@ -35,7 +40,8 @@ export class ServerCommander {
 
       process.exit(0);
     } catch (err: any) {
-      if (err instanceof ServerPortFileNotFound || err instanceof ServerNotFound) throw err;
+      if (err instanceof ServerPortFileNotFound || err instanceof ServerNotFound || err instanceof ScopeNotFound)
+        throw err;
       // eslint-disable-next-line no-console
       console.error(chalk.red(err.message));
       process.exit(1);
@@ -127,14 +133,14 @@ export class ServerCommander {
   private getServerPortFilePath() {
     const scopePath = findScopePath(process.cwd());
     if (!scopePath) {
-      throw new Error(`scope not found at ${process.cwd()}`);
+      throw new ScopeNotFound(process.cwd());
     }
     return join(scopePath, 'server-port.txt');
   }
 }
 
 export function shouldUseBitServer() {
-  const commandsToSkip = ['start', 'run', 'watch', 'init', 'server', 'new'];
+  const commandsToSkip = ['start', 'run', 'watch', 'server'];
   const hasFlag = process.env.BIT_CLI_SERVER === 'true' || process.env.BIT_CLI_SERVER === '1';
   return (
     hasFlag &&
