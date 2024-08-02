@@ -28,7 +28,7 @@ import {
 } from '@pnpm/reviewing.dependencies-hierarchy';
 import { renderTree } from '@pnpm/list';
 import { readWantedLockfile } from '@pnpm/lockfile-file';
-import { ProjectManifest } from '@pnpm/types';
+import { type ProjectManifest, type DepPath } from '@pnpm/types';
 import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
 import { join } from 'path';
 import { readConfig } from './read-config';
@@ -41,6 +41,7 @@ export interface InstallResult {
   dependenciesChanged: boolean;
   rebuild: RebuildFn;
   storeDir: string;
+  depsRequiringBuild?: DepPath[];
 }
 
 type ReadConfigResult = Promise<{ config: Config; warnings: string[] }>;
@@ -98,7 +99,7 @@ export class PnpmPackageManager implements PackageManager {
       });
     }
     this.modulesManifestCache.delete(rootDir);
-    const { dependenciesChanged, rebuild, storeDir } = await install(
+    const { dependenciesChanged, rebuild, storeDir, depsRequiringBuild } = await install(
       rootDir,
       manifests,
       config.storeDir,
@@ -142,6 +143,7 @@ export class PnpmPackageManager implements PackageManager {
           hideLifecycleOutput: installOptions.hideLifecycleOutput,
           peerDependencyRules: installOptions.peerDependencyRules,
         },
+        returnListOfDepsRequiringBuild: installOptions.returnListOfDepsRequiringBuild,
       },
       this.logger
     );
@@ -151,7 +153,7 @@ export class PnpmPackageManager implements PackageManager {
       // this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
       // this.logger.consoleSuccess('installing dependencies using pnpm');
     }
-    return { dependenciesChanged, rebuild, storeDir };
+    return { dependenciesChanged, rebuild, storeDir, depsRequiringBuild };
   }
 
   async getPeerDependencyIssues(
