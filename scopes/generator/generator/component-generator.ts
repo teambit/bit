@@ -164,7 +164,7 @@ export class ComponentGenerator {
       rootDir: componentPath,
       mainFile: mainFile?.relativePath,
       componentName: componentId.fullName,
-      defaultScope: this.options.scope,
+      defaultScope: this.options.scope || componentId.scope,
     });
     const component = await this.workspace.get(componentId);
     const hasEnvConfiguredOriginally = this.envs.hasEnvConfigured(component);
