@@ -47,7 +47,6 @@ import {
   LaneChangeScopeCmd,
   LaneAliasCmd,
   LaneRenameCmd,
-  LaneAddReadmeCmd,
   LaneRemoveReadmeCmd,
   LaneRemoveCompCmd,
   CatLaneHistoryCmd,
@@ -997,51 +996,6 @@ please create a new lane instead, which will include all components of this lane
     await this.createLane(laneId.name, { scope: laneId.scope });
   }
 
-  async addLaneReadme(readmeComponentIdStr: string, laneName?: string): Promise<{ result: boolean; message?: string }> {
-    if (!this.workspace) {
-      throw new BitError(`unable to track a lane readme component outside of Bit workspace`);
-    }
-    const readmeComponentId = await this.workspace.resolveComponentId(readmeComponentIdStr);
-
-    const scope: LegacyScope = this.workspace.scope.legacyScope;
-    const laneId: LaneId = laneName
-      ? await scope.lanes.parseLaneIdFromString(laneName)
-      : (this.getCurrentLaneId() as LaneId);
-
-    const lane: Lane | null | undefined = await scope.loadLane(laneId);
-
-    if (!lane) {
-      return { result: false, message: `cannot find lane ${laneName}` };
-    }
-
-    lane.setReadmeComponent(readmeComponentId);
-    await scope.lanes.saveLane(lane, { laneHistoryMsg: 'add readme' });
-
-    const existingLaneConfig =
-      (await this.workspace.getSpecificComponentConfig(readmeComponentId, LanesAspect.id)) || {};
-
-    const remoteLaneIdStr = lane.toLaneId().toString();
-
-    if (existingLaneConfig.readme) {
-      await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, {
-        ...existingLaneConfig,
-        readme: {
-          ...existingLaneConfig.readme,
-          [remoteLaneIdStr]: true,
-        },
-      });
-    } else {
-      await this.workspace.addSpecificComponentConfig(readmeComponentId, LanesAspect.id, {
-        ...existingLaneConfig,
-        readme: {
-          [remoteLaneIdStr]: true,
-        },
-      });
-    }
-    await this.workspace.bitMap.write('lane-add-readme');
-    return { result: true };
-  }
-
   /**
    * if the local lane was forked from another lane, this gets the differences between the two.
    * it also fetches the original lane from the remote to make sure the data is up to date.
@@ -1227,7 +1181,6 @@ please create a new lane instead, which will include all components of this lane
       new LaneAliasCmd(lanesMain),
       new LaneRenameCmd(lanesMain),
       new LaneDiffCmd(workspace, scope, componentCompare),
-      new LaneAddReadmeCmd(lanesMain),
       new LaneRemoveReadmeCmd(lanesMain),
       new LaneImportCmd(switchCmd),
       new LaneRemoveCompCmd(workspace, lanesMain),
