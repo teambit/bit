@@ -1138,22 +1138,11 @@ bit lane diff from to => diff between "from" lane and "to" lane.
 | ------------------------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--pattern <component-pattern>` |                  | show lane-diff for components conforming to the specified component-pattern only component-pattern format: component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
-### lane add-readme
-
-**Usage**: `lane add-readme <component-name> [lane-name]`
-
-**Description**: EXPERIMENTAL. sets an existing component as the readme of a lane
-
-| **Arg**        |                            **Description**                            |
-| -------------- | :-------------------------------------------------------------------: |
-| `component-id` | the component name or id of the component to use as the lane's readme |
-| `lane-name`    |    the lane to attach the readme to (defaults to the current lane)    |
-
 ### lane remove-readme
 
 **Usage**: `lane remove-readme [laneName]`
 
-**Description**: EXPERIMENTAL. remove lane readme component
+**Description**: DEPRECATED (only use it if you have used add-readme and want to undo it). remove lane readme component
 
 ### lane import
 
