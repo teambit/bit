@@ -1,8 +1,8 @@
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql } from '@apollo/client';
+import { useQuery as useDataQuery, DocumentNode } from '@apollo/client';
+import { gql } from 'graphql-tag';
 import { CloudUser } from '@teambit/cloud.models.cloud-user';
 
-export const CURRENT_USER_QUERY = gql`
+export const CURRENT_USER_QUERY: DocumentNode = gql`
   query CurrentUser($redirectUrl: String!) {
     getCurrentUser {
       username

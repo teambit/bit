@@ -1,4 +1,5 @@
-import { gql } from '@apollo/client';
+import { gql } from 'graphql-tag';
+import { DocumentNode } from '@apollo/client';
 import { EdgeType } from '../../edge-type';
 
 export const GET_GRAPH_IDS = gql`
@@ -16,7 +17,7 @@ export const GET_GRAPH_IDS = gql`
   }
 `;
 
-export const GET_GRAPH = gql`
+export const GET_GRAPH: DocumentNode = gql`
   query graph($ids: [String], $filter: String) {
     graph(ids: $ids, filter: $filter) {
       nodes {

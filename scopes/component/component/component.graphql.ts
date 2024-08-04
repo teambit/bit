@@ -1,6 +1,6 @@
 import stripAnsi from 'strip-ansi';
 import { gql } from 'graphql-tag';
-import { GraphQLJSONObject } from 'graphql-type-json';
+import { GraphQLJSONObject } from 'graphql-scalars';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';

@@ -1,7 +1,7 @@
 import { useMutation } from '@teambit/ui';
-import { gql } from '@apollo/client';
+import { gql, DocumentNode } from '@apollo/client';
 
-export const LOGOUT_MUTATION = gql`
+export const LOGOUT_MUTATION: DocumentNode = gql`
   mutation LogoutUser {
     logout
   }

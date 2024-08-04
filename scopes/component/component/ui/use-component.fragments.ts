@@ -1,6 +1,7 @@
-import { gql } from '@apollo/client';
+import { gql } from 'graphql-tag';
+import { DocumentNode } from '@apollo/client';
 
-export const componentIdFields = gql`
+export const componentIdFields: DocumentNode = gql`
   fragment componentIdFields on ComponentID {
     name
     version
@@ -8,7 +9,7 @@ export const componentIdFields = gql`
   }
 `;
 
-export const componentOverviewFields = gql`
+export const componentOverviewFields: DocumentNode = gql`
   fragment componentOverviewFields on Component {
     id {
       ...componentIdFields
@@ -58,7 +59,7 @@ export const componentOverviewFields = gql`
   ${componentIdFields}
 `;
 
-export const componentFields = gql`
+export const componentFields: DocumentNode = gql`
   fragment componentFields on Component {
     ...componentOverviewFields
     packageName
@@ -74,7 +75,7 @@ export const componentFields = gql`
   ${componentOverviewFields}
 `;
 
-export const componentFieldsWithLogs = gql`
+export const componentFieldsWithLogs: DocumentNode = gql`
   fragment componentFieldWithLogs on Component {
     id {
       ...componentIdFields
@@ -111,7 +112,7 @@ export const COMPONENT_QUERY_LOG_FIELDS = `
   $logTakeHeadFromComponent: Boolean
 `;
 
-export const GET_COMPONENT = gql`
+export const GET_COMPONENT: DocumentNode = gql`
   query Component($extensionId: String!, $id: String!) {
     getHost(id: $extensionId) {
       id # used for GQL caching
@@ -123,7 +124,7 @@ export const GET_COMPONENT = gql`
   ${componentFields}
 `;
 
-export const GET_COMPONENT_WITH_LOGS = gql`
+export const GET_COMPONENT_WITH_LOGS: DocumentNode = gql`
   query Component(
     $extensionId: String!
     $id: String!
@@ -139,7 +140,7 @@ export const GET_COMPONENT_WITH_LOGS = gql`
   ${componentFieldsWithLogs}
 `;
 
-export const SUB_SUBSCRIPTION_ADDED = gql`
+export const SUB_SUBSCRIPTION_ADDED: DocumentNode = gql`
   subscription OnComponentAdded {
     componentAdded {
       component {
@@ -150,7 +151,7 @@ export const SUB_SUBSCRIPTION_ADDED = gql`
   ${componentFields}
 `;
 
-export const SUB_COMPONENT_CHANGED = gql`
+export const SUB_COMPONENT_CHANGED: DocumentNode = gql`
   subscription OnComponentChanged {
     componentChanged {
       component {
@@ -161,7 +162,7 @@ export const SUB_COMPONENT_CHANGED = gql`
   ${componentFields}
 `;
 
-export const SUB_COMPONENT_REMOVED = gql`
+export const SUB_COMPONENT_REMOVED: DocumentNode = gql`
   subscription OnComponentRemoved {
     componentRemoved {
       componentIds {

@@ -10,6 +10,8 @@ process.on('uncaughtException', (err) => {
 process.env.BROWSERSLIST_IGNORE_OLD_DATA = 'true';
 
 import './hook-require';
+// need it for graphql modules to work. https://the-guild.dev/graphql/modules/docs/di/introduction
+import 'reflect-metadata';
 
 import {
   getAspectDir,

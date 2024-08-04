@@ -1,15 +1,31 @@
-import fetch from 'node-fetch';
-import { setContext } from 'apollo-link-context';
-import { HttpLink } from 'apollo-link-http';
-import { makeRemoteExecutableSchema, introspectSchema } from 'apollo-server';
-import { WebSocketLink } from 'apollo-link-ws';
-import { split, ApolloLink } from 'apollo-link';
-import { getMainDefinition } from 'apollo-utilities';
-import { SubscriptionClient } from 'subscriptions-transport-ws';
+import { ApolloClient, InMemoryCache, HttpLink, split, NormalizedCacheObject, ApolloLink } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
+import { getMainDefinition } from '@apollo/client/utilities';
+import { fetch as crossFetch } from 'cross-fetch';
+import { getIntrospectionQuery, buildClientSchema, GraphQLSchema } from 'graphql';
+import { wrapSchema } from '@graphql-tools/wrap';
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import ws from 'ws';
+import { createClient } from 'graphql-ws';
 import { GraphQLServer } from '../graphql-server';
 
-async function getRemoteSchema({ uri, subscriptionsUri }) {
+async function createApolloClient(
+  uri: string,
+  subscriptionsUri?: string
+): Promise<{
+  client: ApolloClient<NormalizedCacheObject>;
+  remoteSchema: GraphQLSchema;
+}> {
+  const httpLink = new HttpLink({ uri, fetch: crossFetch });
+  const introspectionResponse = await crossFetch(uri, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: getIntrospectionQuery() }),
+  });
+
+  const { data } = await introspectionResponse.json();
+  const remoteSchema = buildClientSchema(data);
+
   const wrappingLink = new ApolloLink((operation, forward) => {
     return forward(operation).map((response) => {
       const context = operation.getContext();
@@ -19,45 +35,68 @@ async function getRemoteSchema({ uri, subscriptionsUri }) {
       return response;
     });
   });
-  // @ts-ignore
-  const http = new HttpLink({ uri, fetch });
-  const httpLink = setContext((request, previousContext) => {
+  const contextLink = setContext((_, prevContext) => {
     return {
-      headers: previousContext?.graphqlContext?.headers,
+      headers: prevContext.graphqlContext?.req?.headers,
     };
-  })
-    .concat(wrappingLink)
-    .concat(http);
+  });
 
-  if (!subscriptionsUri) {
-    return makeRemoteExecutableSchema({
-      schema: await introspectSchema(httpLink),
-      link: httpLink,
-    });
+  const link = contextLink.concat(wrappingLink).concat(httpLink);
+
+  if (subscriptionsUri) {
+    const wsLink = new GraphQLWsLink(
+      createClient({
+        url: subscriptionsUri,
+        webSocketImpl: ws,
+      })
+    );
+
+    const splitLink = split(
+      ({ query }) => {
+        const definition = getMainDefinition(query);
+        return definition.kind === 'OperationDefinition' && definition.operation === 'subscription';
+      },
+      wsLink,
+      link
+    );
+
+    return {
+      client: new ApolloClient({
+        link: splitLink,
+        cache: new InMemoryCache(),
+      }),
+      remoteSchema,
+    };
   }
 
-  // Create WebSocket link with custom client
-  const client = new SubscriptionClient(subscriptionsUri, { reconnect: true }, ws);
-  const wsLink = new WebSocketLink(client);
+  return {
+    client: new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    }),
+    remoteSchema,
+  };
+}
 
-  // Using the ability to split links, we can send data to each link
-  // depending on what kind of operation is being sent
-  const link = split(
-    (operation) => {
-      const definition = getMainDefinition(operation.query);
-      return definition.kind === 'OperationDefinition' && definition.operation === 'subscription';
+async function getRemoteSchema({
+  uri,
+  subscriptionsUri,
+}: {
+  uri: string;
+  subscriptionsUri?: string;
+}): Promise<GraphQLSchema> {
+  const { client, remoteSchema } = await createApolloClient(uri, subscriptionsUri);
+
+  return wrapSchema({
+    schema: remoteSchema,
+    executor: async ({ document, variables }) => {
+      const fetchResult = await client.query({ query: document, variables, fetchPolicy: 'network-only' });
+      return fetchResult as any;
     },
-    wsLink,
-    httpLink
-  );
-
-  return makeRemoteExecutableSchema({
-    schema: await introspectSchema(httpLink),
-    link,
   });
 }
 
-export async function createRemoteSchemas(servers: GraphQLServer[]) {
+export async function createRemoteSchemas(servers: GraphQLServer[]): Promise<GraphQLSchema[]> {
   const schemasP = servers.map(async (server) => {
     return getRemoteSchema({
       uri: server.uri,

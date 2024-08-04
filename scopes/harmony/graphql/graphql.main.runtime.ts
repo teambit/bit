@@ -1,19 +1,23 @@
 import { mergeSchemas } from '@graphql-tools/schema';
-import NoIntrospection from 'graphql-disable-introspection';
-import { GraphQLModule } from '@graphql-modules/core';
+import { GraphQLUUID, GraphQLJSONObject } from 'graphql-scalars';
+import { WebSocketServer } from 'ws';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
+import { useServer } from 'graphql-ws/lib/use/ws';
+import { GRAPHQL_TRANSPORT_WS_PROTOCOL } from 'graphql-ws';
+import { Module, createModule, createApplication, Application } from 'graphql-modules';
 import { MainRuntime } from '@teambit/cli';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import express, { Express } from 'express';
-import { graphqlHTTP } from 'express-graphql';
-import { Port } from '@teambit/toolbox.network.get-port';
-import { execute, subscribe } from 'graphql';
 import { PubSubEngine, PubSub } from 'graphql-subscriptions';
 import { createServer, Server } from 'http';
-import httpProxy from 'http-proxy';
-import { SubscriptionServer } from 'subscriptions-transport-ws';
+import compact from 'lodash.compact';
 import cors from 'cors';
 import { GraphQLServer } from './graphql-server';
+import { GraphQLSchema, subscribe as graphqlSubscribe, execute as graphqlExecute } from 'graphql';
 import { createRemoteSchemas } from './create-remote-schemas';
 import { GraphqlAspect } from './graphql.aspect';
 import { Schema } from './schema';
@@ -22,6 +26,9 @@ export enum Verb {
   WRITE = 'write',
   READ = 'read',
 }
+
+export type Subscribe = typeof graphqlSubscribe;
+export type Execute = typeof graphqlExecute;
 
 export type GraphQLConfig = {
   port: number;
@@ -82,7 +89,7 @@ export class GraphqlMain {
     return new PubSub();
   }
 
-  private modules = new Map<string, GraphQLModule>();
+  private modules = new Map<string, Module>();
 
   /**
    * returns the schema for a specific aspect by its id.
@@ -107,18 +114,80 @@ export class GraphqlMain {
 
   async createServer(options: GraphQLServerOptions) {
     const { graphiql = true, disableIntrospection } = options;
-    const localSchema = this.createRootModule(options.schemaSlot);
+    const app = options.app || express();
+    const httpServer = createServer(app);
+
     const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
-    const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
-    const schema = mergeSchemas({
+    const application = this.createRootModule(options.schemaSlot);
+
+    const subscribe = application.createSubscription();
+    const execute = application.createExecution();
+
+    const schemas = compact(
+      [application.schema].concat(remoteSchemas).filter((x) => {
+        return Boolean(x && (x.getQueryType() || x.getMutationType() || x.getSubscriptionType()));
+      })
+    );
+
+    // if there is no schema with at least a query, mutation or subscription, return the http server without spinning up a graphql server
+    if (schemas.length === 0) {
+      return httpServer;
+    }
+
+    const mergedSchema = mergeSchemas({
       schemas,
     });
 
-    // TODO: @guy please consider to refactor to express extension.
-    const app = options.app || express();
+    const subscriptionServerCleanup = await this.createSubscription(
+      mergedSchema,
+      httpServer,
+      options,
+      subscribe,
+      execute
+    );
+
+    const apolloServer = new ApolloServer({
+      gateway: {
+        async load() {
+          return { executor: application.createApolloExecutor() };
+        },
+        onSchemaLoadOrUpdate(callback) {
+          const apiSchema = { apiSchema: mergedSchema } as any;
+          callback(apiSchema);
+          return () => {};
+        },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        async stop() {},
+      },
+      plugins: compact([
+        ApolloServerPluginDrainHttpServer({ httpServer }),
+        !graphiql ? ApolloServerPluginLandingPageDisabled() : null,
+        {
+          async serverWillStart() {
+            return {
+              async drainServer() {
+                await subscriptionServerCleanup.dispose();
+              },
+            };
+          },
+        },
+      ]),
+      introspection: !disableIntrospection,
+      formatError: (err) => {
+        this.logger.error('graphql error ', err);
+        return Object.assign(err, {
+          // @ts-ignore
+          ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
+          // @ts-ignore
+          HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code,
+        });
+      },
+    });
+
+    await apolloServer.start();
+
     if (!this.config.disableCors) {
       app.use(
-        // @ts-ignore todo: it's not clear what's the issue.
         cors({
           origin(origin, callback) {
             callback(null, true);
@@ -130,32 +199,55 @@ export class GraphqlMain {
 
     app.use(
       '/graphql',
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      graphqlHTTP((request, res, params) => ({
-        customFormatErrorFn: (err) => {
-          this.logger.error('graphql got an error during running the following query:', params);
-          this.logger.error('graphql error ', err);
-          return Object.assign(err, {
-            // @ts-ignore
-            ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
-            // @ts-ignore
-            HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code,
-          });
-        },
-        schema,
-        rootValue: request,
-        graphiql,
-        validationRules: disableIntrospection ? [NoIntrospection] : undefined,
-      }))
+      expressMiddleware(apolloServer, {
+        context: async ({ req }) => req,
+      })
     );
 
-    const server = createServer(app);
-    const subscriptionsPort = options.subscriptionsPortRange || this.config.subscriptionsPortRange;
-    const subscriptionServerPort = await this.getPort(subscriptionsPort);
-    const { port } = await this.createSubscription(options, subscriptionServerPort);
-    this.proxySubscription(server, port);
+    return httpServer;
+  }
 
-    return server;
+  async createSubscription(
+    schema: GraphQLSchema,
+    httpServer: Server,
+    options: GraphQLServerOptions,
+    subscribe: Subscribe,
+    execute: Execute
+  ) {
+    const websocketServer = new WebSocketServer({
+      noServer: true,
+      path: this.config.subscriptionsPath,
+    });
+
+    httpServer.on('upgrade', (request, socket, head) => {
+      if (request.url?.startsWith(this.config.subscriptionsPath)) {
+        const protocols = request.headers['sec-websocket-protocol'];
+        if (protocols?.includes(GRAPHQL_TRANSPORT_WS_PROTOCOL)) {
+          websocketServer.handleUpgrade(request, socket, head, (websocket) => {
+            websocketServer.emit('connection', websocket, request);
+          });
+        }
+      }
+    });
+
+    return useServer(
+      {
+        schema,
+        subscribe,
+        execute,
+        onConnect: () => {
+          options?.onWsConnect?.();
+        },
+        context: async (ctx, msgs, args) => {
+          return {
+            ctx,
+            msgs,
+            args,
+          };
+        },
+      },
+      websocketServer
+    );
   }
 
   /**
@@ -200,83 +292,27 @@ export class GraphqlMain {
     return this;
   }
 
-  private async getPort(range: number[]) {
-    const [from, to] = range;
-    return Port.getPort(from, to);
-  }
-
-  /** create Subscription server with different port */
-
-  private async createSubscription(options: GraphQLServerOptions, port: number) {
-    // Create WebSocket listener server
-    const websocketServer = createServer((request, response) => {
-      response.writeHead(404);
-      response.end();
-    });
-
-    // Bind it to port and start listening
-    websocketServer.listen(port, () =>
-      this.logger.debug(`Websocket Server is now running on http://localhost:${port}`)
-    );
-
-    const localSchema = this.createRootModule(options.schemaSlot);
-    const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
-    const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
-    const schema = mergeSchemas({
-      schemas,
-    });
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const subServer = new SubscriptionServer(
-      {
-        execute,
-        subscribe,
-        schema,
-        onConnect: options.onWsConnect,
-      },
-      {
-        server: websocketServer,
-        path: this.config.subscriptionsPath,
-      }
-    );
-    return { subServer, port };
-  }
-  /** proxy ws Subscription server to avoid conflict with different websocket connections */
-
-  private proxySubscription(server: Server, port: number) {
-    const proxServer = httpProxy.createProxyServer();
-    const subscriptionsPath = this.config.subscriptionsPath;
-    server.on('upgrade', function (req, socket, head) {
-      if (req.url === subscriptionsPath) {
-        proxServer.ws(req, socket, head, { target: { host: 'localhost', port } });
-      }
-    });
-  }
-
-  private createRootModule(schemaSlot?: SchemaSlot) {
+  private createRootModule(schemaSlot?: SchemaSlot): Application {
     const modules = this.buildModules(schemaSlot);
-
-    return new GraphQLModule({
-      imports: modules,
+    return createApplication({
+      modules,
     });
+  }
+
+  get scalars() {
+    return {
+      GraphQLUUID,
+      GraphQLJSONObject,
+    };
   }
 
   private buildModules(schemaSlot?: SchemaSlot) {
     const schemaSlots = schemaSlot ? schemaSlot.toArray() : this.moduleSlot.toArray();
     return schemaSlots.map(([extensionId, schema]) => {
-      const moduleDeps = this.getModuleDependencies(extensionId);
-
-      const module = new GraphQLModule({
+      const module = createModule({
+        id: extensionId,
         typeDefs: schema.typeDefs,
         resolvers: schema.resolvers,
-        schemaDirectives: schema.schemaDirectives,
-        imports: moduleDeps,
-        context: (session) => {
-          return {
-            ...session,
-            verb: session?.headers?.['x-verb'] || Verb.READ,
-          };
-        },
       });
 
       this.modules.set(extensionId, module);
@@ -285,27 +321,10 @@ export class GraphqlMain {
     });
   }
 
-  private getModuleDependencies(extensionId: string): GraphQLModule[] {
-    const extension = this.context.extensions.get(extensionId);
-    if (!extension) throw new Error(`aspect ${extensionId} was not found`);
-    const deps = this.context.getDependencies(extension);
-    const ids = deps.map((dep) => dep.id);
-
-    // @ts-ignore check :TODO why types are breaking here.
-    return Array.from(this.modules.entries())
-      .map(([depId, module]) => {
-        const dep = ids.includes(depId);
-        if (!dep) return undefined;
-        return module;
-      })
-      .filter((module) => !!module);
-  }
-
   static slots = [Slot.withType<Schema>(), Slot.withType<GraphQLServer>(), Slot.withType<PubSubSlot>()];
 
   static defaultConfig = {
     port: 4000,
-    subscriptionsPortRange: [2000, 2100],
     disableCors: false,
     subscriptionsPath: '/subscriptions',
   };
@@ -321,6 +340,7 @@ export class GraphqlMain {
   ) {
     const logger = loggerFactory.createLogger(GraphqlAspect.id);
     const graphqlMain = new GraphqlMain(config, moduleSlot, context, logger, graphQLServerSlot, pubSubSlot);
+    graphqlMain.registerPubSub(new PubSub());
     return graphqlMain;
   }
 }

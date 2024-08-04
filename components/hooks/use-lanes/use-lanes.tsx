@@ -1,12 +1,12 @@
 import { useMemo, useCallback } from 'react';
-import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { LaneModel, LanesModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
-import { gql } from '@apollo/client';
+import { useQuery as useDataQuery, DocumentNode } from '@apollo/client';
+import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import { gql } from 'graphql-tag';
 import { LaneId } from '@teambit/lane-id';
 import { isEqual } from 'lodash';
 import { useLanesContext } from './lanes-context';
 
-const GET_LANES = gql`
+const GET_LANES: DocumentNode = gql`
   query Lanes(
     $extensionId: String
     $laneIds: [String!]
@@ -170,7 +170,7 @@ type UseRootLanes = (
 const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}, scope) => {
   const { ids, offset, limit, sort } = options;
 
-  const { data, fetchMore, loading } = useDataQuery<LanesQuery>(GET_LANES, {
+  const { data, fetchMore, loading } = useDataQuery(GET_LANES, {
     variables: {
       laneIds: ids,
       offset,
@@ -258,7 +258,7 @@ const useRootLanes: UseRootLanes = (viewedLaneId, skip, options = {}, scope) => 
 };
 
 export const useSearchLanes: SearchLanes = (search, skip) => {
-  const { data: searchData, loading: loadingSearch } = useDataQuery<LanesQuery>(GET_LANES, {
+  const { data: searchData, loading: loadingSearch } = useDataQuery(GET_LANES, {
     variables: {
       search,
       skipViewedLane: true,
