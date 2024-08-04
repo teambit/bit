@@ -45,7 +45,7 @@ export class EnvPlugin implements PluginDefinition {
       icon: env.icon,
       __getDescriptor: async () => {
         return {
-          type: env.name,
+          type: env.type || env.name,
         };
       },
       id: envId,
