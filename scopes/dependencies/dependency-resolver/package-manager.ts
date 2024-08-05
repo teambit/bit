@@ -125,6 +125,12 @@ export type PackageManagerInstallOptions = {
    * Tells pnpm to automatically install peer dependencies. It is true by default.
    */
   autoInstallPeers?: boolean;
+
+  /**
+   * Tells the package manager to return the list of dependencies that has to be built.
+   * This is used by Ripple CI.
+   */
+  returnListOfDepsRequiringBuild?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

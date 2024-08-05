@@ -6,7 +6,7 @@ import { StoreController, WantedDependency } from '@pnpm/package-store';
 import { rebuild } from '@pnpm/plugin-commands-rebuild';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { sortPackages } from '@pnpm/sort-packages';
-import { type PeerDependencyRules, type ProjectRootDir } from '@pnpm/types';
+import { type PeerDependencyRules, type ProjectRootDir, type DepPath } from '@pnpm/types';
 import {
   ResolvedPackageVersion,
   Registries,
@@ -201,11 +201,12 @@ export async function install(
     | 'neverBuiltDependencies'
     | 'ignorePackageManifest'
     | 'hoistWorkspacePackages'
+    | 'returnListOfDepsRequiringBuild'
   > &
     Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
-): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string }> {
+): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string; depsRequiringBuild?: DepPath[] }> {
   const externalDependencies = new Set<string>();
   const readPackage: ReadPackageHook[] = [];
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
@@ -290,6 +291,7 @@ export async function install(
   };
 
   let dependenciesChanged = false;
+  let depsRequiringBuild: DepPath[] | undefined;
   if (!options.dryRun) {
     let stopReporting: Function | undefined;
     if (!options.hidePackageManagerOutput) {
@@ -302,8 +304,10 @@ export async function install(
       await installsRunning[rootDir];
       await restartWorkerPool();
       installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
-      const { stats } = await installsRunning[rootDir];
-      dependenciesChanged = stats.added + stats.removed + stats.linkedToRoot > 0;
+      const installResult = await installsRunning[rootDir];
+      depsRequiringBuild = installResult.depsRequiringBuild;
+      dependenciesChanged =
+        installResult.stats.added + installResult.stats.removed + installResult.stats.linkedToRoot > 0;
       delete installsRunning[rootDir];
     } catch (err: any) {
       if (logger) {
@@ -337,6 +341,7 @@ export async function install(
       }
     },
     storeDir: storeController.dir,
+    depsRequiringBuild,
   };
 }
 
