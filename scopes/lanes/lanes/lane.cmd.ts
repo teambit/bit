@@ -568,9 +568,13 @@ export class LaneCmd implements Command {
   }
 }
 
+/**
+ * @deprecated - only use it to revert the add-readme command changes
+ */
 export class LaneRemoveReadmeCmd implements Command {
   name = 'remove-readme [laneName]';
-  description = 'EXPERIMENTAL. remove lane readme component';
+  description =
+    'DEPRECATED (only use it if you have used add-readme and want to undo it). remove lane readme component';
   options = [] as CommandOptions;
   loader = true;
   skipWorkspace = false;
@@ -589,37 +593,6 @@ export class LaneRemoveReadmeCmd implements Command {
     }
 
     return chalk.red(`${message}\n`);
-  }
-}
-
-export class LaneAddReadmeCmd implements Command {
-  name = 'add-readme <component-name> [lane-name]';
-  description = 'EXPERIMENTAL. sets an existing component as the readme of a lane';
-  arguments = [
-    { name: 'component-id', description: "the component name or id of the component to use as the lane's readme" },
-    { name: 'lane-name', description: 'the lane to attach the readme to (defaults to the current lane)' },
-  ];
-  options = [] as CommandOptions;
-  loader = true;
-  skipWorkspace = false;
-
-  constructor(private lanes: LanesMain) {}
-
-  async report([componentId, laneName]: [string, string]): Promise<string> {
-    const { result, message } = await this.lanes.addLaneReadme(componentId, laneName);
-
-    if (result)
-      return chalk.green(
-        `the component ${componentId} has been successfully added as the readme component for the lane ${
-          laneName || this.lanes.getCurrentLaneName()
-        }`
-      );
-
-    return chalk.red(
-      `${message || ''}\nthe component ${componentId} could not be added as a readme component for the lane ${
-        laneName || this.lanes.getCurrentLaneName()
-      }`
-    );
   }
 }
 

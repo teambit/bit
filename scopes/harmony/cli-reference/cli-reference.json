@@ -3964,30 +3964,10 @@
         ]
       },
       {
-        "name": "add-readme <component-name> [lane-name]",
-        "alias": "",
-        "options": [],
-        "description": "EXPERIMENTAL. sets an existing component as the readme of a lane",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false,
-        "skipWorkspace": false,
-        "arguments": [
-          {
-            "name": "component-id",
-            "description": "the component name or id of the component to use as the lane's readme"
-          },
-          {
-            "name": "lane-name",
-            "description": "the lane to attach the readme to (defaults to the current lane)"
-          }
-        ]
-      },
-      {
         "name": "remove-readme [laneName]",
         "alias": "",
         "options": [],
-        "description": "EXPERIMENTAL. remove lane readme component",
+        "description": "DEPRECATED (only use it if you have used add-readme and want to undo it). remove lane readme component",
         "extendedDescription": "",
         "group": "ungrouped",
         "private": false,
