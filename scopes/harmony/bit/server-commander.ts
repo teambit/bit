@@ -58,10 +58,9 @@ export class ServerCommander {
     if (!args.includes('--json') && !args.includes('-j')) {
       loader.on();
     }
-    const command = args.join(' ');
     const endpoint = `cli-raw`;
     const pwd = process.cwd();
-    const body = { command, pwd };
+    const body = { command: args, pwd };
     let res;
     try {
       res = await fetch(`${url}/${endpoint}`, {
@@ -74,7 +73,7 @@ export class ServerCommander {
         await this.deleteServerPortFile();
         throw new ServerNotFound(port);
       }
-      throw new Error(`failed to run command "${command}" on the server. ${err.message}`);
+      throw new Error(`failed to run command "${args.join(' ')}" on the server. ${err.message}`);
     }
 
     if (res.ok) {

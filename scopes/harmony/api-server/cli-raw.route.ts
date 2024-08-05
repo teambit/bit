@@ -29,13 +29,14 @@ export class CLIRawRoute implements Route {
       }
 
       const randomNumber = Math.floor(Math.random() * 10000); // helps to distinguish between commands in the log
-      const cmdStrLog = `${randomNumber} ${command}`;
+      const commandStr = command.join(' ');
+      const cmdStrLog = `${randomNumber} ${commandStr}`;
       await this.apiForIDE.logStartCmdHistory(cmdStrLog);
       legacyLogger.isDaemon = true;
       enableChalk();
       const cliParser = new CLIParser(this.cli.commands, this.cli.groups, this.cli.onCommandStartSlot);
       try {
-        const commandRunner = await cliParser.parse(command.split(' '));
+        const commandRunner = await cliParser.parse(command);
         const result = await commandRunner.runCommand(true);
         await this.apiForIDE.logFinishCmdHistory(cmdStrLog, 0);
         res.json(result);
@@ -43,7 +44,7 @@ export class CLIRawRoute implements Route {
         if (err instanceof YargsExitWorkaround) {
           res.json({ data: err.helpMsg, exitCode: err.exitCode });
         } else {
-          this.logger.error(`cli-raw server: got an error for ${command}`, err);
+          this.logger.error(`cli-raw server: got an error for ${commandStr}`, err);
           await this.apiForIDE.logFinishCmdHistory(cmdStrLog, 1);
           res.status(500);
           res.jsonp({
