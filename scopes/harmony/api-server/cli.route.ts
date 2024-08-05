@@ -42,7 +42,10 @@ export class CLIRoute implements Route {
         const argsStr = args ? ` ${args.join(' ')}` : '';
         const optsStr = optsToString ? ` ${optsToString}` : '';
         const cmdStr = req.params.cmd + argsStr + optsStr;
-        this.logger.console(`[*] started a new ${outputMethod} command: ${cmdStr}`);
+        // don't use "logger.console" here, we don't want these message to pollute cli-raw output
+        const msgStart = `[*] started a new ${outputMethod} command: ${cmdStr}`;
+        this.logger.info(msgStart);
+        console.log(msgStart); // eslint-disable-line no-console
         const randomNumber = Math.floor(Math.random() * 10000); // helps to distinguish between commands in the log
         cmdStrLog = `${randomNumber} ${cmdStr}`;
         await this.apiForIDE.logStartCmdHistory(cmdStrLog);
@@ -56,7 +59,9 @@ export class CLIRoute implements Route {
         const result = await command[outputMethod]!(args || [], optionsAsCamelCase);
         this.logger.clearStatusLine();
         const duration = prettyTime(process.hrtime(startTask));
-        this.logger.consoleSuccess(`command "${req.params.cmd}" had been completed in ${duration}`);
+        const msgEnd = `✔ command "${req.params.cmd}" had been completed in ${duration}`;
+        this.logger.info(msgEnd);
+        console.log(msgEnd); // eslint-disable-line no-console
         await this.apiForIDE.logFinishCmdHistory(cmdStrLog, 0);
         if (outputMethod === 'json') {
           res.json(result);
@@ -66,8 +71,9 @@ export class CLIRoute implements Route {
           res.json({ data, exitCode });
         }
       } catch (err: any) {
-        this.logger.error(`command "${req.params.cmd}" had failed`, err);
-        this.logger.consoleFailure(`command "${req.params.cmd}" had failed. ${err.message}`);
+        const msgErr = `command "${req.params.cmd}" had failed. ${err.message}`;
+        this.logger.error(msgErr, err);
+        console.error(msgErr); // eslint-disable-line no-console
         if (cmdStrLog) await this.apiForIDE.logFinishCmdHistory(cmdStrLog, 1);
         res.status(500);
         res.jsonp({

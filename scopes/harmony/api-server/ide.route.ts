@@ -28,19 +28,25 @@ export class IDERoute implements Route {
         }
         const body = req.body;
         const { args } = body;
-        this.logger.console(`[*] started a new api-IDE call: ${req.params.method}, total: ${args?.length || 0} args`);
+        // don't use "logger.console" here, we don't want these message to pollute cli-raw output
+        const msgStart = `[*] started a new api-IDE call: ${req.params.method}, total: ${args?.length || 0} args`;
+        this.logger.info(msgStart);
+        console.log(); // eslint-disable-line no-console
         const randomNumber = Math.floor(Math.random() * 10000); // helps to distinguish between commands in the log
         ideCallLog = `${randomNumber} ${req.params.method}(${getArgsAsString(args)})`;
         await this.apiForIDE.logStartCmdHistory(ideCallLog);
         const startTask = process.hrtime();
         const result = await this.apiForIDE[req.params.method](...args);
         const duration = prettyTime(process.hrtime(startTask));
-        this.logger.consoleSuccess(`api-IDE call: ${req.params.method} had been completed in ${duration}`);
+        const msgEnd = `✔ api-IDE call: ${req.params.method} had been completed in ${duration}`;
+        this.logger.info(msgEnd);
+        console.log(msgEnd); // eslint-disable-line no-console
         await this.apiForIDE.logFinishCmdHistory(ideCallLog, 0);
         res.json(result);
       } catch (err: any) {
-        this.logger.error(`api-IDE call: ${req.params.method} had failed`, err);
-        this.logger.consoleFailure(`api-IDE call: ${req.params.method} had failed. ${err.message}`);
+        const msgErr = `api-IDE call: ${req.params.method} had failed`;
+        this.logger.error(msgErr, err);
+        console.error(`api-IDE call: ${req.params.method} had failed. ${err.message}`); // eslint-disable-line no-console
         if (ideCallLog) await this.apiForIDE.logFinishCmdHistory(ideCallLog, 1);
         res.status(500).jsonp(err.message);
       }

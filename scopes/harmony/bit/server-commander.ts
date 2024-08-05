@@ -40,8 +40,10 @@ export class ServerCommander {
 
       process.exit(0);
     } catch (err: any) {
-      if (err instanceof ServerPortFileNotFound || err instanceof ServerNotFound || err instanceof ScopeNotFound)
+      if (err instanceof ServerPortFileNotFound || err instanceof ServerNotFound || err instanceof ScopeNotFound) {
         throw err;
+      }
+      loader.off();
       // eslint-disable-next-line no-console
       console.error(chalk.red(err.message));
       process.exit(1);

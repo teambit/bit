@@ -25,6 +25,7 @@ export class Loader {
   }
 
   off(): Loader {
+    sendEventsToClients('onLoader', { method: 'off' });
     this.stop();
     this.spinner = null;
     return this;
