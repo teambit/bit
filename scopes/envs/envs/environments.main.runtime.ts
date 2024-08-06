@@ -496,14 +496,15 @@ export class EnvsMain {
     const envDef = this.getEnvFromComponent(envComponent);
     if (!envDef) return undefined;
 
-    const services = this.getServices(envDef);
+    const rawServices = this.getServices(envDef);
+    const services = rawServices.toObject();
     // const selfDescriptor = (await this.getEnvDescriptorFromEnvDef(envDef)) || {};
     const selfDescriptor = await this.getEnvDescriptorFromEnvDef(envDef);
 
     if (!selfDescriptor) return undefined;
     return {
       ...selfDescriptor,
-      services: services.toObject(),
+      services,
     };
   }
 
