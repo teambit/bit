@@ -22,6 +22,24 @@ export function setOutput(configMutator: WebpackConfigMutator) {
   return configMutator;
 }
 
+/**
+ * Setting the webSocketURL to use port 0
+ * This is will make the dev server to use the same port as the website
+ * This is mainly required for a cases when the port is forwarded to a different port
+ * For example when using online vscode instances
+ * @param configMutator
+ * @returns
+ */
+export function setDevServerClient(configMutator: WebpackConfigMutator) {
+  if (!configMutator.raw.devServer) configMutator.raw.devServer = {};
+
+  configMutator.raw.devServer.client = {
+    webSocketURL: 'ws://0.0.0.0:0/ws',
+  };
+
+  return configMutator;
+}
+
 export function replaceTerserPlugin({ prerender = false }: { prerender: boolean }) {
   return (configMutator: WebpackConfigMutator) => {
     if (!configMutator.raw.optimization?.minimizer) return configMutator;
