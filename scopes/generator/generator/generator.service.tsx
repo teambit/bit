@@ -80,8 +80,8 @@ export class GeneratorService implements EnvService<any> {
   }
 
   private getTemplatesToRender(templates: Descriptor['templates']) {
-    const templatesLabel = chalk.green('configured templates:');
-    if (!templates) return 'no templates configured';
+    const templatesLabel = chalk.green('Configured templates:');
+    if (!templates) return `${templatesLabel}\nno templates configured`;
     const templatesStr = templates
       .map((template) => {
         const name = template.displayName ? `${template.displayName}(${template.name})` : template.name;
@@ -92,8 +92,8 @@ export class GeneratorService implements EnvService<any> {
   }
 
   private getStartersToRender(starters: Descriptor['starters']) {
-    const startersLabel = chalk.green('configured starters:');
-    if (!starters) return 'no starters configured';
+    const startersLabel = chalk.green('Configured starters:');
+    if (!starters) return `${startersLabel}\nno starters configured`;
     const startersStr = starters
       .map((starter) => {
         return `${starter.name} - ${starter.description}`;
