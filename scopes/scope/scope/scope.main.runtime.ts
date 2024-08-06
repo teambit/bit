@@ -850,8 +850,13 @@ export class ScopeMain implements ComponentFactory {
   /**
    * get component log sorted by the timestamp in ascending order (from the earliest to the latest)
    */
-  async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
-    return this.legacyScope.loadComponentLogs(id, shortHash, startsFrom);
+  async getLogs(
+    id: ComponentID,
+    shortHash = false,
+    startsFrom?: string,
+    throwIfMissing = false
+  ): Promise<ComponentLog[]> {
+    return this.legacyScope.loadComponentLogs(id, shortHash, startsFrom, throwIfMissing);
   }
 
   async getStagedConfig() {
