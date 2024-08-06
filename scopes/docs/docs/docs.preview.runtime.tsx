@@ -9,7 +9,7 @@ export type DocsRootProps = {
   Provider: React.ComponentType | undefined;
   componentId: string;
   docs: Docs | undefined;
-  compositions: any;
+  compositions?: any;
   context: RenderingContext;
 };
 
@@ -25,10 +25,11 @@ export class DocsPreview {
     componentId: ComponentID,
     envId: string,
     modules: PreviewModule,
-    [compositions]: [any],
+    [compositionsFromParams]: [any],
     context: RenderingContext
   ) => {
     const docsModule = this.selectPreviewModel(componentId.fullName, modules);
+    const compositions = compositionsFromParams || [];
 
     const mainModule = modules.modulesMap[envId] || modules.modulesMap.default;
     let defaultExports = mainModule.default;
