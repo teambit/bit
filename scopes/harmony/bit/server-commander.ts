@@ -62,7 +62,7 @@ export class ServerCommander {
     }
     const endpoint = `cli-raw`;
     const pwd = process.cwd();
-    const body = { command: args, pwd };
+    const body = { command: args, pwd, envBitFeatures: process.env.BIT_FEATURES };
     let res;
     try {
       res = await fetch(`${url}/${endpoint}`, {

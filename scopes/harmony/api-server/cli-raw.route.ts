@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import { Route, Request, Response } from '@teambit/express';
 import { Logger } from '@teambit/logger';
 import legacyLogger from '@teambit/legacy/dist/logger/logger';
+import { reloadFeatureToggle } from '@teambit/harmony.modules.feature-toggle';
 import { APIForIDE } from './api-for-ide';
 
 /**
@@ -22,10 +23,16 @@ export class CLIRawRoute implements Route {
 
   middlewares = [
     async (req: Request, res: Response) => {
-      const { command, pwd } = req.body;
+      const { command, pwd, envBitFeatures } = req.body;
       this.logger.debug(`cli-raw server: got request for ${command}`);
       if (pwd && !process.cwd().startsWith(pwd)) {
         throw new Error(`bit-server is running on a different directory. bit-server: ${process.cwd()}, pwd: ${pwd}`);
+      }
+      const currentBitFeatures = process.env.BIT_FEATURES;
+      const shouldReloadFeatureToggle = currentBitFeatures !== envBitFeatures;
+      if (shouldReloadFeatureToggle) {
+        process.env.BIT_FEATURES = envBitFeatures;
+        reloadFeatureToggle();
       }
 
       const randomNumber = Math.floor(Math.random() * 10000); // helps to distinguish between commands in the log
@@ -56,6 +63,10 @@ export class CLIRawRoute implements Route {
         this.logger.clearStatusLine();
         // change chalk back to false, otherwise, the IDE will have colors. (this is a global setting)
         chalk.enabled = false;
+        if (shouldReloadFeatureToggle) {
+          process.env.BIT_FEATURES = currentBitFeatures;
+          reloadFeatureToggle();
+        }
       }
     },
   ];
