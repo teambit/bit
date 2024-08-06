@@ -79,6 +79,9 @@ export class WorkspaceGenerator {
         copyPeerToRuntimeOnRoot: true,
         copyPeerToRuntimeOnComponents: false,
         updateExisting: false,
+        // skip pruning here to prevent cases which it caused an error about
+        // tsconfig not found because the env location was changed
+        skipPrune: true,
       });
 
       // compile the components again now that we have the dependencies installed
