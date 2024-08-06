@@ -9,7 +9,7 @@ export type DocsRootProps = {
   Provider: React.ComponentType | undefined;
   componentId: string;
   docs: Docs | undefined;
-  compositions: any;
+  compositions?: any;
   context: RenderingContext;
 };
 
