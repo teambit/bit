@@ -239,6 +239,10 @@ export class APIForIDE {
     return scopeName;
   }
 
+  getDefaultScope() {
+    return this.workspace.defaultScope;
+  }
+
   async getCompFilesDirPathFromLastSnapUsingCompFiles(
     compFiles: CompFiles
   ): Promise<{ [relativePath: string]: string }> {
