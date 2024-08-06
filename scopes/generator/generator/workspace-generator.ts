@@ -79,6 +79,7 @@ export class WorkspaceGenerator {
         copyPeerToRuntimeOnRoot: true,
         copyPeerToRuntimeOnComponents: false,
         updateExisting: false,
+        skipPrune: true,
       });
 
       // compile the components again now that we have the dependencies installed
@@ -178,6 +179,7 @@ export class WorkspaceGenerator {
         copyPeerToRuntimeOnRoot: true,
         copyPeerToRuntimeOnComponents: false,
         updateExisting: false,
+        skipPrune: true,
       });
     }
   }
