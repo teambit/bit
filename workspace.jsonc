@@ -32,7 +32,7 @@
         "@pnpm/colorize-semver-diff": "1.0.1",
         "@pnpm/config": "21.7.0",
         "@pnpm/core": "15.2.0",
-        "@pnpm/default-reporter": "13.1.10",
+        "@pnpm/default-reporter": "13.1.12",
         "@pnpm/dependency-path": "5.1.4",
         "@pnpm/error": "6.0.1",
         "@pnpm/fetch": "8.0.5",
