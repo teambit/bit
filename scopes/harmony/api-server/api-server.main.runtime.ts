@@ -130,6 +130,7 @@ export class ApiServerMain {
       server.on('listening', () => {
         this.logger.consoleSuccess(`Bit Server is listening on port ${port}`);
         this.writeUsedPort(port);
+        process.env.BIT_SERVER_RUNNING = 'true';
         resolve(port);
       });
     });

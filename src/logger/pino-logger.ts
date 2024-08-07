@@ -109,7 +109,7 @@ export function getPinoLoggerWithWorkers(
   return { pinoLogger, pinoLoggerConsole, pinoSSELogger };
 }
 
-class ServerSendOutStream extends Writable {
+export class ServerSendOutStream extends Writable {
   _write(chunk, enc, next) {
     sendEventsToClients('onLogWritten', { message: chunk.toString() });
     next();

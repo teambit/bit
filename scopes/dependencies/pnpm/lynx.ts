@@ -166,6 +166,7 @@ export interface ReportOptions {
   hideProgressPrefix?: boolean;
   hideLifecycleOutput?: boolean;
   peerDependencyRules?: PeerDependencyRules;
+  process?: NodeJS.Process;
 }
 
 export async function install(
@@ -349,6 +350,7 @@ function initReporter(opts?: ReportOptions) {
   return initDefaultReporter({
     context: {
       argv: [],
+      process: opts?.process,
     },
     reportingOptions: {
       appendOnly: opts?.appendOnly ?? false,
