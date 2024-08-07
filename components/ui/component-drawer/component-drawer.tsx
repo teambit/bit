@@ -134,7 +134,7 @@ export class ComponentsDrawer implements DrawerType {
           transformTree={this.transformTree ? this.transformTree(host) : undefined}
           components={components}
           isCollapsed={collapsed}
-          assumeScopeInUrl={this.assumeScopeInUrl}
+          // assumeScopeInUrl={this.assumeScopeInUrl}
           TreeNode={TreeNode}
         />
       </div>
