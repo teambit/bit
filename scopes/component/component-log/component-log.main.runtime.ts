@@ -51,7 +51,7 @@ export class ComponentLogMain {
     }
     if (!this.workspace) throw new OutsideWorkspaceError();
     const componentId = await this.workspace.resolveComponentId(id);
-    const logs = await this.workspace.scope.getLogs(componentId, shortHash);
+    const logs = await this.workspace.scope.getLogs(componentId, shortHash, undefined, true);
     logs.forEach((log) => {
       log.date = log.date ? moment(new Date(parseInt(log.date))).format('YYYY-MM-DD HH:mm:ss') : undefined;
       log.message = shortMessage ? log.message.split('\n')[0] : log.message;

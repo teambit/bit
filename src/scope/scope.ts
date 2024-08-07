@@ -530,8 +530,13 @@ once done, to continue working, please run "bit cc"`
     return removeNils(components);
   }
 
-  async loadComponentLogs(id: ComponentID, shortHash = false, startFrom?: string): Promise<ComponentLog[]> {
-    const componentModel = await this.getModelComponentIfExist(id);
+  async loadComponentLogs(
+    id: ComponentID,
+    shortHash = false,
+    startFrom?: string,
+    throwIfMissing = false
+  ): Promise<ComponentLog[]> {
+    const componentModel = throwIfMissing ? await this.getModelComponent(id) : await this.getModelComponentIfExist(id);
     if (!componentModel) return [];
     const startFromRef = startFrom ? componentModel.getRef(startFrom) ?? undefined : undefined;
     const logs = await componentModel.collectLogs(this, shortHash, startFromRef);
