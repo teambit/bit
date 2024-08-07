@@ -14,7 +14,13 @@ export function removeClient(client: CLIENT) {
   clients.splice(clients.indexOf(client), 1);
 }
 
-type EventName = 'onComponentChange' | 'onBitmapChange' | 'onWorkspaceConfigChange' | 'onPostInstall' | 'onLoader';
+type EventName =
+  | 'onComponentChange'
+  | 'onBitmapChange'
+  | 'onWorkspaceConfigChange'
+  | 'onPostInstall'
+  | 'onLoader'
+  | 'onLogWritten';
 
 export function sendEventsToClients(eventName: EventName, data: any) {
   clients.forEach((client) => client.response.write(`event:${eventName}\ndata: ${JSON.stringify(data)}\n\n`));

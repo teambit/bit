@@ -2,7 +2,7 @@ import { CLIMain, CLIParser, YargsExitWorkaround } from '@teambit/cli';
 import chalk from 'chalk';
 import { Route, Request, Response } from '@teambit/express';
 import { Logger } from '@teambit/logger';
-import legacyLogger from '@teambit/legacy/dist/logger/logger';
+import legacyLogger, { getLevelFromArgv } from '@teambit/legacy/dist/logger/logger';
 import { reloadFeatureToggle } from '@teambit/harmony.modules.feature-toggle';
 import { APIForIDE } from './api-for-ide';
 
@@ -40,6 +40,12 @@ export class CLIRawRoute implements Route {
       const cmdStrLog = `${randomNumber} ${commandStr}`;
       await this.apiForIDE.logStartCmdHistory(cmdStrLog);
       legacyLogger.isDaemon = true;
+      let currentLogger;
+      const levelFromArgv = getLevelFromArgv(command);
+      if (levelFromArgv) {
+        currentLogger = legacyLogger.logger;
+        legacyLogger.switchToSSELogger(levelFromArgv);
+      }
       enableChalk();
       const cliParser = new CLIParser(this.cli.commands, this.cli.groups, this.cli.onCommandStartSlot);
       try {
@@ -66,6 +72,9 @@ export class CLIRawRoute implements Route {
         if (shouldReloadFeatureToggle) {
           process.env.BIT_FEATURES = currentBitFeatures;
           reloadFeatureToggle();
+        }
+        if (currentLogger) {
+          legacyLogger.switchToLogger(currentLogger);
         }
       }
     },
