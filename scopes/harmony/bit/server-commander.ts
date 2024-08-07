@@ -117,6 +117,10 @@ export class ServerCommander {
       const { method, args } = parsed;
       loader[method](...(args || []));
     });
+    eventSource.addEventListener('onLogWritten', (event: any) => {
+      const parsed = JSON.parse(event.data);
+      process.stdout.write(parsed.message);
+    });
   }
 
   async getExistingUsedPort(): Promise<number> {
