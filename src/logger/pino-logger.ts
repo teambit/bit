@@ -141,7 +141,8 @@ export function getPinoLoggerWithoutWorkers(
 
   const prettyConsoleStream = prettifier({
     ...prettyOptionsConsole,
-    destination: 1,
+    // it's important to use process.stdout here (and not "1"), otherwise, for cli-server when monkey patching the stdout it won't work
+    destination: process.stdout,
     sync: true,
   });
 

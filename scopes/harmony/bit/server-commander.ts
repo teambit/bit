@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import fs from 'fs-extra';
+import { execSync } from 'child_process';
 import { join } from 'path';
 import EventSource from 'eventsource';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
@@ -52,9 +53,16 @@ export class ServerCommander {
 
   async runCommandWithHttpServer(): Promise<CommandResult | undefined> {
     printBitVersionIfAsked();
+    const isWindows = process.platform === 'win32';
     const port = await this.getExistingUsedPort();
     const url = `http://localhost:${port}/api`;
-    this.initSSE(url);
+    const ttyPath = isWindows
+      ? undefined
+      : execSync('tty', {
+          encoding: 'utf8',
+          stdio: ['inherit', 'pipe', 'pipe'],
+        }).trim();
+    if (!ttyPath) this.initSSE(url);
     // parse the args and options from the command
     const args = process.argv.slice(2);
     if (!args.includes('--json') && !args.includes('-j')) {
@@ -62,7 +70,7 @@ export class ServerCommander {
     }
     const endpoint = `cli-raw`;
     const pwd = process.cwd();
-    const body = { command: args, pwd, envBitFeatures: process.env.BIT_FEATURES };
+    const body = { command: args, pwd, envBitFeatures: process.env.BIT_FEATURES, ttyPath };
     let res;
     try {
       res = await fetch(`${url}/${endpoint}`, {
