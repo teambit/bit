@@ -1,4 +1,5 @@
 import { CLIMain, CLIParser, YargsExitWorkaround } from '@teambit/cli';
+import fs from 'fs-extra';
 import chalk from 'chalk';
 import { Route, Request, Response } from '@teambit/express';
 import { Logger } from '@teambit/logger';
@@ -23,11 +24,28 @@ export class CLIRawRoute implements Route {
 
   middlewares = [
     async (req: Request, res: Response) => {
-      const { command, pwd, envBitFeatures } = req.body;
+      const { command, pwd, envBitFeatures, ttyPath } = req.body;
       this.logger.debug(`cli-raw server: got request for ${command}`);
       if (pwd && !process.cwd().startsWith(pwd)) {
         throw new Error(`bit-server is running on a different directory. bit-server: ${process.cwd()}, pwd: ${pwd}`);
       }
+
+      // Save the original process.stdout.write method
+      const originalStdoutWrite = process.stdout.write;
+
+      if (ttyPath) {
+        const fileHandle = await fs.open(ttyPath, 'w');
+        // @ts-ignore Monkey patch the process stdout write method
+        process.stdout.write = (chunk, encoding, callback) => {
+          // Emit an event when something is written to stdout
+          // stdoutEmitter.emit('data', chunk);
+          fs.writeSync(fileHandle, chunk.toString());
+
+          // Call the original write method
+          return originalStdoutWrite.call(process.stdout, chunk, encoding, callback);
+        };
+      }
+
       const currentBitFeatures = process.env.BIT_FEATURES;
       const shouldReloadFeatureToggle = currentBitFeatures !== envBitFeatures;
       if (shouldReloadFeatureToggle) {
@@ -66,6 +84,9 @@ export class CLIRawRoute implements Route {
           });
         }
       } finally {
+        if (ttyPath) {
+          process.stdout.write = originalStdoutWrite;
+        }
         this.logger.clearStatusLine();
         // change chalk back to false, otherwise, the IDE will have colors. (this is a global setting)
         chalk.enabled = false;
