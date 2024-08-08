@@ -5,6 +5,7 @@ import { Route, Request, Response } from '@teambit/express';
 import { Logger } from '@teambit/logger';
 import legacyLogger, { getLevelFromArgv } from '@teambit/legacy/dist/logger/logger';
 import { reloadFeatureToggle } from '@teambit/harmony.modules.feature-toggle';
+import loader from '@teambit/legacy/dist/cli/loader';
 import { APIForIDE } from './api-for-ide';
 
 /**
@@ -30,20 +31,36 @@ export class CLIRawRoute implements Route {
         throw new Error(`bit-server is running on a different directory. bit-server: ${process.cwd()}, pwd: ${pwd}`);
       }
 
-      // Save the original process.stdout.write method
+      // save the original process.stdout.write method
       const originalStdoutWrite = process.stdout.write;
+      const originalStderrWrite = process.stderr.write;
 
       if (ttyPath) {
         const fileHandle = await fs.open(ttyPath, 'w');
-        // @ts-ignore Monkey patch the process stdout write method
+        // @ts-ignore monkey patch the process stdout write method
         process.stdout.write = (chunk, encoding, callback) => {
-          // Emit an event when something is written to stdout
-          // stdoutEmitter.emit('data', chunk);
           fs.writeSync(fileHandle, chunk.toString());
-
-          // Call the original write method
           return originalStdoutWrite.call(process.stdout, chunk, encoding, callback);
         };
+        // @ts-ignore monkey patch the process stderr write method
+        process.stderr.write = (chunk, encoding, callback) => {
+          fs.writeSync(fileHandle, chunk.toString());
+          return originalStderrWrite.call(process.stdout, chunk, encoding, callback);
+        };
+      } else {
+        process.env.BIT_CLI_SERVER_NO_TTY = 'true';
+        loader.shouldSendServerEvents = true;
+      }
+
+      let currentLogger;
+      const levelFromArgv = getLevelFromArgv(command);
+      if (levelFromArgv) {
+        currentLogger = legacyLogger.logger;
+        if (ttyPath) {
+          legacyLogger.switchToConsoleLogger(levelFromArgv);
+        } else {
+          legacyLogger.switchToSSELogger(levelFromArgv);
+        }
       }
 
       const currentBitFeatures = process.env.BIT_FEATURES;
@@ -58,12 +75,6 @@ export class CLIRawRoute implements Route {
       const cmdStrLog = `${randomNumber} ${commandStr}`;
       await this.apiForIDE.logStartCmdHistory(cmdStrLog);
       legacyLogger.isDaemon = true;
-      let currentLogger;
-      const levelFromArgv = getLevelFromArgv(command);
-      if (levelFromArgv) {
-        currentLogger = legacyLogger.logger;
-        legacyLogger.switchToSSELogger(levelFromArgv);
-      }
       enableChalk();
       const cliParser = new CLIParser(this.cli.commands, this.cli.groups, this.cli.onCommandStartSlot);
       try {
@@ -86,6 +97,10 @@ export class CLIRawRoute implements Route {
       } finally {
         if (ttyPath) {
           process.stdout.write = originalStdoutWrite;
+          process.stderr.write = originalStderrWrite;
+        } else {
+          delete process.env.BIT_CLI_SERVER_NO_TTY;
+          loader.shouldSendServerEvents = false;
         }
         this.logger.clearStatusLine();
         // change chalk back to false, otherwise, the IDE will have colors. (this is a global setting)

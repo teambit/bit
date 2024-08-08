@@ -139,7 +139,7 @@ export class PnpmPackageManager implements PackageManager {
         hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
         reportOptions: {
           appendOnly: installOptions.optimizeReportForNonTerminal,
-          process: process.env.BIT_SERVER_RUNNING ? { ...process, stdout: new ServerSendOutStream() } : undefined,
+          process: process.env.BIT_CLI_SERVER_NO_TTY ? { ...process, stdout: new ServerSendOutStream() } : undefined,
           throttleProgress: installOptions.throttleProgress,
           hideProgressPrefix: installOptions.hideProgressPrefix,
           hideLifecycleOutput: installOptions.hideLifecycleOutput,
