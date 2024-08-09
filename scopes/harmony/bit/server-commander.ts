@@ -1,5 +1,7 @@
 import fetch from 'node-fetch';
+import net from 'net';
 import fs from 'fs-extra';
+import { execSync } from 'child_process';
 import { join } from 'path';
 import EventSource from 'eventsource';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
@@ -7,17 +9,17 @@ import chalk from 'chalk';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { printBitVersionIfAsked } from './bootstrap';
 
-export class ServerPortFileNotFound extends Error {
+class ServerPortFileNotFound extends Error {
   constructor(filePath: string) {
     super(`server port file not found at ${filePath}`);
   }
 }
-export class ServerNotFound extends Error {
+class ServerIsNotRunning extends Error {
   constructor(port: number) {
     super(`bit server is not running on port ${port}`);
   }
 }
-export class ScopeNotFound extends Error {
+class ScopeNotFound extends Error {
   constructor(scopePath: string) {
     super(`scope not found at ${scopePath}`);
   }
@@ -40,7 +42,7 @@ export class ServerCommander {
 
       process.exit(0);
     } catch (err: any) {
-      if (err instanceof ServerPortFileNotFound || err instanceof ServerNotFound || err instanceof ScopeNotFound) {
+      if (err instanceof ScopeNotFound || err instanceof ServerPortFileNotFound || err instanceof ServerIsNotRunning) {
         throw err;
       }
       loader.off();
@@ -50,11 +52,23 @@ export class ServerCommander {
     }
   }
 
+  private shouldUseTTYPath() {
+    if (process.platform === 'win32') return false; // windows doesn't support tty path
+    return process.env.BIT_CLI_SERVER_TTY === 'true';
+  }
+
   async runCommandWithHttpServer(): Promise<CommandResult | undefined> {
+    await this.printPortIfAsked();
     printBitVersionIfAsked();
     const port = await this.getExistingUsedPort();
     const url = `http://localhost:${port}/api`;
-    this.initSSE(url);
+    const ttyPath = this.shouldUseTTYPath()
+      ? execSync('tty', {
+          encoding: 'utf8',
+          stdio: ['inherit', 'pipe', 'pipe'],
+        }).trim()
+      : undefined;
+    if (!ttyPath) this.initSSE(url);
     // parse the args and options from the command
     const args = process.argv.slice(2);
     if (!args.includes('--json') && !args.includes('-j')) {
@@ -62,7 +76,7 @@ export class ServerCommander {
     }
     const endpoint = `cli-raw`;
     const pwd = process.cwd();
-    const body = { command: args, pwd, envBitFeatures: process.env.BIT_FEATURES };
+    const body = { command: args, pwd, envBitFeatures: process.env.BIT_FEATURES, ttyPath };
     let res;
     try {
       res = await fetch(`${url}/${endpoint}`, {
@@ -73,7 +87,7 @@ export class ServerCommander {
     } catch (err: any) {
       if (err.code === 'ECONNREFUSED') {
         await this.deleteServerPortFile();
-        throw new ServerNotFound(port);
+        throw new ServerIsNotRunning(port);
       }
       throw new Error(`failed to run command "${args.join(' ')}" on the server. ${err.message}`);
     }
@@ -117,9 +131,60 @@ export class ServerCommander {
       const { method, args } = parsed;
       loader[method](...(args || []));
     });
+    eventSource.addEventListener('onLogWritten', (event: any) => {
+      const parsed = JSON.parse(event.data);
+      process.stdout.write(parsed.message);
+    });
   }
 
-  async getExistingUsedPort(): Promise<number> {
+  private async printPortIfAsked() {
+    if (!process.argv.includes('cli-server-port')) return;
+    try {
+      const port = await this.getExistingUsedPort();
+      process.stdout.write(port.toString());
+      process.exit(0);
+    } catch (err: any) {
+      if (err instanceof ScopeNotFound || err instanceof ServerPortFileNotFound || err instanceof ServerIsNotRunning) {
+        process.exit(0);
+      }
+      console.error(err.message); // eslint-disable-line no-console
+      process.exit(1);
+    }
+  }
+
+  private async getExistingUsedPort(): Promise<number> {
+    const port = await this.getExistingPort();
+    const isPortInUse = await this.isPortInUse(port);
+    if (!isPortInUse) {
+      await this.deleteServerPortFile();
+      throw new ServerIsNotRunning(port);
+    }
+
+    return port;
+  }
+
+  private isPortInUse(port: number): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      const client = new net.Socket();
+
+      client.once('error', (err: any) => {
+        if (err.code === 'ECONNREFUSED' || err.code === 'EHOSTUNREACH') {
+          resolve(false);
+        } else {
+          reject(err);
+        }
+      });
+
+      client.once('connect', () => {
+        client.end();
+        resolve(true);
+      });
+
+      client.connect({ port, host: 'localhost' });
+    });
+  }
+
+  private async getExistingPort(): Promise<number> {
     const filePath = this.getServerPortFilePath();
     try {
       const fileContent = await fs.readFile(filePath, 'utf8');
@@ -132,7 +197,7 @@ export class ServerCommander {
     }
   }
 
-  async deleteServerPortFile() {
+  private async deleteServerPortFile() {
     const filePath = this.getServerPortFilePath();
     await fs.remove(filePath);
   }
@@ -148,7 +213,10 @@ export class ServerCommander {
 
 export function shouldUseBitServer() {
   const commandsToSkip = ['start', 'run', 'watch', 'server'];
-  const hasFlag = process.env.BIT_CLI_SERVER === 'true' || process.env.BIT_CLI_SERVER === '1';
+  const hasFlag =
+    process.env.BIT_CLI_SERVER === 'true' ||
+    process.env.BIT_CLI_SERVER === '1' ||
+    process.env.BIT_CLI_SERVER_TTY === 'true';
   return (
     hasFlag &&
     process.argv.length > 2 && // if it has no args, it shows the help

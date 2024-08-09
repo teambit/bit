@@ -1,9 +1,11 @@
 import { CLIMain, CLIParser, YargsExitWorkaround } from '@teambit/cli';
+import fs from 'fs-extra';
 import chalk from 'chalk';
 import { Route, Request, Response } from '@teambit/express';
 import { Logger } from '@teambit/logger';
-import legacyLogger from '@teambit/legacy/dist/logger/logger';
+import legacyLogger, { getLevelFromArgv } from '@teambit/legacy/dist/logger/logger';
 import { reloadFeatureToggle } from '@teambit/harmony.modules.feature-toggle';
+import loader from '@teambit/legacy/dist/cli/loader';
 import { APIForIDE } from './api-for-ide';
 
 /**
@@ -23,11 +25,44 @@ export class CLIRawRoute implements Route {
 
   middlewares = [
     async (req: Request, res: Response) => {
-      const { command, pwd, envBitFeatures } = req.body;
+      const { command, pwd, envBitFeatures, ttyPath } = req.body;
       this.logger.debug(`cli-raw server: got request for ${command}`);
       if (pwd && !process.cwd().startsWith(pwd)) {
         throw new Error(`bit-server is running on a different directory. bit-server: ${process.cwd()}, pwd: ${pwd}`);
       }
+
+      // save the original process.stdout.write method
+      const originalStdoutWrite = process.stdout.write;
+      const originalStderrWrite = process.stderr.write;
+
+      if (ttyPath) {
+        const fileHandle = await fs.open(ttyPath, 'w');
+        // @ts-ignore monkey patch the process stdout write method
+        process.stdout.write = (chunk, encoding, callback) => {
+          fs.writeSync(fileHandle, chunk.toString());
+          return originalStdoutWrite.call(process.stdout, chunk, encoding, callback);
+        };
+        // @ts-ignore monkey patch the process stderr write method
+        process.stderr.write = (chunk, encoding, callback) => {
+          fs.writeSync(fileHandle, chunk.toString());
+          return originalStderrWrite.call(process.stdout, chunk, encoding, callback);
+        };
+      } else {
+        process.env.BIT_CLI_SERVER_NO_TTY = 'true';
+        loader.shouldSendServerEvents = true;
+      }
+
+      let currentLogger;
+      const levelFromArgv = getLevelFromArgv(command);
+      if (levelFromArgv) {
+        currentLogger = legacyLogger.logger;
+        if (ttyPath) {
+          legacyLogger.switchToConsoleLogger(levelFromArgv);
+        } else {
+          legacyLogger.switchToSSELogger(levelFromArgv);
+        }
+      }
+
       const currentBitFeatures = process.env.BIT_FEATURES;
       const shouldReloadFeatureToggle = currentBitFeatures !== envBitFeatures;
       if (shouldReloadFeatureToggle) {
@@ -60,12 +95,22 @@ export class CLIRawRoute implements Route {
           });
         }
       } finally {
+        if (ttyPath) {
+          process.stdout.write = originalStdoutWrite;
+          process.stderr.write = originalStderrWrite;
+        } else {
+          delete process.env.BIT_CLI_SERVER_NO_TTY;
+          loader.shouldSendServerEvents = false;
+        }
         this.logger.clearStatusLine();
         // change chalk back to false, otherwise, the IDE will have colors. (this is a global setting)
         chalk.enabled = false;
         if (shouldReloadFeatureToggle) {
           process.env.BIT_FEATURES = currentBitFeatures;
           reloadFeatureToggle();
+        }
+        if (currentLogger) {
+          legacyLogger.switchToLogger(currentLogger);
         }
       }
     },
