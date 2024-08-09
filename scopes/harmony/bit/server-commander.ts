@@ -52,18 +52,22 @@ export class ServerCommander {
     }
   }
 
+  private shouldUseTTYPath() {
+    if (process.platform === 'win32') return false; // windows doesn't support tty path
+    return process.env.BIT_CLI_SERVER_TTY === 'true';
+  }
+
   async runCommandWithHttpServer(): Promise<CommandResult | undefined> {
     await this.printPortIfAsked();
     printBitVersionIfAsked();
-    const isWindows = process.platform === 'win32';
     const port = await this.getExistingUsedPort();
     const url = `http://localhost:${port}/api`;
-    const ttyPath = isWindows
-      ? undefined
-      : execSync('tty', {
+    const ttyPath = this.shouldUseTTYPath()
+      ? execSync('tty', {
           encoding: 'utf8',
           stdio: ['inherit', 'pipe', 'pipe'],
-        }).trim();
+        }).trim()
+      : undefined;
     if (!ttyPath) this.initSSE(url);
     // parse the args and options from the command
     const args = process.argv.slice(2);
@@ -209,7 +213,10 @@ export class ServerCommander {
 
 export function shouldUseBitServer() {
   const commandsToSkip = ['start', 'run', 'watch', 'server'];
-  const hasFlag = process.env.BIT_CLI_SERVER === 'true' || process.env.BIT_CLI_SERVER === '1';
+  const hasFlag =
+    process.env.BIT_CLI_SERVER === 'true' ||
+    process.env.BIT_CLI_SERVER === '1' ||
+    process.env.BIT_CLI_SERVER_TTY === 'true';
   return (
     hasFlag &&
     process.argv.length > 2 && // if it has no args, it shows the help
