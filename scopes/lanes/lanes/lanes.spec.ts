@@ -8,7 +8,6 @@ import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { LaneId } from '@teambit/lane-id';
-import { SUPPORT_LANE_HISTORY, addFeature, removeFeature } from '@teambit/harmony.modules.feature-toggle';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
@@ -216,7 +215,6 @@ describe('LanesAspect', function () {
     let snapping: SnappingMain;
     let laneId: LaneId;
     before(async () => {
-      addFeature(SUPPORT_LANE_HISTORY);
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
@@ -228,7 +226,6 @@ describe('LanesAspect', function () {
       laneId = currentLaneId;
     });
     after(async () => {
-      removeFeature(SUPPORT_LANE_HISTORY);
       await destroyWorkspace(workspaceData);
     });
     it('should create lane history object when creating a new lane', async () => {
@@ -363,7 +360,6 @@ describe('LanesAspect', function () {
     let snapping: SnappingMain;
     let laneId: LaneId;
     before(async () => {
-      addFeature(SUPPORT_LANE_HISTORY);
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
@@ -389,7 +385,6 @@ describe('LanesAspect', function () {
       await snapping.snap({ build: false });
     });
     after(async () => {
-      removeFeature(SUPPORT_LANE_HISTORY);
       await destroyWorkspace(workspaceData);
     });
     it('should save the deleted data into the lane object', async () => {
