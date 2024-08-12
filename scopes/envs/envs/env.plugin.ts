@@ -43,6 +43,8 @@ export class EnvPlugin implements PluginDefinition {
       ...transformers,
       name: env.name,
       icon: env.icon,
+      __path: env.__path,
+      __resolvedPath: env.__resolvedPath,
       __getDescriptor: async () => {
         return {
           type: env.type || env.name,
@@ -52,9 +54,18 @@ export class EnvPlugin implements PluginDefinition {
     };
   }
 
-  register(object: any, aspect: Aspect) {
+  register(object: any, aspect: { id: string }) {
     const env = this.transformToLegacyEnv(aspect.id, object);
     if (!env) return undefined;
-    return this.envSlot.register(env);
+    // This is required when we call it manually and the aspect id fn return the wrong
+    // id
+    // We call the set directly because when we call it manually during install
+    // the aspect id fn return the wrong id
+    // Please do not change this without consulting @GiladShoham
+    // This manual call from install is required to make sure we re-load the envs
+    // when they move to another location in the node_modules
+    // during process is still running (like during bit new, bit switch, bit server)
+    this.envSlot.map.set(aspect.id, env);
+    return;
   }
 }

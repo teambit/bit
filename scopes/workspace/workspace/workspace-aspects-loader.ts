@@ -94,6 +94,7 @@ export class WorkspaceAspectsLoader {
       hideMissingModuleError: !!this.workspace.inInstallContext,
       ignoreErrors: false,
       resolveEnvsFromRoots: this.resolveEnvsFromRoots,
+      forceLoad: false,
     };
     const mergedOpts: Required<WorkspaceLoadAspectsOptions> = { ...defaultOpts, ...opts };
 
@@ -107,7 +108,10 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     const [localAspects, nonLocalAspects] = partition(ids, (id) => id.startsWith('file:'));
     this.workspace.localAspects = localAspects;
     await this.aspectLoader.loadAspectFromPath(this.workspace.localAspects);
-    const notLoadedIds = nonLocalAspects.filter((id) => !this.aspectLoader.isAspectLoaded(id));
+    let notLoadedIds = nonLocalAspects;
+    if (!mergedOpts.forceLoad) {
+      notLoadedIds = nonLocalAspects.filter((id) => !this.aspectLoader.isAspectLoaded(id));
+    }
     if (!notLoadedIds.length) {
       this.logger.profile(`[${callId}] workspace.loadAspects`);
       return [];
@@ -171,7 +175,6 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       throwOnError,
       opts.runSubscribers
     );
-
     await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, undefined, { throwOnError });
     const manifestIds = manifests.map((manifest) => manifest.id);
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
