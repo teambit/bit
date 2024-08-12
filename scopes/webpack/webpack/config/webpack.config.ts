@@ -46,9 +46,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
 
     resolve: {
       // TODO - check - we should not need both fallbacks and alias and provider plugin
-      alias: {
-        ...fallbacksAliases,
-      },
+      alias: fallbacksAliases,
 
       fallback: fallbacks,
     },

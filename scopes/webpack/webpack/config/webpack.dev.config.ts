@@ -142,9 +142,7 @@ export function configFactory(
 
     resolve: {
       // TODO - check - we shoult not need both fallbacks and alias and provider plugin
-      alias: {
-        ...fallbacksAliases,
-      },
+      alias: fallbacksAliases,
 
       fallback: fallbacks as any,
     },
