@@ -104,6 +104,7 @@ export default function createWebpackConfig(
         '@teambit/component.ui.component-compare.context': require.resolve(
           '@teambit/component.ui.component-compare.context'
         ),
+        '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
       },
       fallback: {
         module: false,
