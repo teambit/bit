@@ -142,7 +142,10 @@ export function configFactory(
 
     resolve: {
       // TODO - check - we shoult not need both fallbacks and alias and provider plugin
-      alias: fallbacksAliases,
+      alias: {
+        ...fallbacksAliases,
+        '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
+      },
 
       fallback: fallbacks as any,
     },

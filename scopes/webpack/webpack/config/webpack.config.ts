@@ -46,7 +46,10 @@ export function configFactory(target: Target, context: BundlerContext): Configur
 
     resolve: {
       // TODO - check - we should not need both fallbacks and alias and provider plugin
-      alias: fallbacksAliases,
+      alias: {
+        ...fallbacksAliases,
+        '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
+      },
 
       fallback: fallbacks,
     },
