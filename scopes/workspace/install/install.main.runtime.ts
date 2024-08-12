@@ -1,3 +1,4 @@
+import pFilter from 'p-filter';
 import fs, { pathExists } from 'fs-extra';
 import path from 'path';
 import { getRootComponentDir, linkPkgsToRootComponents } from '@teambit/workspace.root-components';
@@ -14,7 +15,7 @@ import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import {
   CodemodResult,
   linkToNodeModulesWithCodemod,
@@ -52,6 +53,7 @@ import { LinkCommand } from './link';
 import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
 import UpdateCmd from './update.cmd';
+import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 
 export type WorkspaceLinkOptions = LinkingOptions & {
   rootPolicy?: WorkspacePolicy;
@@ -119,6 +121,8 @@ export class InstallMain {
 
     private wsConfigFiles: WorkspaceConfigFilesMain,
 
+    private aspectLoader: AspectLoaderMain,
+
     private app: ApplicationMain,
 
     private generator: GeneratorMain,
@@ -129,7 +133,9 @@ export class InstallMain {
 
     private postInstallSlot: PostInstallSlot,
 
-    private ipcEvents: IpcEventsMain
+    private ipcEvents: IpcEventsMain,
+
+    private harmony: Harmony
   ) {}
   /**
    * Install dependencies for all components in the workspace
@@ -237,7 +243,7 @@ export class InstallMain {
       addMissingDeps: installMissing,
       skipIfExisting: true,
       writeConfigFiles: false,
-      skipPrune: true,
+      // skipPrune: true,
     });
   }
 
@@ -358,6 +364,7 @@ export class InstallMain {
       );
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
+      await this.reloadMovedEnvs();
       const shouldClearCacheOnInstall = this.shouldClearCacheOnInstall();
       if (options?.compile ?? true) {
         const compileStartTime = process.hrtime();
@@ -371,6 +378,7 @@ export class InstallMain {
           cacheCleared = true;
         }
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
+
         // Right now we don't need to load extensions/execute load slot at this point
         // await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install }, undefined, {
         //   executeLoadSlot: true,
@@ -414,6 +422,78 @@ export class InstallMain {
   private shouldClearCacheOnInstall(): boolean {
     const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
     return nonLoadedEnvs.length > 0;
+  }
+
+  /**
+   * This function is very important to fix some issues that might happen during the installation process.
+   * The case is the following:
+   * during/before the installation process we load some envs from their bit.env files
+   * this contains code like:
+   * protected tsconfigPath = require.resolve('./config/tsconfig.json');
+   * protected eslintConfigPath = require.resolve('./config/eslintrc.cjs');
+   * When we load that file, we calculated the resolved path, and it's stored in the env
+   * object instance.
+   * then later on during the install we move the env to another location (like bit roots)
+   * which points to a .pnpm folder with some peers, that changed during the install
+   * then when we take this env object and call write ws config for example
+   * or compile
+   * we use that resolved path to calculate the final tsconfig
+   * however that file is no longer exists which result in an error
+   * This function will check if an env folder doesn't exist anymore, and will re-load it
+   * from its new location.
+   * This usually happen when we have install running in the middle of the process followed
+   * by other bit ops.
+   * examples:
+   * bit new - which might run few installs then other ops.
+   * bit switch - which might run few installs then other ops, and potentially change the
+   * peer deps during the install.
+   * bit server (vscode plugin) - which keep the process always live, so any install ops
+   * that change the location, will cause the vscode plugin/bit server to crash later.
+   * @returns
+   */
+  private async reloadMovedEnvs() {
+    const allEnvs = this.envs.getAllRegisteredEnvs();
+    const movedEnvs = await pFilter(allEnvs, async (env) => {
+      if (!env.__path) return false;
+      const regularPathExists = await pathExists(env.__path);
+      const resolvedPathExists = await pathExists(env.__resolvedPath);
+      return !regularPathExists || !resolvedPathExists;
+    });
+    const idsToLoad = movedEnvs.map((env) => env.id);
+    // const envPlugin = this.envs.getEnvPlugin();
+
+    if (idsToLoad.length && this.workspace) {
+      const componentIdsToLoad = idsToLoad.map((id) => ComponentID.fromString(id));
+      const aspects = await this.workspace.resolveAspects(undefined, componentIdsToLoad, {
+        requestedOnly: true,
+        excludeCore: true,
+        throwOnError: false,
+        // Theoretically we should use skipDeps here, but according to implementation at the moment
+        // it will lead to plugins not load, and we need them to be loaded.
+        // This is a bug in the flow and should be fixed.
+        // skipDeps: true,
+      });
+      const loadedPlugins = compact(
+        await Promise.all(
+          aspects.map((aspectDef) => {
+            const localPath = aspectDef.aspectPath;
+            const component = aspectDef.component;
+            if (!component) return undefined;
+            const plugins = this.aspectLoader.getPlugins(component, localPath);
+            if (plugins.has()) {
+              return plugins.load(MainRuntime.name);
+            }
+          })
+        )
+      );
+      await Promise.all(
+        loadedPlugins.map((plugin) => {
+          const runtime = plugin.getRuntime(MainRuntime);
+          return runtime?.provider(undefined, undefined, undefined, this.harmony);
+        })
+      );
+    }
+    return movedEnvs;
   }
 
   private async _getComponentsManifestsAndRootPolicy(
@@ -472,6 +552,7 @@ export class InstallMain {
       dedupe: true,
       throw: false,
     });
+
     if (err) {
       this.logger.consoleFailure(
         `failed generating workspace config files, please run "bit ws-config write" manually. error: ${err.message}`
@@ -1031,6 +1112,7 @@ export class InstallMain {
     IpcEventsAspect,
     GeneratorAspect,
     WorkspaceConfigFilesAspect,
+    AspectLoaderAspect,
   ];
 
   static runtime = MainRuntime;
@@ -1049,6 +1131,7 @@ export class InstallMain {
       ipcEvents,
       generator,
       wsConfigFiles,
+      aspectLoader,
     ]: [
       DependencyResolverMain,
       Workspace,
@@ -1061,10 +1144,12 @@ export class InstallMain {
       ApplicationMain,
       IpcEventsMain,
       GeneratorMain,
-      WorkspaceConfigFilesMain
+      WorkspaceConfigFilesMain,
+      AspectLoaderMain
     ],
     _,
-    [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot]
+    [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot],
+    harmony: Harmony
   ) {
     const logger = loggerExt.createLogger(InstallAspect.id);
     ipcEvents.registerGotEventSlot(async (eventName) => {
@@ -1082,12 +1167,14 @@ export class InstallMain {
       compiler,
       envs,
       wsConfigFiles,
+      aspectLoader,
       app,
       generator,
       preLinkSlot,
       preInstallSlot,
       postInstallSlot,
-      ipcEvents
+      ipcEvents,
+      harmony
     );
     if (issues) {
       issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));
