@@ -678,8 +678,12 @@ export class EnvsMain {
     return Boolean(this.getAllEnvsConfiguredOnComponent(component).length);
   }
 
-  getAllRegisteredEnvs(): string[] {
+  getAllRegisteredEnvsIds(): string[] {
     return this.envSlot.toArray().map((envData) => envData[0]);
+  }
+
+  getAllRegisteredEnvs(): Environment[] {
+    return this.envSlot.toArray().map((envData) => envData[1]);
   }
 
   getAllRegisteredEnvJsoncCustomizers(): EnvJsoncMergeCustomizer[] {

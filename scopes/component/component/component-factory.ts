@@ -37,6 +37,12 @@ export type LoadAspectsOptions = {
   method will print/throw an error if a required module is missing or if any other error occurs during the loading of
   aspects. */
   ignoreErrors?: boolean;
+
+  /**
+   * Force load the aspect from the host, even if it's already loaded.
+   */
+  forceLoad?: boolean;
+
   [key: string]: any;
 };
 

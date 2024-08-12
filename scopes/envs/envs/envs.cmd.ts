@@ -16,7 +16,7 @@ export class ListEnvsCmd implements Command {
   constructor(private envs: EnvsMain, private componentAspect: ComponentMain) {}
 
   async report() {
-    const allEnvs = this.envs.getAllRegisteredEnvs().join('\n');
+    const allEnvs = this.envs.getAllRegisteredEnvsIds().join('\n');
     const title = chalk.green('the following envs are available in the workspace:');
     return `${title}\n${allEnvs}`;
   }
