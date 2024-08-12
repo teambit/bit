@@ -61,6 +61,12 @@ export class InitCmd implements Command {
 
   constructor(private hostInitializer: HostInitializerMain) {}
 
+  private pathToName(path: string) {
+    const directories = path.split('/');
+    const lastDir = directories[directories.length - 1];
+    return lastDir;
+  }
+
   async report([path]: [string], flags: Record<string, any>) {
     const {
       name,
@@ -89,11 +95,13 @@ export class InitCmd implements Command {
     if (reset && resetHard) {
       throw new BitError('cannot use both --reset and --reset-hard, please use only one of them');
     }
+
     const workspaceExtensionProps: WorkspaceExtensionProps = {
       defaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),
       defaultScope: defaultScope ?? getSync(CFG_INIT_DEFAULT_SCOPE),
-      name,
+      name: name || this.pathToName(path),
     };
+
     const { created } = await HostInitializerMain.init(
       path,
       standalone,
