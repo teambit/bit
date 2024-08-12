@@ -58,7 +58,10 @@ export class Plugins {
   async loadModule(path: string) {
     NativeCompileCache.uninstall();
     const module = await esmLoader(path);
-    return module.default;
+    const defaultModule = module.default;
+    defaultModule.__path = path;
+    defaultModule.__resolvedPath = require.resolve(path);
+    return defaultModule;
   }
 
   async registerPluginWithTryCatch(plugin: Plugin, aspect: Aspect) {
