@@ -1,4 +1,3 @@
-import fs from 'fs-extra';
 import { Aspect } from '@teambit/harmony';
 import { PluginDefinition } from './plugin-definition';
 

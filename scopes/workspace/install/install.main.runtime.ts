@@ -53,7 +53,7 @@ import { LinkCommand } from './link';
 import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
 import UpdateCmd from './update.cmd';
-import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 
 export type WorkspaceLinkOptions = LinkingOptions & {
   rootPolicy?: WorkspacePolicy;

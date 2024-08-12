@@ -1,5 +1,5 @@
 import { PluginDefinition } from '@teambit/aspect-loader';
-import { Aspect, Harmony } from '@teambit/harmony';
+import { Harmony } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component';
 import { WorkerMain } from '@teambit/worker';
 import { MainRuntime } from '@teambit/cli';
