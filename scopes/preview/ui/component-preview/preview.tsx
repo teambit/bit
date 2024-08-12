@@ -112,7 +112,7 @@ export function ComponentPreview({
 
   useEffect(() => {
     const handleLoad = (event) => {
-      if (event.data && event.data.event === LOAD_EVENT) {
+      if (event.data && (event.data.event === LOAD_EVENT || event.data.event === 'webpackInvalid')) {
         onLoad && onLoad(event);
       }
     };
