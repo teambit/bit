@@ -62,7 +62,7 @@ export class InitCmd implements Command {
   constructor(private hostInitializer: HostInitializerMain) {}
 
   private pathToName(path: string) {
-    const directories = path.split('/');
+    const directories = pathlib.normalize(path).split(pathlib.sep);
     const lastDir = directories[directories.length - 1];
     return lastDir;
   }
