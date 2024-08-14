@@ -4,7 +4,7 @@ module.exports = {
   extends: ['plugin:jest/recommended', 'plugin:import/recommended'],
   plugins: ['jest', 'import'],
   settings: {
-    'mdx/code-blocks': true,
+    'mdx/code-blocks': false,
     jest: {
       version: 27,
     },
