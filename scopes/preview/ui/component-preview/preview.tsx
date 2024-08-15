@@ -129,8 +129,9 @@ export function ComponentPreview({
       methods: {
         pub: (event, message) => {
           if (message.type === 'preview-size') {
+            const previewHeight = component.preview?.onlyOverview ? message.data.height - 150 : message.data.height;
             setWidth(message.data.width);
-            setHeight(message.data.height);
+            setHeight(previewHeight);
           }
           onLoad && event && onLoad(event, { height: message.data.height, width: message.data.width });
         },
