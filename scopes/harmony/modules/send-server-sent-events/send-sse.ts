@@ -19,6 +19,7 @@ type EventName =
   | 'onBitmapChange'
   | 'onWorkspaceConfigChange'
   | 'onPostInstall'
+  | 'onPostExport'
   | 'onLoader'
   | 'onLogWritten';
 
