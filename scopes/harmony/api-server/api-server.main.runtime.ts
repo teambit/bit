@@ -75,6 +75,10 @@ export class ApiServerMain {
       sendEventsToClients('onWorkspaceConfigChange', {});
     });
 
+    this.workspace.scope.registerOnPostExport(async () => {
+      sendEventsToClients('onPostExport', {});
+    });
+
     this.installer.registerPostInstall(async () => {
       sendEventsToClients('onPostInstall', {});
     });
