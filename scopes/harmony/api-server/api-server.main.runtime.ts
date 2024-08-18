@@ -1,4 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { Port } from '@teambit/toolbox.network.get-port';
 import fs from 'fs-extra';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -88,7 +89,7 @@ export class ApiServerMain {
         this.logger.error('watcher found an error', err);
       });
 
-    const port = options.port || 3000;
+    const port = options.port || (await this.getRandomPort());
 
     const app = this.express.createApp();
 
@@ -138,6 +139,14 @@ export class ApiServerMain {
   writeUsedPort(port: number) {
     const filePath = this.getServerPortFilePath();
     fs.writeFileSync(filePath, port.toString());
+  }
+
+  async getRandomPort() {
+    const startingPort = 3593; // some arbitrary number shy away from the standard 3000
+    // get random number in the range of [startingPort, 55500].
+    const randomNumber = Math.floor(Math.random() * (55500 - startingPort + 1) + startingPort);
+    const port = await Port.getPort(randomNumber, 65500);
+    return port;
   }
 
   async getExistingUsedPort(): Promise<number | undefined> {

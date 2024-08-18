@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, ReactNode, useMemo } from 'react';
 import classNames from 'classnames';
-import { ComponentTree, PayloadType } from '@teambit/ui-foundation.ui.side-bar';
+import { ComponentTree } from '@teambit/ui-foundation.ui.side-bar';
+import type { PayloadType } from '@teambit/ui-foundation.ui.side-bar';
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
@@ -134,7 +135,7 @@ export class ComponentsDrawer implements DrawerType {
           transformTree={this.transformTree ? this.transformTree(host) : undefined}
           components={components}
           isCollapsed={collapsed}
-          assumeScopeInUrl={this.assumeScopeInUrl}
+          // assumeScopeInUrl={this.assumeScopeInUrl}
           TreeNode={TreeNode}
         />
       </div>

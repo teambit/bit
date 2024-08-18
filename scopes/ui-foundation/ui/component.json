@@ -24,13 +24,13 @@
           "@types/webpack-dev-server": "-"
         },
         "peerDependencies": {
-          "@teambit/legacy": "1.0.734"
+          "@teambit/legacy": "1.0.736"
         }
       }
     },
     "teambit.envs/envs": {
       "env": "teambit.harmony/envs/core-aspect-env"
     },
-    "teambit.harmony/envs/core-aspect-env@0.0.42": {}
+    "teambit.harmony/envs/core-aspect-env@0.0.47": {}
   }
 }

@@ -30,6 +30,7 @@ import { renderTree } from '@pnpm/list';
 import { readWantedLockfile } from '@pnpm/lockfile-file';
 import { type ProjectManifest, type DepPath } from '@pnpm/types';
 import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
+import { ServerSendOutStream } from '@teambit/legacy/dist/logger/pino-logger';
 import { join } from 'path';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
@@ -138,6 +139,7 @@ export class PnpmPackageManager implements PackageManager {
         hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
         reportOptions: {
           appendOnly: installOptions.optimizeReportForNonTerminal,
+          process: process.env.BIT_CLI_SERVER_NO_TTY ? { ...process, stdout: new ServerSendOutStream() } : undefined,
           throttleProgress: installOptions.throttleProgress,
           hideProgressPrefix: installOptions.hideProgressPrefix,
           hideLifecycleOutput: installOptions.hideLifecycleOutput,

@@ -43,7 +43,11 @@ class FeatureToggle {
   }
 }
 
-const featureToggle = new FeatureToggle();
+let featureToggle = new FeatureToggle();
+
+export function reloadFeatureToggle() {
+  featureToggle = new FeatureToggle();
+}
 
 export function isFeatureEnabled(featureName: string): boolean {
   return featureToggle.isFeatureEnabled(featureName);

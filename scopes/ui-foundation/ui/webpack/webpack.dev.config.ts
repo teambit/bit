@@ -181,6 +181,7 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         '@teambit/component.ui.component-compare.context': require.resolve(
           '@teambit/component.ui.component-compare.context'
         ),
+        '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
       },
       fallback: {
