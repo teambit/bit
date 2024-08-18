@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import * as path from 'path';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { Consumer, getConsumerInfo } from '@teambit/legacy/dist/consumer';
 import { Scope } from '@teambit/legacy/dist/scope';
@@ -43,6 +44,11 @@ export class HostInitializerMain {
       );
     }
     const consumerPath = consumerInfo?.path || absPath || process.cwd();
+
+    workspaceConfigProps = {
+      ...workspaceConfigProps,
+      name: workspaceConfigProps.name || path.basename(consumerPath),
+    };
 
     if (reset || resetHard) {
       await resetConsumer(consumerPath, resetHard, noGit);
