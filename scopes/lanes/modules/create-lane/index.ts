@@ -1,1 +1,1 @@
-export { createLane, createLaneInScope, throwForInvalidLaneName } from './create-lane';
+export { createLane, createLaneInScope, throwForInvalidLaneName, throwForStagedComponents } from './create-lane';
