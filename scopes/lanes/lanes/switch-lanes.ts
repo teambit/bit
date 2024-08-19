@@ -7,8 +7,8 @@ import { CheckoutProps } from '@teambit/checkout';
 import { Workspace } from '@teambit/workspace';
 import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
+import { throwForStagedComponents } from '@teambit/lanes.modules.create-lane';
 import { LanesMain } from './lanes.main.runtime';
-import { throwForStagedComponents } from './create-lane';
 
 export type SwitchProps = {
   laneName: string;

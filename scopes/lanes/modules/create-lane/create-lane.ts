@@ -75,13 +75,13 @@ export async function createLane(
   return newLane;
 }
 
-export async function createLaneInScope(laneName: string, scope: ScopeMain): Promise<Lane> {
+export async function createLaneInScope(laneName: string, scope: ScopeMain, scopeName = scope.name): Promise<Lane> {
   const lanes = await scope.legacyScope.listLanes();
   if (lanes.find((lane) => lane.name === laneName)) {
     throw new BitError(`lane "${laneName}" already exists`);
   }
   throwForInvalidLaneName(laneName);
-  const newLane = Lane.create(laneName, scope.name);
+  const newLane = Lane.create(laneName, scopeName);
   await scope.legacyScope.lanes.saveLane(newLane, { laneHistoryMsg: 'new lane (created from scope)' });
   return newLane;
 }

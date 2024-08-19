@@ -989,6 +989,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/html/modules/create-element-from-string"
     },
+    "modules/create-lane": {
+        "name": "modules/create-lane",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.lanes",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/lanes/modules/create-lane"
+    },
     "modules/diff": {
         "name": "modules/diff",
         "scope": "teambit.lanes",
