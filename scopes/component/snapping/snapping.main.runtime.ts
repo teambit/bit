@@ -393,8 +393,7 @@ if you're willing to lose the history from the head to the specified version, us
       try {
         lane = await this.importer.importLaneObject(laneId);
       } catch (err: any) {
-        const creatingNewComps = snapDataPerCompRaw.some((s) => s.isNew);
-        if (!creatingNewComps || err.constructor.name !== LaneNotFound.name) throw err;
+        if (err.constructor.name !== LaneNotFound.name) throw err;
         // if the lane is not found, it's probably because it's new. create a new lane.
         lane = await createLaneInScope(laneId.name, this.scope, laneId.scope);
       }
