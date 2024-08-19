@@ -129,6 +129,7 @@ export function ComponentPreview({
       methods: {
         pub: (event, message) => {
           if (message.type === 'preview-size') {
+            // disable this for now until we figure out how to correctly calculate the height
             // const previewHeight = component.preview?.onlyOverview ? message.data.height - 150 : message.data.height;
             setWidth(message.data.width);
             // setHeight(previewHeight);
