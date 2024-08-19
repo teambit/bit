@@ -31,7 +31,7 @@ export class IDERoute implements Route {
         // don't use "logger.console" here, we don't want these message to pollute cli-raw output
         const msgStart = `[*] started a new api-IDE call: ${req.params.method}, total: ${args?.length || 0} args`;
         this.logger.info(msgStart);
-        console.log(); // eslint-disable-line no-console
+        console.log(msgStart); // eslint-disable-line no-console
         const randomNumber = Math.floor(Math.random() * 10000); // helps to distinguish between commands in the log
         ideCallLog = `${randomNumber} ${req.params.method}(${getArgsAsString(args)})`;
         await this.apiForIDE.logStartCmdHistory(ideCallLog);
