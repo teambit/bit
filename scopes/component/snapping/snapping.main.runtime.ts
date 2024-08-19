@@ -60,6 +60,8 @@ import {
   removeLocalVersionsForMultipleComponents,
 } from './reset-component';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
+import { LaneNotFound } from '@teambit/legacy.scope-api';
+import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
 
 export type TagDataPerComp = {
   componentId: ComponentID;
@@ -388,7 +390,14 @@ if you're willing to lose the history from the head to the specified version, us
     const laneIdStr = params.lane;
     if (laneIdStr) {
       const laneId = LaneId.parse(laneIdStr);
-      lane = await this.importer.importLaneObject(laneId);
+      try {
+        lane = await this.importer.importLaneObject(laneId);
+      } catch (err: any) {
+        const creatingNewComps = snapDataPerCompRaw.some((s) => s.isNew);
+        if (!creatingNewComps || err.constructor.name !== LaneNotFound.name) throw err;
+        // if the lane is not found, it's probably because it's new. create a new lane.
+        lane = await createLaneInScope(laneId.name, this.scope, laneId.scope);
+      }
       // this is critical. otherwise, later on, when loading aspects and isolating capsules, we'll try to fetch dists
       // from the original scope instead of the lane-scope.
       this.scope.legacyScope.setCurrentLaneId(laneId);
