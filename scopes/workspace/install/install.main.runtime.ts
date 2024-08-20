@@ -365,6 +365,7 @@ export class InstallMain {
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
       await this.reloadMovedEnvs();
+      await this.reloadNonLoadedEnvs();
       const shouldClearCacheOnInstall = this.shouldClearCacheOnInstall();
       if (options?.compile ?? true) {
         const compileStartTime = process.hrtime();
@@ -460,10 +461,18 @@ export class InstallMain {
       return !regularPathExists || !resolvedPathExists;
     });
     const idsToLoad = movedEnvs.map((env) => env.id);
-    // const envPlugin = this.envs.getEnvPlugin();
+    const componentIdsToLoad = idsToLoad.map((id) => ComponentID.fromString(id));
+    await this.reloadEnvs(componentIdsToLoad);
+  }
 
-    if (idsToLoad.length && this.workspace) {
-      const componentIdsToLoad = idsToLoad.map((id) => ComponentID.fromString(id));
+  private async reloadNonLoadedEnvs() {
+    const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
+    const componentIdsToLoad = nonLoadedEnvs.map((id) => ComponentID.fromString(id));
+    await this.reloadEnvs(componentIdsToLoad);
+  }
+
+  private async reloadEnvs(componentIdsToLoad: ComponentID[]) {
+    if (componentIdsToLoad.length && this.workspace) {
       const aspects = await this.workspace.resolveAspects(undefined, componentIdsToLoad, {
         requestedOnly: true,
         excludeCore: true,
@@ -493,7 +502,6 @@ export class InstallMain {
         })
       );
     }
-    return movedEnvs;
   }
 
   private async _getComponentsManifestsAndRootPolicy(
