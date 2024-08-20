@@ -15,7 +15,6 @@ import { Application } from './application';
 import { DeploymentProvider } from './deployment-provider';
 import { AppNotFound } from './exceptions';
 import { ApplicationAspect } from './application.aspect';
-import { AppListCmdDeprecated } from './app-list.cmd';
 import { AppsBuildTask } from './build-application.task';
 import { RunCmd } from './run.cmd';
 import { AppService } from './application.service';
@@ -493,7 +492,7 @@ export class ApplicationMain {
     builder.registerTagTasks([new DeployTask(application, builder)]);
     envs.registerService(appService);
     cli.registerGroup('apps', 'Applications');
-    cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
+    cli.register(new RunCmd(application, logger), appCmd);
     // cli.registerOnStart(async () => {
     //   await application.loadAppsToSlot();
     // });
