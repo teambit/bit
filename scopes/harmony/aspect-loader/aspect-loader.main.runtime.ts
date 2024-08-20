@@ -766,13 +766,6 @@ export class AspectLoaderMain {
       await this.harmony.load(relevantManifests);
     } catch (e: any) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
-      // TODO: improve texts
-      const errorMsg = e.message.split('\n')[0];
-      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids, errorMsg, neededFor);
-      if (mergedOptions.ignoreErrors) return;
-      if ((e.code === 'MODULE_NOT_FOUND' || e.code === 'ERR_MODULE_NOT_FOUND') && mergedOptions.hideMissingModuleError)
-        return;
-      this.logger.error(warning, e);
       if (mergedOptions.unifyErrorsByExtId) {
         const needToPrint = some(ids, (id) => !this.failedToLoadExt.has(id));
         if (!needToPrint) return;
@@ -786,6 +779,13 @@ export class AspectLoaderMain {
           }
         });
       }
+      if (mergedOptions.ignoreErrors) return;
+      if ((e.code === 'MODULE_NOT_FOUND' || e.code === 'ERR_MODULE_NOT_FOUND') && mergedOptions.hideMissingModuleError)
+        return;
+      // TODO: improve texts
+      const errorMsg = e.message.split('\n')[0];
+      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids, errorMsg, neededFor);
+      this.logger.error(warning, e);
       if (this.logger.isLoaderStarted) {
         if (mergedOptions.throwOnError) throw new BitError(warning);
         this.logger.consoleFailure(warning);
