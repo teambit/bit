@@ -577,6 +577,7 @@ please create a new lane instead, which will include all components of this lane
     if (!this.workspace) {
       throw new BitError(`unable to switch lanes outside of Bit workspace`);
     }
+    this.workspace.inInstallContext = true;
     let mergeStrategy;
     if (merge && typeof merge === 'string') {
       const mergeOptions = Object.keys(MergeOptions);
