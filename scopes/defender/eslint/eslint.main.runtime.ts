@@ -97,7 +97,7 @@ function getOptions(options: ESLintOptions, context: LinterContext): ESLintOptio
     // https://eslint.org/docs/latest/use/command-line-interface#--resolve-plugins-relative-to
     cwd: options.pluginPath,
     fix: !!context.fix,
-    fixTypes: context.fixTypes,
+    fixTypes: context.fixTypes as ESLintLib.Options['fixTypes'],
   };
   return Object.assign({}, options, { config: mergedConfig, extensions: context.extensionFormats });
 }
