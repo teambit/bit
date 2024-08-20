@@ -194,6 +194,7 @@ export class APIForIDE {
     // const dirName = filenamify(compId.toString(), { replacement: '_' });
     const filePathsRootDir = path.join(this.workspace.scope.path, FILES_HISTORY_DIR, LAST_SNAP_DIR, compDir);
     await fs.remove(filePathsRootDir); // in case it has old data
+    await fs.ensureDir(filePathsRootDir);
 
     const modelComponent = await this.workspace.scope.getBitObjectModelComponent(compId);
     if (!modelComponent) {

@@ -60,7 +60,7 @@ import {
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
 import { LaneSwitcher } from './switch-lanes';
-import { createLane, createLaneInScope, throwForInvalidLaneName } from './create-lane';
+import { createLane, createLaneInScope, throwForInvalidLaneName } from '@teambit/lanes.modules.create-lane';
 import { LanesCreateRoute } from './lanes.create.route';
 import { LanesDeleteRoute } from './lanes.delete.route';
 import { LanesRestoreRoute } from './lanes.restore.route';
