@@ -106,6 +106,8 @@ type GetComponentsAndManifestsOptions = Omit<
 export class InstallMain {
   private visitedAspects: Set<string> = new Set();
 
+  private oldNonLoadedEnvs: string[] = [];
+
   constructor(
     private dependencyResolver: DependencyResolverMain,
 
@@ -364,6 +366,7 @@ export class InstallMain {
       );
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
+      const oldNonLoadedEnvs = this.setOldNonLoadedEnvs();
       await this.reloadMovedEnvs();
       await this.reloadNonLoadedEnvs();
 
@@ -394,7 +397,7 @@ export class InstallMain {
       }
       if (!dependenciesChanged) break;
       if (!options?.recurringInstall) break;
-      const oldNonLoadedEnvs = this.getOldNonLoadedEnvs();
+
       if (!oldNonLoadedEnvs.length) break;
       prevManifests.add(manifestsHash(current.manifests));
       // If we run compile we do the clear cache before the compilation so no need to clean it again (it's an expensive
@@ -706,6 +709,14 @@ export class InstallMain {
     };
   }
 
+  public setOldNonLoadedEnvs() {
+    const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
+    const envsWithoutManifest = Array.from(this.dependencyResolver.envsWithoutManifest);
+    const oldNonLoadedEnvs = intersection(nonLoadedEnvs, envsWithoutManifest);
+    this.oldNonLoadedEnvs = oldNonLoadedEnvs;
+    return oldNonLoadedEnvs;
+  }
+
   /**
    * This function returns a list of old non-loaded environments names.
    * @returns an array of strings called `oldNonLoadedEnvs`. This array contains the names of environment variables that
@@ -714,10 +725,7 @@ export class InstallMain {
    * correctly
    */
   public getOldNonLoadedEnvs() {
-    const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
-    const envsWithoutManifest = Array.from(this.dependencyResolver.envsWithoutManifest);
-    const oldNonLoadedEnvs = intersection(nonLoadedEnvs, envsWithoutManifest);
-    return oldNonLoadedEnvs;
+    return this.oldNonLoadedEnvs;
   }
 
   private async _updateRootDirs(rootDirs: string[]) {
