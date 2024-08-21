@@ -268,9 +268,18 @@ export class WorkspaceCompiler {
     }
   }
 
-  async onAspectLoadFail(err: Error & { code?: string }, id: ComponentID): Promise<boolean> {
+  async onAspectLoadFail(err: Error & { code?: string }, component: Component): Promise<boolean> {
+    const id = component.id;
+    const deps = this.dependencyResolver.getDependencies(component);
+    const depsIds = deps.getComponentDependencies().map((dep) => {
+      return dep.id.toString();
+    });
     if (err.code && err.code === 'MODULE_NOT_FOUND' && this.workspace) {
-      await this.compileComponents([id.toString()], { initiator: CompilationInitiator.AspectLoadFail }, true);
+      await this.compileComponents(
+        [id.toString(), ...depsIds],
+        { initiator: CompilationInitiator.AspectLoadFail },
+        true
+      );
       return true;
     }
     return false;

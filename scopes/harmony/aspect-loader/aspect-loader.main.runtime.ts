@@ -69,7 +69,7 @@ export type LoadExtByManifestOptions = {
   unifyErrorsByExtId?: boolean;
 };
 
-type OnAspectLoadError = (err: Error, id: ComponentID) => Promise<boolean>;
+type OnAspectLoadError = (err: Error, component: Component) => Promise<boolean>;
 export type OnAspectLoadErrorSlot = SlotRegistry<OnAspectLoadError>;
 
 export type OnAspectLoadErrorHandler = (err: Error, component: Component) => Promise<boolean>;
@@ -161,7 +161,7 @@ export class AspectLoaderMain {
     const entries = this.onAspectLoadErrorSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onAspectLoadError] ] ]
     let isFixed = false;
     await mapSeries(entries, async ([, onAspectFailFunc]) => {
-      const result = await onAspectFailFunc(err, component.id);
+      const result = await onAspectFailFunc(err, component);
       if (result) isFixed = true;
     });
 
