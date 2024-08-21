@@ -165,11 +165,11 @@ export class LaneShowCmd implements Command {
 
     const onlyLane = lanes[0];
     const title = `showing information for ${chalk.bold(onlyLane.id.toString())}\n`;
-    const author = `author: ${onlyLane.log?.username || 'N/A'} <${onlyLane.log?.email || 'N/A'}>\n`;
-    const date = onlyLane.log?.date
-      ? `created: ${new Date(parseInt(onlyLane.log.date)).toLocaleString()}\n`
-      : undefined;
-    const link = `link: https://${DEFAULT_CLOUD_DOMAIN}/${laneId.scope.replace('.', '/')}/~lane/${laneId.name}\n`;
+    const author = onlyLane.log ? `author: ${onlyLane.log?.username || 'N/A'} <${onlyLane.log?.email || 'N/A'}>\n` : '';
+    const date = onlyLane.log?.date ? `created: ${new Date(parseInt(onlyLane.log.date)).toLocaleString()}\n` : '';
+    const link = laneId.isDefault()
+      ? ''
+      : `link: https://${DEFAULT_CLOUD_DOMAIN}/${laneId.scope.replace('.', '/')}/~lane/${laneId.name}\n`;
     return title + author + date + link + outputComponents(onlyLane.components);
   }
 

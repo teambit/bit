@@ -2,6 +2,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 // import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
+import { BitError } from '@teambit/bit-error';
 import { CLITable } from '@teambit/cli-table';
 import { ApplicationMain } from './application.main.runtime';
 
@@ -22,7 +23,10 @@ export class AppListCmd implements Command {
     if (!appComponents.length) return chalk.yellow('no apps found');
 
     const rows = appComponents.flatMap(([id, apps]) => {
-      return apps.map((app) => [id, app.name]);
+      return apps.map((app) => {
+        if (!app.name) throw new BitError(`app ${id.toString()} is missing a name`);
+        return [id, app.name];
+      });
     });
 
     const table = new CLITable(['id', 'name'], rows);
