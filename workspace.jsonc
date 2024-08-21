@@ -149,7 +149,7 @@
         "@teambit/defender.content.linter-overview": "1.95.0",
         "@teambit/defender.content.tester-overview": "1.95.0",
         "@teambit/defender.eslint-linter": "^1.0.35",
-        "@teambit/defender.jest-tester": "^2.0.4",
+        "@teambit/defender.jest-tester": "^2.0.14",
         "@teambit/defender.prettier-formatter": "1.0.12",
         "@teambit/defender.tester-task": "^1.0.12",
         "@teambit/defender.ui.test-compare-section": "^0.0.100",
