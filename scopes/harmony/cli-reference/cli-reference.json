@@ -1741,21 +1741,6 @@
     ]
   },
   {
-    "name": "app-list",
-    "alias": "",
-    "options": [
-      [
-        "j",
-        "json",
-        "return the component data in json format"
-      ]
-    ],
-    "description": "DEPRECATED. use \"bit app list\"",
-    "extendedDescription": "",
-    "group": "apps",
-    "private": true
-  },
-  {
     "name": "app <sub-command>",
     "alias": "apps",
     "options": [],

@@ -38,11 +38,7 @@ export class Plugins {
     });
     aspect.addRuntime({
       provider: async () => {
-        await Promise.all(
-          plugins.map(async (plugin) => {
-            return this.registerPluginWithTryCatch(plugin, aspect);
-          })
-        );
+        await Promise.all(plugins.map((plugin) => this.registerPluginWithTryCatch(plugin, aspect)));
         // Return an empty object so haromny will have something in the extension instance
         // otherwise it will throw an error when trying to access the extension instance (harmony.get)
         return {};
@@ -68,7 +64,6 @@ export class Plugins {
     try {
       const isModule = isEsmModule(plugin.path);
       const module = isModule ? await this.loadModule(plugin.path) : undefined;
-
       if (isModule && !module) {
         this.logger.consoleFailure(
           `failed to load plugin ${plugin.path}, make sure to use 'export default' to expose your plugin`
@@ -86,12 +81,14 @@ export class Plugins {
       const isFixed = await this.triggerOnAspectLoadError(firstErr, this.component);
       let errAfterReLoad;
       if (isFixed) {
-        this.logger.info(
-          `the loading issue might be fixed now, re-loading plugin with pattern "${
-            plugin.def.pattern
-          }", in component ${this.component.id.toString()}`
-        );
         try {
+          const isModule = isEsmModule(plugin.path);
+          const module = isModule ? await this.loadModule(plugin.path) : undefined;
+          this.logger.info(
+            `the loading issue might be fixed now, re-loading plugin with pattern "${
+              plugin.def.pattern
+            }", in component ${this.component.id.toString()}`
+          );
           return plugin.register(aspect, module);
         } catch (err: any) {
           this.logger.warn(
