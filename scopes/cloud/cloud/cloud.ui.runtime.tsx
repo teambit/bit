@@ -42,6 +42,10 @@ export class CloudUI {
     return flatten(this.userBarSectionSlot.values());
   }
 
+  CloudUserBar = () => {
+    return <UserBar sections={this.listUserBarSections()} items={this.listUserBarItems()} />;
+  };
+
   static runtime = UIRuntime;
 
   static dependencies = [WorkspaceAspect, LanesAspect, ComponentAspect];
@@ -150,13 +154,13 @@ export class CloudUI {
       //   },
       // },
     ]);
-    const userBarItems = cloudUI.listUserBarItems();
-    const userBarSections = cloudUI.listUserBarSections();
-    const CloudUserBar = () => <UserBar sections={userBarSections} items={userBarItems} />;
-    workspace.registerMenuWidget([CloudUserBar]);
+    workspace.registerMenuWidget([cloudUI.CloudUserBar]);
     if (workspace) {
-      lanes.registerMenuWidget(CloudUserBar);
-      component.registerRightSideMenuItem({ item: <CloudUserBar key={'cloud-user-bar-comp-menu'} />, order: 100 });
+      lanes.registerMenuWidget(cloudUI.CloudUserBar);
+      component.registerRightSideMenuItem({
+        item: <cloudUI.CloudUserBar key={'cloud-user-bar-comp-menu'} />,
+        order: 100,
+      });
     }
     return cloudUI;
   }

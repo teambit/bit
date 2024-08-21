@@ -135,7 +135,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
                       pathSegments[pathSegments.length - 1] = composition.identifier.toLowerCase();
                     }
 
-                    const urlParams = new URLSearchParams();
+                    const urlParams = new URLSearchParams(searchParams);
                     if (versionFromQueryParams) {
                       urlParams.set('version', versionFromQueryParams);
                     }
