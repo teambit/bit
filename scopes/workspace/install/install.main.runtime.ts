@@ -6,7 +6,7 @@ import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/com
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { compact, mapValues, omit, uniq, intersection } from 'lodash';
+import { compact, mapValues, omit, uniq, intersection, groupBy } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import { GenerateResult, GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
@@ -45,6 +45,7 @@ import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/w
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { snapToSemver } from '@teambit/component-package-version';
+import { AspectDefinition, AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import hash from 'object-hash';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
@@ -53,7 +54,6 @@ import { LinkCommand } from './link';
 import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
 import UpdateCmd from './update.cmd';
-import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 
 export type WorkspaceLinkOptions = LinkingOptions & {
   rootPolicy?: WorkspacePolicy;
@@ -366,6 +366,7 @@ export class InstallMain {
       await this.linkCodemods(compDirMap);
       await this.reloadMovedEnvs();
       await this.reloadNonLoadedEnvs();
+
       const shouldClearCacheOnInstall = this.shouldClearCacheOnInstall();
       if (options?.compile ?? true) {
         const compileStartTime = process.hrtime();
@@ -375,7 +376,8 @@ export class InstallMain {
           // We need to clear cache before compiling the components or it might compile them with the default env
           // incorrectly in case the env was not loaded correctly before the installation.
           // We don't want to clear the failed to load envs because we want to show the warning at the end
-          await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+          // await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+          await this.workspace.clearCache();
           cacheCleared = true;
         }
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
@@ -482,26 +484,43 @@ export class InstallMain {
         // This is a bug in the flow and should be fixed.
         // skipDeps: true,
       });
-      const loadedPlugins = compact(
-        await Promise.all(
-          aspects.map((aspectDef) => {
-            const localPath = aspectDef.aspectPath;
-            const component = aspectDef.component;
-            if (!component) return undefined;
-            const plugins = this.aspectLoader.getPlugins(component, localPath);
-            if (plugins.has()) {
-              return plugins.load(MainRuntime.name);
-            }
-          })
-        )
-      );
+      // This is a very special case which we need to compile our envs before loading them correctly.
+      const grouped = groupBy(aspects, (aspectDef) => {
+        return aspectDef.component?.id.toStringWithoutVersion() === 'bitdev.general/envs/bit-env';
+      });
+      await this.reloadAspects(grouped.true || []);
+      const otherEnvs = grouped.false || [];
       await Promise.all(
-        loadedPlugins.map((plugin) => {
-          const runtime = plugin.getRuntime(MainRuntime);
-          return runtime?.provider(undefined, undefined, undefined, this.harmony);
+        otherEnvs.map(async (aspectDef) => {
+          const id = aspectDef.component?.id;
+          if (!id) return;
+          await this.workspace.clearComponentCache(id);
         })
       );
+      await this.reloadAspects(grouped.false || []);
     }
+  }
+
+  private async reloadAspects(aspects: AspectDefinition[]) {
+    const loadedPlugins = compact(
+      await Promise.all(
+        aspects.map((aspectDef) => {
+          const localPath = aspectDef.aspectPath;
+          const component = aspectDef.component;
+          if (!component) return undefined;
+          const plugins = this.aspectLoader.getPlugins(component, localPath);
+          if (plugins.has()) {
+            return plugins.load(MainRuntime.name);
+          }
+        })
+      )
+    );
+    await Promise.all(
+      loadedPlugins.map((plugin) => {
+        const runtime = plugin.getRuntime(MainRuntime);
+        return runtime?.provider(undefined, undefined, undefined, this.harmony);
+      })
+    );
   }
 
   private async _getComponentsManifestsAndRootPolicy(
