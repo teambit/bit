@@ -65,7 +65,7 @@ type WorkspaceHistory = {
 type CompMetadata = {
   id: string;
   isDeprecated: boolean;
-  isApp: boolean;
+  appName?: string; // in case it's an app
   env: {
     id: string;
     name?: string;
@@ -204,12 +204,12 @@ export class APIForIDE {
       async (comp) => {
         const id = comp.id;
         const deprecationInfo = await this.deprecation.getDeprecationInfo(comp);
-        const isApp = apps.find((app) => app.id === id.toString());
+        const foundApp = apps.find((app) => app.id === id.toString());
         const env = this.envs.getEnv(comp);
         return {
           id: id.toStringWithoutVersion(),
           isDeprecated: deprecationInfo.isDeprecate,
-          isApp: Boolean(isApp),
+          appName: foundApp?.name,
           env: {
             id: env.id,
             name: env.name,
