@@ -310,6 +310,19 @@ export class WorkspaceComponentLoader {
     return compact(groupsByWsScope);
   }
 
+  /**
+   * This function will get a list of envs ids and will regroup them into two groups:
+   * 1. envs that are envs of envs from the group
+   * 2. other envs (envs which are just envs of regular components of the workspace)
+   * For Example:
+   * envsIds: [ReactEnv, NodeEnv, BitEnv]
+   * The env of ReactEnv and NodeEnv is BitEnv
+   * The result will be:
+   * [ [BitEnv], [ReactEnv, NodeEnv] ]
+   * @param envIds
+   * @param envsIdsOfWsComps
+   * @returns
+   */
   private regroupEnvsIdsFromTheList(envIds: ComponentID[] = [], envsIdsOfWsComps: Set<string>): Array<ComponentID[]> {
     const envsOfEnvs = new Set<string>();
     envIds.forEach((envId) => {
