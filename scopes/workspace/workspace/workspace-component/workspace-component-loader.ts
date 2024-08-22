@@ -319,6 +319,8 @@ export class WorkspaceComponentLoader {
    * The env of ReactEnv and NodeEnv is BitEnv
    * The result will be:
    * [ [BitEnv], [ReactEnv, NodeEnv] ]
+   *
+   * At the moment this function is not recursive, in the future we might want to make it recursive
    * @param envIds
    * @param envsIdsOfWsComps
    * @returns
