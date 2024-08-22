@@ -27,13 +27,13 @@ function _CompositionCard({
   const Composition = React.useMemo(() => {
     return (
       <ComponentComposition
+        disableScroll
         className={previewClass}
         includeEnv={false}
         loading={'lazy'}
         composition={composition}
         component={component}
         viewport={1280}
-        scrolling="no"
         previewName="compositions"
       />
     );
@@ -41,7 +41,10 @@ function _CompositionCard({
 
   return (
     <div {...rest} key={composition.identifier} className={classnames(styles.compositionCard, className)}>
-      <div className={styles.compositionPreview}>{Composition}</div>
+      <div className={styles.compositionPreview}>
+        {Composition}
+        <div className={styles.previewOverlay} />
+      </div>
       <div className={styles.bottom}>
         <span className={classnames(ellipsis, styles.displayName)}>{composition.displayName}</span>
         {openCompositionLink && (
