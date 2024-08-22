@@ -6,7 +6,7 @@ import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/com
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { compact, mapValues, omit, uniq, intersection, groupBy } from 'lodash';
+import { compact, mapValues, omit, uniq, intersection } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import { GenerateResult, GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
@@ -487,20 +487,34 @@ export class InstallMain {
         // This is a bug in the flow and should be fixed.
         // skipDeps: true,
       });
-      // This is a very special case which we need to compile our envs before loading them correctly.
-      const grouped = groupBy(aspects, (aspectDef) => {
-        return aspectDef.component?.id.toStringWithoutVersion() === 'bitdev.general/envs/bit-env';
-      });
-      await this.reloadAspects(grouped.true || []);
-      const otherEnvs = grouped.false || [];
+
       await Promise.all(
-        otherEnvs.map(async (aspectDef) => {
+        aspects.map(async (aspectDef) => {
           const id = aspectDef.component?.id;
           if (!id) return;
           await this.workspace.clearComponentCache(id);
         })
       );
-      await this.reloadAspects(grouped.false || []);
+      await this.reloadAspects(aspects || []);
+
+      // Keeping this here for now, it was removed as part of #9138 as now that we load envs of envs
+      // correctly first it seems to be not needed anymore.
+      // But there might be cases where it will be needed. So keeping it here for now.
+
+      // This is a very special case which we need to compile our envs before loading them correctly.
+      //   const grouped = groupBy(aspects, (aspectDef) => {
+      //     return aspectDef.component?.id.toStringWithoutVersion() === 'bitdev.general/envs/bit-env';
+      //   });
+      //   await this.reloadAspects(grouped.true || []);
+      //   const otherEnvs = grouped.false || [];
+      //   await Promise.all(
+      //     otherEnvs.map(async (aspectDef) => {
+      //       const id = aspectDef.component?.id;
+      //       if (!id) return;
+      //       await this.workspace.clearComponentCache(id);
+      //     })
+      //   );
+      //   await this.reloadAspects(grouped.false || []);
     }
   }
 
