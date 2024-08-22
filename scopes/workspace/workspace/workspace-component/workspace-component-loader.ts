@@ -155,7 +155,10 @@ export class WorkspaceComponentLoader {
       this.saveInCache(comp, { loadExtensions: true, executeLoadSlot: true });
     });
     const idsWithEmptyStrs = ids.map((id) => id.toString());
-    const requestedComponents = components.filter((comp) => idsWithEmptyStrs.includes(comp.id.toString()));
+    const requestedComponents = components.filter(
+      (comp) =>
+        idsWithEmptyStrs.includes(comp.id.toString()) || idsWithEmptyStrs.includes(comp.id.toStringWithoutVersion())
+    );
     this.logger.profile(`getMany-${callId}`);
     return { components: requestedComponents, invalidComponents };
   }
