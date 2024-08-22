@@ -29,8 +29,8 @@ import { SSEEventsRoute } from './sse-events.route';
 import { join } from 'path';
 import { CLIRawRoute } from './cli-raw.route';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
-import DeprecationAspect, { DeprecationMain } from '@teambit/deprecation';
-import EnvsAspect, { EnvsMain } from '@teambit/envs';
+import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 
 export class ApiServerMain {
   constructor(
