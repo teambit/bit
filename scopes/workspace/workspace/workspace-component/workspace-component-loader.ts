@@ -154,8 +154,10 @@ export class WorkspaceComponentLoader {
     components.forEach((comp) => {
       this.saveInCache(comp, { loadExtensions: true, executeLoadSlot: true });
     });
+    const idsWithEmptyStrs = ids.map((id) => id.toString());
+    const requestedComponents = components.filter((comp) => idsWithEmptyStrs.includes(comp.id.toString()));
     this.logger.profile(`getMany-${callId}`);
-    return { components, invalidComponents };
+    return { components: requestedComponents, invalidComponents };
   }
 
   private async getAndLoadSlotOrdered(
@@ -271,10 +273,22 @@ export class WorkspaceComponentLoader {
       };
     });
 
+    const layeredEnvsFromTheList = this.regroupEnvsIdsFromTheList(groupedByIsEnvOfWsComps.true, envsIdsOfWsComps);
+    const layeredEnvsGroups = layeredEnvsFromTheList.map((ids) => {
+      return {
+        ids,
+        core: false,
+        aspects: true,
+        seeders: true,
+        envs: true,
+      };
+    });
+
     const groupsToHandle = [
       // Always load first core envs
       { ids: groupedByIsCoreEnvs.true || [], core: true, aspects: true, seeders: true, envs: true },
-      { ids: groupedByIsEnvOfWsComps.true || [], core: false, aspects: true, seeders: false, envs: true },
+      // { ids: groupedByIsEnvOfWsComps.true || [], core: false, aspects: true, seeders: false, envs: true },
+      ...layeredEnvsGroups,
       { ids: extsNotFromTheList || [], core: false, aspects: true, seeders: false, envs: false },
       ...layeredExtGroups,
       { ids: groupedByIsExtOfAnother.false || [], core: false, aspects: false, seeders: true, envs: false },
@@ -294,6 +308,28 @@ export class WorkspaceComponentLoader {
       };
     });
     return compact(groupsByWsScope);
+  }
+
+  private regroupEnvsIdsFromTheList(envIds: ComponentID[] = [], envsIdsOfWsComps: Set<string>): Array<ComponentID[]> {
+    const envsOfEnvs = new Set<string>();
+    envIds.forEach((envId) => {
+      const idStr = envId.toString();
+      const fromCache = this.componentsExtensionsCache.get(idStr);
+      if (!fromCache || !fromCache.extensions) {
+        return;
+      }
+      const envOfEnvId = fromCache.envId;
+      if (envOfEnvId && !envsIdsOfWsComps.has(idStr)) {
+        envsOfEnvs.add(envOfEnvId);
+      }
+    });
+    const existingEnvsOfEnvs = envIds.filter(
+      (id) => envsOfEnvs.has(id.toString()) || envsOfEnvs.has(id.toStringWithoutVersion())
+    );
+    const notExistingEnvsOfEnvs = envIds.filter(
+      (id) => !envsOfEnvs.has(id.toString()) && !envsOfEnvs.has(id.toStringWithoutVersion())
+    );
+    return [existingEnvsOfEnvs, notExistingEnvsOfEnvs];
   }
 
   private regroupExtIdsFromTheList(ids: ComponentID[]): Array<ComponentID[]> {
