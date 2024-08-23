@@ -1,7 +1,7 @@
 import { mergeSchemas } from '@graphql-tools/schema';
 import { GraphQLUUID, GraphQLJSONObject } from 'graphql-scalars';
 import { WebSocketServer } from 'ws';
-import { ApolloServer } from '@apollo/server';
+import { ApolloServer, ApolloServerPlugin } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled';
@@ -17,7 +17,7 @@ import { createServer, Server } from 'http';
 import compact from 'lodash.compact';
 import cors from 'cors';
 import { GraphQLServer } from './graphql-server';
-import { GraphQLSchema, subscribe as graphqlSubscribe, execute as graphqlExecute } from 'graphql';
+import { GraphQLSchema, subscribe as graphqlSubscribe, execute as graphqlExecute, isObjectType } from 'graphql';
 import { createRemoteSchemas } from './create-remote-schemas';
 import { GraphqlAspect } from './graphql.aspect';
 import { Schema } from './schema';
@@ -118,13 +118,17 @@ export class GraphqlMain {
     const httpServer = createServer(app);
 
     const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
-    const application = this.createRootModule(options.schemaSlot);
+    // const wrappedRemoteSchemas = remoteSchemas.map(this.wrapSchemaResolvers);
+    const wrappedRemoteSchemas = remoteSchemas;
 
+    const application = this.createRootModule(options.schemaSlot);
+    // const wrappedLocalSchema = this.wrapSchemaResolvers(application.schema);
+    const wrappedLocalSchema = application.schema;
     const subscribe = application.createSubscription();
     const execute = application.createExecution();
 
     const schemas = compact(
-      [application.schema].concat(remoteSchemas).filter((x) => {
+      [wrappedLocalSchema].concat(wrappedRemoteSchemas).filter((x) => {
         return Boolean(x && (x.getQueryType() || x.getMutationType() || x.getSubscriptionType()));
       })
     );
@@ -200,7 +204,7 @@ export class GraphqlMain {
     app.use(
       '/graphql',
       expressMiddleware(apolloServer, {
-        context: async ({ req }) => req,
+        context: async ({ req }) => ({ req }),
       })
     );
 
@@ -306,13 +310,70 @@ export class GraphqlMain {
     };
   }
 
+  wrapResolver = (resolver) => {
+    return (_source, args, context, info) => {
+      return resolver(context, args, context, info);
+    };
+  };
+
+  wrapSchemaResolvers = (schema: GraphQLSchema) => {
+    const typeMap = schema.getTypeMap();
+    Object.keys(typeMap).forEach((typeName) => {
+      const type = typeMap[typeName];
+
+      // Check if the type is an object type (e.g., Query, Mutation, Subscription)
+      if (isObjectType(type)) {
+        const fields = type.getFields();
+        Object.keys(fields).forEach((fieldName) => {
+          const field = fields[fieldName];
+
+          // Only wrap if the field has a resolve function
+          if (typeof field.resolve === 'function') {
+            field.resolve = this.wrapResolver(field.resolve);
+          }
+        });
+      }
+    });
+    return schema;
+  };
+
+  private wrapResolvers = (resolvers: any) => {
+    const wrappedResolvers = {};
+    for (const [typeName, fields] of Object.entries(resolvers) as any) {
+      // Only wrap resolvers for Query, Mutation, and Subscription types
+      if (typeName === 'Query' || typeName === 'Mutation' || typeName === 'Subscription') {
+        wrappedResolvers[typeName] = {};
+        for (const [fieldName, resolver] of Object.entries(fields)) {
+          if (typeof resolver === 'function') {
+            wrappedResolvers[typeName][fieldName] = this.wrapResolver(resolver);
+          }
+        }
+      } else {
+        // Copy the scalar and other non-object type resolvers as is
+        wrappedResolvers[typeName] = fields;
+      }
+    }
+    return wrappedResolvers;
+  };
+
   private buildModules(schemaSlot?: SchemaSlot) {
     const schemaSlots = schemaSlot ? schemaSlot.toArray() : this.moduleSlot.toArray();
     return schemaSlots.map(([extensionId, schema]) => {
+      const wrappedResolvers = this.wrapResolvers(schema.resolvers);
+
+      console.log(
+        '🚀 ~ file: graphql.main.runtime.ts:398 ~ GraphqlMain ~ returnschemaSlots.map ~ schema.resolvers,:',
+        schema.resolvers
+      );
+      console.log(
+        '🚀 ~ file: graphql.main.runtime.ts:410 ~ GraphqlMain ~ returnschemaSlots.map ~ wrappedResolvers:',
+        wrappedResolvers
+      );
+
       const module = createModule({
         id: extensionId,
         typeDefs: schema.typeDefs,
-        resolvers: schema.resolvers,
+        resolvers: wrappedResolvers,
       });
 
       this.modules.set(extensionId, module);

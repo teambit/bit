@@ -38,6 +38,8 @@ async function createApolloClient(
   const contextLink = setContext((_, prevContext) => {
     return {
       headers: prevContext.graphqlContext?.req?.headers,
+      req: prevContext.graphqlContext?.req,
+      rootValue: { req: prevContext.graphqlContext?.req },
     };
   });
 
@@ -89,8 +91,15 @@ async function getRemoteSchema({
 
   return wrapSchema({
     schema: remoteSchema,
-    executor: async ({ document, variables }) => {
-      const fetchResult = await client.query({ query: document, variables, fetchPolicy: 'network-only' });
+    executor: async ({ document, variables, context }) => {
+      const fetchResult: any = await client.query({
+        query: document,
+        variables,
+        fetchPolicy: 'network-only',
+        context: {
+          graphqlContext: context,
+        },
+      });
       return fetchResult as any;
     },
   });
