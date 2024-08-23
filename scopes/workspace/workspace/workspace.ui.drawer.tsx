@@ -23,7 +23,10 @@ export const workspaceDrawer = ({
   drawerWidgetSlot,
   overrideUseLanes: useLanesFromProps,
 }: WorkspaceDrawerProps) => {
-  const useLanes = useLanesFromProps || defaultUseLanesHook;
+  // type conflict due to different versions of LanesModel
+  // 1. scopes/lanes/lanes/node_modules/@teambit/lanes.ui.models.lanes-model
+  // 2. components/ui/models/lanes-model/lanes-model
+  const useLanes: any = useLanesFromProps || defaultUseLanesHook;
 
   return new ComponentsDrawer({
     order: 0,

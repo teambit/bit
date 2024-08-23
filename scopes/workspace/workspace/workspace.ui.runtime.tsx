@@ -112,7 +112,10 @@ export class WorkspaceUI {
    * register component filters
    */
   registerDrawerComponentFilters = (filters: ComponentFilters) => {
-    this.drawerComponentsFiltersSlot.register(filters);
+    // type conflict due to different versions of ComponentFilters
+    // - scopes/scope/scope/node_modules/@teambit/component.ui.component-filters.component-filter-context/dist/component-filter-context
+    // - components/ui/component-filters/component-filter-context/component-filter-context
+    this.drawerComponentsFiltersSlot.register(filters as any);
   };
 
   registerDrawerWidgets = (widgets: ReactNode[]) => {
