@@ -389,9 +389,13 @@ export class APIForIDE {
 
   async getModifiedByConfig(): Promise<ModifiedByConfig[]> {
     const modifiedComps = await this.workspace.modified();
+    const autoTagIds = await this.workspace.listAutoTagPendingComponentIds();
+    const autoTagComps = await this.workspace.getMany(autoTagIds);
+    const allComps = [...modifiedComps, ...autoTagComps];
+    const allIds = allComps.map((c) => c.id);
     const results = await Promise.all(
-      modifiedComps.map(async (comp) => {
-        const wsComp = await this.componentCompare.getConfigForDiffByCompObject(comp);
+      allComps.map(async (comp) => {
+        const wsComp = await this.componentCompare.getConfigForDiffByCompObject(comp, allIds);
         const scopeComp = await this.componentCompare.getConfigForDiffById(comp.id.toString());
         const hasSameDeps = JSON.stringify(wsComp.dependencies) === JSON.stringify(scopeComp.dependencies);
         const hasSameAspects = JSON.stringify(wsComp.aspects) === JSON.stringify(scopeComp.aspects);
