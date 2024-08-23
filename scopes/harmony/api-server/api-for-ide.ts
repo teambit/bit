@@ -20,6 +20,9 @@ import { compact } from 'lodash';
 import { getCloudDomain } from '@teambit/legacy/dist/constants';
 import { ConfigMain } from '@teambit/config';
 import { LANE_REMOTE_DELIMITER, LaneId } from '@teambit/lane-id';
+import { ApplicationMain } from '@teambit/application';
+import { DeprecationMain } from '@teambit/deprecation';
+import { EnvsMain } from '@teambit/envs';
 
 const FILES_HISTORY_DIR = 'files-history';
 const LAST_SNAP_DIR = 'last-snap';
@@ -59,6 +62,17 @@ type WorkspaceHistory = {
   history: Array<{ path: PathOsBasedAbsolute; fileId: string; reason?: string }>;
 };
 
+type CompMetadata = {
+  id: string;
+  isDeprecated: boolean;
+  appName?: string; // in case it's an app
+  env: {
+    id: string;
+    name?: string;
+    icon: string;
+  };
+};
+
 export class APIForIDE {
   constructor(
     private workspace: Workspace,
@@ -71,7 +85,10 @@ export class APIForIDE {
     private componentCompare: ComponentCompareMain,
     private generator: GeneratorMain,
     private remove: RemoveMain,
-    private config: ConfigMain
+    private config: ConfigMain,
+    private application: ApplicationMain,
+    private deprecation: DeprecationMain,
+    private envs: EnvsMain
   ) {}
 
   async logStartCmdHistory(op: string) {
@@ -177,6 +194,32 @@ export class APIForIDE {
       return this.lanes.createLane(laneId.name, { scope: laneId.scope });
     }
     return this.lanes.createLane(name);
+  }
+
+  async getCompsMetadata(): Promise<CompMetadata[]> {
+    const comps = await this.workspace.list();
+    const apps = await this.application.listAppsIdsAndNames();
+    const results = await pMap(
+      comps,
+      async (comp) => {
+        const id = comp.id;
+        const deprecationInfo = await this.deprecation.getDeprecationInfo(comp);
+        const foundApp = apps.find((app) => app.id === id.toString());
+        const env = this.envs.getEnv(comp);
+        return {
+          id: id.toStringWithoutVersion(),
+          isDeprecated: deprecationInfo.isDeprecate,
+          appName: foundApp?.name,
+          env: {
+            id: env.id,
+            name: env.name,
+            icon: env.icon,
+          },
+        };
+      },
+      { concurrency: 30 }
+    );
+    return results;
   }
 
   async getCompFiles(id: string): Promise<{ dirAbs: string; filesRelative: PathOsBasedRelative[] }> {
