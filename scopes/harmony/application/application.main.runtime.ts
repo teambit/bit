@@ -104,6 +104,17 @@ export class ApplicationMain {
     return flatten(this.appSlot.values());
   }
 
+  async listAppsIdsAndNames(): Promise<{ id: string; name: string }[]> {
+    await this.loadAllAppsAsAspects();
+    const appComponents = this.mapApps();
+    return appComponents.flatMap(([id, apps]) => {
+      return apps.map((app) => {
+        if (!app.name) throw new BitError(`app ${id.toString()} is missing a name`);
+        return { id, name: app.name };
+      });
+    });
+  }
+
   /**
    * map all apps by component ID.
    */
