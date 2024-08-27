@@ -40,6 +40,7 @@ export type LaneQueryResult = {
   createdBy?: LaneQueryLaneOwner;
   updatedAt?: Date;
   updatedBy?: LaneQueryLaneOwner;
+  dependents?: Array<ComponentIdObj>;
 };
 /**
  * GQL
@@ -74,6 +75,7 @@ export type LaneModel = {
   createdBy?: LaneQueryLaneOwner;
   updatedAt?: Date;
   updatedBy?: LaneQueryLaneOwner;
+  dependents?: ComponentID[];
 };
 /**
  * Props to instantiate a LanesModel
@@ -92,8 +94,11 @@ export type LanesModelProps = {
  */
 export class LanesModel {
   static lanesPrefix = '~lane';
+
   static baseLaneComponentRoute = '/~component';
+
   static lanePath = ':scopeId/:laneId';
+
   static laneUrlParamsKey = 'lane';
 
   private static laneFromPathRegex = pathToRegexp(`${LanesModel.lanesPrefix}/${LanesModel.lanePath}`, undefined, {
@@ -160,6 +165,7 @@ export class LanesModel {
       updatedAt,
       createdBy: createdByData,
       updatedBy: updatedByData,
+      dependents = [],
     } = laneData;
 
     const componentIds =
@@ -202,6 +208,7 @@ export class LanesModel {
       hash,
       updatedBy,
       createdBy,
+      dependents: dependents?.map((dependent) => ComponentID.fromObject(dependent)),
     };
   }
 
@@ -296,12 +303,17 @@ export class LanesModel {
   }
 
   laneIdsByScope: Map<string, LaneId[]>;
+
   lanesByComponentName: Map<string, LaneModel[]>;
+
   lanesByComponentId: Map<string, LaneModel[]>;
 
   viewedLane?: LaneModel;
+
   currentLane?: LaneModel;
+
   defaultLane?: LaneModel;
+
   lanes: LaneModel[];
 
   getLaneComponentUrlByVersion = (componentId: ComponentID, laneId?: LaneId, addScopeMetadataInUrl?: boolean) => {
@@ -347,6 +359,7 @@ export class LanesModel {
   };
 
   getDefaultLane = () => this.defaultLane;
+
   getNonMainLanes = () => this.lanes.filter((lane) => !lane.id.isDefault());
 
   isInViewedLane = (componentId: ComponentID, includeVersion?: boolean) => {
@@ -359,10 +372,13 @@ export class LanesModel {
   };
 
   isViewingCurrentLane = () => this.currentLane && this.viewedLane && this.currentLane.id.isEqual(this.viewedLane.id);
+
   isViewingDefaultLane = () => this.viewedLane && this.viewedLane.id.isDefault();
+
   isViewingNonDefaultLane = () => this.viewedLane && !this.viewedLane.id.isDefault();
 
   getLanesByComponentName = (componentId: ComponentID) => this.lanesByComponentName.get(componentId.fullName);
+
   getLanesByComponentId = (componentId: ComponentID) => this.lanesByComponentId.get(componentId.toString());
 
   isComponentOnMain = (componentId: ComponentID, includeVersion?: boolean) => {
@@ -379,12 +395,14 @@ export class LanesModel {
       !this.isComponentOnNonDefaultLanes(componentId, includeVersion, laneId)
     );
   };
+
   isComponentOnLaneButNotOnMain = (componentId: ComponentID, includeVersion?: boolean, laneId?: LaneId) => {
     return (
       !this.isComponentOnMain(componentId, includeVersion) &&
       this.isComponentOnNonDefaultLanes(componentId, includeVersion, laneId)
     );
   };
+
   isComponentOnNonDefaultLanes = (componentId: ComponentID, includeVersion?: boolean, laneId?: LaneId) => {
     if (includeVersion) {
       return !!this.getLanesByComponentId(componentId)?.some(
@@ -395,6 +413,17 @@ export class LanesModel {
       (lane) => !lane.id.isDefault() && (!laneId || lane.id.isEqual(laneId))
     );
   };
+
+  isComponentDependent = (componentId: ComponentID, includeVersion?: boolean, laneId?: LaneId) => {
+    const lane = laneId ? this.lanes.find((l) => l.id.isEqual(laneId)) : this.viewedLane;
+
+    if (!lane) return false;
+    if (includeVersion) {
+      return !!lane.dependents?.some((dep) => dep.isEqual(componentId));
+    }
+    return !!lane.dependents?.some((dep) => dep.isEqual(componentId, { ignoreVersion: true }));
+  };
+
   addLanes(newLanes: LaneModel[] = []) {
     this.lanes = LanesModel.concatLanes(this.lanes, newLanes);
     this.laneIdsByScope = LanesModel.groupLaneIdsByScope(this.lanes.map((lane) => lane.id));
