@@ -27,13 +27,13 @@ function _CompositionCard({
   const Composition = React.useMemo(() => {
     return (
       <ComponentComposition
+        disableScroll
         className={previewClass}
         includeEnv={false}
         loading={'lazy'}
         composition={composition}
         component={component}
         viewport={1280}
-        scrolling="no"
         previewName="compositions"
       />
     );
