@@ -5,7 +5,7 @@ import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency'
 import { Component, ComponentFS, Config, InvalidComponent, State, TagMap } from '@teambit/component';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import mapSeries from 'p-map-series';
-import { compact, fromPairs, groupBy, pick, uniq } from 'lodash';
+import { compact, fromPairs, groupBy, pick, uniq, uniqBy } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { IssuesClasses } from '@teambit/component-issues';
@@ -148,7 +148,9 @@ export class WorkspaceComponentLoader {
       if (throwOnFailure) throw err;
     });
 
-    const components = [...loadedComponents, ...loadOrCached.fromCache];
+    const components = uniqBy([...loadedComponents, ...loadOrCached.fromCache], (comp) => {
+      return comp.id.toString();
+    });
 
     // this.logger.clearStatusLine();
     components.forEach((comp) => {
