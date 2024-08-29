@@ -247,7 +247,7 @@
         "@teambit/lanes.ui.icons.lane-icon": "^0.0.9",
         "@teambit/lanes.ui.lane-details": "^0.0.204",
         "@teambit/lanes.ui.menus.lanes-overview-menu": "^0.0.10",
-        "@teambit/lanes.ui.models.lanes-model": "^0.0.220",
+        "@teambit/lanes.ui.models.lanes-model": "^0.0.221",
         "@teambit/lanes.ui.navigation.lane-switcher": "^0.0.225",
         "@teambit/mdx.compilers.mdx-transpiler": "^1.0.6",
         "@teambit/mdx.generator.mdx-templates": "^1.0.9",

@@ -747,7 +747,7 @@
     "hooks/use-lanes": {
         "name": "hooks/use-lanes",
         "scope": "teambit.lanes",
-        "version": "0.0.271",
+        "version": "0.0.272",
         "mainFile": "index.ts",
         "rootDir": "components/hooks/use-lanes"
     },
