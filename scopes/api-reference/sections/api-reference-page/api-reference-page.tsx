@@ -57,7 +57,7 @@ export function APIRefPage({ rendererSlot, className }: APIRefPageProps) {
   const getIcon = (node: TreeNode) => {
     const nodeType = node.id.split('/')[0];
     const icon = apiModel?.apiByType.get(nodeType)?.[0].renderer.icon?.url;
-    return icon;
+    return icon || undefined;
   };
 
   const selectedAPINode =
