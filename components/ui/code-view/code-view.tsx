@@ -86,8 +86,8 @@ function useInViewport(ref: React.RefObject<HTMLElement>) {
         setIsInViewport(entry.isIntersecting);
       },
       {
-        root: null, // Use the viewport as the root
-        threshold: 0.1, // Trigger if at least 10% of the element is visible
+        root: null,
+        threshold: 0.1,
       }
     );
 
@@ -125,7 +125,6 @@ export function CodeView({
   const loading = loadingFromProps || loadingFileContent;
   const location = useLocation();
   const navigate = useNavigate();
-  // const [scrollBlock, setScrollBlock] = React.useState<'nearest' | 'center'>('nearest');
   const [isHighlightedState, setIsHighlightedState] = React.useState(false);
   const highlightedLineRef = React.useRef<HTMLDivElement>(null);
   const isInViewport = useInViewport(highlightedLineRef);
