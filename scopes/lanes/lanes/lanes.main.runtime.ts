@@ -59,7 +59,7 @@ import {
 import { lanesSchema } from './lanes.graphql';
 import { SwitchCmd } from './switch.cmd';
 import { LaneSwitcher } from './switch-lanes';
-import { createLane, createLaneInScope, throwForInvalidLaneName } from './create-lane';
+import { createLane, createLaneInScope, throwForInvalidLaneName } from '@teambit/lanes.modules.create-lane';
 import { LanesCreateRoute } from './lanes.create.route';
 import { LanesDeleteRoute } from './lanes.delete.route';
 import { LanesRestoreRoute } from './lanes.restore.route';
@@ -576,6 +576,7 @@ please create a new lane instead, which will include all components of this lane
     if (!this.workspace) {
       throw new BitError(`unable to switch lanes outside of Bit workspace`);
     }
+    this.workspace.inInstallContext = true;
     let mergeStrategy;
     if (merge && typeof merge === 'string') {
       const mergeOptions = Object.keys(MergeOptions);

@@ -428,6 +428,10 @@ export class CloudMain {
     this.globalConfig.delSync(CFG_USER_NAME_KEY);
   }
 
+  setRedirectUrl(redirectUrl: string) {
+    this.REDIRECT_URL = redirectUrl;
+  }
+
   async whoami(): Promise<string | undefined> {
     const currentUser = await this.getCurrentUser();
     if (!currentUser?.username) {

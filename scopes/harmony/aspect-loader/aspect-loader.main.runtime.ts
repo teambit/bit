@@ -69,7 +69,7 @@ export type LoadExtByManifestOptions = {
   unifyErrorsByExtId?: boolean;
 };
 
-type OnAspectLoadError = (err: Error, id: ComponentID) => Promise<boolean>;
+type OnAspectLoadError = (err: Error, component: Component) => Promise<boolean>;
 export type OnAspectLoadErrorSlot = SlotRegistry<OnAspectLoadError>;
 
 export type OnAspectLoadErrorHandler = (err: Error, component: Component) => Promise<boolean>;
@@ -161,7 +161,7 @@ export class AspectLoaderMain {
     const entries = this.onAspectLoadErrorSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onAspectLoadError] ] ]
     let isFixed = false;
     await mapSeries(entries, async ([, onAspectFailFunc]) => {
-      const result = await onAspectFailFunc(err, component.id);
+      const result = await onAspectFailFunc(err, component);
       if (result) isFixed = true;
     });
 
@@ -766,12 +766,6 @@ export class AspectLoaderMain {
       await this.harmony.load(relevantManifests);
     } catch (e: any) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
-      // TODO: improve texts
-      const errorMsg = e.message.split('\n')[0];
-      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids, errorMsg, neededFor);
-      this.logger.error(warning, e);
-      if (mergedOptions.ignoreErrors) return;
-      if (e.code === 'MODULE_NOT_FOUND' && mergedOptions.hideMissingModuleError) return;
       if (mergedOptions.unifyErrorsByExtId) {
         const needToPrint = some(ids, (id) => !this.failedToLoadExt.has(id));
         if (!needToPrint) return;
@@ -785,6 +779,13 @@ export class AspectLoaderMain {
           }
         });
       }
+      if (mergedOptions.ignoreErrors) return;
+      if ((e.code === 'MODULE_NOT_FOUND' || e.code === 'ERR_MODULE_NOT_FOUND') && mergedOptions.hideMissingModuleError)
+        return;
+      // TODO: improve texts
+      const errorMsg = e.message.split('\n')[0];
+      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids, errorMsg, neededFor);
+      this.logger.error(warning, e);
       if (this.logger.isLoaderStarted) {
         if (mergedOptions.throwOnError) throw new BitError(warning);
         this.logger.consoleFailure(warning);

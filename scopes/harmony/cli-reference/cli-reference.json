@@ -1741,21 +1741,6 @@
     ]
   },
   {
-    "name": "app-list",
-    "alias": "",
-    "options": [
-      [
-        "j",
-        "json",
-        "return the component data in json format"
-      ]
-    ],
-    "description": "DEPRECATED. use \"bit app list\"",
-    "extendedDescription": "",
-    "group": "apps",
-    "private": true
-  },
-  {
     "name": "app <sub-command>",
     "alias": "apps",
     "options": [],
@@ -3412,6 +3397,45 @@
     ]
   },
   {
+    "name": "deprecate <component-name>",
+    "alias": "d",
+    "options": [
+      [
+        "",
+        "new-id <string>",
+        "if replaced by another component, enter the new component id. alternatively use \"bit rename --deprecate\" to do this automatically"
+      ],
+      [
+        "",
+        "range <string>",
+        "enter a Semver range to deprecate specific versions. see https://www.npmjs.com/package/semver#ranges for the range syntax"
+      ]
+    ],
+    "description": "deprecate a component",
+    "extendedDescription": "",
+    "group": "collaborate",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true,
+    "arguments": [
+      {
+        "name": "component-name",
+        "description": "component name or component id"
+      }
+    ]
+  },
+  {
+    "name": "undeprecate <id>",
+    "alias": "",
+    "options": [],
+    "description": "undeprecate a deprecated component (local/remote)",
+    "extendedDescription": "",
+    "group": "collaborate",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true
+  },
+  {
     "name": "test [component-pattern]",
     "alias": "at",
     "options": [
@@ -4648,45 +4672,6 @@
     "extendedDescription": "The following gets removed by this command:\n1) V8 compiled code (generated the first time Bit is loaded by v8-compile-cache package)\n2) components cache on the filesystem (mainly the dependencies graph and docs)\n3) scope's index file, which maps the component-id:object-hash",
     "group": "general",
     "private": false,
-    "skipWorkspace": true
-  },
-  {
-    "name": "deprecate <component-name>",
-    "alias": "d",
-    "options": [
-      [
-        "",
-        "new-id <string>",
-        "if replaced by another component, enter the new component id. alternatively use \"bit rename --deprecate\" to do this automatically"
-      ],
-      [
-        "",
-        "range <string>",
-        "enter a Semver range to deprecate specific versions. see https://www.npmjs.com/package/semver#ranges for the range syntax"
-      ]
-    ],
-    "description": "deprecate a component",
-    "extendedDescription": "",
-    "group": "collaborate",
-    "private": false,
-    "remoteOp": true,
-    "skipWorkspace": true,
-    "arguments": [
-      {
-        "name": "component-name",
-        "description": "component name or component id"
-      }
-    ]
-  },
-  {
-    "name": "undeprecate <id>",
-    "alias": "",
-    "options": [],
-    "description": "undeprecate a deprecated component (local/remote)",
-    "extendedDescription": "",
-    "group": "collaborate",
-    "private": false,
-    "remoteOp": true,
     "skipWorkspace": true
   },
   {

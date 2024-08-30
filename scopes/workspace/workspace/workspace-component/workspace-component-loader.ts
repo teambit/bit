@@ -5,7 +5,7 @@ import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency'
 import { Component, ComponentFS, Config, InvalidComponent, State, TagMap } from '@teambit/component';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import mapSeries from 'p-map-series';
-import { compact, fromPairs, groupBy, pick, uniq } from 'lodash';
+import { compact, fromPairs, groupBy, pick, uniq, uniqBy } from 'lodash';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { IssuesClasses } from '@teambit/component-issues';
@@ -148,14 +148,21 @@ export class WorkspaceComponentLoader {
       if (throwOnFailure) throw err;
     });
 
-    const components = [...loadedComponents, ...loadOrCached.fromCache];
+    const components = uniqBy([...loadedComponents, ...loadOrCached.fromCache], (comp) => {
+      return comp.id.toString();
+    });
 
     // this.logger.clearStatusLine();
     components.forEach((comp) => {
       this.saveInCache(comp, { loadExtensions: true, executeLoadSlot: true });
     });
+    const idsWithEmptyStrs = ids.map((id) => id.toString());
+    const requestedComponents = components.filter(
+      (comp) =>
+        idsWithEmptyStrs.includes(comp.id.toString()) || idsWithEmptyStrs.includes(comp.id.toStringWithoutVersion())
+    );
     this.logger.profile(`getMany-${callId}`);
-    return { components, invalidComponents };
+    return { components: requestedComponents, invalidComponents };
   }
 
   private async getAndLoadSlotOrdered(
@@ -271,10 +278,22 @@ export class WorkspaceComponentLoader {
       };
     });
 
+    const layeredEnvsFromTheList = this.regroupEnvsIdsFromTheList(groupedByIsEnvOfWsComps.true, envsIdsOfWsComps);
+    const layeredEnvsGroups = layeredEnvsFromTheList.map((ids) => {
+      return {
+        ids,
+        core: false,
+        aspects: true,
+        seeders: true,
+        envs: true,
+      };
+    });
+
     const groupsToHandle = [
       // Always load first core envs
       { ids: groupedByIsCoreEnvs.true || [], core: true, aspects: true, seeders: true, envs: true },
-      { ids: groupedByIsEnvOfWsComps.true || [], core: false, aspects: true, seeders: false, envs: true },
+      // { ids: groupedByIsEnvOfWsComps.true || [], core: false, aspects: true, seeders: false, envs: true },
+      ...layeredEnvsGroups,
       { ids: extsNotFromTheList || [], core: false, aspects: true, seeders: false, envs: false },
       ...layeredExtGroups,
       { ids: groupedByIsExtOfAnother.false || [], core: false, aspects: false, seeders: true, envs: false },
@@ -294,6 +313,43 @@ export class WorkspaceComponentLoader {
       };
     });
     return compact(groupsByWsScope);
+  }
+
+  /**
+   * This function will get a list of envs ids and will regroup them into two groups:
+   * 1. envs that are envs of envs from the group
+   * 2. other envs (envs which are just envs of regular components of the workspace)
+   * For Example:
+   * envsIds: [ReactEnv, NodeEnv, BitEnv]
+   * The env of ReactEnv and NodeEnv is BitEnv
+   * The result will be:
+   * [ [BitEnv], [ReactEnv, NodeEnv] ]
+   *
+   * At the moment this function is not recursive, in the future we might want to make it recursive
+   * @param envIds
+   * @param envsIdsOfWsComps
+   * @returns
+   */
+  private regroupEnvsIdsFromTheList(envIds: ComponentID[] = [], envsIdsOfWsComps: Set<string>): Array<ComponentID[]> {
+    const envsOfEnvs = new Set<string>();
+    envIds.forEach((envId) => {
+      const idStr = envId.toString();
+      const fromCache = this.componentsExtensionsCache.get(idStr);
+      if (!fromCache || !fromCache.extensions) {
+        return;
+      }
+      const envOfEnvId = fromCache.envId;
+      if (envOfEnvId && !envsIdsOfWsComps.has(idStr)) {
+        envsOfEnvs.add(envOfEnvId);
+      }
+    });
+    const existingEnvsOfEnvs = envIds.filter(
+      (id) => envsOfEnvs.has(id.toString()) || envsOfEnvs.has(id.toStringWithoutVersion())
+    );
+    const notExistingEnvsOfEnvs = envIds.filter(
+      (id) => !envsOfEnvs.has(id.toString()) && !envsOfEnvs.has(id.toStringWithoutVersion())
+    );
+    return [existingEnvsOfEnvs, notExistingEnvsOfEnvs];
   }
 
   private regroupExtIdsFromTheList(ids: ComponentID[]): Array<ComponentID[]> {

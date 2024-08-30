@@ -15,18 +15,17 @@ export class AppListCmd implements Command {
 
   constructor(private applicationAspect: ApplicationMain) {}
 
-  async report(args: [string], { json }: { json: boolean }) {
-    await this.applicationAspect.loadAllAppsAsAspects();
-    const appComponents = this.applicationAspect.mapApps();
-    if (json) return JSON.stringify(appComponents, null, 2);
-    if (!appComponents.length) return chalk.yellow('no apps found');
-
-    const rows = appComponents.flatMap(([id, apps]) => {
-      return apps.map((app) => [id, app.name]);
-    });
-
+  async report() {
+    const idsAndNames = await this.applicationAspect.listAppsIdsAndNames();
+    if (!idsAndNames.length) return chalk.yellow('no apps found');
+    const rows = idsAndNames.map(({ id, name }) => [id, name]);
     const table = new CLITable(['id', 'name'], rows);
     return table.render();
+  }
+
+  async json() {
+    const idsAndNames = await this.applicationAspect.listAppsIdsAndNames();
+    return idsAndNames;
   }
 }
 

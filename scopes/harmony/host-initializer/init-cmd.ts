@@ -89,11 +89,13 @@ export class InitCmd implements Command {
     if (reset && resetHard) {
       throw new BitError('cannot use both --reset and --reset-hard, please use only one of them');
     }
+
     const workspaceExtensionProps: WorkspaceExtensionProps = {
       defaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),
       defaultScope: defaultScope ?? getSync(CFG_INIT_DEFAULT_SCOPE),
       name,
     };
+
     const { created } = await HostInitializerMain.init(
       path,
       standalone,

@@ -45,6 +45,7 @@ import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/w
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { snapToSemver } from '@teambit/component-package-version';
+import { AspectDefinition, AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import hash from 'object-hash';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
@@ -53,7 +54,6 @@ import { LinkCommand } from './link';
 import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
 import UpdateCmd from './update.cmd';
-import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 
 export type WorkspaceLinkOptions = LinkingOptions & {
   rootPolicy?: WorkspacePolicy;
@@ -105,6 +105,8 @@ type GetComponentsAndManifestsOptions = Omit<
 
 export class InstallMain {
   private visitedAspects: Set<string> = new Set();
+
+  private oldNonLoadedEnvs: string[] = [];
 
   constructor(
     private dependencyResolver: DependencyResolverMain,
@@ -364,7 +366,10 @@ export class InstallMain {
       );
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
+      const oldNonLoadedEnvs = this.setOldNonLoadedEnvs();
       await this.reloadMovedEnvs();
+      await this.reloadNonLoadedEnvs();
+
       const shouldClearCacheOnInstall = this.shouldClearCacheOnInstall();
       if (options?.compile ?? true) {
         const compileStartTime = process.hrtime();
@@ -374,7 +379,8 @@ export class InstallMain {
           // We need to clear cache before compiling the components or it might compile them with the default env
           // incorrectly in case the env was not loaded correctly before the installation.
           // We don't want to clear the failed to load envs because we want to show the warning at the end
-          await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+          // await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+          await this.workspace.clearCache();
           cacheCleared = true;
         }
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
@@ -391,7 +397,7 @@ export class InstallMain {
       }
       if (!dependenciesChanged) break;
       if (!options?.recurringInstall) break;
-      const oldNonLoadedEnvs = this.getOldNonLoadedEnvs();
+
       if (!oldNonLoadedEnvs.length) break;
       prevManifests.add(manifestsHash(current.manifests));
       // If we run compile we do the clear cache before the compilation so no need to clean it again (it's an expensive
@@ -460,10 +466,18 @@ export class InstallMain {
       return !regularPathExists || !resolvedPathExists;
     });
     const idsToLoad = movedEnvs.map((env) => env.id);
-    // const envPlugin = this.envs.getEnvPlugin();
+    const componentIdsToLoad = idsToLoad.map((id) => ComponentID.fromString(id));
+    await this.reloadEnvs(componentIdsToLoad);
+  }
 
-    if (idsToLoad.length && this.workspace) {
-      const componentIdsToLoad = idsToLoad.map((id) => ComponentID.fromString(id));
+  private async reloadNonLoadedEnvs() {
+    const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
+    const componentIdsToLoad = nonLoadedEnvs.map((id) => ComponentID.fromString(id));
+    await this.reloadEnvs(componentIdsToLoad);
+  }
+
+  private async reloadEnvs(componentIdsToLoad: ComponentID[]) {
+    if (componentIdsToLoad.length && this.workspace) {
       const aspects = await this.workspace.resolveAspects(undefined, componentIdsToLoad, {
         requestedOnly: true,
         excludeCore: true,
@@ -473,27 +487,57 @@ export class InstallMain {
         // This is a bug in the flow and should be fixed.
         // skipDeps: true,
       });
-      const loadedPlugins = compact(
-        await Promise.all(
-          aspects.map((aspectDef) => {
-            const localPath = aspectDef.aspectPath;
-            const component = aspectDef.component;
-            if (!component) return undefined;
-            const plugins = this.aspectLoader.getPlugins(component, localPath);
-            if (plugins.has()) {
-              return plugins.load(MainRuntime.name);
-            }
-          })
-        )
-      );
+
       await Promise.all(
-        loadedPlugins.map((plugin) => {
-          const runtime = plugin.getRuntime(MainRuntime);
-          return runtime?.provider(undefined, undefined, undefined, this.harmony);
+        aspects.map(async (aspectDef) => {
+          const id = aspectDef.component?.id;
+          if (!id) return;
+          await this.workspace.clearComponentCache(id);
         })
       );
+      await this.reloadAspects(aspects || []);
+
+      // Keeping this here for now, it was removed as part of #9138 as now that we load envs of envs
+      // correctly first it seems to be not needed anymore.
+      // But there might be cases where it will be needed. So keeping it here for now.
+
+      // This is a very special case which we need to compile our envs before loading them correctly.
+      //   const grouped = groupBy(aspects, (aspectDef) => {
+      //     return aspectDef.component?.id.toStringWithoutVersion() === 'bitdev.general/envs/bit-env';
+      //   });
+      //   await this.reloadAspects(grouped.true || []);
+      //   const otherEnvs = grouped.false || [];
+      //   await Promise.all(
+      //     otherEnvs.map(async (aspectDef) => {
+      //       const id = aspectDef.component?.id;
+      //       if (!id) return;
+      //       await this.workspace.clearComponentCache(id);
+      //     })
+      //   );
+      //   await this.reloadAspects(grouped.false || []);
     }
-    return movedEnvs;
+  }
+
+  private async reloadAspects(aspects: AspectDefinition[]) {
+    const loadedPlugins = compact(
+      await Promise.all(
+        aspects.map((aspectDef) => {
+          const localPath = aspectDef.aspectPath;
+          const component = aspectDef.component;
+          if (!component) return undefined;
+          const plugins = this.aspectLoader.getPlugins(component, localPath);
+          if (plugins.has()) {
+            return plugins.load(MainRuntime.name);
+          }
+        })
+      )
+    );
+    await Promise.all(
+      loadedPlugins.map((plugin) => {
+        const runtime = plugin.getRuntime(MainRuntime);
+        return runtime?.provider(undefined, undefined, undefined, this.harmony);
+      })
+    );
   }
 
   private async _getComponentsManifestsAndRootPolicy(
@@ -679,6 +723,14 @@ export class InstallMain {
     };
   }
 
+  public setOldNonLoadedEnvs() {
+    const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
+    const envsWithoutManifest = Array.from(this.dependencyResolver.envsWithoutManifest);
+    const oldNonLoadedEnvs = intersection(nonLoadedEnvs, envsWithoutManifest);
+    this.oldNonLoadedEnvs = oldNonLoadedEnvs;
+    return oldNonLoadedEnvs;
+  }
+
   /**
    * This function returns a list of old non-loaded environments names.
    * @returns an array of strings called `oldNonLoadedEnvs`. This array contains the names of environment variables that
@@ -687,10 +739,7 @@ export class InstallMain {
    * correctly
    */
   public getOldNonLoadedEnvs() {
-    const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
-    const envsWithoutManifest = Array.from(this.dependencyResolver.envsWithoutManifest);
-    const oldNonLoadedEnvs = intersection(nonLoadedEnvs, envsWithoutManifest);
-    return oldNonLoadedEnvs;
+    return this.oldNonLoadedEnvs;
   }
 
   private async _updateRootDirs(rootDirs: string[]) {
