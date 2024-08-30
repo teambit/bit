@@ -653,6 +653,7 @@ export class ScopeMain implements ComponentFactory {
       useCache = true,
       reFetchUnBuiltVersion = true,
       preferDependencyGraph = true,
+      includeUpdateDependents = false,
       lane,
       reason,
     }: {
@@ -675,6 +676,10 @@ export class ScopeMain implements ComponentFactory {
        */
       preferDependencyGraph?: boolean;
       /**
+       * include the updateDependents components on a lane (generally, on a workspace, it's not needed)
+       */
+      includeUpdateDependents?: boolean;
+      /**
        * reason why this import is needed (to show in the terminal)
        */
       reason?: string;
@@ -690,6 +695,7 @@ export class ScopeMain implements ComponentFactory {
       reFetchUnBuiltVersion,
       lane,
       preferDependencyGraph,
+      includeUpdateDependents,
       reason,
     });
   }

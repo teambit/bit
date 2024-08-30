@@ -76,7 +76,11 @@ export class SignMain {
         this.scope.legacyScope.setCurrentLaneId(laneId);
         this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
       }
-      await this.scope.import(ids, { lane, reason: 'which are the seeders for the sign process' });
+      await this.scope.import(ids, {
+        lane,
+        includeUpdateDependents: true,
+        reason: 'which are the seeders for the sign process',
+      });
       longProcessLogger.end('success');
     }
     const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids, rebuild);
