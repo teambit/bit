@@ -75,6 +75,34 @@ function joinPaths(base: string, relative: string) {
   return newPath.startsWith('/') ? newPath : `/${newPath}`;
 }
 
+function useInViewport(ref: React.RefObject<HTMLElement>) {
+  const [isInViewport, setIsInViewport] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!ref.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInViewport(entry.isIntersecting);
+      },
+      {
+        root: null, // Use the viewport as the root
+        threshold: 0.1, // Trigger if at least 10% of the element is visible
+      }
+    );
+
+    observer.observe(ref.current);
+
+    return () => {
+      if (ref.current) {
+        observer.unobserve(ref.current);
+      }
+    };
+  }, [ref]);
+
+  return isInViewport;
+}
+
 export function CodeView({
   className,
   componentId,
@@ -97,8 +125,11 @@ export function CodeView({
   const loading = loadingFromProps || loadingFileContent;
   const location = useLocation();
   const navigate = useNavigate();
-  const [scrollBlock, setScrollBlock] = React.useState<'nearest' | 'center'>('center');
+  // const [scrollBlock, setScrollBlock] = React.useState<'nearest' | 'center'>('nearest');
+  const [isHighlightedState, setIsHighlightedState] = React.useState(false);
   const highlightedLineRef = React.useRef<HTMLDivElement>(null);
+  const isInViewport = useInViewport(highlightedLineRef);
+
   const fileContent = currentFileContent || downloadedFileContent;
   const title = useMemo(() => currentFile?.split('/').pop(), [currentFile]);
   const lang = useMemo(() => {
@@ -114,15 +145,15 @@ export function CodeView({
   const searchKeyword = extractSearchKeyword(location?.hash);
   const lineRange = extractLineRange(location?.hash);
 
-  React.useEffect(() => {
-    if (highlightedLineRef?.current) {
-      highlightedLineRef?.current.scrollIntoView({ behavior: 'smooth', block: scrollBlock });
+  React.useLayoutEffect(() => {
+    if (highlightedLineRef?.current && isHighlightedState && !isInViewport) {
+      highlightedLineRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-  }, [highlightedLineRef?.current, scrollBlock]);
+  }, [isHighlightedState, isInViewport]);
 
   const onLineClicked = React.useCallback(
     (_lineNumber: number) => () => {
-      setScrollBlock('nearest');
+      // setScrollBlock('nearest');
       // If the line number is already highlighted, remove the hash
       if (
         lineNumber === _lineNumber ||
@@ -139,9 +170,9 @@ export function CodeView({
   const customRenderer = React.useCallback(
     ({ rows, stylesheet, useInlineStyles }) => {
       let isKeywordHighlighted = false;
+      let refAssigned = false;
 
       return rows.map((node, index) => {
-        // console.log('🚀 ~ returnrows.map ~ node:', node);
         const lineText = node.children
           .map((child) => child.children?.[0]?.value ?? '')
           .join('')
@@ -205,9 +236,11 @@ export function CodeView({
             key: `line-number-${index}`,
           });
 
-        const highlightedRef = !isInRange
-          ? (isHighlighted && highlightedLineRef) || null
-          : (lineNum === lineRange.start && highlightedLineRef) || null;
+        const highlightedRef = !refAssigned && isHighlighted ? ((refAssigned = true), highlightedLineRef) : null;
+
+        if (isHighlighted && !isHighlightedState && highlightedRef) {
+          setIsHighlightedState(true);
+        }
 
         return (
           <div
@@ -227,7 +260,16 @@ export function CodeView({
         );
       });
     },
-    [onLineClicked, searchKeyword, lineNumber, lineRange, coreAspects, depsByPackageName.size, currentFile]
+    [
+      onLineClicked,
+      searchKeyword,
+      lineNumber,
+      lineRange,
+      coreAspects,
+      depsByPackageName.size,
+      currentFile,
+      isHighlightedState,
+    ]
   );
 
   const getSelectedLineRange = () => {
