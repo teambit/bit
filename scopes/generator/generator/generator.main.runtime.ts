@@ -18,7 +18,7 @@ import { TrackerAspect, TrackerMain } from '@teambit/tracker';
 import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-component-helper';
 import { compact, uniq } from 'lodash';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import DeprecationAspect, { DeprecationMain } from '@teambit/deprecation';
+import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
