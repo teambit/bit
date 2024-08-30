@@ -18,6 +18,8 @@ import { TreeNode } from '@teambit/design.ui.tree';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
+import { useLanes } from '@teambit/lanes.hooks.use-lanes';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 
 import styles from './api-reference-page.module.scss';
 
@@ -31,6 +33,7 @@ export type APIRefPageProps = {
 
 export function APIRefPage({ rendererSlot, className }: APIRefPageProps) {
   const component = useContext(ComponentContext);
+  const lanes = useLanes();
   const renderers = flatten(rendererSlot.values());
   const { apiModel, loading } = useAPI(component.id.toString(), renderers);
   const isMobile = useIsMobile();
@@ -89,12 +92,23 @@ export function APIRefPage({ rendererSlot, className }: APIRefPageProps) {
   const name = selectedAPINode.api.name;
   const componentVersionFromUrl = query.get('version');
   const filePath = selectedAPINode.api.location.filePath;
-  const pathname = ComponentUrl.toUrl(component.id, { includeVersion: false, useLocationOrigin: true });
 
+  const pathname = ComponentUrl.toUrl(component.id, { includeVersion: false, useLocationOrigin: true });
   const componentUrlWithoutVersion = pathname?.split('~')[0];
-  const locationUrl = `${componentUrlWithoutVersion}/~code/${filePath}${
+
+  const viewedLaneId = lanes.lanesModel?.viewedLane?.id;
+  const laneComponentUrl =
+    viewedLaneId && !viewedLaneId.isDefault()
+      ? `${window.location.origin}${LanesModel.getLaneComponentUrl(component.id, viewedLaneId)}/~code/${filePath}${
+          componentVersionFromUrl ? `?version=${componentVersionFromUrl}` : ''
+        }`
+      : undefined;
+
+  const mainComponentUrl = `${componentUrlWithoutVersion}/~code/${filePath}${
     componentVersionFromUrl ? `?version=${componentVersionFromUrl}` : ''
   }`;
+
+  const locationUrl = laneComponentUrl || mainComponentUrl;
 
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(className, styles.apiRefPageContainer)}>
