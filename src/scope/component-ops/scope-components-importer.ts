@@ -106,6 +106,7 @@ export default class ScopeComponentsImporter {
     ignoreMissingHead = false,
     preferDependencyGraph = true,
     includeUnexported = false,
+    includeUpdateDependents = false,
     reason,
   }: {
     ids: ComponentIdList;
@@ -117,6 +118,7 @@ export default class ScopeComponentsImporter {
     ignoreMissingHead?: boolean; // needed when fetching "main" objects when on a lane
     preferDependencyGraph?: boolean; // if an external is missing and the remote has it with the dependency graph, don't fetch all its dependencies
     includeUnexported?: boolean; // whether filter out new component-ids that were not exported yet (default), or not (for cases we want to fix out-of-sync scenarios)
+    includeUpdateDependents?: boolean; // whether to include the updateDependents components on a lane
     reason?: string; // reason why this import is needed
   }): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
@@ -165,16 +167,15 @@ export default class ScopeComponentsImporter {
     logger.debug('importMany', `total missing externals: ${uniqExternals.length}`);
     const remotes = await getScopeRemotes(this.scope);
     // we don't care about the VersionDeps returned here as it may belong to the dependencies
-    await this.getExternalMany(
-      uniqExternals,
-      remotes,
+    await this.getExternalMany(uniqExternals, remotes, {
       throwForDependencyNotFound,
       lane,
-      throwForSeederNotFound,
+      throwOnUnavailableScope: throwForSeederNotFound,
       preferDependencyGraph,
       includeUnexported,
-      reason
-    );
+      includeUpdateDependents,
+      reason,
+    });
 
     if (shouldRefetchIncompleteHistory) {
       await this.warnForIncompleteVersionHistory(incompleteVersionHistory);
@@ -803,12 +804,23 @@ export default class ScopeComponentsImporter {
   private async getExternalMany(
     ids: ComponentID[],
     remotes: Remotes,
-    throwForDependencyNotFound = false,
-    lane?: Lane,
-    throwOnUnavailableScope = true,
-    preferDependencyGraph = false,
-    includeUnexported = false,
-    reason?: string
+    {
+      throwForDependencyNotFound = false,
+      lane,
+      throwOnUnavailableScope = true,
+      preferDependencyGraph = false,
+      includeUnexported = false,
+      includeUpdateDependents = false,
+      reason,
+    }: {
+      throwForDependencyNotFound?: boolean;
+      lane?: Lane;
+      throwOnUnavailableScope?: boolean;
+      preferDependencyGraph?: boolean;
+      includeUnexported?: boolean;
+      includeUpdateDependents?: boolean;
+      reason?: string;
+    } = {}
   ): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
     lane = await this.getLaneForFetcher(lane);
@@ -830,6 +842,7 @@ export default class ScopeComponentsImporter {
         withoutDependencies: false, // backward compatibility. not needed for remotes > 0.0.900
         includeDependencies: true,
         includeVersionHistory: true,
+        includeUpdateDependents,
         onlyIfBuilt,
         preferDependencyGraph,
         laneId: lane?.id(),
