@@ -18,6 +18,7 @@ import { TrackerAspect, TrackerMain } from '@teambit/tracker';
 import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-component-helper';
 import { compact, uniq } from 'lodash';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import DeprecationAspect, { DeprecationMain } from '@teambit/deprecation';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
@@ -90,7 +91,8 @@ export class GeneratorMain {
     private tracker: TrackerMain,
     private logger: Logger,
     private git: GitMain,
-    private wsConfigFiles: WorkspaceConfigFilesMain
+    private wsConfigFiles: WorkspaceConfigFilesMain,
+    private deprecation: DeprecationMain
   ) {}
 
   /**
@@ -380,8 +382,18 @@ the reason is that after refactoring, the code will have this invalid class: "cl
 
     if (!workspaceTemplate) throw new BitError(`template "${templateName}" was not found`);
     const workspaceGenerator = new WorkspaceGenerator(workspaceName, workspacePath, options, workspaceTemplate, aspect);
+    await this.warnAboutDeprecation(aspect);
     await workspaceGenerator.generate();
     return { workspacePath, appName: workspaceTemplate.appName };
+  }
+
+  private async warnAboutDeprecation(aspect?: Component) {
+    if (!aspect) return;
+    const deprecationInfo = await this.deprecation.getDeprecationInfo(aspect);
+    if (deprecationInfo.isDeprecate) {
+      const newStarterMsg = deprecationInfo.newId ? `, use "${deprecationInfo.newId.toString()}" instead` : '';
+      this.logger.consoleWarning(`the starter "${aspect?.id.toString()}" is deprecated${newStarterMsg}`);
+    }
   }
 
   private async getAllComponentTemplatesDescriptorsFlattened(aspectId?: string): Promise<Array<TemplateDescriptor>> {
@@ -541,6 +553,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     LoggerAspect,
     GitAspect,
     WorkspaceConfigFilesAspect,
+    DeprecationAspect,
   ];
 
   static runtime = MainRuntime;
@@ -558,6 +571,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       loggerMain,
       git,
       wsConfigFiles,
+      deprecation,
     ]: [
       Workspace,
       CLIMain,
@@ -569,7 +583,8 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       TrackerMain,
       LoggerMain,
       GitMain,
-      WorkspaceConfigFilesMain
+      WorkspaceConfigFilesMain,
+      DeprecationMain
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot, onComponentCreateSlot]: [
@@ -592,7 +607,8 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       tracker,
       logger,
       git,
-      wsConfigFiles
+      wsConfigFiles,
+      deprecation
     );
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);
