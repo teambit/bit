@@ -1264,6 +1264,45 @@
     "private": false
   },
   {
+    "name": "deprecate <component-name>",
+    "alias": "d",
+    "options": [
+      [
+        "",
+        "new-id <string>",
+        "if replaced by another component, enter the new component id. alternatively use \"bit rename --deprecate\" to do this automatically"
+      ],
+      [
+        "",
+        "range <string>",
+        "enter a Semver range to deprecate specific versions. see https://www.npmjs.com/package/semver#ranges for the range syntax"
+      ]
+    ],
+    "description": "deprecate a component",
+    "extendedDescription": "",
+    "group": "collaborate",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true,
+    "arguments": [
+      {
+        "name": "component-name",
+        "description": "component name or component id"
+      }
+    ]
+  },
+  {
+    "name": "undeprecate <id>",
+    "alias": "",
+    "options": [],
+    "description": "undeprecate a deprecated component (local/remote)",
+    "extendedDescription": "",
+    "group": "collaborate",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true
+  },
+  {
     "name": "ws-config <sub-command>",
     "alias": "workspace-config",
     "options": [],
@@ -3397,45 +3436,6 @@
     ]
   },
   {
-    "name": "deprecate <component-name>",
-    "alias": "d",
-    "options": [
-      [
-        "",
-        "new-id <string>",
-        "if replaced by another component, enter the new component id. alternatively use \"bit rename --deprecate\" to do this automatically"
-      ],
-      [
-        "",
-        "range <string>",
-        "enter a Semver range to deprecate specific versions. see https://www.npmjs.com/package/semver#ranges for the range syntax"
-      ]
-    ],
-    "description": "deprecate a component",
-    "extendedDescription": "",
-    "group": "collaborate",
-    "private": false,
-    "remoteOp": true,
-    "skipWorkspace": true,
-    "arguments": [
-      {
-        "name": "component-name",
-        "description": "component name or component id"
-      }
-    ]
-  },
-  {
-    "name": "undeprecate <id>",
-    "alias": "",
-    "options": [],
-    "description": "undeprecate a deprecated component (local/remote)",
-    "extendedDescription": "",
-    "group": "collaborate",
-    "private": false,
-    "remoteOp": true,
-    "skipWorkspace": true
-  },
-  {
     "name": "test [component-pattern]",
     "alias": "at",
     "options": [
@@ -4110,8 +4110,13 @@
           ],
           [
             "",
+            "no-auto-snap",
+            "do not auto snap after merge completed without conflicts of diverged components (see command description)"
+          ],
+          [
+            "",
             "no-snap",
-            "do not auto snap after merge completed without conflicts"
+            "do not pass snaps from the other lane even for non-diverged components (see command description)"
           ],
           [
             "",
@@ -4185,7 +4190,7 @@
           ]
         ],
         "description": "merge a local or a remote lane to the current lane",
-        "extendedDescription": "by default, the provided lane will be fetched from the remote before merging.\nto merge the lane from the local scope without updating it first, use \"--skip-fetch\" flag.\n\nwhen the current and merge candidate lanes are diverged in history and the files could be merged with no conflicts,\nthese components will be snap-merged to complete the merge. use \"no-snap\" to opt-out, or \"tag\" to tag instead.\n\nin case a component in both ends don't share history (no snap is found in common), the merge will require \"--resolve-unrelated\" flag.\nthis flag keeps the history of one end and saves a reference to the other end. the decision of which end to keep is determined by the following:\n1. if the component exists on main, then the history linked to main will be kept.\nin this case, the strategy of \"--resolve-unrelated\" only determines which source-code to keep. it's not about the history.\n2. if the component doesn't exist on main, then by default, the history of the current lane will be kept.\nunless \"--resolve-unrelated\" is set to \"theirs\", in which case the history of the other lane will be kept.\n2. a. an edge case: if the component is deleted on the current lane, the strategy will always be \"theirs\".\nso then the history (and the source-code) of the other lane will be kept.\n",
+        "extendedDescription": "by default, the provided lane will be fetched from the remote before merging.\nto merge the lane from the local scope without updating it first, use \"--skip-fetch\" flag.\n\nwhen the current and merge candidate lanes are diverged in history and the files could be merged with no conflicts,\nthese components will be snap-merged to complete the merge. use \"no-auto-snap\" to opt-out, or \"tag\" to tag instead.\n\nwhen the components are not diverged in history, and the current lane is behind the merge candidate, the merge will\nsimply update the components and the heads according to the merge candidate.\nto opt-out, use \"--no-snap\", the components will be written as the merge candidate, and will be left as modified.\n\nin case a component in both ends don't share history (no snap is found in common), the merge will require \"--resolve-unrelated\" flag.\nthis flag keeps the history of one end and saves a reference to the other end. the decision of which end to keep is determined by the following:\n1. if the component exists on main, then the history linked to main will be kept.\nin this case, the strategy of \"--resolve-unrelated\" only determines which source-code to keep. it's not about the history.\n2. if the component doesn't exist on main, then by default, the history of the current lane will be kept.\nunless \"--resolve-unrelated\" is set to \"theirs\", in which case the history of the other lane will be kept.\n2. a. an edge case: if the component is deleted on the current lane, the strategy will always be \"theirs\".\nso then the history (and the source-code) of the other lane will be kept.\n",
         "private": true,
         "remoteOp": true,
         "arguments": [
