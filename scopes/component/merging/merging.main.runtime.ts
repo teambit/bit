@@ -130,7 +130,7 @@ export class MergingMain {
     mergeStrategy: MergeStrategy,
     abort: boolean,
     resolve: boolean,
-    noSnap: boolean,
+    noAutoSnap: boolean,
     message: string,
     build: boolean,
     skipDependencyInstallation: boolean
@@ -148,7 +148,7 @@ export class MergingMain {
         consumer,
         bitIds,
         mergeStrategy,
-        noSnap,
+        noAutoSnap,
         message,
         build,
         skipDependencyInstallation
@@ -166,7 +166,7 @@ export class MergingMain {
     consumer: Consumer,
     bitIds: ComponentID[],
     mergeStrategy: MergeStrategy,
-    noSnap: boolean,
+    noAutoSnap: boolean,
     snapMessage: string,
     build: boolean,
     skipDependencyInstallation: boolean
@@ -195,7 +195,7 @@ export class MergingMain {
       allComponentsStatus,
       otherLaneId: currentLaneId,
       currentLane: currentLaneObject,
-      noSnap,
+      noAutoSnap: noAutoSnap,
       snapMessage,
       build,
       skipDependencyInstallation,
@@ -210,6 +210,7 @@ export class MergingMain {
     allComponentsStatus,
     otherLaneId,
     currentLane,
+    noAutoSnap,
     noSnap,
     tag,
     snapMessage,
@@ -220,6 +221,7 @@ export class MergingMain {
     allComponentsStatus: ComponentMergeStatus[];
     otherLaneId: LaneId;
     currentLane?: Lane;
+    noAutoSnap?: boolean;
     noSnap?: boolean;
     tag?: boolean;
     snapMessage?: string;
@@ -309,7 +311,7 @@ export class MergingMain {
     const getSnapOrTagResults = async (): Promise<MergeSnapResults> => {
       // if one of the component has conflict, don't snap-merge. otherwise, some of the components would be snap-merged
       // and some not. besides the fact that it could by mistake tag dependent, it's a confusing state. better not snap.
-      if (noSnap || leftUnresolvedConflicts || componentsHasConfigMergeConflicts) {
+      if (noAutoSnap || noSnap || leftUnresolvedConflicts || componentsHasConfigMergeConflicts) {
         return null;
       }
       if (tag) {

@@ -123,7 +123,10 @@ describe('merge config scenarios', function () {
       helper.scopeHelper.getClonedLocalScope(mainBeforeDiverge);
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
-      helper.command.mergeLane(`${helper.scopes.remote}/dev`, '--no-snap --skip-dependency-installation --no-squash');
+      helper.command.mergeLane(
+        `${helper.scopes.remote}/dev`,
+        '--no-auto-snap --skip-dependency-installation --no-squash'
+      );
     });
     it('bit status should not show the component with an issue of MergeConfigHasConflict', () => {
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MergeConfigHasConflict.name);
@@ -163,7 +166,7 @@ describe('merge config scenarios', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev');
-      helper.command.mergeLane('main', '--no-snap --skip-dependency-installation');
+      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation');
       beforeConfigResolved = helper.scopeHelper.cloneLocalScope();
     });
     it('bit status should show the component with an issue of MergeConfigHasConflict', () => {
@@ -230,7 +233,7 @@ describe('merge config scenarios', function () {
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev', '--skip-dependency-installation');
       beforeMerge = helper.scopeHelper.cloneLocalScope();
-      helper.command.mergeLane('main', '--no-snap --skip-dependency-installation');
+      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation');
       beforeConfigResolved = helper.scopeHelper.cloneLocalScope();
     });
     it('bit status should show the component with an issue of MergeConfigHasConflict', () => {
@@ -267,7 +270,7 @@ describe('merge config scenarios', function () {
     describe('merging with --auto-merge-resolve ours', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeMerge);
-        helper.command.mergeLane('main', '--no-snap --skip-dependency-installation --auto-merge-resolve=ours');
+        helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation --auto-merge-resolve=ours');
       });
       it('should not generate the config-merge file', () => {
         const configMerge = helper.general.getConfigMergePath();
@@ -283,7 +286,7 @@ describe('merge config scenarios', function () {
     describe('merging with --auto-merge-resolve theirs', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeMerge);
-        helper.command.mergeLane('main', '--no-snap --skip-dependency-installation --auto-merge-resolve=theirs');
+        helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation --auto-merge-resolve=theirs');
       });
       it('should not generate the config-merge file', () => {
         const configMerge = helper.general.getConfigMergePath();
@@ -315,7 +318,7 @@ describe('merge config scenarios', function () {
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
 
-      helper.command.mergeLane('dev', '--no-snap -x --no-squash');
+      helper.command.mergeLane('dev', '--no-auto-snap -x --no-squash');
     });
     // previously, it was ignoring the previous config and only adding "ramda".
     it('should not remove the packages it had previously via deps set', () => {
@@ -350,7 +353,7 @@ describe('merge config scenarios', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev', '--skip-dependency-installation');
-      helper.command.mergeLane('main', '--no-snap --skip-dependency-installation --ignore-config-changes');
+      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation --ignore-config-changes');
       beforeConfigResolved = helper.scopeHelper.cloneLocalScope();
     });
     it('bit status should show the component with an issue of MergeConfigHasConflict', () => {
@@ -417,7 +420,7 @@ describe('merge config scenarios', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev', '--skip-dependency-installation');
-      helper.command.mergeLane('main', '--no-snap --skip-dependency-installation');
+      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation');
       beforeConfigResolved = helper.scopeHelper.cloneLocalScope();
     });
     it('bit status should show the component with an issue of MergeConfigHasConflict', () => {
@@ -537,7 +540,7 @@ describe('merge config scenarios', function () {
       describe('when the dep was updated on the lane only, not on main', () => {
         describe('when the dep is in workspace.jsonc', () => {
           before(() => {
-            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-auto-snap`);
           });
           it('should change workspace.jsonc with the updated dependency', () => {
             const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
@@ -548,7 +551,7 @@ describe('merge config scenarios', function () {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(beforeMerges);
             helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: {} });
-            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-auto-snap`);
           });
           it('should auto-update the dependency according to the lane, because only there it was changed', () => {
             const deps = helper.command.getCompDepsIdsFromData('comp1');
@@ -583,7 +586,7 @@ describe('merge config scenarios', function () {
         });
         describe('when the dep is in workspace.jsonc', () => {
           before(() => {
-            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-auto-snap`);
           });
           it('should not write config-merge file', () => {
             const conflictFile = helper.general.getConfigMergePath();
@@ -605,7 +608,7 @@ describe('merge config scenarios', function () {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(afterExport);
             helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: {} });
-            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-snap`);
+            helper.command.mergeLane(`${helper.scopes.remote}/dev --no-squash --no-auto-snap`);
           });
           it('bit status should not show a workspace issue', () => {
             const status = helper.command.statusJson();
@@ -681,7 +684,7 @@ describe('merge config scenarios', function () {
           let mergeOutput: string;
           before(() => {
             helper.scopeHelper.getClonedLocalScope(laneWs);
-            mergeOutput = helper.command.mergeLane(`main --no-snap -x`);
+            mergeOutput = helper.command.mergeLane(`main --no-auto-snap -x`);
           });
           it('should not update workspace.jsonc', () => {
             const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
@@ -723,7 +726,7 @@ describe('merge config scenarios', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev', '--skip-dependency-installation');
-      helper.command.mergeLane('main', '--no-snap --skip-dependency-installation --ignore-config-changes');
+      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation --ignore-config-changes');
     });
     it('should not delete the previously deps set', () => {
       const deps = helper.command.getCompDepsIdsFromData('comp1');

@@ -324,10 +324,10 @@ describe('bit lane command', function () {
         expect(staged).to.include(`${helper.scopes.remote}/comp2`);
       });
     });
-    describe('when merging with --no-snap', () => {
+    describe('when merging with --no-auto-snap', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeMerge);
-        output = helper.command.mergeLane('lane-a', '-x --no-snap');
+        output = helper.command.mergeLane('lane-a', '-x --no-auto-snap');
       });
       it('bit status should not show the component as soft-removed from remote', () => {
         const status = helper.command.statusJson();
