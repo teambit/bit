@@ -47,6 +47,7 @@
     "ts-coverage": "type-coverage",
     "check-types": "tsc",
     "ts-watch": "tsc -w",
+    "lint:only": "eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\"",
     "lint": "tsc && eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\"",
     "lint:table": "eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\" --format table",
     "lint:html": "eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\" --format html -o eslint-report.html",
