@@ -28,7 +28,6 @@ import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { EjectAspect, EjectMain, EjectResults } from '@teambit/eject';
-import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { ExportOrigin } from '@teambit/legacy/dist/scope/network/http/http';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
@@ -434,11 +433,9 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
       await mapSeries(refsToExportPerComponent, processModelComponent);
       if (lane) {
-        if (isFeatureEnabled(SUPPORT_LANE_HISTORY)) {
-          const laneHistory = await this.workspace.scope.legacyScope.lanes.getOrCreateLaneHistory(lane);
-          const laneHistoryData = await bitObjectToObjectItem(laneHistory);
-          objectList.addIfNotExist([laneHistoryData]);
-        }
+        const laneHistory = await scope.lanes.getOrCreateLaneHistory(lane);
+        const laneHistoryData = await bitObjectToObjectItem(laneHistory);
+        objectList.addIfNotExist([laneHistoryData]);
         const laneData = await bitObjectToObjectItem(lane);
         objectList.addIfNotExist([laneData]);
       }

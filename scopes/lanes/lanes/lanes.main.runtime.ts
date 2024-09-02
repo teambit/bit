@@ -34,7 +34,6 @@ import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { ComponentsList, DivergeDataPerId } from '@teambit/legacy.component-list';
 import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import { SUPPORT_LANE_HISTORY, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { removeLanes } from './remove-lanes';
 import { LanesAspect } from './lanes.aspect';
 import {
@@ -1188,11 +1187,9 @@ please create a new lane instead, which will include all components of this lane
       new LaneFetchCmd(fetchCmd, lanesMain),
       new LaneEjectCmd(lanesMain),
     ];
-    if (isFeatureEnabled(SUPPORT_LANE_HISTORY)) {
-      laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
-      laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
-      laneCmd.commands.push(new LaneRevertCmd(lanesMain));
-    }
+    laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
+    laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
+    laneCmd.commands.push(new LaneRevertCmd(lanesMain));
     cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));
     cli.registerOnStart(async () => {
       await lanesMain.recreateNewLaneIfDeleted();
