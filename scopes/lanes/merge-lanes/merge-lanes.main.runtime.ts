@@ -42,6 +42,7 @@ export type MergeLaneOptions = {
   mergeStrategy: MergeStrategy;
   ours?: boolean;
   theirs?: boolean;
+  noAutoSnap?: boolean;
   noSnap?: boolean;
   snapMessage?: string;
   existingOnWorkspaceOnly?: boolean;
@@ -110,6 +111,7 @@ export class MergeLanesMain {
 
     const {
       mergeStrategy,
+      noAutoSnap,
       noSnap,
       tag,
       snapMessage,
@@ -204,6 +206,7 @@ export class MergeLanesMain {
         ignoreConfigChanges,
         shouldSquash,
         mergeStrategy,
+        handleTargetAheadAsDiverged: noSnap,
       },
       currentLane,
       otherLane
@@ -275,6 +278,7 @@ export class MergeLanesMain {
       allComponentsStatus,
       otherLaneId,
       currentLane,
+      noAutoSnap,
       noSnap,
       tag,
       snapMessage,

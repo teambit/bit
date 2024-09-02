@@ -1206,7 +1206,11 @@ by default, the provided lane will be fetched from the remote before merging.
 to merge the lane from the local scope without updating it first, use "--skip-fetch" flag.
 
 when the current and merge candidate lanes are diverged in history and the files could be merged with no conflicts,  
-these components will be snap-merged to complete the merge. use "no-snap" to opt-out, or "tag" to tag instead.
+these components will be snap-merged to complete the merge. use "no-auto-snap" to opt-out, or "tag" to tag instead.
+
+when the components are not diverged in history, and the current lane is behind the merge candidate, the merge will  
+simply update the components and the heads according to the merge candidate.  
+to opt-out, use "--no-snap", the components will be written as the merge candidate, and will be left as modified.
 
 in case a component in both ends don't share history (no snap is found in common), the merge will require "--resolve-unrelated" flag.  
 this flag keeps the history of one end and saves a reference to the other end. the decision of which end to keep is determined by the following:
@@ -1230,7 +1234,8 @@ this flag keeps the history of one end and saves a reference to the other end. t
 | `--ours`                                |                  | DEPRECATED. use --auto-merge-resolve. in case of a conflict, keep local modifications                                                                       |
 | `--theirs`                              |                  | DEPRECATED. use --auto-merge-resolve. in case of a conflict, override local with incoming changes                                                           |
 | `--workspace`                           |                  | merge only lane components that are in the current workspace                                                                                                |
-| `--no-snap`                             |                  | do not auto snap after merge completed without conflicts                                                                                                    |
+| `--no-auto-snap`                        |                  | do not auto snap after merge completed without conflicts of diverged components (see command description)                                                   |
+| `--no-snap`                             |                  | do not pass snaps from the other lane even for non-diverged components (see command description)                                                            |
 | `--tag`                                 |                  | auto-tag all lane components after merging into main (or tag-merge in case of snap-merge)                                                                   |
 | `--build`                               |                  | in case of snap during the merge, run the build-pipeline (similar to bit snap --build)                                                                      |
 | `--message <message>`                   |       `-m`       | override the default message for the auto snap                                                                                                              |
