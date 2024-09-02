@@ -21,7 +21,8 @@ export class Plugin {
 
   require() {
     // eslint-disable-next-line global-require, import/no-dynamic-require
-    this._instance = require(this.path).default as any;
+    const mod = require(this.path);
+    this._instance = mod.default as any;
     this._instance.__path = this.path;
     this._instance.__resolvedPath = require.resolve(this.path);
     return this._instance;

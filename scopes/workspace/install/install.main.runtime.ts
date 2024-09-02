@@ -6,7 +6,7 @@ import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/com
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { compact, mapValues, omit, uniq, intersection } from 'lodash';
+import { compact, mapValues, omit, uniq, intersection, groupBy } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import { GenerateResult, GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
@@ -103,6 +103,7 @@ type GetComponentsAndManifestsOptions = Omit<
 > &
   Pick<PackageManagerInstallOptions, 'nodeLinker'>;
 
+type ReloadAspectGroup = { comps: boolean; workspace: boolean; envOfAspect?: boolean; aspects: AspectDefinition[] };
 export class InstallMain {
   private visitedAspects: Set<string> = new Set();
 
@@ -519,6 +520,22 @@ export class InstallMain {
   }
 
   private async reloadAspects(aspects: AspectDefinition[]) {
+    const groups = await this.groupAspectsToLoad(aspects);
+    // We need to make sure we load group by group and not in parallel
+    await pMapSeries(groups, async (group) => {
+      await this.reloadOneAspectsGroup(group);
+    });
+  }
+
+  private async reloadOneAspectsGroup(group: ReloadAspectGroup) {
+    const aspects = group.aspects || [];
+    if (group.workspace && !group.envOfAspect) {
+      aspects.forEach((aspectDef) => {
+        if (aspectDef.component?.id) {
+          this.workspace.clearComponentCache(aspectDef.component.id);
+        }
+      });
+    }
     const loadedPlugins = compact(
       await Promise.all(
         aspects.map((aspectDef) => {
@@ -538,6 +555,56 @@ export class InstallMain {
         return runtime?.provider(undefined, undefined, undefined, this.harmony);
       })
     );
+  }
+
+  /**
+   * This function groups the components to aspects to load into groups.
+   * The order of the groups is important, the first group should be loaded first.
+   * The order inside the group is not important.
+   * The groups are:
+   * 1. aspects definitions without components (this should be an empty group, if it's not, we should check why).
+   * 2. aspects which are not in the workspace but in the scope / node modules.
+   * 3. envs of aspects (which are also aspects)
+   * 4. other aspects (the rest)
+   * @param aspects
+   * @returns
+   */
+  private async groupAspectsToLoad(aspects: AspectDefinition[]): Promise<Array<ReloadAspectGroup>> {
+    const groups = groupBy(aspects, (aspectDef) => {
+      if (!aspectDef.component) return 'no-comp';
+      if (!this.workspace.hasId(aspectDef.component.id)) return 'scope';
+      return 'workspace';
+    });
+    const workspaceSubGroups = await this.regroupEnvsIdsFromTheList(groups.workspace || []);
+    return [
+      { comps: false, workspace: false, aspects: groups.noComp || [] },
+      { comps: true, workspace: false, aspects: groups.scope || [] },
+      { comps: true, workspace: true, envOfAspect: true, aspects: workspaceSubGroups.envOfAspect },
+      { comps: true, workspace: true, aspects: workspaceSubGroups.otherAspects },
+    ];
+  }
+
+  private async regroupEnvsIdsFromTheList(aspects: AspectDefinition[]): Promise<Record<string, AspectDefinition[]>> {
+    const envsOfAspects = new Set<string>();
+    await Promise.all(
+      aspects.map(async (aspectDef) => {
+        if (!aspectDef.component) return;
+        const envId = aspectDef.component ? await this.envs.calculateEnvId(aspectDef.component) : undefined;
+        if (envId) {
+          envsOfAspects.add(envId.toString());
+        }
+      })
+    );
+    const groups = groupBy(aspects, (aspectDef) => {
+      const id = aspectDef.component?.id.toString();
+      const idWithoutVersion = aspectDef.component?.id.toStringWithoutVersion();
+      if ((id && envsOfAspects.has(id)) || (idWithoutVersion && envsOfAspects.has(idWithoutVersion))) {
+        return 'envOfAspect';
+      }
+      return 'otherAspects';
+    });
+
+    return groups;
   }
 
   private async _getComponentsManifestsAndRootPolicy(

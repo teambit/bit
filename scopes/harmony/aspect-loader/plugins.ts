@@ -2,6 +2,8 @@ import { Component } from '@teambit/component';
 import esmLoader from '@teambit/node.utils.esm-loader';
 import { NativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 import { Logger } from '@teambit/logger';
+import pMapSeries from 'p-map-series';
+import { setExitOnUnhandledRejection } from '@teambit/cli';
 import { Aspect } from '@teambit/harmony';
 import { PluginDefinition } from './plugin-definition';
 import { isEsmModule } from './is-esm-module';
@@ -38,7 +40,8 @@ export class Plugins {
     });
     aspect.addRuntime({
       provider: async () => {
-        await Promise.all(plugins.map((plugin) => this.registerPluginWithTryCatch(plugin, aspect)));
+        // await Promise.all(plugins.map(async (plugin) => this.registerPluginWithTryCatch(plugin, aspect)));
+        await pMapSeries(plugins, async (plugin) => this.registerPluginWithTryCatch(plugin, aspect));
         // Return an empty object so haromny will have something in the extension instance
         // otherwise it will throw an error when trying to access the extension instance (harmony.get)
         return {};
@@ -62,6 +65,7 @@ export class Plugins {
 
   async registerPluginWithTryCatch(plugin: Plugin, aspect: Aspect) {
     try {
+      setExitOnUnhandledRejection(false);
       const isModule = isEsmModule(plugin.path);
       const module = isModule ? await this.loadModule(plugin.path) : undefined;
       if (isModule && !module) {
@@ -70,7 +74,8 @@ export class Plugins {
         );
         return undefined;
       }
-      return plugin.register(aspect, module);
+      plugin.register(aspect, module);
+      setExitOnUnhandledRejection(true);
     } catch (firstErr: any) {
       this.logger.warn(
         `failed loading plugin with pattern "${
@@ -91,6 +96,7 @@ export class Plugins {
           );
           return plugin.register(aspect, module);
         } catch (err: any) {
+          setExitOnUnhandledRejection(true);
           this.logger.warn(
             `re-load of the plugin with pattern "${
               plugin.def.pattern
@@ -100,6 +106,7 @@ export class Plugins {
           errAfterReLoad = err;
         }
       }
+      setExitOnUnhandledRejection(true);
       const error = errAfterReLoad || firstErr;
       throw error;
     }
