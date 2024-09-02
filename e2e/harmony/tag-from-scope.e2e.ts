@@ -102,6 +102,7 @@ describe('tag components on Harmony', function () {
           data[0].versionToTag = '1.0.1';
           data[1].versionToTag = '0.0.3';
           data[2].versionToTag = '0.0.6';
+          // console.log(`bit _tag '${JSON.stringify(data)}' --push`, 'cwd', bareTag.scopePath);
           helper.command.tagFromScope(bareTag.scopePath, data, '--push');
         });
         it('should export the modified components to the remote', () => {
