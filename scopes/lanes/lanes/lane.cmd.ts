@@ -149,10 +149,11 @@ export class LaneShowCmd implements Command {
   async report([name]: [string], laneOptions: LaneOptions): Promise<string> {
     const lanes = await this.geLanesData([name], laneOptions);
     const onlyLane = lanes[0];
-    const title = `showing information for ${chalk.bold(onlyLane.id.toString())}\n`;
+    const laneId = onlyLane.id;
+    const laneIdStr = laneId.isDefault() ? DEFAULT_LANE : laneId.toString();
+    const title = `showing information for ${chalk.bold(laneIdStr)}\n`;
     const author = onlyLane.log ? `author: ${onlyLane.log?.username || 'N/A'} <${onlyLane.log?.email || 'N/A'}>\n` : '';
     const date = onlyLane.log?.date ? `created: ${new Date(parseInt(onlyLane.log.date)).toLocaleString()}\n` : '';
-    const laneId = await this.lanes.parseLaneId(name);
     const link = laneId.isDefault()
       ? ''
       : `link: https://${DEFAULT_CLOUD_DOMAIN}/${laneId.scope.replace('.', '/')}/~lane/${laneId.name}\n`;
