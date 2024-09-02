@@ -246,6 +246,7 @@ export class InstallMain {
       addMissingDeps: installMissing,
       skipIfExisting: true,
       writeConfigFiles: false,
+      optimizeReportForNonTerminal: !process.stdout.isTTY,
       // skipPrune: true,
     });
   }
