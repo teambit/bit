@@ -241,13 +241,16 @@ semver allows the following options only: ${RELEASE_TYPES.join(', ')}`);
 }
 
 export function tagResultOutput(results: TagResults): string {
-  const { taggedComponents, autoTaggedResults, warnings, newComponents, removedComponents }: TagResults = results;
+  const { taggedComponents, autoTaggedResults, warnings, newComponents, removedComponents, exportedIds }: TagResults =
+    results;
   const changedComponents = taggedComponents.filter((component) => !newComponents.searchWithoutVersion(component.id));
   const addedComponents = taggedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
   const autoTaggedCount = autoTaggedResults ? autoTaggedResults.length : 0;
 
   const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
-  const tagExplanationPersist = `\n(use "bit export" to push these components to a remote")
+  const tagExplanationPersist = exportedIds
+    ? ''
+    : `\n(use "bit export" to push these components to a remote")
 (use "bit reset" to unstage versions)`;
   const tagExplanationSoft = `\n(use "bit tag --persist" to persist the soft-tagged changes as a fully tagged version")
 (use "bit reset --soft" to remove the soft-tags)`;
@@ -285,8 +288,16 @@ export function tagResultOutput(results: TagResults): string {
     return successOutput;
   };
 
+  const exportedOutput = () => {
+    if (!exportedIds) return '';
+    if (!exportedIds.length) return `\n${chalk.yellow('no component has been exported')}\n`;
+    const title = `\n${chalk.underline('exported components')}\n`;
+    const ids = exportedIds.map((id) => `     > ${compInBold(id)}`).join('\n');
+    return `${title}${ids}\n`;
+  };
+
   const softTagPrefix = results.isSoftTag ? 'soft-tagged ' : '';
-  const outputIfExists = (label, explanation, components: ConsumerComponent[]) => {
+  const outputIfExists = (label: string, explanation: string, components: ConsumerComponent[]) => {
     if (!components.length) return '';
     return `\n${chalk.underline(softTagPrefix + label)}\n(${explanation})\n${outputComponents(components)}\n`;
   };
@@ -307,9 +318,12 @@ export function tagResultOutput(results: TagResults): string {
     outputIfExists('changed components', changedDesc, changedComponents) +
     outputIdsIfExists('removed components', removedComponents) +
     publishOutput() +
+    exportedOutput() +
     warningsOutput +
     chalk.green(
-      `\n${taggedComponents.length + autoTaggedCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged`
+      `\n${taggedComponents.length + autoTaggedCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged${
+        exportedIds ? ' and exported' : ''
+      }`
     ) +
     tagExplanation +
     softTagClarification
