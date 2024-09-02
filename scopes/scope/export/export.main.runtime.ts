@@ -433,7 +433,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
       await mapSeries(refsToExportPerComponent, processModelComponent);
       if (lane) {
-        const laneHistory = await this.workspace.scope.legacyScope.lanes.getOrCreateLaneHistory(lane);
+        const laneHistory = await scope.lanes.getOrCreateLaneHistory(lane);
         const laneHistoryData = await bitObjectToObjectItem(laneHistory);
         objectList.addIfNotExist([laneHistoryData]);
         const laneData = await bitObjectToObjectItem(lane);
