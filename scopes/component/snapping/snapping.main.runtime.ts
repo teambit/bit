@@ -105,6 +105,7 @@ export type TagResults = BasicTagResults & {
   autoTaggedResults: AutoTagResult[];
   isSoftTag: boolean;
   publishedPackages: string[];
+  exportedIds?: ComponentIdList; // relevant only for tag-from-scope when --push is used
 };
 
 export type BasicTagResults = {
@@ -333,7 +334,6 @@ if you're willing to lose the history from the head to the specified version, us
       if (!comp.buildStatus) throw new Error(`tag-from-scope expect ${comp.id.toString()} to have buildStatus`);
       return comp.buildStatus === BuildStatus.Succeed && !params.rebuildArtifacts;
     });
-    const legacyIds = ComponentIdList.fromArray(componentIds.map((id) => id));
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
@@ -346,24 +346,26 @@ if you're willing to lose the history from the head to the specified version, us
       dependencyResolver: this.dependencyResolver,
       skipAutoTag: true,
       persist: true,
-      ids: legacyIds,
+      ids: componentIds,
       message: params.message as string,
     });
 
     const { taggedComponents, publishedPackages } = results;
-
+    let exportedIds: ComponentIdList | undefined;
     if (params.push) {
-      await this.exporter.exportMany({
+      const { exported } = await this.exporter.exportMany({
         scope: this.scope.legacyScope,
-        ids: legacyIds,
-        idsWithFutureScope: legacyIds,
+        ids: componentIds,
+        idsWithFutureScope: componentIds,
         allVersions: false,
         exportOrigin: 'tag',
       });
+      exportedIds = exported;
     }
 
     return {
       taggedComponents,
+      exportedIds,
       autoTaggedResults: [],
       isSoftTag: false,
       publishedPackages,

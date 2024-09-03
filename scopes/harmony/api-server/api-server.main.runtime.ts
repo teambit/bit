@@ -28,6 +28,9 @@ import { APIForIDE } from './api-for-ide';
 import { SSEEventsRoute } from './sse-events.route';
 import { join } from 'path';
 import { CLIRawRoute } from './cli-raw.route';
+import { ApplicationAspect, ApplicationMain } from '@teambit/application';
+import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 
 export class ApiServerMain {
   constructor(
@@ -187,6 +190,9 @@ export class ApiServerMain {
     GeneratorAspect,
     RemoveAspect,
     ConfigAspect,
+    ApplicationAspect,
+    DeprecationAspect,
+    EnvsAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -206,6 +212,9 @@ export class ApiServerMain {
     generator,
     remove,
     config,
+    application,
+    deprecation,
+    envs,
   ]: [
     CLIMain,
     Workspace,
@@ -222,7 +231,10 @@ export class ApiServerMain {
     ComponentCompareMain,
     GeneratorMain,
     RemoveMain,
-    ConfigMain
+    ConfigMain,
+    ApplicationMain,
+    DeprecationMain,
+    EnvsMain
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
     const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer, importer);
@@ -239,7 +251,10 @@ export class ApiServerMain {
       componentCompare,
       generator,
       remove,
-      config
+      config,
+      application,
+      deprecation,
+      envs
     );
     const cliRoute = new CLIRoute(logger, cli, apiForIDE);
     const cliRawRoute = new CLIRawRoute(logger, cli, apiForIDE);

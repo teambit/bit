@@ -136,11 +136,13 @@ export class ComponentCompareMain {
     return this.getConfigForDiffByCompObject(component);
   }
 
-  async getConfigForDiffByCompObject(component: Component) {
+  async getConfigForDiffByCompObject(component: Component, modifiedIds?: ComponentID[]) {
     const depData = this.depResolver.getDependencies(component);
+    const modifiedIdsStr = modifiedIds?.map((id) => id.toStringWithoutVersion());
     const serializedToString = (dep: SerializedDependency) => {
       const idWithoutVersion = dep.__type === 'package' ? dep.id : dep.id.split('@')[0];
-      return `${idWithoutVersion}@${dep.version} (${dep.lifecycle}) ${dep.source ? `(${dep.source})` : ''}`;
+      const version = modifiedIdsStr?.includes(idWithoutVersion) ? `<modified>` : dep.version;
+      return `${idWithoutVersion}@${version} (${dep.lifecycle}) ${dep.source ? `(${dep.source})` : ''}`;
     };
     const serializeAndSort = (deps: DependencyList) => {
       const serialized = deps.serialize().map(serializedToString);

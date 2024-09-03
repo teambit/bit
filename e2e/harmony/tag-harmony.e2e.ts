@@ -242,9 +242,9 @@ describe('tag components on Harmony', function () {
       helper.scopeHelper.getClonedLocalScope(beforeTagScope);
       expect(() => helper.command.tagAllComponents('--skip-tests')).to.not.throw();
     });
-    it('should succeed with --force-deploy', () => {
+    it('should succeed with --ignore-build-errors', () => {
       helper.scopeHelper.getClonedLocalScope(beforeTagScope);
-      expect(() => helper.command.tagAllComponents('--force-deploy')).to.not.throw();
+      expect(() => helper.command.tagAllComponents('--ignore-build-errors')).to.not.throw();
     });
   });
   describe('modified one component, the rest are auto-tag pending', () => {

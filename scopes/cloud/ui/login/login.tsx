@@ -15,7 +15,7 @@ export function Login({ loginText = 'Login', loginUrl }: LoginProps) {
 
   return (
     <div className={styles.login}>
-      <Link className={styles.text} href={loginUrl}>
+      <Link external className={styles.text} href={loginUrl}>
         {loginText}
       </Link>
     </div>

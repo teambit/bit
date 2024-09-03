@@ -2,7 +2,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 // import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
-import { BitError } from '@teambit/bit-error';
 import { CLITable } from '@teambit/cli-table';
 import { ApplicationMain } from './application.main.runtime';
 
@@ -16,21 +15,17 @@ export class AppListCmd implements Command {
 
   constructor(private applicationAspect: ApplicationMain) {}
 
-  async report(args: [string], { json }: { json: boolean }) {
-    await this.applicationAspect.loadAllAppsAsAspects();
-    const appComponents = this.applicationAspect.mapApps();
-    if (json) return JSON.stringify(appComponents, null, 2);
-    if (!appComponents.length) return chalk.yellow('no apps found');
-
-    const rows = appComponents.flatMap(([id, apps]) => {
-      return apps.map((app) => {
-        if (!app.name) throw new BitError(`app ${id.toString()} is missing a name`);
-        return [id, app.name];
-      });
-    });
-
+  async report() {
+    const idsAndNames = await this.applicationAspect.listAppsIdsAndNames();
+    if (!idsAndNames.length) return chalk.yellow('no apps found');
+    const rows = idsAndNames.map(({ id, name }) => [id, name]);
     const table = new CLITable(['id', 'name'], rows);
     return table.render();
+  }
+
+  async json() {
+    const idsAndNames = await this.applicationAspect.listAppsIdsAndNames();
+    return idsAndNames;
   }
 }
 
