@@ -65,7 +65,7 @@ export class RunCmd implements Command {
 
     /**
      * normally, when running "bit run <app-name>", the app is running in the background, which keeps the event loop busy.
-     * when the even loop is buys, the process doesn't exit, which is what we're looking for.
+     * when the even loop is busy, the process doesn't exit, which is what we're looking for.
      *
      * however, if the app is not running in the background, the event loop is free, and the process exits. this is
      * very confusing to the end user, because there is no error and no message indicating what's happening.
