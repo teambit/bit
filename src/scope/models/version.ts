@@ -695,6 +695,11 @@ export default class Version extends BitObject {
   get originLaneId(): LaneId | undefined {
     return this.origin?.lane ? new LaneId({ name: this.origin.lane.name, scope: this.origin.lane.scope }) : undefined;
   }
+  get originId(): ComponentID | undefined {
+    return this.origin?.id
+      ? ComponentID.fromObject({ scope: this.origin.id.scope, name: this.origin.id.name })
+      : undefined;
+  }
 
   setDist(dist: Source | undefined) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
