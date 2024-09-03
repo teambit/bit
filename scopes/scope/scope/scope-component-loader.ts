@@ -6,6 +6,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { VERSION_ZERO } from '@teambit/legacy/dist/scope/models/model-component';
+import { BitError } from '@teambit/bit-error';
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import type { ScopeMain } from './scope.main.runtime';
 
@@ -51,6 +52,12 @@ export class ScopeComponentLoader {
     if (versionStr === VERSION_ZERO) return undefined;
     const newId = id.changeVersion(versionStr);
     const version = await modelComponent.loadVersion(versionStr, this.scope.legacyScope.objects);
+    const versionOriginId = version.originId;
+    if (versionOriginId && !versionOriginId.isEqualWithoutVersion(id)) {
+      throw new BitError(
+        `version "${versionStr}" seem to be originated from "${versionOriginId.toString()}", not from "${id.toStringWithoutVersion()}"`
+      );
+    }
     const snap = await this.getHeadSnap(modelComponent);
     const state = await this.createStateFromVersion(id, version);
     const tagMap = this.getTagMap(modelComponent);
