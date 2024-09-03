@@ -62,5 +62,22 @@ export class RunCmd implements Command {
     if (isOldApi) {
       this.logger.console(`${appName} app is running on http://localhost:${port}`);
     }
+
+    /**
+     * normally, when running "bit run <app-name>", the app is running in the background, which keeps the event loop busy.
+     * when the even loop is buys, the process doesn't exit, which is what we're looking for.
+     *
+     * however, if the app is not running in the background, the event loop is free, and the process exits. this is
+     * very confusing to the end user, because there is no error and no message indicating what's happening.
+     *
+     * this "beforeExit" event is a good place to catch this case and print a message to the user.
+     * it's better than using "exit" event, which can caused by the app itself running "process.exit".
+     * "beforeExit" is called when the event loop is empty and the process is about to exit.
+     */
+    process.on('beforeExit', (code) => {
+      if (code === 0) {
+        this.logger.console('no app is running in the background, please check your app');
+      }
+    });
   }
 }
