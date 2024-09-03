@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
+import filenamify from 'filenamify';
 import { CompFiles, Workspace, FilesStatus } from '@teambit/workspace';
 import { PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy.utils';
 import pMap from 'p-map';
@@ -16,15 +17,17 @@ import { GeneratorMain } from '@teambit/generator';
 import { getParsedHistoryMetadata } from '@teambit/legacy/dist/consumer/consumer';
 import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 import { RemoveMain } from '@teambit/remove';
-import { compact } from 'lodash';
+import { compact, uniq } from 'lodash';
 import { getCloudDomain } from '@teambit/legacy/dist/constants';
 import { ConfigMain } from '@teambit/config';
 import { LANE_REMOTE_DELIMITER, LaneId } from '@teambit/lane-id';
 import { ApplicationMain } from '@teambit/application';
 import { DeprecationMain } from '@teambit/deprecation';
 import { EnvsMain } from '@teambit/envs';
+import fetch from 'node-fetch';
 
 const FILES_HISTORY_DIR = 'files-history';
+const ENV_ICONS_DIR = 'env-icons';
 const LAST_SNAP_DIR = 'last-snap';
 const CMD_HISTORY = 'command-history-ide';
 
@@ -70,10 +73,12 @@ type CompMetadata = {
     id: string;
     name?: string;
     icon: string;
+    localIconPath?: string;
   };
 };
 
 export class APIForIDE {
+  private existingEnvIcons: string[] | undefined;
   constructor(
     private workspace: Workspace,
     private snapping: SnappingMain,
@@ -199,7 +204,7 @@ export class APIForIDE {
   async getCompsMetadata(): Promise<CompMetadata[]> {
     const comps = await this.workspace.list();
     const apps = await this.application.listAppsIdsAndNames();
-    const results = await pMap(
+    const results: CompMetadata[] = await pMap(
       comps,
       async (comp) => {
         const id = comp.id;
@@ -219,7 +224,53 @@ export class APIForIDE {
       },
       { concurrency: 30 }
     );
+    const allIcons = uniq(compact(results.map((r) => r.env.icon)));
+    const iconsMap = await this.getEnvIconsMapFetchIfMissing(allIcons);
+    results.forEach((r) => {
+      r.env.localIconPath = iconsMap[r.env.icon];
+    });
     return results;
+  }
+
+  private getEnvIconsFullPath() {
+    return path.join(this.workspace.scope.path, ENV_ICONS_DIR);
+  }
+
+  private async getExistingEnvIcons(): Promise<string[]> {
+    if (!this.existingEnvIcons) {
+      const envIconsDir = this.getEnvIconsFullPath();
+      await fs.ensureDir(envIconsDir);
+      const existingIcons = await fs.readdir(envIconsDir);
+      this.existingEnvIcons = existingIcons;
+    }
+    return this.existingEnvIcons;
+  }
+
+  private async getEnvIconsMapFetchIfMissing(icons: string[]): Promise<{ [iconHttpUrl: string]: string }> {
+    const existingIcons = await this.getExistingEnvIcons();
+    const iconsMap: Record<string, string> = {};
+    await Promise.all(
+      icons.map(async (icon) => {
+        const iconFileName = filenamify(icon, { replacement: '-' });
+        const fullIconPath = path.join(this.workspace.scope.path, ENV_ICONS_DIR, iconFileName);
+        if (existingIcons.includes(iconFileName)) {
+          iconsMap[icon] = fullIconPath;
+          return;
+        }
+        let res;
+        // download the icon from the url and save it locally.
+        try {
+          res = await fetch(icon);
+        } catch (err: any) {
+          throw new Error(`failed to get the icon from ${icon}, error: ${err.message}`);
+        }
+        const svgText = await res.text();
+        await fs.outputFile(fullIconPath, svgText);
+        iconsMap[icon] = fullIconPath;
+        this.existingEnvIcons?.push(iconFileName);
+      })
+    );
+    return iconsMap;
   }
 
   async getCompFiles(id: string): Promise<{ dirAbs: string; filesRelative: PathOsBasedRelative[] }> {
