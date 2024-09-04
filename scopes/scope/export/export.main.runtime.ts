@@ -136,7 +136,7 @@ export class ExportMain {
       includeNonStaged || headOnly
     );
 
-    if (!idsToExport.length) {
+    if (!idsToExport.length && !laneObject) {
       return {
         updatedIds: [],
         nonExistOnBitMap: [],
