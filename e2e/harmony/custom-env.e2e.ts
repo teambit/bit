@@ -337,14 +337,14 @@ describe('custom env', function () {
         helper.fixtures.populateComponents(2);
         helper.command.setEnv('comp1', `${envId}@0.0.1`);
         helper.command.setEnv('comp2', `${envId}@0.0.2`);
-        helper.command.replaceEnv(envId, `teambit.react/react-env`);
+        helper.command.replaceEnv(envId, `teambit.react/react`);
       });
       it('should replace the env for both components', () => {
         const bitMap = helper.bitMap.read();
         expect(bitMap.comp1.config).to.not.have.property(`${envId}@0.0.1`);
         expect(bitMap.comp2.config).to.not.have.property(`${envId}@0.0.2`);
-        expect(bitMap.comp1.config).to.have.property('teambit.react/react-env');
-        expect(bitMap.comp2.config).to.have.property('teambit.react/react-env');
+        expect(bitMap.comp1.config).to.have.property('teambit.react/react');
+        expect(bitMap.comp2.config).to.have.property('teambit.react/react');
       });
     });
     describe('tag and change the env version', () => {
