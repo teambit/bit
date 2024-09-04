@@ -215,6 +215,7 @@ describe('sign command', function () {
       expect(version).to.equal(`0.0.0-${firstSnapHash}`);
     });
     it('should sign the last successfully and export', () => {
+      signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
       signOutput = helper.command.sign(
         [`${secondScopeName}/comp1@${snapHash}`],
