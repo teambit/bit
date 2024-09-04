@@ -492,7 +492,7 @@ export class CloudMain {
       }
     });
     // Refresh the config after updating
-    this.config = clearCachedUrls();
+    clearCachedUrls();
     this.config = CloudMain.calculateConfig();
     return configsToUpdate;
   }
