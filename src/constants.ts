@@ -173,6 +173,10 @@ export const DEFAULT_HUB_DOMAIN = `hub.${getCloudDomain()}`;
 export const CFG_SYMPHONY_URL_KEY = 'symphony_url';
 
 let resolvedSymphonyUrl;
+
+export const SYMPHONY_URL_PREFIX = `api.`;
+export const SYMPHONY_URL_PREFIX_V2 = `api.v2.`;
+
 export const getSymphonyUrl = (): string => {
   if (resolvedSymphonyUrl) return resolvedSymphonyUrl;
   resolvedSymphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || `api.v2.${getCloudDomain()}`;
@@ -204,7 +208,9 @@ export const SEARCH_DOMAIN = `api.${getCloudDomain()}`;
 
 export const RELEASE_SERVER = `https://api.${getCloudDomain()}/release`;
 
-export const DEFAULT_REGISTRY_URL = `https://node-registry.${DEFAULT_CLOUD_DOMAIN}`;
+export const DEFAULT_REGISTRY_URL_PREFIX = `https://node-registry.`;
+
+export const DEFAULT_REGISTRY_URL = `${DEFAULT_REGISTRY_URL_PREFIX}${DEFAULT_CLOUD_DOMAIN}`;
 
 export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_WEB_DOMAIN}`;
 

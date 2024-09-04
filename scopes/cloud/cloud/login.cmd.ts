@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import yesno from 'yesno';
 import { Command, CommandOptions } from '@teambit/cli';
+import { isEmpty } from 'lodash';
 import { CloudMain } from './cloud.main.runtime';
 
 export class LoginCmd implements Command {
@@ -94,6 +95,8 @@ export class LoginCmd implements Command {
       message += this.getNpmrcUpdateMessage(result?.npmrcUpdateResult?.error);
     }
 
+    message = this.getGlobalConfigUpdatesMessage(result?.globalConfigUpdates) + message;
+
     return message;
   }
 
@@ -114,7 +117,12 @@ export class LoginCmd implements Command {
       machineName?: string;
       skipConfigUpdate?: boolean;
     }
-  ): Promise<{ username?: string; token?: string; successfullyUpdatedNpmrc?: boolean }> {
+  ): Promise<{
+    username?: string;
+    token?: string;
+    successfullyUpdatedNpmrc?: boolean;
+    globalConfigUpdates?: Record<string, string | undefined>;
+  }> {
     if (suppressBrowserLaunch) {
       noBrowser = true;
     }
@@ -123,6 +131,7 @@ export class LoginCmd implements Command {
       username: result?.username,
       token: result?.token,
       successfullyUpdatedNpmrc: !!result?.npmrcUpdateResult?.configUpdates,
+      globalConfigUpdates: result?.globalConfigUpdates,
     };
   }
 
@@ -168,4 +177,15 @@ Modification: ${chalk.green(conflict.modifications)}`
       )} for instructions on how to update it manually.`
     );
   }
+
+  getGlobalConfigUpdatesMessage = (globalConfigUpdates: Record<string, string | undefined> | undefined): string => {
+    if (!globalConfigUpdates || isEmpty(globalConfigUpdates)) return '';
+    const updates = Object.entries(globalConfigUpdates)
+      .map(([key, value]) => {
+        const label = value === '' ? 'removed' : 'updated';
+        return `${key}: ${value} (${label})`;
+      })
+      .join('\n');
+    return chalk.greenBright(`\nGlobal config updated:\n${updates}\n\n`);
+  };
 }
