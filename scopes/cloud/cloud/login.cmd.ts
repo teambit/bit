@@ -1,6 +1,8 @@
 import chalk from 'chalk';
 import yesno from 'yesno';
 import { Command, CommandOptions } from '@teambit/cli';
+import { isEmpty } from 'lodash';
+import { BitError } from '@teambit/bit-error';
 import { CloudMain } from './cloud.main.runtime';
 
 export class LoginCmd implements Command {
@@ -12,6 +14,7 @@ export class LoginCmd implements Command {
     ['', 'skip-config-update', 'skip writing to the .npmrc file'],
     ['', 'refresh-token', 'force refresh token even when logged in'],
     ['d', 'cloud-domain <domain>', 'login cloud domain (default bit.cloud)'],
+    ['', 'default-cloud-domain', 'login to default cloud domain (bit.cloud)'],
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
     ['', 'no-browser', 'do not open a browser for authentication'],
     [
@@ -36,6 +39,7 @@ export class LoginCmd implements Command {
     [], // eslint-disable-line no-empty-pattern
     {
       cloudDomain,
+      defaultCloudDomain,
       port,
       suppressBrowserLaunch,
       noBrowser,
@@ -44,6 +48,7 @@ export class LoginCmd implements Command {
       refreshToken,
     }: {
       cloudDomain?: string;
+      defaultCloudDomain: boolean;
       port: string;
       suppressBrowserLaunch?: boolean;
       noBrowser?: boolean;
@@ -53,6 +58,10 @@ export class LoginCmd implements Command {
     }
   ): Promise<string> {
     noBrowser = noBrowser || suppressBrowserLaunch;
+
+    if (defaultCloudDomain && cloudDomain) {
+      throw new BitError('use either --default-cloud-domain or --cloud-domain, not both');
+    }
 
     if (refreshToken) {
       this.cloud.logout();
@@ -78,7 +87,8 @@ export class LoginCmd implements Command {
       machineName,
       cloudDomain,
       undefined,
-      skipConfigUpdate
+      skipConfigUpdate,
+      defaultCloudDomain
     );
 
     let message = chalk.green(`Logged in as ${result?.username}`);
@@ -94,6 +104,8 @@ export class LoginCmd implements Command {
       message += this.getNpmrcUpdateMessage(result?.npmrcUpdateResult?.error);
     }
 
+    message = this.getGlobalConfigUpdatesMessage(result?.globalConfigUpdates) + message;
+
     return message;
   }
 
@@ -106,6 +118,7 @@ export class LoginCmd implements Command {
       noBrowser,
       machineName,
       skipConfigUpdate,
+      defaultCloudDomain,
     }: {
       cloudDomain?: string;
       port: string;
@@ -113,16 +126,31 @@ export class LoginCmd implements Command {
       noBrowser?: boolean;
       machineName?: string;
       skipConfigUpdate?: boolean;
+      defaultCloudDomain?: boolean;
     }
-  ): Promise<{ username?: string; token?: string; successfullyUpdatedNpmrc?: boolean }> {
+  ): Promise<{
+    username?: string;
+    token?: string;
+    successfullyUpdatedNpmrc?: boolean;
+    globalConfigUpdates?: Record<string, string | undefined>;
+  }> {
     if (suppressBrowserLaunch) {
       noBrowser = true;
     }
-    const result = await this.cloud.login(port, noBrowser, machineName, cloudDomain, undefined, skipConfigUpdate);
+    const result = await this.cloud.login(
+      port,
+      noBrowser,
+      machineName,
+      cloudDomain,
+      undefined,
+      skipConfigUpdate,
+      defaultCloudDomain
+    );
     return {
       username: result?.username,
       token: result?.token,
       successfullyUpdatedNpmrc: !!result?.npmrcUpdateResult?.configUpdates,
+      globalConfigUpdates: result?.globalConfigUpdates,
     };
   }
 
@@ -168,4 +196,15 @@ Modification: ${chalk.green(conflict.modifications)}`
       )} for instructions on how to update it manually.`
     );
   }
+
+  getGlobalConfigUpdatesMessage = (globalConfigUpdates: Record<string, string | undefined> | undefined): string => {
+    if (!globalConfigUpdates || isEmpty(globalConfigUpdates)) return '';
+    const updates = Object.entries(globalConfigUpdates)
+      .map(([key, value]) => {
+        const entryStr = value === '' ? `${key} (removed)` : `${key}: ${value} (updated)`;
+        return entryStr;
+      })
+      .join('\n');
+    return chalk.greenBright(`\nGlobal config changes:\n${updates}\n\n`);
+  };
 }

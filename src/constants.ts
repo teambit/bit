@@ -172,10 +172,32 @@ export const DEFAULT_HUB_DOMAIN = `hub.${getCloudDomain()}`;
 
 export const CFG_SYMPHONY_URL_KEY = 'symphony_url';
 
+export const CFG_REGISTRY_URL_KEY = 'registry';
+
+export const DEFAULT_REGISTRY_URL_PREFIX = `https://node-registry.`;
+
 let resolvedSymphonyUrl;
+
+export const SYMPHONY_URL_PREFIX = `api.`;
+export const SYMPHONY_URL_PREFIX_V2 = `api.v2.`;
+
+export const clearCachedUrls = () => {
+  resolvedSymphonyUrl = undefined;
+  resolvedCloudDomain = undefined;
+};
+
 export const getSymphonyUrl = (): string => {
   if (resolvedSymphonyUrl) return resolvedSymphonyUrl;
-  resolvedSymphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || `api.v2.${getCloudDomain()}`;
+  const fromConfig = getSync(CFG_SYMPHONY_URL_KEY);
+  if (fromConfig) {
+    resolvedSymphonyUrl = fromConfig;
+    return resolvedSymphonyUrl;
+  }
+  const cloudDomain = getCloudDomain();
+  resolvedSymphonyUrl =
+    cloudDomain === DEFAULT_CLOUD_DOMAIN
+      ? `${SYMPHONY_URL_PREFIX_V2}${cloudDomain}`
+      : `${SYMPHONY_URL_PREFIX}${cloudDomain}`;
   return resolvedSymphonyUrl;
 };
 
@@ -192,6 +214,16 @@ export const getLoginUrl = (domain?: string): string => {
   return url;
 };
 
+export const getRegistryUrl = (domain?: string): string => {
+  const fromConfig = getSync(CFG_REGISTRY_URL_KEY);
+  if (fromConfig) {
+    return fromConfig;
+  }
+  const finalDomain = domain || getCloudDomain();
+  const url = `${DEFAULT_REGISTRY_URL_PREFIX}${finalDomain}`;
+  return url;
+};
+
 export const SYMPHONY_GRAPHQL = `https://${getSymphonyUrl()}/graphql`;
 
 export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/`;
@@ -204,7 +236,7 @@ export const SEARCH_DOMAIN = `api.${getCloudDomain()}`;
 
 export const RELEASE_SERVER = `https://api.${getCloudDomain()}/release`;
 
-export const DEFAULT_REGISTRY_URL = `https://node-registry.${DEFAULT_CLOUD_DOMAIN}`;
+export const DEFAULT_REGISTRY_URL = `${DEFAULT_REGISTRY_URL_PREFIX}${DEFAULT_CLOUD_DOMAIN}`;
 
 export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_WEB_DOMAIN}`;
 
@@ -272,8 +304,6 @@ export const CFG_USER_EMAIL_KEY = 'user.email';
 export const CFG_USER_TOKEN_KEY = 'user.token';
 
 export const CFG_USER_NAME_KEY = 'user.name';
-
-export const CFG_REGISTRY_URL_KEY = 'registry';
 
 export const CFG_HUB_DOMAIN_KEY = 'hub_domain';
 
