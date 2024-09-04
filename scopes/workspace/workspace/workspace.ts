@@ -1084,18 +1084,18 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   async getComponentsUsingEnv(env: string, ignoreVersion = true, throwIfNotFound = false): Promise<Component[]> {
     const allComps = await this.list();
     const allEnvs = await this.envs.createEnvironment(allComps);
-    const foundEnv = allEnvs.runtimeEnvs.find((runtimeEnv) => {
+    const foundEnvs = allEnvs.runtimeEnvs.filter((runtimeEnv) => {
       if (runtimeEnv.id === env) return true;
       if (!ignoreVersion) return false;
       const envWithoutVersion = runtimeEnv.id.split('@')[0];
       return env === envWithoutVersion;
     });
-    if (!foundEnv && throwIfNotFound) {
+    if (!foundEnvs.length && throwIfNotFound) {
       const availableEnvs = allEnvs.runtimeEnvs.map((runtimeEnv) => runtimeEnv.id);
       throw new BitError(`unable to find components that using "${env}" env.
 the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     }
-    return foundEnv?.components || [];
+    return foundEnvs.map((runtimeEnv) => runtimeEnv.components).flat();
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<Component[]> {
