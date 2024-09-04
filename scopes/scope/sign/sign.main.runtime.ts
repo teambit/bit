@@ -13,7 +13,7 @@ import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { PostSign } from '@teambit/legacy/dist/scope/actions';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
-import { Remotes } from '@teambit/legacy/dist/remotes';
+import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { ComponentIdList } from '@teambit/component-id';
 import Version, { Log } from '@teambit/legacy/dist/scope/models/version';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
@@ -23,6 +23,13 @@ import { LaneId } from '@teambit/lane-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { SignCmd, SignOptions } from './sign.cmd';
 import { SignAspect } from './sign.aspect';
+import { ExportAspect, ExportMain } from '@teambit/export';
+
+type ObjectsPerRemote = {
+  remote: Remote;
+  objectList: ObjectList;
+  exportedIds?: string[];
+};
 
 export type SignResult = {
   components: Component[];
@@ -41,7 +48,8 @@ export class SignMain {
     private onPostSignSlot: OnPostSignSlot,
     private lanes: LanesMain,
     private snapping: SnappingMain,
-    private harmony: Harmony
+    private harmony: Harmony,
+    private exporter: ExportMain
   ) {}
 
   /**
@@ -214,13 +222,33 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       // the components should be exported to the lane-scope, not to their original scope.
       objectList.addScopeName(lane.scope);
     }
+
+    const scopeRemotes = await getScopeRemotes(this.scope.legacyScope);
+    const objectsPerRemote = objectList.objects.reduce((acc, current) => {
+      const scope: string = current.scope as string;
+      if (acc[scope]) acc[scope].push(current);
+      else acc[scope] = [current];
+      return acc;
+    }, {});
+    const manyObjectsPerRemote: ObjectsPerRemote[] = await Promise.all(
+      Object.keys(objectsPerRemote).map(async (scopeName) => {
+        const remote = await scopeRemotes.resolve(scopeName, this.scope.legacyScope);
+        return { remote, objectList: new ObjectList(objectsPerRemote[scopeName]) };
+      })
+    );
+    const shouldPushToCentralHub = this.exporter.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes);
+
     const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
-    await http.pushToCentralHub(objectList, {
-      origin: 'sign',
-      sign: true,
-      signComponents: signComponents.map((id) => id.toString()),
-      idsHashMaps,
-    });
+    if (shouldPushToCentralHub) {
+      await http.pushToCentralHub(objectList, {
+        origin: 'sign',
+        sign: true,
+        signComponents: signComponents.map((id) => id.toString()),
+        idsHashMaps,
+      });
+    } else {
+      await this.exporter.pushToRemotesCarefully(manyObjectsPerRemote);
+    }
   }
 
   private async getComponentIdsToSign(
@@ -252,25 +280,34 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
 
   static runtime = MainRuntime;
 
-  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, LanesAspect, SnappingAspect];
+  static dependencies = [
+    CLIAspect,
+    ScopeAspect,
+    LoggerAspect,
+    BuilderAspect,
+    LanesAspect,
+    SnappingAspect,
+    ExportAspect,
+  ];
 
   static slots = [Slot.withType<OnPostSignSlot>()];
 
   static async provider(
-    [cli, scope, loggerMain, builder, lanes, snapping]: [
+    [cli, scope, loggerMain, builder, lanes, snapping, exporter]: [
       CLIMain,
       ScopeMain,
       LoggerMain,
       BuilderMain,
       LanesMain,
-      SnappingMain
+      SnappingMain,
+      ExportMain
     ],
     _,
     [onPostSignSlot]: [OnPostSignSlot],
     harmony
   ) {
     const logger = loggerMain.createLogger(SignAspect.id);
-    const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes, snapping, harmony);
+    const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes, snapping, harmony, exporter);
     cli.register(new SignCmd(signMain, logger));
     return signMain;
   }
