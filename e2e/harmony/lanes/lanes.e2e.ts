@@ -978,7 +978,7 @@ describe('bit lane command', function () {
       expect(status.invalidComponents[0].error.name).to.equal('NoCommonSnap');
     });
     it('should be able to export with no error', () => {
-      expect(() => helper.command.export('--fork-lane-new-scope')).to.not.throw();
+      expect(() => helper.command.export('--fork-lane-new-scope --all')).to.not.throw();
     });
   });
   describe('snapping and un-tagging on a lane', () => {
