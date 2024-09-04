@@ -18,16 +18,14 @@ import {
   SYMPHONY_GRAPHQL,
   getLoginUrl,
   DEFAULT_ANALYTICS_DOMAIN,
-  DEFAULT_REGISTRY_URL,
+  getRegistryUrl,
+  clearCachedUrls,
   CENTRAL_BIT_HUB_URL,
   CENTRAL_BIT_HUB_NAME,
   CFG_USER_TOKEN_KEY,
   CFG_USER_NAME_KEY,
   DEFAULT_CLOUD_DOMAIN,
-  CFG_SYMPHONY_URL_KEY,
-  CFG_REGISTRY_URL_KEY,
-  SYMPHONY_URL_PREFIX,
-  SYMPHONY_URL_PREFIX_V2,
+  CFG_CLOUD_DOMAIN_KEY,
 } from '@teambit/legacy/dist/constants';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import globalFlags from '@teambit/legacy/dist/cli/global-flags';
@@ -83,10 +81,12 @@ export type OnSuccessLogin = ({
   username,
   token,
   npmrcUpdateResult,
+  updatedConfigs,
 }: {
   username?: string;
   token?: string;
   npmrcUpdateResult?: NpmConfigUpdateResult;
+  updatedConfigs?: Record<string, string | undefined>;
 }) => void;
 export type OnSuccessLoginSlot = SlotRegistry<OnSuccessLogin>;
 export type NpmConfigUpdateResult = {
@@ -217,10 +217,12 @@ export class CloudMain {
     port: portFromParams,
     clientId = v4(),
     skipConfigUpdate,
+    cloudDomain,
   }: {
     port?: number;
     clientId?: string;
     skipConfigUpdate?: boolean;
+    cloudDomain?: string;
   } = {}): Promise<CloudAuthListener | null> {
     return new Promise((resolve, reject) => {
       const port = portFromParams || this.getLoginPort();
@@ -299,12 +301,13 @@ export class CloudMain {
           });
 
           const onLoggedInFns = this.onSuccessLoginSlot.values();
+          const updatedConfigs = this.updateGlobalConfigOnLogin(cloudDomain);
 
           if (!skipConfigUpdate) {
             this.updateNpmConfig({ authToken: token as string, username: username as string })
               .then((configUpdates) => {
                 onLoggedInFns.forEach((fn) =>
-                  fn({ username, token: token as string, npmrcUpdateResult: configUpdates })
+                  fn({ username, token: token as string, npmrcUpdateResult: configUpdates, updatedConfigs })
                 );
               })
               .catch((error) => {
@@ -312,6 +315,7 @@ export class CloudMain {
                   fn({
                     username,
                     token: token as string,
+                    updatedConfigs,
                     npmrcUpdateResult: {
                       error: new Error(`failed to update npmrc. error ${error?.toString}`),
                     },
@@ -463,47 +467,16 @@ export class CloudMain {
   }
 
   private globalConfigsToUpdateOnLogin(domain?: string): Record<string, string | undefined> {
-    const currentRegistryUrl = this.globalConfig.getSync(CFG_REGISTRY_URL_KEY);
-    const currentSymphonyUrl = getSymphonyUrl();
-    const currentSymphonyDomain = currentSymphonyUrl
-      ? currentSymphonyUrl.replace(HTTPS, '').replace(SYMPHONY_URL_PREFIX, '').replace(SYMPHONY_URL_PREFIX_V2, '')
-      : '';
-
+    const currentCloudDomain = this.globalConfig.getSync(CFG_CLOUD_DOMAIN_KEY);
+    const res = {};
     if (!domain || domain === DEFAULT_CLOUD_DOMAIN) {
-      // See explanation below
-      const deleteRegistry = currentRegistryUrl?.includes(currentSymphonyDomain);
-      const deleteSymphonyUrl = !!this.globalConfig.getSync(CFG_SYMPHONY_URL_KEY);
-      const res = {};
-      if (deleteSymphonyUrl) {
-        res[CFG_SYMPHONY_URL_KEY] = '';
-      }
-      if (deleteRegistry) {
-        res[CFG_REGISTRY_URL_KEY] = '';
+      if (currentCloudDomain && currentCloudDomain !== DEFAULT_CLOUD_DOMAIN) {
+        res[CFG_CLOUD_DOMAIN_KEY] = '';
       }
       return res;
     }
-
-    let newRegistryUrl;
-    // This check aims to prevent a case when I have a custom registry defined before (like org.artifactory.com) and I'm login to a custom bit cloud instance
-    // I don't want to override the registry url
-    // I want to keep the custom registry url
-    // I do want to override it if:
-    // 1. It's not defined (currentRegistryUrl is empty)
-    // 2. It's defined but it's the same as the current symphony domain (which means it's a url defined by previous bit login)
-    if (
-      !currentRegistryUrl ||
-      currentRegistryUrl.includes(currentSymphonyDomain) ||
-      currentRegistryUrl === DEFAULT_REGISTRY_URL
-    ) {
-      newRegistryUrl = this.ensureHttps(domain).replace(HTTPS, `${HTTPS}node-registry.`).replace('/bit-login', '');
-    }
-    const newSymphonyUrl = `api.${domain}`;
-    const res = {};
-    if (currentSymphonyUrl !== newSymphonyUrl) {
-      res[CFG_SYMPHONY_URL_KEY] = newSymphonyUrl;
-    }
-    if (newRegistryUrl && currentRegistryUrl !== newRegistryUrl) {
-      res[CFG_REGISTRY_URL_KEY] = newRegistryUrl;
+    if (currentCloudDomain !== domain) {
+      res[CFG_CLOUD_DOMAIN_KEY] = domain;
     }
     return res;
   }
@@ -518,6 +491,9 @@ export class CloudMain {
         this.globalConfig.delSync(key);
       }
     });
+    // Refresh the config after updating
+    this.config = clearCachedUrls();
+    this.config = CloudMain.calculateConfig();
     return configsToUpdate;
   }
 
@@ -527,7 +503,8 @@ export class CloudMain {
     machineName?: string,
     cloudDomain?: string,
     redirectUrl?: string,
-    skipConfigUpdate?: boolean
+    skipConfigUpdate?: boolean,
+    defaultCloudDomain?: boolean
   ): Promise<{
     isAlreadyLoggedIn?: boolean;
     username?: string;
@@ -535,6 +512,9 @@ export class CloudMain {
     npmrcUpdateResult?: NpmConfigUpdateResult;
     globalConfigUpdates?: Record<string, string | undefined>;
   } | null> {
+    if (defaultCloudDomain) {
+      cloudDomain = DEFAULT_CLOUD_DOMAIN;
+    }
     return new Promise((resolve, reject) => {
       if (this.isLoggedIn()) {
         resolve({
@@ -548,13 +528,11 @@ export class CloudMain {
       const promptLogin = async () => {
         this.REDIRECT_URL = redirectUrl;
         this.registerOnSuccessLogin((loggedInParams) => {
-          const updatedConfigs = this.updateGlobalConfigOnLogin(cloudDomain);
-
           resolve({
             username: loggedInParams.username,
             token: loggedInParams.token,
             npmrcUpdateResult: loggedInParams.npmrcUpdateResult,
-            globalConfigUpdates: updatedConfigs,
+            globalConfigUpdates: loggedInParams.updatedConfigs,
           });
         });
 
@@ -581,6 +559,7 @@ export class CloudMain {
         this.setupAuthListener({
           port: Number(port),
           skipConfigUpdate,
+          cloudDomain,
         })
           .then(promptLogin)
           .catch((e) => reject(e));
@@ -689,6 +668,20 @@ export class CloudMain {
       return null;
     }
   }
+  static calculateConfig(): CloudWorkspaceConfig {
+    return {
+      cloudDomain: getCloudDomain(),
+      cloudHubDomain: DEFAULT_HUB_DOMAIN,
+      cloudApi: getSymphonyUrl(),
+      cloudGraphQL: SYMPHONY_GRAPHQL,
+      loginDomain: getLoginUrl(),
+      analyticsDomain: DEFAULT_ANALYTICS_DOMAIN,
+      registryUrl: getRegistryUrl(),
+      cloudExporterUrl: CENTRAL_BIT_HUB_URL,
+      cloudHubName: CENTRAL_BIT_HUB_NAME,
+      loginPort: CloudMain.DEFAULT_PORT,
+    };
+  }
 
   static slots = [Slot.withType<OnSuccessLogin>()];
   static dependencies = [
@@ -702,18 +695,8 @@ export class CloudMain {
     UIAspect,
   ];
   static runtime = MainRuntime;
-  static defaultConfig: CloudWorkspaceConfig = {
-    cloudDomain: getCloudDomain(),
-    cloudHubDomain: DEFAULT_HUB_DOMAIN,
-    cloudApi: getSymphonyUrl(),
-    cloudGraphQL: SYMPHONY_GRAPHQL,
-    loginDomain: getLoginUrl(),
-    analyticsDomain: DEFAULT_ANALYTICS_DOMAIN,
-    registryUrl: DEFAULT_REGISTRY_URL,
-    cloudExporterUrl: CENTRAL_BIT_HUB_URL,
-    cloudHubName: CENTRAL_BIT_HUB_NAME,
-    loginPort: CloudMain.DEFAULT_PORT,
-  };
+  static defaultConfig: CloudWorkspaceConfig = CloudMain.calculateConfig();
+
   static async provider(
     [loggerMain, graphql, express, workspace, scope, globalConfig, cli, ui]: [
       LoggerMain,
