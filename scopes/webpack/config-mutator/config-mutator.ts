@@ -336,8 +336,8 @@ export class WebpackConfigMutator {
     if (htmlPlugins) {
       // iterate over all html plugins and add the scripts to the html
       htmlPlugins.forEach((htmlPlugin) => {
-        if (htmlPlugin.userOptions !== undefined) {
-          htmlPlugin.options.templateContent = htmlPlugin.userOptions.templateContent;
+        if (htmlPlugin.userOptions !== undefined && htmlPlugin.userOptions?.templateContent !== undefined) {
+          if (htmlPlugin.options) htmlPlugin.options.templateContent = htmlPlugin.userOptions.templateContent;
         }
 
         const htmlContent =
@@ -347,7 +347,7 @@ export class WebpackConfigMutator {
 
         const newHtmlContent = inject(htmlContent, element);
 
-        htmlPlugin.options.templateContent = newHtmlContent;
+        if (htmlPlugin.options) htmlPlugin.options.templateContent = newHtmlContent;
         htmlPlugin.userOptions.templateContent = newHtmlContent;
       });
     }
@@ -376,9 +376,9 @@ export class WebpackConfigMutator {
       const htmlContent =
         typeof htmlPlugin.options?.templateContent === 'function'
           ? htmlPlugin.options?.templateContent({})
-          : htmlPlugin.options.templateContent;
+          : htmlPlugin.options?.templateContent;
 
-      htmlPlugin.options.templateContent = (htmlContent as string).replace(element, '');
+      if (htmlPlugin.options) htmlPlugin.options.templateContent = (htmlContent as string).replace(element, '');
 
       this.raw.plugins = this.raw.plugins.map((plugin) => {
         if (plugin.constructor.name === 'HtmlWebpackPlugin') {
