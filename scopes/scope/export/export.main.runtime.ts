@@ -573,7 +573,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     return ejectResults;
   }
 
-  private async pushToRemotesCarefully(manyObjectsPerRemote: ObjectsPerRemote[], resumeExportId?: string) {
+  async pushToRemotesCarefully(manyObjectsPerRemote: ObjectsPerRemote[], resumeExportId?: string) {
     const remotes = manyObjectsPerRemote.map((o) => o.remote);
     const clientId = resumeExportId || Date.now().toString();
     await this.pushRemotesPendingDir(clientId, manyObjectsPerRemote, resumeExportId);
@@ -611,7 +611,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     });
   }
 
-  private shouldPushToCentralHub(
+  shouldPushToCentralHub(
     manyObjectsPerRemote: ObjectsPerRemote[],
     scopeRemotes: Remotes,
     originDirectly = false
