@@ -413,13 +413,26 @@ export class APIForIDE {
     return this.generator.generateComponentTemplate([nameSplit.join('/')], templateName, { scope });
   }
 
-  async removeComponent(id: string) {
+  async removeComponent(componentsPattern: string) {
     const results = await this.remove.remove({
-      componentsPattern: id,
+      componentsPattern,
       force: true,
     });
     const serializedResults = (results.localResult as RemovedObjects).serialize();
     return serializedResults;
+  }
+
+  async deleteComponents(componentsPattern: string, opts): Promise<string[]> {
+    const results = await this.remove.deleteComps(componentsPattern, opts);
+    const serializedResults = results.map((c) => c.id.toString());
+    return serializedResults;
+  }
+
+  async deprecateComponent(id: string, newId?: string, range?: string): Promise<boolean> {
+    return this.deprecation.deprecateByCLIValues(id, newId, range);
+  }
+  async undeprecateComponent(id: string): Promise<boolean> {
+    return this.deprecation.unDeprecateByCLIValues(id);
   }
 
   async switchLane(name: string) {
@@ -442,7 +455,9 @@ export class APIForIDE {
     const modifiedComps = await this.workspace.modified();
     const autoTagIds = await this.workspace.listAutoTagPendingComponentIds();
     const autoTagComps = await this.workspace.getMany(autoTagIds);
-    const allComps = [...modifiedComps, ...autoTagComps];
+    const locallyDeletedIds = await this.workspace.locallyDeletedIds();
+    const locallyDeletedComps = await this.workspace.getMany(locallyDeletedIds);
+    const allComps = [...modifiedComps, ...autoTagComps, ...locallyDeletedComps];
     const allIds = allComps.map((c) => c.id);
     const results = await Promise.all(
       allComps.map(async (comp) => {

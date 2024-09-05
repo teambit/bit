@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import { Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
 import { DeprecationMain } from './deprecation.main.runtime';
 
@@ -26,7 +25,7 @@ export class DeprecateCmd implements Command {
   remoteOp = true;
   helpUrl = 'reference/components/removing-components';
 
-  constructor(private deprecation: DeprecationMain, private workspace: Workspace) {}
+  constructor(private deprecation: DeprecationMain) {}
 
   async report([id]: [string], { newId, range }: { newId?: string; range?: string }): Promise<string> {
     const result = await this.deprecate(id, newId, range);
@@ -37,8 +36,6 @@ export class DeprecateCmd implements Command {
   }
 
   private async deprecate(id: string, newId?: string, range?: string): Promise<boolean> {
-    const componentId = await this.workspace.resolveComponentId(id);
-    const newComponentId = newId ? await this.workspace.resolveComponentId(newId) : undefined;
-    return this.deprecation.deprecate(componentId, newComponentId, range);
+    return this.deprecation.deprecateByCLIValues(id, newId, range);
   }
 }
