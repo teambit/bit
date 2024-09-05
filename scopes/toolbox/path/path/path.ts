@@ -43,3 +43,14 @@ export function removeFileExtension(filePath: string): string {
   const parsedPath = path.parse(filePath);
   return path.join(parsedPath.dir, parsedPath.name);
 }
+
+/**
+ * when used import paths, the paths always start with \<DRIVE>:\, e.g. \C:\Users\<USER>\<PATH>
+ * this function will normalize the path to <DRIVE>:\<PATH>
+ */
+export function normalizeWindowsImportPath(pathToNormalize: PathOsBased): string {
+  if ((pathToNormalize.startsWith('/') || pathToNormalize.startsWith('\\')) && process.platform === 'win32') {
+    return pathToNormalize.slice(1);
+  }
+  return pathToNormalize;
+}
