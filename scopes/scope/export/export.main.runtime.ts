@@ -136,7 +136,7 @@ export class ExportMain {
       includeNonStaged || headOnly
     );
 
-    if (!idsToExport.length) {
+    if (!idsToExport.length && !laneObject) {
       return {
         updatedIds: [],
         nonExistOnBitMap: [],
@@ -147,6 +147,10 @@ export class ExportMain {
         exportedLanes: [],
         rippleJobs: [],
       };
+    }
+    if (!idsToExport.length && laneObject && params.forkLaneNewScope) {
+      throw new BitError(`the forked lane "${laneObject.name}" has no changes, to export all its components, please use "--all" flag
+if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
     }
 
     // validate lane readme component and ensure it has been snapped

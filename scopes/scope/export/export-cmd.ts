@@ -89,11 +89,12 @@ export class ExportCmd implements Command {
         ignoreMissingArtifacts,
         forkLaneNewScope,
       });
-    if (isEmpty(componentsIds) && isEmpty(nonExistOnBitMap) && isEmpty(missingScope)) {
+    if (isEmpty(componentsIds) && isEmpty(nonExistOnBitMap) && isEmpty(missingScope) && !exportedLanes.length) {
       return chalk.yellow('nothing to export');
     }
+    const exportedLane = exportedLanes[0]?.id();
     const exportOutput = () => {
-      if (isEmpty(componentsIds)) return '';
+      if (isEmpty(componentsIds)) return exportedLane ? `exported the lane ${chalk.bold(exportedLane)}` : '';
       const lanesOutput = exportedLanes.length ? ` the lane ${chalk.bold(exportedLanes[0].id())} and` : '';
       return chalk.green(
         `exported${lanesOutput} the following ${componentsIds.length} component(s):\n${chalk.bold(
