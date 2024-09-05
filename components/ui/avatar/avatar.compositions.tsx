@@ -42,3 +42,9 @@ export const UserAvatarWithTooltipExample = () => (
     <UserAvatar size={32} account={accounts.userAccount} showTooltip />
   </div>
 );
+
+export const UserAvatarWithTopTooltipExample = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', marginTop: 70 }}>
+    <UserAvatar size={32} account={accounts.userAccount} showTooltip tooltipPlacement="top" />
+  </div>
+);

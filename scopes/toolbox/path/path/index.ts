@@ -12,4 +12,5 @@ export {
   pathNormalizeToLinux,
   pathRelativeLinux,
   pathResolveToLinux,
+  normalizeWindowsImportPath,
 } from './path';

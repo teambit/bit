@@ -236,7 +236,7 @@
         "@teambit/git.modules.git-ignore": "^1.0.2",
         "@teambit/harmony": "0.4.6",
         "@teambit/html.generator.html-templates": "^1.0.8",
-        "@teambit/html.modules.inject-html-element": "0.0.4",
+        "@teambit/html.modules.inject-html-element": "0.0.5",
         "@teambit/html.modules.render-template": "0.0.104",
         "@teambit/lanes.ui.compare.lane-compare": "^0.0.193",
         "@teambit/lanes.ui.compare.lane-compare-drawer": "^0.0.158",

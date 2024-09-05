@@ -978,7 +978,7 @@
     "modules/config-mutator": {
         "name": "modules/config-mutator",
         "scope": "teambit.webpack",
-        "version": "0.0.166",
+        "version": "0.0.167",
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/config-mutator"
     },
@@ -1251,7 +1251,7 @@
     "path/path": {
         "name": "path/path",
         "scope": "teambit.toolbox",
-        "version": "0.0.2",
+        "version": "6457d1bc06a33906046dba7418fe71a675ba6287",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/path/path"
     },
@@ -1734,7 +1734,7 @@
     "ui/avatar": {
         "name": "ui/avatar",
         "scope": "teambit.design",
-        "version": "1.0.32",
+        "version": "1.0.33",
         "mainFile": "index.ts",
         "rootDir": "components/ui/avatar"
     },
@@ -2049,7 +2049,7 @@
     "ui/tooltip": {
         "name": "ui/tooltip",
         "scope": "teambit.design",
-        "version": "0.0.369",
+        "version": "0.0.370",
         "mainFile": "index.ts",
         "rootDir": "components/ui/tooltip"
     },
