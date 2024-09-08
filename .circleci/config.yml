@@ -1038,7 +1038,7 @@ jobs:
       - run: Get-Content -Path .\version.txt
       - restore_cache:
           key: v2-bvm-folder-{{ checksum "version.txt" }}
-      - run: 'npm i -g @teambit/bvm'
+      - run: 'npm i -g @teambit/bvm@1.0.4'
       - run: bvm config set RELEASE_TYPE nightly
       - run:
           name: 'bvm upgrade'
