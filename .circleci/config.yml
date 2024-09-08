@@ -163,7 +163,7 @@ commands: # reusable commands
   install_bvm:
     steps:
       - run: npm config set prefix '~/.npm-global'
-      - run: npm install --global @teambit/bvm
+      - run: npm install --global @teambit/bvm@1.0.4
       - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
       - run: bvm config set RELEASE_TYPE nightly
   set_bit_cloud_registry:
@@ -1038,7 +1038,7 @@ jobs:
       - run: Get-Content -Path .\version.txt
       - restore_cache:
           key: v2-bvm-folder-{{ checksum "version.txt" }}
-      - run: 'npm i -g @teambit/bvm@1.0.4'
+      - run: 'npm i -g @teambit/bvm'
       - run: bvm config set RELEASE_TYPE nightly
       - run:
           name: 'bvm upgrade'
