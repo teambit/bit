@@ -163,7 +163,7 @@ commands: # reusable commands
   install_bvm:
     steps:
       - run: npm config set prefix '~/.npm-global'
-      - run: npm install --global @teambit/bvm@1.0.4
+      - run: npm install --global @teambit/bvm
       - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
       - run: bvm config set RELEASE_TYPE nightly
   set_bit_cloud_registry:
