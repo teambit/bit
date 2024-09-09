@@ -31,6 +31,7 @@ import { CLIRawRoute } from './cli-raw.route';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { DEFAULT_AUTH_TYPE, Http } from '@teambit/legacy/dist/scope/network/http/http';
 
 export class ApiServerMain {
   constructor(
@@ -109,12 +110,18 @@ export class ApiServerMain {
         credentials: true,
       })
     );
+    const proxyHeaders = {
+      Authorization: `${DEFAULT_AUTH_TYPE} ${Http.getToken()}`,
+      origin: '',
+      'user-agent': 'bit-vscode-proxy',
+    };
     app.use(
       '/api/cloud-graphql',
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       createProxyMiddleware({
-        target: 'https://api.main.lanes.bit.cloud/graphql',
+        target: 'https://api.v2.bit.cloud/graphql',
         changeOrigin: true,
+        headers: proxyHeaders,
         on: {
           error: (err, req, res) => {
             this.logger.error('graphql cloud proxy error', err);
@@ -123,6 +130,30 @@ export class ApiServerMain {
               'Content-Type': 'text/plain',
             });
             res.end('Something went wrong with the proxy server of bit cloud graphql');
+          },
+          proxyReq: fixRequestBody,
+        },
+      })
+    );
+
+    app.use(
+      '/api/cloud-rest',
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      createProxyMiddleware({
+        target: 'https://api.v2.bit.cloud',
+        changeOrigin: true,
+        headers: proxyHeaders,
+        on: {
+          proxyRes: (proxyRes) => {
+            proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
+          },
+          error: (err, req, res) => {
+            this.logger.error('rest cloud proxy error', err);
+            // @ts-ignore
+            res.writeHead(500, {
+              'Content-Type': 'text/plain',
+            });
+            res.end('Something went wrong with the proxy server of bit cloud rest');
           },
           proxyReq: fixRequestBody,
         },
