@@ -336,19 +336,15 @@ export class WebpackConfigMutator {
     if (htmlPlugins) {
       // iterate over all html plugins and add the scripts to the html
       htmlPlugins.forEach((htmlPlugin) => {
-        if (htmlPlugin.userOptions !== undefined && htmlPlugin.userOptions?.templateContent !== undefined) {
-          if (htmlPlugin.options) htmlPlugin.options.templateContent = htmlPlugin.userOptions.templateContent;
-        }
+        const templateContent = htmlPlugin.options?.templateContent || htmlPlugin.userOptions.templateContent;
 
         const htmlContent =
-          typeof htmlPlugin.options?.templateContent === 'function'
-            ? (htmlPlugin.options?.templateContent({}) as string)
-            : (htmlPlugin.options?.templateContent as string);
+          typeof templateContent === 'function' ? (templateContent({}) as string) : (templateContent as string);
 
         const newHtmlContent = inject(htmlContent, element);
 
         if (htmlPlugin.options) htmlPlugin.options.templateContent = newHtmlContent;
-        htmlPlugin.userOptions.templateContent = newHtmlContent;
+        if (htmlPlugin.userOptions) htmlPlugin.userOptions.templateContent = newHtmlContent;
       });
     }
 
