@@ -318,7 +318,6 @@
         "@teambit/ui-foundation.ui.use-box.scope-menu": "^0.0.146",
         "@teambit/ui-foundation.ui.use-box.tab": "^0.0.122",
         "@teambit/ui-foundation.ui.use-box.tab-content": "^0.0.122",
-        "@teambit/ui.routing.compare-url": "^0.0.364",
         "@teambit/workspace.content.variants": "1.95.9",
         "@teambit/workspace.content.workspace-overview": "1.95.0",
         "@teambit/workspace.ui.empty-workspace": "^0.0.508",
