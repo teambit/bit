@@ -339,9 +339,7 @@ export class WebpackConfigMutator {
         const templateContent = htmlPlugin.options?.templateContent || htmlPlugin.userOptions.templateContent;
 
         const htmlContent =
-          typeof templateContent === 'function'
-            ? (templateContent({}) as string)
-            : (htmlPlugin.options?.templateContent as string);
+          typeof templateContent === 'function' ? (templateContent({}) as string) : (templateContent as string);
 
         const newHtmlContent = inject(htmlContent, element);
 
