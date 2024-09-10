@@ -135,6 +135,7 @@ export class ImporterMain {
       ids,
       lane,
       reason: `for fetching lane ${lane.id()}`,
+      includeUpdateDependents,
     });
     const { mergeLane } = await this.scope.legacyScope.sources.mergeLane(lane, true);
     const isRemoteLaneEqualsToMergedLane = lane.isEqual(mergeLane);
