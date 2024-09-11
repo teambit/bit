@@ -13,7 +13,8 @@ export async function createRoot(
   ignoreVersion?: boolean,
   addRuntimes = false,
   harmonyPackage?: string,
-  shouldRun = false
+  shouldRun = false,
+  useWebpackHot = true
 ) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
   const identifiers = getIdentifiers(aspectDefs, 'Aspect');
@@ -39,9 +40,7 @@ const config = JSON.parse('${stringifiedConfig}');
 const mergedConfig = { ...config, ...windowConfig };
 ${idSetters.join('\n')}
 export default function render(...props) {
-  if (import.meta?.webpackHot) {
-    import.meta?.webpackHot?.accept();
-  }
+  ${webpackHotAccept(useWebpackHot)}
   return Harmony.load([${identifiers.join(', ')}], '${runtime}', mergedConfig)
     .then((harmony) => {
       return harmony
@@ -73,6 +72,10 @@ export default function render(...props) {
 
 if (isBrowser || '${runtime}' === 'main' || ${shouldRun}) render();
 `;
+}
+
+function webpackHotAccept(useWebpackHot: boolean) {
+  return useWebpackHot ? 'if (import.meta?.webpackHot) { import.meta?.webpackHot?.accept(); }' : '';
 }
 
 function getRuntimeId(aspectDef: AspectDefinition) {
