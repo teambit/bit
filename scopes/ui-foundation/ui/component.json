@@ -24,7 +24,7 @@
           "@types/webpack-dev-server": "-"
         },
         "peerDependencies": {
-          "@teambit/legacy": "1.0.743"
+          "@teambit/legacy": "1.0.744"
         }
       }
     },
