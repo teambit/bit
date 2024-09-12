@@ -311,7 +311,7 @@ other:   ${otherLaneHead.toString()}`);
         return this.returnUnmerged(id, compIsAlreadyMergedMsg, true);
       }
       // target is ahead.
-      if (!this.options.handleTargetAheadAsDiverged) {
+      if (!this.options.handleTargetAheadAsDiverged || !divergeData.commonSnapBeforeDiverge) {
         // just override with the model data
         return {
           ...componentStatus,

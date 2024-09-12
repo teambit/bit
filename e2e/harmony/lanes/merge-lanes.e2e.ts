@@ -1688,4 +1688,16 @@ describe('merge lanes', function () {
       });
     });
   });
+  describe('merging from lane with --no-snap when there is no base-snap', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+    });
+    it('should not throw an error', () => {
+      expect(() => helper.command.mergeLane('main', '--no-snap -x')).to.not.throw();
+    });
+  });
 });
