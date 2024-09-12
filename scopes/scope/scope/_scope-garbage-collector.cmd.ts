@@ -14,7 +14,7 @@ export class ScopeGarbageCollectorCmd implements Command {
     ['v', 'verbose', 'show verbose output'],
     ['d', 'dry-run', 'print the refs that are going to be deleted without actually deleting them'],
     ['f', 'find-comp-id-origin <comp-id>', 'find the origin of a specific component'],
-    ['f', 'find-scope-id-origin <scope-id>', 'find the origin of all components of the given scope'],
+    ['s', 'find-scope-id-origin <scope-id>', 'find the origin of all components of the given scope'],
     ['r', 'restore', 'restore deleted objects (copy objects from "deleted-objects" directory to the scope)'],
     ['', 'restore-overwrite', 'same as --restore but overwrite existing objects'],
   ] as CommandOptions;

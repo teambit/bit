@@ -224,21 +224,23 @@ export async function collectGarbage(thisScope: Scope, opts: GarbageCollectorOpt
       const refs = version.refsWithOptions(false, true);
       refs.forEach((ref) => refsWhiteList.add(ref.hash));
       version.flattenedDependencies.forEach((dep) => {
-        allFlattenedDeps.add(dep.toString());
+        const depStr = dep.toString();
+        if (allFlattenedDeps.has(depStr)) return;
+        allFlattenedDeps.add(depStr);
         if (findCompIdOrigin && dep.toStringWithoutVersion() === findCompIdOrigin) {
           if (originLane) {
             const foundLanes = allLanes.filter((lane) =>
-              lane.toComponentIdsIncludeUpdateDependents().searchStrWithoutVersion(findCompIdOrigin)
+              lane.toComponentIdsIncludeUpdateDependents().searchWithoutVersion(compId)
             );
             origin.push(`flatten of ${compId.toString()}, found in lanes: ${foundLanes.map((l) => l.id()).join(', ')}`);
           } else {
             origin.push(`flatten of ${compId.toString()}`);
           }
         }
-        if (findScopeIdOrigin && dep.scope === findCompIdOrigin) {
+        if (findScopeIdOrigin && dep.scope === findScopeIdOrigin) {
           if (originLane) {
             const foundLanes = allLanes.filter((lane) =>
-              lane.toComponentIdsIncludeUpdateDependents().find((id) => id.scope === findCompIdOrigin)
+              lane.toComponentIdsIncludeUpdateDependents().find((id) => id.scope === compId.scope)
             );
             origin.push(
               `flatten of ${compId.toString()} (${dep.toString()}), found in lanes: ${foundLanes
