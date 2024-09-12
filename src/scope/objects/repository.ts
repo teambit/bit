@@ -571,14 +571,22 @@ export default class Repository {
     if (removed) await this.scopeIndex.write();
   }
 
-  async moveObjectsToTrash(refs: Ref[]): Promise<void> {
+  async moveObjectsToDir(refs: Ref[], dir: string): Promise<void> {
     if (!refs.length) return;
     const uniqRefs = uniqBy(refs, 'hash');
-    logger.debug(`Repository.moveObjectsToTrash: ${uniqRefs.length} objects`);
+    logger.debug(`Repository.moveObjectsToDir: ${uniqRefs.length} objects`);
     const concurrency = concurrentIOLimit();
-    await pMap(uniqRefs, (ref) => this.moveOneObjectToTrash(ref), { concurrency });
+    await pMap(uniqRefs, (ref) => this.moveOneObjectToDir(ref, dir), { concurrency });
     const removed = this.scopeIndex.removeMany(uniqRefs);
     if (removed) await this.scopeIndex.write();
+  }
+
+  async moveObjectsToTrash(refs: Ref[]): Promise<void> {
+    await this.moveObjectsToDir(refs, TRASH_DIR);
+  }
+
+  async listTrash(): Promise<Ref[]> {
+    return this.listRefs(this.getTrashDir());
   }
 
   async getFromTrash(refs: Ref[]): Promise<BitObject[]> {
@@ -606,11 +614,20 @@ export default class Repository {
     await this.writeObjectsToTheFS(objectsFromTrash);
   }
 
-  private async moveOneObjectToTrash(ref: Ref) {
+  async restoreFromDir(dir: string, overwrite = false) {
+    await fs.copy(path.join(this.scopePath, dir), this.getPath(), { overwrite });
+  }
+
+  private async moveOneObjectToDir(ref: Ref, dir: string) {
     const currentPath = this.objectPath(ref);
-    const trashObjPath = path.join(this.getTrashDir(), this.hashPath(ref));
-    await fs.move(currentPath, trashObjPath, { overwrite: true });
+    const absDir = path.join(this.scopePath, dir);
+    const fullPath = path.join(absDir, this.hashPath(ref));
+    await fs.move(currentPath, fullPath, { overwrite: true });
     this.removeFromCache(ref);
+  }
+
+  private async moveOneObjectToTrash(ref: Ref) {
+    await this.moveOneObjectToDir(ref, TRASH_DIR);
   }
 
   async deleteRecordsFromUnmergedComponents(compIds: ComponentID[]) {

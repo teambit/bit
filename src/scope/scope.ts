@@ -48,6 +48,7 @@ import ClientIdInUse from './exceptions/client-id-in-use';
 import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
 import { getDivergeData } from './component-ops/get-diverge-data';
 import { StagedSnaps } from './staged-snaps';
+import { collectGarbage } from './garbage-collector';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -79,6 +80,15 @@ export type IsolateOptions = {
   installPeerDependencies: boolean | null | undefined;
   no_package_json: boolean | null | undefined;
   override: boolean | null | undefined;
+};
+
+export type GarbageCollectorOpts = {
+  verbose?: boolean;
+  dryRun?: boolean;
+  findCompIdOrigin?: string;
+  findScopeIdOrigin?: string;
+  restore?: boolean;
+  restoreOverwrite?: boolean;
 };
 
 export type ComponentsAndVersions = {
@@ -719,6 +729,10 @@ once done, to continue working, please run "bit cc"`
         throw err;
       }
     }
+  }
+
+  async garbageCollect(opts: GarbageCollectorOpts) {
+    return collectGarbage(this, opts);
   }
 
   static async ensure(path: PathOsBasedAbsolute, name?: string | null, groupName?: string | null): Promise<Scope> {
