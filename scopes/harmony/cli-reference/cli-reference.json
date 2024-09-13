@@ -857,7 +857,7 @@
       [
         "s",
         "find-scope-id-origin <scope-id>",
-        "find the origin of all components of the given scope"
+        "find the origin of all components of the given scope. for multiple scopes, wrap with quotes and separate with commas"
       ],
       [
         "r",
