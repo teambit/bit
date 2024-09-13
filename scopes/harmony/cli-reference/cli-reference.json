@@ -855,7 +855,7 @@
         "find the origin of a specific component"
       ],
       [
-        "f",
+        "s",
         "find-scope-id-origin <scope-id>",
         "find the origin of all components of the given scope"
       ],
