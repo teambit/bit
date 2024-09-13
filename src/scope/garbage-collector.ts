@@ -8,6 +8,7 @@ import { compact } from 'lodash';
 import { Ref } from './objects';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import chalk from 'chalk';
+import { VersionNotFound } from './exceptions';
 
 const DELETED_OBJECTS_DIR = 'deleted-objects';
 
@@ -95,7 +96,7 @@ export async function collectGarbage(thisScope: Scope, opts: GarbageCollectorOpt
   logger.console(`[*] total ${componentInsideLanesUniq.length} components inside lanes`);
 
   await pMapSeries(componentInsideLanesUniq, async (comp) => {
-    const modelComp = await thisScope.getModelComponentIfExist(comp);
+    const modelComp = await thisScope.getModelComponentIfExist(comp.changeVersion(undefined));
     if (!modelComp) return;
     await processComponent(modelComp, Ref.from(comp.version), false, true);
   });
@@ -126,7 +127,13 @@ export async function collectGarbage(thisScope: Scope, opts: GarbageCollectorOpt
   await pMap(
     refsToDelete,
     async (ref) => {
-      const obj = await ref.load(repo);
+      let obj;
+      try {
+        obj = await ref.load(repo);
+      } catch (err: any) {
+        if (verbose) logger.console(chalk.red(`error loading ${ref.toString()} ${err.message}`));
+        return;
+      }
       const id = obj instanceof Version || obj instanceof Source ? '' : obj.id();
       if (verbose) logger.console(`deleting ${ref.toString()} ${obj.constructor.name} ${obj.getType()} ${id}`);
       if (obj instanceof ModelComponent) {
@@ -156,12 +163,20 @@ export async function collectGarbage(thisScope: Scope, opts: GarbageCollectorOpt
 
   async function processDep(dep: string) {
     const depId = ComponentID.fromString(dep);
-    const modelComp = await thisScope.getModelComponentIfExist(depId);
+    const modelComp = await thisScope.getModelComponentIfExist(depId.changeVersion(undefined));
     if (!modelComp) {
       return;
     }
     refsWhiteList.add(modelComp.hash().hash);
-    const version = await modelComp.loadVersion(depId.version, repo, false);
+    let version: Version | undefined;
+    try {
+      version = await modelComp.loadVersion(depId.version, repo, false);
+    } catch (err: any) {
+      if (err instanceof VersionNotFound) return;
+      if (err.constructor.name === 'MissingScope') return; // object is corrupted, it's fine to delete it
+      logger.console(chalk.red.bold(`error loading a flattened dep ${depId.toString()}`));
+      throw err;
+    }
     if (!version) {
       return;
     }
