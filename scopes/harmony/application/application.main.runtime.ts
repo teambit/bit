@@ -129,7 +129,14 @@ export class ApplicationMain {
    */
   async loadAllAppsAsAspects(poolIds?: ComponentID[]): Promise<ComponentID[]> {
     const apps = await this.listAppsComponents(poolIds);
-    const appIds = apps.map((app) => app.id);
+    // do not load apps that their env was not loaded yet. their package-json may not be up to date. e.g. it could be
+    // cjs, when the env needs it as esm. once it is loaded, node.js saved the package.json in the cache with no way to
+    // refresh it.
+    const appsWithEnvLoaded = apps.filter((app) => !app.state.issues.getIssueByName('NonLoadedEnv'));
+    if (apps.length !== appsWithEnvLoaded.length) {
+      this.logger.warn(`some apps were not loaded as aspects because their env was not loaded yet`);
+    }
+    const appIds = appsWithEnvLoaded.map((app) => app.id);
     await this.componentAspect.getHost().loadAspects(appIds.map((id) => id.toString()));
     return appIds;
   }
