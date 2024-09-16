@@ -16,9 +16,9 @@ export type CacheOptions = {
 };
 
 export function getMaxSizeForComponents(): number {
-  return getNumberFromConfig(CFG_CACHE_MAX_ITEMS_COMPONENTS) || 500;
+  return getNumberFromConfig(CFG_CACHE_MAX_ITEMS_COMPONENTS) || 1000;
 }
 
 export function getMaxSizeForObjects(): number {
-  return getNumberFromConfig(CFG_CACHE_MAX_ITEMS_OBJECTS) || 3000;
+  return getNumberFromConfig(CFG_CACHE_MAX_ITEMS_OBJECTS) || 5000;
 }
