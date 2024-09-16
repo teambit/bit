@@ -2,7 +2,7 @@
   "componentId": {
     "scope": "teambit.react",
     "name": "eslint-config-bit-react",
-    "version": "1.0.64"
+    "version": "1.0.220"
   },
   "propagate": true,
   "extensions": {

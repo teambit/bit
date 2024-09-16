@@ -558,7 +558,7 @@
     "eslint-config-bit-react": {
         "name": "eslint-config-bit-react",
         "scope": "teambit.react",
-        "version": "1.0.219",
+        "version": "1.0.220",
         "mainFile": "index.js",
         "rootDir": "scopes/react/eslint-config-bit-react"
     },
