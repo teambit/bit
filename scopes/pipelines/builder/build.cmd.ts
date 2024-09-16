@@ -19,6 +19,7 @@ type BuildOpts = {
   tasks: string;
   listTasks?: string;
   skipTests?: boolean;
+  skipTasks?: string;
   failFast?: boolean;
   includeSnap?: boolean;
   includeTag?: boolean;
@@ -70,6 +71,12 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
     ['', 'skip-tests', 'skip running component tests during build process'],
     [
       '',
+      'skip-tasks <string>',
+      `skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes.
+  specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)`,
+    ],
+    [
+      '',
       'fail-fast',
       'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
@@ -107,6 +114,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       tasks,
       listTasks,
       skipTests,
+      skipTasks,
       failFast,
       includeSnap,
       includeTag,
@@ -129,6 +137,8 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       );
     }
 
+    const skipTasksParsed = skipTasks ? skipTasks.split(',').map((t) => t.trim()) : undefined;
+
     const envsExecutionResults = await this.builder.build(
       components,
       {
@@ -146,6 +156,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
         dev,
         tasks: tasks ? tasks.split(',').map((task) => task.trim()) : [],
         skipTests,
+        skipTasks: skipTasksParsed,
         exitOnFirstFailedTask: failFast,
       },
       {
