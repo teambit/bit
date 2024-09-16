@@ -403,7 +403,7 @@ export class LaneChangeScopeCmd implements Command {
 
 export class LaneRenameCmd implements Command {
   name = 'rename <new-name>';
-  description = `EXPERIMENTAL. change the lane-name locally`;
+  description = `change the lane-name locally`;
   extendedDescription = 'the remote will be updated after the next "bit export" command';
   alias = '';
   options = [

@@ -35,7 +35,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
     [
       't',
       'check-types [string]',
-      'EXPERIMENTAL. show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project',
+      'show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project',
     ],
     [
       'i',

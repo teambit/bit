@@ -16,7 +16,7 @@ export class ScopeRenameOwnerCmd implements Command {
       'refactor',
       'update the import statements in all dependent components to the new package name (that contains the new owner name)',
     ],
-    ['', 'ast', 'EXPERIMENTAL. use ast to transform files instead of regex'],
+    ['', 'ast', 'use ast to transform files instead of regex'],
   ] as CommandOptions;
   group = 'development';
 

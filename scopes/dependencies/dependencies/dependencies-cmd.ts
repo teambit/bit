@@ -29,7 +29,7 @@ export class DependenciesGetCmd implements Command {
   alias = '';
   options = [
     ['', 'scope', 'get the data from the scope instead of the workspace'],
-    ['t', 'tree', 'EXPERIMENTAL. render dependencies as a tree, similar to "npm ls"'],
+    ['t', 'tree', 'render dependencies as a tree, similar to "npm ls"'],
   ] as CommandOptions;
 
   constructor(private deps: DependenciesMain) {}
@@ -228,7 +228,7 @@ export class DependenciesBlameCmd implements Command {
     },
   ];
   group = 'info';
-  description = 'EXPERIMENTAL. find out which snap/tag changed a dependency version';
+  description = 'find out which snap/tag changed a dependency version';
   alias = '';
   options = [] as CommandOptions;
 
@@ -283,7 +283,7 @@ export class DependenciesUsageCmd implements Command {
     },
   ];
   group = 'info';
-  description = 'EXPERIMENTAL. find components that use the specified dependency';
+  description = 'find components that use the specified dependency';
   alias = '';
   options = [['', 'depth <number>', 'max display depth of the dependency graph']] as CommandOptions;
 
