@@ -454,7 +454,7 @@ jobs:
     resource_class: large
     <<: *defaults
     environment:
-      BIT_FEATURES: cloud-importer-v2
+      # BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: ./
@@ -522,7 +522,7 @@ jobs:
     resource_class: xlarge
     <<: *defaults
     environment:
-      BIT_FEATURES: cloud-importer-v2
+      # BIT_FEATURES: cloud-importer-v2
       NODE_OPTIONS: --max-old-space-size=15000
     steps:
       - attach_workspace:
@@ -563,7 +563,7 @@ jobs:
     resource_class: xlarge
     <<: *defaults
     environment:
-      BIT_FEATURES: cloud-importer-v2
+      # BIT_FEATURES: cloud-importer-v2
       NODE_OPTIONS: --max-old-space-size=15000
     steps:
       - attach_workspace:
@@ -828,7 +828,7 @@ jobs:
   bit_export:
     <<: *defaults
     environment:
-      BIT_FEATURES: cloud-importer-v2
+      # BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: ./
@@ -871,7 +871,7 @@ jobs:
     <<: *defaults
     environment:
       BITSRC_ENV: stg
-      BIT_FEATURES: cloud-importer-v2
+      # BIT_FEATURES: cloud-importer-v2
     parallelism: 25
     steps:
       - attach_workspace:
@@ -1063,7 +1063,7 @@ jobs:
       BITSRC_ENV: stg
       SKIP_REGISTRY_TESTS: "true"
       SKIP_BIT_DEV_TESTS: "true"
-      BIT_FEATURES: cloud-importer-v2
+      # BIT_FEATURES: cloud-importer-v2
     steps:
       - attach_workspace:
           at: .
