@@ -76,7 +76,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     [
       '',
       'update-dependents',
-      'EXPERIMENTAL. when snapped on a lane, mark it as update-dependents so it will be skipped from the workspace',
+      'when snapped on a lane, mark it as update-dependents so it will be skipped from the workspace',
     ],
     ['j', 'json', 'output as json format'],
   ] as CommandOptions;

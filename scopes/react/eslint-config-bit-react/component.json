@@ -2,7 +2,7 @@
   "componentId": {
     "scope": "teambit.react",
     "name": "eslint-config-bit-react",
-    "version": "1.0.220"
+    "version": "1.0.222"
   },
   "propagate": true,
   "extensions": {
@@ -45,7 +45,7 @@
         },
         "peerDependencies": {
           "eslint": "> 8.0.0",
-          "@teambit/legacy": "1.0.746"
+          "@teambit/legacy": "1.0.747"
         }
       }
     },

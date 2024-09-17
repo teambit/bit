@@ -36,7 +36,7 @@ export class ExportCmd implements Command {
     [
       '',
       'origin-directly',
-      'EXPERIMENTAL. avoid export to the central hub, instead, export directly to the original scopes. not recommended!',
+      'avoid export to the central hub, instead, export directly to the original scopes. not recommended!',
     ],
     [
       '',
@@ -46,12 +46,12 @@ export class ExportCmd implements Command {
     [
       '',
       'head-only',
-      'EXPERIMENTAL. in case previous export failed and locally it shows exported and only one snap/tag was created, try using this flag',
+      'in case previous export failed and locally it shows exported and only one snap/tag was created, try using this flag',
     ],
     [
       '',
       'ignore-missing-artifacts',
-      "EXPERIMENTAL. don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote",
+      "don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote",
     ],
     ['', 'fork-lane-new-scope', 'allow exporting a forked lane into a different scope than the original scope'],
     ['', 'open-browser', 'open a browser once the export is completed in the cloud job url'],

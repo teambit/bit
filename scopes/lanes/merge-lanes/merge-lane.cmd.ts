@@ -66,11 +66,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
     ['', 'no-squash', 'relevant for merging lanes into main, which by default squashes all lane snaps'],
-    [
-      '',
-      'squash',
-      'EXPERIMENTAL. relevant for merging a lane into another non-main lane, which by default does not squash',
-    ],
+    ['', 'squash', 'relevant for merging a lane into another non-main lane, which by default does not squash'],
     [
       '',
       'ignore-config-changes',

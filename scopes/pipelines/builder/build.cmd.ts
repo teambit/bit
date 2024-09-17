@@ -80,16 +80,8 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       'fail-fast',
       'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
-    [
-      '',
-      'include-snap',
-      'EXPERIMENTAL. include snap pipeline tasks. Warning: this may deploy/publish if you have such tasks',
-    ],
-    [
-      '',
-      'include-tag',
-      'EXPERIMENTAL. include tag pipeline tasks. Warning: this may deploy/publish if you have such tasks',
-    ],
+    ['', 'include-snap', 'include snap pipeline tasks. Warning: this may deploy/publish if you have such tasks'],
+    ['', 'include-tag', 'include tag pipeline tasks. Warning: this may deploy/publish if you have such tasks'],
     [
       'i',
       'ignore-issues <issues>',
