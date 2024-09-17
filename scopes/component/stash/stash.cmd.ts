@@ -108,7 +108,7 @@ export class StashLoadCmd implements Command {
 
 export class StashCmd implements Command {
   name = 'stash <sub-command>';
-  description = 'EXPERIMENTAL. stash modified components';
+  description = 'stash modified components';
   group = 'development';
   options = [
     ['p', 'pattern', COMPONENT_PATTERN_HELP],
