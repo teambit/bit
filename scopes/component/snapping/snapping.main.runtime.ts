@@ -398,6 +398,10 @@ if you're willing to lose the history from the head to the specified version, us
         if (err.constructor.name !== LaneNotFound.name) throw err;
         // if the lane is not found, it's probably because it's new. create a new lane.
         lane = await createLaneInScope(laneId.name, this.scope, laneId.scope);
+        // it's important to set the lane as new in scope.json. otherwise, later, when importing and the lane is loaded
+        // from the filesystem, it looses the "isNew: true", and then it tries to fetch the lane from the remote scope.
+        // which fails with the importer.
+        this.scope.legacyScope.scopeJson.setLaneAsNew(laneId.name);
       }
       // this is critical. otherwise, later on, when loading aspects and isolating capsules, we'll try to fetch dists
       // from the original scope instead of the lane-scope.
