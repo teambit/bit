@@ -95,41 +95,52 @@ export class APISchema extends SchemaNode {
     );
   }
 
-  toFullSignature(options: { showDocs?: boolean } = { showDocs: true }): string {
-    const title = `API Schema of ${this.componentId.toString()}\n`;
-    const sections: string[] = [];
+  toFullSignature(options: { showDocs?: boolean; showTitles?: boolean } = { showDocs: true }): string {
+    const title = `API Schema of ${this.componentId.toString()}\n\n`;
 
-    const getSection = (ClassObj: any, sectionName: string) => {
-      const objects = this.module.exports.filter((exp) => {
-        const node = ExportSchema.isExportSchema(exp) ? exp.exportNode : exp;
-        return node instanceof ClassObj;
-      });
+    const exportGroups: { [key: string]: SchemaNode[] } = {};
 
-      if (!objects.length) {
-        return '';
+    for (const exp of this.module.exports) {
+      const node = ExportSchema.isExportSchema(exp) ? exp.exportNode : exp;
+      const constructorName = node.constructor.name;
+
+      if (!exportGroups[constructorName]) {
+        exportGroups[constructorName] = [];
       }
 
-      const sectionHeader = `${sectionName}\n\n`;
-      const sectionBody = objects
-        .map((obj) => {
-          return obj.toFullSignature(options);
-        })
-        .join('\n\n');
+      exportGroups[constructorName].push(exp);
+    }
 
-      return `${sectionHeader}${sectionBody}\n\n`;
+    let output = options.showTitles ? title : '';
+
+    for (const [sectionName, exports] of Object.entries(exportGroups)) {
+      const readableSectionName = options.showTitles ? this.getReadableSectionName(sectionName) : '';
+
+      output += `${readableSectionName}\n\n`;
+
+      const sectionBody = exports.map((exp) => exp.toFullSignature(options)).join('\n\n');
+
+      output += `${sectionBody}\n\n`;
+    }
+
+    return output.trim();
+  }
+
+  private getReadableSectionName(constructorName: string): string {
+    const sectionNameMap: { [key: string]: string } = {
+      ModuleSchema: 'Namespaces',
+      ClassSchema: 'Classes',
+      InterfaceSchema: 'Interfaces',
+      FunctionLikeSchema: 'Functions',
+      VariableLikeSchema: 'Variables',
+      TypeSchema: 'Types',
+      EnumSchema: 'Enums',
+      TypeRefSchema: 'Type References',
+      UnresolvedSchema: 'Unresolved',
+      ReactSchema: 'React Components',
     };
 
-    sections.push(getSection(ModuleSchema, 'Namespaces'));
-    sections.push(getSection(ClassSchema, 'Classes'));
-    sections.push(getSection(InterfaceSchema, 'Interfaces'));
-    sections.push(getSection(FunctionLikeSchema, 'Functions'));
-    sections.push(getSection(VariableLikeSchema, 'Variables'));
-    sections.push(getSection(TypeSchema, 'Types'));
-    sections.push(getSection(EnumSchema, 'Enums'));
-    sections.push(getSection(TypeRefSchema, 'TypeReferences'));
-    sections.push(getSection(UnresolvedSchema, 'Unresolved'));
-
-    return title + sections.filter(Boolean).join('');
+    return sectionNameMap[constructorName] || constructorName;
   }
 
   listSignatures() {

@@ -8,7 +8,8 @@ export interface ISchemaNode {
   signature?: string;
   name?: string;
   toObject(): Record<string, any>;
-  toString(): string;
+  toString(options?: { color?: boolean }): string;
+  toFullSignature(options?: { showDocs?: boolean }): string;
   getNodes(): SchemaNode[];
   findNode(predicate: (node: SchemaNode) => boolean, visitedNodes?: Set<SchemaNode>): SchemaNode | undefined;
   getAllNodesRecursively(visitedNodes?: Set<SchemaNode>): SchemaNode[];

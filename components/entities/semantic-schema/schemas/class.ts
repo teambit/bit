@@ -28,10 +28,10 @@ export class ClassSchema extends SchemaNode {
     return this.members;
   }
 
-  toString({ color }) {
-    const boldUnderline = color ? chalk.bold.underline : (str: string) => str;
-    const membersStr = this.members.map((m) => `* ${m.toString({ color })}`).join('\n');
-    const decoratorsStr = this.decorators?.map((decorator) => decorator.toString({ color })).join('\n');
+  toString(options?: { color?: boolean }): string {
+    const boldUnderline = options?.color ? chalk.bold.underline : (str: string) => str;
+    const membersStr = this.members.map((m) => `* ${m.toString(options)}`).join('\n');
+    const decoratorsStr = this.decorators?.map((decorator) => decorator.toString(options)).join('\n');
     return `${this.decorators ? `${decoratorsStr}\n` : ''}${boldUnderline(this.name)}\n${membersStr}`;
   }
 
