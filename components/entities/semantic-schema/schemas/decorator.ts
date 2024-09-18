@@ -17,9 +17,22 @@ export class DecoratorSchema extends SchemaNode {
   }
 
   toString() {
-    // name and args
     const argsStr = this.args?.map((arg) => arg.toString()).join(', ');
     return `@${this.name}${argsStr ? `(${argsStr})` : ''}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let result = '';
+
+    if (options?.showDocs && this.doc) {
+      result += `${this.doc.toFullSignature()}\n`;
+    }
+
+    const argsStr = this.args?.map((arg) => arg.toFullSignature(options)).join(', ');
+
+    result += `@${this.name}${argsStr ? `(${argsStr})` : ''}`;
+
+    return result;
   }
 
   toObject() {

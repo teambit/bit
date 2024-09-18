@@ -20,6 +20,13 @@ export class IndexSignatureSchema extends SchemaNode {
     return `[${this.keyType.toString()}]: ${this.valueType.toString()}`;
   }
 
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const keyTypeStr = this.keyType.toFullSignature(options);
+    const valueTypeStr = this.valueType.toFullSignature(options);
+
+    return `[${keyTypeStr}]: ${valueTypeStr}`;
+  }
+
   toObject() {
     return {
       ...super.toObject(),

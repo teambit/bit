@@ -78,7 +78,7 @@ export class APISchema extends SchemaNode {
         return '';
       }
 
-      return `${chalk.green.bold(sectionName)}\n${objects.map((c) => c.toString()).join('\n')}\n\n`;
+      return `${chalk.green.bold(sectionName)}\n${objects.map((c) => c.toString({ color: true })).join('\n')}\n\n`;
     };
 
     return (
@@ -93,6 +93,54 @@ export class APISchema extends SchemaNode {
       getSection(TypeRefSchema, 'TypeReferences') +
       getSection(UnresolvedSchema, 'Unresolved')
     );
+  }
+
+  toFullSignature(options: { showDocs?: boolean; showTitles?: boolean } = { showDocs: true }): string {
+    const title = `API Schema of ${this.componentId.toString()}\n\n`;
+
+    const exportGroups: { [key: string]: SchemaNode[] } = {};
+
+    for (const exp of this.module.exports) {
+      const node = ExportSchema.isExportSchema(exp) ? exp.exportNode : exp;
+      const constructorName = node.constructor.name;
+
+      if (!exportGroups[constructorName]) {
+        exportGroups[constructorName] = [];
+      }
+
+      exportGroups[constructorName].push(exp);
+    }
+
+    let output = options.showTitles ? title : '';
+
+    for (const [sectionName, exports] of Object.entries(exportGroups)) {
+      const readableSectionName = options.showTitles ? this.getReadableSectionName(sectionName) : '';
+
+      output += `${readableSectionName}\n\n`;
+
+      const sectionBody = exports.map((exp) => exp.toFullSignature(options)).join('\n\n');
+
+      output += `${sectionBody}\n\n`;
+    }
+
+    return output.trim();
+  }
+
+  private getReadableSectionName(constructorName: string): string {
+    const sectionNameMap: { [key: string]: string } = {
+      ModuleSchema: 'Namespaces',
+      ClassSchema: 'Classes',
+      InterfaceSchema: 'Interfaces',
+      FunctionLikeSchema: 'Functions',
+      VariableLikeSchema: 'Variables',
+      TypeSchema: 'Types',
+      EnumSchema: 'Enums',
+      TypeRefSchema: 'Type References',
+      UnresolvedSchema: 'Unresolved',
+      ReactSchema: 'React Components',
+    };
+
+    return sectionNameMap[constructorName] || constructorName;
   }
 
   listSignatures() {

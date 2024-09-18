@@ -13,8 +13,12 @@ export class TypeIntersectionSchema extends SchemaNode {
     return this.types;
   }
 
-  toString() {
-    return `${this.types.map((type) => type.toString()).join(' & ')}`;
+  toString(options?: { color?: boolean }) {
+    return `${this.types.map((type) => type.toString(options)).join(' & ')}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    return this.types.map((type) => type.toFullSignature(options)).join(' & ');
   }
 
   toObject() {

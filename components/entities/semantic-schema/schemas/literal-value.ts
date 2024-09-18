@@ -10,6 +10,10 @@ export class LiteralValueSchema extends SchemaNode {
     return this.value;
   }
 
+  toFullSignature(): string {
+    return this.toString();
+  }
+
   toObject() {
     return {
       ...super.toObject(),

@@ -10,8 +10,17 @@ export class ObjectLiteralExpressionSchema extends SchemaNode {
     return this.members;
   }
 
-  toString(): string {
-    return `{\n${this.members.map((member) => `\t${member.toString()}`).join('\n')}\n}`;
+  toString(options?: { color?: boolean }): string {
+    return `{\n${this.members.map((member) => `\t${member.toString(options)}`).join('\n')}\n}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const membersStr = this.members.map((member) => member.toFullSignature(options)).join(',\n');
+
+    return `{\n${membersStr
+      .split('\n')
+      .map((line) => `  ${line}`)
+      .join('\n')}\n}`;
   }
 
   toObject() {

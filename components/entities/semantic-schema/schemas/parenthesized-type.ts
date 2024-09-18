@@ -16,8 +16,12 @@ export class ParenthesizedTypeSchema extends SchemaNode {
     return [this.type];
   }
 
-  toString() {
-    return `(${this.type.toString()})`;
+  toString(options?: { color?: boolean }): string {
+    return `(${this.type.toString(options)})`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    return `(${this.type.toFullSignature(options)})`;
   }
 
   toObject() {

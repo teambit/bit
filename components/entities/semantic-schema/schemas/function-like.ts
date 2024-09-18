@@ -47,13 +47,46 @@ export class FunctionLikeSchema extends SchemaNode {
     return [...this.params, this.returnType, ...(this.decorators || [])];
   }
 
-  toString() {
+  toString({ color }) {
+    const bold = color ? chalk.bold : (text: string) => text;
     const paramsStr = this.params.map((param) => param.toString()).join(', ');
     const typeParamsStr = this.typeParams ? `<${this.typeParams.join(', ')}>` : '';
-    const decoratorsStr = this.decorators?.map((decorator) => decorator.toString()).join('\n');
-    return `${this.decorators ? `${decoratorsStr}\n` : ''}${this.modifiersToString()}${typeParamsStr}${chalk.bold(
+    const decoratorsStr = this.decorators?.map((decorator) => decorator.toString({ color })).join('\n');
+    return `${this.decorators ? `${decoratorsStr}\n` : ''}${this.modifiersToString()}${typeParamsStr}${bold(
       this.name
-    )}(${paramsStr}): ${this.returnType.toString()}`;
+    )}(${paramsStr}): ${this.returnType.toString({ color })}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let result = '';
+    if (options?.showDocs && this.doc) {
+      result += `${this.doc.toFullSignature()}\n`;
+    }
+    const decoratorsStr = this.decorators?.map((decorator) => decorator.toString()).join('\n');
+    if (decoratorsStr) {
+      result += `${decoratorsStr}\n`;
+    }
+    const modifiersStr = this.modifiersToString();
+    const typeParamsStr = this.typeParams ? `<${this.typeParams.join(', ')}>` : '';
+    const paramsStr = this.params
+      .map((param) => {
+        let paramStr = '';
+        if (param.isSpread) {
+          paramStr += '...';
+        }
+        paramStr += param.name;
+        if (param.isOptional) {
+          paramStr += '?';
+        }
+        paramStr += `: ${param.type.toString()}`;
+        if (param.defaultValue !== undefined) {
+          paramStr += ` = ${param.defaultValue}`;
+        }
+        return paramStr;
+      })
+      .join(', ');
+    result += `${modifiersStr}${this.name}${typeParamsStr}(${paramsStr}): ${this.returnType.toString()}`;
+    return result;
   }
 
   isDeprecated(): boolean {

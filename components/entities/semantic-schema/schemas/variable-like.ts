@@ -28,8 +28,26 @@ export class VariableLikeSchema extends SchemaNode {
     return [this.type];
   }
 
-  toString() {
-    return `${chalk.bold(this.name)}${this.isOptional ? '?' : ''}: ${this.type.toString()}`;
+  toString(options?: { color?: boolean }) {
+    const bold = options?.color ? chalk.bold : (str: string) => str;
+    return `${bold(this.name)}${this.isOptional ? '?' : ''}: ${this.type.toString(options)}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const namePart = `${this.name}${this.isOptional ? '?' : ''}`;
+    const typeSignature = this.type.toFullSignature(options);
+    let signature = `${namePart}: ${typeSignature}`;
+
+    if (this.defaultValue !== undefined) {
+      signature += ` = ${this.defaultValue}`;
+    }
+
+    if (options?.showDocs && this.doc) {
+      const docString = this.doc.toFullSignature();
+      signature = `${docString}\n${signature}`;
+    }
+
+    return signature;
   }
 
   toObject() {

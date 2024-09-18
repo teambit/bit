@@ -6,6 +6,7 @@ export class ExportSchema extends SchemaNode {
   alias?: string;
   exportNode: SchemaNode;
   readonly doc?: DocSchema;
+  readonly signature?: string;
 
   constructor(
     readonly location: SchemaLocation,
@@ -18,13 +19,50 @@ export class ExportSchema extends SchemaNode {
     this.exportNode = exportNode;
     this.alias = alias;
     this.doc = doc;
+    this.signature = exportNode.signature || this.toFullSignature();
   }
 
-  toString() {
-    if (this.alias) {
-      return `${this.name} as ${this.alias}`;
+  toString(options?: { color?: boolean }): string {
+    let signature = '';
+
+    const alias = this.alias || this.name;
+    const originalName = this.exportNode.name || this.name;
+
+    if (alias !== originalName) {
+      signature += `export { ${originalName} as ${alias} };\n`;
+    } else {
+      signature += `export { ${originalName} };\n`;
     }
-    return `${this.name}`;
+
+    const exportNodeSignature = this.exportNode.toString(options);
+
+    signature += `\n${exportNodeSignature}`;
+
+    return signature;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let signature = '';
+
+    if (options?.showDocs && this.doc) {
+      const docString = this.doc.toFullSignature();
+      signature += `${docString}\n`;
+    }
+
+    const alias = this.alias || this.name;
+    const originalName = this.exportNode.name || this.name;
+
+    if (alias !== originalName) {
+      signature += `export { ${originalName} as ${alias} };\n`;
+    } else {
+      signature += `export { ${originalName} };\n`;
+    }
+
+    const exportNodeSignature = this.exportNode.toFullSignature(options);
+
+    signature += `\n${exportNodeSignature}`;
+
+    return signature;
   }
 
   toObject() {

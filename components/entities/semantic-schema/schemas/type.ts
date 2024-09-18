@@ -19,8 +19,22 @@ export class TypeSchema extends SchemaNode {
     this.doc = doc;
   }
 
-  toString() {
-    return `${chalk.bold(this.name)}: ${this.type.toString()}`;
+  toString(options?: { color?: boolean }) {
+    const bold = options?.color ? chalk.bold : (str: string) => str;
+    return `${bold(this.name)}: ${this.type.toString(options)}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const typeSignature = this.type.toFullSignature(options);
+
+    let signature = `${this.name}: ${typeSignature}`;
+
+    if (options?.showDocs && this.doc) {
+      const docString = this.doc.toFullSignature();
+      signature = `${docString}\n${signature}`;
+    }
+
+    return signature;
   }
 
   getNodes() {

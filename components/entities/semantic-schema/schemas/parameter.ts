@@ -25,6 +25,46 @@ export class ParameterSchema<T extends SchemaNode = SchemaNode> extends SchemaNo
     return `${this.name}${this.isOptional ? '?' : ''}: ${this.type.toString()}`;
   }
 
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let paramStr = '';
+
+    if (options?.showDocs && this.description) {
+      paramStr += `/** ${this.description} */\n`;
+    }
+
+    if (this.isSpread) {
+      paramStr += '...';
+    }
+
+    let paramName = '';
+
+    if (this.objectBindingNodes && this.objectBindingNodes.length > 0) {
+      const bindingsStr = this.objectBindingNodes.map((node) => node.toFullSignature(options)).join(', ');
+      paramName += `{ ${bindingsStr} }`;
+    } else {
+      paramName += this.name;
+    }
+
+    if (this.isOptional) {
+      paramName += '?';
+    }
+
+    paramStr += `${paramName}`;
+
+    if (this.type && typeof this.type.toString === 'function') {
+      const typeName = this.type.toString();
+      if (typeName) {
+        paramStr += `: ${typeName}`;
+      }
+    }
+
+    if (this.defaultValue !== undefined) {
+      paramStr += ` = ${this.defaultValue}`;
+    }
+
+    return paramStr;
+  }
+
   toObject() {
     return {
       ...super.toObject(),

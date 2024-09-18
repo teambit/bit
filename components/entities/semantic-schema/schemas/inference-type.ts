@@ -22,6 +22,22 @@ export class InferenceTypeSchema extends SchemaNode {
     return this.type;
   }
 
+  toFullSignature(): string {
+    let result = '';
+
+    if (this.name && this.name !== this.type) {
+      result += `${this.name}: `;
+    }
+
+    result += this.type;
+
+    if (this.defaultValue !== undefined) {
+      result += ` = ${this.defaultValue}`;
+    }
+
+    return result;
+  }
+
   toObject() {
     return {
       ...super.toObject(),

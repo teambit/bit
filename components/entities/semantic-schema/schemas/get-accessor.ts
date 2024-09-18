@@ -16,8 +16,21 @@ export class GetAccessorSchema extends SchemaNode {
     return [this.type];
   }
 
-  toString() {
-    return `get ${chalk.bold(this.name)}(): ${this.type.toString()}`;
+  toString(options?: { color?: boolean }): string {
+    const bold = options?.color ? chalk.bold : (x: string) => x;
+    return `get ${bold(this.name)}(): ${this.type.toString(options)}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let result = '';
+
+    if (options?.showDocs && this.doc) {
+      result += `${this.doc.toFullSignature()}\n`;
+    }
+
+    result += `get ${this.name}(): ${this.type.toFullSignature(options)}`;
+
+    return result;
   }
 
   toObject() {
