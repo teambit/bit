@@ -15,7 +15,7 @@ export class DependentsCmd implements Command {
   description = 'show dependents of the given component';
   group = 'info';
   alias = '';
-  options = [] as CommandOptions;
+  options = [['j', 'json', 'return the dependents in JSON format']] as CommandOptions;
 
   async report([id]: [string]) {
     const results: DependentsResults = await dependents(id);
@@ -30,5 +30,20 @@ ${workspaceTable || '<none>'}
 
 ${chalk.bold('Dependents originated from scope')}
 ${scopeTable || '<none>'}`;
+  }
+
+  async json([id]: [string]) {
+    const results: DependentsResults = await dependents(id);
+    const depInfoToString = (depInfo) => {
+      return {
+        ...depInfo,
+        id: depInfo.id.toString(),
+      };
+    };
+    return {
+      scopeDependents: results.scopeDependents.map(depInfoToString),
+      workspaceDependents: results.workspaceDependents.map(depInfoToString),
+      id: results.id.toString(),
+    };
   }
 }
