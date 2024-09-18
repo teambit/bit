@@ -702,7 +702,7 @@
           [
             "",
             "ast",
-            "EXPERIMENTAL. use ast to transform files instead of regex"
+            "use ast to transform files instead of regex"
           ]
         ],
         "description": "Renames the owner part of the scope-name for all components with the specified 'current owner name'",
@@ -724,7 +724,7 @@
           [
             "",
             "ast",
-            "EXPERIMENTAL. use ast to transform files instead of regex"
+            "use ast to transform files instead of regex"
           ],
           [
             "x",
@@ -1286,7 +1286,7 @@
       [
         "t",
         "check-types [string]",
-        "EXPERIMENTAL. show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project"
+        "show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project"
       ],
       [
         "i",
@@ -1719,12 +1719,12 @@
       [
         "",
         "include-snap",
-        "EXPERIMENTAL. include snap pipeline tasks. Warning: this may deploy/publish if you have such tasks"
+        "include snap pipeline tasks. Warning: this may deploy/publish if you have such tasks"
       ],
       [
         "",
         "include-tag",
-        "EXPERIMENTAL. include tag pipeline tasks. Warning: this may deploy/publish if you have such tasks"
+        "include tag pipeline tasks. Warning: this may deploy/publish if you have such tasks"
       ],
       [
         "i",
@@ -1908,7 +1908,7 @@
           [
             "t",
             "tree",
-            "EXPERIMENTAL. render dependencies as a tree, similar to \"npm ls\""
+            "render dependencies as a tree, similar to \"npm ls\""
           ]
         ],
         "description": "show direct and indirect dependencies of the given component",
@@ -2066,7 +2066,7 @@
         "name": "blame <component-name> <dependency-name>",
         "alias": "",
         "options": [],
-        "description": "EXPERIMENTAL. find out which snap/tag changed a dependency version",
+        "description": "find out which snap/tag changed a dependency version",
         "extendedDescription": "",
         "group": "info",
         "private": false,
@@ -2087,7 +2087,7 @@
             "max display depth of the dependency graph"
           ]
         ],
-        "description": "EXPERIMENTAL. find components that use the specified dependency",
+        "description": "find components that use the specified dependency",
         "extendedDescription": "",
         "group": "info",
         "private": false,
@@ -2110,7 +2110,7 @@
         "max display depth of the dependency graph"
       ]
     ],
-    "description": "EXPERIMENTAL. find components that use the specified dependency",
+    "description": "find components that use the specified dependency",
     "extendedDescription": "",
     "group": "info",
     "private": false,
@@ -2744,7 +2744,7 @@
         "do not write config files (such as eslint, tsconfig, prettier, etc...)"
       ]
     ],
-    "description": "EXPERIMENTAL. recover component(s) soft-deleted from the workspace, or a remote scope",
+    "description": "recover component(s) soft-deleted from the workspace, or a remote scope",
     "extendedDescription": "",
     "group": "collaborate",
     "private": false
@@ -2781,7 +2781,7 @@
       [
         "",
         "origin-directly",
-        "EXPERIMENTAL. avoid export to the central hub, instead, export directly to the original scopes. not recommended!"
+        "avoid export to the central hub, instead, export directly to the original scopes. not recommended!"
       ],
       [
         "",
@@ -2791,12 +2791,12 @@
       [
         "",
         "head-only",
-        "EXPERIMENTAL. in case previous export failed and locally it shows exported and only one snap/tag was created, try using this flag"
+        "in case previous export failed and locally it shows exported and only one snap/tag was created, try using this flag"
       ],
       [
         "",
         "ignore-missing-artifacts",
-        "EXPERIMENTAL. don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote"
+        "don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote"
       ],
       [
         "",
@@ -3293,7 +3293,7 @@
       [
         "",
         "update-dependents",
-        "EXPERIMENTAL. when snapped on a lane, mark it as update-dependents so it will be skipped from the workspace"
+        "when snapped on a lane, mark it as update-dependents so it will be skipped from the workspace"
       ],
       [
         "j",
@@ -3425,7 +3425,7 @@
         "message to be attached to the stashed components"
       ]
     ],
-    "description": "EXPERIMENTAL. stash modified components",
+    "description": "stash modified components",
     "extendedDescription": "",
     "group": "development",
     "private": false,
@@ -4011,7 +4011,7 @@
             "the name of the lane to rename. if not specified, the current lane is used"
           ]
         ],
-        "description": "EXPERIMENTAL. change the lane-name locally",
+        "description": "change the lane-name locally",
         "extendedDescription": "the remote will be updated after the next \"bit export\" command",
         "group": "ungrouped",
         "private": false
@@ -4259,7 +4259,7 @@
           [
             "",
             "squash",
-            "EXPERIMENTAL. relevant for merging a lane into another non-main lane, which by default does not squash"
+            "relevant for merging a lane into another non-main lane, which by default does not squash"
           ],
           [
             "",
@@ -4448,7 +4448,7 @@
         "compile components during the watch process"
       ]
     ],
-    "description": "EXPERIMENTAL. communicate with bit cli program via http requests",
+    "description": "communicate with bit cli program via http requests",
     "extendedDescription": "",
     "group": "general",
     "private": false
@@ -4770,7 +4770,7 @@
         "json format"
       ]
     ],
-    "description": "EXPERIMENTAL. basic status for fast execution",
+    "description": "basic status for fast execution",
     "extendedDescription": "shows only modified/new components with code changes. for the full status, use \"bit status\".\nthis command only checks source code changes, it doesn't check for config/aspect/dependency changes",
     "group": "development",
     "private": false,
@@ -4819,7 +4819,7 @@
       [
         "",
         "ast",
-        "EXPERIMENTAL. use ast to transform files instead of regex"
+        "use ast to transform files instead of regex"
       ],
       [
         "",
@@ -4901,7 +4901,7 @@
       [
         "",
         "ast",
-        "EXPERIMENTAL. use ast to transform files instead of regex"
+        "use ast to transform files instead of regex"
       ]
     ],
     "description": "create a new component forked from an existing one (copies source files and configs)",

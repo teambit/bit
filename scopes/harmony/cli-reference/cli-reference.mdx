@@ -199,8 +199,8 @@ because this process can take a while on a large workspace, some flags are avail
 | `--skip-tests`                     |                  | skip running component tests during build process                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `--skip-tasks <string>`            |                  | skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes. specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `--fail-fast`                      |                  | stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `--include-snap`                   |                  | EXPERIMENTAL. include snap pipeline tasks. Warning: this may deploy/publish if you have such tasks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `--include-tag`                    |                  | EXPERIMENTAL. include tag pipeline tasks. Warning: this may deploy/publish if you have such tasks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `--include-snap`                   |                  | include snap pipeline tasks. Warning: this may deploy/publish if you have such tasks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `--include-tag`                    |                  | include tag pipeline tasks. Warning: this may deploy/publish if you have such tasks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `--ignore-issues <issues>`         |       `-i`       | ignore component issues (shown in "bit status" as "issues found"), issues to ignore: [MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory] to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "\*". |
 
 ---
@@ -504,10 +504,10 @@ this command marks the components as deleted, and after snap/tag and export they
 | ---------------- | :----------------------------: |
 | `component-name` | component name or component id |
 
-| **Option** | **Option alias** | **Description**                                                  |
-| ---------- | :--------------: | ---------------------------------------------------------------- |
-| `--scope`  |                  | get the data from the scope instead of the workspace             |
-| `--tree`   |       `-t`       | EXPERIMENTAL. render dependencies as a tree, similar to "npm ls" |
+| **Option** | **Option alias** | **Description**                                      |
+| ---------- | :--------------: | ---------------------------------------------------- |
+| `--scope`  |                  | get the data from the scope instead of the workspace |
+| `--tree`   |       `-t`       | render dependencies as a tree, similar to "npm ls"   |
 
 ### deps remove
 
@@ -592,7 +592,7 @@ this command marks the components as deleted, and after snap/tag and export they
 
 **Usage**: `deps blame <component-name> <dependency-name>`
 
-**Description**: EXPERIMENTAL. find out which snap/tag changed a dependency version
+**Description**: find out which snap/tag changed a dependency version
 
 | **Arg**           |                                **Description**                                |
 | ----------------- | :---------------------------------------------------------------------------: |
@@ -602,7 +602,7 @@ this command marks the components as deleted, and after snap/tag and export they
 
 **Usage**: `deps usage <dependency-name>`
 
-**Description**: EXPERIMENTAL. find components that use the specified dependency
+**Description**: find components that use the specified dependency
 
 | **Arg**           |                                                               **Description**                                                                |
 | ----------------- | :------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -786,18 +786,18 @@ bit export => export all staged snaps/tags of components to their remote scope. 
 | ----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-patterns...` | (not recommended) component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
-| **Option**                   | **Option alias** | **Description**                                                                                                                         |
-| ---------------------------- | :--------------: | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `--eject`                    |       `-e`       | after export, remove the components from the workspace and install them as packages                                                     |
-| `--all`                      |       `-a`       | export all components, including non-staged (useful when components in the remote scope are corrupted or missing)                       |
-| `--all-versions`             |                  | export not only staged versions but all of them (useful when versions in the remote scope are corrupted or missing)                     |
-| `--origin-directly`          |                  | EXPERIMENTAL. avoid export to the central hub, instead, export directly to the original scopes. not recommended!                        |
-| `--resume <string>`          |                  | in case the previous export failed and suggested to resume with an export-id, enter the id                                              |
-| `--head-only`                |                  | EXPERIMENTAL. in case previous export failed and locally it shows exported and only one snap/tag was created, try using this flag       |
-| `--ignore-missing-artifacts` |                  | EXPERIMENTAL. don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote |
-| `--fork-lane-new-scope`      |                  | allow exporting a forked lane into a different scope than the original scope                                                            |
-| `--open-browser`             |                  | open a browser once the export is completed in the cloud job url                                                                        |
-| `--json`                     |       `-j`       | show output in json format                                                                                                              |
+| **Option**                   | **Option alias** | **Description**                                                                                                           |
+| ---------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------------- |
+| `--eject`                    |       `-e`       | after export, remove the components from the workspace and install them as packages                                       |
+| `--all`                      |       `-a`       | export all components, including non-staged (useful when components in the remote scope are corrupted or missing)         |
+| `--all-versions`             |                  | export not only staged versions but all of them (useful when versions in the remote scope are corrupted or missing)       |
+| `--origin-directly`          |                  | avoid export to the central hub, instead, export directly to the original scopes. not recommended!                        |
+| `--resume <string>`          |                  | in case the previous export failed and suggested to resume with an export-id, enter the id                                |
+| `--head-only`                |                  | in case previous export failed and locally it shows exported and only one snap/tag was created, try using this flag       |
+| `--ignore-missing-artifacts` |                  | don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote |
+| `--fork-lane-new-scope`      |                  | allow exporting a forked lane into a different scope than the original scope                                              |
+| `--open-browser`             |                  | open a browser once the export is completed in the cloud job url                                                          |
+| `--json`                     |       `-j`       | show output in json format                                                                                                |
 
 ---
 
@@ -822,7 +822,7 @@ bit export => export all staged snaps/tags of components to their remote scope. 
 | `--skip-config`                  |                  | do not copy the config (aspects-config, env, etc) to the new component. helpful when it fails during aspect loading |
 | `--preserve`                     |                  | avoid refactoring file and variable/class names according to the new component name                                 |
 | `--no-link`                      |                  | avoid saving a reference to the original component                                                                  |
-| `--ast`                          |                  | EXPERIMENTAL. use ast to transform files instead of regex                                                           |
+| `--ast`                          |                  | use ast to transform files instead of regex                                                                         |
 
 ---
 
@@ -1114,7 +1114,7 @@ it is useful e.g. when having multiple lanes with the same name, but with differ
 
 **Usage**: `lane rename <new-name>`
 
-**Description**: EXPERIMENTAL. change the lane-name locally  
+**Description**: change the lane-name locally  
 the remote will be updated after the next "bit export" command
 
 | **Option**                | **Option alias** | **Description**                                                            |
@@ -1284,7 +1284,7 @@ this flag keeps the history of one end and saves a reference to the other end. t
 | `--message <message>`                   |       `-m`       | override the default message for the auto snap                                                                                                              |
 | `--keep-readme`                         |                  | skip deleting the lane readme component after merging                                                                                                       |
 | `--no-squash`                           |                  | relevant for merging lanes into main, which by default squashes all lane snaps                                                                              |
-| `--squash`                              |                  | EXPERIMENTAL. relevant for merging a lane into another non-main lane, which by default does not squash                                                      |
+| `--squash`                              |                  | relevant for merging a lane into another non-main lane, which by default does not squash                                                                    |
 | `--ignore-config-changes`               |                  | allow merging when components are modified due to config changes (such as dependencies) only and not files                                                  |
 | `--verbose`                             |                  | show details of components that were not merged successfully                                                                                                |
 | `--skip-dependency-installation`        |       `-x`       | do not install dependencies of the imported components                                                                                                      |
@@ -1523,7 +1523,7 @@ optionally use '--abort' to revert the last merge. to revert a lane merge, use "
 ## mini-status
 
 **Alias**: `ms`  
-**Description**: EXPERIMENTAL. basic status for fast execution  
+**Description**: basic status for fast execution  
 shows only modified/new components with code changes. for the full status, use "bit status".  
 this command only checks source code changes, it doesn't check for config/aspect/dependency changes
 
@@ -1627,7 +1627,7 @@ to match a state and another criteria, use " AND " keyword. e.g. '$modified AND 
 
 ## recover
 
-**Description**: EXPERIMENTAL. recover component(s) soft-deleted from the workspace, or a remote scope
+**Description**: recover component(s) soft-deleted from the workspace, or a remote scope
 
 `bit recover <component-name>`
 
@@ -1724,7 +1724,7 @@ to mark components as deleted on the remote scope, use "bit delete".
 | `--scope <scope-name>`   |       `-s`       | define the scope for the new component                                                                                                                 |
 | `--refactor`             |       `-r`       | update the import/require statements in all dependent components (in the same workspace)                                                               |
 | `--preserve`             |                  | avoid renaming files and variables/classes according to the new component name                                                                         |
-| `--ast`                  |                  | EXPERIMENTAL. use ast to transform files instead of regex                                                                                              |
+| `--ast`                  |                  | use ast to transform files instead of regex                                                                                                            |
 | `--delete`               |                  | DEPRECATED. this is now the default                                                                                                                    |
 | `--deprecate`            |                  | instead of deleting the original component, deprecating it                                                                                             |
 | `--path <relative-path>` |       `-p`       | relative path in the workspace to place new component in. by default, the directory of the new component is from your workspace's "defaultScope" value |
@@ -1867,7 +1867,7 @@ as a result of this change
 | **Option**   | **Option alias** | **Description**                                                                                                     |
 | ------------ | :--------------: | ------------------------------------------------------------------------------------------------------------------- |
 | `--refactor` |       `-r`       | update the import statements in all dependent components to the new package name (that contains the new owner name) |
-| `--ast`      |                  | EXPERIMENTAL. use ast to transform files instead of regex                                                           |
+| `--ast`      |                  | use ast to transform files instead of regex                                                                         |
 
 ### scope fork
 
@@ -1882,16 +1882,16 @@ optionally, provide [pattern] to limit the fork to specific components
 | `new-scope`      |                                                                                                                                                                                     the new scope to fork to, default to the default-scope of the workspace                                                                                                                                                                                     |
 | `pattern`        | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
-| **Option**                       | **Option alias** | **Description**                                           |
-| -------------------------------- | :--------------: | --------------------------------------------------------- |
-| `--ast`                          |                  | EXPERIMENTAL. use ast to transform files instead of regex |
-| `--skip-dependency-installation` |       `-x`       | do not install packages of the imported components        |
+| **Option**                       | **Option alias** | **Description**                                    |
+| -------------------------------- | :--------------: | -------------------------------------------------- |
+| `--ast`                          |                  | use ast to transform files instead of regex        |
+| `--skip-dependency-installation` |       `-x`       | do not install packages of the imported components |
 
 ---
 
 ## server
 
-**Description**: EXPERIMENTAL. communicate with bit cli program via http requests
+**Description**: communicate with bit cli program via http requests
 
 `bit server`
 
@@ -1989,7 +1989,7 @@ optionally, provide [pattern] to limit the fork to specific components
 
 ## stash
 
-**Description**: EXPERIMENTAL. stash modified components
+**Description**: stash modified components
 
 `bit stash <sub-command>`
 
@@ -2295,13 +2295,13 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
 
 `bit watch`
 
-| **Option**               | **Option alias** | **Description**                                                                                                                                   |
-| ------------------------ | :--------------: | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--verbose`              |       `-v`       | show all watch events and compiler verbose output                                                                                                 |
-| `--skip-pre-compilation` |                  | skip compilation step before starting to watch                                                                                                    |
-| `--check-types [string]` |       `-t`       | EXPERIMENTAL. show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project |
-| `--import`               |       `-i`       | DEPRECATED. it is now the default. helpful when using git. import component objects if .bitmap changed not by bit                                 |
-| `--skip-import`          |                  | do not import component objects if .bitmap changed not by bit                                                                                     |
+| **Option**               | **Option alias** | **Description**                                                                                                                     |
+| ------------------------ | :--------------: | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `--verbose`              |       `-v`       | show all watch events and compiler verbose output                                                                                   |
+| `--skip-pre-compilation` |                  | skip compilation step before starting to watch                                                                                      |
+| `--check-types [string]` |       `-t`       | show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project |
+| `--import`               |       `-i`       | DEPRECATED. it is now the default. helpful when using git. import component objects if .bitmap changed not by bit                   |
+| `--skip-import`          |                  | do not import component objects if .bitmap changed not by bit                                                                       |
 
 ---
 
@@ -2315,7 +2315,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
 
 ## why
 
-**Description**: EXPERIMENTAL. find components that use the specified dependency
+**Description**: find components that use the specified dependency
 
 `bit why <dependency-name>`
 
