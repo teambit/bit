@@ -78,7 +78,7 @@ export class APISchema extends SchemaNode {
         return '';
       }
 
-      return `${chalk.green.bold(sectionName)}\n${objects.map((c) => c.toString()).join('\n')}\n\n`;
+      return `${chalk.green.bold(sectionName)}\n${objects.map((c) => c.toString({ color: true })).join('\n')}\n\n`;
     };
 
     return (
@@ -93,6 +93,43 @@ export class APISchema extends SchemaNode {
       getSection(TypeRefSchema, 'TypeReferences') +
       getSection(UnresolvedSchema, 'Unresolved')
     );
+  }
+
+  toFullSignature(options: { showDocs?: boolean } = { showDocs: true }): string {
+    const title = `API Schema of ${this.componentId.toString()}\n`;
+    const sections: string[] = [];
+
+    const getSection = (ClassObj: any, sectionName: string) => {
+      const objects = this.module.exports.filter((exp) => {
+        const node = ExportSchema.isExportSchema(exp) ? exp.exportNode : exp;
+        return node instanceof ClassObj;
+      });
+
+      if (!objects.length) {
+        return '';
+      }
+
+      const sectionHeader = `${sectionName}\n\n`;
+      const sectionBody = objects
+        .map((obj) => {
+          return obj.toFullSignature(options);
+        })
+        .join('\n\n');
+
+      return `${sectionHeader}${sectionBody}\n\n`;
+    };
+
+    sections.push(getSection(ModuleSchema, 'Namespaces'));
+    sections.push(getSection(ClassSchema, 'Classes'));
+    sections.push(getSection(InterfaceSchema, 'Interfaces'));
+    sections.push(getSection(FunctionLikeSchema, 'Functions'));
+    sections.push(getSection(VariableLikeSchema, 'Variables'));
+    sections.push(getSection(TypeSchema, 'Types'));
+    sections.push(getSection(EnumSchema, 'Enums'));
+    sections.push(getSection(TypeRefSchema, 'TypeReferences'));
+    sections.push(getSection(UnresolvedSchema, 'Unresolved'));
+
+    return title + sections.filter(Boolean).join('');
   }
 
   listSignatures() {

@@ -13,8 +13,12 @@ export class TemplateLiteralTypeSpanSchema extends SchemaNode {
     return [this.type];
   }
 
-  toString() {
-    return `${this.type.toString()} ${this.literal}`;
+  toString(options?: { color?: boolean }) {
+    return `${this.type.toString(options)} ${this.literal}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    return `${this.type.toFullSignature(options)} ${this.literal}`;
   }
 
   toObject() {

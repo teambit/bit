@@ -19,6 +19,10 @@ export class LiteralTypeSchema extends SchemaNode {
     return this.name;
   }
 
+  toFullSignature(): string {
+    return this.toString();
+  }
+
   static fromObject(obj: Record<string, any>): LiteralTypeSchema {
     const location = obj.location;
     const name = obj.name;

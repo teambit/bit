@@ -9,6 +9,10 @@ export class UnImplementedSchema extends SchemaNode {
     return `<<unimplemented schema ${this.name} of type ${this.type}>>`;
   }
 
+  toFullSignature(): string {
+    return `<<unimplemented schema ${this.name} of type ${this.type}>>`;
+  }
+
   toObject() {
     return {
       ...super.toObject(),

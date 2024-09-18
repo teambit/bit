@@ -13,6 +13,10 @@ export class TagSchema extends SchemaNode {
     return `@${this.tagName}${comment}`;
   }
 
+  toFullSignature(): string {
+    return this.toString();
+  }
+
   static fromObject(obj: Record<string, any>): TagSchema {
     const location = obj.location;
     const tagName = obj.tagName;

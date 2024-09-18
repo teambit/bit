@@ -12,6 +12,10 @@ export class KeywordTypeSchema extends SchemaNode {
     return this.name;
   }
 
+  toFullSignature(): string {
+    return this.toString();
+  }
+
   toObject() {
     return {
       ...super.toObject(),

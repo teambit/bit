@@ -18,6 +18,12 @@ export class ReturnTagSchema extends TagSchema {
     return `@${this.tagName}${comment}`;
   }
 
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const typeStr = this.type ? ` {${this.type.toFullSignature(options)}}` : '';
+    const comment = this.comment ? ` ${this.comment}` : '';
+    return `@${this.tagName}${typeStr}${comment}`;
+  }
+
   toObject() {
     return {
       ...super.toObject(),

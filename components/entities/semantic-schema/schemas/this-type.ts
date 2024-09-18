@@ -12,6 +12,10 @@ export class ThisTypeSchema extends SchemaNode {
     return this.name;
   }
 
+  toFullSignature() {
+    return this.toString();
+  }
+
   static fromObject(obj: Record<string, any>): ThisTypeSchema {
     const location = obj.location;
     const name = obj.name;

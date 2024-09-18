@@ -16,6 +16,26 @@ export class DocSchema extends SchemaNode {
     return `${comment}${tags}`;
   }
 
+  toFullSignature(): string {
+    const lines: string[] = [];
+
+    if (this.comment) {
+      lines.push(...this.comment.split('\n').map((line) => ` * ${line.trim()}`));
+    }
+
+    if (this.tags && this.tags.length > 0) {
+      for (const tag of this.tags) {
+        lines.push(` * ${tag.toString().trim()}`);
+      }
+    }
+
+    if (lines.length === 0) {
+      return '';
+    }
+
+    return `/**\n${lines.join('\n')}\n */`;
+  }
+
   hasTag(tagName: TagName) {
     return Boolean(this.findTag(tagName));
   }

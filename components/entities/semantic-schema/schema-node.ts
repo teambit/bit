@@ -44,7 +44,8 @@ export abstract class SchemaNode implements ISchemaNode {
     );
   }
 
-  abstract toString(): string;
+  abstract toString(options?: { color?: boolean }): string;
+  abstract toFullSignature(options?: { showDocs?: boolean }): string;
 
   getNodes(): SchemaNode[] {
     return [this];
