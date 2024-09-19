@@ -2158,7 +2158,13 @@
   {
     "name": "dependents <component-name>",
     "alias": "",
-    "options": [],
+    "options": [
+      [
+        "j",
+        "json",
+        "return the dependents in JSON format"
+      ]
+    ],
     "description": "show dependents of the given component",
     "extendedDescription": "",
     "group": "info",
