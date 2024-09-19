@@ -19,6 +19,13 @@ export class IndexedAccessSchema extends SchemaNode {
     return `${this.objectType.toString()}[${this.indexType.toString()}]`;
   }
 
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const objectTypeStr = this.objectType.toFullSignature(options);
+    const indexTypeStr = this.indexType.toFullSignature(options);
+
+    return `${objectTypeStr}[${indexTypeStr}]`;
+  }
+
   toObject() {
     return {
       ...super.toObject(),

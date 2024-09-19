@@ -14,6 +14,10 @@ export class UnknownSchema extends SchemaNode {
     return `<<unknown schema ${this.name}>>`;
   }
 
+  toFullSignature(): string {
+    return this.toString();
+  }
+
   toObject() {
     return {
       ...super.toObject(),

@@ -9,8 +9,12 @@ export class TupleTypeSchema extends SchemaNode {
     this.elements = elements;
   }
 
-  toString() {
-    return `[${this.elements.map((elem) => elem.toString()).join(', ')}]`;
+  toString(options?: { color?: boolean }) {
+    return `[${this.elements.map((elem) => elem.toString(options)).join(', ')}]`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    return `[${this.elements.map((elem) => elem.toFullSignature(options)).join(', ')}]`;
   }
 
   toObject() {

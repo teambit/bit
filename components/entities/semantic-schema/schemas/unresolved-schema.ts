@@ -13,6 +13,10 @@ export class UnresolvedSchema extends SchemaNode {
     return this.name;
   }
 
+  toFullSignature(): string {
+    return this.toString();
+  }
+
   toObject() {
     return super.toObject();
   }

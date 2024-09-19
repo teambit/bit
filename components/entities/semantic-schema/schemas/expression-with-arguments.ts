@@ -20,6 +20,17 @@ export class ExpressionWithTypeArgumentsSchema extends SchemaNode {
     return this.name;
   }
 
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let result = this.name;
+
+    if (this.typeArgs && this.typeArgs.length > 0) {
+      const typeArgsStr = this.typeArgs.map((arg) => arg.toFullSignature(options)).join(', ');
+      result += `<${typeArgsStr}>`;
+    }
+
+    return result;
+  }
+
   toObject() {
     return {
       ...super.toObject(),

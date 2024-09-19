@@ -20,8 +20,12 @@ export class TypeQuerySchema extends SchemaNode {
     return this.signature;
   }
 
-  toString() {
-    return `typeof ${this.type.toString()}`;
+  toString(options?: { color?: boolean }) {
+    return `typeof ${this.type.toString(options)}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    return `typeof ${this.type.toFullSignature(options)}`;
   }
 
   toObject() {

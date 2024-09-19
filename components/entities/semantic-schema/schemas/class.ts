@@ -28,10 +28,58 @@ export class ClassSchema extends SchemaNode {
     return this.members;
   }
 
-  toString() {
-    const membersStr = this.members.map((m) => `* ${m.toString()}`).join('\n');
-    const decoratorsStr = this.decorators?.map((decorator) => decorator.toString()).join('\n');
-    return `${this.decorators ? `${decoratorsStr}\n` : ''}${chalk.bold.underline(this.name)}\n${membersStr}`;
+  toString(options?: { color?: boolean }): string {
+    const boldUnderline = options?.color ? chalk.bold.underline : (str: string) => str;
+    const membersStr = this.members.map((m) => `* ${m.toString(options)}`).join('\n');
+    const decoratorsStr = this.decorators?.map((decorator) => decorator.toString(options)).join('\n');
+    return `${this.decorators ? `${decoratorsStr}\n` : ''}${boldUnderline(this.name)}\n${membersStr}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let result = '';
+
+    if (options?.showDocs && this.doc) {
+      result += `${this.doc.toFullSignature()}\n`;
+    }
+
+    const decoratorsStr = this.decorators?.map((decorator) => decorator.toFullSignature(options)).join('\n');
+    if (decoratorsStr) {
+      result += `${decoratorsStr}\n`;
+    }
+
+    let classDeclaration = `class ${this.name}`;
+
+    if (this.typeParams && this.typeParams.length > 0) {
+      classDeclaration += `<${this.typeParams.join(', ')}>`;
+    }
+
+    if (this.extendsNodes && this.extendsNodes.length > 0) {
+      const extendsStr = this.extendsNodes.map((node) => node.toFullSignature(options)).join(', ');
+      classDeclaration += ` extends ${extendsStr}`;
+    }
+
+    if (this.implementNodes && this.implementNodes.length > 0) {
+      const implementsStr = this.implementNodes.map((node) => node.toFullSignature(options)).join(', ');
+      classDeclaration += ` implements ${implementsStr}`;
+    }
+
+    result += `${classDeclaration} {\n`;
+
+    const membersStr = this.members
+      .map((member) => {
+        const memberStr = member.toFullSignature(options);
+        return memberStr
+          .split('\n')
+          .map((line) => `  ${line}`)
+          .join('\n');
+      })
+      .join('\n');
+
+    result += `${membersStr}\n`;
+
+    result += `}`;
+
+    return result;
   }
 
   toObject() {

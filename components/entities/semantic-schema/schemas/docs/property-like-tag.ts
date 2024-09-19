@@ -18,6 +18,12 @@ export class PropertyLikeTagSchema extends TagSchema {
     return `@${this.tagName} ${this.name}${type} ${comment}`;
   }
 
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const typeStr = this.type ? ` {${this.type.toFullSignature(options)}} ` : '';
+    const comment = this.comment ? ` ${this.comment}` : '';
+    return `@${this.tagName} ${this.name}${typeStr}${comment}`;
+  }
+
   toObject() {
     return {
       ...super.toObject(),

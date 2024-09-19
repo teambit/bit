@@ -22,4 +22,9 @@ export class ArrayLiteralExpressionSchema extends SchemaNode {
   toString(): string {
     return `[${this.members.join(', ')}]`;
   }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const membersStr = this.members.map((member) => member.toFullSignature(options)).join(', ');
+    return `[${membersStr}]`;
+  }
 }

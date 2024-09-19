@@ -45,7 +45,7 @@ type Options = {
 };
 
 type BuiltinDeps = string[] | Record<string, any>;
-type Detective = (fileContent: string | object, options?: any) => BuiltinDeps;
+type Detective = (fileContent: string, options?: any) => BuiltinDeps;
 
 const jsExt = ['.js', '.jsx', '.cjs', '.mjs'];
 
