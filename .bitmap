@@ -19,7 +19,7 @@
     "api-reference": {
         "name": "api-reference",
         "scope": "teambit.api-reference",
-        "version": "1.0.411",
+        "version": "1.0.410",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/api-reference"
     },
