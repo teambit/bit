@@ -78,7 +78,7 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   );
 
   const controlledHref = useUpdatedUrlFromQuery({});
-  const getHref = (node: any) => {
+  const useHref = (node: any) => {
     const hrefFromHook =
       hook?.useUpdatedUrlFromQuery?.(
         { file: node.id },
@@ -130,7 +130,7 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
             currentFile={selectedFile}
             drawerName="FILES"
             widgets={[Widget]}
-            getHref={getHref}
+            getHref={useHref}
             onTreeNodeSelected={hook?.onClick}
             open={isSidebarOpen}
           />
