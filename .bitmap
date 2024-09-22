@@ -19,7 +19,7 @@
     "api-reference": {
         "name": "api-reference",
         "scope": "teambit.api-reference",
-        "version": "1.0.410",
+        "version": "1.0.411",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/api-reference",
         "config": {
@@ -2009,7 +2009,7 @@
     "ui/code-compare": {
         "name": "ui/code-compare",
         "scope": "teambit.code",
-        "version": "0.0.305",
+        "version": "0.0.306",
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-compare",
         "config": {
