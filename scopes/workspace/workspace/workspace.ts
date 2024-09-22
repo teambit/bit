@@ -180,7 +180,7 @@ export class Workspace implements ComponentFactory {
    * They are used in webpack configuration to only track changes from these paths inside `node_modules`
    */
   private componentPathsRegExps: RegExp[] = [];
-  localAspects: string[] = [];
+  localAspects: Record<string, string> = {};
   filter: Filter;
   constructor(
     /**
