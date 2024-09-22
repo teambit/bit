@@ -37,6 +37,7 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
   options = [
     ['', 'push', 'export the updated objects to the original scopes once done'],
     ['', 'rebuild-artifacts', 'run the full build pipeline. do not use the saved artifacts from the last snap'],
+    ['', 'ignore-last-pkg-json', 'ignore the package.json created by the last snap'],
     ...tagCmdOptions.filter((o) => !excludeOptions.includes(o[1])),
   ] as CommandOptions;
   remoteOp = true; // In case a compiler / tester is not installed
@@ -49,6 +50,7 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
     options: {
       push?: boolean;
       rebuildArtifacts?: boolean;
+      ignoreLastPkgJson?: boolean;
     } & Partial<TagParams>
   ): Promise<string> {
     const { releaseType, preReleaseId } = validateOptions(options);
@@ -64,6 +66,7 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
       disableTagPipeline = false,
       ignoreBuildErrors = false,
       rebuildArtifacts,
+      ignoreLastPkgJson,
       rebuildDepsGraph,
       incrementBy = 1,
     } = options;
@@ -85,6 +88,7 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
       incrementBy,
       version: ver,
       rebuildArtifacts,
+      ignoreLastPkgJson,
     };
 
     const tagDataPerCompRaw = this.parseData(data);

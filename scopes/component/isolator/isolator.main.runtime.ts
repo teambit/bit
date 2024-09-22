@@ -211,6 +211,13 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   populateArtifactsFrom?: ComponentID[];
 
   /**
+   * relevant when populateArtifactsFrom is set.
+   * by default, it uses the package.json created in the previous snap as a base and make the necessary changes.
+   * if this is set to true, it will ignore the package.json from the previous snap.
+   */
+  populateArtifactsIgnorePkgJson?: boolean;
+
+  /**
    * Force specific host to get the component from.
    */
   host?: ComponentFactory;
@@ -910,6 +917,13 @@ export class IsolatorMain {
     const legacyComponents = [...legacyUnmodifiedComps, ...legacyModifiedComps];
     if (legacyScope && unmodifiedComps.length) await importMultipleDistsArtifacts(legacyScope, legacyUnmodifiedComps);
     const allIds = ComponentIdList.fromArray(legacyComponents.map((c) => c.id));
+    const getParentsComp = () => {
+      const artifactsFrom = opts?.populateArtifactsFrom;
+      if (!artifactsFrom) return undefined;
+      if (!legacyScope) throw new Error('populateArtifactsFrom is set but legacyScope is not defined');
+      return Promise.all(artifactsFrom.map((id) => legacyScope.getConsumerComponent(id)));
+    };
+    const populateArtifactsFromComps = await getParentsComp();
     await Promise.all(
       components.map(async (component) => {
         const capsule = capsuleList.getCapsule(component.id);
@@ -918,7 +932,13 @@ export class IsolatorMain {
           (await CapsuleList.capsuleUsePreviouslySavedDists(component)) || opts?.populateArtifactsFrom
             ? legacyScope
             : undefined;
-        const dataToPersist = await this.populateComponentsFilesToWriteForCapsule(component, allIds, scope, opts);
+        const dataToPersist = await this.populateComponentsFilesToWriteForCapsule(
+          component,
+          allIds,
+          scope,
+          opts,
+          populateArtifactsFromComps
+        );
         await dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
       })
     );
@@ -1128,11 +1148,12 @@ export class IsolatorMain {
     return packageJson;
   }
 
-  async populateComponentsFilesToWriteForCapsule(
+  private async populateComponentsFilesToWriteForCapsule(
     component: Component,
     ids: ComponentIdList,
     legacyScope?: Scope,
-    opts?: IsolateComponentsOptions
+    opts?: IsolateComponentsOptions,
+    populateArtifactsFromComps?: ConsumerComponent[]
   ): Promise<DataToPersist> {
     const legacyComp: ConsumerComponent = component.state._consumer;
     const dataToPersist = new DataToPersist();
@@ -1153,10 +1174,53 @@ export class IsolatorMain {
     await PackageJsonTransformer.applyTransformers(component, packageJson);
     const valuesToMerge = legacyComp.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
+    if (populateArtifactsFromComps && !opts?.populateArtifactsIgnorePkgJson) {
+      const compParent = this.getCompForArtifacts(component, populateArtifactsFromComps);
+      this.mergePkgJsonFromLastBuild(compParent, packageJson);
+    }
     dataToPersist.addFile(packageJson.toVinylFile());
-    const artifacts = await this.getArtifacts(component, legacyScope, opts?.populateArtifactsFrom);
+    const artifacts = await this.getArtifacts(component, legacyScope, populateArtifactsFromComps);
     dataToPersist.addManyFiles(artifacts);
     return dataToPersist;
+  }
+
+  private mergePkgJsonFromLastBuild(component: ConsumerComponent, packageJson: PackageJsonFile) {
+    const suffix = `for ${component.id.toString()}. to workaround this, use --ignore-last-pkg-json flag`;
+    const aspectsData = component.extensions.findExtension('teambit.pipelines/builder')?.data?.aspectsData;
+    if (!aspectsData) throw new Error(`getPkgJsonFromLastBuild, unable to find builder aspects data ${suffix}`);
+    const data = aspectsData?.find((aspectData) => aspectData.aspectId === 'teambit.pkg/pkg');
+    if (!data) throw new Error(`getPkgJsonFromLastBuild, unable to find pkg aspect data ${suffix}`);
+    const pkgJsonLastBuild = data?.data?.pkgJson;
+    if (!pkgJsonLastBuild) throw new Error(`getPkgJsonFromLastBuild, unable to find pkgJson of pkg aspect  ${suffix}`);
+    const current = packageJson.packageJsonObject;
+    pkgJsonLastBuild.componentId = current.componentId;
+    pkgJsonLastBuild.version = current.version;
+    const mergeDeps = (currentDeps?: Record<string, string>, depsFromLastBuild?: Record<string, string>) => {
+      if (!depsFromLastBuild) return;
+      if (!currentDeps) return depsFromLastBuild;
+      Object.keys(depsFromLastBuild).forEach((depName) => {
+        if (!currentDeps[depName]) return;
+        depsFromLastBuild[depName] = currentDeps[depName];
+      });
+      return depsFromLastBuild;
+    };
+    pkgJsonLastBuild.dependencies = mergeDeps(current.dependencies, pkgJsonLastBuild.dependencies);
+    pkgJsonLastBuild.devDependencies = mergeDeps(current.devDependencies, pkgJsonLastBuild.devDependencies);
+    pkgJsonLastBuild.peerDependencies = mergeDeps(current.peerDependencies, pkgJsonLastBuild.peerDependencies);
+    packageJson.mergePackageJsonObject(pkgJsonLastBuild);
+  }
+
+  private getCompForArtifacts(
+    component: Component,
+    populateArtifactsFromComps: ConsumerComponent[]
+  ): ConsumerComponent {
+    const compParent = populateArtifactsFromComps.find((comp) =>
+      comp.id.isEqual(component.id, { ignoreVersion: true })
+    );
+    if (!compParent) {
+      throw new Error(`isolator, unable to find where to populate the artifacts from for ${component.id.toString()}`);
+    }
+    return compParent;
   }
 
   private preparePackageJsonToWrite(
@@ -1208,28 +1272,21 @@ export class IsolatorMain {
   private async getArtifacts(
     component: Component,
     legacyScope?: Scope,
-    populateArtifactsFrom?: ComponentID[]
+    populateArtifactsFromComps?: ConsumerComponent[]
   ): Promise<AbstractVinyl[]> {
     const legacyComp: ConsumerComponent = component.state._consumer;
     if (!legacyScope) {
-      if (populateArtifactsFrom) throw new Error(`unable to fetch from parent, the legacyScope was not provided`);
       // when capsules are written via the workspace, do not write artifacts, they get created by
       // build-pipeline. when capsules are written via the scope, we do need the dists.
       return [];
     }
-    if (legacyComp.buildStatus !== 'succeed' && !populateArtifactsFrom) {
+    if (legacyComp.buildStatus !== 'succeed' && !populateArtifactsFromComps) {
       // this is important for "bit sign" when on lane to not go to the original scope
       return [];
     }
     const artifactFilesToFetch = async () => {
-      if (populateArtifactsFrom) {
-        const found = populateArtifactsFrom.find((id) => id.isEqual(component.id, { ignoreVersion: true }));
-        if (!found) {
-          throw new Error(
-            `getArtifacts: unable to find where to populate the artifacts from for ${component.id.toString()}`
-          );
-        }
-        const compParent = await legacyScope.getConsumerComponent(found);
+      if (populateArtifactsFromComps) {
+        const compParent = this.getCompForArtifacts(component, populateArtifactsFromComps);
         return getArtifactFilesExcludeExtension(compParent.extensions, 'teambit.pkg/pkg');
       }
       const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];

@@ -78,7 +78,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     [
       '',
       'include-deps',
-      'relevant for "--pattern" and "--workspace". merge also dependencies of the specified components',
+      'relevant for "pattern" and "--workspace". merge also dependencies of the specified components',
     ],
     [
       '',
