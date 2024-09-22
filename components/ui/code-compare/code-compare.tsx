@@ -141,7 +141,7 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
             widgets={[Widget]}
             fileName={selectedFile}
             files={fileTree}
-            getHref={getHref}
+            getHref={useHref}
             onTabClicked={hook?.onClick}
           />
         </Pane>
