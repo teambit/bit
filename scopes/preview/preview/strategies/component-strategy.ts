@@ -28,7 +28,7 @@ export const COMPONENT_STRATEGY_ARTIFACT_NAME = 'preview-component';
 
 type ComponentEntry = {
   component: Component;
-  entries: Object;
+  entries: object;
 };
 /**
  * bundles all components in a given env into the same bundle.

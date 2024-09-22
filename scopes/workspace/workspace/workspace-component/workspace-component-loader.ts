@@ -944,7 +944,7 @@ function createComponentCacheKey(id: ComponentID, loadOpts?: ComponentLoadOption
   return `${id.toString()}:${JSON.stringify(sortKeys(relevantOpts ?? {}))}`;
 }
 
-function sortKeys(obj: Object) {
+function sortKeys(obj: object) {
   return fromPairs(Object.entries(obj).sort(([k1], [k2]) => k1.localeCompare(k2)));
 }
 

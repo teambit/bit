@@ -140,7 +140,7 @@ export class DevFilesMain {
 
   mergeEnvManifestPatterns(parent: EnvJsonc, child: EnvJsonc): Partial<EnvJsonc> {
     const merged: Partial<EnvJsonc> = {
-      patterns: { ...(parent.patterns || {}), ...(child.patterns || {}) },
+      patterns: { ...parent.patterns, ...child.patterns },
     };
     return merged;
   }
