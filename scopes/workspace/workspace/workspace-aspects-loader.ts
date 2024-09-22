@@ -106,8 +106,9 @@ export class WorkspaceAspectsLoader {
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts, null, 2)}`);
     const [localAspects, nonLocalAspects] = partition(ids, (id) => id.startsWith('file:'));
-    this.workspace.localAspects = localAspects;
-    await this.aspectLoader.loadAspectFromPath(this.workspace.localAspects);
+    const localAspectsMap = await this.aspectLoader.loadAspectFromPath(localAspects);
+    this.workspace.localAspects = localAspectsMap;
+
     let notLoadedIds = nonLocalAspects;
     if (!mergedOpts.forceLoad) {
       notLoadedIds = nonLocalAspects.filter((id) => !this.aspectLoader.isAspectLoaded(id));
@@ -268,12 +269,21 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     };
     const mergedOpts = { ...defaultOpts, ...opts };
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
+    const workspaceLocalAspectsIds = Object.keys(this.workspace.localAspects);
+    const [localAspectsIds, nonLocalAspectsIds] = partition(idsToResolve, (id) =>
+      workspaceLocalAspectsIds.includes(id)
+    );
+
+    const localDefs = await this.aspectLoader.resolveLocalAspects(
+      localAspectsIds.map((id) => this.workspace.localAspects[id]),
+      runtimeName
+    );
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const configuredAspects = this.aspectLoader.getConfiguredAspects();
     // it's possible that componentIds are core-aspects that got version for some reason, remove the version to
     // correctly filter them out later.
-    const userAspectsIds: string[] = componentIds
-      ? componentIds.filter((id) => !coreAspectsIds.includes(id.toStringWithoutVersion())).map((id) => id.toString())
+    const userAspectsIds: string[] = nonLocalAspectsIds
+      ? nonLocalAspectsIds.filter((id) => !coreAspectsIds.includes(id.split('@')[0])).map((id) => id.toString())
       : difference(this.harmony.extensionsIds, coreAspectsIds);
     const rootAspectsIds: string[] = difference(configuredAspects, coreAspectsIds);
     const componentIdsToResolve = await this.workspace.resolveMultipleComponentIds(userAspectsIds);
@@ -295,7 +305,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       );
 
       const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
-      const targetDefs = wsAspectDefs.concat(coreAspectDefs);
+      const targetDefs = wsAspectDefs.concat(coreAspectDefs).concat(localDefs);
       const finalDefs = this.aspectLoader.filterAspectDefs(targetDefs, idsToFilter, runtimeName, mergedOpts);
 
       return finalDefs;
@@ -381,7 +391,10 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         return coreAspect.runtimePath;
       });
     }
-    const localResolved = await this.aspectLoader.resolveLocalAspects(this.workspace.localAspects, runtimeName);
+    const localResolved = await this.aspectLoader.resolveLocalAspects(
+      Object.keys(this.workspace.localAspects),
+      runtimeName
+    );
     const allDefsExceptLocal = [...wsAspectDefs, ...coreAspectDefs, ...scopeAspectsDefs, ...installedAspectsDefs];
     const withoutLocalAspects = allDefsExceptLocal.filter((aspectId) => {
       return !localResolved.find((localAspect) => {

@@ -813,28 +813,34 @@ export class AspectLoaderMain {
     return graph;
   }
 
-  public async loadAspectFromPath(localAspects: string[]) {
+  public async loadAspectFromPath(localAspects: string[]): Promise<Record<string, string>> {
+    const res = {};
     const dirPaths = this.parseLocalAspect(localAspects);
-    const manifests = dirPaths.map((dirPath) => {
+    const manifests = dirPaths.map(([dirPath, localAspect]) => {
       const scopeRuntime = this.findRuntime(dirPath, 'scope');
       if (scopeRuntime) {
         // eslint-disable-next-line global-require, import/no-dynamic-require
         const module = require(join(dirPath, 'dist', scopeRuntime));
-        return module.default || module;
+        const manifest = module.default || module;
+        res[manifest.id] = localAspect;
+        return manifest;
       }
       // eslint-disable-next-line global-require, import/no-dynamic-require
       const module = require(dirPath);
-      return module.default || module;
+      const manifest = module.default || module;
+      res[manifest.id] = localAspect;
+      return manifest;
     });
 
     await this.loadExtensionsByManifests(manifests, undefined, { throwOnError: true });
+    return res;
   }
 
   private parseLocalAspect(localAspects: string[]) {
-    const dirPaths = localAspects.map((localAspect) => resolve(localAspect.replace('file://', '')));
-    const nonExistsDirPaths = dirPaths.filter((path) => !existsSync(path));
+    const dirPaths = localAspects.map((localAspect) => [resolve(localAspect.replace('file://', '')), localAspect]);
+    const nonExistsDirPaths = dirPaths.filter(([path]) => !existsSync(path));
     nonExistsDirPaths.forEach((path) => this.logger.warn(`no such file or directory: ${path}`));
-    const existsDirPaths = dirPaths.filter((path) => existsSync(path));
+    const existsDirPaths = dirPaths.filter(([path]) => existsSync(path));
     return existsDirPaths;
   }
 
@@ -844,8 +850,7 @@ export class AspectLoaderMain {
   }
 
   public async resolveLocalAspects(ids: string[], runtime?: string): Promise<AspectDefinition[]> {
-    const dirs = this.parseLocalAspect(ids);
-
+    const dirs = this.parseLocalAspect(ids).map(([dir]) => dir);
     return dirs.map((dir) => {
       const srcRuntimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
       const srcAspectFilePath = runtime ? this.findAspectFile(dir) : undefined;
