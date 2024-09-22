@@ -57,7 +57,9 @@ export class CliCmd implements Command {
   async report(): Promise<string> {
     legacyLogger.isDaemon = true;
     const rl = readline.createInterface({
+      // @ts-ignore TODO: fix this. A problem with types/node 20.12.10
       input: process.stdin,
+      // @ts-ignore TODO: fix this. A problem with types/node 20.12.10
       output: process.stdout,
       prompt: 'bit > ',
       completer: (line, cb) => completer(line, cb, this.cliMain),
