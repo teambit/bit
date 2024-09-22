@@ -260,6 +260,7 @@ export class SnappingMain {
       ignoreIssues?: string;
       incrementBy?: number;
       rebuildArtifacts?: boolean;
+      ignoreLastPkgJson?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<TagResults | null> {
     if (this.workspace) {
@@ -340,6 +341,7 @@ if you're willing to lose the history from the head to the specified version, us
       consumerComponents,
       tagDataPerComp,
       populateArtifactsFrom: shouldUsePopulateArtifactsFrom ? components.map((c) => c.id) : undefined,
+      populateArtifactsIgnorePkgJson: params.ignoreLastPkgJson,
       copyLogFromPreviousSnap: true,
       snapping: this,
       builder: this.builder,

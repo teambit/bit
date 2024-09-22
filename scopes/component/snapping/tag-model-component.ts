@@ -180,6 +180,7 @@ export async function tagModelComponent({
   ids,
   tagDataPerComp,
   populateArtifactsFrom,
+  populateArtifactsIgnorePkgJson,
   message,
   editor,
   exactVersion,
@@ -211,6 +212,7 @@ export async function tagModelComponent({
   ids: ComponentIdList;
   tagDataPerComp?: TagDataPerComp[];
   populateArtifactsFrom?: ComponentID[];
+  populateArtifactsIgnorePkgJson?: boolean;
   copyLogFromPreviousSnap?: boolean;
   exactVersion?: string | null | undefined;
   releaseType?: ReleaseType;
@@ -355,7 +357,7 @@ export async function tagModelComponent({
     };
     const skipTasksParsed = skipTasks ? skipTasks.split(',').map((t) => t.trim()) : undefined;
     const seedersOnly = !workspace; // if tag from scope, build only the given components
-    const isolateOptions = { packageManagerConfigRootDir, seedersOnly };
+    const isolateOptions = { packageManagerConfigRootDir, seedersOnly, populateArtifactsIgnorePkgJson };
     const builderOptions = { exitOnFirstFailedTask, skipTests, skipTasks: skipTasksParsed };
 
     const componentsToBuild = allComponentsToTag.filter((c) => !c.isRemoved());
