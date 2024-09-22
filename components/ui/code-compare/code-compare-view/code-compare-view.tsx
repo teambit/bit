@@ -24,7 +24,7 @@ export type CodeCompareViewProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 // a translation list of specific monaco languages that are not the same as their file ending.
-const languageOverrides = {
+const languageOverrides: Record<string, string> = {
   ts: 'typescript',
   tsx: 'typescript',
   js: 'javascript',
@@ -78,8 +78,8 @@ export function CodeCompareView({
   const [wrap, setWrap] = useState<boolean>(true);
   const language = useMemo(() => {
     if (!fileName) return languageOverrides.ts;
-    const fileEnding = fileName?.split('.').pop();
-    return languageOverrides[fileEnding || ''] || fileEnding;
+    const fileEnding = fileName?.split('.').pop() ?? '';
+    return languageOverrides[fileEnding] || fileEnding;
   }, [fileName]);
   const containerRef = useRef(null);
   const isFullScreen = !!componentCompareContext?.isFullScreen;
@@ -97,7 +97,7 @@ export function CodeCompareView({
 
   const [containerHeight, setContainerHeight] = useState<string | undefined>(isFullScreen ? '100%' : undefined);
 
-  const getDisplayedLineCount = (editorInstance, containerWidth, changedLines = 0) => {
+  const getDisplayedLineCount = (editorInstance: any, containerWidth: any, changedLines = 0) => {
     if (!monacoRef.current?.monaco) return 0;
 
     const model = editorInstance.getModel();
@@ -139,7 +139,7 @@ export function CodeCompareView({
     const diffResult = monacoRef.current.editor.getLineChanges() ?? [];
 
     let adjustedLines = 0;
-    diffResult.forEach((change) => {
+    diffResult.forEach((change: any) => {
       if (change.originalEndLineNumber !== 0) {
         const removedLines =
           change.originalEndLineNumber > change.originalStartLineNumber
