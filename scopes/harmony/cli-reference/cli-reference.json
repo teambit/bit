@@ -3146,6 +3146,11 @@
         "run the full build pipeline. do not use the saved artifacts from the last snap"
       ],
       [
+        "",
+        "ignore-last-pkg-json",
+        "ignore the package.json created by the last snap"
+      ],
+      [
         "m",
         "message <message>",
         "a log message describing latest changes"
@@ -4290,7 +4295,7 @@
           [
             "",
             "include-deps",
-            "relevant for \"--pattern\" and \"--workspace\". merge also dependencies of the specified components"
+            "relevant for \"pattern\" and \"--workspace\". merge also dependencies of the specified components"
           ],
           [
             "",
