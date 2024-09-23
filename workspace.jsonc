@@ -261,8 +261,6 @@
         "@teambit/pkg.content.packages-overview": "1.95.9",
         "@teambit/preview.modules.preview-modules": "^1.0.3",
         "@teambit/react.content.react-overview": "1.95.0",
-        "@teambit/react.generator.react-native-templates": "^1.0.11",
-        "@teambit/react.instructions.react-native.adding-tests": "0.0.1",
         "@teambit/react.instructions.react.adding-compositions": "0.0.6",
         "@teambit/react.instructions.react.adding-tests": "0.0.6",
         "@teambit/react.jest.react-jest": "^1.0.32",
@@ -461,7 +459,6 @@
         "react-dev-utils": "11.0.4",
         "react-error-boundary": "^3.0.0",
         "react-error-overlay": "6.0.9",
-        "react-native": "^0.64.1",
         "react-syntax-highlighter": "15.5.0",
         "react-tabs": "3.2.0",
         "react-test-renderer": "17.0.2",
@@ -645,8 +642,6 @@
             "reflect-metadata": "0.1.13",
             "monaco-editor": "0.33.0",
             "mz": "2.7.0",
-            // make sure the package manager installs an instance of react (and other peers)
-            "react-native-web": "0.14.13",
             "react": "17.0.2",
             "react-dom": "17.0.2",
             "core-js": "3.13.0",
@@ -676,7 +671,6 @@
             "graphql": "-",
             "react": "-",
             "react-dom": "-",
-            "react-native-web": "-",
             "react-router-dom": "-",
             "core-js": "-"
           }
