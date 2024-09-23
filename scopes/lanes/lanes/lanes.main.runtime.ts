@@ -1054,7 +1054,7 @@ please create a new lane instead, which will include all components of this lane
    * default to remove all of them.
    * returns true if the lane has changed
    */
-  async removeUpdateDependents(laneId: LaneId, ids?: ComponentID[]): Promise<Boolean> {
+  async removeUpdateDependents(laneId: LaneId, ids?: ComponentID[]): Promise<boolean> {
     const lane = await this.loadLane(laneId);
     if (!lane) throw new BitError(`unable to find a lane ${laneId.toString()}`);
     if (ids?.length) {

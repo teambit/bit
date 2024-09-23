@@ -728,8 +728,8 @@ export default class ScopeComponentsImporter {
       reasonForImport,
     }: {
       lane?: Lane;
-      onlyIfBuilt?: Boolean;
-      skipComponentsWithDepsGraph?: Boolean;
+      onlyIfBuilt?: boolean;
+      skipComponentsWithDepsGraph?: boolean;
       reasonForImport?: string;
     } = {}
   ): Promise<VersionDependencies[]> {

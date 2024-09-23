@@ -2117,7 +2117,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         isPnpmEnabled,
       }),
     ];
-    this.componentPathsRegExps = [...pathsExcluding.map((stringPattern) => new RegExp(stringPattern))];
+    this.componentPathsRegExps = pathsExcluding.map((stringPattern) => new RegExp(stringPattern));
   }
 
   getInjectedDirs(component: Component): Promise<string[]> {

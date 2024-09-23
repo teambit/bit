@@ -392,7 +392,7 @@ export class BuilderMain {
       seedersOnly: isolateOptions?.seedersOnly,
       originalSeeders: ids,
       capsulesBaseDir,
-      ...(builderOptions || {}),
+      ...builderOptions,
     };
     this.logger.consoleTitle(`Total ${components.length} components to build`);
     const buildResult: TaskResultsList = await envs.runOnce(this.buildService, builderServiceOptions);

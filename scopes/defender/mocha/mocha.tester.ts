@@ -31,7 +31,7 @@ export class MochaTester implements Tester {
     const specsPerComp = context.specFiles.toArray();
     babelRegister({
       extensions: ['.es6', '.es', '.jsx', '.js', '.mjs', '.ts', '.tsx'],
-      ...(this.babelConfig || {}),
+      ...this.babelConfig,
     });
     const componentsResults: ComponentsResults[] = await pMapSeries(specsPerComp, async ([component, files]) => {
       const testsFiles: TestsFiles[] = await pMapSeries(files, async (file) => {

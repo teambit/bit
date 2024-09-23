@@ -219,7 +219,7 @@ export function componentSchema(componentExtension: ComponentMain) {
           if (!head && filter?.takeHeadFromComponent) {
             head = component.id.version;
           }
-          const finalFilter = { ...filter, ...{ head } };
+          const finalFilter = { ...filter, head };
           return (await component.getLogs(finalFilter)).map((log) => ({ ...log, id: log.hash }));
         },
       },

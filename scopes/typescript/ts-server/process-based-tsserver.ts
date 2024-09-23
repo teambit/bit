@@ -193,7 +193,7 @@ export class ProcessBasedTsServer {
       const tsserverPathIsModule = path.extname(tsserverPath) === '.js';
       const options = {
         silent: true,
-        execArgv: [...(maxTsServerMemory ? [`--max-old-space-size=${maxTsServerMemory}`] : [])],
+        execArgv: maxTsServerMemory ? [`--max-old-space-size=${maxTsServerMemory}`] : [],
       };
       this.tsServerProcess = tsserverPathIsModule ? cp.fork(tsserverPath, args, options) : cp.spawn(tsserverPath, args);
 

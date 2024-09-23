@@ -104,7 +104,7 @@ function CompareMenuNav({ tabs, state, hooks, changes: changed }: ComponentCompa
           {
             ...tab,
             props: {
-              ...(tab.props || {}),
+              ...tab.props,
               key,
               displayName: (!loading && tab.displayName) || undefined,
               active: isActive,
