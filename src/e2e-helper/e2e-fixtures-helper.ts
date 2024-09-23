@@ -220,15 +220,13 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
     }
   }
 
-  populateComponentsTS(numOfComponents = 3, owner = '@bit', isHarmony = true): string {
-    let nmPathPrefix = `${owner}/${this.scopes.remote}.`;
-    if (isHarmony) {
-      const remoteSplit = this.scopes.remote.split('.');
-      if (remoteSplit.length === 1) {
-        nmPathPrefix = `@${this.scopes.remote}/`;
-      } else {
-        nmPathPrefix = `@${remoteSplit[0]}/${remoteSplit[1]}.`;
-      }
+  populateComponentsTS(numOfComponents = 3): string {
+    let nmPathPrefix: string;
+    const remoteSplit = this.scopes.remote.split('.');
+    if (remoteSplit.length === 1) {
+      nmPathPrefix = `@${this.scopes.remote}/`;
+    } else {
+      nmPathPrefix = `@${remoteSplit[0]}/${remoteSplit[1]}.`;
     }
     const getImp = (index) => {
       if (index === numOfComponents) return `export default () => 'comp${index}';`;

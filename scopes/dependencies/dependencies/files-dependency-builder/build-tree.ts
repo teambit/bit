@@ -13,21 +13,30 @@ import { DependencyTreeParams, FileObject, DependenciesTree, DependenciesTreeIte
  *
  * componentDir is the root of working directory (used for node packages version calculation)
  */
-function groupDependencyList(dependenciesPaths: string[], componentDir: string): DependenciesTreeItem {
+function groupDependencyList(
+  dependenciesPaths: string[],
+  componentDir: string,
+  pathMapItem?: PathMapItem
+): DependenciesTreeItem {
   const resultGroups = new DependenciesTreeItem();
   const isPackage = (str: string) => str.includes('node_modules/');
   dependenciesPaths.forEach((dependencyPath) => {
+    const pathMapDep = pathMapItem?.dependencies.find((file) => file.resolvedDep === dependencyPath);
+    const isDev = pathMapDep && pathMapDep.isTypeImport;
     if (!isPackage(dependencyPath)) {
       resultGroups.files.push({ file: dependencyPath });
+      if (isDev) resultGroups.devDeps.push(dependencyPath);
       return;
     }
     const resolvedPackage = resolvePackageData(componentDir, path.join(componentDir, dependencyPath));
     if (!resolvedPackage) {
       // package doesn't have package.json, probably it's a custom-resolve-module dep file
       resultGroups.unidentifiedPackages.push(dependencyPath);
+      if (isDev) resultGroups.devDeps.push(dependencyPath);
       return;
     }
 
+    if (isDev) resultGroups.devDeps.push(resolvedPackage.name);
     // If the package is a component add it to the components list
     if (resolvedPackage.componentId) {
       resultGroups.components.push(resolvedPackage);
@@ -49,11 +58,16 @@ function groupDependencyList(dependenciesPaths: string[], componentDir: string):
  *
  * @returns new tree with grouped dependencies
  */
-function MadgeTreeToDependenciesTree(tree: MadgeTree, componentDir: string): DependenciesTree {
+function MadgeTreeToDependenciesTree(
+  tree: MadgeTree,
+  componentDir: string,
+  pathMapItems: PathMapItem[]
+): DependenciesTree {
   const result: DependenciesTree = {};
   Object.keys(tree).forEach((filePath) => {
     if (tree[filePath] && !isEmpty(tree[filePath])) {
-      result[filePath] = groupDependencyList(tree[filePath], componentDir);
+      const pathMapItem = pathMapItems.find((pathMap) => pathMap.file === filePath);
+      result[filePath] = groupDependencyList(tree[filePath], componentDir, pathMapItem);
     } else {
       result[filePath] = new DependenciesTreeItem();
     }
@@ -65,9 +79,8 @@ function MadgeTreeToDependenciesTree(tree: MadgeTree, componentDir: string): Dep
 /**
  * add extra data such as custom-resolve and link-files from pathMap
  */
-function updateTreeWithPathMap(tree: DependenciesTree, pathMapAbsolute: PathMapItem[], baseDir: string): void {
-  if (!pathMapAbsolute.length) return;
-  const pathMap = convertPathMapToRelativePaths(pathMapAbsolute, baseDir);
+function updateTreeWithPathMap(tree: DependenciesTree, pathMap: PathMapItem[]): void {
+  if (!pathMap.length) return;
   Object.keys(tree).forEach((filePath: string) => {
     const treeFiles = tree[filePath].files;
     if (!treeFiles.length) return; // file has no dependency
@@ -169,7 +182,8 @@ export async function getDependencyTree({
     return path.resolve(componentDir, filePath);
   });
   const { madgeTree, skipped, pathMap, errors } = generateTree(fullPaths, config);
-  const tree: DependenciesTree = MadgeTreeToDependenciesTree(madgeTree, componentDir);
+  const pathMapRelative = convertPathMapToRelativePaths(pathMap, componentDir);
+  const tree: DependenciesTree = MadgeTreeToDependenciesTree(madgeTree, componentDir, pathMapRelative);
   const { missingGroups, foundPackages } = new MissingHandler(
     skipped,
     componentDir,
@@ -179,7 +193,7 @@ export async function getDependencyTree({
   if (foundPackages) mergeManuallyFoundPackagesToTree(foundPackages, missingGroups, tree);
   if (errors) mergeErrorsToTree(errors, tree);
   if (missingGroups) mergeMissingToTree(missingGroups, tree);
-  if (pathMap) updateTreeWithPathMap(tree, pathMap, componentDir);
+  if (pathMap) updateTreeWithPathMap(tree, pathMapRelative);
 
   return { tree };
 }

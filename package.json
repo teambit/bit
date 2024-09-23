@@ -161,7 +161,7 @@
     "@teambit/toolbox.string.random": "~0.0.1",
     "@teambit/cloud.models.cloud-user": "~0.0.5",
     "@teambit/component-id": "^1.2.0",
-    "@teambit/typescript.deps-detectors.detective-typescript": "~0.0.6",
+    "@teambit/typescript.deps-detectors.detective-typescript": "~0.0.8",
     "@teambit/typescript.deps-lookups.lookup-typescript": "~0.0.1",
     "@teambit/toolbox.fs.readdir-skip-system-files": "~0.0.2",
     "@teambit/scope.modules.find-scope-path": "~0.0.1",

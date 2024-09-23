@@ -3,7 +3,7 @@ import path from 'path';
 import readPkgUp from 'read-pkg-up';
 import { PACKAGE_JSON } from '@teambit/legacy/dist/constants';
 import { PackageJsonFile } from '@teambit/component.sources';
-import { PathLinuxAbsolute, PathOsBased, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
+import { PathOsBased, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import { resolvePackageNameByPath } from '@teambit/legacy.utils';
 
 export interface ResolvedPackageData {
@@ -29,7 +29,7 @@ export interface ResolvedPackageData {
  */
 export function resolvePackageData(
   dependentDir: string,
-  packageFullPath: PathLinuxAbsolute
+  packageFullPath: PathOsBasedAbsolute
 ): ResolvedPackageData | undefined {
   const packageData: ResolvedPackageData = {
     fullPath: packageFullPath,

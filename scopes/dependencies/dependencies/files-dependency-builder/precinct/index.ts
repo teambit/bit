@@ -179,15 +179,17 @@ const getJsDetector = (fileInfo: FileInfo, options?: Options): Detective | undef
   return detector;
 };
 
-/**
- * Normalize the deps into an array.
- */
-const normalizeDeps = (deps: BuiltinDeps, includeCore?: boolean): string[] => {
-  const normalizedDeps = Array.isArray(deps) ? deps : Object.keys(deps);
-  return includeCore ? normalizedDeps : normalizedDeps.filter((d) => !isBuiltin(d));
+const removeCoreDeps = (deps: BuiltinDeps, includeCore?: boolean): BuiltinDeps => {
+  if (includeCore) return deps;
+  return Array.isArray(deps)
+    ? deps.filter((d) => !isBuiltin(d))
+    : Object.keys(deps).reduce((acc, key) => {
+        if (!isBuiltin(key)) acc[key] = deps[key];
+        return acc;
+      }, {});
 };
 
-const getDepsFromFile = (filename: string, options?: Options): string[] => {
+const getDepsFromFile = (filename: string, options?: Options): BuiltinDeps => {
   const normalizedOptions: Options = assign({ includeCore: true }, options || {});
   const fileInfo = getFileInfo(filename);
   if (
@@ -207,7 +209,7 @@ const getDepsFromFile = (filename: string, options?: Options): string[] => {
 
   const deps = detective(fileInfo.ast, normalizedOptions[fileInfo.type]);
 
-  return normalizeDeps(deps, normalizedOptions?.includeCore);
+  return removeCoreDeps(deps, normalizedOptions?.includeCore);
 };
 
 /**

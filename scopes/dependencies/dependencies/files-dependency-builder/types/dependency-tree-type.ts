@@ -18,6 +18,7 @@ export class DependenciesTreeItem {
   components: ResolvedPackageData[] = [];
   error?: Error; // error.code is either PARSING_ERROR or RESOLVE_ERROR
   missing?: { [key in MissingType]: string[] };
+  devDeps: string[] = []; // components/packages that are used as types only. e.g. `import type x from 'y'`. components are saved by their pkgName.
 
   isEmpty() {
     return (

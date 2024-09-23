@@ -13,6 +13,7 @@ export type PathMapDependency = {
   importSource: string; // dependency path as it has been received from dependency-tree lib
   resolvedDep: string; // path relative to consumer root (after convertPathMapToRelativePaths() )
   importSpecifiers?: Specifier[]; // relevant for ES6 and TS
+  isTypeImport?: boolean; // relevant for TS. (e.g. import type x from 'y')
 };
 
 /**

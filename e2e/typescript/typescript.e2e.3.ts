@@ -93,4 +93,91 @@ export class List extends React.Component {
       });
     });
   });
+  describe('import "type" of a package', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.npm.initNpm();
+      helper.fs.outputFile(
+        path.join('bar', 'index.ts'),
+        `import type { yo } from 'ninja';
+        export {};`
+      );
+
+      helper.npm.addFakeNpmPackage('ninja', '13.0.0');
+      helper.npm.addFakeNpmPackage('@types/ninja', '1.0.0');
+      helper.packageJson.addKeyValue({ dependencies: { ninja: '13.0.0' } });
+      helper.packageJson.addKeyValue({ devDependencies: { '@types/ninja': '1.0.0' } });
+
+      helper.command.addComponent('bar', { i: 'bar/foo' });
+    });
+    it('should be recognized as a dev dependency', () => {
+      const deps = helper.command.showDependenciesData('bar/foo');
+      const pkgDep = deps.find((dep) => dep.id === 'ninja');
+
+      expect(pkgDep?.lifecycle).to.equal('dev');
+    });
+  });
+  describe('import "type" of a component', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponentsTS(2);
+      helper.fs.outputFile(
+        path.join('comp1', 'index.ts'),
+        `import type { yo } from '${helper.general.getPackageNameByCompName('comp2', false)}';`
+      );
+      helper.fs.outputFile(path.join('comp2', 'index.ts'), `export const yo = 'yo';`);
+    });
+    it('should be recognized as a dev dependency', () => {
+      const deps = helper.command.showDependenciesData('comp1');
+      const compDep = deps.find((dep) => dep.id === `${helper.scopes.remote}/comp2`);
+      expect(compDep?.lifecycle).to.equal('dev');
+    });
+  });
+  describe('import of another component as a "type" and non-type in the same file', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponentsTS(2);
+      helper.fs.outputFile(
+        path.join('comp1', 'index.ts'),
+        `import type { yo } from '${helper.general.getPackageNameByCompName('comp2', false)}';
+import { foo } from '${helper.general.getPackageNameByCompName('comp2', false)}';`
+      );
+      helper.fs.outputFile(
+        path.join('comp2', 'index.ts'),
+        `export const yo = 'yo';
+        export const foo = 'foo';
+        `
+      );
+    });
+    it('should not be recognized as a dev dependency', () => {
+      const deps = helper.command.showDependenciesData('comp1');
+      const compDep = deps.find((dep) => dep.id === `${helper.scopes.remote}/comp2`);
+      expect(compDep?.lifecycle).to.equal('runtime');
+    });
+  });
+  describe('import of another component as a "type" and non-type in two different files', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponentsTS(2);
+      helper.fs.outputFile(
+        path.join('comp1', 'index.ts'),
+        `import type { yo } from '${helper.general.getPackageNameByCompName('comp2', false)}'`
+      );
+      helper.fs.outputFile(
+        path.join('comp1', 'get-foo.ts'),
+        `import { foo } from '${helper.general.getPackageNameByCompName('comp2', false)}';`
+      );
+      helper.fs.outputFile(
+        path.join('comp2', 'index.ts'),
+        `export const yo = 'yo';
+        export const foo = 'foo';
+        `
+      );
+    });
+    it('should not be recognized as a dev dependency', () => {
+      const deps = helper.command.showDependenciesData('comp1');
+      const compDep = deps.find((dep) => dep.id === `${helper.scopes.remote}/comp2`);
+      expect(compDep?.lifecycle).to.equal('runtime');
+    });
+  });
 });

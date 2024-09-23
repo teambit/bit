@@ -141,6 +141,8 @@ module.exports._getDependencies = function (config) {
     if (!isDependenciesArray && dependenciesRaw[dependency].importSpecifiers) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       pathMap.importSpecifiers = dependenciesRaw[dependency].importSpecifiers;
+      // @ts-ignore
+      pathMap.isTypeImport = dependenciesRaw[dependency].isTypeImport;
     }
 
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -428,6 +428,9 @@ export class AutoDetectDeps {
         }
       }
       const currentComponentsDeps = new Dependency(existingId, [], compDep.name, peerVersionRange);
+      if (this.tree[originFile].devDeps.includes(compDep.name)) {
+        fileType.isTestFile = true;
+      }
       this._pushToDependenciesIfNotExist(currentComponentsDeps, {
         fileType,
         depDebug,
@@ -486,11 +489,14 @@ export class AutoDetectDeps {
     const packageNames = Object.keys(packages).concat(this.tree[originFile].missing?.packages ?? []);
     this._addTypesPackagesForTypeScript(packageNames, originFile);
     if (!packages || isEmpty(packages)) return;
-    if (fileType.isTestFile) {
-      Object.assign(this.allPackagesDependencies.devPackageDependencies, packages);
-    } else {
-      Object.assign(this.allPackagesDependencies.packageDependencies, packages);
-    }
+    Object.keys(packages).forEach((packageName) => {
+      const isDev = fileType.isTestFile || this.tree[originFile].devDeps.includes(packageName);
+      if (isDev) {
+        Object.assign(this.allPackagesDependencies.devPackageDependencies, { [packageName]: packages[packageName] });
+      } else {
+        Object.assign(this.allPackagesDependencies.packageDependencies, { [packageName]: packages[packageName] });
+      }
+    });
   }
 
   private processMissing(originFile: PathLinuxRelative, fileType: FileType) {
