@@ -64,6 +64,7 @@ export type VersionProps = {
   _flattenedEdges?: DepEdge[];
   flattenedEdges?: DepEdge[];
   flattenedEdgesRef?: Ref;
+  dependenciesGraphRef?: Ref;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies?: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -98,6 +99,8 @@ export default class Version extends BitObject {
   devDependencies: Dependencies;
   peerDependencies: Dependencies;
   flattenedDependencies: ComponentIdList;
+  dependenciesGraphRef?: Ref;
+  _dependenciesGraph?: any; // caching for the dependencies graph
   flattenedEdgesRef?: Ref; // ref to a BitObject Source file, which is a JSON object containing the flattened edge
   _flattenedEdges?: DepEdge[]; // caching for the flattenedEdges
   /**
@@ -145,6 +148,7 @@ export default class Version extends BitObject {
     this.flattenedDependencies = props.flattenedDependencies || new ComponentIdList();
     this.flattenedEdges = props.flattenedEdges || [];
     this.flattenedEdgesRef = props.flattenedEdgesRef;
+    this.dependenciesGraphRef = props.dependenciesGraphRef;
     this.packageDependencies = props.packageDependencies || {};
     this.devPackageDependencies = props.devPackageDependencies || {};
     this.peerPackageDependencies = props.peerPackageDependencies || {};
@@ -193,6 +197,28 @@ export default class Version extends BitObject {
     }
 
     return this._flattenedEdges;
+  }
+
+  async getDependenciesGraph(repo: Repository): Promise<any> {
+    const getWithBackwardCompatibility = async (): Promise<any> => {
+      if (this.dependenciesGraphRef) {
+        // it's possible that there is a ref but the file is not there.
+        // it can happen if the remote-scope uses an older version that doesn't know to collect this ref.
+        // in which case, the client will get the Version object with the ref prop, but not the Source object.
+        const throws = false;
+        const dependenciesGraphSource = (await repo.load(this.dependenciesGraphRef, throws)) as Source | undefined;
+        if (dependenciesGraphSource) {
+          return JSON.parse(dependenciesGraphSource.contents.toString());
+        }
+      }
+      return {};
+    };
+
+    if (!this._dependenciesGraph) {
+      this._dependenciesGraph = await getWithBackwardCompatibility();
+    }
+
+    return this._dependenciesGraph;
   }
 
   validateVersion() {
@@ -406,6 +432,11 @@ export default class Version extends BitObject {
     const flattenedEdgesObj = flattenedEdges.map((f) => Version.depEdgeToObject(f));
     const flattenedEdgesBuffer = Buffer.from(JSON.stringify(flattenedEdgesObj));
     return Source.from(flattenedEdgesBuffer);
+  }
+  static dependenciesGraphToSource(dependenciesGraph?: any): Source | undefined {
+    if (!dependenciesGraph) return undefined;
+    const dependenciesGraphBuffer = Buffer.from(JSON.stringify(dependenciesGraph));
+    return Source.from(dependenciesGraphBuffer);
   }
 
   toObject() {
@@ -631,10 +662,12 @@ export default class Version extends BitObject {
     component,
     files,
     flattenedEdges,
+    dependenciesGraph,
   }: {
     component: ConsumerComponent;
     files: Array<SourceFileModel>;
     flattenedEdges?: Source;
+    dependenciesGraph?: Source;
   }) {
     const parseFile = (file) => {
       return {
@@ -658,6 +691,7 @@ export default class Version extends BitObject {
       packageDependencies: component.packageDependencies,
       devPackageDependencies: component.devPackageDependencies,
       peerPackageDependencies: component.peerPackageDependencies,
+      dependenciesGraphRef: dependenciesGraph?.hash(),
       flattenedDependencies: component.flattenedDependencies,
       // it's safe to remove this line once the version.flattenedEdges prop is deleted
       flattenedEdges: component.flattenedEdges,

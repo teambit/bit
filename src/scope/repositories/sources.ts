@@ -282,6 +282,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     version: Version;
     files: any;
     flattenedEdges?: Source;
+    dependenciesGraph?: Source;
   }> {
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
     const files = consumerComponent.files.map((file) => {
@@ -294,16 +295,18 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     });
 
     const flattenedEdges = Version.flattenedEdgeToSource(consumerComponent.flattenedEdges);
+    const dependenciesGraph = Version.flattenedEdgeToSource(consumerComponent.dependenciesGraph);
 
     const version: Version = Version.fromComponent({
       component: clonedComponent,
       files: files as any,
       flattenedEdges,
+      dependenciesGraph,
     });
     // $FlowFixMe it's ok to override the pendingVersion attribute
     consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component
 
-    return { version, files, flattenedEdges };
+    return { version, files, flattenedEdges, dependenciesGraph };
   }
 
   put({ component, objects }: ComponentTree): ModelComponent {

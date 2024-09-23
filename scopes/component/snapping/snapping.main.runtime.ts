@@ -756,6 +756,15 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     this.logger.profile('snap._addFlattenedDependenciesToComponents');
   }
 
+  async _addDependenciesGraphToComponents(components: ConsumerComponent[]) {
+    loader.start('importing missing dependencies...');
+    this.logger.profile('snap._addDependenciesGraphToComponents');
+    components.forEach((component) => {
+      component.dependenciesGraph = {};
+    });
+    this.logger.profile('snap._addDependenciesGraphToComponents');
+  }
+
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
     const lane = await this.scope.legacyScope.getCurrentLaneObject();
     const allIds = ComponentIdList.fromArray(components.map((c) => c.id));
@@ -993,13 +1002,15 @@ another option, in case this dependency is not in main yet is to remove all refe
     const component = await this.scope.legacyScope.sources.findOrAddComponent(source as any);
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
-    const { version, files, flattenedEdges } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
+    const { version, files, flattenedEdges, dependenciesGrapth } =
+      await this.scope.legacyScope.sources.consumerComponentToVersion(source);
     version.origin = {
       id: { scope: source.scope || (source.defaultScope as string), name: source.name },
       lane: lane ? { scope: lane.scope, name: lane.name, hash: lane.hash().toString() } : undefined,
     };
     objectRepo.add(version);
     if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
+    if (dependenciesGrapth) this.objectsRepo.add(dependenciesGrapth);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
     component.addVersion(version, source.version, lane, source.previouslyUsedVersion, updateDependentsOnLane);
     objectRepo.add(component);
