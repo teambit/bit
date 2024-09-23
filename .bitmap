@@ -182,13 +182,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/aspect-docs/react"
     },
-    "aspect-docs/react-native": {
-        "name": "aspect-docs/react-native",
-        "scope": "teambit.react",
-        "version": "0.0.172",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/aspect-docs/react-native"
-    },
     "aspect-docs/typescript": {
         "name": "aspect-docs/typescript",
         "scope": "teambit.typescript",
@@ -1550,13 +1543,6 @@
         "version": "1.0.411",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/react"
-    },
-    "react-native": {
-        "name": "react-native",
-        "scope": "teambit.react",
-        "version": "1.0.411",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/react-native"
     },
     "react-router": {
         "name": "react-router",
