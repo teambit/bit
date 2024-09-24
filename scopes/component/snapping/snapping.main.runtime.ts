@@ -1002,7 +1002,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     const component = await this.scope.legacyScope.sources.findOrAddComponent(source as any);
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
-    const { version, files, flattenedEdges, dependenciesGrapth } =
+    const { version, files, flattenedEdges, dependenciesGraph } =
       await this.scope.legacyScope.sources.consumerComponentToVersion(source);
     version.origin = {
       id: { scope: source.scope || (source.defaultScope as string), name: source.name },
@@ -1010,7 +1010,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     };
     objectRepo.add(version);
     if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
-    if (dependenciesGrapth) this.objectsRepo.add(dependenciesGrapth);
+    if (dependenciesGraph) this.objectsRepo.add(dependenciesGraph);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
     component.addVersion(version, source.version, lane, source.previouslyUsedVersion, updateDependentsOnLane);
     objectRepo.add(component);

@@ -295,7 +295,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     });
 
     const flattenedEdges = Version.flattenedEdgeToSource(consumerComponent.flattenedEdges);
-    const dependenciesGraph = Version.flattenedEdgeToSource(consumerComponent.dependenciesGraph);
+    const dependenciesGraph = Version.dependenciesGraphToSource(consumerComponent.dependenciesGraph);
 
     const version: Version = Version.fromComponent({
       component: clonedComponent,

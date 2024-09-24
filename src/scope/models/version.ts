@@ -382,6 +382,7 @@ export default class Version extends BitObject {
       allRefs.push(...artifacts);
     }
     if (this.flattenedEdgesRef) allRefs.push(this.flattenedEdgesRef);
+    if (this.dependenciesGraphRef) allRefs.push(this.dependenciesGraphRef);
     return allRefs;
   }
 
@@ -522,6 +523,7 @@ export default class Version extends BitObject {
       flattenedDependencies,
       flattenedEdges,
       flattenedEdgesRef,
+      dependenciesGraphRef,
       flattenedDevDependencies,
       devPackageDependencies,
       peerPackageDependencies,
@@ -628,6 +630,7 @@ export default class Version extends BitObject {
       // backward compatibility. before introducing `flattenedEdgesRef`, we only had `flattenedEdges`. see getFlattenedEdges() for more info.
       flattenedEdges: flattenedEdgesRef ? [] : flattenedEdges?.map((f) => Version.depEdgeFromObject(f)) || [],
       flattenedEdgesRef: flattenedEdgesRef ? Ref.from(flattenedEdgesRef) : undefined,
+      dependenciesGraphRef: dependenciesGraphRef ? Ref.from(dependenciesGraphRef) : undefined,
       devPackageDependencies,
       peerPackageDependencies,
       packageDependencies,
