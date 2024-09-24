@@ -468,6 +468,7 @@ export default class Version extends BitObject {
         flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toObject()),
         flattenedEdges: this.flattenedEdgesRef ? undefined : this.flattenedEdges.map((f) => Version.depEdgeToObject(f)),
         flattenedEdgesRef: this.flattenedEdgesRef?.toString(),
+        dependenciesGraphRef: this.dependenciesGraphRef?.toString(),
         extensions: this.extensions.toModelObjects(),
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
