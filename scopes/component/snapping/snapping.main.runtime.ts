@@ -759,9 +759,16 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
   async _addDependenciesGraphToComponents(components: ConsumerComponent[]) {
     loader.start('importing missing dependencies...');
     this.logger.profile('snap._addDependenciesGraphToComponents');
-    components.forEach((component) => {
-      component.dependenciesGraph = {};
-    });
+    await Promise.all(
+      components.map(async (component) => {
+        if (component.componentMap?.rootDir) {
+          component.dependenciesGraph = await this.dependencyResolver.getDependenciesGraph(
+            this.workspace.path,
+            component.componentMap!.rootDir
+          );
+        }
+      })
+    );
     this.logger.profile('snap._addDependenciesGraphToComponents');
   }
 

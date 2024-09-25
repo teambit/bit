@@ -1,4 +1,5 @@
 import { CloudMain } from '@teambit/cloud';
+import { BitError } from '@teambit/bit-error';
 import {
   DependencyResolverMain,
   extendWithComponentsFromDir,
@@ -18,7 +19,9 @@ import { Logger } from '@teambit/logger';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
+import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
 import { Config } from '@pnpm/config';
+import { type ProjectId } from '@pnpm/types';
 import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
 import {
   buildDependenciesHierarchy,
@@ -347,6 +350,23 @@ export class PnpmPackageManager implements PackageManager {
       long: false,
       showExtraneous: false,
     });
+  }
+
+  async getDependenciesGraph(workspaceDir: string, componentRootDir: string): Promise<any> {
+    const lockfile = await readWantedLockfile(workspaceDir, { ignoreIncompatible: false });
+    if (!lockfile) {
+      throw new BitError('Cannot get the depednency graph without a lockfile. Try running "bit install".');
+    }
+    const partialLockfile = filterLockfileByImporters(lockfile, [componentRootDir as ProjectId], {
+      include: {
+        dependencies: true,
+        devDependencies: true,
+        optionalDependencies: true,
+      },
+      failOnMissingDependencies: false,
+      skipped: new Set(),
+    });
+    return partialLockfile;
   }
 }
 

@@ -548,6 +548,11 @@ export class DependencyResolverMain {
     return relativePath;
   }
 
+  async getDependenciesGraph(workspaceDir: string, componentRootDir: string): Promise<any> {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    return packageManager?.getDependenciesGraph?.(workspaceDir, componentRootDir);
+  }
+
   /**
    * get a component dependency installer.
    */
