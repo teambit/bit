@@ -436,7 +436,7 @@
         "map-obj": "4.2.1",
         "mime": "2.5.2",
         "mini-css-extract-plugin": "2.2.2",
-        "minimatch": "3.0.4",
+        "minimatch": "3.0.5",
         "mousetrap": "1.6.5",
         "multimatch": "5.0.0",
         "nerf-dart": "1.0.0",
