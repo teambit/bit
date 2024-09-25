@@ -1,7 +1,7 @@
 import { AspectAspect, AspectMain } from '@teambit/aspect';
 import { MainRuntime } from '@teambit/cli';
 import { EnvsAspect, Environment, EnvsMain, EnvTransformer } from '@teambit/envs';
-import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { EnvAspect } from './env.aspect';
 import { EnvEnv } from './env.env';
 
