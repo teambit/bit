@@ -1,5 +1,6 @@
 import rimraf from 'rimraf';
 import { v4 } from 'uuid';
+import { Version } from '@teambit/legacy/dist/scope/models';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
@@ -54,6 +55,7 @@ import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
 import path, { basename } from 'path';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
+import { writeWantedLockfile } from '@pnpm/lockfile.fs';
 import pMap from 'p-map';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
@@ -699,6 +701,23 @@ export class IsolatorMain {
           })
         );
       } else {
+        if (legacyScope) {
+          let lockfile = null;
+          await Promise.all(
+            components.map(async (comp) => {
+              const graph = await this.getDependenciesGraphFromModel(legacyScope, comp.id);
+              if (lockfile == null) {
+                lockfile = graph;
+              } else {
+                Object.assign(lockfile.importers, graph.importers);
+                Object.assign(lockfile.packages, graph.packages);
+                Object.assign(lockfile.snapshots, graph.snapshots);
+              }
+            })
+          );
+          await writeWantedLockfile(capsulesDir, lockfile);
+        }
+
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
@@ -735,6 +754,16 @@ export class IsolatorMain {
     }
 
     return allCapsuleList;
+  }
+
+  private async getDependenciesGraphFromModel(legacyScope: Scope, id: ComponentID) {
+    let versionObj: Version;
+    try {
+      versionObj = await legacyScope.getVersionInstance(id);
+    } catch (err) {
+      return undefined;
+    }
+    return versionObj.getDependenciesGraph(legacyScope.objects);
   }
 
   private async markCapsulesAsReady(capsuleList: CapsuleList): Promise<void> {
