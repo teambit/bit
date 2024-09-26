@@ -451,6 +451,8 @@ export class ApplicationMain {
       context,
       rootDir,
       undefined,
+      undefined,
+      undefined,
       undefined
     );
     return appContext;
