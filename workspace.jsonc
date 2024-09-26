@@ -304,7 +304,6 @@
         "@teambit/ui-foundation.ui.notifications.store": "^0.0.500",
         "@teambit/ui-foundation.ui.react-router.extend-path": "^0.0.486",
         "@teambit/ui-foundation.ui.react-router.use-query": "^0.0.501",
-        "@teambit/ui-foundation.ui.side-bar": "^0.0.884",
         "@teambit/ui-foundation.ui.top-bar": "^0.0.514",
         "@teambit/ui-foundation.ui.tree.drawer": "^0.0.518",
         "@teambit/ui-foundation.ui.tree.file-tree": "^0.0.523",
