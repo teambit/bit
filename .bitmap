@@ -2025,6 +2025,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/rendering/html"
     },
+    "ui/side-bar": {
+        "name": "ui/side-bar",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.885",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/side-bar"
+    },
     "ui/test-compare": {
         "name": "ui/test-compare",
         "scope": "teambit.defender",

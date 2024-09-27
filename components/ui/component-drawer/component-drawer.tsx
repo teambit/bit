@@ -130,16 +130,15 @@ function ComponentsDrawerContent({
   const { loading: loadingComponents, components } = useComponents();
   const { lanesModel: lanes, loading: loadingLanesModel } = useLanesFromProps();
   const componentFiltersContext = useContext(ComponentFilterContext);
-
   const filters = componentFiltersContext?.filters || [];
+  const host = useHost?.();
 
-  const filteredComponents = useMemo(
-    () => runAllFilters(filters, { components, lanes }),
-    [filters.length, components.length, lanes?.lanes.length, lanes?.viewedLane?.id.toString(), loadingLanesModel]
-  );
+  const filteredComponents = useMemo(() => {
+    if (!filters.length) return components;
+    return runAllFilters(filters, { components, lanes });
+  }, [filters, components.length, lanes?.lanes.length, lanes?.viewedLane?.id.toString(), loadingLanesModel]);
 
   const Filters = <ComponentsDrawerRenderFilters components={components} lanes={lanes} plugins={plugins} />;
-  const host = useHost?.();
 
   const Tree = (
     <ComponentsDrawerRenderTree
@@ -147,6 +146,7 @@ function ComponentsDrawerContent({
       host={host}
       plugins={plugins}
       transformTree={transformTree}
+      lanesModel={lanes}
     />
   );
 
@@ -189,6 +189,8 @@ function ComponentsDrawerRenderFilters({
     [filterPlugins?.map.size, filterPlugins?.values()?.length]
   );
 
+  if (!filters.length) return null;
+
   return (
     <div className={classNames(styles.filtersContainer, filterWidgetOpen && styles.open)}>
       {filters.map((filter) => (
@@ -208,11 +210,13 @@ function ComponentsDrawerRenderTree({
   host,
   plugins,
   transformTree,
+  lanesModel,
 }: {
   components: ComponentModel[];
   host?: ScopeModel | WorkspaceModel;
   plugins: ComponentsDrawerPlugins;
   transformTree?: TransformTreeFn;
+  lanesModel?: LanesModel;
 }) {
   const { collapsed } = useContext(ComponentTreeContext);
   const { tree } = plugins;
@@ -232,6 +236,7 @@ function ComponentsDrawerRenderTree({
         components={components}
         isCollapsed={collapsed}
         TreeNode={TreeNode}
+        lanesModel={lanesModel}
       />
     </div>
   );
