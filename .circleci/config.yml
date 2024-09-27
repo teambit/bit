@@ -845,7 +845,7 @@ jobs:
       - run: cd bit && git diff
       - run:
           name: export components
-          command: cd bit && bit export
+          command: cd bit && bit export --verbose
           no_output_timeout: '20m'
       - run:
           name: backup bit objects (after export)
