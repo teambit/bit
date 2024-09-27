@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { ComponentsDrawer, ComponentFiltersSlot, DrawerWidgetSlot } from '@teambit/component.ui.component-drawer';
-import { ComponentView, NamespaceTreeNode, ScopeTreeNode, ScopePayload } from '@teambit/ui-foundation.ui.side-bar';
+import { ComponentView, NamespaceTreeNode, ScopePayload, ScopeTreeNode } from '@teambit/ui-foundation.ui.side-bar';
 import type { PayloadType } from '@teambit/ui-foundation.ui.side-bar';
 import { TreeNode as TreeNodeType, TreeNodeProps } from '@teambit/design.ui.tree';
 import { useLanes as defaultUseLanesHook } from '@teambit/lanes.hooks.use-lanes';
