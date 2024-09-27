@@ -77,8 +77,7 @@ export function APINodeDetails({
 
   const example = (doc?.tags || []).find((tag) => tag.tagName === 'example');
   const comment =
-    doc?.comment ??
-    doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n` ?? ''), '');
+    doc?.comment ?? doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n`), '');
   const linkComment = doc?.tags?.find((tag) => tag.tagName === 'link')?.comment;
 
   let linkPlaceholder: string | undefined;
