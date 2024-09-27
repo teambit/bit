@@ -121,6 +121,10 @@ otherwise, only new and modified components will be tested`);
         updateSnapshot,
       });
       if (tests.hasErrors()) code = 1;
+      if (process.exitCode && process.exitCode !== 0) {
+        // this is needed for testers such as "vitest", where it sets the exitCode to non zero when the coverage is not met.
+        code = process.exitCode;
+      }
     }
     const { seconds } = timer.stop();
 
