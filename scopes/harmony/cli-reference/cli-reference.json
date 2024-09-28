@@ -2815,6 +2815,11 @@
         "open a browser once the export is completed in the cloud job url"
       ],
       [
+        "",
+        "verbose",
+        "per exported component, show the versions being exported"
+      ],
+      [
         "j",
         "json",
         "show output in json format"
