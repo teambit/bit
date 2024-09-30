@@ -2020,7 +2020,10 @@
         "scope": "teambit.code",
         "version": "0.0.308",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/code-compare"
+        "rootDir": "components/ui/code-compare",
+        "config": {
+            "teambit.react/v17/react-env@1.1.71": {}
+        }
     },
     "ui/code-editor": {
         "name": "ui/code-editor",
@@ -2055,7 +2058,10 @@
         "scope": "teambit.component",
         "version": "0.0.192",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/component-compare"
+        "rootDir": "components/ui/component-compare/component-compare",
+        "config": {
+            "teambit.react/v17/react-env@1.1.71": {}
+        }
     },
     "ui/component-compare/context": {
         "name": "ui/component-compare/context",
@@ -2069,7 +2075,10 @@
         "scope": "teambit.component",
         "version": "0.0.110",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-compare/models/component-compare-props"
+        "rootDir": "components/ui/component-compare/models/component-compare-props",
+        "config": {
+            "teambit.react/v17/react-env@1.1.71": {}
+        }
     },
     "ui/component-compare/utils/lazy-loading": {
         "name": "ui/component-compare/utils/lazy-loading",
@@ -2286,7 +2295,10 @@
         "scope": "teambit.ui-foundation",
         "version": "0.0.510",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/react-router/slot-router"
+        "rootDir": "components/ui/react-router/slot-router",
+        "config": {
+            "teambit.react/v17/react-env@1.1.71": {}
+        }
     },
     "ui/rendering/html": {
         "name": "ui/rendering/html",
@@ -2300,7 +2312,10 @@
         "scope": "teambit.ui-foundation",
         "version": "0.0.885",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/side-bar"
+        "rootDir": "components/ui/side-bar",
+        "config": {
+            "teambit.react/v17/react-env@1.1.71": {}
+        }
     },
     "ui/test-compare": {
         "name": "ui/test-compare",
