@@ -125,7 +125,8 @@ export class FileSystemBlobStore {
 
   save(): boolean {
     const dump = this._getDump();
-    const blobToStore = Buffer.concat(dump[0] as Uint8Array[]);
+    // @ts-ignore should be fixed after upgrading @types/node from '12.20.4' to > 20
+    const blobToStore = Buffer.concat(dump[0]);
     const mapToStore = JSON.stringify(dump[1]);
 
     try {
@@ -137,7 +138,8 @@ export class FileSystemBlobStore {
     }
 
     try {
-      writeFileSync(this._blobFilename, blobToStore as any);
+      // @ts-ignore should be fixed after upgrading @types/node from '12.20.4' to > 20
+      writeFileSync(this._blobFilename, blobToStore);
       writeFileSync(this._mapFilename, mapToStore);
     } finally {
       unlinkSync(this._lockFilename);

@@ -107,8 +107,8 @@ export async function applyVersion(
 export function updateFileStatus(files: SourceFile[], filesStatus: FilesStatus, componentFromFS?: ConsumerComponent) {
   files.forEach((file) => {
     const fileFromFs = componentFromFS?.files.find((f) => f.relative === file.relative);
-    const areFilesEqual =
-      fileFromFs && Buffer.compare(fileFromFs.contents as Uint8Array, file.contents as Uint8Array) === 0;
+    // @ts-ignore should be fixed after upgrading @types/node from '12.20.4' to > 20
+    const areFilesEqual = fileFromFs && Buffer.compare(fileFromFs.contents, file.contents) === 0;
     // @ts-ignore
     filesStatus[pathNormalizeToLinux(file.relative)] = areFilesEqual ? FileStatus.unchanged : FileStatus.updated;
   });
