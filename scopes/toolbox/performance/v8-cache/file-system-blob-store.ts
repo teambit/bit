@@ -125,7 +125,7 @@ export class FileSystemBlobStore {
 
   save(): boolean {
     const dump = this._getDump();
-    const blobToStore = Buffer.concat(dump[0]);
+    const blobToStore = Buffer.concat(dump[0] as Uint8Array[]);
     const mapToStore = JSON.stringify(dump[1]);
 
     try {
@@ -137,7 +137,7 @@ export class FileSystemBlobStore {
     }
 
     try {
-      writeFileSync(this._blobFilename, blobToStore);
+      writeFileSync(this._blobFilename, blobToStore as any);
       writeFileSync(this._mapFilename, mapToStore);
     } finally {
       unlinkSync(this._lockFilename);
