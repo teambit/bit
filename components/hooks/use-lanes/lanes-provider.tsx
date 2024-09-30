@@ -57,10 +57,8 @@ export function LanesProvider({
   });
 
   useEffect(() => {
-    if (viewedLaneIdProp && (!viewedLaneId || !viewedLaneId.isEqual(viewedLaneIdProp))) {
-      setViewedLaneId(viewedLaneIdProp);
-    }
-  }, [viewedLaneIdProp?.toString(), viewedLaneId?.toString()]);
+    setViewedLaneId(viewedLaneIdProp);
+  }, [viewedLaneIdProp?.toString()]);
 
   useEffect(() => {
     if (ignoreDerivingFromUrl(location)) return;
