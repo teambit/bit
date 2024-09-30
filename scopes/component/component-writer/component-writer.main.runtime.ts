@@ -313,7 +313,7 @@ to move all component files to a different directory, run bit remove and then bi
     LoggerMain,
     Workspace,
     MoverMain,
-    ConfigMergerMain
+    ConfigMergerMain,
   ]) {
     const logger = loggerMain.createLogger(ComponentWriterAspect.id);
     return new ComponentWriterMain(install, compiler, workspace, logger, mover, configMerger);

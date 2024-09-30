@@ -2,7 +2,10 @@ import { SchemaLocation, SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 
 export class ArrayLiteralExpressionSchema extends SchemaNode {
-  constructor(readonly members: SchemaNode[], readonly location: SchemaLocation) {
+  constructor(
+    readonly members: SchemaNode[],
+    readonly location: SchemaLocation
+  ) {
     super();
   }
 

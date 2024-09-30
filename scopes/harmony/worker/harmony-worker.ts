@@ -25,7 +25,10 @@ export type InitOptions = {
 };
 
 export class HarmonyWorker<T> {
-  constructor(readonly name: string, readonly workerPath: string) {}
+  constructor(
+    readonly name: string,
+    readonly workerPath: string
+  ) {}
 
   protected remoteWorker: undefined | Remote<T>;
 

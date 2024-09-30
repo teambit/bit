@@ -38,7 +38,7 @@ export function useComponentFilters() {
   const laneFromUrl = useViewedLaneFromUrl();
   const laneComponentId =
     idFromLocation && !laneFromUrl?.isDefault()
-      ? lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl) ?? null
+      ? (lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl) ?? null)
       : null;
 
   if (laneComponentId === null || loading) {
@@ -360,7 +360,7 @@ export class LanesUI {
       WorkspaceUI,
       ScopeUI,
       ComponentCompareUI,
-      CommandBarUI
+      CommandBarUI,
     ],
     _,
     [routeSlot, overviewSlot, navSlot, menuWidgetSlot, laneProviderIgnoreSlot]: [
@@ -368,7 +368,7 @@ export class LanesUI {
       LaneOverviewLineSlot,
       LanesOrderedNavigationSlot,
       MenuWidgetSlot,
-      LaneProviderIgnoreSlot
+      LaneProviderIgnoreSlot,
     ],
     harmony: Harmony
   ) {

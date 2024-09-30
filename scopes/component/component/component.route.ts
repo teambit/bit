@@ -11,7 +11,10 @@ export type ComponentUrlParams = {
 };
 
 export class ComponentRoute implements Route {
-  constructor(private registerRoute: RegisteredComponentRoute, private componentExtension: ComponentMain) {}
+  constructor(
+    private registerRoute: RegisteredComponentRoute,
+    private componentExtension: ComponentMain
+  ) {}
   dynamicRouteRegex = '/?[^/@]+/[^~]*';
   readonly route = `/:componentId(${this.dynamicRouteRegex})/~aspect${this.registerRoute.route}`;
 

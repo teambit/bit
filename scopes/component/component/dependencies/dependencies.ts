@@ -40,7 +40,11 @@ export class DependencyList extends Array<Dependency> {
 }
 
 export class Dependencies {
-  constructor(public runtime: DependencyList, public dev: DependencyList, public peer: DependencyList) {}
+  constructor(
+    public runtime: DependencyList,
+    public dev: DependencyList,
+    public peer: DependencyList
+  ) {}
 
   private getByEnvironment(env: Environment): DependencyList {
     if (env === DEV_ENV) {

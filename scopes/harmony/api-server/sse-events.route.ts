@@ -12,7 +12,10 @@ type CLIENT = {
  * Server-Sent Events (SSE).
  */
 export class SSEEventsRoute implements Route {
-  constructor(private logger: Logger, private cli: CLIMain) {}
+  constructor(
+    private logger: Logger,
+    private cli: CLIMain
+  ) {}
 
   method = 'get';
   route = '/sse-events';

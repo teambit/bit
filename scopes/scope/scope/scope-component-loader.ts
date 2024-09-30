@@ -13,7 +13,10 @@ import type { ScopeMain } from './scope.main.runtime';
 export class ScopeComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
   private importedComponentsCache: InMemoryCache<boolean>;
-  constructor(private scope: ScopeMain, private logger: Logger) {
+  constructor(
+    private scope: ScopeMain,
+    private logger: Logger
+  ) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.importedComponentsCache = createInMemoryCache({ maxAge: 1000 * 60 * 30 }); // 30 min
   }

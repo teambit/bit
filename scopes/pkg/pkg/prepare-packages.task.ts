@@ -14,7 +14,11 @@ import { writeNpmIgnore } from './write-npm-ignore';
 export class PreparePackagesTask implements BuildTask {
   readonly name = 'PreparePackages';
   readonly location = 'end';
-  constructor(readonly aspectId: string, private logger: Logger, private envs: EnvsMain) {}
+  constructor(
+    readonly aspectId: string,
+    private logger: Logger,
+    private envs: EnvsMain
+  ) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async execute(context: BuildContext): Promise<BuiltTaskResult> {

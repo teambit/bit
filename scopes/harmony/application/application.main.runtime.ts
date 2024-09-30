@@ -479,7 +479,7 @@ export class ApplicationMain {
       AspectLoaderMain,
       Workspace,
       WatcherMain,
-      ScopeMain
+      ScopeMain,
     ],
     config: ApplicationAspectConfig,
     [appTypeSlot, appSlot, deploymentProviderSlot]: [ApplicationTypeSlot, ApplicationSlot, DeploymentProviderSlot],

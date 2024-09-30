@@ -30,7 +30,10 @@ export class VariantsMain {
   static runtime = MainRuntime;
   static dependencies = [ConfigAspect];
 
-  constructor(private patterns: Patterns, private configAspect: ConfigMain) {
+  constructor(
+    private patterns: Patterns,
+    private configAspect: ConfigMain
+  ) {
     this.validateConfig();
   }
 

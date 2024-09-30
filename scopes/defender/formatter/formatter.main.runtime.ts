@@ -14,7 +14,10 @@ export type FormatterConfig = {};
 export class FormatterMain {
   static runtime = MainRuntime;
 
-  constructor(private envs: EnvsMain, private formatterService: FormatterService) {}
+  constructor(
+    private envs: EnvsMain,
+    private formatterService: FormatterService
+  ) {}
 
   /**
    * format an array of components.

@@ -644,7 +644,7 @@ export class UiMain {
       OnStartSlot,
       PublicDirOverwriteSlot,
       BuildMethodOverwriteSlot,
-      StartPluginSlot
+      StartPluginSlot,
     ],
     harmony: Harmony
   ) {

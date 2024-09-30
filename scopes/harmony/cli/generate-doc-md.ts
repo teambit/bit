@@ -9,7 +9,10 @@ export type GenerateOpts = {
 type CommandObject = ReturnType<typeof oneCommandToObject> & { commands?: any };
 
 export class GenerateCommandsDoc {
-  constructor(private commands: Command[], private options: GenerateOpts) {}
+  constructor(
+    private commands: Command[],
+    private options: GenerateOpts
+  ) {}
 
   generate(): string {
     const commands = this.getAllPublicCommandsSorted();

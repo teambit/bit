@@ -185,7 +185,7 @@ export class DocsMain {
       LoggerMain,
       DevFilesMain,
       EnvsMain,
-      ScopeMain
+      ScopeMain,
     ],
     config: DocsConfig,
     [docPropSlot, docReaderSlot]: [DocPropSlot, DocReaderSlot]

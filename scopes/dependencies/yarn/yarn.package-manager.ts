@@ -46,7 +46,10 @@ import { createRootComponentsDir } from './create-root-components-dir';
 export class YarnPackageManager implements PackageManager {
   readonly name = 'yarn';
 
-  constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
+  constructor(
+    private depResolver: DependencyResolverMain,
+    private logger: Logger
+  ) {}
 
   async install(
     { rootDir, manifests, componentDirectoryMap }: InstallationContext,

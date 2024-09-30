@@ -6,7 +6,10 @@ import { Capsule } from '@teambit/isolator';
 import { Environment } from '@teambit/envs';
 
 export class CoreExporterTask implements BuildTask {
-  constructor(private env: Environment, private aspectLoader: AspectLoaderMain) {}
+  constructor(
+    private env: Environment,
+    private aspectLoader: AspectLoaderMain
+  ) {}
 
   location: TaskLocation = 'start';
   readonly aspectId = 'teambit.harmony/aspect';

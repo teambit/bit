@@ -55,7 +55,7 @@ export type WorkspaceDeps = [
   BundlerMain,
   AspectLoaderMain,
   EnvsMain,
-  GlobalConfigMain
+  GlobalConfigMain,
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -141,7 +141,7 @@ export class WorkspaceMain {
       OnAspectsResolveSlot,
       OnRootAspectAddedSlot,
       OnBitmapChangeSlot,
-      OnWorkspaceConfigChangeSlot
+      OnWorkspaceConfigChangeSlot,
     ],
     harmony: Harmony
   ) {

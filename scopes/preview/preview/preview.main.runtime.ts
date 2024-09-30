@@ -980,7 +980,7 @@ export class PreviewMain {
       DependencyResolverMain,
       GraphqlMain,
       WatcherMain,
-      ScopeMain
+      ScopeMain,
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],

@@ -76,7 +76,7 @@ export class MDXMain {
       CompilerMain,
       GeneratorMain,
       LoggerMain,
-      WorkerMain
+      WorkerMain,
     ],
     config: MDXConfig,
     slots,

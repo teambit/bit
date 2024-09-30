@@ -3,7 +3,10 @@ import { Component } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
 
 export class ResolvedComponent {
-  constructor(readonly component: Component, readonly capsule: Capsule) {}
+  constructor(
+    readonly component: Component,
+    readonly capsule: Capsule
+  ) {}
 
   require() {
     // eslint-disable-next-line global-require, import/no-dynamic-require

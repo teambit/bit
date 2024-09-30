@@ -183,7 +183,7 @@ export class BuilderMain {
         if (this.envs.isUsingCoreEnv(comp)) {
           return [comp.id.toString(), { envId, inWs: false, lastTaggedEnvHasOnlyOverview: false }] as [
             string,
-            { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview?: boolean; isEnvTaggedWithComp?: boolean }
+            { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview?: boolean; isEnvTaggedWithComp?: boolean },
           ];
         }
 
@@ -191,7 +191,7 @@ export class BuilderMain {
         if (envId && !compsBeingTaggedLookup.has(comp.id.toString())) {
           return [comp.id.toString(), { envId, isEnvTaggedWithComp: false }] as [
             string,
-            { envId: string; inWs?: boolean; lastTaggedEnvHasOnlyOverview?: boolean; isEnvTaggedWithComp?: boolean }
+            { envId: string; inWs?: boolean; lastTaggedEnvHasOnlyOverview?: boolean; isEnvTaggedWithComp?: boolean },
           ];
         }
 
@@ -204,7 +204,7 @@ export class BuilderMain {
 
         return [comp.id.toString(), { envId, inWs, lastTaggedEnvHasOnlyOverview, isEnvTaggedWithComp: true }] as [
           string,
-          { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean; isEnvTaggedWithComp?: boolean }
+          { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean; isEnvTaggedWithComp?: boolean },
         ];
       })
     );
@@ -547,7 +547,7 @@ export class BuilderMain {
       ComponentMain,
       UiMain,
       GlobalConfigMain,
-      IssuesMain
+      IssuesMain,
     ],
     config,
     [buildTaskSlot, tagTaskSlot, snapTaskSlot]: [TaskSlot, TaskSlot, TaskSlot]

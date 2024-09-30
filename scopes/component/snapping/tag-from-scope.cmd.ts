@@ -42,7 +42,10 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
   ] as CommandOptions;
   remoteOp = true; // In case a compiler / tester is not installed
 
-  constructor(private snapping: SnappingMain, private logger: Logger) {}
+  constructor(
+    private snapping: SnappingMain,
+    private logger: Logger
+  ) {}
 
   // eslint-disable-next-line complexity
   async report(

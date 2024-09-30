@@ -6,7 +6,10 @@ import { EnvAspect } from './env.aspect';
 import { EnvEnv } from './env.env';
 
 export class EnvMain {
-  constructor(readonly envEnv: EnvEnv, private envs: EnvsMain) {}
+  constructor(
+    readonly envEnv: EnvEnv,
+    private envs: EnvsMain
+  ) {}
 
   /**
    * compose your own aspect environment.

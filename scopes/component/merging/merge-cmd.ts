@@ -53,7 +53,10 @@ optionally use '--abort' to revert the last merge. to revert a lane merge, use "
   ] as CommandOptions;
   loader = true;
 
-  constructor(private merging: MergingMain, private globalConfig: GlobalConfigMain) {}
+  constructor(
+    private merging: MergingMain,
+    private globalConfig: GlobalConfigMain
+  ) {}
 
   async report(
     [pattern]: [string],

@@ -74,9 +74,8 @@ export class StatusMain {
       loadDocs: false,
       loadCompositions: false,
     };
-    const { components: allComps, invalidComponents: allInvalidComponents } = await this.workspace.listWithInvalid(
-      loadOpts
-    );
+    const { components: allComps, invalidComponents: allInvalidComponents } =
+      await this.workspace.listWithInvalid(loadOpts);
     const consumer = this.workspace.consumer;
     const laneObj = await consumer.getCurrentLaneObject();
     const componentsList = new ComponentsList(consumer);
@@ -228,7 +227,7 @@ export class StatusMain {
     InsightsMain,
     IssuesMain,
     RemoveMain,
-    LanesMain
+    LanesMain,
   ]) {
     const statusMain = new StatusMain(workspace, issues, insights, remove, lanes);
     cli.register(new StatusCmd(statusMain), new MiniStatusCmd(statusMain));

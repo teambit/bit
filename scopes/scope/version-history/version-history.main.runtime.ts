@@ -26,7 +26,10 @@ type BuildResult = { err?: Error; added?: string[] };
 type ShowResult = { node: string; pointers: string[]; edges: Array<{ hash: string; type: string }> };
 
 export class VersionHistoryMain {
-  constructor(private scope: ScopeMain, private logger: Logger) {}
+  constructor(
+    private scope: ScopeMain,
+    private logger: Logger
+  ) {}
 
   async build(id: ComponentID, options: BuildOptions = {}): Promise<BuildResult> {
     const { fromSnap } = options;

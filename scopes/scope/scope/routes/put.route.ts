@@ -4,7 +4,10 @@ import { put } from '@teambit/legacy.scope-api';
 import { OnPostPutSlot, ScopeMain } from '../scope.main.runtime';
 
 export class PutRoute implements Route {
-  constructor(private scope: ScopeMain, private postPutSlot: OnPostPutSlot) {}
+  constructor(
+    private scope: ScopeMain,
+    private postPutSlot: OnPostPutSlot
+  ) {}
 
   method = 'post';
   route = '/scope/put';

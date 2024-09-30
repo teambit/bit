@@ -4,7 +4,10 @@ import { SchemaRegistry } from '../schema-registry';
 export class TypeIntersectionSchema extends SchemaNode {
   readonly types: SchemaNode[];
 
-  constructor(readonly location: SchemaLocation, types: SchemaNode[]) {
+  constructor(
+    readonly location: SchemaLocation,
+    types: SchemaNode[]
+  ) {
     super();
     this.types = types;
   }

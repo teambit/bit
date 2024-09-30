@@ -14,7 +14,10 @@ import { testsResultsToJUnitFormat } from './utils/junit-generator';
 export class TesterTask implements BuildTask {
   readonly name = 'TestComponents';
   readonly dependencies = [CompilerAspect.id];
-  constructor(readonly aspectId: string, private devFiles: DevFilesMain) {}
+  constructor(
+    readonly aspectId: string,
+    private devFiles: DevFilesMain
+  ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const components = context.capsuleNetwork.originalSeedersCapsules.getAllComponents();

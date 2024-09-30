@@ -316,7 +316,7 @@ export class ComponentCompareMain {
     Workspace,
     TesterMain,
     DependencyResolverMain,
-    ImporterMain
+    ImporterMain,
   ]) {
     const logger = loggerMain.createLogger(ComponentCompareAspect.id);
     const componentCompareMain = new ComponentCompareMain(

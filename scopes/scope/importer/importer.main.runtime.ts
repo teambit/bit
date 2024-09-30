@@ -326,7 +326,7 @@ export class ImporterMain {
     InstallMain,
     EnvsMain,
     LoggerMain,
-    ListerMain
+    ListerMain,
   ]) {
     const logger = loggerMain.createLogger(ImporterAspect.id);
     const importerMain = new ImporterMain(workspace, depResolver, graph, scope, componentWriter, envs, logger, lister);

@@ -155,7 +155,7 @@ export function CustomClassDecorator(config: {
     number | undefined,
     (a: string) => void,
     { a: string; b: number },
-    ClassSomething
+    ClassSomething,
   ];
 }) {
   return function (target: any) {
