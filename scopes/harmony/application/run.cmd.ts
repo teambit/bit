@@ -31,7 +31,11 @@ export class RunCmd implements Command {
     ['v', 'verbose', 'show verbose output for inspection and print stack trace'],
     // ['', 'skip-watch', 'avoid running the watch process that compiles components in the background'],
     ['w', 'watch', 'watch and compile your components upon changes'],
-    ['a', 'args [argv]', 'the arguments passing to the app.'],
+    [
+      'a',
+      'args <argv>',
+      'the arguments passing to the app. for example, --args="--a=1 --b". don\'t forget to use quotes to wrap the value to escape special characters.',
+    ],
   ] as CommandOptions;
 
   constructor(
