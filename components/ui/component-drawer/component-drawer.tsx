@@ -223,7 +223,7 @@ function ComponentsDrawerRenderTree({
 
   const TreeNode = useMemo(() => {
     return tree?.customRenderer && tree.customRenderer(tree.widgets, host);
-  }, [host, tree?.customRenderer, tree?.widgets.map.size, tree?.widgets.values().length]);
+  }, [tree?.customRenderer, tree?.widgets.map.size, tree?.widgets.values().length]);
 
   const isVisible = components.length > 0;
 

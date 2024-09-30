@@ -79,16 +79,7 @@ export function LanesProvider({
       limit: optionsProp.limit ?? 10,
       ...optionsProp,
     }),
-    [
-      skip,
-      optionsProp.ids?.join(','),
-      optionsProp.offset,
-      optionsProp.limit,
-      optionsProp.sort?.by,
-      optionsProp.sort?.direction,
-      optionsProp.search,
-      viewedLaneId?.toString(),
-    ]
+    [skip, optionsProp, viewedLaneId?.toString()]
   );
 
   const {
