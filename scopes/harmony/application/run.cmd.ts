@@ -9,6 +9,7 @@ type RunOptions = {
   watch: boolean;
   ssr: boolean;
   port: string;
+  args: string;
 };
 
 export class RunCmd implements Command {
@@ -30,6 +31,11 @@ export class RunCmd implements Command {
     ['v', 'verbose', 'show verbose output for inspection and print stack trace'],
     // ['', 'skip-watch', 'avoid running the watch process that compiles components in the background'],
     ['w', 'watch', 'watch and compile your components upon changes'],
+    [
+      'a',
+      'args <argv>',
+      'the arguments passing to the app. for example, --args="--a=1 --b". don\'t forget to use quotes to wrap the value to escape special characters.',
+    ],
   ] as CommandOptions;
 
   constructor(
@@ -41,7 +47,7 @@ export class RunCmd implements Command {
     private logger: Logger
   ) {}
 
-  async wait([appName]: [string], { dev, watch, ssr, port: exactPort }: RunOptions) {
+  async wait([appName]: [string], { dev, watch, ssr, port: exactPort, args }: RunOptions) {
     await this.application.loadAllAppsAsAspects();
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
     this.logger.off();
@@ -50,6 +56,7 @@ export class RunCmd implements Command {
       watch,
       ssr,
       port: +exactPort,
+      args,
     });
 
     if (errors) {
