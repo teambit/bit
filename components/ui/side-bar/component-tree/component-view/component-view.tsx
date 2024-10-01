@@ -42,13 +42,13 @@ export function ComponentView(props: ComponentViewProps) {
   const location = useLocation();
   const scope = { name: scopeName };
 
-  if (!component.id || !component.environment.id) return null;
+  const isMissingCompOrEnvId = !component?.id || !component?.environment?.id;
 
   component = component as ComponentModel;
 
-  const envId = ComponentID.fromString(component.environment?.id as string);
+  const envId = !isMissingCompOrEnvId ? ComponentID.fromString(component.environment?.id as string) : undefined;
 
-  const envTooltip = (
+  const envTooltip = envId ? (
     <Link
       external
       className={styles.envLink}
@@ -64,11 +64,14 @@ export function ComponentView(props: ComponentViewProps) {
       <div className={styles.componentEnvTitle}>Environment</div>
       <div>{component.environment?.id}</div>
     </Link>
-  );
+  ) : null;
 
-  const href = lanesModel?.getLaneComponentUrlByVersion(component.id as any, lanesModel.viewedLane?.id, !scope.name);
+  const href = !isMissingCompOrEnvId
+    ? lanesModel?.getLaneComponentUrlByVersion(component.id as any, lanesModel.viewedLane?.id, !scope.name)
+    : undefined;
 
   const viewingMainCompOnLane = React.useMemo(() => {
+    if (isMissingCompOrEnvId) return false;
     return (
       !component.status?.isNew &&
       !lanesModel?.viewedLane?.id.isDefault() &&
@@ -118,7 +121,7 @@ export function ComponentView(props: ComponentViewProps) {
    * @todo - move this logic to a util function
    */
   const isActive = React.useMemo(() => {
-    if (!href || !location) return false;
+    if (!href || !location || !component?.id) return false;
 
     const scopeFromQueryParams = location.search.split('scope=')[1];
 
@@ -178,7 +181,9 @@ export function ComponentView(props: ComponentViewProps) {
       ? laneCompIdFromUrl?.toString() === compIdStr || laneCompIdFromUrl.fullName === compIdName
       : laneCompIdFromUrl?.toString() === compIdStr ||
           (laneCompIdFromUrl.fullName === compIdName && componentScope === scopeFromQueryParams);
-  }, [href, viewingMainCompOnLane, location?.pathname, component.id.toString(), scope.name]);
+  }, [href, viewingMainCompOnLane, location?.pathname, component?.id.toString(), scope.name]);
+
+  if (isMissingCompOrEnvId) return null;
 
   const isCompModified =
     component.status?.modifyInfo?.hasModifiedFiles || component.status?.modifyInfo?.hasModifiedDependencies;
