@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, ReactNode, useMemo } from 'react';
+import React, { useContext, ReactNode, useMemo } from 'react';
 import classNames from 'classnames';
 import { ComponentTree } from '@teambit/ui-foundation.ui.side-bar';
 import type { PayloadType } from '@teambit/ui-foundation.ui.side-bar';
@@ -90,93 +90,156 @@ export class ComponentsDrawer implements DrawerType {
     return <Composer components={combinedContexts}>{children}</Composer>;
   };
 
-  renderFilters = ({ components, lanes }: { components: ComponentModel[]; lanes?: LanesModel }) => {
-    const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
-    const filterPlugins = this.plugins.filters;
-
-    const filters = useMemo(
-      () =>
-        (filterPlugins &&
-          flatten(
-            filterPlugins.toArray().map(([key, filtersByKey]) => {
-              return filtersByKey.map((filter) => ({ ...filter, key: `${key}-${filter.id}` }));
-            })
-          ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) ||
-        [],
-      [filterPlugins]
-    );
-
-    return (
-      <div className={classNames(styles.filtersContainer, filterWidgetOpen && styles.open)}>
-        {filters.map((filter) => (
-          <filter.render
-            key={filter.key}
-            components={components}
-            lanes={lanes}
-            className={classNames(styles.filter, filterWidgetOpen && styles.open)}
-          />
-        ))}
-      </div>
-    );
-  };
-
-  renderTree = ({ components, host }: { components: ComponentModel[]; host?: ScopeModel | WorkspaceModel }) => {
-    const { collapsed } = useContext(ComponentTreeContext);
-    const { tree } = this.plugins;
-
-    const TreeNode = tree?.customRenderer && useCallback(tree.customRenderer(tree.widgets, host), [tree.widgets]);
-    const isVisible = components.length > 0;
-
-    if (!isVisible) return null;
-
-    return (
-      <div className={styles.drawerTreeContainer}>
-        <ComponentTree
-          transformTree={this.transformTree ? this.transformTree(host) : undefined}
-          components={components}
-          isCollapsed={collapsed}
-          // assumeScopeInUrl={this.assumeScopeInUrl}
-          TreeNode={TreeNode}
-        />
-      </div>
-    );
-  };
-
   setWidgets = (widgets?: DrawerWidgetSlot) => {
     this.widgets = flatten(widgets?.values());
   };
 
   render = () => {
-    const { loading, components } = this.useComponents();
-    const { lanesModel: lanes } = this.useLanes();
-    const componentFiltersContext = useContext(ComponentFilterContext);
-
-    const filters = componentFiltersContext?.filters || [];
-
-    const filteredComponents = useMemo(
-      () => runAllFilters(filters, { components, lanes }),
-      [filters, components, lanes]
-    );
-
-    const Filters = this.renderFilters({ components, lanes });
-    const host = this.useHost?.();
-
-    const Tree = this.renderTree({ components: filteredComponents, host });
-
-    const emptyDrawer = (
-      <span className={classNames(mutedItalic, ellipsis, styles.emptyDrawer)}>{this.emptyMessage}</span>
-    );
-
-    if (loading) return <ComponentTreeLoader />;
-
+    const { useComponents, useLanes: useLanesFromInstance, emptyMessage, plugins, transformTree, useHost, id } = this;
     return (
-      <div key={this.id} className={styles.drawerContainer}>
-        {Filters}
-        {Tree}
-        {filteredComponents.length === 0 && emptyDrawer}
-      </div>
+      <ComponentsDrawerContent
+        useComponents={useComponents}
+        useLanes={useLanesFromInstance}
+        emptyMessage={emptyMessage}
+        plugins={plugins}
+        transformTree={transformTree}
+        useHost={useHost}
+        id={id}
+      />
     );
   };
+}
+
+function ComponentsDrawerContent({
+  useComponents,
+  useLanes: useLanesFromProps,
+  emptyMessage,
+  plugins,
+  transformTree,
+  useHost,
+  id,
+}: {
+  useComponents: () => { components: ComponentModel[]; loading?: boolean };
+  useLanes: () => { lanesModel?: LanesModel; loading?: boolean };
+  emptyMessage: ReactNode;
+  plugins: ComponentsDrawerPlugins;
+  transformTree?: TransformTreeFn;
+  useHost?: () => ScopeModel | WorkspaceModel;
+  id: string;
+}) {
+  const { loading: loadingComponents, components } = useComponents();
+  const { lanesModel: lanes, loading: loadingLanesModel } = useLanesFromProps();
+  const componentFiltersContext = useContext(ComponentFilterContext);
+  const filters = componentFiltersContext?.filters || [];
+  const host = useHost?.();
+
+  const filteredComponents = useMemo(() => {
+    if (!filters.length) return components;
+    return runAllFilters(filters, { components, lanes });
+  }, [filters, components.length, lanes?.lanes.length, lanes?.viewedLane?.id.toString(), loadingLanesModel]);
+
+  const Filters = <ComponentsDrawerRenderFilters components={components} lanes={lanes} plugins={plugins} />;
+
+  const Tree = (
+    <ComponentsDrawerRenderTree
+      components={filteredComponents}
+      host={host}
+      plugins={plugins}
+      transformTree={transformTree}
+      lanesModel={lanes}
+    />
+  );
+
+  const emptyDrawer = <span className={classNames(mutedItalic, ellipsis, styles.emptyDrawer)}>{emptyMessage}</span>;
+
+  const loading = loadingComponents || loadingLanesModel || !lanes || !components;
+
+  if (loading) return <ComponentTreeLoader />;
+
+  return (
+    <div key={id} className={styles.drawerContainer}>
+      {Filters}
+      {Tree}
+      {filteredComponents.length === 0 && emptyDrawer}
+    </div>
+  );
+}
+
+function ComponentsDrawerRenderFilters({
+  components,
+  lanes,
+  plugins,
+}: {
+  components: ComponentModel[];
+  lanes?: LanesModel;
+  plugins: ComponentsDrawerPlugins;
+}) {
+  const { filterWidgetOpen } = useContext(ComponentFilterWidgetContext);
+  const filterPlugins = plugins.filters;
+
+  const filters = useMemo(
+    () =>
+      (filterPlugins &&
+        flatten(
+          filterPlugins.toArray().map(([key, filtersByKey]) => {
+            return filtersByKey.map((filter) => ({ ...filter, key: `${key}-${filter.id}` }));
+          })
+        ).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) ||
+      [],
+    [filterPlugins?.map.size, filterPlugins?.values()?.length]
+  );
+
+  if (!filters.length) return null;
+
+  return (
+    <div className={classNames(styles.filtersContainer, filterWidgetOpen && styles.open)}>
+      {filters.map((filter) => (
+        <filter.render
+          key={filter.key}
+          components={components}
+          lanes={lanes}
+          className={classNames(styles.filter, filterWidgetOpen && styles.open)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ComponentsDrawerRenderTree({
+  components,
+  host,
+  plugins,
+  transformTree,
+  lanesModel,
+}: {
+  components: ComponentModel[];
+  host?: ScopeModel | WorkspaceModel;
+  plugins: ComponentsDrawerPlugins;
+  transformTree?: TransformTreeFn;
+  lanesModel?: LanesModel;
+}) {
+  const { collapsed } = useContext(ComponentTreeContext);
+  const { tree } = plugins;
+
+  const TreeNode = useMemo(() => {
+    return tree?.customRenderer && tree.customRenderer(tree.widgets, host);
+  }, [tree?.customRenderer, tree?.widgets.map.size, tree?.widgets.values().length]);
+
+  const isVisible = components.length > 0;
+
+  if (!isVisible) return null;
+
+  return (
+    <div className={styles.drawerTreeContainer}>
+      <ComponentTree
+        transformTree={transformTree ? transformTree(host) : undefined}
+        components={components}
+        isCollapsed={collapsed}
+        TreeNode={TreeNode}
+        lanesModel={lanesModel}
+      />
+    </div>
+  );
 }
 
 export function TreeToggleWidget() {
