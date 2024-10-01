@@ -57,7 +57,7 @@ export function LanesProvider({
   });
 
   useEffect(() => {
-    setViewedLaneId(viewedLaneIdProp);
+    if (viewedLaneIdProp) setViewedLaneId(viewedLaneIdProp);
   }, [viewedLaneIdProp?.toString()]);
 
   useEffect(() => {
