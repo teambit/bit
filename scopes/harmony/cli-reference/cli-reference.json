@@ -1812,6 +1812,11 @@
         "w",
         "watch",
         "watch and compile your components upon changes"
+      ],
+      [
+        "a",
+        "args <argv>",
+        "the arguments passing to the app. for example, --args=\"--a=1 --b\". don't forget to use quotes to wrap the value to escape special characters."
       ]
     ],
     "description": "locally run an app component (independent of bit's dev server)",
@@ -1872,6 +1877,11 @@
             "w",
             "watch",
             "watch and compile your components upon changes"
+          ],
+          [
+            "a",
+            "args <argv>",
+            "the arguments passing to the app. for example, --args=\"--a=1 --b\". don't forget to use quotes to wrap the value to escape special characters."
           ]
         ],
         "description": "locally run an app component (independent of bit's dev server)",
