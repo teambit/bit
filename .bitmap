@@ -658,9 +658,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/dependency-resolver",
         "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.37": {},
+            "teambit.harmony/envs/core-aspect-env-jest@0.0.37": {},
             "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
+                "env": "teambit.harmony/envs/core-aspect-env-jest"
             }
         }
     },
