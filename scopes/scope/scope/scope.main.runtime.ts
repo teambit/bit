@@ -32,7 +32,7 @@ import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import chokidar from '@teambit/chokidar';
+import chokidar from 'chokidar';
 import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';

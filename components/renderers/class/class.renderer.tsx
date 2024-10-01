@@ -72,8 +72,7 @@ function ClassOverviewComponent(props: APINodeRenderProps) {
 
   const icon = renderer.icon;
   const description =
-    doc?.comment ??
-    doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n` ?? ''), '');
+    doc?.comment ?? doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n`), '');
   return (
     <SchemaNodesSummary
       name={classNode.name}
