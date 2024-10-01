@@ -762,9 +762,11 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     await Promise.all(
       components.map(async (component) => {
         if (component.componentMap?.rootDir) {
+          const [comp] = await this.scope.getManyByLegacy([component]);
           component.dependenciesGraph = await this.dependencyResolver.getDependenciesGraph(
+            comp,
             this.workspace.path,
-            component.componentMap!.rootDir
+            this.workspace.rootComponentsPath
           );
         }
       })
