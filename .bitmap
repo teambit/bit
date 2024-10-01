@@ -1342,7 +1342,7 @@
     "modules/component-url": {
         "name": "modules/component-url",
         "scope": "teambit.component",
-        "version": "0.0.168",
+        "version": "0.0.169",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-url"
     },
@@ -2472,7 +2472,7 @@
     "ui/highlighter-provider": {
         "name": "ui/highlighter-provider",
         "scope": "teambit.react",
-        "version": "0.0.213",
+        "version": "0.0.214",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/highlighter-provider"
     },
