@@ -49,6 +49,11 @@ export class AppContext extends ExecutionContext {
     readonly port?: number,
 
     /**
+     * arguments to pass to the app.
+     */
+    readonly args?: string,
+
+    /**
      * path to the application component in the workspace
      */
     readonly workspaceComponentPath?: string,
@@ -90,6 +95,7 @@ export class AppContext extends ExecutionContext {
       overrides?.execContext || appContext?.execContext,
       overrides?.hostRootDir || appContext?.hostRootDir,
       overrides?.port || appContext?.port,
+      overrides?.args || appContext?.args,
       overrides?.workspaceComponentPath || appContext?.workspaceComponentPath,
       overrides?.envVariables || appContext?.envVariables
     );
