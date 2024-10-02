@@ -290,6 +290,7 @@ export const useLanes: UseLanes = (targetLanes, skip, optionsFromProps, useConte
   const searchResult = useSearchLanes(options?.search, shouldSkip);
 
   if (targetLanes) {
+    if (!targetLanes.viewedLane) targetLanes.setViewedLane(context?.lanesModel?.viewedLane?.id);
     return {
       ...context,
       ...rootLanesData,

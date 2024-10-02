@@ -100,7 +100,7 @@ function envsFilter({ components, className, lanes }: ComponentFilterRenderProps
   const filtersExceptEnv = filters.filter((filter) => filter.id !== EnvsFilter.id);
   const filteredComponents = useMemo(
     () => runAllFilters(filtersExceptEnv, { components, lanes }),
-    [filtersExceptEnv, lanes?.viewedLane?.id.toString()]
+    [filtersExceptEnv.length, lanes?.viewedLane?.id.toString()]
   );
 
   const envsFilterState = deriveEnvsFilterState(filteredComponents);

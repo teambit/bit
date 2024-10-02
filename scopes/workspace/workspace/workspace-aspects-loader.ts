@@ -107,7 +107,7 @@ ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts, null, 2)}`);
     const [localAspects, nonLocalAspects] = partition(ids, (id) => id.startsWith('file:'));
     const localAspectsMap = await this.aspectLoader.loadAspectFromPath(localAspects);
-    this.workspace.localAspects = localAspectsMap;
+    this.workspace.localAspects = { ...this.workspace.localAspects, ...localAspectsMap };
 
     let notLoadedIds = nonLocalAspects;
     if (!mergedOpts.forceLoad) {
