@@ -10,11 +10,25 @@ import { fallbacks } from './webpack-fallbacks';
 import { fallbacksProvidePluginConfig } from './webpack-fallbacks-provide-plugin-config';
 import { fallbacksAliases } from './webpack-fallbacks-aliases';
 
-export function configFactory(target: Target, context: BundlerContext): Configuration {
+export function configFactory(target: Target, context: BundlerContext): Configuration[] {
   let truthyEntries =
     Array.isArray(target.entries) && target.entries.length ? target.entries.filter(Boolean) : target.entries || {};
   if (Array.isArray(truthyEntries) && !truthyEntries.length) {
     truthyEntries = {};
+  }
+
+  const truthyEntriesArr = Object.entries(truthyEntries);
+  const chunkSize = context.metaData?.chunkSize;
+  const chunksOfEntries = [];
+
+  if (!!chunkSize) {
+    for (let i = 0; i < truthyEntriesArr.length; i += chunkSize) {
+      // @ts-ignore
+      chunksOfEntries.push(truthyEntriesArr.slice(i, i + chunkSize));
+    }
+  } else {
+    // @ts-ignore
+    chunksOfEntries.push(truthyEntriesArr);
   }
 
   const dev = Boolean(context.development);
@@ -23,75 +37,81 @@ export function configFactory(target: Target, context: BundlerContext): Configur
   const htmlPlugins = htmlConfig ? generateHtmlPlugins(htmlConfig) : undefined;
   const splitChunks = target.chunking?.splitChunks;
 
-  const config: Configuration = {
-    mode: dev ? 'development' : 'production',
-    // Stop compilation early in production
-    bail: true,
-    // These are the "entry points" to our application.
-    // This means they will be the "root" imports that are included in JS bundle.
-    // @ts-ignore
-    entry: truthyEntries,
+  const configs: Configuration[] = chunksOfEntries.map((chunkOfEntry) => {
+    const configEntries = Object.fromEntries(chunkOfEntry);
 
-    infrastructureLogging: {
-      level: 'error',
-    },
+    const config: Configuration = {
+      mode: dev ? 'development' : 'production',
+      // Stop compilation early in production
+      bail: true,
+      // These are the "entry points" to our application.
+      // This means they will be the "root" imports that are included in JS bundle.
+      // @ts-ignore
+      entry: configEntries,
 
-    output: {
-      // The build folder.
-      path: `${target.outputPath}${sep}public`,
-    },
-    stats: {
-      errorDetails: true,
-    },
+      infrastructureLogging: {
+        level: 'error',
+      },
 
-    resolve: {
-      // TODO - check - we should not need both fallbacks and alias and provider plugin
-      alias: fallbacksAliases,
+      output: {
+        // The build folder.
+        path: `${target.outputPath}${sep}public`,
+      },
+      stats: {
+        errorDetails: true,
+      },
 
-      fallback: fallbacks,
-    },
+      resolve: {
+        // TODO - check - we should not need both fallbacks and alias and provider plugin
+        alias: fallbacksAliases,
 
-    plugins: [new webpack.ProvidePlugin(fallbacksProvidePluginConfig), getAssetManifestPlugin()],
-  };
+        fallback: fallbacks,
+      },
 
-  if (target.filename) {
-    config.output = config.output || {};
-    config.output.filename = target.filename;
-  }
-
-  if (target.chunkFilename) {
-    config.output = config.output || {};
-    config.output.chunkFilename = target.chunkFilename;
-  }
-
-  if (target.runtimeChunkName) {
-    config.optimization = config.optimization || {};
-    config.optimization.runtimeChunk = {
-      name: target.runtimeChunkName,
+      plugins: [new webpack.ProvidePlugin(fallbacksProvidePluginConfig), getAssetManifestPlugin()],
     };
-  }
 
-  if (splitChunks) {
-    config.optimization = config.optimization || {};
-    config.optimization.splitChunks = {
-      chunks: 'all',
-      name: false,
-    };
-  }
+    if (target.filename) {
+      config.output = config.output || {};
+      config.output.filename = target.filename;
+    }
 
-  if (htmlPlugins && htmlPlugins.length) {
-    if (!config.plugins) {
-      config.plugins = [];
+    if (target.chunkFilename) {
+      config.output = config.output || {};
+      config.output.chunkFilename = target.chunkFilename;
     }
-    config.plugins = config.plugins.concat(htmlPlugins);
-  }
-  if (compress) {
-    if (!config.plugins) {
-      config.plugins = [];
+
+    if (target.runtimeChunkName) {
+      config.optimization = config.optimization || {};
+      config.optimization.runtimeChunk = {
+        name: target.runtimeChunkName,
+      };
     }
-    config.plugins = config.plugins.concat(new CompressionPlugin());
-  }
-  return config;
+
+    if (splitChunks) {
+      config.optimization = config.optimization || {};
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        name: false,
+      };
+    }
+
+    if (htmlPlugins && htmlPlugins.length) {
+      if (!config.plugins) {
+        config.plugins = [];
+      }
+      config.plugins = config.plugins.concat(htmlPlugins);
+    }
+    if (compress) {
+      if (!config.plugins) {
+        config.plugins = [];
+      }
+      config.plugins = config.plugins.concat(new CompressionPlugin());
+    }
+    return config;
+  });
+
+  return configs;
 }
 
 function getAssetManifestPlugin() {
