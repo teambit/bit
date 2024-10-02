@@ -24,7 +24,10 @@ export class PreviewTask implements BuildTask {
     private preview: PreviewMain,
 
     private dependencyResolver: DependencyResolverMain,
-    private logger: Logger
+
+    private logger: Logger,
+
+    private chunkSize: number
   ) {}
 
   aspectId = 'teambit.preview/preview';
@@ -53,6 +56,7 @@ export class PreviewTask implements BuildTask {
       metaData: {
         initiator: `${PREVIEW_TASK_NAME} task`,
         envId: context.id,
+        chunkSize: this.chunkSize,
       },
     });
 
