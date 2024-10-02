@@ -410,7 +410,12 @@ export class APIForIDE {
       throw new Error('id should include the scope name');
     }
     const [scope, ...nameSplit] = idIncludeScope.split('/');
-    return this.generator.generateComponentTemplate([nameSplit.join('/')], templateName, { scope });
+    return this.generator.generateComponentTemplate(
+      [nameSplit.join('/')],
+      templateName,
+      { scope },
+      { optimizeReportForNonTerminal: true }
+    );
   }
 
   async removeComponent(componentsPattern: string) {
