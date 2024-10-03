@@ -24,7 +24,7 @@ import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
 import { generatorSchema } from './generator.graphql';
-import { ComponentGenerator, GenerateResult, OnComponentCreateFn } from './component-generator';
+import { ComponentGenerator, GenerateResult, InstallOptions, OnComponentCreateFn } from './component-generator';
 import { WorkspaceGenerator } from './workspace-generator';
 import { WorkspaceTemplate } from './workspace-template';
 import { NewCmd, NewOptions } from './new.cmd';
@@ -299,7 +299,8 @@ export class GeneratorMain {
   async generateComponentTemplate(
     componentNames: string[],
     templateName: string,
-    options: Partial<CreateOptions>
+    options: Partial<CreateOptions>,
+    installOptions?: InstallOptions
   ): Promise<GenerateResult[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     await this.loadAspects();
@@ -340,7 +341,8 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       this.logger,
       this.onComponentCreateSlot,
       templateWithId.id,
-      envId
+      envId,
+      installOptions
     );
     return componentGenerator.generate(options.force);
   }

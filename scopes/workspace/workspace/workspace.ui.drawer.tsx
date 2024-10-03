@@ -38,20 +38,7 @@ export const workspaceDrawer = ({
 
             if (!children) {
               // non collapse
-              return (
-                <ComponentView
-                  {...props}
-                  treeNodeSlot={treeNodeSlot}
-                  /**
-                   * this is a hack to get around incompatible component id b/w the new sidebar and components in this workspace
-                   * the new sidebar has been tagged with the new LanesModel component which has been upgraded to a new major component id version
-                   * which makes it incompatible with all other components in this workspace
-                   *
-                   * hopefully when wave gets released it becomes seamless to update all dependents for a given version
-                   */
-                  useLanes={useLanes as any}
-                />
-              );
+              return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
             }
 
             if (props.node.payload instanceof ScopePayload) return <ScopeTreeNode {...props} />;

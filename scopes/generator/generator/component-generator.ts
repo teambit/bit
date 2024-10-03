@@ -33,7 +33,9 @@ export type GenerateResult = {
   installMissingDependencies?: boolean;
 };
 
-export type OnComponentCreateFn = (generateResults: GenerateResult[]) => Promise<void>;
+export type InstallOptions = { optimizeReportForNonTerminal?: boolean };
+
+export type OnComponentCreateFn = (generateResults: GenerateResult[], installOptions?: InstallOptions) => Promise<void>;
 
 export class ComponentGenerator {
   constructor(
@@ -48,7 +50,8 @@ export class ComponentGenerator {
     private logger: Logger,
     private onComponentCreateSlot: OnComponentCreateSlot,
     private aspectId: string,
-    private envId?: ComponentID
+    private envId?: ComponentID,
+    private installOptions: InstallOptions = {}
   ) {}
 
   async generate(force = false): Promise<GenerateResult[]> {
@@ -101,7 +104,7 @@ export class ComponentGenerator {
   private async runOnComponentCreateHook(generateResults: GenerateResult[]) {
     const fns = this.onComponentCreateSlot.values();
     if (!fns.length) return;
-    await Promise.all(fns.map((fn) => fn(generateResults)));
+    await Promise.all(fns.map((fn) => fn(generateResults, this.installOptions)));
   }
 
   /**

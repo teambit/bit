@@ -199,7 +199,7 @@ export class InstallMain {
     this.postInstallSlot.register(fn);
   }
 
-  async onComponentCreate(generateResults: GenerateResult[]) {
+  async onComponentCreate(generateResults: GenerateResult[], installOptions?: Partial<WorkspaceInstallOptions>) {
     this.workspace.inInstallContext = true;
     let runInstall = false;
     let packages: string[] = [];
@@ -243,10 +243,10 @@ export class InstallMain {
     // `the following environments are not installed yet: ${nonLoadedEnvs.join(', ')}. installing them now...`
     // );
     await this.install(packages, {
+      ...installOptions,
       addMissingDeps: installMissing,
       skipIfExisting: true,
       writeConfigFiles: false,
-      optimizeReportForNonTerminal: !process.stdout.isTTY,
       // skipPrune: true,
     });
   }

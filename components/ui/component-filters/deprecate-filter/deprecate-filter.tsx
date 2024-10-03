@@ -19,12 +19,10 @@ export const DeprecateFilter: DeprecateFilterCriteria = {
 
 function deprecateFilter({ className }: React.HTMLAttributes<HTMLDivElement>) {
   const filterContext = useComponentFilter<boolean>(DeprecateFilter.id);
-
   if (!filterContext) return null;
-
   const [filter, updateFilter] = filterContext;
 
-  const isActive = filter.state;
+  const isActive = filter?.state;
 
   return (
     <div className={classNames(styles.deprecateFilter, isActive && styles.active, className)}>
