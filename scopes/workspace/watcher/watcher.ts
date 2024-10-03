@@ -437,6 +437,7 @@ export class Watcher {
   private async createWatcher() {
     const usePollingConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_POLLING);
     const usePolling = usePollingConf === 'true';
+    const workspacePathLinux = pathNormalizeToLinux(this.workspace.path);
     const ignoreLocalScope = (pathToCheck: string) => {
       // chokidar 4 doesn't support glob patterns. so we we have to check it with a function.
       if (pathToCheck.endsWith('/node_modules')) return true;
@@ -444,7 +445,7 @@ export class Watcher {
       if (pathToCheck.endsWith('/package.json')) return true;
       if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
       return (
-        pathToCheck.startsWith(`${this.workspace.path}/.git/`) || pathToCheck.startsWith(`${this.workspace.path}/.bit/`)
+        pathToCheck.startsWith(`${workspacePathLinux}/.git/`) || pathToCheck.startsWith(`${workspacePathLinux}/.bit/`)
       );
     };
     this.fsWatcher = chokidar.watch(this.workspace.path, {
