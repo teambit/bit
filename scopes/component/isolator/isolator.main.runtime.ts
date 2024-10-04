@@ -704,8 +704,11 @@ export class IsolatorMain {
         if (legacyScope) {
           let lockfile = null;
           await Promise.all(
-            components.map(async (comp) => {
-              const graph = await this.getDependenciesGraphFromModel(legacyScope, comp.id);
+            capsuleList.map(async (capsule) => {
+              const graph = await this.getDependenciesGraphFromModel(legacyScope, capsule.component.id);
+              const projectId = pathNormalizeToLinux(path.relative(capsulesDir, capsule.path));
+              graph.importers[projectId] = graph.importers['.'];
+              delete graph.importers['.'];
               if (lockfile == null) {
                 lockfile = graph;
               } else {
@@ -715,7 +718,9 @@ export class IsolatorMain {
               }
             })
           );
-          await writeWantedLockfile(capsulesDir, lockfile);
+          if (lockfile) {
+            await writeWantedLockfile(capsulesDir, lockfile);
+          }
         }
 
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);

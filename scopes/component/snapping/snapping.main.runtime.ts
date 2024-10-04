@@ -212,6 +212,7 @@ export class SnappingMain {
         scope: this.scope,
         snapping: this,
         builder: this.builder,
+        components,
         consumerComponents,
         ids: compIds,
         message,
@@ -338,6 +339,7 @@ if you're willing to lose the history from the head to the specified version, us
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
+      components,
       consumerComponents,
       tagDataPerComp,
       populateArtifactsFrom: shouldUsePopulateArtifactsFrom ? components.map((c) => c.id) : undefined,
@@ -502,6 +504,7 @@ if you're willing to lose the history from the head to the specified version, us
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
+      components,
       consumerComponents,
       tagDataPerComp: snapDataPerComp.map((s) => ({
         componentId: s.componentId,
@@ -595,6 +598,7 @@ if you're willing to lose the history from the head to the specified version, us
       snapping: this,
       builder: this.builder,
       editor,
+      components,
       consumerComponents,
       ids,
       ignoreNewestVersion: false,
@@ -756,15 +760,14 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     this.logger.profile('snap._addFlattenedDependenciesToComponents');
   }
 
-  async _addDependenciesGraphToComponents(components: ConsumerComponent[]) {
+  async _addDependenciesGraphToComponents(consumerComponents: ConsumerComponent[], components: Component[]) {
     loader.start('importing missing dependencies...');
     this.logger.profile('snap._addDependenciesGraphToComponents');
     await Promise.all(
-      components.map(async (component) => {
-        if (component.componentMap?.rootDir) {
-          const [comp] = await this.scope.getManyByLegacy([component]);
-          component.dependenciesGraph = await this.dependencyResolver.getDependenciesGraph(
-            comp,
+      consumerComponents.map(async (consumerComponent, index) => {
+        if (consumerComponent.componentMap?.rootDir) {
+          consumerComponent.dependenciesGraph = await this.dependencyResolver.getDependenciesGraph(
+            components[index],
             this.workspace.path,
             this.workspace.rootComponentsPath
           );

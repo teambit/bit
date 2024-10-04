@@ -366,6 +366,9 @@ export class PnpmPackageManager implements PackageManager {
       failOnMissingDependencies: false,
       skipped: new Set(),
     });
+    partialLockfile.importers = {
+      ['.' as ProjectId]: partialLockfile.importers[componentRootDir],
+    };
     return partialLockfile;
   }
 }
