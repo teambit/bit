@@ -207,5 +207,5 @@ export interface PackageManager {
 
   findUsages?(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string>;
 
-  getDependenciesGraph?(workspaceDir: string, componentRootDir: string): Promise<any>;
+  getDependenciesGraph?(workspaceDir: string, componentRootDir: string, pkgName: string): Promise<any>;
 }

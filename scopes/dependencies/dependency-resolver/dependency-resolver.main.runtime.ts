@@ -565,8 +565,9 @@ export class DependencyResolverMain {
       workspacePath: workspaceDir,
       rootComponentsPath: componentRootDir,
     });
+    const pkgName = this.getPackageName(component);
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
-    return packageManager?.getDependenciesGraph?.(workspaceDir, dirInEnvRoot);
+    return packageManager?.getDependenciesGraph?.(workspaceDir, dirInEnvRoot, pkgName);
   }
 
   /**

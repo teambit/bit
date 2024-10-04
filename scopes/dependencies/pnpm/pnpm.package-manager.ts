@@ -352,7 +352,7 @@ export class PnpmPackageManager implements PackageManager {
     });
   }
 
-  async getDependenciesGraph(workspaceDir: string, componentRootDir: string): Promise<any> {
+  async getDependenciesGraph(workspaceDir: string, componentRootDir: string, pkgName: string): Promise<any> {
     const lockfile = await readWantedLockfile(workspaceDir, { ignoreIncompatible: false });
     if (!lockfile) {
       throw new BitError('Cannot get the depednency graph without a lockfile. Try running "bit install".');
@@ -367,7 +367,8 @@ export class PnpmPackageManager implements PackageManager {
       skipped: new Set(),
     });
     partialLockfile.importers = {
-      ['.' as ProjectId]: partialLockfile.importers[componentRootDir],
+      ['.' as ProjectId]:
+        partialLockfile.packages![`${pkgName}@${partialLockfile.importers[componentRootDir].dependencies[pkgName]}`],
     };
     return partialLockfile;
   }
