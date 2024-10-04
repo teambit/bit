@@ -83,7 +83,7 @@ export class ForkingMain {
    */
   getForkInfo(component: Component): ForkInfo | null {
     const forkConfig = component.state.aspects.get(ForkingAspect.id)?.config as ForkConfig | undefined;
-    if (!forkConfig) return null;
+    if (!forkConfig?.forkedFrom) return null;
     return {
       forkedFrom: ComponentID.fromObject(forkConfig.forkedFrom),
     };
