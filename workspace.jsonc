@@ -554,7 +554,8 @@
     "capsuleSelfReference": true
   },
   "teambit.preview/preview": {
-    "bundlingStrategy": "component"
+    "bundlingStrategy": "component",
+    "maxChunkSize": 20
   },
   "teambit.generator/generator": {
     "aspects": [
