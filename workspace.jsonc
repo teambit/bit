@@ -489,6 +489,7 @@
         "url": "^0.11.3",
         "url-join": "4.0.1",
         "url-parse": "1.4.7",
+        "user-home": "^3.0.0",
         "util": "^0.12.5",
         "version-selector-type": "3.0.0",
         "vfile": "4.2.0",
