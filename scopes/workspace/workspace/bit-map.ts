@@ -17,7 +17,10 @@ export type MergeOptions = {
  * (pro: making Workspace aspect smaller. con: it's an implementation details of the workspace)
  */
 export class BitMap {
-  constructor(private legacyBitMap: LegacyBitMap, private consumer: Consumer) {}
+  constructor(
+    private legacyBitMap: LegacyBitMap,
+    private consumer: Consumer
+  ) {}
 
   mergeBitmaps(bitmapContent: string, otherBitmapContent: string, opts: MergeOptions = {}): string {
     return LegacyBitMap.mergeContent(bitmapContent, otherBitmapContent, opts);

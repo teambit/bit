@@ -7,7 +7,11 @@ import { Doc } from '@teambit/docs.entities.doc';
 import { DocReader } from './doc-reader';
 
 export class DefaultDocReader implements DocReader {
-  constructor(private pkg: PkgMain, private compiler: CompilerMain, private workspace: Workspace) {}
+  constructor(
+    private pkg: PkgMain,
+    private compiler: CompilerMain,
+    private workspace: Workspace
+  ) {}
 
   async read(path: string, contents: Buffer, component: Component) {
     const packageName = this.pkg.getPackageName(component);

@@ -850,7 +850,7 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
     RemoveMain,
     DependencyResolverMain,
     LoggerMain,
-    EjectMain
+    EjectMain,
   ]) {
     const logger = loggerMain.createLogger(ExportAspect.id);
     const exportMain = new ExportMain(workspace, remove, depResolver, logger, eject);

@@ -7,7 +7,10 @@ import { pipeline } from 'stream/promises';
 import { ScopeMain } from '../scope.main.runtime';
 
 export class FetchRoute implements Route {
-  constructor(private scope: ScopeMain, private logger: Logger) {}
+  constructor(
+    private scope: ScopeMain,
+    private logger: Logger
+  ) {}
 
   route = '/scope/fetch';
   method = 'post';

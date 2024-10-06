@@ -381,7 +381,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
     GraphqlMain,
     RefactoringMain,
     PkgMain,
-    InstallMain
+    InstallMain,
   ]) {
     const forkingMain = new ForkingMain(workspace, install, dependencyResolver, newComponentHelper, refactoring, pkg);
     cli.register(new ForkCmd(forkingMain));

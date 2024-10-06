@@ -327,7 +327,7 @@ export class ComponentUI {
       MenuItemSlot,
       ComponentPageSlot,
       ComponentSearchResultSlot,
-      RightSideMenuSlot
+      RightSideMenuSlot,
     ]
   ) {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)

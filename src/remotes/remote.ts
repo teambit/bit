@@ -27,7 +27,12 @@ export default class Remote {
   host: string;
   name: string;
 
-  constructor(host: string, name?: string, primary = false, private localScopeName?: string) {
+  constructor(
+    host: string,
+    name?: string,
+    primary = false,
+    private localScopeName?: string
+  ) {
     this.name = name || '';
     this.host = host;
     this.primary = primary;

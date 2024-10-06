@@ -12,7 +12,10 @@ import path, { join } from 'path';
 
 export default class PackageManager {
   private emitter = new EventEmitter();
-  constructor(readonly packageManagerName: string, readonly logger: Logger) {}
+  constructor(
+    readonly packageManagerName: string,
+    readonly logger: Logger
+  ) {}
 
   get name() {
     return this.packageManagerName;

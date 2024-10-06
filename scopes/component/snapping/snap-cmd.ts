@@ -68,7 +68,11 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   ] as CommandOptions;
   loader = true;
 
-  constructor(private snapping: SnappingMain, private logger: Logger, private globalConfig: GlobalConfigMain) {}
+  constructor(
+    private snapping: SnappingMain,
+    private logger: Logger,
+    private globalConfig: GlobalConfigMain
+  ) {}
 
   async report(
     [pattern]: string[],

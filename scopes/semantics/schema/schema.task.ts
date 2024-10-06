@@ -24,7 +24,11 @@ export class SchemaTask implements BuildTask {
   readonly location: TaskLocation = 'end';
   readonly description = 'extract api schema for a set of components';
 
-  constructor(readonly aspectId: string, private schema: SchemaMain, private logger: Logger) {}
+  constructor(
+    readonly aspectId: string,
+    private schema: SchemaMain,
+    private logger: Logger
+  ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const startTime = Date.now();

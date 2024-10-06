@@ -15,7 +15,10 @@ const WATCHER_COMPLETED_MSG_HARMONY = 'Watching for component changes';
 
 export default class WatchRunner {
   watchProcess: ChildProcess;
-  constructor(private helper: Helper, private isHarmony: boolean) {}
+  constructor(
+    private helper: Helper,
+    private isHarmony: boolean
+  ) {}
   watch(): Promise<void> {
     const cmd = `${this.helper.command.bitBin} watch --verbose`;
     if (this.helper.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line

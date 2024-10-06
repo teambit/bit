@@ -2,7 +2,11 @@ import { SchemaLocation, SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 
 export class NamedTupleSchema extends SchemaNode {
-  constructor(readonly location: SchemaLocation, readonly type: SchemaNode, readonly name?: string) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly type: SchemaNode,
+    readonly name?: string
+  ) {
     super();
   }
 

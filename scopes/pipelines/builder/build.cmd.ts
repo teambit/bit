@@ -91,7 +91,11 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     ],
   ] as CommandOptions;
 
-  constructor(private builder: BuilderMain, private workspace: Workspace, private logger: Logger) {}
+  constructor(
+    private builder: BuilderMain,
+    private workspace: Workspace,
+    private logger: Logger
+  ) {}
 
   async report(
     [pattern]: [string],

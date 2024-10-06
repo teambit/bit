@@ -83,7 +83,10 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   loader = true;
   private = true;
 
-  constructor(private snapping: SnappingMain, private logger: Logger) {}
+  constructor(
+    private snapping: SnappingMain,
+    private logger: Logger
+  ) {}
 
   async report([data]: [string], options: SnapFromScopeOptions) {
     const results = await this.json([data], options);

@@ -180,7 +180,7 @@ export class CompositionsMain {
       SchemaMain,
       DevFilesMain,
       EnvsMain,
-      ScopeMain
+      ScopeMain,
     ],
     config: CompositionsConfig
   ) {

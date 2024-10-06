@@ -22,7 +22,10 @@ export type ListScopeResult = {
 };
 
 export class ListerMain {
-  constructor(private logger: Logger, private workspace?: Workspace) {}
+  constructor(
+    private logger: Logger,
+    private workspace?: Workspace
+  ) {}
 
   async remoteList(
     scopeName: string,

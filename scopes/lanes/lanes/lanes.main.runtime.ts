@@ -1151,7 +1151,7 @@ please create a new lane instead, which will include all components of this lane
     ComponentWriterMain,
     RemoveMain,
     CheckoutMain,
-    InstallMain
+    InstallMain,
   ]) {
     const logger = loggerMain.createLogger(LanesAspect.id);
     const lanesMain = new LanesMain(

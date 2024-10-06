@@ -347,7 +347,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       DependencyResolverMain,
       SnappingMain,
       LanesMain,
-      ExportMain
+      ExportMain,
     ],
     _,
     [onPostUpdateDependenciesSlot]: [OnPostUpdateDependenciesSlot]

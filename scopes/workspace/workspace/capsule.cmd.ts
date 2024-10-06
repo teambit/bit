@@ -37,7 +37,11 @@ export class CapsuleCreateCmd implements Command {
     ['p', 'package-manager <name>', 'npm, yarn or pnpm, default to npm'],
   ] as CommandOptions;
 
-  constructor(private workspace: Workspace | undefined, private scope: ScopeMain, private isolator: IsolatorMain) {}
+  constructor(
+    private workspace: Workspace | undefined,
+    private scope: ScopeMain,
+    private isolator: IsolatorMain
+  ) {}
 
   async create(
     [componentIds = []]: [string[]],
@@ -111,7 +115,11 @@ export class CapsuleListCmd implements Command {
   alias = '';
   options = [['j', 'json', 'json format']] as CommandOptions;
 
-  constructor(private isolator: IsolatorMain, private workspace: Workspace | undefined, private scope: ScopeMain) {}
+  constructor(
+    private isolator: IsolatorMain,
+    private workspace: Workspace | undefined,
+    private scope: ScopeMain
+  ) {}
 
   async report() {
     const { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir } = this.getCapsulesRootDirs();
@@ -163,7 +171,11 @@ export class CapsuleDeleteCmd implements Command {
     ['a', 'all', 'delete all capsules for all workspaces and scopes'],
   ] as CommandOptions;
 
-  constructor(private isolator: IsolatorMain, private scope: ScopeMain, private workspace?: Workspace) {}
+  constructor(
+    private isolator: IsolatorMain,
+    private scope: ScopeMain,
+    private workspace?: Workspace
+  ) {}
 
   async report(args: [], { all, scopeAspects }: { all: boolean; scopeAspects: boolean }) {
     const capsuleBaseDirToDelete = (): string | undefined => {
@@ -192,7 +204,11 @@ other users after publishing/exporting them.`;
   commands: Command[] = [];
   options = [['j', 'json', 'json format']] as CommandOptions;
 
-  constructor(private isolator: IsolatorMain, private workspace: Workspace | undefined, private scope: ScopeMain) {}
+  constructor(
+    private isolator: IsolatorMain,
+    private workspace: Workspace | undefined,
+    private scope: ScopeMain
+  ) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async report(args: [string]) {

@@ -30,15 +30,18 @@ const getLogsBetweenVersions: (
   compareVersion?: LegacyComponentLog
 ) => LegacyComponentLog[] = (allLogs, baseVersion, compareVersion) => {
   const [startingVersion, endingVersion] = orderByDateDsc(baseVersion, compareVersion);
-  const { startingVersionIndex, endingVersionIndex } = allLogs.reduce((accum, next, index) => {
-    if (next.hash === startingVersion?.hash) {
-      accum = { ...accum, startingVersionIndex: index };
-    }
-    if (next.hash === endingVersion?.hash) {
-      accum = { ...accum, endingVersionIndex: index };
-    }
-    return accum;
-  }, {} as { startingVersionIndex: number; endingVersionIndex: number });
+  const { startingVersionIndex, endingVersionIndex } = allLogs.reduce(
+    (accum, next, index) => {
+      if (next.hash === startingVersion?.hash) {
+        accum = { ...accum, startingVersionIndex: index };
+      }
+      if (next.hash === endingVersion?.hash) {
+        accum = { ...accum, endingVersionIndex: index };
+      }
+      return accum;
+    },
+    {} as { startingVersionIndex: number; endingVersionIndex: number }
+  );
 
   return allLogs.filter((_, index) => index >= startingVersionIndex && index <= endingVersionIndex);
 };

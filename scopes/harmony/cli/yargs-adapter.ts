@@ -13,7 +13,10 @@ export class YargsAdapter implements CommandModule {
   describe?: string;
   aliases?: string;
   commandRunner?: CommandRunner;
-  constructor(private commanderCommand: Command, private onCommandStartSlot: OnCommandStartSlot) {
+  constructor(
+    private commanderCommand: Command,
+    private onCommandStartSlot: OnCommandStartSlot
+  ) {
     this.command = commanderCommand.name;
     this.describe = commanderCommand.description;
     this.aliases = commanderCommand.alias;

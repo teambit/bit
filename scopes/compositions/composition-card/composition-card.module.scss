@@ -12,13 +12,17 @@
   box-sizing: border-box;
   width: 100%;
   .icon {
-    transition: visibility 300ms, ease-in-out;
+    transition:
+      visibility 300ms,
+      ease-in-out;
     visibility: hidden;
   }
   &:hover {
     border-color: var(--border-high-active-color, #8c8f96);
     .icon {
-      transition: visibility 300ms, ease-in-out;
+      transition:
+        visibility 300ms,
+        ease-in-out;
       visibility: visible;
     }
   }

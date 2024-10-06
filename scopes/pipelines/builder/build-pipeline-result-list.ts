@@ -25,7 +25,10 @@ export type AspectData = {
  */
 export class BuildPipelineResultList {
   private artifactListsMap: ComponentMap<ArtifactList<Artifact>>;
-  constructor(private tasksResults: TaskResults[], private components: Component[]) {
+  constructor(
+    private tasksResults: TaskResults[],
+    private components: Component[]
+  ) {
     this.artifactListsMap = this.getFlattenedArtifactListsMapFromAllTasks();
   }
 

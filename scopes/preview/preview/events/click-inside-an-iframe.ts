@@ -8,7 +8,10 @@ class ClickInsideAnIframeEventData {
 export class ClickInsideAnIframeEvent extends BitBaseEvent<ClickInsideAnIframeEventData> {
   static readonly TYPE = 'click-inside-an-iframe';
 
-  constructor(readonly timestamp = Date.now(), readonly clickEvent) {
+  constructor(
+    readonly timestamp = Date.now(),
+    readonly clickEvent
+  ) {
     super(ClickInsideAnIframeEvent.TYPE, '0.0.1', timestamp, new ClickInsideAnIframeEventData(clickEvent));
   }
 }

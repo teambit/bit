@@ -127,7 +127,7 @@ export class PkgMain {
       BuilderMain,
       DependencyResolverMain,
       ComponentMain,
-      GraphqlMain
+      GraphqlMain,
     ],
     config: PkgExtensionConfig,
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]

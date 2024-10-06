@@ -1110,13 +1110,13 @@ export class EnvsMain {
       ComponentMain,
       CLIMain,
       WorkerMain,
-      IssuesMain
+      IssuesMain,
     ],
     config: EnvsConfig,
     [envSlot, servicesRegistry, envJsoncMergeCustomizerSlot]: [
       EnvsRegistry,
       ServicesRegistry,
-      EnvJsoncMergeCustomizerRegistry
+      EnvJsoncMergeCustomizerRegistry,
     ],
     context: Harmony
   ) {

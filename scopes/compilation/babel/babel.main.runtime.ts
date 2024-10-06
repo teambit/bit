@@ -7,7 +7,10 @@ import { BabelCompilerOptions } from './compiler-options';
 import { BabelAspect } from './babel.aspect';
 
 export class BabelMain {
-  constructor(private logger: Logger, private compiler: CompilerMain) {}
+  constructor(
+    private logger: Logger,
+    private compiler: CompilerMain
+  ) {}
 
   createCompiler(options: BabelCompilerOptions, babelModule = babel): BabelCompiler {
     return new BabelCompiler(BabelAspect.id, this.logger, options, options.babelTransformOptions || {}, babelModule);

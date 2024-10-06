@@ -17,7 +17,10 @@ type GetBuildPipeModifiers = PipeServiceModifiersMap & {
   jestModifier?: PipeServiceModifier;
 };
 export class NodeEnv implements DependenciesEnv, PackageEnv {
-  constructor(protected tsAspect: TypescriptMain, protected reactAspect: ReactMain) {}
+  constructor(
+    protected tsAspect: TypescriptMain,
+    protected reactAspect: ReactMain
+  ) {}
 
   icon = 'https://static.bit.dev/extensions-icons/nodejs.svg';
 

@@ -6,7 +6,11 @@ export type TemplateListOptions = {
 };
 
 export class TemplateList {
-  constructor(readonly name: string, private templates: EnvHandler<ComponentTemplate>[], private context: EnvContext) {}
+  constructor(
+    readonly name: string,
+    private templates: EnvHandler<ComponentTemplate>[],
+    private context: EnvContext
+  ) {}
 
   compute(): ComponentTemplate[] {
     return this.templates.map((template) => template(this.context));

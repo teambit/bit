@@ -27,7 +27,11 @@ import { DependencyNameRefactorCmd, RefactorCmd } from './refactor.cmd';
 export type MultipleStringsReplacement = Array<{ oldStr: string; newStr: string }>;
 
 export class RefactoringMain {
-  constructor(private componentMain: ComponentMain, private pkg: PkgMain, private envs: EnvsMain) {}
+  constructor(
+    private componentMain: ComponentMain,
+    private pkg: PkgMain,
+    private envs: EnvsMain
+  ) {}
 
   /**
    * refactor the dependency name of a component.

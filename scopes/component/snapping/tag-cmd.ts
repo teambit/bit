@@ -115,7 +115,11 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
   remoteOp = true; // In case a compiler / tester is not installed
   examples = [{ cmd: 'tag --ver 1.0.0', description: 'tag all components to version 1.0.0' }];
 
-  constructor(private snapping: SnappingMain, private logger: Logger, private globalConfig: GlobalConfigMain) {}
+  constructor(
+    private snapping: SnappingMain,
+    private logger: Logger,
+    private globalConfig: GlobalConfigMain
+  ) {}
 
   // eslint-disable-next-line complexity
   async report([patterns = []]: [string[]], options: TagParams): Promise<string> {
