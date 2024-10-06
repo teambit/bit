@@ -90,8 +90,8 @@ function mergeConfigs(
   const hostConfig = workspaceConfig || scopeConfig || {};
   // merge the dependency resolver from the global config with the workspace/scope config
   const depsResolver = json.assign(
-    globalConfig['teambit.dependencies/dependency-resolver'],
-    hostConfig['teambit.dependencies/dependency-resolver']
+    globalConfig['teambit.dependencies/dependency-resolver'] || {},
+    hostConfig['teambit.dependencies/dependency-resolver'] || {}
   );
   const mergedConfig = json.assign(globalConfig, workspaceConfig);
   json.assign(mergedConfig, { 'teambit.dependencies/dependency-resolver': depsResolver });
