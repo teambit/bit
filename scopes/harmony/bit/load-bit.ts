@@ -77,15 +77,15 @@ async function getConfig(cwd = process.cwd()) {
   // We don't use the harmonyConfig.loadGlobal as we want to manually merge it in a better way
   // harmony merge will prioritize the global config over the workspace config
   // and won't know to handle the dependency resolver config merge
-  const mergedConfig = mergeConfigs(wsConfig, scopeConfig, globalConfig);
+  const mergedConfig = mergeConfigs(globalConfig, wsConfig, scopeConfig);
 
   return new Config(mergedConfig);
 }
 
 function mergeConfigs(
+  globalConfig: Record<string, any> = {},
   workspaceConfig?: Record<string, any>,
-  scopeConfig?: Record<string, any>,
-  globalConfig?: Record<string, any> = {}
+  scopeConfig?: Record<string, any>
 ) {
   const hostConfig = workspaceConfig || scopeConfig || {};
   // merge the dependency resolver from the global config with the workspace/scope config
