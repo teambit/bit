@@ -102,7 +102,7 @@ export class DependencyInstaller {
 
     private preferOffline?: boolean,
 
-    private installingContext: DepInstallerContext = {}
+    private installingContext: DepInstallerContext = {},
   ) {}
 
   async install(
@@ -110,7 +110,7 @@ export class DependencyInstaller {
     rootPolicy: WorkspacePolicy,
     componentDirectoryMap: ComponentMap<string>,
     options: InstallOptions = DEFAULT_INSTALL_OPTIONS,
-    packageManagerOptions: PackageManagerInstallOptions = DEFAULT_PM_INSTALL_OPTIONS
+    packageManagerOptions: PackageManagerInstallOptions = DEFAULT_PM_INSTALL_OPTIONS,
   ) {
     const finalRootDir = rootDir ?? this.rootDir;
     if (!finalRootDir) {
@@ -131,7 +131,7 @@ export class DependencyInstaller {
       rootPolicy,
       componentDirectoryMap,
       options,
-      packageManagerOptions
+      packageManagerOptions,
     );
   }
 
@@ -141,7 +141,7 @@ export class DependencyInstaller {
     rootPolicy: WorkspacePolicy,
     componentDirectoryMap: ComponentMap<string>,
     options: InstallOptions = DEFAULT_INSTALL_OPTIONS,
-    packageManagerOptions: PackageManagerInstallOptions = DEFAULT_PM_INSTALL_OPTIONS
+    packageManagerOptions: PackageManagerInstallOptions = DEFAULT_PM_INSTALL_OPTIONS,
   ): Promise<{ dependenciesChanged: boolean }> {
     const args = {
       componentDirectoryMap,
@@ -159,7 +159,7 @@ export class DependencyInstaller {
     if (options.linkedDependencies) {
       manifests = JSON.parse(JSON.stringify(manifests));
       const linkedDependencies = JSON.parse(
-        JSON.stringify(options.linkedDependencies)
+        JSON.stringify(options.linkedDependencies),
       ) as typeof options.linkedDependencies;
       if (linkedDependencies[finalRootDir]) {
         const directDeps = new Set<string>();
@@ -222,12 +222,17 @@ export class DependencyInstaller {
     }
 
     if (!packageManagerOptions.rootComponents && !packageManagerOptions.keepExistingModulesDir) {
-      // Remove node modules dir for all components dirs, since it might contain left overs from previous install.
-      //
-      // This is not needed when "rootComponents" are used, as in that case the package manager handles the node_modules
-      // and it never leaves node_modules in a broken state.
-      // Removing node_modules in that case would delete useful state information that is used by Yarn or pnpm.
-      await this.cleanCompsNodeModules(componentDirectoryMap);
+      try {
+        // Remove node modules dir for all components dirs, since it might contain left overs from previous install.
+        //
+        // This is not needed when "rootComponents" are used, as in that case the package manager handles the node_modules
+        // and it never leaves node_modules in a broken state.
+        // Removing node_modules in that case would delete useful state information that is used by Yarn or pnpm.
+        await this.cleanCompsNodeModules(componentDirectoryMap);
+      } catch (err) {
+        this.logger.debug('failed to remove node_modules directories from components', err);
+        // A failure to remove the node_modules directory should not cause the process to fail
+      }
     }
 
     const messagePrefix = 'running package installation';
@@ -247,7 +252,7 @@ export class DependencyInstaller {
         manifests,
         componentDirectoryMap,
       },
-      calculatedPmOpts
+      calculatedPmOpts,
     );
     if (!hidePackageManagerOutput) {
       this.logger.consoleSuccess(`done ${message}`, startTime);
@@ -298,7 +303,7 @@ export class DependencyInstaller {
       rootDir,
       componentDirectoryMap.components,
       options,
-      this.installingContext
+      this.installingContext,
     );
     const manifests: Record<string, ProjectManifest> = componentDirectoryMap
       .toArray()
@@ -330,7 +335,7 @@ export class DependencyInstaller {
   private async runPrePostSubscribers(
     subscribers: PreInstallSubscriberList | PostInstallSubscriberList = [],
     type: 'pre' | 'post',
-    args: InstallArgs
+    args: InstallArgs,
   ): Promise<void> {
     const message = this.installingContext?.inCapsule
       ? `(capsule) running ${type} install subscribers in root dir ${this.rootDir}`
