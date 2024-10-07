@@ -47,7 +47,11 @@ export class TestCmd implements Command {
     // TODO: we need to reduce this redundant casting every time.
   ] as CommandOptions;
 
-  constructor(private tester: TesterMain, private workspace: Workspace, private logger: Logger) {}
+  constructor(
+    private tester: TesterMain,
+    private workspace: Workspace,
+    private logger: Logger
+  ) {}
 
   async report(
     [userPattern]: [string],

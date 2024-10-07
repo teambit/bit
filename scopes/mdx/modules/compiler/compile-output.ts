@@ -5,7 +5,10 @@ import { ImportSpecifier } from './import-specifier';
  * compilation output of bit-mdx format.
  */
 export class CompileOutput {
-  constructor(readonly file: VFile, private _renderer: string) {}
+  constructor(
+    readonly file: VFile,
+    private _renderer: string
+  ) {}
 
   get renderer() {
     return this._renderer;

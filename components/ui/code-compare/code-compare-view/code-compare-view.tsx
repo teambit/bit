@@ -318,7 +318,7 @@ export function CodeCompareView({
     ? '100%'
     : (!!containerHeight && `calc(${containerHeight} + 30px)`) || '250px';
 
-  const codeContainerHeightStyle = isFullScreen ? 'calc(100% - 30px)' : containerHeight ?? '220px';
+  const codeContainerHeightStyle = isFullScreen ? 'calc(100% - 30px)' : (containerHeight ?? '220px');
   const fileCompareDataByName = componentCompareContext?.fileCompareDataByName;
   const codeNavFiles = React.useMemo(() => {
     return files.filter((file) => {

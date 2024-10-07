@@ -489,6 +489,7 @@
         "url": "^0.11.3",
         "url-join": "4.0.1",
         "url-parse": "1.4.7",
+        "user-home": "^3.0.0",
         "util": "^0.12.5",
         "version-selector-type": "3.0.0",
         "vfile": "4.2.0",
@@ -507,7 +508,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.31",
-        "@teambit/legacy": "1.0.750",
+        "@teambit/legacy": "1.0.751",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
         "graphql": "15.8.0",
@@ -554,7 +555,8 @@
     "capsuleSelfReference": true
   },
   "teambit.preview/preview": {
-    "bundlingStrategy": "component"
+    "bundlingStrategy": "component",
+    "maxChunkSize": 20
   },
   "teambit.generator/generator": {
     "aspects": [
@@ -631,7 +633,7 @@
             "@teambit/harmony.content.cli-reference": "^2.0.279",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            "@teambit/legacy": "1.0.750",
+            "@teambit/legacy": "1.0.751",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",

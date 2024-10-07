@@ -12,7 +12,11 @@ type ComponentConfigObj = { id: ComponentIdObj; config: Config };
 
 export class StagedConfig {
   hasChanged = false;
-  constructor(readonly filePath: string, private componentsConfig: ComponentConfig[], private logger: Logger) {}
+  constructor(
+    readonly filePath: string,
+    private componentsConfig: ComponentConfig[],
+    private logger: Logger
+  ) {}
 
   static async load(scopePath: string, logger: Logger, laneId?: LaneId): Promise<StagedConfig> {
     const lanePath = laneId ? path.join(laneId.scope, laneId.name) : DEFAULT_LANE;

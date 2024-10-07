@@ -292,7 +292,7 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
   const localVersion = isWorkspace && !isNew && (!viewedLane || lanesModel?.isViewingCurrentLane());
 
   const currentVersion =
-    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : _currentVersion ?? '';
+    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : (_currentVersion ?? '');
 
   const consumeMethodProps: ConsumePluginProps | undefined = React.useMemo(() => {
     return id

@@ -907,9 +907,7 @@ export class InstallMain {
     return Object.fromEntries(
       compact(
         await Promise.all(
-          (
-            await this.app.listAppsComponents()
-          ).map(async (app) => {
+          (await this.app.listAppsComponents()).map(async (app) => {
             const appPkgName = this.dependencyResolver.getPackageName(app);
             const appManifest = Object.values(manifests).find(({ name }) => name === appPkgName);
             if (!appManifest) return null;
@@ -1262,7 +1260,7 @@ export class InstallMain {
       IpcEventsMain,
       GeneratorMain,
       WorkspaceConfigFilesMain,
-      AspectLoaderMain
+      AspectLoaderMain,
     ],
     _,
     [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot],

@@ -627,7 +627,7 @@ export class SchemaExtractorContext {
     const location = this.getLocation(jsDoc);
     // Extract link comments and filter them out from the main comment
     const linkComments = (
-      typeof jsDoc.comment !== 'string' ? jsDoc.comment?.filter((c) => c.kind === ts.SyntaxKind.JSDocLink) ?? [] : []
+      typeof jsDoc.comment !== 'string' ? (jsDoc.comment?.filter((c) => c.kind === ts.SyntaxKind.JSDocLink) ?? []) : []
     ) as ts.JSDocLink[];
     const linkTags = linkComments.map((linkComment) => {
       const tagName = 'link';
@@ -637,7 +637,7 @@ export class SchemaExtractorContext {
     });
 
     const commentsWithoutLink = (typeof jsDoc.comment !== 'string'
-      ? jsDoc.comment?.filter((c) => c.kind !== ts.SyntaxKind.JSDocLink) ?? ''
+      ? (jsDoc.comment?.filter((c) => c.kind !== ts.SyntaxKind.JSDocLink) ?? '')
       : jsDoc.comment) as unknown as ts.NodeArray<ts.JSDocComment>;
 
     const comment = getTextOfJSDocComment(commentsWithoutLink);

@@ -185,7 +185,7 @@ export class CLIMain {
       CommandsSlot,
       OnStartSlot,
       OnCommandStartSlot,
-      OnBeforeExitSlot
+      OnBeforeExitSlot,
     ]
   ) {
     const logger = loggerMain.createLogger(CLIAspect.id);

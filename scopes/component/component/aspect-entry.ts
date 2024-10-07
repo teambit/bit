@@ -20,7 +20,10 @@ export type AspectData = {
 
 export type ResolveComponentIdFunc = (id: string) => Promise<ComponentID>;
 export class AspectEntry {
-  constructor(public id: ComponentID, private legacyEntry: ExtensionDataEntry) {}
+  constructor(
+    public id: ComponentID,
+    private legacyEntry: ExtensionDataEntry
+  ) {}
 
   get legacy() {
     return this.legacyEntry;

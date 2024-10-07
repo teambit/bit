@@ -12,7 +12,10 @@ export const EnvEnvType = 'env';
  * a component environment built for Envs.
  */
 export class EnvEnv {
-  constructor(private aspectEnv: AspectEnv, private aspectLoader: AspectLoaderMain) {}
+  constructor(
+    private aspectEnv: AspectEnv,
+    private aspectLoader: AspectLoaderMain
+  ) {}
   // TODO: consider special icon for envs?
   icon = 'https://static.bit.dev/extensions-icons/default.svg';
 

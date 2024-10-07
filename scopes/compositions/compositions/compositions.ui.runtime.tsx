@@ -14,7 +14,10 @@ export type CompositionsMenuSlot = SlotRegistry<MenuBarWidget[]>;
 export type EmptyStateSlot = SlotRegistry<ComponentType>;
 
 export class CompositionsUI {
-  constructor(private menuBarWidgetSlot: CompositionsMenuSlot, private emptyStateSlot: EmptyStateSlot) {}
+  constructor(
+    private menuBarWidgetSlot: CompositionsMenuSlot,
+    private emptyStateSlot: EmptyStateSlot
+  ) {}
   /**
    * register a new tester empty state. this allows to register a different empty state from each environment for example.
    */

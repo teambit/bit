@@ -20,7 +20,11 @@ type ListResult = {
 
 export class StashMain {
   private stashFiles: StashFiles;
-  constructor(private workspace: Workspace, private checkout: CheckoutMain, private snapping: SnappingMain) {
+  constructor(
+    private workspace: Workspace,
+    private checkout: CheckoutMain,
+    private snapping: SnappingMain
+  ) {
     this.stashFiles = new StashFiles(workspace);
   }
 
@@ -105,9 +109,8 @@ export class StashMain {
     const previousVersion = component.getSnapHash();
     const consumerComponent = component.state._consumer.clone() as ConsumerComponent;
     consumerComponent.setNewVersion();
-    const { version, files } = await this.workspace.scope.legacyScope.sources.consumerComponentToVersion(
-      consumerComponent
-    );
+    const { version, files } =
+      await this.workspace.scope.legacyScope.sources.consumerComponentToVersion(consumerComponent);
     if (previousVersion) {
       // set the parent, we need it for the "stash-load" to function as the "base" version for the three-way-merge.
       const modelComponent = consumerComponent.modelComponent;

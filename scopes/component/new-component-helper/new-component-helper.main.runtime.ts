@@ -19,7 +19,11 @@ import { incrementPathRecursively } from '@teambit/component-writer';
 const aspectsConfigToIgnore: string[] = [PkgAspect.id, RenamingAspect.id];
 
 export class NewComponentHelperMain {
-  constructor(private workspace: Workspace, private harmony: Harmony, private tracker: TrackerMain) {}
+  constructor(
+    private workspace: Workspace,
+    private harmony: Harmony,
+    private tracker: TrackerMain
+  ) {}
   /**
    * when creating/forking a component, the user provides the new name and optionally the scope/namespace.
    * from this user input, create a ComponentID.

@@ -7,7 +7,11 @@ import { HarmonyUiAppAspect } from './harmony-ui-app.aspect';
 // import { HarmonyUIApp } from './ui.application';
 
 export class HarmonyUiAppMain {
-  constructor(private application: ApplicationMain, private ui: UiMain, private componentAspect: ComponentMain) {}
+  constructor(
+    private application: ApplicationMain,
+    private ui: UiMain,
+    private componentAspect: ComponentMain
+  ) {}
 
   /**
    * register a new harmony UI application.

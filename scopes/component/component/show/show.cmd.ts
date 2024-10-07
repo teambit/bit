@@ -28,7 +28,10 @@ export class ShowCmd implements Command {
     ],
   ] as CommandOptions;
 
-  constructor(private component: ComponentMain, private logger: Logger) {}
+  constructor(
+    private component: ComponentMain,
+    private logger: Logger
+  ) {}
 
   private async getComponent(idStr: string, remote: boolean) {
     if (remote) {

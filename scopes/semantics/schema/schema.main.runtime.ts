@@ -230,7 +230,7 @@ export class SchemaMain {
       LoggerMain,
       BuilderMain,
       Workspace,
-      ScopeMain
+      ScopeMain,
     ],
     config: SchemaConfig,
     [parserSlot]: [ParserSlot]

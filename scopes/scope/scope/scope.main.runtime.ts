@@ -1225,7 +1225,7 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain,
       EnvsMain,
       DependencyResolverMain,
-      GlobalConfigMain
+      GlobalConfigMain,
     ],
     config: ScopeConfig,
     [
@@ -1241,7 +1241,7 @@ export class ScopeMain implements ComponentFactory {
       OnPostExportSlot,
       OnPostObjectsPersistSlot,
       OnPreFetchObjectsSlot,
-      OnCompAspectReCalcSlot
+      OnCompAspectReCalcSlot,
     ],
     harmony: Harmony
   ) {

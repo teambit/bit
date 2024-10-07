@@ -428,7 +428,7 @@ export class ScopeUI {
       OverviewLineSlot,
       ContextSlot,
       DrawerWidgetSlot,
-      ComponentFiltersSlot
+      ComponentFiltersSlot,
     ]
   ) {
     const scopeUi = new ScopeUI(

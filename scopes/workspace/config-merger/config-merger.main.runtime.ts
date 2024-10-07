@@ -498,7 +498,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     Workspace,
     ConfigMain,
     LoggerMain,
-    DependencyResolverMain
+    DependencyResolverMain,
   ]) {
     const logger = loggerMain.createLogger(ConfigMergerAspect.id);
     return new ConfigMergerMain(workspace, logger, config, depsResolver);

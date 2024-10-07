@@ -8,7 +8,11 @@ import { TagName, TagSchema } from './tag';
 export class ReturnTagSchema extends TagSchema {
   readonly type?: SchemaNode;
 
-  constructor(readonly location: SchemaLocation, readonly comment?: string, type?: SchemaNode) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly comment?: string,
+    type?: SchemaNode
+  ) {
     super(location, TagName.return, comment);
     this.type = type;
   }

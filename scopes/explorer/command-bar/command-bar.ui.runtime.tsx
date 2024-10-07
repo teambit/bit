@@ -169,7 +169,11 @@ export class CommandBarUI {
 
   CommandBarButton = () => <CommandBarButton onClick={() => this.setVisibility?.(true)} />;
 
-  constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot, private config: CommandBarConfig) {}
+  constructor(
+    private searcherSlot: SearcherSlot,
+    private commandSlot: CommandSlot,
+    private config: CommandBarConfig
+  ) {}
 
   static dependencies = [UIAspect, PubsubAspect, ReactRouterAspect];
   static slots = [Slot.withType<SearchProvider>(), Slot.withType<CommandEntry[]>()];

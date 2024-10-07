@@ -5,7 +5,12 @@ import { TagName, TagSchema } from './tag';
 export class DocSchema extends SchemaNode {
   readonly tags?: TagSchema[];
 
-  constructor(readonly location: SchemaLocation, readonly raw: string, readonly comment?: string, tags?: TagSchema[]) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly raw: string,
+    readonly comment?: string,
+    tags?: TagSchema[]
+  ) {
     super();
     this.tags = tags;
   }

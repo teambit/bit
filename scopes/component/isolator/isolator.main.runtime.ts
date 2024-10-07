@@ -298,7 +298,7 @@ export class IsolatorMain {
       GraphMain,
       GlobalConfigMain,
       AspectLoaderMain,
-      CLIMain
+      CLIMain,
     ],
     _config,
     [capsuleTransferSlot]: [CapsuleTransferSlot]

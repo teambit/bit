@@ -586,13 +586,13 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       LoggerMain,
       GitMain,
       WorkspaceConfigFilesMain,
-      DeprecationMain
+      DeprecationMain,
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot, onComponentCreateSlot]: [
       ComponentTemplateSlot,
       WorkspaceTemplateSlot,
-      OnComponentCreateSlot
+      OnComponentCreateSlot,
     ]
   ) {
     const logger = loggerMain.createLogger(GeneratorAspect.id);

@@ -4,7 +4,12 @@ import { SchemaRegistry } from '../schema-registry';
 
 export class GetAccessorSchema extends SchemaNode {
   readonly type: SchemaNode;
-  constructor(readonly location: SchemaLocation, readonly name: string, type: SchemaNode, readonly signature: string) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly name: string,
+    type: SchemaNode,
+    readonly signature: string
+  ) {
     super();
     this.type = type;
   }

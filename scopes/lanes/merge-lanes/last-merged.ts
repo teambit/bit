@@ -26,7 +26,11 @@ type Snapshot = {
 };
 
 export class LastMerged {
-  constructor(private scope: ScopeMain, private consumer: Consumer, private logger: Logger) {}
+  constructor(
+    private scope: ScopeMain,
+    private consumer: Consumer,
+    private logger: Logger
+  ) {}
 
   get path() {
     return this.scope.getLastMergedPath();

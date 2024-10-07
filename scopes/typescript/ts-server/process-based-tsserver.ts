@@ -40,70 +40,70 @@ export interface TsServerArgs {
 export interface StandardTsServerRequests {
   [CommandTypes.ApplyCodeActionCommand]: [
     ts.server.protocol.ApplyCodeActionCommandRequestArgs,
-    ts.server.protocol.ApplyCodeActionCommandResponse
+    ts.server.protocol.ApplyCodeActionCommandResponse,
   ];
   [CommandTypes.CompletionDetails]: [
     ts.server.protocol.CompletionDetailsRequestArgs,
-    ts.server.protocol.CompletionDetailsResponse
+    ts.server.protocol.CompletionDetailsResponse,
   ];
   [CommandTypes.CompletionInfo]: [ts.server.protocol.CompletionsRequestArgs, ts.server.protocol.CompletionInfoResponse];
   [CommandTypes.Configure]: [ts.server.protocol.ConfigureRequestArguments, ts.server.protocol.ConfigureResponse];
   [CommandTypes.Definition]: [ts.server.protocol.FileLocationRequestArgs, ts.server.protocol.DefinitionResponse];
   [CommandTypes.DefinitionAndBoundSpan]: [
     ts.server.protocol.FileLocationRequestArgs,
-    ts.server.protocol.DefinitionInfoAndBoundSpanResponse
+    ts.server.protocol.DefinitionInfoAndBoundSpanResponse,
   ];
   [CommandTypes.DocCommentTemplate]: [
     ts.server.protocol.FileLocationRequestArgs,
-    ts.server.protocol.DocCommandTemplateResponse
+    ts.server.protocol.DocCommandTemplateResponse,
   ];
   [CommandTypes.DocumentHighlights]: [
     ts.server.protocol.DocumentHighlightsRequestArgs,
-    ts.server.protocol.DocumentHighlightsResponse
+    ts.server.protocol.DocumentHighlightsResponse,
   ];
   [CommandTypes.Format]: [ts.server.protocol.FormatRequestArgs, ts.server.protocol.FormatResponse];
   [CommandTypes.Formatonkey]: [ts.server.protocol.FormatOnKeyRequestArgs, ts.server.protocol.FormatResponse];
   [CommandTypes.GetApplicableRefactors]: [
     ts.server.protocol.GetApplicableRefactorsRequestArgs,
-    ts.server.protocol.GetApplicableRefactorsResponse
+    ts.server.protocol.GetApplicableRefactorsResponse,
   ];
   [CommandTypes.GetCodeFixes]: [ts.server.protocol.CodeFixRequestArgs, ts.server.protocol.CodeFixResponse];
   [CommandTypes.GetCombinedCodeFix]: [
     ts.server.protocol.GetCombinedCodeFixRequestArgs,
-    ts.server.protocol.GetCombinedCodeFixResponse
+    ts.server.protocol.GetCombinedCodeFixResponse,
   ];
   [CommandTypes.GetEditsForFileRename]: [
     ts.server.protocol.GetEditsForFileRenameRequestArgs,
-    ts.server.protocol.GetEditsForFileRenameResponse
+    ts.server.protocol.GetEditsForFileRenameResponse,
   ];
   [CommandTypes.GetEditsForRefactor]: [
     ts.server.protocol.GetEditsForRefactorRequestArgs,
-    ts.server.protocol.GetEditsForRefactorResponse
+    ts.server.protocol.GetEditsForRefactorResponse,
   ];
   [CommandTypes.GetOutliningSpans]: [ts.server.protocol.FileRequestArgs, ts.server.protocol.OutliningSpansResponse];
   [CommandTypes.GetSupportedCodeFixes]: [null, ts.server.protocol.GetSupportedCodeFixesResponse];
   [CommandTypes.Implementation]: [
     ts.server.protocol.FileLocationRequestArgs,
-    ts.server.protocol.ImplementationResponse
+    ts.server.protocol.ImplementationResponse,
   ];
   [CommandTypes.JsxClosingTag]: [ts.server.protocol.JsxClosingTagRequestArgs, ts.server.protocol.JsxClosingTagResponse];
   [CommandTypes.Navto]: [ts.server.protocol.NavtoRequestArgs, ts.server.protocol.NavtoResponse];
   [CommandTypes.NavTree]: [ts.server.protocol.FileRequestArgs, ts.server.protocol.NavTreeResponse];
   [CommandTypes.OrganizeImports]: [
     ts.server.protocol.OrganizeImportsRequestArgs,
-    ts.server.protocol.OrganizeImportsResponse
+    ts.server.protocol.OrganizeImportsResponse,
   ];
   [CommandTypes.PrepareCallHierarchy]: [
     ts.server.protocol.FileLocationRequestArgs,
-    ts.server.protocol.PrepareCallHierarchyResponse
+    ts.server.protocol.PrepareCallHierarchyResponse,
   ];
   [CommandTypes.ProvideCallHierarchyIncomingCalls]: [
     ts.server.protocol.FileLocationRequestArgs,
-    ts.server.protocol.ProvideCallHierarchyIncomingCallsResponse
+    ts.server.protocol.ProvideCallHierarchyIncomingCallsResponse,
   ];
   [CommandTypes.ProvideCallHierarchyOutgoingCalls]: [
     ts.server.protocol.FileLocationRequestArgs,
-    ts.server.protocol.ProvideCallHierarchyOutgoingCallsResponse
+    ts.server.protocol.ProvideCallHierarchyOutgoingCallsResponse,
   ];
   [CommandTypes.ProjectInfo]: [ts.server.protocol.ProjectInfoRequestArgs, ts.server.protocol.ProjectInfoResponse];
   [CommandTypes.ProvideInlayHints]: [ts.server.protocol.InlayHintsRequestArgs, ts.server.protocol.InlayHintsResponse];
@@ -112,12 +112,12 @@ export interface StandardTsServerRequests {
   [CommandTypes.Rename]: [ts.server.protocol.RenameRequestArgs, ts.server.protocol.RenameResponse];
   [CommandTypes.SelectionRange]: [
     ts.server.protocol.SelectionRangeRequestArgs,
-    ts.server.protocol.SelectionRangeResponse
+    ts.server.protocol.SelectionRangeResponse,
   ];
   [CommandTypes.SignatureHelp]: [ts.server.protocol.SignatureHelpRequestArgs, ts.server.protocol.SignatureHelpResponse];
   [CommandTypes.TypeDefinition]: [
     ts.server.protocol.FileLocationRequestArgs,
-    ts.server.protocol.TypeDefinitionResponse
+    ts.server.protocol.TypeDefinitionResponse,
   ];
   [CommandTypes.UpdateOpen]: [ts.server.protocol.UpdateOpenRequestArgs, ts.server.protocol.Response];
 }
@@ -127,12 +127,12 @@ export interface NoResponseTsServerRequests {
   [CommandTypes.Close]: [ts.server.protocol.FileRequestArgs, null];
   [CommandTypes.CompilerOptionsForInferredProjects]: [
     ts.server.protocol.SetCompilerOptionsForInferredProjectsArgs,
-    ts.server.protocol.SetCompilerOptionsForInferredProjectsResponse
+    ts.server.protocol.SetCompilerOptionsForInferredProjectsResponse,
   ];
   [CommandTypes.Configure]: [ts.server.protocol.ConfigureRequestArguments, ts.server.protocol.ConfigureResponse];
   [CommandTypes.ConfigurePlugin]: [
     ts.server.protocol.ConfigurePluginRequestArguments,
-    ts.server.protocol.ConfigurePluginResponse
+    ts.server.protocol.ConfigurePluginResponse,
   ];
   [CommandTypes.Open]: [ts.server.protocol.OpenRequestArgs, null];
 }
@@ -156,7 +156,10 @@ export class ProcessBasedTsServer {
   private logger: Logger;
   private cancellationPipeName: string | undefined;
 
-  constructor(private options: TspClientOptions, private tsServerArgs: TsServerArgs = {}) {
+  constructor(
+    private options: TspClientOptions,
+    private tsServerArgs: TsServerArgs = {}
+  ) {
     this.logger = options.logger;
   }
 

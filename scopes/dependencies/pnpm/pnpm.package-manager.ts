@@ -64,7 +64,11 @@ export class PnpmPackageManager implements PackageManager {
 
   public readConfig: (dir?: string) => ReadConfigResult = memoize(this._readConfig);
 
-  constructor(private depResolver: DependencyResolverMain, private logger: Logger, private cloud: CloudMain) {}
+  constructor(
+    private depResolver: DependencyResolverMain,
+    private logger: Logger,
+    private cloud: CloudMain
+  ) {}
 
   async install(
     { rootDir, manifests }: InstallationContext,

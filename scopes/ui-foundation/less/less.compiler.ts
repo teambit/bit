@@ -6,7 +6,10 @@ export class LessCompiler implements Compiler {
   distDir = 'dist';
   shouldCopyNonSupportedFiles = false;
 
-  constructor(readonly id: string, readonly displayName = 'Less') {}
+  constructor(
+    readonly id: string,
+    readonly displayName = 'Less'
+  ) {}
 
   getDistPathBySrcPath(srcPath: string): string {
     return srcPath.replace('.scss', '.css');

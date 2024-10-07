@@ -9,7 +9,10 @@ import type { JestWorker } from './jest.worker';
 export const WORKER_NAME = 'jest';
 
 export class JestMain {
-  constructor(private jestWorker: HarmonyWorker<JestWorker>, private logger: Logger) {}
+  constructor(
+    private jestWorker: HarmonyWorker<JestWorker>,
+    private logger: Logger
+  ) {}
 
   /**
    * @deprecated use jest tester from https://bit.cloud/teambit/defender/jest-tester

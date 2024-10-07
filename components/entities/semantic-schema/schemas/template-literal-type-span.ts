@@ -4,7 +4,11 @@ import { SchemaRegistry } from '../schema-registry';
 export class TemplateLiteralTypeSpanSchema extends SchemaNode {
   type: SchemaNode;
 
-  constructor(readonly location: SchemaLocation, readonly literal: string, type: SchemaNode) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly literal: string,
+    type: SchemaNode
+  ) {
     super();
     this.type = type;
   }

@@ -42,7 +42,10 @@ const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
   excludeExtensionsDependencies: false,
 };
 export class WorkspaceManifestFactory {
-  constructor(private dependencyResolver: DependencyResolverMain, private aspectLoader: AspectLoaderMain) {}
+  constructor(
+    private dependencyResolver: DependencyResolverMain,
+    private aspectLoader: AspectLoaderMain
+  ) {}
 
   async createFromComponents(
     name: string,

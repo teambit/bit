@@ -4,7 +4,10 @@ import { SchemaRegistry } from '../schema-registry';
 export class TupleTypeSchema extends SchemaNode {
   readonly elements: SchemaNode[];
 
-  constructor(readonly location: SchemaLocation, elements: SchemaNode[]) {
+  constructor(
+    readonly location: SchemaLocation,
+    elements: SchemaNode[]
+  ) {
     super();
     this.elements = elements;
   }

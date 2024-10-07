@@ -2,7 +2,10 @@ import { Aspect } from '@teambit/harmony';
 import { PluginDefinition } from './plugin-definition';
 
 export class Plugin {
-  constructor(readonly def: PluginDefinition, readonly path: string) {}
+  constructor(
+    readonly def: PluginDefinition,
+    readonly path: string
+  ) {}
 
   // consider adding a more abstract type here to allow users to ask for dependencies.
   private _instance: undefined | any;

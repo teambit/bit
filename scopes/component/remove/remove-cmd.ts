@@ -41,7 +41,10 @@ export class RemoveCmd implements Command {
   ];
   remoteOp = true;
 
-  constructor(private remove: RemoveMain, private workspace?: Workspace) {}
+  constructor(
+    private remove: RemoveMain,
+    private workspace?: Workspace
+  ) {}
 
   async report(
     [componentsPattern]: [string],

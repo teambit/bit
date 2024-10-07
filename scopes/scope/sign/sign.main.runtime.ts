@@ -300,7 +300,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       BuilderMain,
       LanesMain,
       SnappingMain,
-      ExportMain
+      ExportMain,
     ],
     _,
     [onPostSignSlot]: [OnPostSignSlot],

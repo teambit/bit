@@ -452,7 +452,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     ImporterMain,
     DependencyResolverMain,
     IssuesMain,
-    ListerMain
+    ListerMain,
   ]) {
     const logger = loggerMain.createLogger(RemoveAspect.id);
     const removeMain = new RemoveMain(workspace, scope, logger, importerMain, depResolver, lister);

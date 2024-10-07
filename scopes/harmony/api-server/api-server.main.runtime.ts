@@ -265,7 +265,7 @@ export class ApiServerMain {
     ConfigMain,
     ApplicationMain,
     DeprecationMain,
-    EnvsMain
+    EnvsMain,
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
     const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer, importer);

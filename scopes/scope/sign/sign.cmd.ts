@@ -35,7 +35,10 @@ export class SignCmd implements Command {
     ['', 'save-locally', 'save the signed components locally on the bare-scope for debugging purposes'],
   ] as CommandOptions;
 
-  constructor(private signMain: SignMain, private logger: Logger) {}
+  constructor(
+    private signMain: SignMain,
+    private logger: Logger
+  ) {}
 
   async report([components = []]: [string[]], signOptions: SignOptions) {
     const harmonyVersion = getBitVersion();

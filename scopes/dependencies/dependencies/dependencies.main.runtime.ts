@@ -396,7 +396,7 @@ export class DependenciesMain {
     DevFilesMain,
     AspectLoaderMain,
     ScopeMain,
-    GraphMain
+    GraphMain,
   ]) {
     const depsMain = new DependenciesMain(workspace, scope, depsResolver, devFiles, aspectLoader, graph);
     const depsCmd = new DependenciesCmd();

@@ -7,7 +7,12 @@ export default class Symlink {
   src: string; // current existing path
   dest: string; // new symlink path
   componentId: ComponentID | null | undefined;
-  constructor(src: string, dest: string, componentId?: ComponentID, private avoidHardLink = false) {
+  constructor(
+    src: string,
+    dest: string,
+    componentId?: ComponentID,
+    private avoidHardLink = false
+  ) {
     this.src = src;
     this.dest = dest;
     this.componentId = componentId;

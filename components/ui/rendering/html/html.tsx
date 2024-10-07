@@ -64,21 +64,15 @@ export function Html({
         {fullHeight && <FullHeightStyle />}
         {withDevTools && <CrossIframeDevTools />}
 
-        {assets.style?.map((x, idx) => (
-          <style key={idx}>{x}</style>
-        ))}
-        {assets.css?.map((x, idx) => (
-          <link key={idx} href={x} rel="stylesheet" type="text/css" />
-        ))}
+        {assets.style?.map((x, idx) => <style key={idx}>{x}</style>)}
+        {assets.css?.map((x, idx) => <link key={idx} href={x} rel="stylesheet" type="text/css" />)}
         {notifyParentOnLoad && <NotifyParentScript />}
       </head>
       <body>
         {children}
         {assets.json && <StoredAssets data={assets.json} />}
         {/* load scripts after showing the the whole html  */}
-        {assets.js?.map((x, idx) => (
-          <script key={idx} src={x} />
-        ))}
+        {assets.js?.map((x, idx) => <script key={idx} src={x} />)}
       </body>
     </html>
   );

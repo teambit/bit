@@ -1464,7 +1464,7 @@ export class DependencyResolverMain {
       AspectLoaderMain,
       ComponentMain,
       GraphqlMain,
-      GlobalConfigMain
+      GlobalConfigMain,
     ],
     config: DependencyResolverWorkspaceConfig,
     [
@@ -1480,7 +1480,7 @@ export class DependencyResolverMain {
       PackageManagerSlot,
       DependencyFactorySlot,
       PreInstallSlot,
-      PostInstallSlot
+      PostInstallSlot,
     ]
   ) {
     // const packageManager = new PackageManagerLegacy(config.packageManager, logger);
