@@ -5,6 +5,11 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
+import fs from 'fs';
+import gracefulFs from 'graceful-fs';
+// monkey patch fs module to avoid EMFILE error (especially when running watch operation)
+gracefulFs.gracefulify(fs);
+
 import './hook-require';
 import { bootstrap } from './bootstrap';
 import { handleErrorAndExit } from '@teambit/cli';
