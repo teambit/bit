@@ -370,6 +370,7 @@ export class PnpmPackageManager implements PackageManager {
       ['.' as ProjectId]:
         partialLockfile.packages![`${pkgName}@${partialLockfile.importers[componentRootDir].dependencies[pkgName]}`],
     };
+    partialLockfile.importers['.'].specifiers = partialLockfile.importers['.'].dependencies;
     return partialLockfile;
   }
 }

@@ -18,7 +18,7 @@ describe('dependencies graph data', function () {
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
       helper.command.install('react@18.3.1');
-      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.snapAllComponents();
     });
     it('should save dependencies graph to the model', () => {
       const versionObj = helper.command.catComponent('comp1@latest');
