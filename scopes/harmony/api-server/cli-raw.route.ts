@@ -31,7 +31,7 @@ export class CLIRawRoute implements Route {
     async (req: Request, res: Response) => {
       const { command, pwd, envBitFeatures, ttyPath } = req.body;
       this.logger.debug(`cli-raw server: got request for ${command}`);
-      if (pwd && !process.cwd().startsWith(pwd)) {
+      if (pwd && !pwd.startsWith(process.cwd())) {
         throw new Error(`bit-server is running on a different directory. bit-server: ${process.cwd()}, pwd: ${pwd}`);
       }
 
