@@ -17,13 +17,15 @@ describe('dependencies graph data', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
-      helper.command.install('react@18.3.1');
+      helper.fs.outputFile(`comp1/index.spec.js`, `const isOdd = require("is-odd")`);
+      helper.command.install('react@18.3.1 is-odd@1.0.0');
       helper.command.snapAllComponents();
     });
     it('should save dependencies graph to the model', () => {
       const versionObj = helper.command.catComponent('comp1@latest');
       const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
       expect(depsGraph.importers['.'].dependencies.react).to.eq('18.3.1');
+      expect(depsGraph.importers['.'].devDependencies['is-odd']).to.eq('1.0.0');
       console.log(JSON.stringify(depsGraph, null, 2));
     });
   });

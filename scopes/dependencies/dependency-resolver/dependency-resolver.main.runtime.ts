@@ -560,14 +560,19 @@ export class DependencyResolverMain {
     return relativePath;
   }
 
-  async getDependenciesGraph(component: Component, workspaceDir: string, componentRootDir: string): Promise<any> {
+  async getDependenciesGraph(
+    component: Component,
+    workspaceDir: string,
+    rootComponentsPath: string,
+    componentRelativeDir: string
+  ): Promise<any> {
     const dirInEnvRoot = this.getComponentDirInBitRoots(component, {
       workspacePath: workspaceDir,
-      rootComponentsPath: componentRootDir,
+      rootComponentsPath,
     });
     const pkgName = this.getPackageName(component);
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
-    return packageManager?.getDependenciesGraph?.(workspaceDir, dirInEnvRoot, pkgName);
+    return packageManager?.getDependenciesGraph?.(workspaceDir, dirInEnvRoot, pkgName, componentRelativeDir);
   }
 
   /**

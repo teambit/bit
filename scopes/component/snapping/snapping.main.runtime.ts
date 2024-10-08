@@ -769,7 +769,8 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
           consumerComponent.dependenciesGraph = await this.dependencyResolver.getDependenciesGraph(
             components[index],
             this.workspace.path,
-            this.workspace.rootComponentsPath
+            this.workspace.rootComponentsPath,
+            consumerComponent.componentMap.rootDir
           );
         }
       })

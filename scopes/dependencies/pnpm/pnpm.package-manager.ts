@@ -352,25 +352,40 @@ export class PnpmPackageManager implements PackageManager {
     });
   }
 
-  async getDependenciesGraph(workspaceDir: string, componentRootDir: string, pkgName: string): Promise<any> {
+  async getDependenciesGraph(
+    workspaceDir: string,
+    componentRootDir: string,
+    pkgName: string,
+    componentRelativeDir: string
+  ): Promise<any> {
     const lockfile = await readWantedLockfile(workspaceDir, { ignoreIncompatible: false });
     if (!lockfile) {
       throw new BitError('Cannot get the depednency graph without a lockfile. Try running "bit install".');
     }
-    const partialLockfile = filterLockfileByImporters(lockfile, [componentRootDir as ProjectId], {
-      include: {
-        dependencies: true,
-        devDependencies: true,
-        optionalDependencies: true,
-      },
-      failOnMissingDependencies: false,
-      skipped: new Set(),
-    });
+    const partialLockfile = filterLockfileByImporters(
+      lockfile,
+      [componentRootDir as ProjectId, componentRelativeDir as ProjectId],
+      {
+        include: {
+          dependencies: true,
+          devDependencies: true,
+          optionalDependencies: true,
+        },
+        failOnMissingDependencies: false,
+        skipped: new Set(),
+      }
+    );
+    const specifiers = partialLockfile.importers[componentRootDir].specifiers;
+    const componentDevImporter = partialLockfile.importers[componentRelativeDir];
     partialLockfile.importers = {
       ['.' as ProjectId]:
         partialLockfile.packages![`${pkgName}@${partialLockfile.importers[componentRootDir].dependencies[pkgName]}`],
     };
-    partialLockfile.importers['.'].specifiers = partialLockfile.importers['.'].dependencies;
+    partialLockfile.importers['.'].devDependencies = componentDevImporter.devDependencies;
+    partialLockfile.importers['.'].specifiers = {
+      ...componentDevImporter.specifiers,
+      ...specifiers,
+    };
     return partialLockfile;
   }
 }
