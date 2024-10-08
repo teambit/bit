@@ -15,6 +15,7 @@ import { ComponentMap } from '@teambit/legacy.bit-map';
 import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';
 import { DebugDependencies, FileType } from './auto-detect-deps';
+import { Logger } from '@teambit/logger';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -53,6 +54,7 @@ export class ApplyOverrides {
   constructor(
     private component: Component,
     private depsResolver: DependencyResolverMain,
+    private logger: Logger,
     private workspace?: Workspace
   ) {
     this.componentId = component.componentId;
@@ -245,6 +247,12 @@ export class ApplyOverrides {
         const dependencyValue = overrides[depField][dependency];
         const componentData = this._getComponentIdToAdd(dependency, dependencyValue);
         if (componentData?.componentId) {
+          if (componentData.componentId.isEqualWithoutVersion(this.componentId)) {
+            this.logger.warn(
+              `component ${this.componentId.toString()} depends on itself ${componentData.componentId.toString()}. ignoring it.`
+            );
+            return;
+          }
           const dependencyExist = existingDependencies[depField].find((d) =>
             d.id.isEqualWithoutVersion(componentData.componentId)
           );
