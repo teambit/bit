@@ -21,7 +21,7 @@ export default class UpdateCmd implements Command {
     {
       name: 'package-patterns...',
       description:
-        'a string list of package names, or patterns (separated by spaces or commas), e.g. "@teambit/**,@my-org/ui/**". The patterns should be in glob format. By default, all packages are selected.',
+        'a string list of package names, or patterns (separated by spaces or commas), e.g. "@teambit/**,@my-org/ui.**". The patterns should be in glob format. By default, all packages are selected.',
     },
   ];
   options = [

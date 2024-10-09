@@ -2391,7 +2391,7 @@
     "arguments": [
       {
         "name": "package-patterns...",
-        "description": "a string list of package names, or patterns (separated by spaces or commas), e.g. \"@teambit/**,@my-org/ui/**\". The patterns should be in glob format. By default, all packages are selected."
+        "description": "a string list of package names, or patterns (separated by spaces or commas), e.g. \"@teambit/**,@my-org/ui.**\". The patterns should be in glob format. By default, all packages are selected."
       }
     ]
   },
