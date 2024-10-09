@@ -112,6 +112,19 @@ describe('bit dependencies command', function () {
         expect(show).to.have.string('lodash');
       });
     });
+    describe('adding itself as a dep', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.tagAllWithoutBuild();
+        const pkgName = helper.general.getPackageNameByCompName('comp1', false);
+        helper.command.dependenciesSet('comp1', `${pkgName}@0.0.1`);
+      });
+      it('should ignore it and not consider it as a dependency', () => {
+        const deps = helper.command.getCompDepsIdsFromData('comp1');
+        expect(deps).to.not.include(`${helper.scopes.remote}/comp1@0.0.1`);
+      });
+    });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('adding component dependency', () => {
       let npmCiRegistry: NpmCiRegistry;
       before(async () => {
