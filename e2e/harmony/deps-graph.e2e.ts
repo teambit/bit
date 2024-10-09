@@ -19,7 +19,7 @@ describe('dependencies graph data', function () {
       helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
       helper.fs.outputFile(`comp1/index.spec.js`, `const isOdd = require("is-odd")`);
       helper.command.install('react@18.3.1 is-odd@1.0.0');
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponents('--skip-tests');
     });
     it('should save dependencies graph to the model', () => {
       const versionObj = helper.command.catComponent('comp1@latest');

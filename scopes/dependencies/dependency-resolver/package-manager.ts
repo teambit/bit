@@ -131,6 +131,8 @@ export type PackageManagerInstallOptions = {
    * This is used by Ripple CI.
    */
   returnListOfDepsRequiringBuild?: boolean;
+
+  dependenciesGraph?: any;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

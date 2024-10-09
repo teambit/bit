@@ -44,6 +44,7 @@ export type InstallOptions = {
   forceTeambitHarmonyLink?: boolean;
   excludeExtensionsDependencies?: boolean;
   dedupeInjectedDeps?: boolean;
+  dependenciesGraph?: any;
 };
 
 export type GetComponentManifestsOptions = {
@@ -205,6 +206,7 @@ export class DependencyInstaller {
       neverBuiltDependencies: ['core-js', ...(this.neverBuiltDependencies ?? [])],
       preferOffline: this.preferOffline,
       dedupeInjectedDeps: options.dedupeInjectedDeps,
+      dependenciesGraph: options.dependenciesGraph,
       ...packageManagerOptions,
     };
     if (options.installTeambitBit) {

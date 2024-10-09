@@ -55,7 +55,6 @@ import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
 import path, { basename } from 'path';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import { writeWantedLockfile } from '@pnpm/lockfile.fs';
 import pMap from 'p-map';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
@@ -701,26 +700,20 @@ export class IsolatorMain {
           })
         );
       } else {
+        let allGraph = null;
         if (legacyScope) {
-          let lockfile = null;
           await Promise.all(
             capsuleList.map(async (capsule) => {
               const graph = await this.getDependenciesGraphFromModel(legacyScope, capsule.component.id);
-              const projectId = pathNormalizeToLinux(path.relative(capsulesDir, capsule.path));
-              graph.importers[projectId] = graph.importers['.'];
-              delete graph.importers['.'];
-              if (lockfile == null) {
-                lockfile = graph;
+              if (allGraph == null) {
+                allGraph = graph;
               } else {
-                Object.assign(lockfile.importers, graph.importers);
-                Object.assign(lockfile.packages, graph.packages);
-                Object.assign(lockfile.snapshots, graph.snapshots);
+                Object.assign(allGraph.directDependencies, graph.directDependencies);
+                Object.assign(allGraph.packages, graph.packages);
+                Object.assign(allGraph.snapshots, graph.snapshots);
               }
             })
           );
-          if (lockfile) {
-            await writeWantedLockfile(capsulesDir, lockfile);
-          }
         }
 
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
@@ -729,6 +722,7 @@ export class IsolatorMain {
           cachePackagesOnCapsulesRoot,
           linkedDependencies,
           packageManager: opts.packageManager,
+          dependenciesGraph: allGraph,
         });
       }
       if (installLongProcessLogger) {
@@ -811,6 +805,7 @@ export class IsolatorMain {
       linkedDependencies?: Record<string, Record<string, string>>;
       packageManager?: string;
       nodeLinker?: NodeLinker;
+      dependenciesGraph?: any;
     }
   ) {
     const installer = this.dependencyResolver.getInstaller({
@@ -832,6 +827,7 @@ export class IsolatorMain {
       forceTeambitHarmonyLink: !this.dependencyResolver.hasHarmonyInRootPolicy(),
       excludeExtensionsDependencies: true,
       dedupeInjectedDeps: true,
+      dependenciesGraph: opts.dependenciesGraph,
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {
