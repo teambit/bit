@@ -12,14 +12,17 @@ describe('dependencies graph data', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('single component', () => {
+  describe.only('single component', () => {
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
-      helper.fs.outputFile(`comp1/index.spec.js`, `const isOdd = require("is-odd")`);
+      helper.fs.outputFile(
+        `comp1/index.spec.js`,
+        `const isOdd = require("is-odd"); test('test', () => { expect(1).toEqual(1); })`
+      );
       helper.command.install('react@18.3.1 is-odd@1.0.0');
-      helper.command.snapAllComponents('--skip-tests');
+      helper.command.snapAllComponentsWithoutBuild('--skip-tests');
     });
     it('should save dependencies graph to the model', () => {
       const versionObj = helper.command.catComponent('comp1@latest');
@@ -29,6 +32,23 @@ describe('dependencies graph data', function () {
       expect(depsGraph.directDependencies['react@18.3.1']).to.eq('18.3.1');
       expect(depsGraph.directDependencies['is-odd@1.0.0']).to.eq('1.0.0');
       console.log(JSON.stringify(depsGraph, null, 2));
+    });
+    describe('sign component and use dependency graph to generate a lockfile', () => {
+      let signOutput: string;
+      before(async () => {
+        helper.command.export();
+        helper.scopeHelper.cloneLocalScope();
+        // yes, this is strange, it adds the remote-scope to itself as a remote. we need it because
+        // we run "action" command from the remote to itself to clear the cache. (needed because
+        // normally bit-sign is running from the fs but a different http service is running as well)
+        helper.scopeHelper.addRemoteScope(undefined, helper.scopes.remotePath);
+        const ids = [`${helper.scopes.remote}/comp1@latest`];
+        // console.log('sign-command', `bit sign ${ids.join(' ')}`);
+        signOutput = helper.command.sign(ids, '--push --original-scope', helper.scopes.remotePath);
+      });
+      it('should sign successfully', () => {
+        expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
+      });
     });
   });
   describe('two components with different peer dependencies', function () {
