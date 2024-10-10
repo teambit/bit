@@ -7,7 +7,6 @@ import legacyLogger, { getLevelFromArgv } from '@teambit/legacy/dist/logger/logg
 import { reloadFeatureToggle } from '@teambit/harmony.modules.feature-toggle';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { APIForIDE } from './api-for-ide';
-import { Readable } from 'stream';
 
 /**
  * example usage:
@@ -40,33 +39,13 @@ export class CLIRawRoute implements Route {
       const originalStdoutWrite = process.stdout.write;
       const originalStderrWrite = process.stderr.write;
 
-      // Open the server input pipe for reading
-      const serverInputStream = fs.createReadStream('/tmp/my_pipe');
-
       if (ttyPath) {
         const fileHandle = await fs.open(ttyPath, 'w');
-
-        // Create a custom stdin stream
-        // const customStdin = new Readable({
-        //   read() {}
-        // });
-
-        // // Replace process.stdin with customStdin
-        // // @ts-ignore
-        // process.stdin = customStdin;
-        // Replace process.stdin with serverInputStream
-        process.stdin.destroy();
-        // @ts-ignore
-        process.stdin = serverInputStream;
-
         // @ts-ignore monkey patch the process stdout write method
         process.stdout.write = (chunk, encoding, callback) => {
           fs.writeSync(fileHandle, chunk.toString());
           return originalStdoutWrite.call(process.stdout, chunk, encoding, callback);
         };
-
-        // fileHandleRead.pipe(process.stdin);
-
         // @ts-ignore monkey patch the process stderr write method
         process.stderr.write = (chunk, encoding, callback) => {
           fs.writeSync(fileHandle, chunk.toString());
@@ -103,13 +82,11 @@ export class CLIRawRoute implements Route {
       enableChalk();
       const cliParser = new CLIParser(this.cli.commands, this.cli.groups, this.cli.onCommandStartSlot);
       try {
-        console.log('IN TRY');
         const commandRunner = await cliParser.parse(command);
         const result = await commandRunner.runCommand(true);
         await this.apiForIDE.logFinishCmdHistory(cmdStrLog, 0);
         res.json(result);
       } catch (err: any) {
-        console.log('IN CATCH');
         if (err instanceof YargsExitWorkaround) {
           res.json({ data: err.helpMsg, exitCode: err.exitCode });
         } else {
@@ -122,7 +99,6 @@ export class CLIRawRoute implements Route {
           });
         }
       } finally {
-        console.log('IN FINALLY');
         if (ttyPath) {
           process.stdout.write = originalStdoutWrite;
           process.stderr.write = originalStderrWrite;
