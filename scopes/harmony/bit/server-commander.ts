@@ -62,6 +62,21 @@ export class ServerCommander {
     printBitVersionIfAsked();
     const port = await this.getExistingUsedPort();
     const url = `http://localhost:${port}/api`;
+
+    const serverInputStream = fs.createWriteStream('/tmp/my_pipe');
+
+    // Set stdin to raw mode to capture all keypresses
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+
+    // Forward user's stdin to the server's input pipe
+    process.stdin.on('data', (chunk) => {
+      serverInputStream.write(chunk);
+    });
+    process.stdin.on('error', (err) => {
+      console.error('stdin error:', err);
+    });
+
     const ttyPath = this.shouldUseTTYPath()
       ? execSync('tty', {
           encoding: 'utf8',

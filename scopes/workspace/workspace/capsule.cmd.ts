@@ -122,7 +122,7 @@ export class CapsuleListCmd implements Command {
   ) {}
 
   async report() {
-    const { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir } = this.getCapsulesRootDirs();
+    const { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir, scopeCapsulesRootDir } = this.getCapsulesRootDirs();
     const listWs = workspaceCapsulesRootDir ? await this.isolator.list(workspaceCapsulesRootDir) : undefined;
     const listScope = await this.isolator.list(scopeAspectsCapsulesRootDir);
 
@@ -136,9 +136,12 @@ export class CapsuleListCmd implements Command {
     const wsLine = listWs
       ? chalk.green(`workspace capsules root-dir:       ${chalk.cyan(workspaceCapsulesRootDir)}`)
       : undefined;
-    const scopeLine = chalk.green(`scope's aspects capsules root-dir: ${chalk.cyan(scopeAspectsCapsulesRootDir)}`);
+    const scopeAspectLine = chalk.green(
+      `scope's aspects capsules root-dir: ${chalk.cyan(scopeAspectsCapsulesRootDir)}`
+    );
+    const scopeLine = chalk.green(`scope's capsules root-dir: ${chalk.cyan(scopeCapsulesRootDir)}`);
     const suggestLine = chalk.green(`use --json to get the list of all capsules`);
-    const lines = [title, wsLine, scopeLine, suggestLine].filter((x) => x).join('\n');
+    const lines = [title, wsLine, scopeAspectLine, scopeLine, suggestLine].filter((x) => x).join('\n');
 
     // TODO: improve output
     return lines;
@@ -216,7 +219,7 @@ other users after publishing/exporting them.`;
   }
 }
 
-function getCapsulesRootDirs(isolator, scope, workspace) {
+function getCapsulesRootDirs(isolator, scope: ScopeMain, workspace) {
   const workspaceCapsulesRootDir = workspace
     ? isolator.getCapsulesRootDir({
         baseDir: workspace.getCapsulePath(),
@@ -227,6 +230,12 @@ function getCapsulesRootDirs(isolator, scope, workspace) {
     baseDir: scope.getAspectCapsulePath(),
     useHash: scope.shouldUseHashForCapsules(),
   });
+  const scopeCapsulesRootDir = workspace
+    ? undefined
+    : isolator.getCapsulesRootDir({
+        baseDir: process.cwd(),
+        useHash: true,
+      });
 
-  return { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir };
+  return { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir, scopeCapsulesRootDir };
 }

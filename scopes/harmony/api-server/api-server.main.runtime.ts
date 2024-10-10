@@ -48,6 +48,20 @@ export class ApiServerMain {
       throw new Error(`unable to run bit-server, the current directory ${process.cwd()} is not a workspace`);
     }
 
+    // const pipeStream = fs.createReadStream('/tmp/my_pipe');
+    // pipeStream.on('data', (chunk) => {
+    //   // console.log(`Received: ${chunk}`);
+    //   // Process the input as needed
+    // });
+
+    // pipeStream.on('end', () => {
+    //   console.log('No more data in the pipe.');
+    // });
+
+    // pipeStream.on('error', (err) => {
+    //   console.error(`Error reading from pipe: ${err.message}`);
+    // });
+
     this.workspace.registerOnComponentChange(
       async (
         component: Component,
