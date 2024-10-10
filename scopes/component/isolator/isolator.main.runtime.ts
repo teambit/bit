@@ -710,7 +710,6 @@ export class IsolatorMain {
               } else {
                 Object.assign(allGraph.directDependencies, graph.directDependencies);
                 Object.assign(allGraph.packages, graph.packages);
-                Object.assign(allGraph.snapshots, graph.snapshots);
               }
             })
           );
