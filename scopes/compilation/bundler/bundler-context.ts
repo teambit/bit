@@ -193,6 +193,11 @@ export type MetaData = {
    * Whether the config is for an env template bundling
    */
   isEnvTemplate?: boolean;
+
+  /**
+   * Chunk size for config entries
+   */
+  chunkSize?: number;
 };
 export interface BundlerContext extends BuildContext {
   /**
