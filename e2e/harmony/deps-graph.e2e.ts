@@ -1,4 +1,7 @@
+import fs from 'fs';
+import path from 'path';
 import chai, { expect } from 'chai';
+import stripAnsi from 'strip-ansi';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -44,10 +47,17 @@ describe('dependencies graph data', function () {
         helper.scopeHelper.addRemoteScope(undefined, helper.scopes.remotePath);
         const ids = [`${helper.scopes.remote}/comp1@latest`];
         // console.log('sign-command', `bit sign ${ids.join(' ')}`);
-        signOutput = helper.command.sign(ids, '--push --original-scope', helper.scopes.remotePath);
+        signOutput = helper.command.sign(ids, '--push --original-scope --log', helper.scopes.remotePath);
       });
       it('should sign successfully', () => {
         expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
+      });
+      it('should generate a lockfile', () => {
+        const capsulesDir = signOutput.match(/running installation in root dir (\/[^\s]+)/)?.[1];
+        expect(capsulesDir).to.be.a('string');
+        expect(fs.readFileSync(path.join(stripAnsi(capsulesDir!), 'pnpm-lock.yaml'), 'utf8')).to.have.string(
+          'restoredFromModel: true'
+        );
       });
     });
   });

@@ -102,6 +102,9 @@ export class PnpmPackageManager implements PackageManager {
         }
       }
     }
+    lockfile.bit = {
+      restoredFromModel: true,
+    };
     await writeWantedLockfile(rootDir, lockfile);
   }
 
