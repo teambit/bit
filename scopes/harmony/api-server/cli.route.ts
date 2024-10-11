@@ -18,7 +18,11 @@ import { APIForIDE } from './api-for-ide';
 }
  */
 export class CLIRoute implements Route {
-  constructor(private logger: Logger, private cli: CLIMain, private apiForIDE: APIForIDE) {}
+  constructor(
+    private logger: Logger,
+    private cli: CLIMain,
+    private apiForIDE: APIForIDE
+  ) {}
 
   method = 'post';
   route = '/cli/:cmd';

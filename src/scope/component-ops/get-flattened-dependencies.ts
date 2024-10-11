@@ -16,7 +16,11 @@ export class FlattenedDependenciesGetter {
   private dependenciesGraph: Graph;
   private versionDependencies: VersionDependencies[];
   private cache: { [idStr: string]: ComponentIdList } = {};
-  constructor(private scope: Scope, private components: Component[], private lane?: Lane) {}
+  constructor(
+    private scope: Scope,
+    private components: Component[],
+    private lane?: Lane
+  ) {}
 
   /**
    * to get the flattened dependencies of a component, we iterate over the direct dependencies and

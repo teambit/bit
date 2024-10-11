@@ -199,7 +199,7 @@ export class InstallMain {
     this.postInstallSlot.register(fn);
   }
 
-  async onComponentCreate(generateResults: GenerateResult[]) {
+  async onComponentCreate(generateResults: GenerateResult[], installOptions?: Partial<WorkspaceInstallOptions>) {
     this.workspace.inInstallContext = true;
     let runInstall = false;
     let packages: string[] = [];
@@ -243,10 +243,10 @@ export class InstallMain {
     // `the following environments are not installed yet: ${nonLoadedEnvs.join(', ')}. installing them now...`
     // );
     await this.install(packages, {
+      ...installOptions,
       addMissingDeps: installMissing,
       skipIfExisting: true,
       writeConfigFiles: false,
-      optimizeReportForNonTerminal: !process.stdout.isTTY,
       // skipPrune: true,
     });
   }
@@ -907,9 +907,7 @@ export class InstallMain {
     return Object.fromEntries(
       compact(
         await Promise.all(
-          (
-            await this.app.listAppsComponents()
-          ).map(async (app) => {
+          (await this.app.listAppsComponents()).map(async (app) => {
             const appPkgName = this.dependencyResolver.getPackageName(app);
             const appManifest = Object.values(manifests).find(({ name }) => name === appPkgName);
             if (!appManifest) return null;
@@ -1262,7 +1260,7 @@ export class InstallMain {
       IpcEventsMain,
       GeneratorMain,
       WorkspaceConfigFilesMain,
-      AspectLoaderMain
+      AspectLoaderMain,
     ],
     _,
     [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot],

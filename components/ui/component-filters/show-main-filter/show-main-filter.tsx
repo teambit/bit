@@ -34,7 +34,7 @@ function showMainFilter({ className, lanes }: ComponentFilterRenderProps) {
 
   const [filter, updateFilter] = filterContext;
 
-  const isActive = filter.state;
+  const isActive = filter?.state;
 
   return (
     <div className={classNames(styles.onLaneFilter, isActive && styles.active, className)}>

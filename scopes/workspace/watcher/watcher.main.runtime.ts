@@ -68,7 +68,7 @@ export class WatcherMain {
       PubsubMain,
       LoggerMain,
       IpcEventsMain,
-      GlobalConfigMain
+      GlobalConfigMain,
     ],
     _,
     [onPreWatchSlot]: [OnPreWatchSlot]

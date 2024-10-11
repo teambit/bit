@@ -13,7 +13,10 @@ import { APIForIDE } from './api-for-ide';
 }
  */
 export class IDERoute implements Route {
-  constructor(private logger: Logger, private apiForIDE: APIForIDE) {}
+  constructor(
+    private logger: Logger,
+    private apiForIDE: APIForIDE
+  ) {}
 
   method = 'post';
   route = '/ide/:method';

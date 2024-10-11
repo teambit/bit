@@ -13,7 +13,10 @@ import { MergeConflictFile } from './merge-conflict-file';
 export class AspectsMerger {
   readonly mergeConflictFile: MergeConflictFile;
   private mergeConfigDepsResolverDataCache: { [compIdStr: string]: Record<string, any> } = {};
-  constructor(private workspace: Workspace, private harmony: Harmony) {
+  constructor(
+    private workspace: Workspace,
+    private harmony: Harmony
+  ) {
     this.mergeConflictFile = new MergeConflictFile(workspace.path);
   }
 

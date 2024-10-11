@@ -26,7 +26,11 @@ export class CompileCmd implements Command {
     ['d', 'delete-dist-dir', 'delete existing dist folder before writing new compiled files'],
   ] as CommandOptions;
 
-  constructor(private compile: WorkspaceCompiler, private logger: Logger, private pubsub: PubsubMain) {}
+  constructor(
+    private compile: WorkspaceCompiler,
+    private logger: Logger,
+    private pubsub: PubsubMain
+  ) {}
 
   async report([components = []]: [string[]], compilerOptions: CompileOptions) {
     const startTimestamp = process.hrtime();

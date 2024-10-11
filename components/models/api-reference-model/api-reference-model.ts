@@ -32,7 +32,10 @@ export class APIReferenceModel {
   taggedAPINodes: APINode<SchemaNode>[] = [];
   componentId: ComponentID;
 
-  constructor(public _api: APISchema, _renderers: APINodeRenderer[]) {
+  constructor(
+    public _api: APISchema,
+    _renderers: APINodeRenderer[]
+  ) {
     this.componentId = _api.componentId as any;
     this.apiNodes = this.mapToAPINode(_api, _renderers, this.componentId);
     this.apiByType = this.groupByType(this.apiNodes);
@@ -87,7 +90,7 @@ export class APIReferenceModel {
               defaultRenderers.find((renderer) =>
                 renderer.predicate(ExportSchema.isExportSchema(schemaNode) ? schemaNode.exportNode : schemaNode)
               ),
-          } as APINode)
+          }) as APINode
       )
       .concat(
         internalSchemaNodes.map(
@@ -99,7 +102,7 @@ export class APIReferenceModel {
               renderer:
                 nonDefaultRenderers.find((renderer) => renderer.predicate(schemaNode)) ||
                 defaultRenderers.find((renderer) => renderer.predicate(schemaNode)),
-            } as APINode)
+            }) as APINode
         )
       )
       .filter((schemaNode) => schemaNode.renderer) as APINode[];

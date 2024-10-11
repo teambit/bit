@@ -120,9 +120,7 @@ function LaneOverviewWithPreview({ currentLane, overviewItems, routeSlot, host }
         componentCount={currentLane.components.length}
       ></LaneDetails>
       <ComponentGrid className={styles.cardGrid}>
-        {components?.map((component, index) => (
-          <ComponentCard component={component} key={index} />
-        ))}
+        {components?.map((component, index) => <ComponentCard component={component} key={index} />)}
       </ComponentGrid>
       {routeSlot && <SlotRouter slot={routeSlot} />}
       {overviewItems.length > 0 && overviewItems.map((Item, index) => <Item key={index} />)}

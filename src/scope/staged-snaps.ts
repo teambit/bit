@@ -14,7 +14,10 @@ const STAGED_SNAPS = 'staged-snaps';
  */
 export class StagedSnaps {
   private hasChanged = false;
-  constructor(private scopePath: string, private snaps: string[]) {}
+  constructor(
+    private scopePath: string,
+    private snaps: string[]
+  ) {}
 
   async write() {
     if (this.hasChanged) {

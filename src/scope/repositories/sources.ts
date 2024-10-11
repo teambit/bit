@@ -46,7 +46,7 @@ export type ComponentDef = {
 
 export type ComponentExistence = {
   id: ComponentID;
-  exists: Boolean;
+  exists: boolean;
 };
 
 export type MergeResult = {

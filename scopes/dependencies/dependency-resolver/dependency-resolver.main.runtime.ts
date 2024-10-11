@@ -1057,7 +1057,7 @@ export class DependencyResolverMain {
    * supported range, force etc')
    * if a dep exists with a version value "-" we will remove it from the policy
    */
-  mergeEnvManifestPolicy(parent: EnvJsonc, child: EnvJsonc): Object {
+  mergeEnvManifestPolicy(parent: EnvJsonc, child: EnvJsonc): object {
     const policy = {};
     ['peers', 'dev', 'runtime'].forEach((key) => {
       policy[key] = cloneDeep(parent.policy?.[key] || []);
@@ -1491,7 +1491,7 @@ export class DependencyResolverMain {
       AspectLoaderMain,
       ComponentMain,
       GraphqlMain,
-      GlobalConfigMain
+      GlobalConfigMain,
     ],
     config: DependencyResolverWorkspaceConfig,
     [
@@ -1507,7 +1507,7 @@ export class DependencyResolverMain {
       PackageManagerSlot,
       DependencyFactorySlot,
       PreInstallSlot,
-      PostInstallSlot
+      PostInstallSlot,
     ]
   ) {
     // const packageManager = new PackageManagerLegacy(config.packageManager, logger);

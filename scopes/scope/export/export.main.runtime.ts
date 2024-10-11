@@ -73,6 +73,7 @@ type ExportParams = {
 
 export interface ExportResult {
   nonExistOnBitMap: ComponentID[];
+  newIdsOnRemote: ComponentID[];
   removedIds: ComponentIdList;
   missingScope: ComponentID[];
   componentsIds: ComponentID[];
@@ -91,13 +92,14 @@ export class ExportMain {
   ) {}
 
   async export(params: ExportParams = {}): Promise<ExportResult> {
-    const { nonExistOnBitMap, missingScope, exported, removedIds, exportedLanes, rippleJobs } =
+    const { nonExistOnBitMap, newIdsOnRemote, missingScope, exported, removedIds, exportedLanes, rippleJobs } =
       await this.exportComponents(params);
     let ejectResults: EjectResults | undefined;
     await this.workspace.clearCache(); // needed when one process executes multiple commands, such as in "bit test" or "bit cli"
     if (params.eject) ejectResults = await this.ejectExportedComponents(exported);
     const exportResults = {
       componentsIds: exported,
+      newIdsOnRemote,
       nonExistOnBitMap,
       removedIds,
       missingScope,
@@ -512,7 +514,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         const newIdsOnRemote = exportedIds!.map((id) => ComponentID.fromString(id));
         // remove version. exported component might have multiple versions exported
         const idsWithRemoteScope: ComponentID[] = newIdsOnRemote.map((id) => id.changeVersion(undefined));
-        const idsWithRemoteScopeUniq = ComponentIdList.uniqFromArray(idsWithRemoteScope);
+        const idsWithRemoteScopeUniq = ComponentIdList.uniqFromArray(idsWithRemoteScope).sort();
         return {
           newIdsOnRemote,
           exported: idsWithRemoteScopeUniq,
@@ -848,7 +850,7 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
     RemoveMain,
     DependencyResolverMain,
     LoggerMain,
-    EjectMain
+    EjectMain,
   ]) {
     const logger = loggerMain.createLogger(ExportAspect.id);
     const exportMain = new ExportMain(workspace, remove, depResolver, logger, eject);

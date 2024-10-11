@@ -7,7 +7,10 @@ import { SchemaRegistry } from '../schema-registry';
 export class TypeLiteralSchema extends SchemaNode {
   readonly members: SchemaNode[];
 
-  constructor(readonly location: SchemaLocation, members: SchemaNode[]) {
+  constructor(
+    readonly location: SchemaLocation,
+    members: SchemaNode[]
+  ) {
     super();
     this.members = members;
   }

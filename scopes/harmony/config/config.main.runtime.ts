@@ -23,7 +23,10 @@ export type ConfigDeps = [];
 export type ConfigConfig = {};
 
 export class ConfigMain {
-  constructor(public workspaceConfig?: WorkspaceConfig, public scopeConfig?: WorkspaceConfig) {}
+  constructor(
+    public workspaceConfig?: WorkspaceConfig,
+    public scopeConfig?: WorkspaceConfig
+  ) {}
 
   get type(): ConfigType {
     if (this.workspaceConfig) {

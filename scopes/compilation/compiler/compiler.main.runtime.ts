@@ -153,7 +153,7 @@ export class CompilerMain {
     GeneratorMain,
     DependencyResolverMain,
     WatcherMain,
-    IssuesMain
+    IssuesMain,
   ]) {
     const logger = loggerMain.createLogger(CompilerAspect.id);
     const compilerService = new CompilerService();

@@ -11,7 +11,11 @@ export class PackTask implements BuildTask {
   readonly description = 'Packing components into a .tgz file';
   readonly location: TaskLocation = 'end';
   readonly dependencies = [TypescriptAspect.id];
-  constructor(readonly aspectId: string, private packer: Packer, private logger: Logger) {}
+  constructor(
+    readonly aspectId: string,
+    private packer: Packer,
+    private logger: Logger
+  ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const capsules = context.capsuleNetwork.seedersCapsules;

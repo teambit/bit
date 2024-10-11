@@ -10,7 +10,10 @@ type ComponentsPerId = { [id: string]: ModelComponentPerRemote };
 
 export class MultipleComponentMerger {
   private compsPerIds: ComponentsPerId;
-  constructor(private componentsPerRemote: ComponentsPerRemote, private sources: SourceRepository) {
+  constructor(
+    private componentsPerRemote: ComponentsPerRemote,
+    private sources: SourceRepository
+  ) {
     this.compsPerIds = this.convertToCompsPerIds();
   }
 

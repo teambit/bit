@@ -32,7 +32,7 @@ import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import chokidar from '@teambit/chokidar';
+import chokidar from 'chokidar';
 import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
@@ -875,7 +875,7 @@ export class ScopeMain implements ComponentFactory {
    * whether a component is soft-removed.
    * the version is required as it can be removed on a lane. in which case, the version is the head in the lane.
    */
-  async isComponentRemoved(id: ComponentID): Promise<Boolean> {
+  async isComponentRemoved(id: ComponentID): Promise<boolean> {
     const version = id.version;
     if (!version) throw new Error(`isComponentRemoved expect to get version, got ${id.toString()}`);
     const modelComponent = await this.legacyScope.getModelComponent(id);
@@ -957,34 +957,35 @@ export class ScopeMain implements ComponentFactory {
     throwForNoMatch = true,
     filterByStateFunc?: (state: any, poolIds: ComponentID[]) => Promise<ComponentID[]>
   ) {
-    const patterns = pattern
-      .split(',')
-      .map((p) => p.trim())
-      .map((p) => p.split('@')[0]); // no need for the version
+    const patterns = pattern.split(',').map((p) => p.trim());
+
     if (patterns.every((p) => p.startsWith('!'))) {
       // otherwise it'll never match anything. don't use ".push()". it must be the first item in the array.
       patterns.unshift('**');
     }
     // check also as legacyId.toString, as it doesn't have the defaultScope
     const idsToCheck = (id: ComponentID) => [id._legacy.toStringWithoutVersion(), id.toStringWithoutVersion()];
-    const [statePatterns, nonStatePatterns] = partition(patterns, (p) => p.startsWith('$'));
-    const idsFiltered = nonStatePatterns.length
-      ? ids.filter((id) => multimatch(idsToCheck(id), nonStatePatterns).length)
+    const [statePatterns, nonStatePatterns] = partition(patterns, (p) => p.startsWith('$') || p.includes(' AND '));
+    const nonStatePatternsNoVer = nonStatePatterns.map((p) => p.split('@')[0]); // no need for the version
+    const idsFiltered = nonStatePatternsNoVer.length
+      ? ids.filter((id) => multimatch(idsToCheck(id), nonStatePatternsNoVer).length)
       : [];
 
     const idsStateFiltered = await mapSeries(statePatterns, async (statePattern) => {
       if (!filterByStateFunc) {
         throw new Error(`filter by a state (${statePattern}) is currently supported on the workspace only`);
       }
-      statePattern = statePattern.replace('$', '');
       if (statePattern.includes(' AND ')) {
-        const statePatternSplit = statePattern.split(' AND ').map((p) => p.trim());
-        if (statePatternSplit.length !== 2) throw new Error('invalid state pattern, can have only one "AND"');
-        const [stateF, nonStateF] = statePatternSplit;
-        const filteredByNonState = ids.filter((id) => multimatch(idsToCheck(id), [nonStateF]).length);
-        return filterByStateFunc(stateF, filteredByNonState);
+        let filteredByAnd: ComponentID[] = ids;
+        const patternSplit = statePattern.split(' AND ').map((p) => p.trim());
+        for await (const onePattern of patternSplit) {
+          filteredByAnd = onePattern.startsWith('$')
+            ? await filterByStateFunc(onePattern.replace('$', ''), filteredByAnd)
+            : filteredByAnd.filter((id) => multimatch(idsToCheck(id), [onePattern.split('@')[0]]).length);
+        }
+        return filteredByAnd;
       }
-      return filterByStateFunc(statePattern, ids);
+      return filterByStateFunc(statePattern.replace('$', ''), ids);
     });
     const idsStateFilteredFlat = idsStateFiltered.flat();
     const combineFilteredIds = () => {
@@ -1225,7 +1226,7 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain,
       EnvsMain,
       DependencyResolverMain,
-      GlobalConfigMain
+      GlobalConfigMain,
     ],
     config: ScopeConfig,
     [
@@ -1241,7 +1242,7 @@ export class ScopeMain implements ComponentFactory {
       OnPostExportSlot,
       OnPostObjectsPersistSlot,
       OnPreFetchObjectsSlot,
-      OnCompAspectReCalcSlot
+      OnCompAspectReCalcSlot,
     ],
     harmony: Harmony
   ) {

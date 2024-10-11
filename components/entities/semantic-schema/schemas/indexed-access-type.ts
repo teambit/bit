@@ -5,7 +5,11 @@ export class IndexedAccessSchema extends SchemaNode {
   readonly objectType: SchemaNode;
   readonly indexType: SchemaNode;
 
-  constructor(readonly location: SchemaLocation, objectType: SchemaNode, indexType: SchemaNode) {
+  constructor(
+    readonly location: SchemaLocation,
+    objectType: SchemaNode,
+    indexType: SchemaNode
+  ) {
     super();
     this.objectType = objectType;
     this.indexType = indexType;

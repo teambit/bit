@@ -9,7 +9,10 @@ export type Provider = ComponentType<{}>;
 export type ProviderSlot = SlotRegistry<Provider[]>;
 
 export class ReactPreview {
-  constructor(private preview: PreviewPreview, private providerSlot: ProviderSlot) {}
+  constructor(
+    private preview: PreviewPreview,
+    private providerSlot: ProviderSlot
+  ) {}
 
   registerProvider(provider: Provider[]) {
     this.providerSlot.register(provider);

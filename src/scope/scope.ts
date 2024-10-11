@@ -548,7 +548,7 @@ once done, to continue working, please run "bit cc"`
   ): Promise<ComponentLog[]> {
     const componentModel = throwIfMissing ? await this.getModelComponent(id) : await this.getModelComponentIfExist(id);
     if (!componentModel) return [];
-    const startFromRef = startFrom ? componentModel.getRef(startFrom) ?? undefined : undefined;
+    const startFromRef = startFrom ? (componentModel.getRef(startFrom) ?? undefined) : undefined;
     const logs = await componentModel.collectLogs(this, shortHash, startFromRef);
     return logs;
   }

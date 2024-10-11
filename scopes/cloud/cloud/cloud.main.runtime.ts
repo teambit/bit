@@ -706,7 +706,7 @@ export class CloudMain {
       ScopeMain,
       GlobalConfigMain,
       CLIMain,
-      UiMain
+      UiMain,
     ],
     config: CloudWorkspaceConfig,
     [onSuccessLoginSlot]: [OnSuccessLoginSlot]

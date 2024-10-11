@@ -52,7 +52,11 @@ export class LintCmd implements Command {
     ['j', 'json', 'return the lint results in json format'],
   ] as CommandOptions;
 
-  constructor(private linter: LinterMain, private componentHost: ComponentFactory, private workspace: Workspace) {}
+  constructor(
+    private linter: LinterMain,
+    private componentHost: ComponentFactory,
+    private workspace: Workspace
+  ) {}
 
   async report([pattern]: [string], linterOptions: LintCmdOptions) {
     const { code, data } = await this.json([pattern], linterOptions);

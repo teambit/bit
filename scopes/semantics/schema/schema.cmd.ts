@@ -13,7 +13,11 @@ export class SchemaCommand implements Command {
   group = 'development';
   options = [['j', 'json', 'return the component schema in json format']] as CommandOptions;
 
-  constructor(private schema: SchemaMain, private component: ComponentMain, private logger: Logger) {}
+  constructor(
+    private schema: SchemaMain,
+    private component: ComponentMain,
+    private logger: Logger
+  ) {}
 
   async report([pattern]: [string]) {
     const schemas = await this.getSchemas([pattern]);

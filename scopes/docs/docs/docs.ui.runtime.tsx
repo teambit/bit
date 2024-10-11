@@ -12,7 +12,10 @@ import { OverviewSection } from './overview.section';
 import type { TitleBadgeSlot, TitleBadge, OverviewOptionsSlot, OverviewOptions } from './overview';
 
 export class DocsUI {
-  constructor(readonly titleBadgeSlot: TitleBadgeSlot, readonly overviewOptionsSlot: OverviewOptionsSlot) {}
+  constructor(
+    readonly titleBadgeSlot: TitleBadgeSlot,
+    readonly overviewOptionsSlot: OverviewOptionsSlot
+  ) {}
 
   /**
    * register a new title badge into the overview section of a component.

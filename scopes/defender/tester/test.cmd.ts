@@ -47,7 +47,11 @@ export class TestCmd implements Command {
     // TODO: we need to reduce this redundant casting every time.
   ] as CommandOptions;
 
-  constructor(private tester: TesterMain, private workspace: Workspace, private logger: Logger) {}
+  constructor(
+    private tester: TesterMain,
+    private workspace: Workspace,
+    private logger: Logger
+  ) {}
 
   async report(
     [userPattern]: [string],
@@ -121,6 +125,10 @@ otherwise, only new and modified components will be tested`);
         updateSnapshot,
       });
       if (tests.hasErrors()) code = 1;
+      if (process.exitCode && process.exitCode !== 0 && typeof process.exitCode === 'number') {
+        // this is needed for testers such as "vitest", where it sets the exitCode to non zero when the coverage is not met.
+        code = process.exitCode;
+      }
     }
     const { seconds } = timer.stop();
 

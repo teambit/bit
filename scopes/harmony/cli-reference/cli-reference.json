@@ -459,7 +459,7 @@
             "description": "configures 'ui/button' to use the 'teambit.community/envs/community-mdx@1.95.16' env"
           },
           {
-            "cmd": "set \"ui/**\" teambit.react/react-env",
+            "cmd": "set \"*/ui/**\" teambit.react/react-env",
             "description": "configures all components that have the 'ui' namespace to use the latest version of the teambit.react/react-env env"
           }
         ]
@@ -1158,7 +1158,7 @@
       ]
     ],
     "description": "list the component ids matching the given pattern",
-    "extendedDescription": "this command helps validating a pattern before using it in other commands.\nNOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes.\na pattern can be a simple component-id or component-name. e.g. 'ui/button'.\na pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes.\nto enter multiple patterns, separate them by a comma, e.g. 'ui/*, lib/*'\nto exclude, use '!'. e.g. 'ui/**, !ui/button'\nthe matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch).\n\nto filter by a state or attribute, prefix the pattern with \"$\". e.g. '$deprecated', '$modified'.\nlist of supported states: [new, modified, deprecated, deleted, snappedOnMain, softTagged, codeModified, localOnly].\nto filter by multi-params state/attribute, separate the params with \":\", e.g. '$env:teambit.react/react'.\nlist of supported multi-params states: [env].\nto match a state and another criteria, use \" AND \" keyword. e.g. '$modified AND teambit.workspace/**'. note that the state must be first.\n",
+    "extendedDescription": "this command helps validating a pattern before using it in other commands.\nNOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes.\na pattern can be a simple component-id or component-name. e.g. 'ui/button'.\na pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes.\nto enter multiple patterns, separate them by a comma, e.g. 'ui/*, lib/*'\nto exclude, use '!'. e.g. 'ui/**, !ui/button'\nthe matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch).\n\nto filter by a state or attribute, prefix the pattern with \"$\". e.g. '$deprecated', '$modified'.\nlist of supported states: [new, modified, deprecated, deleted, snappedOnMain, softTagged, codeModified, localOnly].\nto filter by multi-params state/attribute, separate the params with \":\", e.g. '$env:teambit.react/react'.\nlist of supported multi-params states: [env].\nto match a state and another criteria, use \" AND \" keyword. e.g. '$modified AND teambit.workspace/** AND $env:teambit.react/react'.\n",
     "group": "development",
     "private": false,
     "examples": [
@@ -1812,6 +1812,11 @@
         "w",
         "watch",
         "watch and compile your components upon changes"
+      ],
+      [
+        "a",
+        "args <argv>",
+        "the arguments passing to the app. for example, --args=\"--a=1 --b\". don't forget to use quotes to wrap the value to escape special characters."
       ]
     ],
     "description": "locally run an app component (independent of bit's dev server)",
@@ -1872,6 +1877,11 @@
             "w",
             "watch",
             "watch and compile your components upon changes"
+          ],
+          [
+            "a",
+            "args <argv>",
+            "the arguments passing to the app. for example, --args=\"--a=1 --b\". don't forget to use quotes to wrap the value to escape special characters."
           ]
         ],
         "description": "locally run an app component (independent of bit's dev server)",
@@ -2815,6 +2825,11 @@
         "open a browser once the export is completed in the cloud job url"
       ],
       [
+        "",
+        "verbose",
+        "per exported component, show the versions being exported"
+      ],
+      [
         "j",
         "json",
         "show output in json format"
@@ -3144,6 +3159,11 @@
         "",
         "rebuild-artifacts",
         "run the full build pipeline. do not use the saved artifacts from the last snap"
+      ],
+      [
+        "",
+        "ignore-last-pkg-json",
+        "ignore the package.json created by the last snap"
       ],
       [
         "m",
@@ -4290,7 +4310,7 @@
           [
             "",
             "include-deps",
-            "relevant for \"--pattern\" and \"--workspace\". merge also dependencies of the specified components"
+            "relevant for \"pattern\" and \"--workspace\". merge also dependencies of the specified components"
           ],
           [
             "",

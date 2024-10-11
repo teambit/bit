@@ -100,7 +100,10 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
   private = true;
   remoteOp = true;
 
-  constructor(private mergeLanes: MergeLanesMain, private globalConfig: GlobalConfigMain) {}
+  constructor(
+    private mergeLanes: MergeLanesMain,
+    private globalConfig: GlobalConfigMain
+  ) {}
 
   async report(
     [name, pattern]: [string, string],

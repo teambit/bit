@@ -6,7 +6,11 @@ import { PermissionDenied } from '.';
  * @see https://www.npmjs.com/package/graphql-request#error-handling
  */
 export class GraphQLClientError extends BitError {
-  constructor(private err: ClientError, private url: string, private scopeName: string) {
+  constructor(
+    private err: ClientError,
+    private url: string,
+    private scopeName: string
+  ) {
     super(JSON.stringify(err, undefined, 2));
     this.stack = err.stack;
   }

@@ -58,9 +58,7 @@ function CodeCompareNav({
                   <img src={getFileIcon(fileIconMatchers, file)} alt="file-icon" />
                   <span>{file}</span>
                   <div className={styles.codeCompareTabRight}>
-                    {widgets?.map((Widget, widgetIndex) => (
-                      <Widget key={widgetIndex} node={{ id: file }} />
-                    ))}
+                    {widgets?.map((Widget, widgetIndex) => <Widget key={widgetIndex} node={{ id: file }} />)}
                   </div>
                 </div>
               ),

@@ -37,7 +37,11 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
   remoteOp = true;
   skipWorkspace = true;
 
-  constructor(private workspace: Workspace, private scope: ScopeMain, private componentCompare: ComponentCompareMain) {}
+  constructor(
+    private workspace: Workspace,
+    private scope: ScopeMain,
+    private componentCompare: ComponentCompareMain
+  ) {}
 
   async report([values = []]: [string[]], { pattern }: { pattern?: string }) {
     const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);

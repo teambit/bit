@@ -6,7 +6,11 @@ export type StarterListOptions = {
 };
 
 export class StarterList {
-  constructor(readonly name: string, private starters: EnvHandler<WorkspaceTemplate>[], private context: EnvContext) {}
+  constructor(
+    readonly name: string,
+    private starters: EnvHandler<WorkspaceTemplate>[],
+    private context: EnvContext
+  ) {}
 
   compute(): WorkspaceTemplate[] {
     return this.starters.map((starter) => starter(this.context));

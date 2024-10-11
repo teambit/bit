@@ -38,6 +38,7 @@ import {
 import { DependenciesAspect } from './dependencies.aspect';
 import { DebugDependencies } from './dependencies-loader/auto-detect-deps';
 import { DependentsCmd } from './dependents-cmd';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 
 export type RemoveDependencyResult = { id: ComponentID; removedPackages: string[] };
 export type SetDependenciesResult = { changedComps: string[]; addedPackages: Record<string, string> };
@@ -65,7 +66,8 @@ export class DependenciesMain {
     private dependencyResolver: DependencyResolverMain,
     private devFiles: DevFilesMain,
     private aspectLoader: AspectLoaderMain,
-    private graph: GraphMain
+    private graph: GraphMain,
+    private logger: Logger
   ) {}
 
   async setPeer(componentId: string, range?: string): Promise<void> {
@@ -235,7 +237,8 @@ export class DependenciesMain {
       component,
       this.dependencyResolver,
       this.devFiles,
-      this.aspectLoader
+      this.aspectLoader,
+      this.logger
     );
     return dependenciesLoader.load(this.workspace, opts);
   }
@@ -251,7 +254,8 @@ export class DependenciesMain {
       component,
       this.dependencyResolver,
       this.devFiles,
-      this.aspectLoader
+      this.aspectLoader,
+      this.logger
     );
     return dependenciesLoader.loadFromScope(dependenciesData);
   }
@@ -385,20 +389,23 @@ export class DependenciesMain {
     AspectLoaderAspect,
     ScopeAspect,
     GraphAspect,
+    LoggerAspect,
   ];
 
   static runtime = MainRuntime;
 
-  static async provider([cli, workspace, depsResolver, devFiles, aspectLoader, scope, graph]: [
+  static async provider([cli, workspace, depsResolver, devFiles, aspectLoader, scope, graph, loggerMain]: [
     CLIMain,
     Workspace,
     DependencyResolverMain,
     DevFilesMain,
     AspectLoaderMain,
     ScopeMain,
-    GraphMain
+    GraphMain,
+    LoggerMain,
   ]) {
-    const depsMain = new DependenciesMain(workspace, scope, depsResolver, devFiles, aspectLoader, graph);
+    const logger = loggerMain.createLogger(DependenciesAspect.id);
+    const depsMain = new DependenciesMain(workspace, scope, depsResolver, devFiles, aspectLoader, graph, logger);
     const depsCmd = new DependenciesCmd();
     depsCmd.commands = [
       new DependenciesGetCmd(depsMain),

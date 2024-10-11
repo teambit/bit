@@ -7,7 +7,10 @@ import { SchemaRegistry } from '../schema-registry';
  */
 export class ParenthesizedTypeSchema extends SchemaNode {
   readonly type: SchemaNode;
-  constructor(readonly location: SchemaLocation, type: SchemaNode) {
+  constructor(
+    readonly location: SchemaLocation,
+    type: SchemaNode
+  ) {
     super();
     this.type = type;
   }

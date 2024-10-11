@@ -136,13 +136,13 @@ export class ComponentConfigMerger {
       // exist in other but not in current and base, so it got created on other.
       return { id, mergedConfig: this.getConfig(otherExt) };
     });
-    const envResult = [this.envStrategy()] || [];
+    const envResult = this.envStrategy();
     this.logger.debug(`*** end config-merger for ${this.compIdStr} ***\n`);
     return new ConfigMergeResult(
       this.compIdStr,
       this.currentLabel,
       this.otherLabel,
-      compact([...results, ...otherAspectsNotHandledResults, ...envResult])
+      compact([...results, ...otherAspectsNotHandledResults, envResult])
     );
   }
 

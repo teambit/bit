@@ -340,7 +340,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     CompilerMain,
     LoggerMain,
     EnvsMain,
-    RemoveMain
+    RemoveMain,
   ]) {
     const logger = loggerMain.createLogger(RenamingAspect.id);
     const renaming = new RenamingMain(

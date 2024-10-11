@@ -21,7 +21,10 @@ export type LinterConfig = {
 export class LinterMain {
   static runtime = MainRuntime;
 
-  constructor(private envs: EnvsMain, private linterService: LinterService) {}
+  constructor(
+    private envs: EnvsMain,
+    private linterService: LinterService
+  ) {}
 
   /**
    * lint an array of components.

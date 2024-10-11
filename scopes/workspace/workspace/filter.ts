@@ -53,10 +53,12 @@ export class Filter {
   }
 
   async byEnv(env: string, withinIds?: ComponentID[]): Promise<ComponentID[]> {
-    const ids = withinIds || (await this.workspace.listIds());
+    const ids = withinIds || this.workspace.listIds();
     const comps = await this.workspace.getMany(ids);
     const compsUsingEnv = comps.filter((c) => {
       const envId = this.workspace.envs.getEnvId(c);
+      if (envId === env) return true;
+      // try without version
       const envIdWithoutVer = ComponentID.getStringWithoutVersion(envId);
       return envIdWithoutVer === env;
     });

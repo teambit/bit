@@ -1306,7 +1306,9 @@ module.exports.default = {
 }`
       );
       helper.extensions.addExtensionToVariant('custom-react', 'teambit.envs/env', {});
-      helper.command.install();
+      // for unclear reason, since upgrading core-envs to use @types/node@20.12.10, the following line throws an error "Unexpected token 'export'"
+      // helper.command.install();
+      helper.command.install('--add-missing-deps');
     });
     after(() => {
       helper.scopeHelper.destroy();

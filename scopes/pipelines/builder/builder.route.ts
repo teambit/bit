@@ -14,7 +14,11 @@ export type BuilderUrlParams = {
 };
 export const defaultExtension = '.tgz';
 export class BuilderRoute implements Route {
-  constructor(private builder: BuilderMain, private scope: ScopeMain, private logger: Logger) {}
+  constructor(
+    private builder: BuilderMain,
+    private scope: ScopeMain,
+    private logger: Logger
+  ) {}
   route = `/${routePath}/*`;
   method = 'get';
 

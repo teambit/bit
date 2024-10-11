@@ -30,7 +30,11 @@ const EVENTS_DIR = 'events';
  * is onPostInstall and then triggers its own OnPostInstall slot.
  */
 export class IpcEventsMain {
-  constructor(private scope: ScopeMain, private gotEventSlot: GotEventSlot, private logger: Logger) {}
+  constructor(
+    private scope: ScopeMain,
+    private gotEventSlot: GotEventSlot,
+    private logger: Logger
+  ) {}
 
   registerGotEventSlot(fn: GotEvent) {
     this.gotEventSlot.register(fn);

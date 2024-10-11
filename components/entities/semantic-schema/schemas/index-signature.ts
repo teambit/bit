@@ -10,7 +10,11 @@ import { ParameterSchema } from './parameter';
 export class IndexSignatureSchema extends SchemaNode {
   readonly keyType: SchemaNode;
   readonly valueType: SchemaNode;
-  constructor(readonly location: SchemaLocation, keyType: ParameterSchema, valueType: SchemaNode) {
+  constructor(
+    readonly location: SchemaLocation,
+    keyType: ParameterSchema,
+    valueType: SchemaNode
+  ) {
     super();
     this.keyType = keyType;
     this.valueType = valueType;

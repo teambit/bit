@@ -165,7 +165,7 @@ function SchemaMethodMember({
   const memberSignature =
     member.__schema === SetAccessorSchema.name
       ? `(${(member as SetAccessorSchema).param.toString()}) => void`
-      : transformSignature(member)?.split(member.name ?? '')[1] ?? member.signature;
+      : (transformSignature(member)?.split(member.name ?? '')[1] ?? member.signature);
 
   const { renderers } = apiNodeRendererProps;
   const { doc } = member;

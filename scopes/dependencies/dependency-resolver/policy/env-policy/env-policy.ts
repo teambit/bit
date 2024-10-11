@@ -44,7 +44,10 @@ export type EnvPolicyLegacyConfigObject = Pick<EnvPolicyEnvJsoncConfigObject, 'p
 export type EnvPolicyConfigObject = EnvPolicyEnvJsoncConfigObject | EnvPolicyLegacyConfigObject;
 
 export class EnvPolicy extends VariantPolicy {
-  constructor(_policiesEntries: VariantPolicyEntry[], readonly selfPolicy: VariantPolicy) {
+  constructor(
+    _policiesEntries: VariantPolicyEntry[],
+    readonly selfPolicy: VariantPolicy
+  ) {
     super(_policiesEntries);
   }
 

@@ -3,7 +3,11 @@ import { SchemaRegistry } from '../schema-registry';
 
 export class TypeOperatorSchema extends SchemaNode {
   type: SchemaNode;
-  constructor(readonly location: SchemaLocation, readonly name: string, type: SchemaNode) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly name: string,
+    type: SchemaNode
+  ) {
     super();
     this.type = type;
   }

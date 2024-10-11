@@ -12,7 +12,7 @@ import mapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import { UNMERGED_FILENAME } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
-import chokidar, { FSWatcher } from '@teambit/chokidar';
+import chokidar, { FSWatcher } from 'chokidar';
 import { ComponentMap } from '@teambit/legacy.bit-map';
 import { CompilationInitiator } from '@teambit/compiler';
 import {
@@ -104,7 +104,15 @@ export class Watcher {
       }
       watcher.on('ready', () => {
         msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
-        // console.log(this.fsWatcher.getWatched());
+        if (this.verbose) {
+          const watched = this.fsWatcher.getWatched();
+          const totalWatched = Object.values(watched).flat().length;
+          logger.console(
+            `${chalk.bold('the following files are being watched:')}\n${JSON.stringify(watched, null, 2)}`
+          );
+          logger.console(`\nTotal files being watched: ${chalk.bold(totalWatched.toString())}`);
+        }
+
         loader.stop();
       });
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -429,31 +437,28 @@ export class Watcher {
   private async createWatcher() {
     const usePollingConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_POLLING);
     const usePolling = usePollingConf === 'true';
-    // const useFsEventsConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_FS_EVENTS);
-    // const useFsEvents = useFsEventsConf === 'true';
+    const workspacePathLinux = pathNormalizeToLinux(this.workspace.path);
     const ignoreLocalScope = (pathToCheck: string) => {
+      // chokidar 4 doesn't support glob patterns. so we we have to check it with a function.
+      if (pathToCheck.endsWith('/node_modules')) return true;
+      // if (pathToCheck.includes('/node_modules/')) return true;
+      if (pathToCheck.endsWith('/package.json')) return true;
       if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
       return (
-        pathToCheck.startsWith(`${this.workspace.path}/.git/`) || pathToCheck.startsWith(`${this.workspace.path}/.bit/`)
+        pathToCheck.startsWith(`${workspacePathLinux}/.git/`) || pathToCheck.startsWith(`${workspacePathLinux}/.bit/`)
       );
     };
     this.fsWatcher = chokidar.watch(this.workspace.path, {
       ignoreInitial: true,
       // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
       // (windows-style backslashes are converted to forward slashes)
-      ignored: ['**/node_modules/**', '**/package.json', ignoreLocalScope],
-      /**
-       * default to false, although it causes high CPU usage.
-       * see: https://github.com/paulmillr/chokidar/issues/1196#issuecomment-1711033539
-       * there is a fix for this in master. once a new version of Chokidar is released, we can upgrade it and then
-       * default to true.
-       */
+      ignored: [ignoreLocalScope],
       usePolling,
       // useFsEvents,
       persistent: true,
     });
     if (this.verbose) {
-      logger.console(`chokidar.options ${JSON.stringify(this.fsWatcher.options, undefined, 2)}`);
+      logger.console(`${chalk.bold('chokidar.options:\n')} ${JSON.stringify(this.fsWatcher.options, undefined, 2)}`);
     }
   }
 

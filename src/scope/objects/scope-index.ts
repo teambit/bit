@@ -18,7 +18,11 @@ interface IndexItem {
 }
 
 export class ComponentItem implements IndexItem {
-  constructor(public id: { scope: string | null; name: string }, public isSymlink: boolean, public hash: string) {}
+  constructor(
+    public id: { scope: string | null; name: string },
+    public isSymlink: boolean,
+    public hash: string
+  ) {}
 
   toIdentifierString(): string {
     const scope = this.id.scope ? `${this.id.scope}/` : '';
@@ -27,7 +31,10 @@ export class ComponentItem implements IndexItem {
 }
 
 export class LaneItem implements IndexItem {
-  constructor(public id: { scope: string; name: string }, public hash: string) {}
+  constructor(
+    public id: { scope: string; name: string },
+    public hash: string
+  ) {}
 
   toIdentifierString() {
     const scope = this.id.scope ? `${this.id.scope}/` : '';

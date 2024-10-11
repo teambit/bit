@@ -7,7 +7,11 @@ import { SchemaRegistry } from '../schema-registry';
 export class TypeQuerySchema extends SchemaNode {
   readonly type: SchemaNode;
 
-  constructor(readonly location: SchemaLocation, type: SchemaNode, readonly signature: string) {
+  constructor(
+    readonly location: SchemaLocation,
+    type: SchemaNode,
+    readonly signature: string
+  ) {
     super();
     this.type = type;
   }

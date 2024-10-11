@@ -56,7 +56,7 @@ type ReactDeps = [
   LoggerMain,
   SchemaMain,
   WorkerMain,
-  DevFilesMain
+  DevFilesMain,
 ];
 
 export type ReactMainConfig = {

@@ -45,7 +45,11 @@ type ArtifactFilesObject = {
  * 3. Finally, once the Version object is saved, it needs to save only the hash of the artifacts, hence ArtifactModel.
  */
 export class ArtifactFiles {
-  constructor(public paths: string[] = [], public vinyls: ArtifactVinyl[] = [], public refs: ArtifactRef[] = []) {}
+  constructor(
+    public paths: string[] = [],
+    public vinyls: ArtifactVinyl[] = [],
+    public refs: ArtifactRef[] = []
+  ) {}
 
   clone() {
     const vinyls = this.vinyls.map((vinyl) => vinyl.clone());

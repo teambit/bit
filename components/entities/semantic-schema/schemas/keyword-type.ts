@@ -4,7 +4,10 @@ import { SchemaLocation, SchemaNode } from '../schema-node';
  * e.g. 'string', 'boolean', etc.
  */
 export class KeywordTypeSchema extends SchemaNode {
-  constructor(readonly location: SchemaLocation, readonly name: string) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly name: string
+  ) {
     super();
   }
 

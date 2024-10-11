@@ -65,12 +65,13 @@ Learn the recommended workflow for tracking directories as components, in the li
 | ---------- | :--------------------------------------------------------------------------------------------------: |
 | `app-name` | the app's name is registered by the app (run 'bit app list' to list the names of the available apps) |
 
-| **Option**             | **Option alias** | **Description**                                          |
-| ---------------------- | :--------------: | -------------------------------------------------------- |
-| `--dev`                |       `-d`       | start the application in dev mode.                       |
-| `--port [port-number]` |       `-p`       | port to run the app on                                   |
-| `--verbose`            |       `-v`       | show verbose output for inspection and print stack trace |
-| `--watch`              |       `-w`       | watch and compile your components upon changes           |
+| **Option**             | **Option alias** | **Description**                                                                                                                               |
+| ---------------------- | :--------------: | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--dev`                |       `-d`       | start the application in dev mode.                                                                                                            |
+| `--port [port-number]` |       `-p`       | port to run the app on                                                                                                                        |
+| `--verbose`            |       `-v`       | show verbose output for inspection and print stack trace                                                                                      |
+| `--watch`              |       `-w`       | watch and compile your components upon changes                                                                                                |
+| `--args <argv>`        |       `-a`       | the arguments passing to the app. for example, --args="--a=1 --b". don't forget to use quotes to wrap the value to escape special characters. |
 
 ---
 
@@ -801,6 +802,7 @@ bit export => export all staged snaps/tags of components to their remote scope. 
 | `--ignore-missing-artifacts` |                  | don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote |
 | `--fork-lane-new-scope`      |                  | allow exporting a forked lane into a different scope than the original scope                                              |
 | `--open-browser`             |                  | open a browser once the export is completed in the cloud job url                                                          |
+| `--verbose`                  |                  | per exported component, show the versions being exported                                                                  |
 | `--json`                     |       `-j`       | show output in json format                                                                                                |
 
 ---
@@ -1293,7 +1295,7 @@ this flag keeps the history of one end and saves a reference to the other end. t
 | `--verbose`                             |                  | show details of components that were not merged successfully                                                                                                |
 | `--skip-dependency-installation`        |       `-x`       | do not install dependencies of the imported components                                                                                                      |
 | `--skip-fetch`                          |                  | use the local state of target-lane if exits locally, without updating it from the remote                                                                    |
-| `--include-deps`                        |                  | relevant for "--pattern" and "--workspace". merge also dependencies of the specified components                                                             |
+| `--include-deps`                        |                  | relevant for "pattern" and "--workspace". merge also dependencies of the specified components                                                               |
 | `--resolve-unrelated [merge-strategy]`  |                  | relevant when a component on a lane and the component on main have nothing in common. merge-strategy can be "ours" (default) or "theirs"                    |
 | `--include-non-lane-comps`              |                  | DEPRECATED (this is now the default). when merging main, include workspace components that are not on the lane (by default only lane components are merged) |
 | `--exclude-non-lane-comps`              |                  | when merging main into a lane, exclude workspace components that are not on the lane (by default all workspace components are merged)                       |
@@ -1619,7 +1621,7 @@ to filter by a state or attribute, prefix the pattern with "$". e.g. '$deprecate
 list of supported states: [new, modified, deprecated, deleted, snappedOnMain, softTagged, codeModified, localOnly].  
 to filter by multi-params state/attribute, separate the params with ":", e.g. '$env:teambit.react/react'.  
 list of supported multi-params states: [env].  
-to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/\*\*'. note that the state must be first.
+to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/\*\* AND $env:teambit.react/react'.
 
 `bit pattern <pattern>`
 
@@ -1786,12 +1788,13 @@ https://bit.dev/components/tags#undoing-a-tag
 | ---------- | :--------------------------------------------------------------------------------------------------: |
 | `app-name` | the app's name is registered by the app (run 'bit app list' to list the names of the available apps) |
 
-| **Option**             | **Option alias** | **Description**                                          |
-| ---------------------- | :--------------: | -------------------------------------------------------- |
-| `--dev`                |       `-d`       | start the application in dev mode.                       |
-| `--port [port-number]` |       `-p`       | port to run the app on                                   |
-| `--verbose`            |       `-v`       | show verbose output for inspection and print stack trace |
-| `--watch`              |       `-w`       | watch and compile your components upon changes           |
+| **Option**             | **Option alias** | **Description**                                                                                                                               |
+| ---------------------- | :--------------: | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--dev`                |       `-d`       | start the application in dev mode.                                                                                                            |
+| `--port [port-number]` |       `-p`       | port to run the app on                                                                                                                        |
+| `--verbose`            |       `-v`       | show verbose output for inspection and print stack trace                                                                                      |
+| `--watch`              |       `-w`       | watch and compile your components upon changes                                                                                                |
+| `--args <argv>`        |       `-a`       | the arguments passing to the app. for example, --args="--a=1 --b". don't forget to use quotes to wrap the value to escape special characters. |
 
 ---
 

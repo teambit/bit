@@ -56,7 +56,7 @@ export class ForkCmd implements Command {
     {
       cmd: 'fork teambit.base-ui/input/button ui/button';
       description: "create a component named 'ui/button', forked from the remote 'input/button' component";
-    }
+    },
   ];
   loader = true;
   remoteOp = true;

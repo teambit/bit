@@ -4,7 +4,11 @@ import { SchemaLocation, SchemaNode } from '../../schema-node';
  * e.g. `@deprecated please use something else`
  */
 export class TagSchema extends SchemaNode {
-  constructor(readonly location: SchemaLocation, readonly tagName: TagName | string, readonly comment?: string) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly tagName: TagName | string,
+    readonly comment?: string
+  ) {
     super();
   }
 
