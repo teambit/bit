@@ -44,6 +44,7 @@ export type InstallOptions = {
   forceTeambitHarmonyLink?: boolean;
   excludeExtensionsDependencies?: boolean;
   dedupeInjectedDeps?: boolean;
+  dependenciesGraph?: any;
 };
 
 export type GetComponentManifestsOptions = {
@@ -102,7 +103,7 @@ export class DependencyInstaller {
 
     private preferOffline?: boolean,
 
-    private installingContext: DepInstallerContext = {},
+    private installingContext: DepInstallerContext = {}
   ) {}
 
   async install(
@@ -110,7 +111,7 @@ export class DependencyInstaller {
     rootPolicy: WorkspacePolicy,
     componentDirectoryMap: ComponentMap<string>,
     options: InstallOptions = DEFAULT_INSTALL_OPTIONS,
-    packageManagerOptions: PackageManagerInstallOptions = DEFAULT_PM_INSTALL_OPTIONS,
+    packageManagerOptions: PackageManagerInstallOptions = DEFAULT_PM_INSTALL_OPTIONS
   ) {
     const finalRootDir = rootDir ?? this.rootDir;
     if (!finalRootDir) {
@@ -131,7 +132,7 @@ export class DependencyInstaller {
       rootPolicy,
       componentDirectoryMap,
       options,
-      packageManagerOptions,
+      packageManagerOptions
     );
   }
 
@@ -141,7 +142,7 @@ export class DependencyInstaller {
     rootPolicy: WorkspacePolicy,
     componentDirectoryMap: ComponentMap<string>,
     options: InstallOptions = DEFAULT_INSTALL_OPTIONS,
-    packageManagerOptions: PackageManagerInstallOptions = DEFAULT_PM_INSTALL_OPTIONS,
+    packageManagerOptions: PackageManagerInstallOptions = DEFAULT_PM_INSTALL_OPTIONS
   ): Promise<{ dependenciesChanged: boolean }> {
     const args = {
       componentDirectoryMap,
@@ -159,7 +160,7 @@ export class DependencyInstaller {
     if (options.linkedDependencies) {
       manifests = JSON.parse(JSON.stringify(manifests));
       const linkedDependencies = JSON.parse(
-        JSON.stringify(options.linkedDependencies),
+        JSON.stringify(options.linkedDependencies)
       ) as typeof options.linkedDependencies;
       if (linkedDependencies[finalRootDir]) {
         const directDeps = new Set<string>();
@@ -205,6 +206,7 @@ export class DependencyInstaller {
       neverBuiltDependencies: ['core-js', ...(this.neverBuiltDependencies ?? [])],
       preferOffline: this.preferOffline,
       dedupeInjectedDeps: options.dedupeInjectedDeps,
+      dependenciesGraph: options.dependenciesGraph,
       ...packageManagerOptions,
     };
     if (options.installTeambitBit) {
@@ -252,7 +254,7 @@ export class DependencyInstaller {
         manifests,
         componentDirectoryMap,
       },
-      calculatedPmOpts,
+      calculatedPmOpts
     );
     if (!hidePackageManagerOutput) {
       this.logger.consoleSuccess(`done ${message}`, startTime);
@@ -303,7 +305,7 @@ export class DependencyInstaller {
       rootDir,
       componentDirectoryMap.components,
       options,
-      this.installingContext,
+      this.installingContext
     );
     const manifests: Record<string, ProjectManifest> = componentDirectoryMap
       .toArray()
@@ -335,7 +337,7 @@ export class DependencyInstaller {
   private async runPrePostSubscribers(
     subscribers: PreInstallSubscriberList | PostInstallSubscriberList = [],
     type: 'pre' | 'post',
-    args: InstallArgs,
+    args: InstallArgs
   ): Promise<void> {
     const message = this.installingContext?.inCapsule
       ? `(capsule) running ${type} install subscribers in root dir ${this.rootDir}`

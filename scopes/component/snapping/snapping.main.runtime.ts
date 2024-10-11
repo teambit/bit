@@ -212,6 +212,7 @@ export class SnappingMain {
         scope: this.scope,
         snapping: this,
         builder: this.builder,
+        components,
         consumerComponents,
         ids: compIds,
         message,
@@ -338,6 +339,7 @@ if you're willing to lose the history from the head to the specified version, us
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
+      components,
       consumerComponents,
       tagDataPerComp,
       populateArtifactsFrom: shouldUsePopulateArtifactsFrom ? components.map((c) => c.id) : undefined,
@@ -502,6 +504,7 @@ if you're willing to lose the history from the head to the specified version, us
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
+      components,
       consumerComponents,
       tagDataPerComp: snapDataPerComp.map((s) => ({
         componentId: s.componentId,
@@ -595,6 +598,7 @@ if you're willing to lose the history from the head to the specified version, us
       snapping: this,
       builder: this.builder,
       editor,
+      components,
       consumerComponents,
       ids,
       ignoreNewestVersion: false,
@@ -754,6 +758,24 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       flattenedEdgesGetter.populateFlattenedAndEdgesForComp(component);
     });
     this.logger.profile('snap._addFlattenedDependenciesToComponents');
+  }
+
+  async _addDependenciesGraphToComponents(consumerComponents: ConsumerComponent[], components: Component[]) {
+    loader.start('importing missing dependencies...');
+    this.logger.profile('snap._addDependenciesGraphToComponents');
+    await Promise.all(
+      consumerComponents.map(async (consumerComponent, index) => {
+        if (consumerComponent.componentMap?.rootDir) {
+          consumerComponent.dependenciesGraph = await this.dependencyResolver.getDependenciesGraph(
+            components[index],
+            this.workspace.path,
+            this.workspace.rootComponentsPath,
+            consumerComponent.componentMap.rootDir
+          );
+        }
+      })
+    );
+    this.logger.profile('snap._addDependenciesGraphToComponents');
   }
 
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
@@ -993,13 +1015,15 @@ another option, in case this dependency is not in main yet is to remove all refe
     const component = await this.scope.legacyScope.sources.findOrAddComponent(source as any);
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
-    const { version, files, flattenedEdges } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
+    const { version, files, flattenedEdges, dependenciesGraph } =
+      await this.scope.legacyScope.sources.consumerComponentToVersion(source);
     version.origin = {
       id: { scope: source.scope || (source.defaultScope as string), name: source.name },
       lane: lane ? { scope: lane.scope, name: lane.name, hash: lane.hash().toString() } : undefined,
     };
     objectRepo.add(version);
     if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
+    if (dependenciesGraph) this.objectsRepo.add(dependenciesGraph);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
     component.addVersion(version, source.version, lane, source.previouslyUsedVersion, updateDependentsOnLane);
     objectRepo.add(component);

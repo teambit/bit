@@ -1,5 +1,6 @@
 import rimraf from 'rimraf';
 import { v4 } from 'uuid';
+import { Version } from '@teambit/legacy/dist/scope/models';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
@@ -699,12 +700,28 @@ export class IsolatorMain {
           })
         );
       } else {
+        let allGraph = null;
+        if (legacyScope) {
+          await Promise.all(
+            capsuleList.map(async (capsule) => {
+              const graph = await this.getDependenciesGraphFromModel(legacyScope, capsule.component.id);
+              if (allGraph == null) {
+                allGraph = graph;
+              } else {
+                Object.assign(allGraph.directDependencies, graph.directDependencies);
+                Object.assign(allGraph.packages, graph.packages);
+              }
+            })
+          );
+        }
+
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
           cachePackagesOnCapsulesRoot,
           linkedDependencies,
           packageManager: opts.packageManager,
+          dependenciesGraph: allGraph,
         });
       }
       if (installLongProcessLogger) {
@@ -735,6 +752,16 @@ export class IsolatorMain {
     }
 
     return allCapsuleList;
+  }
+
+  private async getDependenciesGraphFromModel(legacyScope: Scope, id: ComponentID) {
+    let versionObj: Version;
+    try {
+      versionObj = await legacyScope.getVersionInstance(id);
+    } catch (err) {
+      return undefined;
+    }
+    return versionObj.getDependenciesGraph(legacyScope.objects);
   }
 
   private async markCapsulesAsReady(capsuleList: CapsuleList): Promise<void> {
@@ -777,6 +804,7 @@ export class IsolatorMain {
       linkedDependencies?: Record<string, Record<string, string>>;
       packageManager?: string;
       nodeLinker?: NodeLinker;
+      dependenciesGraph?: any;
     }
   ) {
     const installer = this.dependencyResolver.getInstaller({
@@ -798,6 +826,7 @@ export class IsolatorMain {
       forceTeambitHarmonyLink: !this.dependencyResolver.hasHarmonyInRootPolicy(),
       excludeExtensionsDependencies: true,
       dedupeInjectedDeps: true,
+      dependenciesGraph: opts.dependenciesGraph,
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {

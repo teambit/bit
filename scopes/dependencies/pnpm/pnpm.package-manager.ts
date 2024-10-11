@@ -1,4 +1,5 @@
 import { CloudMain } from '@teambit/cloud';
+import { BitError } from '@teambit/bit-error';
 import {
   DependencyResolverMain,
   extendWithComponentsFromDir,
@@ -18,7 +19,9 @@ import { Logger } from '@teambit/logger';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
+import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
 import { Config } from '@pnpm/config';
+import { type ProjectId } from '@pnpm/types';
 import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
 import {
   buildDependenciesHierarchy,
@@ -27,6 +30,7 @@ import {
   PackageNode,
 } from '@pnpm/reviewing.dependencies-hierarchy';
 import { renderTree } from '@pnpm/list';
+import { writeWantedLockfile, getLockfileImporterId } from '@pnpm/lockfile.fs';
 import { readWantedLockfile } from '@pnpm/lockfile-file';
 import { type ProjectManifest, type DepPath } from '@pnpm/types';
 import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
@@ -70,6 +74,40 @@ export class PnpmPackageManager implements PackageManager {
     private cloud: CloudMain
   ) {}
 
+  async dependenciesGraphToLockfile(
+    dependenciesGraph: any,
+    manifests: Record<string, ProjectManifest>,
+    rootDir: string
+  ) {
+    const lockfile = {
+      importers: {},
+      snapshots: dependenciesGraph.snapshots,
+      packages: dependenciesGraph.packages,
+    };
+    for (const [projectDir, manifest] of Object.entries(manifests)) {
+      const projectId = getLockfileImporterId(rootDir, projectDir);
+      lockfile.importers[projectId] = {
+        dependencies: {},
+        devDependencies: {},
+        optionalDependencies: {},
+        specifiers: {},
+      };
+      for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
+        for (const [name, spec] of Object.entries(manifest[depType] ?? {})) {
+          const directDep = dependenciesGraph.directDependencies[`${name}@${spec}`];
+          if (directDep) {
+            lockfile.importers[projectId][depType][name] = directDep;
+            lockfile.importers[projectId].specifiers[name] = spec;
+          }
+        }
+      }
+    }
+    lockfile.bit = {
+      restoredFromModel: true,
+    };
+    await writeWantedLockfile(rootDir, lockfile);
+  }
+
   async install(
     { rootDir, manifests }: InstallationContext,
     installOptions: PackageManagerInstallOptions = {}
@@ -77,6 +115,10 @@ export class PnpmPackageManager implements PackageManager {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
+
+    if (installOptions.dependenciesGraph) {
+      await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, manifests, rootDir);
+    }
 
     this.logger.debug(`running installation in root dir ${rootDir}`);
     this.logger.debug('components manifests for installation', manifests);
@@ -351,6 +393,55 @@ export class PnpmPackageManager implements PackageManager {
       long: false,
       showExtraneous: false,
     });
+  }
+
+  async getDependenciesGraph(
+    workspaceDir: string,
+    componentRootDir: string,
+    pkgName: string,
+    componentRelativeDir: string
+  ): Promise<any> {
+    const lockfile = await readWantedLockfile(workspaceDir, { ignoreIncompatible: false });
+    if (!lockfile) {
+      throw new BitError('Cannot get the depednency graph without a lockfile. Try running "bit install".');
+    }
+    const partialLockfile = filterLockfileByImporters(
+      lockfile,
+      [componentRootDir as ProjectId, componentRelativeDir as ProjectId],
+      {
+        include: {
+          dependencies: true,
+          devDependencies: true,
+          optionalDependencies: true,
+        },
+        failOnMissingDependencies: false,
+        skipped: new Set(),
+      }
+    );
+    const specifiers = partialLockfile.importers[componentRootDir].specifiers;
+    const componentDevImporter = partialLockfile.importers[componentRelativeDir];
+    const directDependencies = {};
+    for (const [name, version] of Object.entries(componentDevImporter.devDependencies)) {
+      directDependencies[`${name}@${componentDevImporter.specifiers[name]}`] = version;
+    }
+    const lockedPkg =
+      partialLockfile.packages![`${pkgName}@${partialLockfile.importers[componentRootDir].dependencies[pkgName]}`];
+    for (const depType of ['dependencies', 'optionalDependencies']) {
+      for (const [name, version] of Object.entries(lockedPkg[depType] ?? {})) {
+        directDependencies[`${name}@${componentDevImporter.specifiers[name]}`] = version;
+      }
+    }
+    partialLockfile.importers = {
+      ['.' as ProjectId]:
+        partialLockfile.packages![`${pkgName}@${partialLockfile.importers[componentRootDir].dependencies[pkgName]}`],
+    };
+    partialLockfile.directDependencies = directDependencies;
+    partialLockfile.importers['.'].devDependencies = componentDevImporter.devDependencies;
+    partialLockfile.importers['.'].specifiers = {
+      ...componentDevImporter.specifiers,
+      ...specifiers,
+    };
+    return partialLockfile;
   }
 }
 

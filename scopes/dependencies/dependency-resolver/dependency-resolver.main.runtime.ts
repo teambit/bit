@@ -532,10 +532,22 @@ export class DependencyResolverMain {
       // in that case we return the dir from the root node_modules
       return this.getModulePath(component);
     }
-    const envId = this.envs.getEnvId(component);
-    const dirInEnvRoot = join(getRelativeRootComponentDir(envId), 'node_modules', pkgName);
+    const dirInEnvRoot = join(this.getComponentDirInBitRoots(component, options), 'node_modules', pkgName);
     if (fs.pathExistsSync(dirInEnvRoot)) return dirInEnvRoot;
     return this.getModulePath(component);
+  }
+
+  getComponentDirInBitRoots(
+    component: Component,
+    options: {
+      workspacePath: string;
+      rootComponentsPath: string;
+    }
+  ) {
+    const envId = this.envs.getEnvId(component);
+    const rootComponentsRelativePath = relative(options.workspacePath, options.rootComponentsPath);
+    const getRelativeRootComponentDir = getRootComponentDir.bind(null, rootComponentsRelativePath ?? '');
+    return getRelativeRootComponentDir(envId);
   }
 
   /**
@@ -546,6 +558,21 @@ export class DependencyResolverMain {
     const pkgName = this.getPackageName(component);
     const relativePath = join('node_modules', pkgName);
     return relativePath;
+  }
+
+  async getDependenciesGraph(
+    component: Component,
+    workspaceDir: string,
+    rootComponentsPath: string,
+    componentRelativeDir: string
+  ): Promise<any> {
+    const dirInEnvRoot = this.getComponentDirInBitRoots(component, {
+      workspacePath: workspaceDir,
+      rootComponentsPath,
+    });
+    const pkgName = this.getPackageName(component);
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    return packageManager?.getDependenciesGraph?.(workspaceDir, dirInEnvRoot, pkgName, componentRelativeDir);
   }
 
   /**

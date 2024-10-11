@@ -177,6 +177,7 @@ export async function tagModelComponent({
   snapping,
   builder,
   consumerComponents,
+  components,
   ids,
   tagDataPerComp,
   populateArtifactsFrom,
@@ -208,6 +209,7 @@ export async function tagModelComponent({
   scope: ScopeMain;
   snapping: SnappingMain;
   builder: BuilderMain;
+  components: Component[];
   consumerComponents: ConsumerComponent[];
   ids: ComponentIdList;
   tagDataPerComp?: TagDataPerComp[];
@@ -292,6 +294,11 @@ export async function tagModelComponent({
 
   logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially persist all components');
   setCurrentSchema(allComponentsToTag);
+
+  if (!soft) {
+    await snapping._addDependenciesGraphToComponents(allComponentsToTag, components);
+  }
+
   // go through all components and find the future versions for them
   isSnap
     ? setHashes(allComponentsToTag)
