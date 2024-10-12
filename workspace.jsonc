@@ -133,7 +133,7 @@
         "@teambit/component.ui.component-compare.utils.sort-logs": "^0.0.8",
         "@teambit/component.ui.component-compare.utils.sort-tabs": "^0.0.102",
         "@teambit/component.ui.component-deprecated": "^0.0.39",
-        "@teambit/component.ui.component-meta": "^0.0.358",
+        "@teambit/component.ui.component-meta": "^0.0.359",
         "@teambit/component.ui.component-size": "^0.0.77",
         "@teambit/component.ui.component-status": "^0.0.504",
         "@teambit/component.ui.component-status-resolver": "^0.0.510",
