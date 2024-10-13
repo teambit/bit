@@ -1748,7 +1748,7 @@
     "ui/code-compare": {
         "name": "ui/code-compare",
         "scope": "teambit.code",
-        "version": "0.0.310",
+        "version": "0.0.311",
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-compare"
     },
@@ -1783,7 +1783,7 @@
     "ui/component-compare/component-compare": {
         "name": "ui/component-compare/component-compare",
         "scope": "teambit.component",
-        "version": "0.0.194",
+        "version": "0.0.195",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/component-compare"
     },

@@ -1,3 +1,5 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
+
 .componentCompareCodeViewContainer {
   width: 100%;
   display: flex;
@@ -18,7 +20,7 @@
 }
 
 .loader {
-  width: calc(100% - 48px);
+  width: 100%;
   color: var(--on-surface-neutral-low-color, #282828);
   background-image: linear-gradient(to right, currentColor 0%, #2b2b2b 30%, #2b2b2b 50%, currentColor 100%);
   opacity: 1;
@@ -28,6 +30,11 @@
     visibility 0.3s ease-in-out;
   position: absolute;
   height: 220px;
+  z-index: $modal-z-index;
+
+  &.fullHeight {
+    height: 100%;
+  }
 
   > div {
     background-image: linear-gradient(to right, currentColor 0%, #2b2b2b 30%, #2b2b2b 50%, currentColor 100%);
