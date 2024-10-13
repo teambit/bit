@@ -62,7 +62,7 @@ export function useComponentFilter<T>(
       const initialFilterState = { ...filterFromContext, state: defaultState };
       updateFilter(filterContext, initialFilterState);
     }
-  }, [filterId, filterContext, defaultState]);
+  }, [filterId, defaultState]);
 
   type Setter = Dispatch<SetStateAction<ComponentFilterCriteria<any>>>;
 
@@ -91,17 +91,15 @@ export const ComponentFiltersProvider = ({
   filters?: ComponentFilters;
 }) => {
   const [filtersState, setFilters] = useState<ComponentFilters>(filters || []);
-
-  return (
-    <ComponentFilterContext.Provider
-      value={{
-        filters: filtersState,
-        setFilters,
-      }}
-    >
-      {children}
-    </ComponentFilterContext.Provider>
+  const contextValue = React.useMemo(
+    () => ({
+      filters: filtersState,
+      setFilters,
+    }),
+    [filtersState, setFilters]
   );
+
+  return <ComponentFilterContext.Provider value={contextValue}>{children}</ComponentFilterContext.Provider>;
 };
 
 export const runAllFilters: (
