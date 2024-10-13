@@ -91,15 +91,17 @@ export const ComponentFiltersProvider = ({
   filters?: ComponentFilters;
 }) => {
   const [filtersState, setFilters] = useState<ComponentFilters>(filters || []);
-  const contextValue = React.useMemo(
-    () => ({
-      filters: filtersState,
-      setFilters,
-    }),
-    [filtersState, setFilters]
-  );
 
-  return <ComponentFilterContext.Provider value={contextValue}>{children}</ComponentFilterContext.Provider>;
+  return (
+    <ComponentFilterContext.Provider
+      value={{
+        filters: filtersState,
+        setFilters,
+      }}
+    >
+      {children}
+    </ComponentFilterContext.Provider>
+  );
 };
 
 export const runAllFilters: (
