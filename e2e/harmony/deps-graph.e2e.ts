@@ -60,6 +60,18 @@ describe('dependencies graph data', function () {
         );
       });
     });
+    describe('imported component uses dependency graph to generate a lockfile', () => {
+      before(async () => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.import(`${helper.scopes.remote}/comp1@latest`);
+      });
+      it('should generate a lockfile', () => {
+        expect(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8')).to.have.string(
+          'restoredFromModel: true'
+        );
+      });
+    });
   });
   describe('two components with different peer dependencies', function () {
     const env1DefaultPeerVersion = '16.0.0';
