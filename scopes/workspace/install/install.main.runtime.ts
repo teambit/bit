@@ -85,6 +85,7 @@ export type WorkspaceInstallOptions = {
   lockfileOnly?: boolean;
   writeConfigFiles?: boolean;
   skipPrune?: boolean;
+  dependenciesGraph?: any;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -326,6 +327,7 @@ export class InstallMain {
     const pmInstallOptions: PackageManagerInstallOptions = {
       ...calcManifestsOpts,
       autoInstallPeers: this.dependencyResolver.config.autoInstallPeers,
+      dependenciesGraph: options?.dependenciesGraph,
       includeOptionalDeps: options?.includeOptionalDeps,
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
       overrides: this.dependencyResolver.config.overrides,

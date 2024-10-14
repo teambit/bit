@@ -793,6 +793,16 @@ once done, to continue working, please run "bit cc"`
     Scope.scopeCache[scopePath] = scope;
     return scope;
   }
+
+  public async getDependenciesGraphByComponentId(id: ComponentID): Promise<any> {
+    let versionObj: Version;
+    try {
+      versionObj = await this.getVersionInstance(id);
+    } catch (err) {
+      return undefined;
+    }
+    return versionObj.getDependenciesGraph(this.objects);
+  }
 }
 
 function composePath(patternPath: string, patterns: string[]): string[] {

@@ -79,7 +79,7 @@ export class ComponentWriterMain {
       );
     }
     if (!opts.skipDependencyInstallation) {
-      installationError = await this.installPackagesGracefully(opts.skipWriteConfigFiles);
+      installationError = await this.installPackagesGracefully(opts.components, opts.skipWriteConfigFiles);
       // no point to compile if the installation is not running. the environment is not ready.
       compilationError = await this.compileGracefully();
     }
@@ -87,7 +87,10 @@ export class ComponentWriterMain {
     return { installationError, compilationError, workspaceConfigUpdateResult };
   }
 
-  private async installPackagesGracefully(skipWriteConfigFiles = false): Promise<Error | undefined> {
+  private async installPackagesGracefully(
+    components: ConsumerComponent[],
+    skipWriteConfigFiles = false
+  ): Promise<Error | undefined> {
     this.logger.debug('installPackagesGracefully, start installing packages');
     try {
       const installOpts = {
@@ -96,6 +99,19 @@ export class ComponentWriterMain {
         import: false,
         writeConfigFiles: !skipWriteConfigFiles,
       };
+      let allGraph = null;
+      await Promise.all(
+        components.map(async (component) => {
+          const graph = await this.workspace.scope.legacyScope.getDependenciesGraphByComponentId(component.id);
+          if (allGraph == null) {
+            allGraph = graph;
+          } else {
+            Object.assign(allGraph.directDependencies, graph.directDependencies);
+            Object.assign(allGraph.packages, graph.packages);
+          }
+        })
+      );
+      installOpts.dependenciesGraph = allGraph;
       await this.installer.install(undefined, installOpts);
       this.logger.debug('installPackagesGracefully, completed installing packages successfully');
       return undefined;

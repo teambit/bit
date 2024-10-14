@@ -704,7 +704,7 @@ export class IsolatorMain {
         if (legacyScope) {
           await Promise.all(
             capsuleList.map(async (capsule) => {
-              const graph = await this.getDependenciesGraphFromModel(legacyScope, capsule.component.id);
+              const graph = await legacyScope.getDependenciesGraphByComponentId(capsule.component.id);
               if (allGraph == null) {
                 allGraph = graph;
               } else {
@@ -752,16 +752,6 @@ export class IsolatorMain {
     }
 
     return allCapsuleList;
-  }
-
-  private async getDependenciesGraphFromModel(legacyScope: Scope, id: ComponentID) {
-    let versionObj: Version;
-    try {
-      versionObj = await legacyScope.getVersionInstance(id);
-    } catch (err) {
-      return undefined;
-    }
-    return versionObj.getDependenciesGraph(legacyScope.objects);
   }
 
   private async markCapsulesAsReady(capsuleList: CapsuleList): Promise<void> {
