@@ -1,13 +1,17 @@
 import fs from 'fs';
+import { addDistTag } from '@pnpm/registry-mock';
 import path from 'path';
 import chai, { expect } from 'chai';
 import stripAnsi from 'strip-ansi';
+import yaml from 'js-yaml';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
-describe('dependencies graph data', function () {
+(supportNpmCiRegistryTesting ? describe : describe.skip)('dependencies graph data', function () {
   this.timeout(0);
+  let npmCiRegistry: NpmCiRegistry;
   let helper: Helper;
   before(() => {
     helper = new Helper();
@@ -18,14 +22,26 @@ describe('dependencies graph data', function () {
   describe.only('single component', () => {
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      await npmCiRegistry.init();
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
       helper.fs.outputFile(
         `comp1/index.spec.js`,
         `const isOdd = require("is-odd"); test('test', () => { expect(1).toEqual(1); })`
       );
-      helper.command.install('react@18.3.1 is-odd@1.0.0');
+      await addDistTag({ package: '@pnpm.e2e/pkg-with-1-dep', version: '100.0.0', distTag: 'latest' });
+      await addDistTag({ package: '@pnpm.e2e/dep-of-pkg-with-1-dep', version: '100.0.0', distTag: 'latest' });
+      helper.command.install('react@18.3.1 is-odd@1.0.0 @pnpm.e2e/pkg-with-1-dep');
       helper.command.snapAllComponentsWithoutBuild('--skip-tests');
+      await addDistTag({ package: '@pnpm.e2e/pkg-with-1-dep', version: '100.1.0', distTag: 'latest' });
+      await addDistTag({ package: '@pnpm.e2e/dep-of-pkg-with-1-dep', version: '100.1.0', distTag: 'latest' });
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.command.delConfig('registry');
     });
     it('should save dependencies graph to the model', () => {
       const versionObj = helper.command.catComponent('comp1@latest');
@@ -38,6 +54,7 @@ describe('dependencies graph data', function () {
     });
     describe('sign component and use dependency graph to generate a lockfile', () => {
       let signOutput: string;
+      let lockfile: any;
       before(async () => {
         helper.command.export();
         helper.scopeHelper.cloneLocalScope();
@@ -55,9 +72,8 @@ describe('dependencies graph data', function () {
       it('should generate a lockfile', () => {
         const capsulesDir = signOutput.match(/running installation in root dir (\/[^\s]+)/)?.[1];
         expect(capsulesDir).to.be.a('string');
-        expect(fs.readFileSync(path.join(stripAnsi(capsulesDir!), 'pnpm-lock.yaml'), 'utf8')).to.have.string(
-          'restoredFromModel: true'
-        );
+        lockfile = yaml.load(fs.readFileSync(path.join(stripAnsi(capsulesDir!), 'pnpm-lock.yaml'), 'utf8'));
+        expect(lockfile.bit.restoredFromModel).to.eq(true);
       });
     });
     describe('imported component uses dependency graph to generate a lockfile', () => {
