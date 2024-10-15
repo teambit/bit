@@ -107,13 +107,6 @@ export class ServerCommander {
           process.stdin.pause();
         });
       });
-      // Handle process exit (e.g., Ctrl+C)
-      process.on('SIGINT', () => {
-        process.stdin.setRawMode(false);
-        process.stdin.pause();
-        socket.end();
-        process.exit();
-      });
     }
     const ttyPath = this.shouldUseTTYPath()
       ? execSync('tty', {
