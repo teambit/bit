@@ -61,7 +61,7 @@ export function spawnPTY() {
     });
   });
 
-  const PORT = getPortFromPath(process.cwd());
+  const PORT = getSocketPort();
 
   server.on('error', (err: any) => {
     if (err.code === 'EADDRINUSE') {

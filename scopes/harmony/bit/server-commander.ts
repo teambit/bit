@@ -104,55 +104,14 @@ export class ServerCommander {
 
   async runCommandWithHttpServer(): Promise<CommandResult | undefined> {
     await this.printPortIfAsked();
+    this.printSocketPortIfAsked();
     printBitVersionIfAsked();
     const port = await this.getExistingUsedPort();
     const url = `http://localhost:${port}/api`;
     const shouldUsePTY = process.env.BIT_CLI_SERVER_PTY === 'true';
 
     if (shouldUsePTY) {
-      // Connect to the server
-      const socketPort = getSocketPort();
-      const socket = net.createConnection({ port: socketPort }, () => {
-        process.stdin.setRawMode(true);
-        process.stdin.resume();
-
-        // Forward stdin to the socket
-        process.stdin.on('data', (data: any) => {
-          socket.write(data);
-          // User hit ctrl+c
-          if (data.toString('hex') === '03') {
-            // important to write it to the socket, so the server knows to kill the pty process
-            process.stdin.setRawMode(false);
-            process.stdin.pause();
-            socket.end();
-            process.exit();
-          }
-        });
-
-        // Forward data from the socket to stdout
-        socket.on('data', (data: any) => {
-          process.stdout.write(data);
-        });
-
-        // Handle socket close
-        socket.on('close', () => {
-          process.stdin.setRawMode(false);
-          process.stdin.pause();
-        });
-
-        socket.on('end', () => {
-          process.stdin.setRawMode(false);
-          process.stdin.pause();
-        });
-
-        // Handle errors
-        socket.on('error', (err) => {
-          // eslint-disable-next-line no-console
-          console.error('Socket error:', err);
-          process.stdin.setRawMode(false);
-          process.stdin.pause();
-        });
-      });
+      await this.connectToSocket();
     }
     const ttyPath = this.shouldUseTTYPath()
       ? execSync('tty', {
@@ -198,6 +157,67 @@ export class ServerCommander {
     throw new Error(jsonResponse?.message || jsonResponse || res.statusText);
   }
 
+  private async connectToSocket() {
+    return new Promise<void>((resolve, reject) => {
+      const socketPort = getSocketPort();
+      const socket = net.createConnection({ port: socketPort });
+
+      const resetStdin = () => {
+        process.stdin.setRawMode(false);
+        process.stdin.pause();
+      };
+
+      // Handle errors that occur before or after connection
+      socket.on('error', (err: any) => {
+        if (err.code === 'ECONNREFUSED') {
+          reject(
+            new Error(`Error: Unable to connect to the socket on port ${socketPort}.
+Please run the command "bit server-forever" first to start the server.`)
+          );
+        }
+        resetStdin();
+        socket.destroy(); // Ensure the socket is fully closed
+        reject(err);
+      });
+
+      // Handle successful connection
+      socket.on('connect', () => {
+        process.stdin.setRawMode(true);
+        process.stdin.resume();
+
+        // Forward stdin to the socket
+        process.stdin.on('data', (data: any) => {
+          socket.write(data);
+
+          // Detect Ctrl+C (hex code '03')
+          if (data.toString('hex') === '03') {
+            // Important to write it to the socket so the server knows to kill the PTY process
+            process.stdin.setRawMode(false);
+            process.stdin.pause();
+            socket.end();
+            process.exit();
+          }
+        });
+
+        // Forward data from the socket to stdout
+        socket.on('data', (data: any) => {
+          process.stdout.write(data);
+        });
+
+        // Handle socket close and end events
+        const cleanup = () => {
+          resetStdin();
+          socket.destroy();
+        };
+
+        socket.on('close', cleanup);
+        socket.on('end', cleanup);
+
+        resolve(); // Connection successful, resolve the Promise
+      });
+    });
+  }
+
   /**
    * Initialize the server-sent events (SSE) connection to the server.
    * This is used to print the logs and show the loader during the command.
@@ -239,6 +259,18 @@ export class ServerCommander {
       if (err instanceof ScopeNotFound || err instanceof ServerPortFileNotFound || err instanceof ServerIsNotRunning) {
         process.exit(0);
       }
+      console.error(err.message); // eslint-disable-line no-console
+      process.exit(1);
+    }
+  }
+
+  private printSocketPortIfAsked() {
+    if (!process.argv.includes('cli-server-socket-port')) return;
+    try {
+      const port = getSocketPort();
+      process.stdout.write(port.toString());
+      process.exit(0);
+    } catch (err: any) {
       console.error(err.message); // eslint-disable-line no-console
       process.exit(1);
     }
