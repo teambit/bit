@@ -48,7 +48,6 @@ export function spawnPTY() {
 
     ptyProcess.on('exit', (code, signal) => {
       console.log(`PTY exited with code ${code} and signal ${signal}`);
-      socket.end();
       server.close();
       setTimeout(() => {
         console.log('restarting the server');
