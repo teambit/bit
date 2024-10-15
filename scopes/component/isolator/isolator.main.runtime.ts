@@ -702,17 +702,8 @@ export class IsolatorMain {
       } else {
         let allGraph = null;
         if (legacyScope) {
-          await Promise.all(
-            capsuleList.map(async (capsule) => {
-              const graph = await legacyScope.getDependenciesGraphByComponentId(capsule.component.id);
-              if (allGraph == null) {
-                allGraph = graph;
-              } else {
-                Object.assign(allGraph.directDependencies, graph.directDependencies);
-                Object.assign(allGraph.packages, graph.packages);
-              }
-            })
-          );
+          const componentIds = capsuleList.map((capsule) => capsule.component.id);
+          allGraph = await legacyScope.getDependenciesGraphByComponentIds(componentIds);
         }
 
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);

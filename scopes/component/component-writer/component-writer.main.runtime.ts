@@ -99,19 +99,9 @@ export class ComponentWriterMain {
         import: false,
         writeConfigFiles: !skipWriteConfigFiles,
       };
-      let allGraph = null;
-      await Promise.all(
-        components.map(async (component) => {
-          const graph = await this.workspace.scope.legacyScope.getDependenciesGraphByComponentId(component.id);
-          if (allGraph == null) {
-            allGraph = graph;
-          } else {
-            Object.assign(allGraph.directDependencies, graph.directDependencies);
-            Object.assign(allGraph.packages, graph.packages);
-          }
-        })
+      installOpts.dependenciesGraph = await this.workspace.scope.legacyScope.getDependenciesGraphByComponentIds(
+        components.map(({ id }) => id)
       );
-      installOpts.dependenciesGraph = allGraph;
       await this.installer.install(undefined, installOpts);
       this.logger.debug('installPackagesGracefully, completed installing packages successfully');
       return undefined;

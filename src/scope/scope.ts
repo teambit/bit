@@ -794,6 +794,31 @@ once done, to continue working, please run "bit cc"`
     return scope;
   }
 
+  public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<any> {
+    let allGraph: any;
+    await Promise.all(
+      componentIds.map(async (componentId) => {
+        const graph = await this.getDependenciesGraphByComponentId(componentId);
+        if (allGraph == null) {
+          allGraph = graph;
+        } else {
+          for (const directDepSelector in graph.directDependencies) {
+            if (!allGraph.directDependencies[directDepSelector]) {
+              allGraph.directDependencies[directDepSelector] = graph.directDependencies[directDepSelector];
+            } else if (
+              allGraph.directDependencies[directDepSelector] !== graph.directDependencies[directDepSelector] &&
+              semver.lt(allGraph.directDependencies[directDepSelector], graph.directDependencies[directDepSelector])
+            ) {
+              allGraph.directDependencies[directDepSelector] = graph.directDependencies[directDepSelector];
+            }
+          }
+          Object.assign(allGraph.packages, graph.packages);
+        }
+      })
+    );
+    return allGraph;
+  }
+
   public async getDependenciesGraphByComponentId(id: ComponentID): Promise<any> {
     let versionObj: Version;
     try {

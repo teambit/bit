@@ -220,8 +220,11 @@ chai.use(require('chai-fs'));
       helper.command.snapAllComponentsWithoutBuild('--skip-tests');
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
-      helper.scopeHelper.addRemoteScope();
+      helper.command.removeComponent('foo');
+      fs.rmSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
+      fs.unlinkSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'));
+      // helper.scopeHelper.reInitLocalScope();
+      // helper.scopeHelper.addRemoteScope();
       helper.command.import(`${helper.scopes.remote}/foo@latest ${helper.scopes.remote}/bar@latest`);
     });
     let lockfile: any;
@@ -229,8 +232,11 @@ chai.use(require('chai-fs'));
       lockfile = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8'));
       expect(lockfile.bit.restoredFromModel).to.eq(true);
     });
-    it('should resolve to one version of the peer dependency', () => {
-      console.log(JSON.stringify(lockfile, null, 2));
+    it('should resolve to one version of the peer dependency, the highest one', () => {
+      expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/pkg-with-1-dep@100.0.0');
+      expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.0.0');
+      expect(lockfile.packages).to.have.a.property('@pnpm.e2e/pkg-with-1-dep@100.1.0');
+      expect(lockfile.packages).to.have.a.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.1.0');
     });
     after(() => {
       npmCiRegistry.destroy();
