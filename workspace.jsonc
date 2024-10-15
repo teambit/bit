@@ -117,7 +117,7 @@
         "@teambit/component.ui.artifacts.queries.use-component-artifacts": "^0.0.14",
         "@teambit/component.ui.badges.component-count": "^0.0.15",
         "@teambit/component.ui.component-compare.compare-aspects.compare-aspect-view": "^0.0.14",
-        "@teambit/component.ui.component-compare.compare-aspects.compare-aspects": "^0.0.146",
+        "@teambit/component.ui.component-compare.compare-aspects.compare-aspects": "^0.0.147",
         "@teambit/component.ui.component-compare.compare-aspects.context": "^0.0.12",
         "@teambit/component.ui.component-compare.compare-aspects.hooks.use-compare-aspects": "^0.0.118",
         "@teambit/component.ui.component-compare.compare-aspects.models.component-compare-aspects-model": "^0.0.11",
