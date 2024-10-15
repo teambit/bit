@@ -62,13 +62,66 @@ export class ServerCommander {
     printBitVersionIfAsked();
     const port = await this.getExistingUsedPort();
     const url = `http://localhost:${port}/api`;
+    const shouldUsePTY = process.env.BIT_CLI_SERVER_PTY === 'true';
+
+    if (shouldUsePTY) {
+      // Connect to the server
+      const socket = net.createConnection({ port: 5002 }, () => {
+        process.stdin.setRawMode(true);
+        process.stdin.resume();
+
+        // Forward stdin to the socket
+        process.stdin.on('data', (data: any) => {
+          socket.write(data);
+          // User hit ctrl+c
+          if (data.toString('hex') === '03') {
+            // important to write it to the socket, so the server knows to kill the pty process
+            process.stdin.setRawMode(false);
+            process.stdin.pause();
+            socket.end();
+            process.exit();
+          }
+        });
+
+        // Forward data from the socket to stdout
+        socket.on('data', (data: any) => {
+          process.stdout.write(data);
+        });
+
+        // Handle socket close
+        socket.on('close', () => {
+          process.stdin.setRawMode(false);
+          process.stdin.pause();
+        });
+
+        socket.on('end', () => {
+          process.stdin.setRawMode(false);
+          process.stdin.pause();
+        });
+
+        // Handle errors
+        socket.on('error', (err) => {
+          // eslint-disable-next-line no-console
+          console.error('Socket error:', err);
+          process.stdin.setRawMode(false);
+          process.stdin.pause();
+        });
+      });
+      // Handle process exit (e.g., Ctrl+C)
+      process.on('SIGINT', () => {
+        process.stdin.setRawMode(false);
+        process.stdin.pause();
+        socket.end();
+        process.exit();
+      });
+    }
     const ttyPath = this.shouldUseTTYPath()
       ? execSync('tty', {
           encoding: 'utf8',
           stdio: ['inherit', 'pipe', 'pipe'],
         }).trim()
       : undefined;
-    if (!ttyPath) this.initSSE(url);
+    if (!ttyPath && !shouldUsePTY) this.initSSE(url);
     // parse the args and options from the command
     const args = process.argv.slice(2);
     if (!args.includes('--json') && !args.includes('-j')) {
@@ -76,7 +129,7 @@ export class ServerCommander {
     }
     const endpoint = `cli-raw`;
     const pwd = process.cwd();
-    const body = { command: args, pwd, envBitFeatures: process.env.BIT_FEATURES, ttyPath };
+    const body = { command: args, pwd, envBitFeatures: process.env.BIT_FEATURES, ttyPath, isPty: shouldUsePTY };
     let res;
     try {
       res = await fetch(`${url}/${endpoint}`, {
@@ -216,6 +269,7 @@ export function shouldUseBitServer() {
   const hasFlag =
     process.env.BIT_CLI_SERVER === 'true' ||
     process.env.BIT_CLI_SERVER === '1' ||
+    process.env.BIT_CLI_SERVER_PTY === 'true' ||
     process.env.BIT_CLI_SERVER_TTY === 'true';
   return (
     hasFlag &&

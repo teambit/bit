@@ -43,7 +43,7 @@ export class ApiServerMain {
     private importer: ImporterMain
   ) {}
 
-  async runApiServer(options: { port: number; compile: boolean }) {
+  async runApiServer(options: { port: number; compile: boolean; pty?: boolean }) {
     if (!this.workspace) {
       throw new Error(`unable to run bit-server, the current directory ${process.cwd()} is not a workspace`);
     }
