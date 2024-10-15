@@ -27,14 +27,19 @@ chai.use(require('chai-fs'));
       await npmCiRegistry.init();
       helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
       helper.fixtures.populateComponents(1);
-      helper.fs.outputFile(`comp1/index.js`, `const React = require("react")`);
+      helper.fs.outputFile(`comp1/index.js`, `const React = require("react"); require('@pnpm.e2e/pkg-with-1-dep')`);
       helper.fs.outputFile(
         `comp1/index.spec.js`,
         `const isOdd = require("is-odd"); test('test', () => { expect(1).toEqual(1); })`
       );
       await addDistTag({ package: '@pnpm.e2e/pkg-with-1-dep', version: '100.0.0', distTag: 'latest' });
       await addDistTag({ package: '@pnpm.e2e/dep-of-pkg-with-1-dep', version: '100.0.0', distTag: 'latest' });
-      helper.command.install('react@18.3.1 is-odd@1.0.0 @pnpm.e2e/pkg-with-1-dep');
+      helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
+        dependencies: {
+          '@pnpm.e2e/pkg-with-1-dep': '^100.0.0',
+        },
+      });
+      helper.command.install('react@18.3.1 is-odd@1.0.0');
       helper.command.snapAllComponentsWithoutBuild('--skip-tests');
       await addDistTag({ package: '@pnpm.e2e/pkg-with-1-dep', version: '100.1.0', distTag: 'latest' });
       await addDistTag({ package: '@pnpm.e2e/dep-of-pkg-with-1-dep', version: '100.1.0', distTag: 'latest' });
@@ -74,6 +79,12 @@ chai.use(require('chai-fs'));
         expect(capsulesDir).to.be.a('string');
         lockfile = yaml.load(fs.readFileSync(path.join(stripAnsi(capsulesDir!), 'pnpm-lock.yaml'), 'utf8'));
         expect(lockfile.bit.restoredFromModel).to.eq(true);
+      });
+      it('should not update dependencies in the lockfile', () => {
+        expect(lockfile.packages).to.have.a.property('@pnpm.e2e/pkg-with-1-dep@100.0.0');
+        expect(lockfile.packages).to.have.a.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.0.0');
+        expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/pkg-with-1-dep@100.1.0');
+        expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.1.0');
       });
     });
     describe('imported component uses dependency graph to generate a lockfile', () => {
