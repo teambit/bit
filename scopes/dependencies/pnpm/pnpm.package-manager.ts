@@ -405,6 +405,9 @@ export class PnpmPackageManager implements PackageManager {
     if (!lockfile) {
       throw new BitError('Cannot get the depednency graph without a lockfile. Try running "bit install".');
     }
+    if (!lockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
+      componentRootDir = componentRootDir.split('@')[0];
+    }
     const partialLockfile = filterLockfileByImporters(
       lockfile,
       [componentRootDir as ProjectId, componentRelativeDir as ProjectId],

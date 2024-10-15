@@ -19,7 +19,7 @@ chai.use(require('chai-fs'));
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe.only('single component', () => {
+  describe('single component', () => {
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -172,6 +172,69 @@ chai.use(require('chai-fs'));
       expect(depsGraph.importers['.'].dependencies.react).to.eq('17.0.0');
       expect(depsGraph.directDependencies['react@17.0.0']).to.eq('17.0.0');
       console.log(JSON.stringify(depsGraph, null, 2));
+    });
+  });
+  describe.only('two components exported with different peer dependencies using the same env', function () {
+    before(async () => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      await npmCiRegistry.init();
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        {
+          policy: {
+            peers: [
+              {
+                name: '@pnpm.e2e/pkg-with-1-dep',
+                version: '^100.0.0',
+                supportedRange: '^100.0.0',
+              },
+            ],
+          },
+        },
+        false,
+        'custom-env/env',
+        'custom-env/env'
+      );
+      helper.fs.createFile('bar', 'bar.js', 'require("@pnpm.e2e/pkg-with-1-dep");');
+      helper.command.addComponent('bar');
+      helper.extensions.addExtensionToVariant('bar', `${helper.scopes.remote}/custom-env/env`, {});
+      await addDistTag({ package: '@pnpm.e2e/pkg-with-1-dep', version: '100.0.0', distTag: 'latest' });
+      await addDistTag({ package: '@pnpm.e2e/dep-of-pkg-with-1-dep', version: '100.0.0', distTag: 'latest' });
+      helper.command.install('--add-missing-deps');
+      helper.command.snapAllComponentsWithoutBuild('--skip-tests');
+      helper.command.export();
+
+      await addDistTag({ package: '@pnpm.e2e/pkg-with-1-dep', version: '100.1.0', distTag: 'latest' });
+      await addDistTag({ package: '@pnpm.e2e/dep-of-pkg-with-1-dep', version: '100.1.0', distTag: 'latest' });
+      helper.command.removeComponent('bar');
+      fs.rmSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
+      fs.unlinkSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'));
+      helper.fs.createFile('foo', 'foo.js', 'require("@pnpm.e2e/pkg-with-1-dep");');
+      helper.command.addComponent('foo');
+      helper.extensions.addExtensionToVariant('foo', `${helper.scopes.remote}/custom-env/env`, {});
+      helper.command.install();
+      helper.command.snapAllComponentsWithoutBuild('--skip-tests');
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.import(`${helper.scopes.remote}/foo@latest ${helper.scopes.remote}/bar@latest`);
+    });
+    let lockfile: any;
+    it('should generate a lockfile', () => {
+      lockfile = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8'));
+      expect(lockfile.bit.restoredFromModel).to.eq(true);
+    });
+    it('should resolve to one version of the peer dependency', () => {
+      console.log(JSON.stringify(lockfile, null, 2));
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.command.delConfig('registry');
     });
   });
 });
