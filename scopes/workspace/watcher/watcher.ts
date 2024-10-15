@@ -439,10 +439,6 @@ export class Watcher {
     const usePolling = usePollingConf === 'true';
     const workspacePathLinux = pathNormalizeToLinux(this.workspace.path);
     const ignoreLocalScope = (pathToCheck: string) => {
-      // chokidar 4 doesn't support glob patterns. so we we have to check it with a function.
-      if (pathToCheck.endsWith('/node_modules')) return true;
-      // if (pathToCheck.includes('/node_modules/')) return true;
-      if (pathToCheck.endsWith('/package.json')) return true;
       if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
       return (
         pathToCheck.startsWith(`${workspacePathLinux}/.git/`) || pathToCheck.startsWith(`${workspacePathLinux}/.bit/`)
@@ -452,7 +448,7 @@ export class Watcher {
       ignoreInitial: true,
       // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
       // (windows-style backslashes are converted to forward slashes)
-      ignored: [ignoreLocalScope],
+      ignored: ['**/node_modules/**', '**/package.json', ignoreLocalScope],
       usePolling,
       // useFsEvents,
       persistent: true,
