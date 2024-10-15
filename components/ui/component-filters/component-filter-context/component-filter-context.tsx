@@ -62,7 +62,7 @@ export function useComponentFilter<T>(
       const initialFilterState = { ...filterFromContext, state: defaultState };
       updateFilter(filterContext, initialFilterState);
     }
-  }, [filterId, filterContext, defaultState]);
+  }, [filterId]);
 
   type Setter = Dispatch<SetStateAction<ComponentFilterCriteria<any>>>;
 
