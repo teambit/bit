@@ -52,6 +52,7 @@ import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import chalk from 'chalk';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { printBitVersionIfAsked } from './bootstrap';
+import { getSocketPort } from './server-forever';
 
 class ServerPortFileNotFound extends Error {
   constructor(filePath: string) {
@@ -110,7 +111,8 @@ export class ServerCommander {
 
     if (shouldUsePTY) {
       // Connect to the server
-      const socket = net.createConnection({ port: 5002 }, () => {
+      const socketPort = getSocketPort();
+      const socket = net.createConnection({ port: socketPort }, () => {
         process.stdin.setRawMode(true);
         process.stdin.resume();
 
