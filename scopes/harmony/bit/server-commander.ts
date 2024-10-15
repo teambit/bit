@@ -1,3 +1,43 @@
+/**
+ * This file is responsible for interacting with bit through a long-running background process "bit-server" rather than directly.
+ * Why not directly?
+ * 1. startup cost. currently it takes around 1 second to bootstrap bit.
+ * 2. an experimental package-manager saves node_modules in-memory. if a client starts a new process, it won't have the node_modules in-memory.
+ *
+ * In this file, there are three ways to achieve this. It's outlined in the order it was evolved.
+ * The big challenge here is to show the output correctly to the client even though the server is running in a different process.
+ *
+ * 1. process.env.BIT_CLI_SERVER === 'true'
+ * This method uses SSE - Server Send Events. The server sends events to the client with the output to print. The client listens to
+ * these events and prints them. It's cumbersome. For this, the logger was changed and every time the logger needs to print to the console,
+ * it was using this SSE to send events. Same with the loader.
+ * Cons: Other output, such as pnpm, needs an extra effort to print - for pnpm, the "process" object was passed to pnpm
+ * and its stdout was modified to use the SSE.
+ * However, other tools that print directly to the console, such as Jest, won't work.
+ *
+ * 2. process.env.BIT_CLI_SERVER_TTY === 'true'
+ * Because the terminal - tty is a fd (file descriptor) on mac/linux, it can be passed to the server. The server can write to this
+ * fd and it will be printed to the client terminal. On the server, the process.stdout.write was monkey-patched to
+ * write to the tty. (see cli-raw.route.ts file).
+ * It solves the problem of Jest and other tools that print directly to the console.
+ * Cons:
+ * A. It doesn't work on Windows. Windows doesn't treat tty as a file descriptor.
+ * B. We need two ways communication. Commands such as "bit update", display a prompt with option to select using the arrow keys.
+ *    This is not possible with the tty approach. Also, if the client hits Ctrl+C, the server won't know about it and it
+ *    won't kill the process.
+ *
+ * 3. process.env.BIT_CLI_SERVER_PTY === 'true'
+ * This is the most advanced approach. It spawns a pty (pseudo terminal) process to communicate between the client and the server.
+ * The client connects to the server using a socket. The server writes to the socket and the client reads from it.
+ * The client also writes to the socket and the server reads from it.
+ * In order to pass terminal sequences, such as arrow keys or Ctrl+C, the stdin of the client is set to raw mode.
+ *
+ * With this new approach, we also support terminating and reloading the server. A new command is added
+ * "bit server-forever", which spawns the pty-process. If the client hits Ctrl+C, this server-forever process will kill
+ * the pty-process and re-load it.
+ *
+ */
+
 import fetch from 'node-fetch';
 import net from 'net';
 import fs from 'fs-extra';
