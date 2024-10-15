@@ -1,13 +1,20 @@
+/**
+ * see the docs of server-commander.ts for more info
+ * this "server-forever" command is used to run the bit server in a way that it will never stop. if it gets killed,
+ * it will restart itself.
+ * it spawns "bit server" using node-pty for a pseudo-terminal (PTY) in order for libs such as inquirer/ora/chalk to work properly.
+ */
+
 /* eslint-disable no-console */
 
 import net from 'net';
 import crypto from 'crypto';
-const pty = require('node-pty');
+import { spawn } from 'node-pty';
 
 export function spawnPTY() {
   // Create a PTY (terminal emulation) running the 'bit server' process
   // this way, we can catch terminal sequences like arrows, ctrl+c, etc.
-  const ptyProcess = pty.spawn('bit', ['server', '--pty'], {
+  const ptyProcess = spawn('bit', ['server', '--pty'], {
     name: 'xterm-color',
     cols: 80,
     rows: 30,
@@ -20,7 +27,7 @@ export function spawnPTY() {
     console.log('Client connected.');
 
     // Forward data from the client to the ptyProcess
-    socket.on('data', (data) => {
+    socket.on('data', (data: any) => {
       // console.log('Server received data from client:', data.toString());
       if (data.toString('hex') === '03') {
         // User hit ctrl+c
@@ -31,6 +38,7 @@ export function spawnPTY() {
     });
 
     // Forward data from the ptyProcess to the client
+    // @ts-ignore
     ptyProcess.on('data', (data) => {
       // console.log('ptyProcess data:', data.toString());
       socket.write(data);
@@ -46,6 +54,7 @@ export function spawnPTY() {
       console.error('Socket error:', err);
     });
 
+    // @ts-ignore
     ptyProcess.on('exit', (code, signal) => {
       console.log(`PTY exited with code ${code} and signal ${signal}`);
       server.close();
@@ -55,6 +64,7 @@ export function spawnPTY() {
       }, 500);
     });
 
+    // @ts-ignore
     ptyProcess.on('error', (err) => {
       console.error('PTY process error:', err);
     });
@@ -91,6 +101,9 @@ export function getSocketPort(): number {
     : getPortFromPath(process.cwd());
 }
 
+/**
+ * it's easier to generate a random port based on the workspace path than to save it in a file
+ */
 export function getPortFromPath(path: string): number {
   // Step 1: Hash the workspace path using MD5
   const hash = crypto.createHash('md5').update(path).digest('hex');

@@ -11,12 +11,11 @@ export class ServerCmd implements Command {
   options = [
     ['p', 'port [port]', 'port to run the server on'],
     ['c', 'compile', 'compile components during the watch process'],
-    ['', 'pty', 'use pty for child process'],
   ] as CommandOptions;
 
   constructor(private apiServer: ApiServerMain) {}
 
-  async wait(args, options: { port: number; compile: boolean; pty?: boolean }) {
+  async wait(args, options: { port: number; compile: boolean }) {
     await this.apiServer.runApiServer(options);
   }
 }
