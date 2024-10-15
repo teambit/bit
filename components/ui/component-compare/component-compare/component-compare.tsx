@@ -279,6 +279,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   } = props;
 
   const baseVersion = useCompareQueryParam('baseVersion');
+
   const component = useContext(ComponentContext);
   const componentDescriptor = useContext(ComponentDescriptorContext);
   const location = useLocation();

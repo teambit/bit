@@ -322,12 +322,6 @@ export default class Repository {
         const bitObject = await this.load(new Ref(hash));
         if (!bitObject) {
           const indexJsonPath = this.scopeIndex.getPath();
-          if (this.scopeIndex.isFileOnBitHub()) {
-            logger.error(
-              `repository._getBitObjectsByHashes, indexJson at "${indexJsonPath}" is outdated and needs to be deleted`
-            );
-            return null;
-          }
           const indexItem = this.scopeIndex.find(hash);
           if (!indexItem) throw new Error(`_getBitObjectsByHashes failed finding ${hash}`);
           await this.scopeIndex.deleteFile();

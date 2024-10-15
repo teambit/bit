@@ -29,6 +29,7 @@ export type CodeCompareProps = {
 
 export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareView }: CodeCompareProps) {
   const componentCompareContext = useComponentCompare();
+
   const query = useQuery();
   const location = useLocation() || { pathname: '/' };
 
@@ -143,6 +144,7 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
             files={fileTree}
             getHref={useHref}
             onTabClicked={hook?.onClick}
+            fileIconSlot={fileIconSlot}
           />
         </Pane>
       </SplitPane>
