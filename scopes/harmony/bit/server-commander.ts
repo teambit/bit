@@ -29,13 +29,17 @@
  * 3. process.env.BIT_CLI_SERVER_PTY === 'true'
  * This is the most advanced approach. It spawns a pty (pseudo terminal) process to communicate between the client and the server.
  * The client connects to the server using a socket. The server writes to the socket and the client reads from it.
- * The client also writes to the socket and the server reads from it.
+ * The client also writes to the socket and the server reads from it. See server-forever.ts to understand better.
  * In order to pass terminal sequences, such as arrow keys or Ctrl+C, the stdin of the client is set to raw mode.
- *
+ * In theory, this approach could work by spawning a normal process, not pty, however, then, the stdin/stdout are non-tty,
+ * and as a result, loaders such as Ora and chalk won't work.
  * With this new approach, we also support terminating and reloading the server. A new command is added
  * "bit server-forever", which spawns the pty-process. If the client hits Ctrl+C, this server-forever process will kill
  * the pty-process and re-load it.
- *
+ * Keep in mind, that to send the command and get the results, we still using http. The usage of the pty is only for
+ * the input/output during the command.
+ * I was trying to avoid the http, and use only the pty, by implementing readline to get the command from the socket,
+ * but then I wasn't able to return the prompt to the user easily. So, I decided to keep the http for the request/response part.
  */
 
 import fetch from 'node-fetch';
