@@ -372,6 +372,7 @@ export class Http implements Network {
     const res = await retry(
       async () => {
         const retiedRes = await _fetch(urlToFetch, opts);
+        if (!retiedRes.ok) throw new Error(`${retiedRes.status} - ${retiedRes.statusText}`);
         return retiedRes;
       },
       {
