@@ -98,10 +98,10 @@ export class ComponentWriterMain {
         updateExisting: false,
         import: false,
         writeConfigFiles: !skipWriteConfigFiles,
+        dependenciesGraph: await this.workspace.scope.legacyScope.getDependenciesGraphByComponentIds(
+          components.map(({ id }) => id)
+        ),
       };
-      installOpts.dependenciesGraph = await this.workspace.scope.legacyScope.getDependenciesGraphByComponentIds(
-        components.map(({ id }) => id)
-      );
       await this.installer.install(undefined, installOpts);
       this.logger.debug('installPackagesGracefully, completed installing packages successfully');
       return undefined;

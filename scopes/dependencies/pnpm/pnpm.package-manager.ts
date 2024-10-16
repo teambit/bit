@@ -83,6 +83,7 @@ export class PnpmPackageManager implements PackageManager {
       importers: {},
       snapshots: dependenciesGraph.snapshots,
       packages: dependenciesGraph.packages,
+      lockfileVersion: '9.0',
     };
     for (const [projectDir, manifest] of Object.entries(manifests)) {
       const projectId = getLockfileImporterId(rootDir, projectDir);
@@ -102,7 +103,7 @@ export class PnpmPackageManager implements PackageManager {
         }
       }
     }
-    lockfile.bit = {
+    lockfile['bit'] = {
       restoredFromModel: true,
     };
     await writeWantedLockfile(rootDir, lockfile);
@@ -438,7 +439,7 @@ export class PnpmPackageManager implements PackageManager {
       ['.' as ProjectId]:
         partialLockfile.packages![`${pkgName}@${partialLockfile.importers[componentRootDir].dependencies[pkgName]}`],
     };
-    partialLockfile.directDependencies = directDependencies;
+    partialLockfile['directDependencies'] = directDependencies;
     partialLockfile.importers['.'].devDependencies = componentDevImporter.devDependencies;
     partialLockfile.importers['.'].specifiers = {
       ...componentDevImporter.specifiers,
