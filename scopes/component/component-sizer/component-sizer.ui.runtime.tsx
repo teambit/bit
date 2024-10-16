@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import { UIRuntime } from '@teambit/ui';
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { ComponentModel } from '@teambit/component';
 import { DocsAspect, DocsUI } from '@teambit/docs';
 import { ComponentSize } from '@teambit/component.ui.component-size';
@@ -22,7 +23,13 @@ export class SizerUIRuntime {
     docs.registerTitleBadge({
       component: function badge({ legacyComponentModel }: { legacyComponentModel: ComponentModel }) {
         const workspace = useContext(WorkspaceContext);
-        const workspaceComponent = workspace?.getComponent(legacyComponentModel.id);
+        const query = useQuery();
+        const workspaceComponent = workspace?.components.find((component) =>
+          component.id.isEqual(legacyComponentModel.id)
+        );
+
+        const componentVersionFromUrl = query.get('version');
+        const isWorkspaceVersion = Boolean(workspaceComponent && !componentVersionFromUrl);
         const size = legacyComponentModel.size;
         const isModified = Boolean(
           workspaceComponent?.status?.modifyInfo?.hasModifiedFiles ||
@@ -30,7 +37,7 @@ export class SizerUIRuntime {
         );
         const sizeExistsBuComponentModified = Boolean(size && isModified);
 
-        if (sizeExistsBuComponentModified) {
+        if (isWorkspaceVersion && sizeExistsBuComponentModified) {
           return (
             <Tooltip
               className={styles.componentSizeTooltip}
