@@ -4,6 +4,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import R from 'ramda';
 import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
+import { removeSuffix } from '@pnpm/dependency-path';
 import semver from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
@@ -807,7 +808,10 @@ once done, to continue working, please run "bit cc"`
               allGraph.directDependencies[directDepSelector] = graph.directDependencies[directDepSelector];
             } else if (
               allGraph.directDependencies[directDepSelector] !== graph.directDependencies[directDepSelector] &&
-              semver.lt(allGraph.directDependencies[directDepSelector], graph.directDependencies[directDepSelector])
+              semver.lt(
+                removeSuffix(allGraph.directDependencies[directDepSelector]),
+                removeSuffix(graph.directDependencies[directDepSelector])
+              )
             ) {
               allGraph.directDependencies[directDepSelector] = graph.directDependencies[directDepSelector];
             }

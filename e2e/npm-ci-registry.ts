@@ -1,5 +1,5 @@
 /* eslint no-console: 0 */
-import { addUser, REGISTRY_MOCK_PORT, start as startRegistryMock } from '@pnpm/registry-mock';
+import { addUser, REGISTRY_MOCK_PORT, start as startRegistryMock, prepare } from '@pnpm/registry-mock';
 import { ChildProcess } from 'child_process';
 import { fetch } from '@pnpm/fetch';
 import execa from 'execa';
@@ -57,6 +57,7 @@ export default class NpmCiRegistry {
 
   _establishRegistry(): Promise<void> {
     return new Promise((resolve, reject) => {
+      prepare();
       this.registryServer = startRegistryMock({ detached: true });
       let resolved = false;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -66,7 +67,7 @@ export default class NpmCiRegistry {
           resolved = true;
           let fetchResults;
           try {
-            fetchResults = await fetch(`http://localhost:${REGISTRY_MOCK_PORT}`, {
+            fetchResults = await fetch(`http://localhost:${REGISTRY_MOCK_PORT}/is-odd`, {
               retry: {
                 minTimeout: 1000,
                 maxTimeout: 10000,

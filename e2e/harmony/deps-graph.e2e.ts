@@ -188,9 +188,9 @@ chai.use(require('chai-fs'));
           policy: {
             peers: [
               {
-                name: '@pnpm.e2e/pkg-with-1-dep',
-                version: '^100.0.0',
-                supportedRange: '^100.0.0',
+                name: '@pnpm.e2e/abc',
+                version: '*',
+                supportedRange: '*',
               },
             ],
           },
@@ -199,21 +199,21 @@ chai.use(require('chai-fs'));
         'custom-env/env',
         'custom-env/env'
       );
-      helper.fs.createFile('bar', 'bar.js', 'require("@pnpm.e2e/pkg-with-1-dep");');
+      helper.fs.createFile('bar', 'bar.js', 'require("@pnpm.e2e/abc");');
       helper.command.addComponent('bar');
       helper.extensions.addExtensionToVariant('bar', `${helper.scopes.remote}/custom-env/env`, {});
-      await addDistTag({ package: '@pnpm.e2e/pkg-with-1-dep', version: '100.0.0', distTag: 'latest' });
-      await addDistTag({ package: '@pnpm.e2e/dep-of-pkg-with-1-dep', version: '100.0.0', distTag: 'latest' });
+      await addDistTag({ package: '@pnpm.e2e/abc', version: '1.0.0', distTag: 'latest' });
+      await addDistTag({ package: '@pnpm.e2e/peer-a', version: '1.0.1', distTag: 'latest' });
       helper.command.install('--add-missing-deps');
       helper.command.snapAllComponentsWithoutBuild('--skip-tests');
       helper.command.export();
 
-      await addDistTag({ package: '@pnpm.e2e/pkg-with-1-dep', version: '100.1.0', distTag: 'latest' });
-      await addDistTag({ package: '@pnpm.e2e/dep-of-pkg-with-1-dep', version: '100.1.0', distTag: 'latest' });
+      await addDistTag({ package: '@pnpm.e2e/abc', version: '2.0.0', distTag: 'latest' });
+      await addDistTag({ package: '@pnpm.e2e/peer-a', version: '1.0.0', distTag: 'latest' });
       helper.command.removeComponent('bar');
       fs.rmSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
       fs.unlinkSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'));
-      helper.fs.createFile('foo', 'foo.js', 'require("@pnpm.e2e/pkg-with-1-dep");');
+      helper.fs.createFile('foo', 'foo.js', 'require("@pnpm.e2e/abc");');
       helper.command.addComponent('foo');
       helper.extensions.addExtensionToVariant('foo', `${helper.scopes.remote}/custom-env/env`, {});
       helper.command.install();
@@ -233,10 +233,10 @@ chai.use(require('chai-fs'));
       expect(lockfile.bit.restoredFromModel).to.eq(true);
     });
     it('should resolve to one version of the peer dependency, the highest one', () => {
-      expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/pkg-with-1-dep@100.0.0');
-      expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.0.0');
-      expect(lockfile.packages).to.have.a.property('@pnpm.e2e/pkg-with-1-dep@100.1.0');
-      expect(lockfile.packages).to.have.a.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.1.0');
+      expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/peer-a@1.0.0');
+      expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/abc@1.0.0');
+      expect(lockfile.packages).to.have.a.property('@pnpm.e2e/peer-a@1.0.1');
+      expect(lockfile.packages).to.have.a.property('@pnpm.e2e/abc@2.0.0');
     });
     after(() => {
       npmCiRegistry.destroy();
