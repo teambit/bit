@@ -16,13 +16,16 @@ import { handleErrorAndExit } from '@teambit/cli';
 import { runCLI } from './load-bit';
 import { autocomplete } from './autocomplete';
 import { ServerCommander, shouldUseBitServer } from './server-commander';
+import { spawnPTY } from './server-forever';
 
 if (process.argv.includes('--get-yargs-completions')) {
   autocomplete();
   process.exit(0);
 }
 
-if (shouldUseBitServer()) {
+if (process.argv.includes('server-forever')) {
+  spawnPTY();
+} else if (shouldUseBitServer()) {
   new ServerCommander().execute().catch(() => {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     initApp();

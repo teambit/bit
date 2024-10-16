@@ -159,7 +159,13 @@ function getIdentifier(aspectDef: AspectDefinition, suffix: string, pathProp?: s
 }
 
 function getRegularAspectIdentifier(aspectDef: AspectDefinition, suffix: string, pathProp?: string): string {
-  const targetName = camelCase(`${parse(aspectDef.aspectPath).base.replace(/\./, '__').replace('@', '__')}${suffix}`);
+  let version = '';
+  if (aspectDef.getId) {
+    version = aspectDef.getId.split('@')[1];
+  }
+  const targetName = camelCase(
+    `${parse(aspectDef.aspectPath).base.replace(/\./, '__').replace('@', '__')}${version}${suffix}`
+  );
   const sourceName = pathProp ? getDefaultOrOnlyExport(aspectDef[pathProp]) : undefined;
   const identifier = sourceName ? `{${sourceName} as ${targetName}}` : targetName;
   return identifier;

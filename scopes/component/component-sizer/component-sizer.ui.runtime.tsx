@@ -27,7 +27,6 @@ export class SizerUIRuntime {
         const workspaceComponent = workspace?.components.find((component) =>
           component.id.isEqual(legacyComponentModel.id)
         );
-
         const componentVersionFromUrl = query.get('version');
         const isWorkspaceVersion = Boolean(workspaceComponent && !componentVersionFromUrl);
         const size = legacyComponentModel.size;
