@@ -227,8 +227,8 @@ chai.use(require('chai-fs'));
       helper.command.removeComponent('foo');
       fs.rmSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
       fs.unlinkSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'));
-      // helper.scopeHelper.reInitLocalScope();
-      // helper.scopeHelper.addRemoteScope();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.command.import(`${helper.scopes.remote}/foo@latest ${helper.scopes.remote}/bar@latest`);
     });
     let lockfile: any;
@@ -241,6 +241,9 @@ chai.use(require('chai-fs'));
       expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/abc@1.0.0');
       expect(lockfile.packages).to.have.a.property('@pnpm.e2e/peer-a@1.0.1');
       expect(lockfile.packages).to.have.a.property('@pnpm.e2e/abc@2.0.0');
+    });
+    it('imported component is not installed as a dependency', () => {
+      expect(lockfile.packages).to.not.have.a.property(`@ci/${randomStr}.bar@0.0.1`);
     });
     after(() => {
       npmCiRegistry.destroy();
