@@ -14,7 +14,7 @@ import { spawn } from 'node-pty';
 export function spawnPTY() {
   // Create a PTY (terminal emulation) running the 'bit server' process
   // this way, we can catch terminal sequences like arrows, ctrl+c, etc.
-  const ptyProcess = spawn('bit', ['server', '--pty'], {
+  const ptyProcess = spawn('bit', ['server'], {
     name: 'xterm-color',
     cols: 80,
     rows: 30,
@@ -22,51 +22,55 @@ export function spawnPTY() {
     env: process.env,
   });
 
+  // Keep track of connected clients
+  const clients: net.Socket[] = [];
+
+  let didGetClient = false;
+  let outputNotForClients = false;
+
+  // @ts-ignore
+  ptyProcess.on('data', (data) => {
+    if (!clients.length) outputNotForClients = data.toString();
+    // Forward data from the ptyProcess to connected clients
+    // console.log('ptyProcess data:', data.toString());
+    clients.forEach((socket) => {
+      socket.write(data);
+    });
+  });
+
   // Create a TCP server
   const server = net.createServer((socket) => {
     console.log('Client connected.');
+    didGetClient = true;
+    clients.push(socket);
 
     // Forward data from the client to the ptyProcess
     socket.on('data', (data: any) => {
       // console.log('Server received data from client:', data.toString());
       if (data.toString('hex') === '03') {
-        // User hit ctrl+c
+        // User hit Ctrl+C
         ptyProcess.kill();
       } else {
         ptyProcess.write(data);
       }
     });
 
-    // Forward data from the ptyProcess to the client
-    // @ts-ignore
-    ptyProcess.on('data', (data) => {
-      // console.log('ptyProcess data:', data.toString());
-      socket.write(data);
-    });
-
     // Handle client disconnect
-    socket.on('end', (item) => {
-      console.log('Client disconnected.', item);
+    socket.on('end', () => {
+      console.log('Client disconnected.');
+      const index = clients.indexOf(socket);
+      if (index !== -1) {
+        clients.splice(index, 1);
+      }
     });
 
-    // Handle errors
+    // Handle socket errors
     socket.on('error', (err) => {
       console.error('Socket error:', err);
-    });
-
-    // @ts-ignore
-    ptyProcess.on('exit', (code, signal) => {
-      console.log(`PTY exited with code ${code} and signal ${signal}`);
-      server.close();
-      setTimeout(() => {
-        console.log('restarting the server');
-        spawnPTY();
-      }, 500);
-    });
-
-    // @ts-ignore
-    ptyProcess.on('error', (err) => {
-      console.error('PTY process error:', err);
+      const index = clients.indexOf(socket);
+      if (index !== -1) {
+        clients.splice(index, 1);
+      }
     });
   });
 
@@ -92,6 +96,20 @@ export function spawnPTY() {
 
   server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
+  });
+
+  // @ts-ignore
+  ptyProcess.on('exit', (code, signal) => {
+    server.close();
+    if (didGetClient) {
+      console.log(`PTY exited with code ${code} and signal ${signal}`);
+      setTimeout(() => {
+        console.log('Restarting the PTY process...');
+        spawnPTY(); // Restart the PTY process
+      }, 500);
+    } else {
+      console.error(`Failed to start the PTY Process. Error: ${outputNotForClients}`);
+    }
   });
 }
 

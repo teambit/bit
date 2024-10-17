@@ -1,10 +1,9 @@
-import { platform } from 'os';
 import ora, { Ora, PersistOptions } from 'ora';
 import cliSpinners from 'cli-spinners';
 import prettyTime from 'pretty-time';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 
-const SPINNER_TYPE = platform() === 'win32' ? cliSpinners.dots : cliSpinners.dots12;
+const SPINNER_TYPE = cliSpinners.dots;
 
 export class Loader {
   shouldSendServerEvents = false;
