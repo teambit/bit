@@ -107,6 +107,10 @@ export class APIForIDE {
     await this.writeToCmdHistory(str);
   }
 
+  getProcessPid() {
+    return process.pid;
+  }
+
   private async writeToCmdHistory(str: string) {
     await fs.appendFile(path.join(this.workspace.scope.path, CMD_HISTORY), `${new Date().toISOString()} ${str}\n`);
   }

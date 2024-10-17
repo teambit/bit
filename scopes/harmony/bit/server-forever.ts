@@ -95,7 +95,7 @@ export function spawnPTY() {
   });
 
   server.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+    console.log(`Socket listening on port ${PORT}`);
   });
 
   // @ts-ignore
@@ -106,7 +106,7 @@ export function spawnPTY() {
       setTimeout(() => {
         console.log('Restarting the PTY process...');
         spawnPTY(); // Restart the PTY process
-      }, 500);
+      }, 100);
     } else {
       console.error(`Failed to start the PTY Process. Error: ${outputNotForClients}`);
     }
