@@ -106,7 +106,8 @@ export class CLIRawRoute implements Route {
           delete process.env.BIT_CLI_SERVER_NO_TTY;
           loader.shouldSendServerEvents = false;
         }
-        this.logger.clearStatusLine();
+        // for Pty, this line causes an error "Error: read ECONNRESET" on the socket
+        if (!isPty) this.logger.clearStatusLine();
         // change chalk back to false, otherwise, the IDE will have colors. (this is a global setting)
         chalk.enabled = false;
         if (shouldReloadFeatureToggle) {
