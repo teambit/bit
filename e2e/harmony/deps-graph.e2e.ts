@@ -101,12 +101,19 @@ chai.use(require('chai-fs'));
       });
     });
   });
-  describe('two components with different peer dependencies', function () {
+  describe.only('two components with different peer dependencies', function () {
     const env1DefaultPeerVersion = '16.0.0';
     const env2DefaultPeerVersion = '17.0.0';
-    before(() => {
-      helper = new Helper();
+    let randomStr: string;
+    before(async () => {
+      randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
+      const name = `@ci/${randomStr}.{name}`;
       helper.scopeHelper.setNewLocalAndRemoteScopes();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
+      await npmCiRegistry.init();
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -146,18 +153,32 @@ chai.use(require('chai-fs'));
 
       helper.fixtures.populateComponents(2);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
-      helper.fs.outputFile(`comp1/index.js`, `const React = require("react") // eslint-disable-line`);
+      await addDistTag({ package: '@pnpm.e2e/foo', version: '100.0.0', distTag: 'latest' });
+      await addDistTag({ package: '@pnpm.e2e/bar', version: '100.0.0', distTag: 'latest' });
+      helper.fs.outputFile(
+        `comp1/index.js`,
+        `const React = require("react"); require("@pnpm.e2e/foo"); // eslint-disable-line`
+      );
       helper.fs.outputFile(
         `comp2/index.js`,
-        `const React = require("react");const comp1 = require("@${helper.scopes.remote}/comp1"); // eslint-disable-line`
+        `const React = require("react");const comp1 = require("@ci/${randomStr}.comp1"); require("@pnpm.e2e/bar"); // eslint-disable-line`
       );
       helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-react/env1`, {});
       helper.extensions.addExtensionToVariant('comp2', `${helper.scopes.remote}/custom-react/env2`, {});
       helper.extensions.addExtensionToVariant('custom-react', 'teambit.envs/env', {});
+      helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
+        dependencies: {
+          '@pnpm.e2e/foo': '^100.0.0',
+          '@pnpm.e2e/bar': '^100.0.0',
+        },
+      });
       helper.command.install('--add-missing-deps');
-      helper.command.snapAllComponentsWithoutBuild('--skip-tests');
+      helper.command.tagAllComponents('--skip-tests');
+      helper.command.export();
     });
     after(() => {
+      npmCiRegistry.destroy();
+      helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
     });
     it('should save dependencies graph to the model', () => {
@@ -165,17 +186,38 @@ chai.use(require('chai-fs'));
       const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
       expect(depsGraph.importers['.'].dependencies.react).to.eq('16.0.0');
       expect(depsGraph.directDependencies['react@16.0.0']).to.eq('16.0.0');
-      console.log(JSON.stringify(depsGraph, null, 2));
+      // console.log(JSON.stringify(depsGraph, null, 2));
     });
     it('should save dependencies graph to the model', () => {
       const versionObj = helper.command.catComponent('comp2@latest');
       const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
       expect(depsGraph.importers['.'].dependencies.react).to.eq('17.0.0');
       expect(depsGraph.directDependencies['react@17.0.0']).to.eq('17.0.0');
-      console.log(JSON.stringify(depsGraph, null, 2));
+      // console.log(JSON.stringify(depsGraph, null, 2));
+    });
+    describe('importing a component that depends on another component and was export together with that component', () => {
+      before(async () => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        await addDistTag({ package: '@pnpm.e2e/foo', version: '100.1.0', distTag: 'latest' });
+        await addDistTag({ package: '@pnpm.e2e/bar', version: '100.1.0', distTag: 'latest' });
+        helper.command.import(`${helper.scopes.remote}/comp2@latest`);
+      });
+      let lockfile: any;
+      it('should generate a lockfile', () => {
+        lockfile = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8'));
+        expect(lockfile.bit.restoredFromModel).to.eq(true);
+      });
+      it('should import the component with its own resolved versions', () => {
+        expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/foo@100.1.0');
+        expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/bar@100.1.0');
+        expect(lockfile.packages).to.have.a.property('@pnpm.e2e/foo@100.0.0');
+        expect(lockfile.packages).to.have.a.property('@pnpm.e2e/bar@100.0.0');
+        // console.log(JSON.stringify(lockfile, null, 2));
+      });
     });
   });
-  describe.only('two components exported with different peer dependencies using the same env', function () {
+  describe('two components exported with different peer dependencies using the same env', function () {
     let randomStr: string;
     before(async () => {
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
