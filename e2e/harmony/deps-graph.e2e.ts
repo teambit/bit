@@ -214,19 +214,15 @@ chai.use(require('chai-fs'));
 
       await addDistTag({ package: '@pnpm.e2e/abc', version: '2.0.0', distTag: 'latest' });
       await addDistTag({ package: '@pnpm.e2e/peer-a', version: '1.0.0', distTag: 'latest' });
-      helper.command.removeComponent('bar');
-      fs.rmSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
-      fs.unlinkSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'));
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
       helper.fs.createFile('foo', 'foo.js', `require("@pnpm.e2e/abc"); require("@ci/${randomStr}.bar");`);
       helper.command.addComponent('foo');
-      helper.extensions.addExtensionToVariant('foo', `${helper.scopes.remote}/custom-env/env`, {});
+      helper.extensions.addExtensionToVariant('foo', `${helper.scopes.remote}/custom-env/env@0.0.1`, {});
       helper.command.install('--add-missing-deps');
       helper.command.snapAllComponentsWithoutBuild('--skip-tests');
       helper.command.export();
 
-      helper.command.removeComponent('foo');
-      fs.rmSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
-      fs.unlinkSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'));
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.import(`${helper.scopes.remote}/foo@latest ${helper.scopes.remote}/bar@latest`);
