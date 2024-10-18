@@ -336,7 +336,8 @@ Please run the command "bit server-forever" first to start the server.`)
 }
 
 export function shouldUseBitServer() {
-  const commandsToSkip = ['start', 'run', 'watch', 'server'];
+  // update command is interactive with option to press up/down, which doesn't work with the server.
+  const commandsToSkip = ['start', 'run', 'watch', 'server', 'update'];
   const hasFlag =
     process.env.BIT_CLI_SERVER === 'true' ||
     process.env.BIT_CLI_SERVER === '1' ||
