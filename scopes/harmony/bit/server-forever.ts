@@ -14,7 +14,8 @@ import { spawn } from 'node-pty';
 export function spawnPTY() {
   // Create a PTY (terminal emulation) running the 'bit server' process
   // this way, we can catch terminal sequences like arrows, ctrl+c, etc.
-  const ptyProcess = spawn('bit', ['server'], {
+  const flags = process.argv.slice(2).filter((arg) => arg.startsWith('-'));
+  const ptyProcess = spawn('bit', ['server', ...flags], {
     name: 'xterm-color',
     cols: 80,
     rows: 30,
