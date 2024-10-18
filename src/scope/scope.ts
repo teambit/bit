@@ -800,6 +800,7 @@ once done, to continue working, please run "bit cc"`
     await Promise.all(
       componentIds.map(async (componentId) => {
         const graph = await this.getDependenciesGraphByComponentId(componentId);
+        if (graph == null || Object.keys(graph).length === 0) return;
         if (allGraph == null) {
           allGraph = graph;
         } else {
