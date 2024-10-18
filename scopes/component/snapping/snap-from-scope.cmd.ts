@@ -23,6 +23,7 @@ export type SnapDataPerCompRaw = {
     type?: 'runtime' | 'dev' | 'peer'; // default "runtime".
   }>;
   removeDependencies?: string[];
+  forkFrom?: string; // origin id to fork from. the componentId is the new id. (no need to populate isNew prop).
 };
 
 type SnapFromScopeOptions = {
@@ -53,6 +54,7 @@ the input data is a stringified JSON of an array of the following object.
     type?: 'runtime' | 'dev' | 'peer'; // default "runtime".
   }>;
   removeDependencies?: string[]; // component-id (for components) or package-name (for packages) to remove from the dependencies.
+  forkFrom?: string;      // origin id to fork from. the componentId is the new id. (no need to populate isNew prop).
 }
 an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "first snap"}]'
 `;

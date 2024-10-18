@@ -50,7 +50,7 @@ import ResetCmd from './reset-cmd';
 import { tagModelComponent, updateComponentsVersions, BasicTagParams, BasicTagSnapParams } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
-import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
+import { addDeps, generateCompFromScope, replaceDeps } from './generate-comp-from-scope';
 import { FlattenedEdgesGetter } from './flattened-edges';
 import { SnapDistanceCmd } from './snap-distance-cmd';
 import {
@@ -62,6 +62,7 @@ import {
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
+import { ForkingAspect, ForkingMain } from '@teambit/forking';
 
 export type TagDataPerComp = {
   componentId: ComponentID;
@@ -86,6 +87,7 @@ export type SnapDataParsed = {
     type: 'runtime' | 'dev' | 'peer';
   }[];
   removeDependencies?: string[];
+  forkFrom?: ComponentID;
 };
 
 export type SnapResults = BasicTagResults & {
@@ -127,7 +129,8 @@ export class SnappingMain {
     private builder: BuilderMain,
     private importer: ImporterMain,
     private deps: DependenciesMain,
-    private application: ApplicationMain
+    private application: ApplicationMain,
+    private forking: ForkingMain
   ) {
     this.objectsRepo = this.scope?.legacyScope?.objects;
   }
@@ -427,17 +430,45 @@ if you're willing to lose the history from the head to the specified version, us
           type: dep.type ?? 'runtime',
         })),
         removeDependencies: snapData.removeDependencies,
+        forkFrom: snapData.forkFrom ? ComponentID.fromString(snapData.forkFrom) : undefined,
       };
     });
 
     // console.log('snapDataPerComp', JSON.stringify(snapDataPerComp, undefined, 2));
 
-    const componentIds = compact(snapDataPerComp.map((t) => (t.isNew ? null : t.componentId)));
+    const componentIds = compact(snapDataPerComp.map((t) => (t.isNew || t.forkFrom ? null : t.componentId)));
     const allCompIds = snapDataPerComp.map((s) => s.componentId);
     const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
-    const newCompsData = compact(snapDataPerComp.map((t) => (t.isNew ? t : null)));
+    const newCompsData = compact(snapDataPerComp.map((t) => (t.isNew && !t.forkFrom ? t : null)));
+    const forkedFromData = compact(snapDataPerComp.map((t) => (t.forkFrom ? t : null)));
     const newComponents = await Promise.all(
       newCompsData.map((newComp) => generateCompFromScope(this.scope, newComp, this))
+    );
+    const newForkedComponents = await Promise.all(
+      forkedFromData.map(async ({ componentId, forkFrom }) => {
+        if (!forkFrom) throw new Error(`expected to have forkFrom data`);
+        const results = await this.forking.forkRemoteComponent(forkFrom, componentId.fullName, {
+          scope: componentId.scope,
+        });
+        const originComp = results.component.state._consumer as ConsumerComponent;
+        const consumerComp = originComp.clone();
+        consumerComp.name = componentId.name;
+        consumerComp.scope = undefined;
+        consumerComp.defaultScope = componentId.scope;
+        consumerComp.version = undefined;
+
+        const { version, files: filesBitObject } =
+          await this.scope.legacyScope.sources.consumerComponentToVersion(consumerComp);
+        const modelComponent = this.scope.legacyScope.sources.findOrAddComponent(consumerComp);
+        consumerComp.version = version.hash().toString();
+        await this.scope.legacyScope.objects.writeObjectsToTheFS([
+          version,
+          modelComponent,
+          ...filesBitObject.map((f) => f.file),
+        ]);
+        const comp = this.scope.getFromConsumerComponent(consumerComp);
+        return comp;
+      })
     );
 
     await this.scope.import(componentIdsLatest, {
@@ -468,7 +499,11 @@ if you're willing to lose the history from the head to the specified version, us
       });
     }
 
-    const components = [...existingComponents, ...newComponents];
+    const components = [...existingComponents, ...newComponents, ...newForkedComponents];
+
+    await pMapSeries(newForkedComponents, async (comp) => {
+      await replaceDeps(comp, this.dependencyResolver, newForkedComponents, snapDataPerComp);
+    });
 
     // this must be done before we load component aspects later on, because this updated deps may update aspects.
     await pMapSeries(components, async (component) => {
@@ -479,7 +514,7 @@ if you're willing to lose the history from the head to the specified version, us
 
     // for new components these are not needed. coz when generating them we already add the aspects and the files.
     await Promise.all(
-      existingComponents.map(async (comp) => {
+      [...existingComponents, ...newForkedComponents].map(async (comp) => {
         const snapData = getSnapData(comp.id);
         if (snapData.aspects) await this.scope.addAspectsFromConfigObject(comp, snapData.aspects);
         if (snapData.files?.length) {
@@ -1294,6 +1329,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     GlobalConfigAspect,
     DependenciesAspect,
     ApplicationAspect,
+    ForkingAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1310,6 +1346,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     globalConfig,
     deps,
     application,
+    forking,
   ]: [
     Workspace,
     CLIMain,
@@ -1324,6 +1361,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     GlobalConfigMain,
     DependenciesMain,
     ApplicationMain,
+    ForkingMain,
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(
@@ -1337,7 +1375,8 @@ another option, in case this dependency is not in main yet is to remove all refe
       builder,
       importer,
       deps,
-      application
+      application,
+      forking
     );
     const snapCmd = new SnapCmd(snapping, logger, globalConfig);
     const tagCmd = new TagCmd(snapping, logger, globalConfig);

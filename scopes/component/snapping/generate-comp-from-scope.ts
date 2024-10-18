@@ -1,6 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
+import { Dependencies, Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { SourceFile } from '@teambit/component.sources';
 import { ScopeMain } from '@teambit/scope';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
@@ -161,4 +161,32 @@ export async function addDeps(
   await deps.loadDependenciesFromScope(consumerComponent, dependenciesData);
 
   await snapping.UpdateDepsAspectsSaveIntoDepsResolver(component, updateDeps);
+}
+
+export async function replaceDeps(
+  comp: Component,
+  depsResolver: DependencyResolverMain,
+  forkedComps: Component[],
+  snapDataPerComp: SnapDataParsed[]
+) {
+  const consumerComponent = comp.state._consumer as ConsumerComponent;
+  const toDependency = (depId: ComponentID) => {
+    const depComp = forkedComps.find((c) => c.id.isEqualWithoutVersion(depId));
+    if (!depComp) throw new Error(`unable to find the specified dependency ${depId.toString()} in the scope`);
+    const pkgName = depsResolver.calcPackageName(depComp);
+    return new Dependency(depComp.id, [], pkgName);
+  };
+  const replace = (deps: Dependencies): Dependencies => {
+    const dependencies = deps.get().map((dep) => {
+      const found = snapDataPerComp.find((d) => d.forkFrom && d.forkFrom.isEqualWithoutVersion(dep.id));
+      if (found) {
+        return toDependency(found.componentId);
+      }
+      return dep;
+    });
+    return new Dependencies(dependencies);
+  };
+  consumerComponent.dependencies = replace(consumerComponent.dependencies);
+  consumerComponent.devDependencies = replace(consumerComponent.devDependencies);
+  consumerComponent.peerDependencies = replace(consumerComponent.peerDependencies);
 }
