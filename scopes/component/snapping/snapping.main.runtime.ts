@@ -942,13 +942,16 @@ another option, in case this dependency is not in main yet is to remove all refe
     });
   }
 
-  _getPublishedPackages(components: ConsumerComponent[]): string[] {
-    const publishedPackages = components.map((comp) => {
+  _getPublishedPackages(components: ConsumerComponent[]): Map<string, string | undefined> {
+    const publishedPackages: Map<string, string | undefined> = new Map();
+    for (const comp of components) {
       const builderExt = comp.extensions.findCoreExtension(Extensions.builder);
       const pkgData = builderExt?.data?.aspectsData?.find((a) => a.aspectId === Extensions.pkg);
-      return pkgData?.data?.publishedPackage;
-    });
-    return compact(publishedPackages);
+      if (pkgData?.data?.publishedPackage != null) {
+        publishedPackages.set(pkgData.data.publishedPackage, pkgData.data.integrity);
+      }
+    }
+    return publishedPackages;
   }
 
   async _addCompToObjects({

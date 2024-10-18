@@ -108,7 +108,7 @@ export class UpdateDependenciesMain {
     );
     const legacyBuildResults = this.scope.builderDataMapToLegacyOnTagResults(builderDataMap);
     this.snapping._updateComponentsByTagResult(this.legacyComponents, legacyBuildResults);
-    const publishedPackages = this.snapping._getPublishedPackages(this.legacyComponents);
+    const publishedPackages = Array.from(this.snapping._getPublishedPackages(this.legacyComponents).keys());
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     await this.saveDataIntoLocalScope(buildStatus);

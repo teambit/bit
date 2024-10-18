@@ -101,7 +101,7 @@ chai.use(require('chai-fs'));
       });
     });
   });
-  describe.only('two components with different peer dependencies', function () {
+  describe('two components with different peer dependencies', function () {
     const env1DefaultPeerVersion = '16.0.0';
     const env2DefaultPeerVersion = '17.0.0';
     let randomStr: string;
@@ -286,6 +286,92 @@ chai.use(require('chai-fs'));
     after(() => {
       npmCiRegistry.destroy();
       helper.command.delConfig('registry');
+    });
+  });
+  describe.only('graph data is update during tagging components from the scope', () => {
+    let bareTag;
+    before(async () => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      await npmCiRegistry.init();
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      helper.fixtures.populateComponents(2);
+      helper.command.install('--add-missing-deps');
+      helper.command.snapAllComponents('--skip-tests');
+      helper.command.export();
+
+      bareTag = helper.scopeHelper.getNewBareScope('-bare-tag');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+      const data = [
+        {
+          componentId: `${helper.scopes.remote}/comp1`,
+          versionToTag: `1.0.0`,
+          dependencies: [`${helper.scopes.remote}/comp2@^1.0.0`],
+          message: `msg for first comp`,
+        },
+        {
+          componentId: `${helper.scopes.remote}/comp2`,
+          versionToTag: `1.0.0`,
+          message: `msg for second comp`,
+        },
+      ];
+      helper.command.tagFromScope(bareTag.scopePath, data);
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.command.delConfig('registry');
+    });
+    it('should save dependencies graph to the model', () => {
+      const versionObj = helper.command.catComponent('comp1@latest');
+      const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
+      expect(depsGraph.importers['.'].dependencies.react).to.eq('18.3.1');
+      expect(depsGraph.importers['.'].devDependencies['is-odd']).to.eq('1.0.0');
+      expect(depsGraph.directDependencies['react@18.3.1']).to.eq('18.3.1');
+      expect(depsGraph.directDependencies['is-odd@1.0.0']).to.eq('1.0.0');
+      console.log(JSON.stringify(depsGraph, null, 2));
+    });
+    describe('sign component and use dependency graph to generate a lockfile', () => {
+      let signOutput: string;
+      let lockfile: any;
+      before(async () => {
+        helper.command.export();
+        helper.scopeHelper.cloneLocalScope();
+        // yes, this is strange, it adds the remote-scope to itself as a remote. we need it because
+        // we run "action" command from the remote to itself to clear the cache. (needed because
+        // normally bit-sign is running from the fs but a different http service is running as well)
+        helper.scopeHelper.addRemoteScope(undefined, helper.scopes.remotePath);
+        const ids = [`${helper.scopes.remote}/comp1@latest`];
+        // console.log('sign-command', `bit sign ${ids.join(' ')}`);
+        signOutput = helper.command.sign(ids, '--push --original-scope --log', helper.scopes.remotePath);
+      });
+      it('should sign successfully', () => {
+        expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
+      });
+      it('should generate a lockfile', () => {
+        const capsulesDir = signOutput.match(/running installation in root dir (\/[^\s]+)/)?.[1];
+        expect(capsulesDir).to.be.a('string');
+        lockfile = yaml.load(fs.readFileSync(path.join(stripAnsi(capsulesDir!), 'pnpm-lock.yaml'), 'utf8'));
+        expect(lockfile.bit.restoredFromModel).to.eq(true);
+      });
+      it('should not update dependencies in the lockfile', () => {
+        expect(lockfile.packages).to.have.a.property('@pnpm.e2e/pkg-with-1-dep@100.0.0');
+        expect(lockfile.packages).to.have.a.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.0.0');
+        expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/pkg-with-1-dep@100.1.0');
+        expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.1.0');
+      });
+    });
+    describe('imported component uses dependency graph to generate a lockfile', () => {
+      before(async () => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.import(`${helper.scopes.remote}/comp1@latest`);
+      });
+      it('should generate a lockfile', () => {
+        expect(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8')).to.have.string(
+          'restoredFromModel: true'
+        );
+      });
     });
   });
 });

@@ -375,7 +375,10 @@ export async function tagModelComponent({
       const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
 
       snapping._updateComponentsByTagResult(componentsToBuild, buildResult);
-      publishedPackages.push(...snapping._getPublishedPackages(componentsToBuild));
+      const packageIntegritiesByPublishedPackages = snapping._getPublishedPackages(componentsToBuild);
+      publishedPackages.push(...Array.from(packageIntegritiesByPublishedPackages.keys()));
+      // TODO: update the integrities in the dependencies graphs
+      console.log(packageIntegritiesByPublishedPackages);
       addBuildStatus(componentsToBuild, BuildStatus.Succeed);
       await mapSeries(componentsToBuild, (consumerComponent) => snapping._enrichComp(consumerComponent));
     }
