@@ -452,7 +452,7 @@ if you're willing to lose the history from the head to the specified version, us
         });
         const originComp = results.component.state._consumer as ConsumerComponent;
         const consumerComp = originComp.clone();
-        consumerComp.name = componentId.name;
+        consumerComp.name = componentId.fullName;
         consumerComp.scope = undefined;
         consumerComp.defaultScope = componentId.scope;
         consumerComp.version = undefined;
