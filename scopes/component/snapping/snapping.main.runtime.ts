@@ -459,7 +459,7 @@ if you're willing to lose the history from the head to the specified version, us
 
         const { version, files: filesBitObject } =
           await this.scope.legacyScope.sources.consumerComponentToVersion(consumerComp);
-        const modelComponent = this.scope.legacyScope.sources.findOrAddComponent(consumerComp);
+        const modelComponent = await this.scope.legacyScope.sources.findOrAddComponent(consumerComp);
         consumerComp.version = version.hash().toString();
         await this.scope.legacyScope.objects.writeObjectsToTheFS([
           version,
@@ -502,7 +502,7 @@ if you're willing to lose the history from the head to the specified version, us
     const components = [...existingComponents, ...newComponents, ...newForkedComponents];
 
     await pMapSeries(newForkedComponents, async (comp) => {
-      await replaceDeps(comp, this.dependencyResolver, newForkedComponents, snapDataPerComp);
+      await replaceDeps(comp, this.dependencyResolver, this.scope, newForkedComponents, snapDataPerComp);
     });
 
     // this must be done before we load component aspects later on, because this updated deps may update aspects.

@@ -166,6 +166,7 @@ export async function addDeps(
 export async function replaceDeps(
   comp: Component,
   depsResolver: DependencyResolverMain,
+  scope: ScopeMain,
   forkedComps: Component[],
   snapDataPerComp: SnapDataParsed[]
 ) {
@@ -189,4 +190,17 @@ export async function replaceDeps(
   consumerComponent.dependencies = replace(consumerComponent.dependencies);
   consumerComponent.devDependencies = replace(consumerComponent.devDependencies);
   consumerComponent.peerDependencies = replace(consumerComponent.peerDependencies);
+
+  // replace extensions ids
+  consumerComponent.extensions.forEach((ext) => {
+    const extId = ext.extensionId;
+    if (!extId) return;
+    const found = snapDataPerComp.find((d) => d.forkFrom && d.forkFrom.isEqualWithoutVersion(extId));
+    if (found) {
+      ext.extensionId = found.componentId;
+      if (ext.newExtensionId) ext.newExtensionId = ext.extensionId;
+    }
+  });
+
+  comp.state.aspects = await scope.createAspectListFromExtensionDataList(consumerComponent.extensions);
 }
