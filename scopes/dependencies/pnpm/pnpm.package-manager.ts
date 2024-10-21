@@ -30,7 +30,7 @@ import {
   PackageNode,
 } from '@pnpm/reviewing.dependencies-hierarchy';
 import { renderTree } from '@pnpm/list';
-import { writeWantedLockfile, getLockfileImporterId } from '@pnpm/lockfile.fs';
+import { writeWantedLockfile, getLockfileImporterId, convertToLockfileFile } from '@pnpm/lockfile.fs';
 import { readWantedLockfile } from '@pnpm/lockfile-file';
 import { type ProjectManifest, type DepPath } from '@pnpm/types';
 import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
@@ -409,10 +409,8 @@ export class PnpmPackageManager implements PackageManager {
     if (!lockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
       componentRootDir = componentRootDir.split('@')[0];
     }
-    const partialLockfile = filterLockfileByImporters(
-      lockfile,
-      [componentRootDir as ProjectId, componentRelativeDir as ProjectId],
-      {
+    const partialLockfile = convertToLockfileFile(
+      filterLockfileByImporters(lockfile, [componentRootDir as ProjectId, componentRelativeDir as ProjectId], {
         include: {
           dependencies: true,
           devDependencies: true,
@@ -420,31 +418,33 @@ export class PnpmPackageManager implements PackageManager {
         },
         failOnMissingDependencies: false,
         skipped: new Set(),
-      }
-    );
-    const specifiers = partialLockfile.importers[componentRootDir].specifiers;
-    const componentDevImporter = partialLockfile.importers[componentRelativeDir];
+      }),
+      { forceSharedFormat: true }
+    ) as any;
+    const componentDevImporter = partialLockfile.importers![componentRelativeDir];
     const directDependencies = {};
-    for (const [name, version] of Object.entries(componentDevImporter.devDependencies)) {
-      directDependencies[`${name}@${componentDevImporter.specifiers[name]}`] = version;
+    for (const [name, { version, specifier }] of Object.entries(componentDevImporter.devDependencies ?? {}) as any) {
+      directDependencies[`${name}@${specifier}`] = version;
     }
     const lockedPkg =
-      partialLockfile.packages![`${pkgName}@${partialLockfile.importers[componentRootDir].dependencies[pkgName]}`];
+      partialLockfile.snapshots![
+        `${pkgName}@${partialLockfile.importers![componentRootDir].dependencies![pkgName].version}`
+      ];
     for (const depType of ['dependencies', 'optionalDependencies']) {
-      for (const [name, version] of Object.entries(lockedPkg[depType] ?? {})) {
-        directDependencies[`${name}@${componentDevImporter.specifiers[name]}`] = version;
+      for (const [name, version] of Object.entries(lockedPkg[depType] ?? {}) as any) {
+        directDependencies[`${name}@${componentDevImporter[depType][name].specifier}`] = version;
       }
     }
-    partialLockfile.importers = {
-      ['.' as ProjectId]:
-        partialLockfile.packages![`${pkgName}@${partialLockfile.importers[componentRootDir].dependencies[pkgName]}`],
-    };
+    // partialLockfile.importers = {
+    // ['.' as ProjectId]:
+    // partialLockfile.packages![`${pkgName}@${partialLockfile.importers[componentRootDir].dependencies[pkgName]}`],
+    // };
     partialLockfile['directDependencies'] = directDependencies;
-    partialLockfile.importers['.'].devDependencies = componentDevImporter.devDependencies;
-    partialLockfile.importers['.'].specifiers = {
-      ...componentDevImporter.specifiers,
-      ...specifiers,
-    };
+    // partialLockfile.importers['.'].devDependencies = componentDevImporter.devDependencies;
+    // partialLockfile.importers['.'].specifiers = {
+    // ...componentDevImporter.specifiers,
+    // ...specifiers,
+    // };
     return partialLockfile;
   }
 }
