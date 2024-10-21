@@ -306,9 +306,9 @@ describe('env-jsonc-policies', function () {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       const envIdLevel1 = 'react-based-env-level1';
-      const envIdLevel1PackageName = `@${helper.scopes.remote}/react-based-env-level1`;
+      const envFullIdLevel1 = `${helper.scopes.remote}/react-based-env-level1`;
       const envIdLevel2 = 'react-based-env-level2';
-      const envIdLevel2PackageName = `@${helper.scopes.remote}/react-based-env-level2`;
+      const envFullIdLevel2 = `${helper.scopes.remote}/react-based-env-level2`;
       envIdLevel3 = 'react-based-env-level3';
       fullEnvIdLevel3 = `${helper.scopes.remote}/react-based-env-level3`;
 
@@ -316,7 +316,7 @@ describe('env-jsonc-policies', function () {
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
-        generateEnvJsoncWithExtends(envIdLevel1PackageName, ENV_JSONC_LEVEL2),
+        generateEnvJsoncWithExtends(envFullIdLevel1, ENV_JSONC_LEVEL2),
         false,
         'react-based-env-level2',
         envIdLevel2
@@ -324,7 +324,7 @@ describe('env-jsonc-policies', function () {
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
-        generateEnvJsoncWithExtends(envIdLevel2PackageName, ENV_JSONC_LEVEL3),
+        generateEnvJsoncWithExtends(envFullIdLevel2, ENV_JSONC_LEVEL3),
         false,
         'react-based-env-level3',
         envIdLevel3
