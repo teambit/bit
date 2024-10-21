@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
 import memoize from 'memoizee';
+import { parse } from 'comment-json';
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import type { PubsubMain } from '@teambit/pubsub';
@@ -24,7 +25,7 @@ import {
   VariantPolicy,
   DependencyList,
 } from '@teambit/dependency-resolver';
-import { EnvsMain, EnvsAspect } from '@teambit/envs';
+import { EnvsMain, EnvsAspect, EnvJsonc } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { Logger } from '@teambit/logger';
@@ -1994,6 +1995,28 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     const comp = comps[0];
     if (!comp) throw new BitError(`unable to find ${envId.toString()} in the workspace or in the remote`);
     return comp.id.toString();
+  }
+
+  async resolveEnvManifest(envId: string): Promise<EnvJsonc> {
+    const envComponentId = ComponentID.fromString(envId);
+    const resolvedEnvComponentId = await this.resolveComponentId(envComponentId);
+    const envComponent = await this.get(resolvedEnvComponentId, undefined, true, false, {
+      executeLoadSlot: false,
+      loadExtensions: false,
+    });
+    // TODO: caching this
+    const alreadyResolved = this.envs.getEnvManifest(envComponent);
+    if (alreadyResolved) return alreadyResolved;
+
+    // TODO: caching this
+    const envJson = envComponent.filesystem.files.find((file) => {
+      return file.relative === 'env.jsonc' || file.relative === 'env.json';
+    });
+    if (!envJson) {
+      throw new BitError(`unable to find env.jsonc file in ${envId}`);
+    }
+    const envManifest: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true);
+    return envManifest;
   }
 
   /**
