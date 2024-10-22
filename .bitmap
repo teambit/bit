@@ -1087,13 +1087,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/modules/match-pattern"
     },
-    "modules/mdx-compiler": {
-        "name": "modules/mdx-compiler",
-        "scope": "teambit.mdx",
-        "version": "0.0.512",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/modules/compiler"
-    },
     "modules/merge-component-results": {
         "name": "modules/merge-component-results",
         "scope": "teambit.pipelines",
