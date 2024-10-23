@@ -549,7 +549,8 @@ export default class Consumer {
         if (!id.hasVersion()) return id;
         const modelComponent = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
         if (!modelComponent) {
-          throw new Error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing, please run bit-import`);
+          logger.error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing`);
+          throw new BitError(`${id.toStringWithoutVersion()} is missing, please run "bit import"`);
         }
         const head = modelComponent.getHeadAsTagIfExist();
         if (head) {
