@@ -646,4 +646,55 @@ export const BasicIdInput = () => {
       expect(catComp1.extensions[0].extensionId.version).to.not.equal('0.0.1');
     });
   });
+  // @todo: change the test to work with the workspace
+  describe.skip('_snap with forkFrom prop', () => {
+    let bareTag;
+    // let beforeSnappingOnScope: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.snapAllComponents();
+      helper.command.export();
+
+      bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+      // beforeSnappingOnScope = helper.scopeHelper.cloneScope(bareTag.scopePath);
+    });
+    describe('snapping them all at the same time without dependencies changes', () => {
+      let data;
+      before(() => {
+        data = [
+          {
+            componentId: `${helper.scopes.remote}/comp1-a`,
+            forkFrom: `${helper.scopes.remote}/comp1`,
+            message: `msg for first comp`,
+          },
+          {
+            componentId: `${helper.scopes.remote}/comp2-b`,
+            forkFrom: `${helper.scopes.remote}/comp2`,
+            message: `msg for second comp`,
+          },
+          {
+            componentId: `${helper.scopes.remote}/comp3-c`,
+            forkFrom: `${helper.scopes.remote}/comp3`,
+            message: `msg for third comp`,
+          },
+        ];
+        // console.log('command', `bit _snap '${JSON.stringify(data)}'`);
+        helper.command.snapFromScope(bareTag.scopePath, data);
+      });
+      it('should save the components and dependencies according to the new ids', () => {
+        const comp1Head = helper.command.getHead(`${helper.scopes.remote}/comp1-a`, bareTag.scopePath);
+        const comp1OnBare = helper.command.catObject(comp1Head, true, bareTag.scopePath);
+        expect(comp1OnBare.log.message).to.equal('msg for first comp');
+        expect(comp1OnBare.dependencies[0].id.name).to.equal('comp2-b');
+        expect(comp1OnBare.dependencies[0].packageName).to.equal(`@${helper.scopes.remote}/comp2-b`);
+        const flattenedDepNames = comp1OnBare.flattenedDependencies.map((d) => d.name);
+        expect(flattenedDepNames).to.include('comp2-b');
+        expect(flattenedDepNames).to.include('comp3-c');
+        expect(flattenedDepNames).to.not.include('comp2');
+        expect(flattenedDepNames).to.not.include('comp3');
+      });
+    });
+  });
 });
