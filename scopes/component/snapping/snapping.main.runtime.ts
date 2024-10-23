@@ -536,6 +536,7 @@ if you're willing to lose the history from the head to the specified version, us
       // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
       await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
     } else {
+      await this.workspace.clearCache();
       // for the forked components, it's on the workspace, so all it is missing now is the installation
       await this.install.install(undefined, {
         dedupe: true,
