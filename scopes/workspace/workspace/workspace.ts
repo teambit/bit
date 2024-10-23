@@ -368,7 +368,10 @@ export class Workspace implements ComponentFactory {
     const autoTagPending = await this.consumer.listComponentsForAutoTagging(
       ComponentIdList.fromArray(modifiedComponents)
     );
-    const comps = autoTagPending.filter((autoTagComp) => !newComponents.has(autoTagComp.componentId));
+    const localOnly = this.listLocalOnly();
+    const comps = autoTagPending
+      .filter((autoTagComp) => !newComponents.has(autoTagComp.componentId))
+      .filter((autoTagComp) => !localOnly.has(autoTagComp.componentId));
     return comps.map((c) => c.id);
   }
 
