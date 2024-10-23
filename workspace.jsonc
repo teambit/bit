@@ -534,9 +534,7 @@
     // "bit compile" breaks node_modules when hard links are used.
     "packageImportMethod": "copy",
     "packageManagerArgs": [],
-    "devFilePatterns": [
-      "**/*.spec.ts"
-    ],
+    "devFilePatterns": ["**/*.spec.ts"],
     "strictPeerDependencies": true,
     "autoInstallPeers": true,
     // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
@@ -544,13 +542,7 @@
     "savePrefix": "",
     "extraArgs": [],
     "peerDependencyRules": {
-      "allowAny": [
-        "react",
-        "react-dom",
-        "@testing-library/react",
-        "@teambit/legacy",
-        "typescript"
-      ],
+      "allowAny": ["react", "react-dom", "@testing-library/react", "@teambit/legacy", "typescript"],
       "ignoreMissing": []
     },
     "capsuleSelfReference": true
@@ -560,23 +552,16 @@
     "maxChunkSize": 20
   },
   "teambit.generator/generator": {
-    "aspects": [
-      "teambit.harmony/aspect"
-    ]
+    "aspects": ["teambit.harmony/aspect"]
   },
   "teambit.component/issues": {
-    "ignoreIssues": [
-      "CircularDependencies",
-      "DuplicateComponentAndPackage"
-    ]
+    "ignoreIssues": ["CircularDependencies", "DuplicateComponentAndPackage"]
   },
   "teambit.workspace/variants": {
     // Only component with no namespace (aka aspects in our workspace)
     "*,!{*/**}": {
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": [
-          "--access public"
-        ],
+        "packageManagerPublishArgs": ["--access public"],
         "packageJson": {
           "name": "@teambit/{name}"
         }
@@ -602,14 +587,10 @@
       "teambit.component/issues": {
         // This is here because in load-bit, we have to import harmony config from non main file
         // we can't expose it from the main file, since it's not browser compatible
-        "ignoreIssues": [
-          "ImportNonMainFiles"
-        ]
+        "ignoreIssues": ["ImportNonMainFiles"]
       },
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": [
-          "--access public"
-        ],
+        "packageManagerPublishArgs": ["--access public"],
         "packageJson": {
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "bvm": {
@@ -687,9 +668,7 @@
     },
     "scopes/harmony/node": {
       "teambit.component/issues": {
-        "ignoreIssues": [
-          "ImportNonMainFiles"
-        ]
+        "ignoreIssues": ["ImportNonMainFiles"]
       },
       // TODO: remove after next tag
       "teambit.dependencies/dependency-resolver": {

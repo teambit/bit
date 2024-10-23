@@ -152,6 +152,7 @@ export type PreviewEnvComponentData = {
 export type PreviewConfig = {
   bundlingStrategy?: string;
   disabled: boolean;
+  chunkSize?: number;
   /**
    * limit concurrent components when running the bundling step for your bundler during generate components preview task.
    * this helps mitigate large memory consumption for the build pipeline. This may increase the overall time for the generate-preview task, but reduce memory footprint.
@@ -1025,7 +1026,7 @@ export class PreviewMain {
     if (!config.disabled)
       builder.registerBuildTasks([
         new EnvPreviewTemplateTask(preview, envs, aspectLoader, dependencyResolver, logger),
-        new PreviewTask(bundler, preview, dependencyResolver, logger),
+        new PreviewTask(bundler, preview, dependencyResolver, logger, config.chunkSize),
         new PreBundlePreviewTask(uiMain, logger),
       ]);
 
