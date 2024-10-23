@@ -457,7 +457,9 @@ if you're willing to lose the history from the head to the specified version, us
       targetId: f.componentId.fullName,
       targetScope: f.componentId.scope,
     }));
-    const forkResults = await this.forking.forkMultipleFromRemote(forkMultipleData, { refactor: true });
+    const forkResults = forkMultipleData.length
+      ? await this.forking.forkMultipleFromRemote(forkMultipleData, { refactor: true })
+      : [];
     const newEnvData: Record<string, ComponentID[]> = {};
     forkedFromData.forEach((f) => {
       const bitmapElem = this.workspace.bitMap.getBitmapEntry(f.componentId);
