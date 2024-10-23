@@ -114,6 +114,7 @@ export class ForkingMain {
       }
     );
     await this.refactorMultipleAndInstall(results, options);
+    return results;
   }
 
   /**

@@ -50,7 +50,7 @@ import ResetCmd from './reset-cmd';
 import { tagModelComponent, updateComponentsVersions, BasicTagParams, BasicTagSnapParams } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
-import { addDeps, generateCompFromScope, replaceDeps } from './generate-comp-from-scope';
+import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
 import { FlattenedEdgesGetter } from './flattened-edges';
 import { SnapDistanceCmd } from './snap-distance-cmd';
 import {
@@ -63,6 +63,7 @@ import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
 import { ForkingAspect, ForkingMain } from '@teambit/forking';
+import { InstallAspect, InstallMain } from '@teambit/install';
 
 export type TagDataPerComp = {
   componentId: ComponentID;
@@ -130,7 +131,8 @@ export class SnappingMain {
     private importer: ImporterMain,
     private deps: DependenciesMain,
     private application: ApplicationMain,
-    private forking: ForkingMain
+    private forking: ForkingMain,
+    private install: InstallMain
   ) {
     this.objectsRepo = this.scope?.legacyScope?.objects;
   }
@@ -388,7 +390,8 @@ if you're willing to lose the history from the head to the specified version, us
       updateDependents?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<SnapFromScopeResults> {
-    if (this.workspace) {
+    const hasForkedFrom = snapDataPerCompRaw.some((s) => s.forkFrom);
+    if (this.workspace && !hasForkedFrom) {
       throw new BitError(
         `unable to run this command from a workspace, please create a new bare-scope and run it from there`
       );
@@ -444,32 +447,33 @@ if you're willing to lose the history from the head to the specified version, us
     const newComponents = await Promise.all(
       newCompsData.map((newComp) => generateCompFromScope(this.scope, newComp, this))
     );
-    const newForkedComponents = await Promise.all(
-      forkedFromData.map(async ({ componentId, forkFrom }) => {
-        if (!forkFrom) throw new Error(`expected to have forkFrom data`);
-        const results = await this.forking.forkRemoteComponent(forkFrom, componentId.fullName, {
-          scope: componentId.scope,
-        });
-        const originComp = results.component.state._consumer as ConsumerComponent;
-        const consumerComp = originComp.clone();
-        consumerComp.name = componentId.fullName;
-        consumerComp.scope = undefined;
-        consumerComp.defaultScope = componentId.scope;
-        consumerComp.version = undefined;
-
-        const { version, files: filesBitObject } =
-          await this.scope.legacyScope.sources.consumerComponentToVersion(consumerComp);
-        const modelComponent = await this.scope.legacyScope.sources.findOrAddComponent(consumerComp);
-        consumerComp.version = version.hash().toString();
-        await this.scope.legacyScope.objects.writeObjectsToTheFS([
-          version,
-          modelComponent,
-          ...filesBitObject.map((f) => f.file),
-        ]);
-        const comp = this.scope.getFromConsumerComponent(consumerComp);
-        return comp;
-      })
-    );
+    const forkMultipleData: Array<{
+      sourceId: string;
+      targetId?: string;
+      targetScope?: string;
+      env?: string;
+    }> = forkedFromData.map((f) => ({
+      sourceId: f.forkFrom!.toString(),
+      targetId: f.componentId.fullName,
+      targetScope: f.componentId.scope,
+    }));
+    const forkResults = await this.forking.forkMultipleFromRemote(forkMultipleData, { refactor: true });
+    const newEnvData: Record<string, ComponentID[]> = {};
+    forkedFromData.forEach((f) => {
+      const bitmapElem = this.workspace.bitMap.getBitmapEntry(f.componentId);
+      // @ts-ignore
+      const env = bitmapElem?.config?.['teambit.envs/envs'].env;
+      if (!env) return;
+      const found = forkedFromData.find((fo) => fo.forkFrom?.toStringWithoutVersion() === env);
+      if (!found) return;
+      const newEnvStr = found.componentId.toString();
+      if (!newEnvData[newEnvStr]) newEnvData[newEnvStr] = [];
+      newEnvData[newEnvStr].push(f.componentId);
+    });
+    await pMapSeries(Object.entries(newEnvData), async ([env, compIds]) => {
+      await this.workspace.setEnvToComponents(ComponentID.fromString(env), compIds, false);
+    });
+    const newForkedComponents = await this.workspace.getMany(forkResults.map((f) => f.targetCompId));
 
     await this.scope.import(componentIdsLatest, {
       preferDependencyGraph: false,
@@ -501,10 +505,6 @@ if you're willing to lose the history from the head to the specified version, us
 
     const components = [...existingComponents, ...newComponents, ...newForkedComponents];
 
-    await pMapSeries(newForkedComponents, async (comp) => {
-      await replaceDeps(comp, this.dependencyResolver, this.scope, newForkedComponents, snapDataPerComp);
-    });
-
     // this must be done before we load component aspects later on, because this updated deps may update aspects.
     await pMapSeries(components, async (component) => {
       const snapData = getSnapData(component.id);
@@ -522,16 +522,25 @@ if you're willing to lose the history from the head to the specified version, us
         }
       })
     );
+    if (!this.workspace) {
+      // load the aspects user configured to set on the components. it creates capsules if needed.
+      // otherwise, when a user set a custom-env, it won't be loaded and the Version object will leave the
+      // teambit.envs/envs in a weird state. the config will be set correctly but the data will be set to the default
+      // node env.
+      await this.scope.loadManyCompsAspects(components);
 
-    // load the aspects user configured to set on the components. it creates capsules if needed.
-    // otherwise, when a user set a custom-env, it won't be loaded and the Version object will leave the
-    // teambit.envs/envs in a weird state. the config will be set correctly but the data will be set to the default
-    // node env.
-    await this.scope.loadManyCompsAspects(components);
-
-    // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
-    await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
-
+      // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
+      await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
+    } else {
+      // for the forked components, it's on the workspace, so all it is missing now is the installation
+      await this.install.install(undefined, {
+        dedupe: true,
+        import: false,
+        copyPeerToRuntimeOnRoot: true,
+        copyPeerToRuntimeOnComponents: false,
+        updateExisting: false,
+      });
+    }
     const consumerComponents = components.map((c) => c.state._consumer);
     const ids = ComponentIdList.fromArray(allCompIds);
     const results = await tagModelComponent({
@@ -1148,7 +1157,7 @@ another option, in case this dependency is not in main yet is to remove all refe
         }
         return;
       }
-      const currentFile = currentFiles.find((f) => f.path === file.path);
+      const currentFile = currentFiles.find((f) => f.relative === file.path);
       if (currentFile) {
         currentFile.contents = Buffer.from(file.content);
       } else {
@@ -1330,6 +1339,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     DependenciesAspect,
     ApplicationAspect,
     ForkingAspect,
+    InstallAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1347,6 +1357,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     deps,
     application,
     forking,
+    install,
   ]: [
     Workspace,
     CLIMain,
@@ -1362,6 +1373,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     DependenciesMain,
     ApplicationMain,
     ForkingMain,
+    InstallMain,
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(
@@ -1376,7 +1388,8 @@ another option, in case this dependency is not in main yet is to remove all refe
       importer,
       deps,
       application,
-      forking
+      forking,
+      install
     );
     const snapCmd = new SnapCmd(snapping, logger, globalConfig);
     const tagCmd = new TagCmd(snapping, logger, globalConfig);
