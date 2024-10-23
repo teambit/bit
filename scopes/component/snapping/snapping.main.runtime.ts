@@ -475,7 +475,9 @@ if you're willing to lose the history from the head to the specified version, us
     await pMapSeries(Object.entries(newEnvData), async ([env, compIds]) => {
       await this.workspace.setEnvToComponents(ComponentID.fromString(env), compIds, false);
     });
-    const newForkedComponents = await this.workspace.getMany(forkResults.map((f) => f.targetCompId));
+    const newForkedComponents = forkResults.length
+      ? await this.workspace.getMany(forkResults.map((f) => f.targetCompId))
+      : [];
 
     await this.scope.import(componentIdsLatest, {
       preferDependencyGraph: false,
