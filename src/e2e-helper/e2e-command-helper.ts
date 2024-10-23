@@ -8,6 +8,7 @@ import * as path from 'path';
 import tar from 'tar';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { NOTHING_TO_TAG_MSG } from '@teambit/snapping';
+import type { Descriptor } from '@teambit/envs';
 import { ENV_VAR_FEATURE_TOGGLE } from '@teambit/harmony.modules.feature-toggle';
 import { Extensions, NOTHING_TO_SNAP_MSG } from '../constants';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
@@ -735,6 +736,11 @@ export default class CommandHelper {
   showDependenciesData(compId: string): Array<{ id: string; version: string; packageName: string }> {
     const showConfig = this.showAspectConfig(compId, Extensions.dependencyResolver);
     return showConfig.data.dependencies;
+  }
+
+  showEnvsData(compId: string): Descriptor {
+    const showConfig = this.showAspectConfig(compId, Extensions.envs);
+    return showConfig.data;
   }
 
   /** returns the ids without the versions */

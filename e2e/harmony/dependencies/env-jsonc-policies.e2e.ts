@@ -431,12 +431,16 @@ describe('env-jsonc-policies', function () {
           it('should have entries resolved from first level', () => {
             const reactDomEntry = envLevel2EnvsDataInModel.policy.peers.find((entry) => entry.name === 'react-dom');
             expect(reactDomEntry.version).to.equal('^18.0.0');
+            const isStringEntry = envLevel2EnvsDataInModel.policy.runtime.find((entry) => entry.name === 'is-string');
+            expect(isStringEntry.version).to.equal('1.0.7');
             const testsPattern = envLevel2EnvsDataInModel.patterns.tests;
             expect(testsPattern).to.include('**/*.spec.*');
           });
           it('should have entries resolved from self', () => {
             const reactEntry = envLevel2EnvsDataInModel.policy.peers.find((entry) => entry.name === 'react');
             expect(reactEntry.version).to.equal('^16.0.0');
+            const isOddEntry = envLevel2EnvsDataInModel.policy.runtime.find((entry) => entry.name === 'is-odd');
+            expect(isOddEntry.version).to.equal('3.0.1');
             const compositionsPattern = envLevel2EnvsDataInModel.patterns.compositions;
             expect(compositionsPattern).to.include('**/*.preview-level2.*');
             expect(compositionsPattern).to.include('**/*.preview.*');
@@ -479,6 +483,66 @@ describe('env-jsonc-policies', function () {
           });
           it('should not have extends in resolved manifest', () => {
             expect(envLevel3EnvsDataInModel).to.not.have.property('extends');
+          });
+        });
+      });
+      describe('change tagged envs', () => {
+        let envLevel2EnvsDataInWs;
+        before(() => {
+          const level2EnvJsoncPath = 'react-based-env-level2/env.jsonc';
+          const level2EnvJsonc = helper.fs.readJsonFile(level2EnvJsoncPath);
+          level2EnvJsonc.policy.runtime.find((entry) => entry.name === 'is-odd').version = '3.0.0';
+          helper.fs.outputFile(level2EnvJsoncPath, JSON.stringify(level2EnvJsonc, null, 2));
+          // @ts-ignore
+          envLevel2EnvsDataInWs = helper.command.showEnvsData('react-based-env-level2').resolvedEnvJsonc;
+        });
+        it('should update the resolved env.jsonc in the ws data', () => {
+          const isOddEntry = envLevel2EnvsDataInWs.policy.runtime.find((entry) => entry.name === 'is-odd');
+          expect(isOddEntry.version).to.equal('3.0.0');
+        });
+        describe('re-tag modified env (only)', () => {
+          before(() => {
+            // We skip the auto tag as we want later to test level 3 that uses old version of level 2
+            helper.command.tagWithoutBuild(envIdLevel2, '--skip-auto-tag'); // 0.0.2
+          });
+          it('should have the updated version in the model', () => {
+            envLevel2EnvsDataInModel = helper.command.getAspectsDataFromId(
+              fullEnvIdLevel2,
+              'teambit.envs/envs'
+            ).resolvedEnvJsonc;
+            const isOddEntry = envLevel2EnvsDataInModel.policy.runtime.find((entry) => entry.name === 'is-odd');
+            expect(isOddEntry.version).to.equal('3.0.0');
+          });
+          describe('after import', () => {
+            before(() => {
+              helper.command.export();
+              helper.scopeHelper.reInitLocalScope();
+              helper.scopeHelper.addRemoteScope();
+              helper.command.importComponent(envIdLevel3);
+            });
+            describe('extends old version of env level2', () => {
+              it('should use the old version (and policy) of the env', () => {
+                envLevel3EnvsDataInModel = helper.command.getAspectsDataFromId(
+                  fullEnvIdLevel3,
+                  'teambit.envs/envs'
+                ).resolvedEnvJsonc;
+                const isOddEntry = envLevel3EnvsDataInModel.policy.runtime.find((entry) => entry.name === 'is-odd');
+                expect(isOddEntry.version).to.equal('3.0.1');
+              });
+            });
+            describe('when importing the updated version of env level2', () => {
+              before(() => {
+                helper.command.importComponent(envIdLevel2);
+              });
+              it('should use the old version (and policy) of the env', () => {
+                envLevel3EnvsDataInModel = helper.command.getAspectsDataFromId(
+                  fullEnvIdLevel3,
+                  'teambit.envs/envs'
+                ).resolvedEnvJsonc;
+                const isOddEntry = envLevel3EnvsDataInModel.policy.runtime.find((entry) => entry.name === 'is-odd');
+                expect(isOddEntry.version).to.equal('3.0.0');
+              });
+            });
           });
         });
       });
