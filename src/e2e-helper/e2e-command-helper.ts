@@ -493,6 +493,12 @@ export default class CommandHelper {
     if (!builder) throw new Error(`getAspectsData: unable to find builder data`);
     return builder.data.aspectsData.find((a) => a.aspectId === aspectId);
   }
+  getAspectsDataFromId(id: string, aspectId: string, cwd?: string) {
+    const idWithVersion = id.includes('@') ? id : `${id}@latest`;
+    const comp = this.catComponent(idWithVersion, cwd);
+    const aspectEntry = comp.extensions.find((e) => e.name === aspectId);
+    return aspectEntry.data;
+  }
   reset(id: string, head = false, flag = '') {
     return this.runCmd(`bit reset ${id} ${head ? '--head' : ''} ${flag}`);
   }

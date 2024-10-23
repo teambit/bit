@@ -300,23 +300,27 @@ describe('env-jsonc-policies', function () {
   describe('env-jsonc-extends', function () {
     let componentShowParsed;
     let devFilesData;
+    let envIdLevel1;
+    let fullEnvIdLevel1;
+    let envIdLevel2;
+    let fullEnvIdLevel2;
     let envIdLevel3;
     let fullEnvIdLevel3;
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      const envIdLevel1 = 'react-based-env-level1';
-      const envFullIdLevel1 = `${helper.scopes.remote}/react-based-env-level1`;
-      const envIdLevel2 = 'react-based-env-level2';
-      const envFullIdLevel2 = `${helper.scopes.remote}/react-based-env-level2`;
+      envIdLevel1 = 'react-based-env-level1';
+      fullEnvIdLevel1 = `${helper.scopes.remote}/react-based-env-level1`;
+      envIdLevel2 = 'react-based-env-level2';
+      fullEnvIdLevel2 = `${helper.scopes.remote}/react-based-env-level2`;
       envIdLevel3 = 'react-based-env-level3';
       fullEnvIdLevel3 = `${helper.scopes.remote}/react-based-env-level3`;
 
-      helper.env.setCustomNewEnv(undefined, undefined, ENV_JSONC_LEVEL1, false, 'react-based-env-level1', envIdLevel1);
+      helper.env.setCustomNewEnv(undefined, undefined, ENV_JSONC_LEVEL1, false, envIdLevel1, envIdLevel1);
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
-        generateEnvJsoncWithExtends(envFullIdLevel1, ENV_JSONC_LEVEL2),
+        generateEnvJsoncWithExtends(fullEnvIdLevel1, ENV_JSONC_LEVEL2),
         false,
         'react-based-env-level2',
         envIdLevel2
@@ -324,7 +328,7 @@ describe('env-jsonc-policies', function () {
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
-        generateEnvJsoncWithExtends(envFullIdLevel2, ENV_JSONC_LEVEL3),
+        generateEnvJsoncWithExtends(fullEnvIdLevel2, ENV_JSONC_LEVEL3),
         false,
         'react-based-env-level3',
         envIdLevel3
@@ -337,7 +341,7 @@ describe('env-jsonc-policies', function () {
       helper.fs.outputFile('button/my-file.preview-level3.ts', '');
       helper.fs.outputFile('button/my-file.level3.ts', '');
       helper.command.setEnv('button', envIdLevel3);
-      helper.command.install('@teambit/react.react-env');
+      helper.command.install('@teambit/react.react-env', { a: '' });
       componentShowParsed = helper.command.showComponentParsed('button');
       const show = helper.command.showComponentParsedHarmony('button');
       const devFilesEntry = show.find((item) => item.title === 'dev files');
@@ -346,53 +350,137 @@ describe('env-jsonc-policies', function () {
     after(() => {
       helper.scopeHelper.destroy();
     });
-    describe('patterns merges', () => {
-      let testFiles;
-      let docsFiles;
-      let compositionFiles;
-      before(() => {
-        testFiles = devFilesData['teambit.defender/tester'];
-        docsFiles = devFilesData['teambit.docs/docs'];
-        compositionFiles = devFilesData['teambit.compositions/compositions'];
+    describe('new envs', () => {
+      describe('patterns merges', () => {
+        let testFiles;
+        let docsFiles;
+        let compositionFiles;
+        before(() => {
+          testFiles = devFilesData['teambit.defender/tester'];
+          docsFiles = devFilesData['teambit.docs/docs'];
+          compositionFiles = devFilesData['teambit.compositions/compositions'];
+        });
+        it('should respect patterns that exists only on first level env', () => {
+          expect(testFiles).to.include('button.spec.tsx');
+        });
+        it('should respect patterns that exists only on second level env', () => {
+          expect(docsFiles).to.include('my-file.docs-level2.ts');
+        });
+        it('should respect (custom) patterns that exists only on third level env', () => {
+          const level3Files = devFilesData[fullEnvIdLevel3];
+          expect(level3Files).to.include('my-file.level3.ts');
+        });
+        it('should not use patterns that defined by the second level and overriden by third level', () => {
+          expect(compositionFiles).to.not.include('my-file.preview-level2.ts');
+        });
+        it('should respect patterns that overriden by the third level', () => {
+          expect(compositionFiles).to.include('my-file.preview-level3.ts');
+        });
       });
-      it('should respect patterns that exists only on first level env', () => {
-        expect(testFiles).to.include('button.spec.tsx');
-      });
-      it('should respect patterns that exists only on second level env', () => {
-        expect(docsFiles).to.include('my-file.docs-level2.ts');
-      });
-      it('should respect (custom) patterns that exists only on third level env', () => {
-        const level3Files = devFilesData[fullEnvIdLevel3];
-        expect(level3Files).to.include('my-file.level3.ts');
-      });
-      it('should not use patterns that defined by the second level and overriden by third level', () => {
-        expect(compositionFiles).to.not.include('my-file.preview-level2.ts');
-      });
-      it('should respect patterns that overriden by the third level', () => {
-        expect(compositionFiles).to.include('my-file.preview-level3.ts');
+      describe('policies merges', () => {
+        it('should respect peers that exists only on first level env', () => {
+          expect(componentShowParsed.peerPackageDependencies).to.include({ 'react-dom': '^17.0.0 || ^18.0.0' });
+        });
+        it('should respect dev deps that exists only on first level env', () => {
+          expect(componentShowParsed.devPackageDependencies).to.include({ 'is-positive': '3.1.0' });
+        });
+        it('should respect peers that overriden by the second level', () => {
+          expect(componentShowParsed.peerPackageDependencies).to.include({ react: '^17.0.0 || ^16.0.0' });
+        });
+        it('should respect deps that only defined by the second level', () => {
+          expect(componentShowParsed.packageDependencies).to.include({ 'is-odd': '3.0.1' });
+        });
+        it('should respect deps that defined by first and overridden by third but not by second', () => {
+          expect(componentShowParsed.packageDependencies).to.include({ 'is-string': '1.0.6' });
+        });
+        it('should remove deps added by second, and removed by third', () => {
+          expect(componentShowParsed.packageDependencies['is-negative']).to.be.undefined;
+        });
+        it('should respect removed by third that added as different dep type', () => {
+          expect(componentShowParsed.devPackageDependencies).to.include({ 'is-negative': '2.1.0' });
+        });
       });
     });
-    describe('policies merges', () => {
-      it('should respect peers that exists only on first level env', () => {
-        expect(componentShowParsed.peerPackageDependencies).to.include({ 'react-dom': '^17.0.0 || ^18.0.0' });
+    describe('tagged envs', () => {
+      let envLevel1EnvsDataInModel;
+      let envLevel2EnvsDataInModel;
+      let envLevel3EnvsDataInModel;
+
+      before(() => {
+        helper.command.tagAllWithoutBuild();
+        envLevel1EnvsDataInModel = helper.command.getAspectsDataFromId(
+          fullEnvIdLevel1,
+          'teambit.envs/envs'
+        ).resolvedEnvJsonc;
+        envLevel2EnvsDataInModel = helper.command.getAspectsDataFromId(
+          fullEnvIdLevel2,
+          'teambit.envs/envs'
+        ).resolvedEnvJsonc;
+        envLevel3EnvsDataInModel = helper.command.getAspectsDataFromId(
+          fullEnvIdLevel3,
+          'teambit.envs/envs'
+        ).resolvedEnvJsonc;
       });
-      it('should respect dev deps that exists only on first level env', () => {
-        expect(componentShowParsed.devPackageDependencies).to.include({ 'is-positive': '3.1.0' });
-      });
-      it('should respect peers that overriden by the second level', () => {
-        expect(componentShowParsed.peerPackageDependencies).to.include({ react: '^17.0.0 || ^16.0.0' });
-      });
-      it('should respect deps that only defined by the second level', () => {
-        expect(componentShowParsed.packageDependencies).to.include({ 'is-odd': '3.0.1' });
-      });
-      it('should respect deps that defined by first and overridden by third but not by second', () => {
-        expect(componentShowParsed.packageDependencies).to.include({ 'is-string': '1.0.6' });
-      });
-      it('should remove deps added by second, and removed by third', () => {
-        expect(componentShowParsed.packageDependencies['is-negative']).to.be.undefined;
-      });
-      it('should respect removed by third that added as different dep type', () => {
-        expect(componentShowParsed.devPackageDependencies).to.include({ 'is-negative': '2.1.0' });
+      describe('store resolved env manifest (env.jsonc) in the model', () => {
+        describe('first level env', () => {
+          it('should store the resolved env.jsonc in the model', () => {
+            expect(envLevel1EnvsDataInModel).to.deep.include(ENV_JSONC_LEVEL1);
+          });
+        });
+        describe('second level env', () => {
+          it('should have entries resolved from first level', () => {
+            const reactDomEntry = envLevel2EnvsDataInModel.policy.peers.find((entry) => entry.name === 'react-dom');
+            expect(reactDomEntry.version).to.equal('^18.0.0');
+            const testsPattern = envLevel2EnvsDataInModel.patterns.tests;
+            expect(testsPattern).to.include('**/*.spec.*');
+          });
+          it('should have entries resolved from self', () => {
+            const reactEntry = envLevel2EnvsDataInModel.policy.peers.find((entry) => entry.name === 'react');
+            expect(reactEntry.version).to.equal('^16.0.0');
+            const compositionsPattern = envLevel2EnvsDataInModel.patterns.compositions;
+            expect(compositionsPattern).to.include('**/*.preview-level2.*');
+            expect(compositionsPattern).to.include('**/*.preview.*');
+            const docsPattern = envLevel2EnvsDataInModel.patterns.docs;
+            expect(docsPattern).to.include('**/*.docs-level2.*');
+          });
+          it('should not have extends in resolved manifest', () => {
+            expect(envLevel2EnvsDataInModel).to.not.have.property('extends');
+          });
+        });
+        describe('third level env', () => {
+          it('should have entries resolved from first level', () => {
+            const reactDomEntry = envLevel3EnvsDataInModel.policy.peers.find((entry) => entry.name === 'react-dom');
+            expect(reactDomEntry.version).to.equal('^18.0.0');
+            const testsPattern = envLevel3EnvsDataInModel.patterns.tests;
+            expect(testsPattern).to.include('**/*.spec.*');
+          });
+          it('should have entries resolved from second level', () => {
+            const reactEntry = envLevel3EnvsDataInModel.policy.peers.find((entry) => entry.name === 'react');
+            expect(reactEntry.version).to.equal('^16.0.0');
+            const docsPattern = envLevel3EnvsDataInModel.patterns.docs;
+            expect(docsPattern).to.include('**/*.docs-level2.*');
+          });
+          it('should have entries resolved from self', () => {
+            const isNegativeSecondLevelEntry = envLevel3EnvsDataInModel.policy.runtime.find(
+              (entry) => entry.name === 'is-negative'
+            );
+            expect(isNegativeSecondLevelEntry).to.be.undefined;
+            const isNegativeEntry = envLevel3EnvsDataInModel.policy.dev.find((entry) => entry.name === 'is-negative');
+            expect(isNegativeEntry.version).to.equal('2.1.0');
+            const isStringEntry = envLevel3EnvsDataInModel.policy.runtime.find((entry) => entry.name === 'is-string');
+            expect(isStringEntry.version).to.equal('1.0.6');
+
+            const compositionsPattern = envLevel3EnvsDataInModel.patterns.compositions;
+            expect(compositionsPattern).to.include('**/*.preview-level3.*');
+            expect(compositionsPattern).to.include('**/*.preview.*');
+            expect(compositionsPattern).to.not.include('**/*.preview-level2.*');
+            const level3Pattern = envLevel3EnvsDataInModel.patterns.level3;
+            expect(level3Pattern).to.include('**/*.level3.*');
+          });
+          it('should not have extends in resolved manifest', () => {
+            expect(envLevel3EnvsDataInModel).to.not.have.property('extends');
+          });
+        });
       });
     });
   });
