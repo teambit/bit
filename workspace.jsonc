@@ -439,7 +439,7 @@
         "mousetrap": "1.6.5",
         "multimatch": "5.0.0",
         "nerf-dart": "1.0.0",
-        "node-pty": "^1.0.0",
+        "@lydell/node-pty": "^1.0.0",
         "npm": "6.14.17",
         "p-limit": "3.1.0",
         "p-locate": "5.0.0",
