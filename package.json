@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.755",
+  "version": "1.0.756",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -169,6 +169,7 @@
     "@teambit/pkg.package-json.validator": "0.0.1",
     "@viz-js/viz": "^3.4.0",
     "@types/normalize-path": "^3.0.0",
+    "@lydell/node-pty": "^1.0.0",
     "array-difference": "0.0.2",
     "async-mutex": "0.3.1",
     "bluebird": "3.7.2",
