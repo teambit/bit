@@ -1014,8 +1014,14 @@ export class DependencyResolverMain {
   }
 
   getEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): EnvPolicy | undefined {
-    const object = this.envs.getEnvManifest(envComponent, legacyFiles) as any;
-    const policy = object?.policy;
+    let envManifest;
+    if (envComponent) {
+      envManifest = this.envs.getEnvManifest(envComponent) as any;
+    }
+    if (!envManifest && legacyFiles) {
+      envManifest = this.envs.calculateEnvManifest(undefined, legacyFiles);
+    }
+    const policy = envManifest?.policy;
     if (!policy) return undefined;
     const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policy, {
       includeLegacyPeersInSelfPolicy: envComponent && this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()),
