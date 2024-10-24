@@ -362,6 +362,7 @@
         "@yarnpkg/parsers": "2.5.1",
         "@yarnpkg/plugin-npm": "2.7.4",
         "@yarnpkg/plugin-pack": "3.2.0",
+        "@lydell/node-pty": "^1.0.0",
         "ansi-to-html": "0.6.14",
         "apollo-link-context": "1.0.20",
         "apollo-link-http": "1.5.17",
