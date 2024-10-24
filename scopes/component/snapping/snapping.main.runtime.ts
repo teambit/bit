@@ -61,7 +61,7 @@ import {
 } from './reset-component';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
-import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
+import { createLane, createLaneInScope } from '@teambit/lanes.modules.create-lane';
 import { ForkingAspect, ForkingMain } from '@teambit/forking';
 import { InstallAspect, InstallMain } from '@teambit/install';
 
@@ -381,6 +381,167 @@ if you're willing to lose the history from the head to the specified version, us
     };
   }
 
+  async forkAndSnap(
+    snapDataPerCompRaw: SnapDataPerCompRaw[],
+    params: {
+      push?: boolean;
+      ignoreIssues?: string;
+      lane?: string;
+      updateDependents?: boolean;
+    } & Partial<BasicTagParams>
+  ): Promise<SnapFromScopeResults> {
+    const allAreForkedFrom = snapDataPerCompRaw.every((s) => s.forkFrom);
+    if (!allAreForkedFrom) {
+      throw new BitError(`when forkedFrom prop is used, all components must have the forkedFrom prop`);
+    }
+    let lane: Lane | undefined;
+    const laneIdStr = params.lane;
+    if (laneIdStr) {
+      const laneId = LaneId.parse(laneIdStr);
+      try {
+        lane = await this.importer.importLaneObject(laneId);
+      } catch (err: any) {
+        if (err.constructor.name !== LaneNotFound.name) throw err;
+        // if the lane is not found, it's probably because it's new. create a new lane.
+        lane = await createLane(this.workspace, laneId.name, laneId.scope);
+      }
+    }
+    const snapDataPerComp = snapDataPerCompRaw.map((snapData) => {
+      return {
+        componentId: ComponentID.fromString(snapData.componentId),
+        dependencies: snapData.dependencies || [],
+        aspects: snapData.aspects,
+        message: snapData.message,
+        files: snapData.files,
+        isNew: snapData.isNew,
+        mainFile: snapData.mainFile,
+        newDependencies: (snapData.newDependencies || []).map((dep) => ({
+          id: dep.id,
+          version: dep.version,
+          isComponent: dep.isComponent ?? true,
+          type: dep.type ?? 'runtime',
+        })),
+        removeDependencies: snapData.removeDependencies,
+        forkFrom: ComponentID.fromString(snapData.forkFrom!),
+      };
+    });
+
+    // console.log('snapDataPerComp', JSON.stringify(snapDataPerComp, undefined, 2));
+
+    const allCompIds = snapDataPerComp.map((s) => s.componentId);
+    const forkedFromData = compact(snapDataPerComp.map((t) => (t.forkFrom ? t : null)));
+    const forkMultipleData: Array<{
+      sourceId: string;
+      targetId?: string;
+      targetScope?: string;
+      env?: string;
+    }> = forkedFromData.map((f) => ({
+      sourceId: f.forkFrom!.toString(),
+      targetId: f.componentId.fullName,
+      targetScope: f.componentId.scope,
+    }));
+    const forkResults = forkMultipleData.length
+      ? await this.forking.forkMultipleFromRemote(forkMultipleData, { refactor: true })
+      : [];
+    const newEnvData: Record<string, ComponentID[]> = {};
+    forkedFromData.forEach((f) => {
+      const bitmapElem = this.workspace.bitMap.getBitmapEntry(f.componentId);
+      // @ts-ignore
+      const env = bitmapElem?.config?.['teambit.envs/envs'].env;
+      if (!env) return;
+      const found = forkedFromData.find((fo) => fo.forkFrom?.toStringWithoutVersion() === env);
+      if (!found) return;
+      const newEnvStr = found.componentId.toString();
+      if (!newEnvData[newEnvStr]) newEnvData[newEnvStr] = [];
+      newEnvData[newEnvStr].push(f.componentId);
+    });
+    await pMapSeries(Object.entries(newEnvData), async ([env, compIds]) => {
+      await this.workspace.setEnvToComponents(ComponentID.fromString(env), compIds, false);
+    });
+    // @todo: merge current config in .bitmap with "aspect" prop of forkedFromData.
+    const getSnapData = (id: ComponentID): SnapDataParsed => {
+      const snapData = snapDataPerComp.find((t) => {
+        return t.componentId.isEqual(id, { ignoreVersion: true });
+      });
+      if (!snapData) throw new Error(`unable to find ${id.toString()} in snapDataPerComp`);
+      return snapData;
+    };
+
+    const newForkedComponents = forkResults.length
+      ? await this.workspace.getMany(forkResults.map((f) => f.targetCompId))
+      : [];
+
+    await Promise.all(
+      newForkedComponents.map(async (comp) => {
+        const snapData = getSnapData(comp.id);
+        // if (snapData.aspects) await this.scope.addAspectsFromConfigObject(comp, snapData.aspects);
+        if (snapData.files?.length) {
+          await this.updateSourceFiles(comp, snapData.files);
+          await this.workspace.write(comp);
+        }
+      })
+    );
+    // if you don't clear the cache here, the installation assumes all components have the old env.
+    await this.workspace.clearCache();
+    await this.install.install(undefined, {
+      dedupe: true,
+      import: false,
+      copyPeerToRuntimeOnRoot: true,
+      copyPeerToRuntimeOnComponents: false,
+      updateExisting: false,
+    });
+    // if we don't clear the cache here, the "build" process during tag doesn't install the necessary packages
+    // on the capsules.
+    await this.workspace.clearCache();
+    const components = await this.workspace.getMany(forkedFromData.map((f) => f.componentId));
+
+    const consumerComponents = components.map((c) => c.state._consumer);
+    const ids = ComponentIdList.fromArray(allCompIds);
+    const results = await tagModelComponent({
+      ...params,
+      scope: this.scope,
+      consumerComponents,
+      tagDataPerComp: snapDataPerComp.map((s) => ({
+        componentId: s.componentId,
+        message: s.message,
+        dependencies: [],
+      })),
+      snapping: this,
+      builder: this.builder,
+      dependencyResolver: this.dependencyResolver,
+      skipAutoTag: true,
+      persist: true,
+      isSnap: true,
+      ids,
+      message: params.message as string,
+      updateDependentsOnLane: params.updateDependents,
+    });
+
+    const { taggedComponents } = results;
+    let exportedIds: ComponentIdList | undefined;
+    if (params.push) {
+      const updatedLane = lane ? await this.scope.legacyScope.loadLane(lane.toLaneId()) : undefined;
+      const { exported } = await this.exporter.exportMany({
+        scope: this.scope.legacyScope,
+        ids,
+        idsWithFutureScope: ids,
+        allVersions: false,
+        laneObject: updatedLane,
+        // no need other snaps. only the latest one. without this option, when snapping on lane from another-scope, it
+        // may throw an error saying the previous snaps don't exist on the filesystem.
+        // (see the e2e - "snap on a lane when the component is new to the lane and the scope")
+        exportHeadsOnly: true,
+      });
+      exportedIds = exported;
+    }
+
+    return {
+      snappedComponents: taggedComponents,
+      snappedIds: taggedComponents.map((comp) => comp.id),
+      exportedIds,
+    };
+  }
+
   async snapFromScope(
     snapDataPerCompRaw: SnapDataPerCompRaw[],
     params: {
@@ -391,7 +552,8 @@ if you're willing to lose the history from the head to the specified version, us
     } & Partial<BasicTagParams>
   ): Promise<SnapFromScopeResults> {
     const hasForkedFrom = snapDataPerCompRaw.some((s) => s.forkFrom);
-    if (this.workspace && !hasForkedFrom) {
+    if (hasForkedFrom) return this.forkAndSnap(snapDataPerCompRaw, params);
+    if (this.workspace) {
       throw new BitError(
         `unable to run this command from a workspace, please create a new bare-scope and run it from there`
       );
@@ -433,51 +595,18 @@ if you're willing to lose the history from the head to the specified version, us
           type: dep.type ?? 'runtime',
         })),
         removeDependencies: snapData.removeDependencies,
-        forkFrom: snapData.forkFrom ? ComponentID.fromString(snapData.forkFrom) : undefined,
       };
     });
 
     // console.log('snapDataPerComp', JSON.stringify(snapDataPerComp, undefined, 2));
 
-    const componentIds = compact(snapDataPerComp.map((t) => (t.isNew || t.forkFrom ? null : t.componentId)));
+    const componentIds = compact(snapDataPerComp.map((t) => (t.isNew ? null : t.componentId)));
     const allCompIds = snapDataPerComp.map((s) => s.componentId);
     const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
-    const newCompsData = compact(snapDataPerComp.map((t) => (t.isNew && !t.forkFrom ? t : null)));
-    const forkedFromData = compact(snapDataPerComp.map((t) => (t.forkFrom ? t : null)));
+    const newCompsData = compact(snapDataPerComp.map((t) => (t.isNew ? t : null)));
     const newComponents = await Promise.all(
       newCompsData.map((newComp) => generateCompFromScope(this.scope, newComp, this))
     );
-    const forkMultipleData: Array<{
-      sourceId: string;
-      targetId?: string;
-      targetScope?: string;
-      env?: string;
-    }> = forkedFromData.map((f) => ({
-      sourceId: f.forkFrom!.toString(),
-      targetId: f.componentId.fullName,
-      targetScope: f.componentId.scope,
-    }));
-    const forkResults = forkMultipleData.length
-      ? await this.forking.forkMultipleFromRemote(forkMultipleData, { refactor: true })
-      : [];
-    const newEnvData: Record<string, ComponentID[]> = {};
-    forkedFromData.forEach((f) => {
-      const bitmapElem = this.workspace.bitMap.getBitmapEntry(f.componentId);
-      // @ts-ignore
-      const env = bitmapElem?.config?.['teambit.envs/envs'].env;
-      if (!env) return;
-      const found = forkedFromData.find((fo) => fo.forkFrom?.toStringWithoutVersion() === env);
-      if (!found) return;
-      const newEnvStr = found.componentId.toString();
-      if (!newEnvData[newEnvStr]) newEnvData[newEnvStr] = [];
-      newEnvData[newEnvStr].push(f.componentId);
-    });
-    await pMapSeries(Object.entries(newEnvData), async ([env, compIds]) => {
-      await this.workspace.setEnvToComponents(ComponentID.fromString(env), compIds, false);
-    });
-    const newForkedComponents = forkResults.length
-      ? await this.workspace.getMany(forkResults.map((f) => f.targetCompId))
-      : [];
 
     await this.scope.import(componentIdsLatest, {
       preferDependencyGraph: false,
@@ -507,7 +636,7 @@ if you're willing to lose the history from the head to the specified version, us
       });
     }
 
-    const components = [...existingComponents, ...newComponents, ...newForkedComponents];
+    const components = [...existingComponents, ...newComponents];
 
     // this must be done before we load component aspects later on, because this updated deps may update aspects.
     await pMapSeries(components, async (component) => {
@@ -518,7 +647,7 @@ if you're willing to lose the history from the head to the specified version, us
 
     // for new components these are not needed. coz when generating them we already add the aspects and the files.
     await Promise.all(
-      [...existingComponents, ...newForkedComponents].map(async (comp) => {
+      existingComponents.map(async (comp) => {
         const snapData = getSnapData(comp.id);
         if (snapData.aspects) await this.scope.addAspectsFromConfigObject(comp, snapData.aspects);
         if (snapData.files?.length) {
@@ -526,26 +655,16 @@ if you're willing to lose the history from the head to the specified version, us
         }
       })
     );
-    if (!this.workspace) {
-      // load the aspects user configured to set on the components. it creates capsules if needed.
-      // otherwise, when a user set a custom-env, it won't be loaded and the Version object will leave the
-      // teambit.envs/envs in a weird state. the config will be set correctly but the data will be set to the default
-      // node env.
-      await this.scope.loadManyCompsAspects(components);
 
-      // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
-      await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
-    } else {
-      await this.workspace.clearCache();
-      // for the forked components, it's on the workspace, so all it is missing now is the installation
-      await this.install.install(undefined, {
-        dedupe: true,
-        import: false,
-        copyPeerToRuntimeOnRoot: true,
-        copyPeerToRuntimeOnComponents: false,
-        updateExisting: false,
-      });
-    }
+    // load the aspects user configured to set on the components. it creates capsules if needed.
+    // otherwise, when a user set a custom-env, it won't be loaded and the Version object will leave the
+    // teambit.envs/envs in a weird state. the config will be set correctly but the data will be set to the default
+    // node env.
+    await this.scope.loadManyCompsAspects(components);
+
+    // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
+    await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
+
     const consumerComponents = components.map((c) => c.state._consumer);
     const ids = ComponentIdList.fromArray(allCompIds);
     const results = await tagModelComponent({
