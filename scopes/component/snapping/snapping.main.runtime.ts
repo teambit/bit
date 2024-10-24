@@ -440,9 +440,7 @@ if you're willing to lose the history from the head to the specified version, us
       targetId: f.componentId.fullName,
       targetScope: f.componentId.scope,
     }));
-    const forkResults = forkMultipleData.length
-      ? await this.forking.forkMultipleFromRemote(forkMultipleData, { refactor: true })
-      : [];
+    const forkResults = await this.forking.forkMultipleFromRemote(forkMultipleData, { refactor: true });
     const newEnvData: Record<string, ComponentID[]> = {};
     forkedFromData.forEach((f) => {
       const bitmapElem = this.workspace.bitMap.getBitmapEntry(f.componentId);
@@ -458,7 +456,6 @@ if you're willing to lose the history from the head to the specified version, us
     await pMapSeries(Object.entries(newEnvData), async ([env, compIds]) => {
       await this.workspace.setEnvToComponents(ComponentID.fromString(env), compIds, false);
     });
-    // @todo: merge current config in .bitmap with "aspect" prop of forkedFromData.
     const getSnapData = (id: ComponentID): SnapDataParsed => {
       const snapData = snapDataPerComp.find((t) => {
         return t.componentId.isEqual(id, { ignoreVersion: true });
@@ -466,21 +463,40 @@ if you're willing to lose the history from the head to the specified version, us
       if (!snapData) throw new Error(`unable to find ${id.toString()} in snapDataPerComp`);
       return snapData;
     };
-
-    const newForkedComponents = forkResults.length
-      ? await this.workspace.getMany(forkResults.map((f) => f.targetCompId))
-      : [];
+    const newForkedComponents = await this.workspace.getMany(forkResults.map((f) => f.targetCompId));
 
     await Promise.all(
       newForkedComponents.map(async (comp) => {
         const snapData = getSnapData(comp.id);
-        // if (snapData.aspects) await this.scope.addAspectsFromConfigObject(comp, snapData.aspects);
         if (snapData.files?.length) {
           await this.updateSourceFiles(comp, snapData.files);
           await this.workspace.write(comp);
         }
+        if (snapData.aspects) {
+          const bitmapElem = this.workspace.bitMap.getBitmapEntry(comp.id);
+          if (!bitmapElem) throw new Error(`unable to find ${comp.id.toString()} in the bitmap`);
+          const currentConfig = bitmapElem.config;
+          if (!currentConfig) {
+            this.workspace.bitMap.setEntireConfig(comp.id, snapData.aspects);
+            return;
+          }
+          const currentEnvSettings = currentConfig['teambit.envs/envs'];
+          const currentEnv = currentEnvSettings !== '-' && currentEnvSettings.env;
+          const newEnv = snapData.aspects['teambit.envs/envs']?.env;
+          if (!currentEnv || !newEnv) {
+            this.workspace.bitMap.setEntireConfig(comp.id, { ...currentConfig, ...snapData.aspects });
+            return;
+          }
+          const currentEnvWithPotentialVer = Object.keys(currentConfig).find(
+            (c) => c === currentEnv || c.startsWith(`${currentEnv}@`)
+          );
+          if (currentEnvWithPotentialVer) delete currentConfig[currentEnvWithPotentialVer];
+          delete currentConfig['teambit.envs/envs'];
+          this.workspace.bitMap.setEntireConfig(comp.id, { ...currentConfig, ...snapData.aspects });
+        }
       })
     );
+    await this.workspace.bitMap.write();
     // if you don't clear the cache here, the installation assumes all components have the old env.
     await this.workspace.clearCache();
     await this.install.install(undefined, {
