@@ -35,6 +35,7 @@ export type FileLog = {
 export type BlameLineInfo = {
   lineNumber: number;
   lineContent: string;
+  previousLineContent?: string;
   username: string;
   email?: string;
   date: string;
@@ -204,12 +205,6 @@ export class ComponentLogMain {
     const blameArray: Partial<BlameLineInfo>[] = currentContentLines.map((lineContent, index) => ({
       lineNumber: index + 1,
       lineContent,
-      author: undefined,
-      email: undefined,
-      date: undefined,
-      message: undefined,
-      hash: undefined,
-      tag: undefined,
     }));
     const populateBlameArray = (lineNumber: number, log: FileLog) => {
       blameArray[lineNumber].username = log.username;
@@ -223,7 +218,7 @@ export class ComponentLogMain {
     // Keep track of unassigned lines
     const unblamedLineIndices = new Set(blameArray.map((_, index) => index));
 
-    await pMapSeries(logs.reverse(), async (logItem) => {
+    await pMapSeries(logs, async (logItem) => {
       if (unblamedLineIndices.size === 0) return; // All lines have been assigned
 
       const currentHash = logItem.fileHash;
@@ -237,6 +232,9 @@ export class ComponentLogMain {
 
       const diff = diffLines(parentContentStr, currentContentStr);
 
+      const removedLines: Record<number, string> = {};
+      const addedLines: number[] = [];
+
       let currentLineNum = 0;
 
       diff.forEach((part) => {
@@ -249,16 +247,25 @@ export class ComponentLogMain {
           lines.forEach(() => {
             if (unblamedLineIndices.has(currentLineNum)) {
               populateBlameArray(currentLineNum, logItem);
+              addedLines.push(currentLineNum);
               unblamedLineIndices.delete(currentLineNum);
             }
             currentLineNum++;
           });
         } else if (part.removed) {
+          lines.forEach((line, index) => {
+            removedLines[currentLineNum + index] = line;
+          });
           // Lines removed from parent version; do not advance currentLineNum
           // Since these lines are not in the current version, we ignore them
         } else {
           // Unchanged lines
           currentLineNum += lines.length;
+        }
+      });
+      Object.keys(removedLines).forEach((lineNum) => {
+        if (addedLines.includes(parseInt(lineNum))) {
+          blameArray[parseInt(lineNum)].previousLineContent = removedLines[parseInt(lineNum)];
         }
       });
     });
