@@ -3857,6 +3857,27 @@
     ]
   },
   {
+    "name": "blame <filepath>",
+    "alias": "",
+    "options": [
+      [
+        "m",
+        "include-message",
+        "show the commit message"
+      ]
+    ],
+    "description": "EXPERIMENTAL. per line, show who and when was the last to modify it",
+    "extendedDescription": "",
+    "group": "info",
+    "private": false,
+    "arguments": [
+      {
+        "name": "filepath",
+        "description": "file path relative to the workspace"
+      }
+    ]
+  },
+  {
     "name": "merge [component-pattern]",
     "alias": "",
     "options": [
