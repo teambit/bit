@@ -409,7 +409,7 @@ export class PnpmPackageManager implements PackageManager {
     if (!lockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
       componentRootDir = componentRootDir.split('@')[0];
     }
-    const partialLockfile = convertToLockfileFile(
+    let partialLockfile = convertToLockfileFile(
       filterLockfileByImporters(lockfile, [componentRootDir as ProjectId, componentRelativeDir as ProjectId], {
         include: {
           dependencies: true,
@@ -435,6 +435,7 @@ export class PnpmPackageManager implements PackageManager {
         directDependencies[`${name}@${componentDevImporter[depType][name].specifier}`] = version;
       }
     }
+    partialLockfile = JSON.parse(JSON.stringify(partialLockfile).replaceAll(/file:[^'"(]+/g, 'pending:'));
     // partialLockfile.importers = {
     // ['.' as ProjectId]:
     // partialLockfile.packages![`${pkgName}@${partialLockfile.importers[componentRootDir].dependencies[pkgName]}`],

@@ -101,7 +101,7 @@ chai.use(require('chai-fs'));
       });
     });
   });
-  describe.only('two components with different peer dependencies', function () {
+  describe('two components with different peer dependencies', function () {
     const env1DefaultPeerVersion = '16.0.0';
     const env2DefaultPeerVersion = '17.0.0';
     let randomStr: string;
@@ -217,7 +217,7 @@ chai.use(require('chai-fs'));
       });
     });
   });
-  describe('two components exported with different peer dependencies using the same env', function () {
+  describe.only('two components exported with different peer dependencies using the same env', function () {
     let randomStr: string;
     before(async () => {
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
@@ -275,6 +275,7 @@ chai.use(require('chai-fs'));
       expect(lockfile.bit.restoredFromModel).to.eq(true);
     });
     it('should resolve to one version of the peer dependency, the highest one', () => {
+      // console.log(JSON.stringify(lockfile, null, 2))
       expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/peer-a@1.0.0');
       expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/abc@1.0.0');
       expect(lockfile.packages).to.have.a.property('@pnpm.e2e/peer-a@1.0.1');
@@ -286,6 +287,7 @@ chai.use(require('chai-fs'));
     after(() => {
       npmCiRegistry.destroy();
       helper.command.delConfig('registry');
+      helper.scopeHelper.destroy();
     });
   });
   describe('graph data is update during tagging components from the scope', () => {
