@@ -11,6 +11,8 @@ import { StashAspect } from './stash.aspect';
 import { StashCmd, StashListCmd, StashLoadCmd, StashSaveCmd } from './stash.cmd';
 import { StashData } from './stash-data';
 import { StashFiles } from './stash-files';
+import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
+import { RemoveAspect, RemoveMain } from '@teambit/remove';
 
 type ListResult = {
   id: string;
@@ -23,33 +25,44 @@ export class StashMain {
   constructor(
     private workspace: Workspace,
     private checkout: CheckoutMain,
-    private snapping: SnappingMain
+    private snapping: SnappingMain,
+    private remove: RemoveMain
   ) {
     this.stashFiles = new StashFiles(workspace);
   }
 
-  async save(options: { message?: string; pattern?: string }): Promise<ComponentID[]> {
+  async save(options: { message?: string; pattern?: string; includeNew?: boolean }): Promise<ComponentID[]> {
     const compIds = options?.pattern ? await this.workspace.idsByPattern(options?.pattern) : this.workspace.listIds();
     const comps = await this.workspace.getMany(compIds);
+    const newComps: Component[] = [];
     const modifiedComps = compact(
       await Promise.all(
         comps.map(async (comp) => {
-          if (!comp.head) return undefined; // it's new
+          if (!comp.head) {
+            // it's a new component
+            if (options.includeNew) newComps.push(comp);
+            return undefined;
+          }
           const isModified = await this.workspace.isModified(comp);
           if (isModified) return comp;
           return undefined;
         })
       )
     );
-    if (!modifiedComps.length) return [];
+    const allComps = [...modifiedComps, ...newComps];
+    if (!allComps.length) return [];
 
     // per comp: create Version object, save it in the local scope and return the hash. don't save anything in the .bitmap
-    const consumeComponents = modifiedComps.map((comp) => comp.state._consumer);
+    const consumeComponents = allComps.map((comp) => comp.state._consumer);
     await this.snapping._addFlattenedDependenciesToComponents(consumeComponents);
     const hashPerId = await Promise.all(
-      modifiedComps.map(async (comp) => {
+      allComps.map(async (comp) => {
         const versionObj = await this.addComponentDataToRepo(comp);
-        return { id: comp.id, hash: versionObj.hash().toString() };
+        return {
+          id: comp.id,
+          hash: versionObj.hash().toString(),
+          bitmapEntry: this.workspace.bitMap.getBitmapEntry(comp.id).toPlainObject(),
+        };
       })
     );
     await this.workspace.scope.legacyScope.objects.persist();
@@ -63,8 +76,13 @@ export class StashMain {
       skipNpmInstall: true,
       reset: true,
     });
+    // remove new components from the workspace
+    const newCompIds = newComps.map((c) => c.id);
+    if (newComps.length) {
+      await this.remove.removeLocallyByIds(newCompIds);
+    }
 
-    return modifiedCompIds;
+    return [...modifiedCompIds, ...newCompIds];
   }
 
   async list(): Promise<ListResult[]> {
@@ -87,8 +105,14 @@ export class StashMain {
       throw new BitError('no stashed components found');
     }
     const stashData = await this.stashFiles.getStashData(stashFile);
-    const compIds = stashData.stashCompsData.map((c) => c.id);
-    const versionPerId = stashData.stashCompsData.map((c) => c.id.changeVersion(c.hash.toString()));
+    const stashModifiedCompsData = stashData.stashCompsData.filter((c) => !c.bitmapEntry.defaultScope);
+    const stashNewCompsData = stashData.stashCompsData.filter((c) => c.bitmapEntry.defaultScope);
+    const compIds = stashModifiedCompsData.map((c) => c.id);
+    const versionPerId = stashModifiedCompsData.map((c) => c.id.changeVersion(c.hash.toString()));
+    const stashedBitmapEntries = stashNewCompsData.map((s) => ({
+      ...s.bitmapEntry,
+      id: s.id.changeVersion(s.hash.toString()),
+    }));
 
     await this.checkout.checkout({
       ...checkoutProps,
@@ -98,17 +122,21 @@ export class StashMain {
       skipUpdatingBitmap: true,
       promptMergeOptions: true,
       loadStash: true,
+      stashedBitmapEntries,
     });
 
     await this.stashFiles.deleteStashFile(stashFile);
 
-    return compIds;
+    return [...compIds, ...stashNewCompsData.map((c) => c.id)];
   }
 
   private async addComponentDataToRepo(component: Component) {
     const previousVersion = component.getSnapHash();
     const consumerComponent = component.state._consumer.clone() as ConsumerComponent;
     consumerComponent.setNewVersion();
+    if (!consumerComponent.log) {
+      consumerComponent.log = await getBasicLog();
+    }
     const { version, files } =
       await this.workspace.scope.legacyScope.sources.consumerComponentToVersion(consumerComponent);
     if (previousVersion) {
@@ -126,10 +154,16 @@ export class StashMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, CheckoutAspect, SnappingAspect];
+  static dependencies = [CLIAspect, WorkspaceAspect, CheckoutAspect, SnappingAspect, RemoveAspect];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, checkout, snapping]: [CLIMain, Workspace, CheckoutMain, SnappingMain]) {
-    const stashMain = new StashMain(workspace, checkout, snapping);
+  static async provider([cli, workspace, checkout, snapping, remove]: [
+    CLIMain,
+    Workspace,
+    CheckoutMain,
+    SnappingMain,
+    RemoveMain,
+  ]) {
+    const stashMain = new StashMain(workspace, checkout, snapping, remove);
     const stashCmd = new StashCmd(stashMain);
     stashCmd.commands = [new StashSaveCmd(stashMain), new StashLoadCmd(stashMain), new StashListCmd(stashMain)];
     cli.register(stashCmd);

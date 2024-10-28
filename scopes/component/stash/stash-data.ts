@@ -1,7 +1,7 @@
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 
-export type StashCompData = { id: ComponentID; hash: string };
-export type StashCompDataWithIdObj = { id: ComponentIdObj; hash: string };
+export type StashCompData = { id: ComponentID; hash: string; bitmapEntry: Record<string, any> };
+export type StashCompDataWithIdObj = { id: ComponentIdObj; hash: string; bitmapEntry: Record<string, any> };
 export type StashMetadata = { message?: string };
 export type StashDataObj = {
   metadata: StashMetadata;
@@ -17,9 +17,10 @@ export class StashData {
   toObject(): StashDataObj {
     return {
       metadata: this.metadata,
-      stashCompsData: this.stashCompsData.map(({ id, hash }) => ({
+      stashCompsData: this.stashCompsData.map(({ id, hash, bitmapEntry }) => ({
         id: id.changeVersion(undefined).toObject(),
         hash,
+        bitmapEntry,
       })),
     };
   }
@@ -31,6 +32,7 @@ export class StashData {
         return {
           id,
           hash: compData.hash,
+          bitmapEntry: compData.bitmapEntry,
         };
       })
     );
