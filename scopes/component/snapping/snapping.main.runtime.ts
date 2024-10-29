@@ -388,6 +388,7 @@ if you're willing to lose the history from the head to the specified version, us
       ignoreIssues?: string;
       lane?: string;
       updateDependents?: boolean;
+      tag?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<SnapFromScopeResults> {
     const allAreForkedFrom = snapDataPerCompRaw.every((s) => s.forkFrom);
@@ -423,6 +424,7 @@ if you're willing to lose the history from the head to the specified version, us
         })),
         removeDependencies: snapData.removeDependencies,
         forkFrom: ComponentID.fromString(snapData.forkFrom!),
+        version: snapData.version,
       };
     });
 
@@ -513,6 +515,8 @@ if you're willing to lose the history from the head to the specified version, us
 
     const consumerComponents = components.map((c) => c.state._consumer);
     const ids = ComponentIdList.fromArray(allCompIds);
+    await this.throwForVariousIssues(components, params.ignoreIssues);
+    const shouldTag = Boolean(params.tag);
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
@@ -521,13 +525,14 @@ if you're willing to lose the history from the head to the specified version, us
         componentId: s.componentId,
         message: s.message,
         dependencies: [],
+        versionToTag: shouldTag ? s.version || 'patch' : undefined,
       })),
       snapping: this,
       builder: this.builder,
       dependencyResolver: this.dependencyResolver,
       skipAutoTag: true,
       persist: true,
-      isSnap: true,
+      isSnap: !shouldTag,
       ids,
       message: params.message as string,
       updateDependentsOnLane: params.updateDependents,
@@ -565,6 +570,7 @@ if you're willing to lose the history from the head to the specified version, us
       ignoreIssues?: string;
       lane?: string;
       updateDependents?: boolean;
+      tag?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<SnapFromScopeResults> {
     const hasForkedFrom = snapDataPerCompRaw.some((s) => s.forkFrom);
@@ -611,6 +617,7 @@ if you're willing to lose the history from the head to the specified version, us
           type: dep.type ?? 'runtime',
         })),
         removeDependencies: snapData.removeDependencies,
+        version: snapData.version,
       };
     });
 
@@ -683,6 +690,7 @@ if you're willing to lose the history from the head to the specified version, us
 
     const consumerComponents = components.map((c) => c.state._consumer);
     const ids = ComponentIdList.fromArray(allCompIds);
+    const shouldTag = Boolean(params.tag);
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
@@ -691,13 +699,14 @@ if you're willing to lose the history from the head to the specified version, us
         componentId: s.componentId,
         message: s.message,
         dependencies: [],
+        versionToTag: shouldTag ? s.version || 'patch' : undefined,
       })),
       snapping: this,
       builder: this.builder,
       dependencyResolver: this.dependencyResolver,
       skipAutoTag: true,
       persist: true,
-      isSnap: true,
+      isSnap: !shouldTag,
       ids,
       message: params.message as string,
       updateDependentsOnLane: params.updateDependents,

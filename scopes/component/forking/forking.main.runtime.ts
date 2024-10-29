@@ -139,7 +139,11 @@ export class ForkingMain {
         oldPackages.push(oldPackageName);
         const newName = targetCompId.fullName.replace(/\//g, '.');
         const scopeToReplace = targetCompId.scope.replace('.', '/');
-        const newPackageName = `@${scopeToReplace}.${newName}`;
+        // for locally hosted, the scope has no "/", so the package name would be "@scope/name".
+        // for the cloud, the package name would be "@org.scope/name".
+        const newPackageName = scopeToReplace.includes('/')
+          ? `@${scopeToReplace}.${newName}`
+          : `@${scopeToReplace}/${newName}`;
         return [
           { oldStr: oldPackageName, newStr: newPackageName },
           { oldStr: sourceId, newStr: targetCompId.toStringWithoutVersion() },
