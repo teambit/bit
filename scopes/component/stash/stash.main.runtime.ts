@@ -62,6 +62,7 @@ export class StashMain {
           id: comp.id,
           hash: versionObj.hash().toString(),
           bitmapEntry: this.workspace.bitMap.getBitmapEntry(comp.id).toPlainObject(),
+          isNew: !comp.id.hasVersion(),
         };
       })
     );
@@ -105,8 +106,8 @@ export class StashMain {
       throw new BitError('no stashed components found');
     }
     const stashData = await this.stashFiles.getStashData(stashFile);
-    const stashModifiedCompsData = stashData.stashCompsData.filter((c) => !c.bitmapEntry.defaultScope);
-    const stashNewCompsData = stashData.stashCompsData.filter((c) => c.bitmapEntry.defaultScope);
+    const stashModifiedCompsData = stashData.stashCompsData.filter((c) => !c.isNew);
+    const stashNewCompsData = stashData.stashCompsData.filter((c) => c.isNew);
     const compIds = stashModifiedCompsData.map((c) => c.id);
     const versionPerId = stashModifiedCompsData.map((c) => c.id.changeVersion(c.hash.toString()));
     const stashedBitmapEntries = stashNewCompsData.map((s) => ({
