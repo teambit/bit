@@ -62,7 +62,6 @@ export default class NpmCiRegistry {
       let resolved = false;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.registryServer.stdout.on('data', async (data): void => {
-        if (this.helper.debugMode) console.log(`stdout: ${data}`);
         if (!resolved && data.includes(REGISTRY_MOCK_PORT)) {
           resolved = true;
           let fetchResults;

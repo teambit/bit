@@ -380,27 +380,37 @@ export async function tagModelComponent({
       // TODO: update the integrities in the dependencies graphs
       // console.log(packageIntegritiesByPublishedPackages);
 
-      allComponentsToTag.map(async (consumerComponent, index) => {
-        if (consumerComponent.dependenciesGraph) {
-          const resolvedVersions: Array<{ name: string; version: string }> = [];
-          for (const [selector, integrity] of packageIntegritiesByPublishedPackages.entries()) {
-            const index = selector.indexOf('@', 1);
-            const name = selector.substring(0, index);
-            const version = selector.substring(index + 1);
-            if (consumerComponent.dependenciesGraph.packages[`${name}@pending:`]) {
-              consumerComponent.dependenciesGraph.packages[`${name}@pending:`].resolution = {
-                integrity,
-              };
-              resolvedVersions.push({ name, version });
+      await Promise.all(
+        allComponentsToTag.map(async (consumerComponent, index) => {
+          if (consumerComponent.dependenciesGraph) {
+            const resolvedVersions: Array<{ name: string; version: string }> = [];
+            for (const [selector, integrity] of packageIntegritiesByPublishedPackages.entries()) {
+              const index = selector.indexOf('@', 1);
+              const name = selector.substring(0, index);
+              const version = selector.substring(index + 1);
+              if (consumerComponent.dependenciesGraph.packages[`${name}@pending:`]) {
+                consumerComponent.dependenciesGraph.packages[`${name}@pending:`].resolution = {
+                  integrity,
+                };
+                resolvedVersions.push({ name, version });
+              }
             }
+            let s = JSON.stringify(consumerComponent.dependenciesGraph, null, 2);
+            for (const { name, version } of resolvedVersions) {
+              s = s.replaceAll(`${name}@pending:`, `${name}@${version}`);
+            }
+            consumerComponent.dependenciesGraph = JSON.parse(s);
+
+            // Re-add the component to scope objects to persist the changes
+            await snapping._addCompToObjects({
+              source: consumerComponent,
+              lane,
+              shouldValidateVersion: Boolean(build),
+              updateDependentsOnLane,
+            });
           }
-          let s = JSON.stringify(consumerComponent.dependenciesGraph, null, 2);
-          for (const { name, version } of resolvedVersions) {
-            s = s.replaceAll(`${name}@pending:`, `${name}@${version}`);
-          }
-          consumerComponent.dependenciesGraph = JSON.parse(s);
-        }
-      });
+        })
+      );
 
       addBuildStatus(componentsToBuild, BuildStatus.Succeed);
       await mapSeries(componentsToBuild, (consumerComponent) => snapping._enrichComp(consumerComponent));

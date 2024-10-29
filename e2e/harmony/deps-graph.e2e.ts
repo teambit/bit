@@ -101,7 +101,7 @@ chai.use(require('chai-fs'));
       });
     });
   });
-  describe('two components with different peer dependencies', function () {
+  describe.only('two components with different peer dependencies', function () {
     const env1DefaultPeerVersion = '16.0.0';
     const env2DefaultPeerVersion = '17.0.0';
     let randomStr: string;
@@ -188,12 +188,16 @@ chai.use(require('chai-fs'));
       expect(depsGraph.directDependencies['react@16.0.0']).to.eq('16.0.0');
       // console.log(JSON.stringify(depsGraph, null, 2));
     });
+    let depsGraph2;
     it('should save dependencies graph to the model', () => {
       const versionObj = helper.command.catComponent('comp2@latest');
-      const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
+      depsGraph2 = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
       // expect(depsGraph.importers['.'].dependencies.react).to.eq('17.0.0');
-      expect(depsGraph.directDependencies['react@17.0.0']).to.eq('17.0.0');
-      // console.log(JSON.stringify(depsGraph, null, 2));
+      expect(depsGraph2.directDependencies['react@17.0.0']).to.eq('17.0.0');
+      // console.log(JSON.stringify(depsGraph2, null, 2));
+    });
+    it('should update integrity of dependency component', () => {
+      expect(depsGraph2.packages[`@ci/${randomStr}.comp1@0.0.1`].resolution.integrity).to.match(/^sha512-/);
     });
     describe('importing a component that depends on another component and was export together with that component', () => {
       before(async () => {
@@ -217,7 +221,7 @@ chai.use(require('chai-fs'));
       });
     });
   });
-  describe.only('two components exported with different peer dependencies using the same env', function () {
+  describe('two components exported with different peer dependencies using the same env', function () {
     let randomStr: string;
     before(async () => {
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
