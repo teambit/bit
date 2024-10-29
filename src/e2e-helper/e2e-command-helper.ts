@@ -637,8 +637,12 @@ export default class CommandHelper {
     return this.runCmd(`bit revert ${pattern} ${to} ${flags}`);
   }
 
-  stash() {
-    return this.runCmd('bit stash save');
+  stash(flags = '') {
+    return this.runCmd(`bit stash save ${flags}`);
+  }
+
+  stashList(flags = '') {
+    return this.runCmd(`bit stash list ${flags}`);
   }
 
   stashLoad(flags = '') {

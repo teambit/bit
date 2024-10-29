@@ -106,4 +106,31 @@ describe('bit stash command', function () {
       expect(index).to.not.have.string('hello');
     });
   });
+  describe('stash new components along with modified', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild('comp2');
+      helper.fixtures.populateComponents(2, undefined, 'version2');
+      helper.command.stash('--include-new');
+    });
+    it('should stash both of them', () => {
+      const stashList = helper.command.stashList();
+      expect(stashList).to.have.string('2 components');
+    });
+    it('should remove the new component from .bitmap', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('comp2');
+      expect(bitMap).to.not.have.property('comp1');
+    });
+    describe('stash load them', () => {
+      before(() => {
+        helper.command.stashLoad();
+      });
+      it('should re-create the new component', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.have.property('comp1');
+      });
+    });
+  });
 });
