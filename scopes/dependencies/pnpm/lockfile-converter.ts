@@ -1,19 +1,19 @@
-import { Lockfile } from '@pnpm/lockfile.types';
+import { LockfileFileV9 } from '@pnpm/lockfile.types';
 import * as dp from '@pnpm/dependency-path';
 import pick from 'ramda/src/pick';
 import partition from 'ramda/src/partition';
 
-export function convertLockfileToGraph(lockfile: Lockfile) {
+export function convertLockfileToGraph(lockfile: LockfileFileV9) {
   const nodes: any[] = [];
   const edges: any[] = [];
-  for (const [depPath, pkg] of Object.entries(lockfile.packages ?? {})) {
+  for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
     const neighbours: Array<{ id: string; type: string }> = [];
     for (const { depTypeField, depType } of [
       { depTypeField: 'dependencies', depType: 'prod' },
       { depTypeField: 'optionalDependencies', depType: 'optional' },
     ]) {
-      for (const pkgName in pkg[depTypeField]) {
-        const subDepPath = dp.refToRelative(pkg[depTypeField][pkgName], pkgName);
+      for (const pkgName in snapshot[depTypeField]) {
+        const subDepPath = dp.refToRelative(snapshot[depTypeField][pkgName], pkgName);
         if (subDepPath == null) continue;
         neighbours.push({ id: subDepPath, type: depType });
       }
@@ -25,11 +25,11 @@ export function convertLockfileToGraph(lockfile: Lockfile) {
       attr: {
         pkgId,
       },
-    };
-    edges.push(edge);
-    if (pkg.transitivePeerDependencies) {
-      edge.attr.transitivePeerDependencies = pkg.transitivePeerDependencies;
+    } as any;
+    if (snapshot.transitivePeerDependencies) {
+      edge.attr.transitivePeerDependencies = snapshot.transitivePeerDependencies;
     }
+    edges.push(edge);
     nodes.push({
       pkgId,
       attr: pick(
@@ -47,20 +47,22 @@ export function convertLockfileToGraph(lockfile: Lockfile) {
           'resolution',
           'version',
         ],
-        pkg
+        lockfile.packages![pkgId]
       ),
     });
   }
   return { edges, nodes };
 }
 
-export function convertGraphToLockfile(graph): Lockfile {
+export function convertGraphToLockfile(graph): LockfileFileV9 {
   const packages = {};
+  const snapshots = {};
   for (const edge of graph.edges) {
-    packages[edge.id] = {};
+    snapshots[edge.id] = {};
+    packages[edge.attr.pkgId] = {};
     const [prodDeps, optionalDeps] = partition((dep) => dep.type === 'prod', edge.neighbours);
     if (prodDeps.length) {
-      packages[edge.id].dependencies = Object.fromEntries(
+      snapshots[edge.id].dependencies = Object.fromEntries(
         prodDeps.map(({ id }) => {
           const parsed = dp.parse(id);
           return [parsed.name, `${parsed.version}${parsed.peersSuffix ?? ''}`]; // TODO: support peers
@@ -68,7 +70,7 @@ export function convertGraphToLockfile(graph): Lockfile {
       );
     }
     if (optionalDeps.length) {
-      packages[edge.id].optionalDependencies = Object.fromEntries(
+      snapshots[edge.id].optionalDependencies = Object.fromEntries(
         optionalDeps.map(({ id }) => {
           const parsed = dp.parse(id);
           return [parsed.name, `${parsed.version}${parsed.peersSuffix ?? ''}`]; // TODO: support peers
@@ -76,9 +78,11 @@ export function convertGraphToLockfile(graph): Lockfile {
       );
     }
     const node = graph.nodes.find(({ pkgId }) => edge.attr.pkgId === pkgId);
-    packages[edge.id].resolution = node.attr.resolution;
+    packages[edge.attr.pkgId].resolution = node.attr.resolution;
   }
   return {
+    lockfileVersion: '9.0',
     packages,
+    snapshots,
   };
 }

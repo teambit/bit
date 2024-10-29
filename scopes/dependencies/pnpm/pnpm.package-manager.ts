@@ -36,6 +36,7 @@ import { type ProjectManifest, type DepPath } from '@pnpm/types';
 import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
 import { ServerSendOutStream } from '@teambit/legacy/dist/logger/pino-logger';
 import { join } from 'path';
+import { convertLockfileToGraph } from './lockfile-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
@@ -436,17 +437,31 @@ export class PnpmPackageManager implements PackageManager {
       }
     }
     partialLockfile = JSON.parse(JSON.stringify(partialLockfile).replaceAll(/file:[^'"(]+/g, 'pending:'));
+    console.log(
+      JSON.stringify(
+        {
+          ...convertLockfileToGraph(partialLockfile),
+          directDependencies,
+        },
+        null,
+        2
+      )
+    );
+    return {
+      ...convertLockfileToGraph(partialLockfile),
+      directDependencies,
+    };
     // partialLockfile.importers = {
     // ['.' as ProjectId]:
     // partialLockfile.packages![`${pkgName}@${partialLockfile.importers[componentRootDir].dependencies[pkgName]}`],
     // };
-    partialLockfile['directDependencies'] = directDependencies;
+    // partialLockfile['directDependencies'] = directDependencies;
     // partialLockfile.importers['.'].devDependencies = componentDevImporter.devDependencies;
     // partialLockfile.importers['.'].specifiers = {
     // ...componentDevImporter.specifiers,
     // ...specifiers,
     // };
-    return partialLockfile;
+    // return partialLockfile;
   }
 }
 
