@@ -49,6 +49,9 @@ export class Loader {
       this.spinner.stop();
       this.spinner.text = text;
       this.spinner.start();
+    } else if (process.argv.includes('--stream')) {
+      // eslint-disable-next-line no-console
+      console.log(JSON.stringify({ loader: text }));
     }
     return this;
   }
