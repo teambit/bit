@@ -84,6 +84,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       'when snapped on a lane, mark it as update-dependents so it will be skipped from the workspace',
     ],
     ['', 'tag', 'make a tag instead of a snap'],
+    ['', 'stream', 'relevant for --json only. stream loader as json strings'],
     ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;
