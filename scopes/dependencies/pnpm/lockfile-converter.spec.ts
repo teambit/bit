@@ -1,8 +1,8 @@
-import { convertLockfileToGraph } from './lockfile-converter';
+import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-converter';
 import { expect } from 'chai';
 
 describe.only('convertLockfileToGraph', () => {
-  const graph = convertLockfileToGraph({
+  const lockfile = {
     packages: {
       'foo@1.0.0': {
         dependencies: {
@@ -18,7 +18,8 @@ describe.only('convertLockfileToGraph', () => {
         },
       },
     },
-  });
+  };
+  const graph = convertLockfileToGraph(lockfile);
   const expected = {
     edges: [
       {
@@ -55,5 +56,10 @@ describe.only('convertLockfileToGraph', () => {
       },
     ],
   };
-  expect(graph).to.eql(expected);
+  it('should convert the lockfile object to the graph object', () => {
+    expect(graph).to.eql(expected);
+  });
+  it('should convert the graph object to the lockfile object', () => {
+    expect(convertGraphToLockfile(graph)).to.eql(lockfile);
+  });
 });
