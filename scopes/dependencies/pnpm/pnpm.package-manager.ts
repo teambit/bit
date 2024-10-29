@@ -432,7 +432,7 @@ export class PnpmPackageManager implements PackageManager {
       ];
     for (const depType of ['dependencies', 'optionalDependencies']) {
       for (const [name, version] of Object.entries(lockedPkg[depType] ?? {}) as any) {
-        directDependencies[`${name}@${componentDevImporter[depType][name]?.specifier ?? '*'}`] = version;
+        directDependencies[`${name}@${componentDevImporter[depType]?.[name]?.specifier ?? '*'}`] = version;
       }
     }
     partialLockfile = JSON.parse(JSON.stringify(partialLockfile).replaceAll(/file:[^'"(]+/g, 'pending:'));

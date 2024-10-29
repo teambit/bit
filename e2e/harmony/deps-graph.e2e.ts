@@ -101,7 +101,7 @@ chai.use(require('chai-fs'));
       });
     });
   });
-  describe.only('two components with different peer dependencies', function () {
+  describe('two components with different peer dependencies', function () {
     const env1DefaultPeerVersion = '16.0.0';
     const env2DefaultPeerVersion = '17.0.0';
     let randomStr: string;
@@ -294,7 +294,7 @@ chai.use(require('chai-fs'));
       helper.scopeHelper.destroy();
     });
   });
-  describe('graph data is update during tagging components from the scope', () => {
+  describe.only('graph data is update during tagging components from the scope', () => {
     let bareTag;
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
