@@ -162,9 +162,18 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     context.components = context.components.concat(this.getComponentsFromContexts(additionalContexts));
     const peers = await this.dependencyResolver.getPreviewHostDependenciesFromEnv(context.envDefinition.env);
     const hostRootDir = context.envRuntime.envAspectDefinition?.aspectPath;
+    const entry = await getEntry(context, this.runtimeSlot);
+    const componentDirectoryMap = {};
+    context.components.forEach((component) => {
+      // @ts-ignore this is usually a workspace component here so it has a workspace
+      const workspace = component.workspace;
+      if (!workspace) return;
+      componentDirectoryMap[component.id.toString()] = workspace.componentDir(component.id);
+    });
 
     return Object.assign(context, {
-      entry: await getEntry(context, this.runtimeSlot),
+      entry,
+      componentDirectoryMap,
       // don't start with a leading "/" because it generates errors on Windows
       rootPath: `preview/${context.envRuntime.id}`,
       publicPath: `${sep}public`,
