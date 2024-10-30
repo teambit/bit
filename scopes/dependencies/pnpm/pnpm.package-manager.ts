@@ -1,3 +1,4 @@
+import path from 'path';
 import { CloudMain } from '@teambit/cloud';
 import { BitError } from '@teambit/bit-error';
 import {
@@ -16,6 +17,7 @@ import {
 } from '@teambit/dependency-resolver';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { Logger } from '@teambit/logger';
+import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
@@ -30,13 +32,13 @@ import {
   PackageNode,
 } from '@pnpm/reviewing.dependencies-hierarchy';
 import { renderTree } from '@pnpm/list';
-import { writeWantedLockfile, getLockfileImporterId, convertToLockfileFile } from '@pnpm/lockfile.fs';
+import { writeLockfileFile, getLockfileImporterId, convertToLockfileFile } from '@pnpm/lockfile.fs';
 import { readWantedLockfile } from '@pnpm/lockfile-file';
 import { type ProjectManifest, type DepPath } from '@pnpm/types';
 import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
 import { ServerSendOutStream } from '@teambit/legacy/dist/logger/pino-logger';
 import { join } from 'path';
-import { convertLockfileToGraph } from './lockfile-converter';
+import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
@@ -80,26 +82,25 @@ export class PnpmPackageManager implements PackageManager {
     manifests: Record<string, ProjectManifest>,
     rootDir: string
   ) {
-    const lockfile = {
+    const lockfile: LockfileFileV9 = {
       importers: {},
-      snapshots: dependenciesGraph.snapshots,
-      packages: dependenciesGraph.packages,
-      lockfileVersion: '9.0',
+      ...convertGraphToLockfile(dependenciesGraph),
     };
     for (const [projectDir, manifest] of Object.entries(manifests)) {
       const projectId = getLockfileImporterId(rootDir, projectDir);
-      lockfile.importers[projectId] = {
+      lockfile.importers![projectId] = {
         dependencies: {},
         devDependencies: {},
         optionalDependencies: {},
-        specifiers: {},
+        // specifiers: {},
       };
       for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
         for (const [name, spec] of Object.entries(manifest[depType] ?? {})) {
           const directDep = dependenciesGraph.directDependencies[`${name}@${spec}`];
           if (directDep) {
-            lockfile.importers[projectId][depType][name] = directDep;
-            lockfile.importers[projectId].specifiers[name] = spec;
+            lockfile.importers![projectId][depType][name] = { version: directDep, specifier: spec };
+            // lockfile.importers[projectId][depType][name] = directDep;
+            // lockfile.importers[projectId].specifiers[name] = spec;
           }
         }
       }
@@ -107,7 +108,8 @@ export class PnpmPackageManager implements PackageManager {
     lockfile['bit'] = {
       restoredFromModel: true,
     };
-    await writeWantedLockfile(rootDir, lockfile);
+    // console.log(JSON.stringify(lockfile, null, 2))
+    await writeLockfileFile(path.join(rootDir, 'pnpm-lock.yaml'), lockfile);
   }
 
   async install(

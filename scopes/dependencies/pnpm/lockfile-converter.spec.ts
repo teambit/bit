@@ -3,11 +3,17 @@ import { expect } from 'chai';
 
 describe.only('convertLockfileToGraph', () => {
   const lockfile = {
-    packages: {
+    lockfileVersion: '9.0',
+    snapshots: {
       'foo@1.0.0': {
         dependencies: {
           bar: '1.0.0',
         },
+      },
+      'bar@1.0.0': {},
+    },
+    packages: {
+      'foo@1.0.0': {
         resolution: {
           integrity: 'sha512-000',
         },

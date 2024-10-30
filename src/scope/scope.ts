@@ -817,10 +817,12 @@ once done, to continue working, please run "bit cc"`
               allGraph.directDependencies[directDepSelector] = graph.directDependencies[directDepSelector];
             }
           }
-          Object.assign(allGraph.packages, graph.packages);
+          allGraph.nodes.push(...graph.nodes);
+          allGraph.edges.push(...graph.edges);
         }
       })
     );
+    // console.log(JSON.stringify(allGraph, null, 2))
     return allGraph;
   }
 

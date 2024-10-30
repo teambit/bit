@@ -20,7 +20,7 @@ chai.use(require('chai-fs'));
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('single component', () => {
+  describe.only('single component', () => {
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -68,7 +68,8 @@ chai.use(require('chai-fs'));
         // we run "action" command from the remote to itself to clear the cache. (needed because
         // normally bit-sign is running from the fs but a different http service is running as well)
         helper.scopeHelper.addRemoteScope(undefined, helper.scopes.remotePath);
-        const ids = [`${helper.scopes.remote}/comp1@latest`];
+        const { head } = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
+        const ids = [`${helper.scopes.remote}/comp1@${head}`];
         // console.log('sign-command', `bit sign ${ids.join(' ')}`);
         signOutput = helper.command.sign(ids, '--push --original-scope --log', helper.scopes.remotePath);
       });
@@ -294,7 +295,7 @@ chai.use(require('chai-fs'));
       helper.scopeHelper.destroy();
     });
   });
-  describe.only('graph data is update during tagging components from the scope', () => {
+  describe('graph data is update during tagging components from the scope', () => {
     let bareTag;
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
