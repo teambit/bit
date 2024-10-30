@@ -1507,6 +1507,9 @@ export class DependencyResolverMain {
       postInstallSlot
     );
 
+    const envJsoncDetector = envs.getEnvJsoncDetector();
+    dependencyResolver.registerDetector(envJsoncDetector);
+
     componentAspect.registerShowFragments([
       new DependenciesFragment(dependencyResolver),
       new DevDependenciesFragment(dependencyResolver),

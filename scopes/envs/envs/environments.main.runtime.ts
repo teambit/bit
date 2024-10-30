@@ -4,7 +4,7 @@ import { parse } from 'comment-json';
 import { SourceFile } from '@teambit/component.sources';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
-import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { DependencyList, EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import type { EnvJsoncPatterns } from '@teambit/dev-files';
@@ -30,6 +30,7 @@ import { EnvsCmd, GetEnvCmd, ListEnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
 import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
 import { EnvPlugin } from './env.plugin';
+import { EnvJsoncDetector } from './env-jsonc.detector';
 
 export type EnvJsonc = {
   extends?: string;
@@ -1031,6 +1032,10 @@ export class EnvsMain {
 
   registerEnvJsoncResolver(resolver: EnvJsoncResolver) {
     return this.envJsoncResolverSlot.register(resolver);
+  }
+
+  getEnvJsoncDetector() {
+    return new EnvJsoncDetector();
   }
 
   async addNonLoadedEnvAsComponentIssues(components: Component[]) {
