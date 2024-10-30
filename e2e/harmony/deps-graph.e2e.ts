@@ -190,6 +190,7 @@ chai.use(require('chai-fs'));
       // console.log(JSON.stringify(depsGraph, null, 2));
     });
     let depsGraph2;
+    let comp1Node;
     it('should save dependencies graph to the model', () => {
       const versionObj = helper.command.catComponent('comp2@latest');
       depsGraph2 = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
@@ -198,8 +199,11 @@ chai.use(require('chai-fs'));
       // console.log(JSON.stringify(depsGraph2, null, 2));
     });
     it('should update integrity of dependency component', () => {
-      const node = depsGraph2.nodes.find(({ pkgId }) => pkgId === `@ci/${randomStr}.comp1@0.0.1`);
-      expect(node.attr.resolution.integrity).to.match(/^sha512-/);
+      comp1Node = depsGraph2.nodes.find(({ pkgId }) => pkgId === `@ci/${randomStr}.comp1@0.0.1`);
+      expect(comp1Node.attr.resolution.integrity).to.match(/^sha512-/);
+    });
+    it('should add component ID to the deps graph', () => {
+      expect(comp1Node.attr.component).to.eql({ scope: helper.scopes.remote, name: 'comp1' });
     });
     describe('importing a component that depends on another component and was export together with that component', () => {
       before(async () => {

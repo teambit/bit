@@ -1,4 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import * as dp from '@pnpm/dependency-path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
@@ -763,8 +764,21 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
   async _addDependenciesGraphToComponents(consumerComponents: ConsumerComponent[], components: Component[]) {
     loader.start('importing missing dependencies...');
     this.logger.profile('snap._addDependenciesGraphToComponents');
+    const componentIdByPkgName = new Map<string, { scope: string; name: string }>();
+    consumerComponents.map(async (consumerComponent, index) => {
+      if (consumerComponent.componentMap?.rootDir) {
+        componentIdByPkgName.set(this.dependencyResolver.getPackageName(components[index]), {
+          scope: consumerComponent.componentMap.id.scope,
+          name: consumerComponent.componentMap.id.fullName,
+        });
+      }
+    });
     await Promise.all(
       consumerComponents.map(async (consumerComponent, index) => {
+        // console.log('>>>', consumerComponent.componentMap?.rootDir);
+        // console.log('>>>', consumerComponent.componentMap?.id);
+        // console.log('>>>', consumerComponent.componentMap?.id?.scope);
+        // console.log('>>>fullname', consumerComponent.componentMap?.id?.fullName);
         if (consumerComponent.componentMap?.rootDir) {
           consumerComponent.dependenciesGraph = await this.dependencyResolver.getDependenciesGraph(
             components[index],
@@ -772,6 +786,14 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
             this.workspace.rootComponentsPath,
             consumerComponent.componentMap.rootDir
           );
+        }
+        for (const node of consumerComponent.dependenciesGraph.nodes) {
+          if (node.pkgId.includes('@pending:')) {
+            const parsed = dp.parse(node.pkgId);
+            if (parsed.name && componentIdByPkgName.has(parsed.name)) {
+              node.attr.component = componentIdByPkgName.get(parsed.name);
+            }
+          }
         }
       })
     );
