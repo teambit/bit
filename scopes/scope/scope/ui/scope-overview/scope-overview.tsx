@@ -6,7 +6,7 @@ import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 import { EmptyScope } from '@teambit/scope.ui.empty-scope';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { ComponentID } from '@teambit/component-id';
-import { ComponentCard, ComponentCardPluginType, PluginProps } from '@teambit/explorer.ui.component-card';
+import { ComponentCard, type ComponentCardPluginType, type PluginProps } from '@teambit/explorer.ui.component-card';
 import { ComponentModel } from '@teambit/component';
 import { ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
 import { ComponentDescriptor } from '@teambit/component-descriptor';

@@ -7,6 +7,7 @@ export type DependencyLifecycleType = WorkspaceDependencyLifecycleType | 'dev';
 export interface SerializedDependency {
   id: string;
   version: string;
+  versionRange?: string;
   __type: string;
   lifecycle: string;
   source?: DependencySource;
@@ -29,6 +30,7 @@ export type DependencyManifest = {
 export interface Dependency {
   id: string;
   version: string;
+  versionRange?: string;
   type: string;
   idWithoutVersion: string;
   lifecycle: DependencyLifecycleType;

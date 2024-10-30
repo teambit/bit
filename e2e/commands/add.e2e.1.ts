@@ -5,12 +5,8 @@ import * as path from 'path';
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import { InvalidName } from '@teambit/legacy-bit-id';
 import { statusInvalidComponentsMsg } from '../../src/constants';
-import { MissingMainFile } from '../../src/consumer/bit-map/exceptions';
-import {
-  MainFileIsDir,
-  PathOutsideConsumer,
-  VersionShouldBeRemoved,
-} from '../../src/consumer/component-ops/add-components/exceptions';
+import { MainFileIsDir, PathOutsideConsumer, VersionShouldBeRemoved } from '@teambit/tracker';
+import { MissingMainFile } from '@teambit/legacy.bit-map';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -32,7 +28,7 @@ describe('bit add command', function () {
   describe('add before running "bit init"', () => {
     it('Should return message to run "bit init"', () => {
       helper.fixtures.createComponentBarFoo();
-      const cmd = () => helper.fixtures.addComponentBarFooAsDir();
+      const cmd = () => helper.fixtures.addComponentBarFoo();
       const error = new OutsideWorkspaceError();
       helper.general.expectToThrow(cmd, error);
     });
@@ -46,7 +42,7 @@ describe('bit add command', function () {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.scopeHelper.initWorkspace();
       helper.fixtures.createComponentBarFoo();
-      const addCmd = () => helper.fixtures.addComponentBarFooAsDir();
+      const addCmd = () => helper.fixtures.addComponentBarFoo();
       expect(addCmd).to.not.throw();
     });
   });
@@ -57,15 +53,16 @@ describe('bit add command', function () {
     });
     it('Should print tracking component: id', () => {
       helper.fixtures.createComponentBarFoo();
-      output = helper.fixtures.addComponentBarFooAsDir();
+      output = helper.fixtures.addComponentBarFoo();
       expect(output).to.contain('bar/foo');
     });
-    // @TODO: FIX ON HARMONY!
-    it.skip('Should print warning when trying to add file that is already tracked with different id and not add it as a new one', () => {
+    it('Should print warning when trying to add file that is already tracked with different id and not add it as a new one', () => {
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       output = helper.command.addComponent('bar -i bar/new');
-      expect(output).to.have.string('warning: files bar/foo.js already used by component: bar/foo');
+      expect(output).to.have.string(
+        `warning: files bar/foo.js already used by component: ${helper.scopes.remote}/bar/foo`
+      );
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.not.have.property('bar/new');
     });
@@ -207,25 +204,6 @@ describe('bit add command', function () {
       const mainPath = path.join(helper.scopes.localPath, 'mainDir');
       const error = new MainFileIsDir(mainPath);
       helper.general.expectToThrow(addFunc, error);
-    });
-  });
-  // @TODO: FIX ON HARMONY!
-  describe.skip('add file as lowercase and then re-add it as CamelCase', () => {
-    before(() => {
-      helper.scopeHelper.reInitLocalScope();
-      helper.fixtures.createComponentBarFoo();
-      helper.command.addComponent('bar', { i: 'bar/foo' });
-      fs.removeSync(path.join(helper.scopes.localPath, 'bar'));
-      helper.fs.createFile('Bar', 'foo.js');
-      helper.command.addComponent('Bar', { i: 'bar/foo' });
-    });
-    it('should update the files and the mainFile with the new case', () => {
-      const bitMap = helper.bitMap.read();
-      const componentMap = bitMap['bar/foo'];
-      expect(componentMap.files).to.have.lengthOf(1);
-      expect(componentMap.files[0].relativePath).to.equal('Bar/foo.js');
-      expect(componentMap.files[0].relativePath).to.not.equal('bar/foo.js');
-      expect(componentMap.mainFile).to.equal('Bar/foo.js');
     });
   });
   describe('add the main file when it was removed before', () => {

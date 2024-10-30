@@ -2,7 +2,11 @@ import { SchemaLocation, SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 
 export class NamedTupleSchema extends SchemaNode {
-  constructor(readonly location: SchemaLocation, readonly type: SchemaNode, readonly name?: string) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly type: SchemaNode,
+    readonly name?: string
+  ) {
     super();
   }
 
@@ -10,8 +14,12 @@ export class NamedTupleSchema extends SchemaNode {
     return [this.type];
   }
 
-  toString() {
-    return `${this.name}: ${this.type.toString()}`;
+  toString(options?: { color?: boolean }): string {
+    return `${this.name}: ${this.type.toString(options)}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    return `${this.name}: ${this.type.toFullSignature(options)}`;
   }
 
   toObject() {

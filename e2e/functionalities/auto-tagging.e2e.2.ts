@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-import { AUTO_TAGGED_MSG } from '../../src/api/consumer/lib/tag';
+import { AUTO_TAGGED_MSG } from '@teambit/snapping';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -92,9 +92,8 @@ describe('auto tagging functionality', function () {
       });
     });
   });
-  // @TODO: FIX ON HARMONY!
-  // this is failing for the same reason flows/cyclic-dependencies.e2e.2 are failing.
-  describe.skip('with cyclic dependencies', () => {
+
+  describe('with cyclic dependencies', () => {
     let scopeBeforeTag;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -102,19 +101,21 @@ describe('auto tagging functionality', function () {
       helper.fs.createFile('bar/b', 'b.js', 'require("../c/c")');
       helper.fs.createFile('bar/c', 'c.js', 'require("../a/a"); console.log("I am C v1")');
       helper.command.addComponent('bar/*', { n: 'bar' });
-      helper.command.tagAllWithoutBuild();
+      helper.command.linkAndRewire();
+      helper.command.tagAllWithoutBuild('--ignore-issues="CircularDependencies"');
       helper.fs.createFile('bar/c', 'c.js', 'require("../a/a"); console.log("I am C v2")');
+      helper.command.linkAndRewire();
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     it('bit status should recognize the auto tag pending components', () => {
       const output = helper.command.statusJson();
-      expect(output.autoTagPendingComponents).to.deep.include('bar/a@0.0.1');
-      expect(output.autoTagPendingComponents).to.deep.include('bar/b@0.0.1');
+      expect(output.autoTagPendingComponents).to.deep.include(`${helper.scopes.remote}/bar/a`);
+      expect(output.autoTagPendingComponents).to.deep.include(`${helper.scopes.remote}/bar/b`);
     });
     describe('tagging the components with auto-version-bump', () => {
       let tagOutput;
       before(() => {
-        tagOutput = helper.command.tagAllWithoutBuild();
+        tagOutput = helper.command.tagAllWithoutBuild('--ignore-issues="CircularDependencies"');
       });
       it('should auto tag all dependents', () => {
         expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
@@ -123,38 +124,50 @@ describe('auto tagging functionality', function () {
       });
       it('should update the dependencies and the flattenedDependencies of the all dependents with the new versions', () => {
         const barA = helper.command.catComponent('bar/a@latest');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barA.dependencies[0].id.name).to.equal('bar/b');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barA.dependencies[0].id.version).to.equal('0.0.2');
 
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        expect(barA.flattenedDependencies).to.deep.include({ name: 'bar/b', version: '0.0.2' });
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        expect(barA.flattenedDependencies).to.deep.include({ name: 'bar/c', version: '0.0.2' });
+        expect(barA.flattenedDependencies).to.deep.include({
+          scope: helper.scopes.remote,
+          name: 'bar/b',
+          version: '0.0.2',
+        });
+        expect(barA.flattenedDependencies).to.deep.include({
+          scope: helper.scopes.remote,
+          name: 'bar/c',
+          version: '0.0.2',
+        });
 
         const barB = helper.command.catComponent('bar/b@latest');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barB.dependencies[0].id.name).to.equal('bar/c');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barB.dependencies[0].id.version).to.equal('0.0.2');
 
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        expect(barB.flattenedDependencies).to.deep.include({ name: 'bar/c', version: '0.0.2' });
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        expect(barB.flattenedDependencies).to.deep.include({ name: 'bar/a', version: '0.0.2' });
+        expect(barB.flattenedDependencies).to.deep.include({
+          scope: helper.scopes.remote,
+          name: 'bar/c',
+          version: '0.0.2',
+        });
+        expect(barB.flattenedDependencies).to.deep.include({
+          scope: helper.scopes.remote,
+          name: 'bar/a',
+          version: '0.0.2',
+        });
       });
       it('should update the dependencies and the flattenedDependencies of the modified component with the cycle dependency', () => {
         const barC = helper.command.catComponent('bar/c@latest');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barC.dependencies[0].id.name).to.equal('bar/a');
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barC.dependencies[0].id.version).to.equal('0.0.2');
 
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        expect(barC.flattenedDependencies).to.deep.include({ name: 'bar/a', version: '0.0.2' });
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        expect(barC.flattenedDependencies).to.deep.include({ name: 'bar/b', version: '0.0.2' });
+        expect(barC.flattenedDependencies).to.deep.include({
+          scope: helper.scopes.remote,
+          name: 'bar/a',
+          version: '0.0.2',
+        });
+        expect(barC.flattenedDependencies).to.deep.include({
+          scope: helper.scopes.remote,
+          name: 'bar/b',
+          version: '0.0.2',
+        });
 
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         expect(barC.flattenedDependencies).to.have.lengthOf(2);
@@ -165,7 +178,7 @@ describe('auto tagging functionality', function () {
       let tagOutput: string;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
-        tagOutput = helper.command.tagAllWithoutBuild('--ver 2.0.0');
+        tagOutput = helper.command.tagAllWithoutBuild('--ignore-issues="CircularDependencies" --ver 2.0.0');
       });
       it('should auto tag all dependents', () => {
         expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
@@ -178,23 +191,47 @@ describe('auto tagging functionality', function () {
         expect(barA.dependencies[0].id.name).to.equal('bar/b');
         expect(barA.dependencies[0].id.version).to.equal('0.0.2');
 
-        expect(barA.flattenedDependencies).to.deep.include({ name: 'bar/b', version: '0.0.2' });
-        expect(barA.flattenedDependencies).to.deep.include({ name: 'bar/c', version: '2.0.0' });
+        expect(barA.flattenedDependencies).to.deep.include({
+          scope: helper.scopes.remote,
+          name: 'bar/b',
+          version: '0.0.2',
+        });
+        expect(barA.flattenedDependencies).to.deep.include({
+          scope: helper.scopes.remote,
+          name: 'bar/c',
+          version: '2.0.0',
+        });
 
         const barB = helper.command.catComponent('bar/b@latest');
         expect(barB.dependencies[0].id.name).to.equal('bar/c');
         expect(barB.dependencies[0].id.version).to.equal('2.0.0');
 
-        expect(barB.flattenedDependencies).to.deep.include({ name: 'bar/c', version: '2.0.0' });
-        expect(barB.flattenedDependencies).to.deep.include({ name: 'bar/a', version: '0.0.2' });
+        expect(barB.flattenedDependencies).to.deep.include({
+          scope: helper.scopes.remote,
+          name: 'bar/c',
+          version: '2.0.0',
+        });
+        expect(barB.flattenedDependencies).to.deep.include({
+          scope: helper.scopes.remote,
+          name: 'bar/a',
+          version: '0.0.2',
+        });
       });
       it('should update the dependencies and the flattenedDependencies of the modified component according to the specified version', () => {
         const barC = helper.command.catComponent('bar/c@latest');
         expect(barC.dependencies[0].id.name).to.equal('bar/a');
         expect(barC.dependencies[0].id.version).to.equal('0.0.2');
 
-        expect(barC.flattenedDependencies).to.deep.include({ name: 'bar/a', version: '0.0.2' });
-        expect(barC.flattenedDependencies).to.deep.include({ name: 'bar/b', version: '0.0.2' });
+        expect(barC.flattenedDependencies).to.deep.include({
+          scope: helper.scopes.remote,
+          name: 'bar/a',
+          version: '0.0.2',
+        });
+        expect(barC.flattenedDependencies).to.deep.include({
+          scope: helper.scopes.remote,
+          name: 'bar/b',
+          version: '0.0.2',
+        });
 
         expect(barC.flattenedDependencies).to.have.lengthOf(2);
       });

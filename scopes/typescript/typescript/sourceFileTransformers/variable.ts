@@ -20,6 +20,6 @@ export function variableNamesTransformer(nameMapping: Record<string, string>): t
       }
       return ts.visitEachChild(node, (child) => visit(child), context);
     };
-    return (node) => ts.visitNode(node, visit);
+    return (node) => ts.visitNode(node, visit) as ts.SourceFile;
   };
 }

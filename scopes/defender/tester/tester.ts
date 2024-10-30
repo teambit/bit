@@ -1,6 +1,6 @@
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { ExecutionContext } from '@teambit/envs';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 import { TestsResult } from '@teambit/tests-results';
 
 export class Tests {
@@ -78,6 +78,11 @@ export interface TesterContext extends ExecutionContext {
   specFiles: SpecFiles;
 
   /**
+   * list of source spec files to test.
+   */
+  sourceSpecFiles?: SpecFiles;
+
+  /**
    * rootPath of the component workspace or the capsule root dir (during build).
    */
   rootPath: string;
@@ -103,9 +108,19 @@ export interface TesterContext extends ExecutionContext {
   coverage?: boolean;
 
   /**
+   * re-record every snapshot that fails during the test run
+   */
+  updateSnapshot?: boolean;
+
+  /**
    * array of patterns to test.
    */
   patterns: ComponentPatternsMap;
+
+  /**
+   * array of source files patterns to test.
+   */
+  sourcePatterns?: ComponentPatternsMap;
 
   /**
    *

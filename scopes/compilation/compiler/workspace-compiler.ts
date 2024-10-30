@@ -4,33 +4,37 @@ import { Component } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
+import type { WorkspaceComponentLoadOptions } from '@teambit/workspace';
 import { WatcherMain, WatchOptions } from '@teambit/watcher';
 import path from 'path';
+import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
-import { AbstractVinyl, Dist } from '@teambit/legacy/dist/consumer/component/sources';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { AbstractVinyl, Dist, DataToPersist, RemovePath } from '@teambit/component.sources';
 import {
   linkToNodeModulesByComponents,
   removeLinksFromNodeModules,
 } from '@teambit/workspace.modules.node-modules-linker';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
+import { DependencyList, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { UiMain } from '@teambit/ui';
-import { readBitRootsDir } from '@teambit/bit-roots';
+import { readRootComponentsDir } from '@teambit/workspace.root-components';
 import { groupBy, uniq } from 'lodash';
 import type { PreStartOpts } from '@teambit/ui';
-import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { MultiCompiler } from '@teambit/multi-compiler';
 import { CompilerAspect } from './compiler.aspect';
-import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
+import { CompilerErrorEvent } from './events';
 import { Compiler, CompilationInitiator } from './types';
 
-export type BuildResult = { component: string; buildResults: string[] | null | undefined };
+export type BuildResult = {
+  component: string;
+  buildResults: string[];
+  errors: CompileError[];
+};
 
 export type CompileOptions = {
   changed?: boolean; // compile only new and modified components
@@ -65,10 +69,11 @@ export class ComponentCompiler {
   async compile(noThrow = true, options: CompileOptions): Promise<BuildResult> {
     let dataToPersist;
     const deleteDistDir = options.deleteDistDir ?? this.compilerInstance.deleteDistDir;
+    const distDirs = await this.distDirs();
     // delete dist folder before transpilation (because some compilers (like ngPackagr) can generate files there during the compilation process)
     if (deleteDistDir) {
       dataToPersist = new DataToPersist();
-      for (const distDir of await this.distDirs()) {
+      for (const distDir of distDirs) {
         dataToPersist.removePath(new RemovePath(distDir));
       }
       dataToPersist.addBasePath(this.workspace.path);
@@ -83,12 +88,14 @@ export class ComponentCompiler {
 
     if (canTranspileFile) {
       await Promise.all(
-        this.component.filesystem.files.map((file: AbstractVinyl) => this.compileOneFile(file, options.initiator))
+        this.component.filesystem.files.map((file: AbstractVinyl) =>
+          this.compileOneFile(file, options.initiator, distDirs)
+        )
       );
     }
 
     if (canTranspileComponent) {
-      await this.compileAllFiles(this.component, options.initiator);
+      await this.compileAllFiles(this.component, options.initiator, distDirs);
     }
 
     if (!canTranspileFile && !canTranspileComponent) {
@@ -104,17 +111,10 @@ export class ComponentCompiler {
     dataToPersist.addManyFiles(this.dists);
     dataToPersist.addBasePath(this.workspace.path);
     await dataToPersist.persistAllToFS();
-    const linkComponents = options.linkComponents ?? true;
-    if (linkComponents) {
-      await linkToNodeModulesByComponents([this.component], this.workspace);
-    }
     const buildResults = this.dists.map((distFile) => distFile.path);
     if (this.component.state._consumer.compiler) loader.succeed();
-    this.pubsub.pub(
-      CompilerAspect.id,
-      new ComponentCompilationOnDoneEvent(this.compileErrors, this.component, buildResults)
-    );
-    return { component: this.component.id.toString(), buildResults };
+
+    return { component: this.component.id.toString(), buildResults, errors: this.compileErrors };
   }
 
   private throwOnCompileErrors(noThrow = true) {
@@ -148,7 +148,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     const injectedDirs = await this.workspace.getInjectedDirs(this.component);
     if (injectedDirs.length > 0) return injectedDirs;
 
-    const rootDirs = await readBitRootsDir(this.workspace.path);
+    const rootDirs = await readRootComponentsDir(this.workspace.rootComponentsPath);
     return rootDirs.map((rootDir) => path.relative(this.workspace.path, path.join(rootDir, packageName)));
   }
 
@@ -156,7 +156,11 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     return this.workspace.componentDir(this.component.id);
   }
 
-  private async compileOneFile(file: AbstractVinyl, initiator: CompilationInitiator): Promise<void> {
+  private async compileOneFile(
+    file: AbstractVinyl,
+    initiator: CompilationInitiator,
+    distDirs: PathOsBasedRelative[]
+  ): Promise<void> {
     const options = { componentDir: this.componentDir, filePath: file.relative, initiator };
     const isFileSupported = this.compilerInstance.isFileSupported(file.path);
     let compileResults;
@@ -168,7 +172,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
         return;
       }
     }
-    for (const base of await this.distDirs()) {
+    for (const base of distDirs) {
       if (isFileSupported && compileResults) {
         this.dists.push(
           ...compileResults.map(
@@ -187,9 +191,13 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 
-  private async compileAllFiles(component: Component, initiator: CompilationInitiator): Promise<void> {
+  private async compileAllFiles(
+    component: Component,
+    initiator: CompilationInitiator,
+    distDirs: PathOsBasedRelative[]
+  ): Promise<void> {
     const filesToCompile: AbstractVinyl[] = [];
-    for (const base of await this.distDirs()) {
+    for (const base of distDirs) {
       component.filesystem.files.forEach((file: AbstractVinyl) => {
         const isFileSupported = this.compilerInstance.isFileSupported(file.path);
         if (isFileSupported) {
@@ -260,9 +268,22 @@ export class WorkspaceCompiler {
     }
   }
 
-  async onAspectLoadFail(err: Error & { code?: string }, id: ComponentID): Promise<boolean> {
-    if (err.code && err.code === 'MODULE_NOT_FOUND' && this.workspace) {
-      await this.compileComponents([id.toString()], { initiator: CompilationInitiator.AspectLoadFail }, true);
+  async onAspectLoadFail(err: Error & { code?: string }, component: Component): Promise<boolean> {
+    const id = component.id;
+    const deps = this.dependencyResolver.getDependencies(component);
+    const depsIds = deps.getComponentDependencies().map((dep) => {
+      return dep.id.toString();
+    });
+    if (
+      ((err.code && (err.code === 'MODULE_NOT_FOUND' || err.code === 'ERR_REQUIRE_ESM')) ||
+        err.message.includes('import.meta')) &&
+      this.workspace
+    ) {
+      await this.compileComponents(
+        [id.toString(), ...depsIds],
+        { initiator: CompilationInitiator.AspectLoadFail },
+        true
+      );
       return true;
     }
     return false;
@@ -290,11 +311,10 @@ export class WorkspaceCompiler {
       { initiator: watchOpts.initiator || CompilationInitiator.ComponentChanged, deleteDistDir },
       true
     );
-    // await linkToNodeModulesByComponents([component], this.workspace);
     return {
       results: buildResults,
       toString() {
-        return `${buildResults[0]?.buildResults?.join('\n\t')}`;
+        return formatCompileResults(buildResults, watchOpts.verbose);
       },
     };
   }
@@ -315,19 +335,26 @@ export class WorkspaceCompiler {
   async compileComponents(
     componentsIds: string[] | ComponentID[] | ComponentID[], // when empty, it compiles new+modified (unless options.all is set),
     options: CompileOptions,
-    noThrow?: boolean
+    noThrow?: boolean,
+    componentLoadOptions: WorkspaceComponentLoadOptions = {}
   ): Promise<BuildResult[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const componentIds = await this.getIdsToCompile(componentsIds, options.changed);
     // In case the aspect failed to load, we want to compile it without try to re-load it again
-    const getManyOpts =
-      options.initiator === CompilationInitiator.AspectLoadFail ? { loadSeedersAsAspects: false } : undefined;
-    const components = await this.workspace.getMany(componentIds, getManyOpts);
+    if (options.initiator === CompilationInitiator.AspectLoadFail) {
+      componentLoadOptions.loadSeedersAsAspects = false;
+    }
+    const components = await this.workspace.getMany(componentIds, componentLoadOptions);
+    const grouped = await this.buildGroupsToCompile(components);
 
-    const grouped = this.groupByIsEnv(components);
-    const envsResults = grouped.envs ? await this.runCompileComponents(grouped.envs, options, noThrow) : [];
-    const otherResults = grouped.other ? await this.runCompileComponents(grouped.other, options, noThrow) : [];
-    return [...envsResults, ...otherResults];
+    const results = await mapSeries(grouped, async (group) => {
+      return this.runCompileComponents(group.components, options, noThrow);
+    });
+    const linkComponents = options.linkComponents ?? true;
+    if (linkComponents) {
+      await linkToNodeModulesByComponents(components, this.workspace);
+    }
+    return results.flat();
   }
 
   private async runCompileComponents(
@@ -366,26 +393,95 @@ export class WorkspaceCompiler {
   }
 
   /**
-   * This function get's a list of aspect ids and return them grouped by whether any of them is the env of other from the list
+   * This function groups the components to compile into groups by their environment and dependencies.
+   * The order of the groups is important, the first group should be compiled first.
+   * The order inside the group is not important.
+   * The groups are:
+   * 1. dependencies of envs of envs.
+   * 2. envs of envs.
+   * 3. dependencies of envs.
+   * 4. envs.
+   * 5. the rest.
    * @param ids
    */
-  groupByIsEnv(components: Component[]): { envs?: Component[]; other?: Component[] } {
-    const envsIds = uniq(
+  async buildGroupsToCompile(components: Component[]): Promise<
+    Array<{
+      components: Component[];
+      envsOfEnvs?: boolean;
+      envs?: boolean;
+      depsOfEnvsOfEnvs?: boolean;
+      depsOfEnvs?: boolean;
+      other?: boolean;
+    }>
+  > {
+    const envCompIds = await Promise.all(
       components
-        .map((component) => this.envs.getEnvId(component))
-        .filter((envId) => !this.aspectLoader.isCoreEnv(envId))
+        // .map((component) => this.envs.getEnvId(component))
+        .map(async (component) => {
+          const envId = await this.envs.calculateEnvId(component);
+          return envId.toString();
+        })
     );
-    const grouped = groupBy(components, (component) => {
+    const envsIds = uniq(envCompIds);
+    const groupedByIsEnv = groupBy(components, (component) => {
       if (envsIds.includes(component.id.toString())) return 'envs';
+      if (this.envs.isEnv(component)) return 'envs';
       return 'other';
     });
-    return grouped as { envs: Component[]; other: Component[] };
+    const envsOfEnvsCompIds = await Promise.all(
+      (groupedByIsEnv.envs || [])
+        // .map((component) => this.envs.getEnvId(component))
+        .map(async (component) => (await this.envs.calculateEnvId(component)).toString())
+    );
+    const groupedByEnvsOfEnvs = groupBy(groupedByIsEnv.envs, (component) => {
+      if (envsOfEnvsCompIds.includes(component.id.toString())) return 'envsOfEnvs';
+      return 'otherEnvs';
+    });
+    const depsOfEnvsOfEnvsCompLists = (groupedByEnvsOfEnvs.envsOfEnvs || []).map((envComp) =>
+      this.dependencyResolver.getDependencies(envComp)
+    );
+    const depsOfEnvsOfEnvsCompIds = DependencyList.merge(depsOfEnvsOfEnvsCompLists)
+      .getComponentDependencies()
+      .map((dep) => dep.id.toString());
+    const groupedByIsDepsOfEnvsOfEnvs = groupBy(groupedByIsEnv.other, (component) => {
+      if (depsOfEnvsOfEnvsCompIds.includes(component.id.toString())) return 'depsOfEnvsOfEnvs';
+      return 'other';
+    });
+    const depsOfEnvsCompLists = (groupedByEnvsOfEnvs.otherEnvs || []).map((envComp) =>
+      this.dependencyResolver.getDependencies(envComp)
+    );
+    const depsOfEnvsOfCompIds = DependencyList.merge(depsOfEnvsCompLists)
+      .getComponentDependencies()
+      .map((dep) => dep.id.toString());
+    const groupedByIsDepsOfEnvs = groupBy(groupedByIsDepsOfEnvsOfEnvs.other, (component) => {
+      if (depsOfEnvsOfCompIds.includes(component.id.toString())) return 'depsOfEnvs';
+      return 'other';
+    });
+    return [
+      {
+        components: groupedByIsDepsOfEnvsOfEnvs.depsOfEnvsOfEnvs || [],
+        depsOfEnvsOfEnvs: true,
+      },
+      {
+        components: groupedByEnvsOfEnvs.envsOfEnvs || [],
+        envsOfEnvs: true,
+      },
+      {
+        components: groupedByIsDepsOfEnvs.depsOfEnvs || [],
+        depsOfEnvs: true,
+      },
+      {
+        components: groupedByEnvsOfEnvs.otherEnvs || [],
+        envs: true,
+      },
+      {
+        components: groupedByIsDepsOfEnvs.other || [],
+        other: true,
+      },
+    ];
   }
 
-  private async getIdsToCompile(
-    componentsIds: Array<string | ComponentID | ComponentID>,
-    changed = false
-  ): Promise<ComponentID[]> {
+  private async getIdsToCompile(componentsIds: Array<string | ComponentID>, changed = false): Promise<ComponentID[]> {
     if (componentsIds.length) {
       const componentIds = await this.workspace.resolveMultipleComponentIds(componentsIds);
       return this.workspace.filterIds(componentIds);
@@ -395,4 +491,18 @@ export class WorkspaceCompiler {
     }
     return this.workspace.listIds();
   }
+}
+
+function formatCompileResults(buildResults: BuildResult[], verbose?: boolean) {
+  if (!buildResults.length) return '';
+  // this gets called when a file is changed, so the buildResults array always has only one item
+  const buildResult = buildResults[0];
+  const title = ` ${chalk.underline('STATUS\tCOMPONENT ID')}`;
+  const verboseComponentFilesArrayToString = () => {
+    return buildResult.buildResults.map((filePath) => ` \t - ${filePath}`).join('\n');
+  };
+
+  return `${title}
+  ${Logger.successSymbol()}SUCCESS\t${buildResult.component}\n
+  ${verbose ? `${verboseComponentFilesArrayToString()}\n` : ''}`;
 }

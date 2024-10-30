@@ -3,8 +3,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { CapsuleList, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import type { ScopeMain } from '@teambit/scope';
 import chalk from 'chalk';
-
-import { Workspace } from '.';
+import { Workspace } from './workspace';
 
 type CreateOpts = {
   baseDir?: string;
@@ -38,7 +37,11 @@ export class CapsuleCreateCmd implements Command {
     ['p', 'package-manager <name>', 'npm, yarn or pnpm, default to npm'],
   ] as CommandOptions;
 
-  constructor(private workspace: Workspace | undefined, private scope: ScopeMain, private isolator: IsolatorMain) {}
+  constructor(
+    private workspace: Workspace | undefined,
+    private scope: ScopeMain,
+    private isolator: IsolatorMain
+  ) {}
 
   async create(
     [componentIds = []]: [string[]],
@@ -112,10 +115,14 @@ export class CapsuleListCmd implements Command {
   alias = '';
   options = [['j', 'json', 'json format']] as CommandOptions;
 
-  constructor(private isolator: IsolatorMain, private workspace: Workspace | undefined, private scope: ScopeMain) {}
+  constructor(
+    private isolator: IsolatorMain,
+    private workspace: Workspace | undefined,
+    private scope: ScopeMain
+  ) {}
 
   async report() {
-    const { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir } = this.getCapsulesRootDirs();
+    const { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir, scopeCapsulesRootDir } = this.getCapsulesRootDirs();
     const listWs = workspaceCapsulesRootDir ? await this.isolator.list(workspaceCapsulesRootDir) : undefined;
     const listScope = await this.isolator.list(scopeAspectsCapsulesRootDir);
 
@@ -129,9 +136,12 @@ export class CapsuleListCmd implements Command {
     const wsLine = listWs
       ? chalk.green(`workspace capsules root-dir:       ${chalk.cyan(workspaceCapsulesRootDir)}`)
       : undefined;
-    const scopeLine = chalk.green(`scope's aspects capsules root-dir: ${chalk.cyan(scopeAspectsCapsulesRootDir)}`);
+    const scopeAspectLine = chalk.green(
+      `scope's aspects capsules root-dir: ${chalk.cyan(scopeAspectsCapsulesRootDir)}`
+    );
+    const scopeLine = chalk.green(`scope's capsules root-dir: ${chalk.cyan(scopeCapsulesRootDir)}`);
     const suggestLine = chalk.green(`use --json to get the list of all capsules`);
-    const lines = [title, wsLine, scopeLine, suggestLine].filter((x) => x).join('\n');
+    const lines = [title, wsLine, scopeAspectLine, scopeLine, suggestLine].filter((x) => x).join('\n');
 
     // TODO: improve output
     return lines;
@@ -164,7 +174,11 @@ export class CapsuleDeleteCmd implements Command {
     ['a', 'all', 'delete all capsules for all workspaces and scopes'],
   ] as CommandOptions;
 
-  constructor(private isolator: IsolatorMain, private scope: ScopeMain, private workspace?: Workspace) {}
+  constructor(
+    private isolator: IsolatorMain,
+    private scope: ScopeMain,
+    private workspace?: Workspace
+  ) {}
 
   async report(args: [], { all, scopeAspects }: { all: boolean; scopeAspects: boolean }) {
     const capsuleBaseDirToDelete = (): string | undefined => {
@@ -193,7 +207,11 @@ other users after publishing/exporting them.`;
   commands: Command[] = [];
   options = [['j', 'json', 'json format']] as CommandOptions;
 
-  constructor(private isolator: IsolatorMain, private workspace: Workspace | undefined, private scope: ScopeMain) {}
+  constructor(
+    private isolator: IsolatorMain,
+    private workspace: Workspace | undefined,
+    private scope: ScopeMain
+  ) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async report(args: [string]) {
@@ -201,7 +219,7 @@ other users after publishing/exporting them.`;
   }
 }
 
-function getCapsulesRootDirs(isolator, scope, workspace) {
+function getCapsulesRootDirs(isolator, scope: ScopeMain, workspace) {
   const workspaceCapsulesRootDir = workspace
     ? isolator.getCapsulesRootDir({
         baseDir: workspace.getCapsulePath(),
@@ -212,6 +230,12 @@ function getCapsulesRootDirs(isolator, scope, workspace) {
     baseDir: scope.getAspectCapsulePath(),
     useHash: scope.shouldUseHashForCapsules(),
   });
+  const scopeCapsulesRootDir = workspace
+    ? undefined
+    : isolator.getCapsulesRootDir({
+        baseDir: process.cwd(),
+        useHash: true,
+      });
 
-  return { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir };
+  return { workspaceCapsulesRootDir, scopeAspectsCapsulesRootDir, scopeCapsulesRootDir };
 }

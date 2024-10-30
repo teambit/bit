@@ -122,6 +122,12 @@ export function GroupedSchemaNodesSummary({
             {skipRenderingTable &&
               groupedMembersByType.map((member) => {
                 if (!type) return null;
+                const params =
+                  (member as any).params ||
+                  (member as any).props ||
+                  ((member as any).param && [(member as any).param]) ||
+                  [];
+
                 return (
                   <FunctionNodeSummary
                     key={`${member.__schema}-${member.name}`}
@@ -132,7 +138,7 @@ export function GroupedSchemaNodesSummary({
                     apiRefModel={apiRefModel}
                     name={(member as any).name}
                     hideName={type === 'constructors'}
-                    params={(member as any).params || [(member as any).param]}
+                    params={params}
                     returnType={(member as any).returnType}
                   />
                 );

@@ -3,26 +3,26 @@ import { pickBy } from 'lodash';
 import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
+import { v4 } from 'uuid';
 import { BuildStatus, DEFAULT_BUNDLE_FILENAME, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { isSchemaSupport, SchemaFeature, SchemaName } from '../../consumer/component/component-schema';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
-import { SourceFile } from '../../consumer/component/sources';
-import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
+import { getRefsFromExtensions, SourceFile } from '@teambit/component.sources';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/extension-data';
 import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
-import { getStringifyArgs } from '../../utils';
-import { PathLinux } from '../../utils/path';
+import { getStringifyArgs, PathLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import VersionInvalid from '../exceptions/version-invalid';
 import { BitObject, Ref } from '../objects';
 import { ObjectItem } from '../objects/object-list';
 import Repository from '../objects/repository';
 import validateVersionInstance from '../version-validator';
 import Source from './source';
-import { getHarmonyVersion } from '../../bootstrap';
 import { BitIdCompIdError } from '../exceptions/bit-id-comp-id-err';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 
 export type SourceFileModel = {
   name: string;
@@ -45,7 +45,7 @@ export type Log = {
   email: string | undefined;
 };
 
-export type DepEdgeType = 'prod' | 'dev' | 'ext';
+export type DepEdgeType = 'prod' | 'dev' | 'peer' | 'ext';
 export type DepEdge = { source: ComponentID; target: ComponentID; type: DepEdgeType };
 
 type ExternalHead = { head: Ref; laneId: LaneId };
@@ -59,6 +59,7 @@ export type VersionProps = {
   docs?: Doclet[];
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
+  peerDependencies?: Dependency[];
   flattenedDependencies?: ComponentIdList;
   _flattenedEdges?: DepEdge[];
   flattenedEdges?: DepEdge[];
@@ -95,6 +96,7 @@ export default class Version extends BitObject {
   docs: Doclet[] | undefined;
   dependencies: Dependencies;
   devDependencies: Dependencies;
+  peerDependencies: Dependencies;
   flattenedDependencies: ComponentIdList;
   flattenedEdgesRef?: Ref; // ref to a BitObject Source file, which is a JSON object containing the flattened edge
   _flattenedEdges?: DepEdge[]; // caching for the flattenedEdges
@@ -138,6 +140,7 @@ export default class Version extends BitObject {
     this.log = props.log;
     this.dependencies = new Dependencies(props.dependencies);
     this.devDependencies = new Dependencies(props.devDependencies);
+    this.peerDependencies = new Dependencies(props.peerDependencies);
     this.docs = props.docs;
     this.flattenedDependencies = props.flattenedDependencies || new ComponentIdList();
     this.flattenedEdges = props.flattenedEdges || [];
@@ -177,7 +180,9 @@ export default class Version extends BitObject {
         const flattenedEdgesSource = (await repo.load(this.flattenedEdgesRef, throws)) as Source | undefined;
         if (flattenedEdgesSource) {
           const flattenedEdgesJson = JSON.parse(flattenedEdgesSource.contents.toString());
-          return flattenedEdgesJson.map((item) => Version.depEdgeFromObject(item));
+          return flattenedEdgesJson.map((item) =>
+            Array.isArray(item) ? Version.depEdgeFromArray(item) : Version.depEdgeFromObject(item)
+          );
         }
       }
       return this.flattenedEdges || [];
@@ -294,11 +299,13 @@ export default class Version extends BitObject {
   get depsIdsGroupedByType(): {
     dependencies: ComponentIdList;
     devDependencies: ComponentIdList;
+    peerDependencies: ComponentIdList;
     extensionDependencies: ComponentIdList;
   } {
     return {
       dependencies: this.dependencies.getAllIds(),
       devDependencies: this.devDependencies.getAllIds(),
+      peerDependencies: this.peerDependencies.getAllIds(),
       extensionDependencies: this.extensions.extensionsBitIds,
     };
   }
@@ -345,6 +352,7 @@ export default class Version extends BitObject {
     }
     if (includeArtifacts) {
       const artifacts = getRefsFromExtensions(this.extensions);
+      // @ts-ignore todo: remove after deleting teambit.legacy
       allRefs.push(...artifacts);
     }
     if (this.flattenedEdgesRef) allRefs.push(this.flattenedEdgesRef);
@@ -379,8 +387,22 @@ export default class Version extends BitObject {
       type: depEdgeObj.type,
     };
   }
+  static depEdgeToArray(depEdge: DepEdge): Record<string, any> {
+    return [depEdge.source.toString(), depEdge.target.toString(), depEdge.type];
+  }
+  static depEdgeFromArray(depEdgeArr: string[]): DepEdge {
+    const [sourceStr, targetStr, type] = depEdgeArr;
+    return {
+      source: ComponentID.fromString(sourceStr),
+      target: ComponentID.fromString(targetStr),
+      type: type as DepEdgeType,
+    };
+  }
   static flattenedEdgeToSource(flattenedEdges?: DepEdge[]): Source | undefined {
     if (!flattenedEdges) return undefined;
+    // @todo: around August 2024, uncomment this line and delete the next one.
+    // it'll make this object much much smaller (for 604 edges, it's now 143KB, with the array format it's 6KB!)
+    // const flattenedEdgesObj = flattenedEdges.map((f) => Version.depEdgeToArray(f));
     const flattenedEdgesObj = flattenedEdges.map((f) => Version.depEdgeToObject(f));
     const flattenedEdgesBuffer = Buffer.from(JSON.stringify(flattenedEdgesObj));
     return Source.from(flattenedEdgesBuffer);
@@ -625,7 +647,7 @@ export default class Version extends BitObject {
 
     if (!component.log) throw new Error('Version.fromComponent - component.log is missing');
     const version = new Version({
-      mainFile: component.mainFile,
+      mainFile: pathNormalizeToLinux(component.mainFile),
       files: files.map(parseFile),
       bindingPrefix: component.bindingPrefix,
       log: component.log as Log,
@@ -647,7 +669,7 @@ export default class Version extends BitObject {
       extensions: component.extensions,
       buildStatus: component.buildStatus,
       componentId: component.id,
-      bitVersion: getHarmonyVersion(true),
+      bitVersion: getBitVersion(),
     });
     if (isSnap(component.version)) {
       version._hash = component.version as string;
@@ -659,8 +681,7 @@ export default class Version extends BitObject {
   }
 
   setNewHash() {
-    // @todo: after v15 is deployed, this can be changed to generate a random uuid
-    this._hash = this.calculateHash().toString();
+    this._hash = sha1(v4());
   }
 
   get ignoreSharedDir(): boolean {
@@ -669,6 +690,15 @@ export default class Version extends BitObject {
 
   get isLegacy(): boolean {
     return !this.schema || this.schema === SchemaName.Legacy;
+  }
+
+  get originLaneId(): LaneId | undefined {
+    return this.origin?.lane ? new LaneId({ name: this.origin.lane.name, scope: this.origin.lane.scope }) : undefined;
+  }
+  get originId(): ComponentID | undefined {
+    return this.origin?.id
+      ? ComponentID.fromObject({ scope: this.origin.id.scope, name: this.origin.id.name })
+      : undefined;
   }
 
   setDist(dist: Source | undefined) {
@@ -729,6 +759,7 @@ export default class Version extends BitObject {
   }
 
   modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {
+    // @ts-ignore todo: remove after deleting teambit.legacy
     return Promise.all(this.files.map((file) => SourceFile.loadFromSourceFileModel(file, repository)));
   }
 

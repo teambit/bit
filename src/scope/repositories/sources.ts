@@ -23,12 +23,11 @@ import Repository from '../objects/repository';
 import Scope from '../scope';
 import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
-import { concurrentComponentsLimit } from '../../utils/concurrency';
-import { InMemoryCache } from '../../cache/in-memory-cache';
-import { createInMemoryCache } from '../../cache/cache-factory';
-import { pathNormalizeToLinux } from '../../utils';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getDivergeData } from '../component-ops/get-diverge-data';
-import { pMapPool } from '../../utils/promise-with-concurrent';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -47,7 +46,7 @@ export type ComponentDef = {
 
 export type ComponentExistence = {
   id: ComponentID;
-  exists: Boolean;
+  exists: boolean;
 };
 
 export type MergeResult = {
@@ -79,7 +78,7 @@ export default class SourceRepository {
     if (!ids.length) return [];
     const concurrency = concurrentComponentsLimit();
     logger.trace(`sources.getMany, Ids: ${ids.join(', ')}`);
-    logger.debug(`sources.getMany, ${ids.length} Ids`);
+    logger.trace(`sources.getMany, ${ids.length} Ids`);
     return pMapPool(
       ids,
       async (id) => {
@@ -122,7 +121,12 @@ export default class SourceRepository {
     if (!bitId.hasVersion()) return component;
 
     const returnComponent = async (version: Version): Promise<ModelComponent | undefined> => {
-      if (bitId.isLocal(this.scope.name) || version.buildStatus === BuildStatus.Succeed || !versionShouldBeBuilt) {
+      if (
+        bitId.isLocal(this.scope.name) ||
+        version.buildStatus === BuildStatus.Succeed ||
+        version.buildStatus === BuildStatus.Skipped ||
+        !versionShouldBeBuilt
+      ) {
         return component;
       }
       const hash = component.getRef(bitId.version as string);
@@ -327,7 +331,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     component: ModelComponent,
     versionsRefs: Ref[],
     versions: string[],
-    lane: Lane | null,
+    lane?: Lane,
     removeOnlyHead?: boolean
   ) {
     logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);
@@ -613,17 +617,24 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
     const mergeErrors: ComponentNeedsUpdate[] = [];
     const isExport = !isImport;
 
-    const mergeLaneComponent = async (component: LaneComponent) => {
+    const getModelComponent = async (id: ComponentID): Promise<ModelComponent> => {
       const modelComponent =
-        (await this.get(component.id)) ||
-        componentObjects?.find((c) => c.toComponentId().isEqualWithoutVersion(component.id));
+        (await this.get(id)) || componentObjects?.find((c) => c.toComponentId().isEqualWithoutVersion(id));
       if (!modelComponent) {
-        throw new Error(`unable to merge lane ${lane.name}, the component ${component.id.toString()} was not found`);
+        throw new Error(`unable to merge lane ${lane.name}, the component ${id.toString()} was not found`);
       }
+      return modelComponent;
+    };
+
+    const mergeLaneComponent = async (component: LaneComponent) => {
+      const modelComponent = await getModelComponent(component.id);
       const existingComponent = existingLane ? existingLane.components.find((c) => c.id.isEqual(component.id)) : null;
       if (!existingComponent) {
         if (isExport) {
-          if (existingLane) existingLane.addComponent(component);
+          if (existingLane) {
+            existingLane.addComponent(component);
+            existingLane.removeComponentFromUpdateDependentsIfExist(component.id);
+          }
           if (!sentVersionHashes?.includes(component.head.toString())) {
             // during export, the remote might got a lane when some components were not sent from the client. ignore them.
             return;
@@ -697,6 +708,26 @@ otherwise, to collaborate on the same lane as the remote, you'll need to remove 
     // of current lane as 1.0.0 will mistakenly think that the component is not deleted.
     if (existingLane?.hasChanged && existingLane.includeDeletedData() && !lane.includeDeletedData()) {
       existingLane.setSchemaToNotSupportDeletedData();
+    }
+    // merging updateDependents is tricky. the end user should never change it, only get it as is from the remote.
+    // this prop gets updated with snap-from-scope with --update-dependents flag. and a graphql query should remove entries
+    // from there. other than these 2 places, it should never change. so when a user imports it, always override.
+    // if it is being exported, the remote should override it only when it comes from the snap-from-scope command, to
+    // indicate this, the lane should have the overrideUpdateDependents prop set to true.
+    if (isImport && existingLane) {
+      existingLane.updateDependents = lane.updateDependents;
+    }
+    if (isExport && existingLane && lane.shouldOverrideUpdateDependents()) {
+      await Promise.all(
+        (lane.updateDependents || []).map(async (id) => {
+          const existing = existingLane.updateDependents?.find((existingId) => existingId.isEqualWithoutVersion(id));
+          if (!existing || existing.version !== id.version) {
+            const mergedComponent = await getModelComponent(id);
+            mergeResults.push({ mergedComponent, mergedVersions: [id.version] });
+          }
+        })
+      );
+      existingLane.updateDependents = lane.updateDependents;
     }
 
     return { mergeResults, mergeErrors, mergeLane: existingLane || lane };

@@ -1,14 +1,18 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { InstallAspect, InstallMain } from '@teambit/install';
 import { EjectCmd } from './eject-cmd';
 import { EjectAspect } from './eject.aspect';
 import { ComponentsEjector, EjectOptions, EjectResults } from './components-ejector';
 
 export class EjectMain {
-  constructor(private workspace: Workspace, private install: InstallMain, private logger: Logger) {}
+  constructor(
+    private workspace: Workspace,
+    private install: InstallMain,
+    private logger: Logger
+  ) {}
   async eject(componentIds: ComponentID[], ejectOptions: EjectOptions = {}): Promise<EjectResults> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const componentEjector = new ComponentsEjector(

@@ -1,30 +1,31 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { Analytics } from '@teambit/legacy.analytics';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import pMapSeries from 'p-map-series';
-import EnvsAspect, { EnvsMain } from '@teambit/envs';
-import ComponentWriterAspect, { ComponentWriterMain } from '@teambit/component-writer';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import ScopeAspect, { ScopeMain } from '@teambit/scope';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
-import { importAllArtifactsFromLane } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import InstallAspect, { InstallMain } from '@teambit/install';
+import { importAllArtifactsFromLane } from '@teambit/component.sources';
+import { InstallAspect, InstallMain } from '@teambit/install';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
-import GraphAspect, { GraphMain } from '@teambit/graph';
-import { LaneNotFound } from '@teambit/legacy/dist/api/scope/lib/exceptions/lane-not-found';
+import { GraphAspect, GraphMain } from '@teambit/graph';
+import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { BitError } from '@teambit/bit-error';
 import { ImportCmd } from './import.cmd';
 import { ImporterAspect } from './importer.aspect';
 import { FetchCmd } from './fetch-cmd';
 import ImportComponents, { ImportOptions, ImportResult } from './import-components';
+import { ListerAspect, ListerMain } from '@teambit/lister';
 
 export class ImporterMain {
   constructor(
@@ -34,7 +35,8 @@ export class ImporterMain {
     private scope: ScopeMain,
     private componentWriter: ComponentWriterMain,
     private envs: EnvsMain,
-    private logger: Logger
+    readonly logger: Logger,
+    private lister: ListerMain
   ) {}
 
   async import(importOptions: ImportOptions, packageManagerArgs: string[] = []): Promise<ImportResult> {
@@ -115,9 +117,9 @@ export class ImporterMain {
     return importComponents.importComponents();
   }
 
-  async importObjectsFromMainIfExist(ids: ComponentID[]) {
+  async importObjectsFromMainIfExist(ids: ComponentID[], { cache } = { cache: false }) {
     await this.scope.legacyScope.scopeImporter.importWithoutDeps(ComponentIdList.fromArray(ids), {
-      cache: false,
+      cache,
       includeVersionHistory: true,
       ignoreMissingHead: true,
     });
@@ -127,12 +129,13 @@ export class ImporterMain {
    * fetch lane's components and save them in the local scope.
    * once done, merge the lane object and save it as well.
    */
-  async fetchLaneComponents(lane: Lane) {
-    const ids = lane.toComponentIds();
+  async fetchLaneComponents(lane: Lane, includeUpdateDependents = false) {
+    const ids = includeUpdateDependents ? lane.toComponentIdsIncludeUpdateDependents() : lane.toComponentIds();
     await this.scope.legacyScope.scopeImporter.importMany({
       ids,
       lane,
       reason: `for fetching lane ${lane.id()}`,
+      includeUpdateDependents,
     });
     const { mergeLane } = await this.scope.legacyScope.sources.mergeLane(lane, true);
     const isRemoteLaneEqualsToMergedLane = lane.isEqual(mergeLane);
@@ -218,6 +221,7 @@ export class ImporterMain {
       this.componentWriter,
       this.envs,
       this.logger,
+      this.lister,
       importOptions
     );
   }
@@ -298,9 +302,21 @@ export class ImporterMain {
     InstallAspect,
     EnvsAspect,
     LoggerAspect,
+    ListerAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, depResolver, graph, scope, componentWriter, install, envs, loggerMain]: [
+  static async provider([
+    cli,
+    workspace,
+    depResolver,
+    graph,
+    scope,
+    componentWriter,
+    install,
+    envs,
+    loggerMain,
+    lister,
+  ]: [
     CLIMain,
     Workspace,
     DependencyResolverMain,
@@ -309,10 +325,11 @@ export class ImporterMain {
     ComponentWriterMain,
     InstallMain,
     EnvsMain,
-    LoggerMain
+    LoggerMain,
+    ListerMain,
   ]) {
     const logger = loggerMain.createLogger(ImporterAspect.id);
-    const importerMain = new ImporterMain(workspace, depResolver, graph, scope, componentWriter, envs, logger);
+    const importerMain = new ImporterMain(workspace, depResolver, graph, scope, componentWriter, envs, logger, lister);
     install.registerPreInstall(async (opts) => {
       if (!opts?.import) return;
       logger.setStatusLine('importing missing objects');

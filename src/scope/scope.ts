@@ -6,8 +6,10 @@ import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
 import semver from 'semver';
 import { BitError } from '@teambit/bit-error';
+import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { isTag } from '@teambit/component-version';
-import { Analytics } from '../analytics/analytics';
+import { readDirIgnoreSystemFilesSync } from '@teambit/toolbox.fs.readdir-skip-system-files';
+import { Analytics } from '@teambit/legacy.analytics';
 import {
   BIT_GIT_DIR,
   BIT_HIDDEN_DIR,
@@ -25,8 +27,7 @@ import Component from '../consumer/component/consumer-component';
 import { ExtensionDataEntry } from '../consumer/config';
 import Consumer from '../consumer/consumer';
 import logger from '../logger/logger';
-import { pathHasAll, findScopePath, readDirSyncIgnoreDsStore } from '../utils';
-import { PathOsBasedAbsolute } from '../utils/path';
+import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
 import ComponentVersion from './component-version';
@@ -47,6 +48,7 @@ import ClientIdInUse from './exceptions/client-id-in-use';
 import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
 import { getDivergeData } from './component-ops/get-diverge-data';
 import { StagedSnaps } from './staged-snaps';
+import { collectGarbage } from './garbage-collector';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -78,6 +80,15 @@ export type IsolateOptions = {
   installPeerDependencies: boolean | null | undefined;
   no_package_json: boolean | null | undefined;
   override: boolean | null | undefined;
+};
+
+export type GarbageCollectorOpts = {
+  verbose?: boolean;
+  dryRun?: boolean;
+  findCompIdOrigin?: string;
+  findScopeIdOrigin?: string;
+  restore?: boolean;
+  restoreOverwrite?: boolean;
 };
 
 export type ComponentsAndVersions = {
@@ -227,7 +238,7 @@ export default class Scope {
     }
     const componentFullPath = pathLib.join(scopePath, Scope.getComponentsRelativePath(), relativePath);
     if (!fs.existsSync(componentFullPath)) return '';
-    const versions = readDirSyncIgnoreDsStore(componentFullPath);
+    const versions = readDirIgnoreSystemFilesSync(componentFullPath);
     const latestVersion = semver.maxSatisfying(versions, '*', { includePrerelease: true });
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return pathLib.join(relativePath, latestVersion!);
@@ -290,7 +301,7 @@ once done, to continue working, please run "bit cc"`
 
   async listIncludeRemoteHead(laneId: LaneId): Promise<ModelComponent[]> {
     const components = await this.list();
-    const lane = laneId.isDefault() ? null : await this.loadLane(laneId);
+    const lane = laneId.isDefault() ? undefined : await this.loadLane(laneId);
     await Promise.all(components.map((component) => component.populateLocalAndRemoteHeads(this.objects, lane)));
     return components;
   }
@@ -304,7 +315,7 @@ once done, to continue working, please run "bit cc"`
     return this.lanes.listLanes();
   }
 
-  async loadLane(id: LaneId): Promise<Lane | null> {
+  async loadLane(id: LaneId): Promise<Lane | undefined> {
     return this.lanes.loadLane(id);
   }
 
@@ -361,21 +372,37 @@ once done, to continue working, please run "bit cc"`
     return null;
   }
 
-  async isPartOfLaneHistory(id: ComponentID, lane: Lane) {
+  async isPartOfLaneHistoryOrMain(id: ComponentID, lane: Lane) {
     if (!id.version) throw new Error(`isIdOnGivenLane expects id with version, got ${id.toString()}`);
-    const laneIds = lane.toBitIds();
+    const laneIds = lane.toComponentIdsIncludeUpdateDependents();
     if (laneIds.has(id)) return true; // in the lane with the same version
-    const laneIdWithDifferentVersion = laneIds.searchWithoutVersion(id);
-    if (!laneIdWithDifferentVersion) return false; // not in the lane at all
+    if (isTag(id.version)) return true; // tags can be on main only
 
-    // component is in the lane object but with a different version.
-    // we have to figure out whether this version is part of the lane history
     const component = await this.getModelComponent(id.changeVersion(undefined));
-    const laneVersionRef = Ref.from(laneIdWithDifferentVersion.version as string);
-    const verHistory = await component.getAndPopulateVersionHistory(this.objects, laneVersionRef);
-    const verRef = component.getRef(id.version);
-    if (!verRef) throw new Error(`isIdOnGivenLane unable to find ref for ${id.toString()}`);
-    return verHistory.isRefPartOfHistory(laneVersionRef, verRef);
+    if (component.head && component.head.toString() === id.version) return true; // it's on main
+
+    const version = await component.loadVersion(id.version as string, this.objects, false);
+    if (version?.originLaneId?.isEqual(lane.toLaneId())) return true; // on lane
+    if (version?.origin && !version.origin.lane) return true; // on main
+
+    const isPartOfLane = async () => {
+      const laneIdWithDifferentVersion = laneIds.searchWithoutVersion(id);
+      if (!laneIdWithDifferentVersion) return false; // not in the lane at all
+      const laneVersionRef = Ref.from(laneIdWithDifferentVersion.version as string);
+      const verHistory = await component.getAndPopulateVersionHistory(this.objects, laneVersionRef);
+      const verRef = component.getRef(id.version);
+      if (!verRef) throw new Error(`isIdOnGivenLane unable to find ref for ${id.toString()}`);
+      return verHistory.isRefPartOfHistory(laneVersionRef, verRef);
+    };
+
+    const isPartOfMain = async () => {
+      if (!component.head) return false; // it's not on main. must be on a lane. (even if it was forked from another lane, current lane must have all objects)
+      const verHistory = await component.getAndPopulateVersionHistory(this.objects, component.head);
+      const verRef = Ref.from(id.version);
+      return verHistory.isRefPartOfHistory(component.head, verRef);
+    };
+
+    return (await isPartOfLane()) || (await isPartOfMain());
   }
 
   async isPartOfMainHistory(id: ComponentID) {
@@ -435,9 +462,9 @@ once done, to continue working, please run "bit cc"`
     return this.sources.get(id);
   }
 
-  async getCurrentLaneObject(): Promise<Lane | null> {
+  async getCurrentLaneObject(): Promise<Lane | undefined> {
     const currentLaneId = this.getCurrentLaneId();
-    return currentLaneId ? this.loadLane(currentLaneId) : null;
+    return currentLaneId ? this.loadLane(currentLaneId) : undefined;
   }
 
   /**
@@ -513,10 +540,15 @@ once done, to continue working, please run "bit cc"`
     return removeNils(components);
   }
 
-  async loadComponentLogs(id: ComponentID, shortHash = false, startFrom?: string): Promise<ComponentLog[]> {
-    const componentModel = await this.getModelComponentIfExist(id);
+  async loadComponentLogs(
+    id: ComponentID,
+    shortHash = false,
+    startFrom?: string,
+    throwIfMissing = false
+  ): Promise<ComponentLog[]> {
+    const componentModel = throwIfMissing ? await this.getModelComponent(id) : await this.getModelComponentIfExist(id);
     if (!componentModel) return [];
-    const startFromRef = startFrom ? componentModel.getRef(startFrom) ?? undefined : undefined;
+    const startFromRef = startFrom ? (componentModel.getRef(startFrom) ?? undefined) : undefined;
     const logs = await componentModel.collectLogs(this, shortHash, startFromRef);
     return logs;
   }
@@ -699,6 +731,10 @@ once done, to continue working, please run "bit cc"`
     }
   }
 
+  async garbageCollect(opts: GarbageCollectorOpts) {
+    return collectGarbage(this, opts);
+  }
+
   static async ensure(path: PathOsBasedAbsolute, name?: string | null, groupName?: string | null): Promise<Scope> {
     if (pathHasScope(path)) return this.load(path);
     const scopeJson = Scope.ensureScopeJson(path, name, groupName);
@@ -757,4 +793,26 @@ once done, to continue working, please run "bit cc"`
     Scope.scopeCache[scopePath] = scope;
     return scope;
   }
+}
+
+function composePath(patternPath: string, patterns: string[]): string[] {
+  return patterns.map((pattern) => {
+    return pathLib.join(patternPath, pattern);
+  });
+}
+
+/**
+ * determine whether given path have all files/dirs
+ */
+export function pathHasAll(patterns: string[]): (absPath: string) => boolean {
+  return (absPath: string) => {
+    let state = true;
+    const paths = composePath(absPath, patterns);
+    for (const potentialPath of paths) {
+      if (!state) return false;
+      state = fs.existsSync(potentialPath);
+    }
+
+    return state;
+  };
 }

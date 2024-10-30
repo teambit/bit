@@ -12,8 +12,8 @@ import { GraphqlAspect } from '@teambit/graphql';
 import chalk from 'chalk';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
-import { sha1 } from '@teambit/legacy/dist/utils';
+import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import pMapSeries from 'p-map-series';
 import fs from 'fs-extra';
 import { Port } from '@teambit/toolbox.network.get-port';
@@ -231,6 +231,7 @@ export class UiMain {
     const ssrConfig = ssr && createSsrWebpackConfig(outputPath, [mainEntry], await this.publicDir(uiRoot));
 
     const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
+
     const compiler = webpack(config);
     this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" running webpack`);
     const compilerRun = promisify(compiler.run.bind(compiler));
@@ -643,7 +644,7 @@ export class UiMain {
       OnStartSlot,
       PublicDirOverwriteSlot,
       BuildMethodOverwriteSlot,
-      StartPluginSlot
+      StartPluginSlot,
     ],
     harmony: Harmony
   ) {

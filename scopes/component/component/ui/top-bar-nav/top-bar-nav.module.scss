@@ -37,7 +37,9 @@
     height: 0;
     border-top-right-radius: 2px;
     border-top-left-radius: 2px;
-    transition: background-color 300ms, height 300ms;
+    transition:
+      background-color 300ms,
+      height 300ms;
   }
 
   > div {

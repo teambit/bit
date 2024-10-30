@@ -9,7 +9,6 @@ const scenarios = new Map([
   ['classnames', '@types/classnames'],
   ['cors', '@types/cors'],
   ['cross-spawn', '@types/cross-spawn'],
-  ['dagre', '@types/dagre'],
   ['didyoumean', '@types/didyoumean'],
   ['eslint', '@types/eslint'],
   ['express', '@types/express'],

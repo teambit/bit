@@ -4,7 +4,7 @@ import { ApiServerMain } from './api-server.main.runtime';
 
 export class ServerCmd implements Command {
   name = 'server';
-  description = 'EXPERIMENTAL. communicate with bit cli program via http requests';
+  description = 'communicate with bit cli program via http requests';
   alias = '';
   commands: Command[] = [];
   group = 'general';
@@ -15,8 +15,7 @@ export class ServerCmd implements Command {
 
   constructor(private apiServer: ApiServerMain) {}
 
-  async report(args, options: { port: number; compile: boolean }): Promise<string> {
+  async wait(args, options: { port: number; compile: boolean }) {
     await this.apiServer.runApiServer(options);
-    return 'server is running successfully'; // should never get here, the previous line is blocking
   }
 }

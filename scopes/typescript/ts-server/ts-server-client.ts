@@ -1,8 +1,7 @@
 import fs from 'fs-extra';
 import { Logger } from '@teambit/logger';
 import path from 'path';
-// eslint-disable-next-line import/no-unresolved
-import protocol from 'typescript/lib/protocol';
+import type ts from 'typescript/lib/tsserverlibrary';
 import { CheckTypes } from '@teambit/watcher';
 import type { Position } from 'vscode-languageserver-types';
 import commandExists from 'command-exists';
@@ -21,7 +20,7 @@ export type TsserverClientOpts = {
 
 export class TsserverClient {
   private tsServer: ProcessBasedTsServer | null;
-  public lastDiagnostics: protocol.DiagnosticEventBody[] = [];
+  public lastDiagnostics: ts.server.protocol.DiagnosticEventBody[] = [];
   private serverRunning = false;
 
   constructor(
@@ -152,7 +151,7 @@ export class TsserverClient {
   /**
    * @param file can be absolute or relative to this.projectRoot.
    */
-  async getQuickInfo(file: string, position: Position): Promise<protocol.QuickInfoResponse | undefined> {
+  async getQuickInfo(file: string, position: Position): Promise<ts.server.protocol.QuickInfoResponse | undefined> {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
     await this.openIfNeeded(absFile);
     return this.tsServer?.request(CommandTypes.Quickinfo, {
@@ -165,7 +164,10 @@ export class TsserverClient {
   /**
    * @param file can be absolute or relative to this.projectRoot.
    */
-  async getTypeDefinition(file: string, position: Position): Promise<protocol.TypeDefinitionResponse | undefined> {
+  async getTypeDefinition(
+    file: string,
+    position: Position
+  ): Promise<ts.server.protocol.TypeDefinitionResponse | undefined> {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
     await this.openIfNeeded(absFile);
     return this.tsServer?.request(CommandTypes.TypeDefinition, {
@@ -196,7 +198,7 @@ export class TsserverClient {
   /**
    * @param file can be absolute or relative to this.projectRoot.
    */
-  async getReferences(file: string, position: Position): Promise<protocol.ReferencesResponse | undefined> {
+  async getReferences(file: string, position: Position): Promise<ts.server.protocol.ReferencesResponse | undefined> {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
     await this.openIfNeeded(absFile);
     return this.tsServer?.request(CommandTypes.References, {
@@ -209,7 +211,10 @@ export class TsserverClient {
   /**
    * @param file can be absolute or relative to this.projectRoot.
    */
-  async getSignatureHelp(file: string, position: Position): Promise<protocol.SignatureHelpResponse | undefined> {
+  async getSignatureHelp(
+    file: string,
+    position: Position
+  ): Promise<ts.server.protocol.SignatureHelpResponse | undefined> {
     const absFile = this.convertFileToAbsoluteIfNeeded(file);
     await this.openIfNeeded(absFile);
 
@@ -221,8 +226,8 @@ export class TsserverClient {
   }
 
   private async configure(
-    configureArgs: protocol.ConfigureRequestArguments = {}
-  ): Promise<protocol.ConfigureResponse | undefined> {
+    configureArgs: ts.server.protocol.ConfigureRequestArguments = {}
+  ): Promise<ts.server.protocol.ConfigureResponse | undefined> {
     return this.tsServer?.request(CommandTypes.Configure, configureArgs);
   }
 
@@ -282,11 +287,11 @@ export class TsserverClient {
     });
   }
 
-  protected onTsserverEvent(event: protocol.Event): void {
+  protected onTsserverEvent(event: ts.server.protocol.Event): void {
     switch (event.event) {
       case EventName.semanticDiag:
       case EventName.syntaxDiag:
-        this.publishDiagnostic(event as protocol.DiagnosticEvent);
+        this.publishDiagnostic(event as ts.server.protocol.DiagnosticEvent);
         break;
       default:
         this.logger.debug(`ignored TsServer event: ${event.event}`);
@@ -300,7 +305,7 @@ export class TsserverClient {
     return path.join(this.projectPath, filepath);
   }
 
-  private publishDiagnostic(message: protocol.DiagnosticEvent) {
+  private publishDiagnostic(message: ts.server.protocol.DiagnosticEvent) {
     if (!message.body?.diagnostics.length || !this.options.printTypeErrors) {
       return;
     }

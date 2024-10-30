@@ -45,12 +45,30 @@ export class ReactSchema extends SchemaNode {
     return compact([this.props, this.returnType]);
   }
 
-  toString() {
+  toString(options?: { color?: boolean }): string {
+    const bold = options?.color ? chalk.bold : (x: string) => x;
+
     const paramsStr = this.props?.toString();
     const typeParamsStr = this.typeParams ? `<${this.typeParams.join(', ')}>` : '';
-    return `${this.modifiersToString()}${typeParamsStr}${chalk.bold(
-      this.name
-    )}(${paramsStr}): ${this.returnType.toString()}`;
+    return `${this.modifiersToString()}${typeParamsStr}${bold(this.name)}(${paramsStr}): ${this.returnType.toString()}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let signature = '';
+
+    if (this.doc && options?.showDocs) {
+      signature += `${this.doc.toFullSignature()}\n`;
+    }
+
+    const modifiersStr = this.modifiersToString();
+    const typeParamsStr = this.typeParams ? `<${this.typeParams.join(', ')}>` : '';
+    const paramsStr = this.props ? this.props.toFullSignature() : '';
+
+    const returnTypeStr = this.returnType.toFullSignature();
+
+    signature += `${modifiersStr}const ${this.name}${typeParamsStr} = (${paramsStr}): ${returnTypeStr};`;
+
+    return signature;
   }
 
   isDeprecated(): boolean {

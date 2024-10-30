@@ -11,9 +11,10 @@ import styles from './tagged-exports.module.scss';
 
 export type TaggedExportsProps = {
   componentId: string;
+  showBanner?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function TaggedExports({ componentId, ...rest }: TaggedExportsProps) {
+export function TaggedExports({ componentId, showBanner, ...rest }: TaggedExportsProps) {
   const renderers = useAPIRefRenderers();
   const api = useAPI(componentId, renderers.nodeRenderers);
   const showTableOfContents = api.apiModel?.taggedAPINodes.length === 0;
@@ -21,19 +22,23 @@ export function TaggedExports({ componentId, ...rest }: TaggedExportsProps) {
   const taggedAPIs = api.apiModel?.taggedAPINodes;
   const loading = !!api.loading;
 
-  if (!loading && !api.apiModel) return null;
+  if (loading) {
+    return (
+      <Section {...rest} className={styles.section}>
+        <div className={styles.loader}>
+          <div className={styles.loaderTitle}>
+            <CircleSkeleton size={1.5} />
+            <WordSkeleton length={5} />
+          </div>
 
-  const Loader = (
-    <div className={styles.loader}>
-      <div className={styles.loaderTitle}>
-        <CircleSkeleton size={1.5} />
-        <WordSkeleton length={5} />
-      </div>
+          <BlockSkeleton lines={8} />
+          <BlockSkeleton lines={4} />
+        </div>
+      </Section>
+    );
+  }
 
-      <BlockSkeleton lines={8} />
-      <BlockSkeleton lines={4} />
-    </div>
-  );
+  if (!api.apiModel || !api.apiModel.apiNodes.length) return null;
 
   return (
     <Section {...rest} className={styles.section}>
@@ -43,12 +48,12 @@ export function TaggedExports({ componentId, ...rest }: TaggedExportsProps) {
           <span>API</span>
         </div>
       </LinkedHeading>
-      {showTableOfContents && api.apiModel && (
+      {showTableOfContents && (
         <div className={styles.content}>
           <APIReferenceTableOfContents apiModel={api.apiModel} />
         </div>
       )}
-      {!loading && (
+      {
         <div className={styles.taggedAPIs}>
           {taggedAPIs?.map((taggedAPI, index) => {
             const OverviewComponent = taggedAPI.renderer.OverviewComponent;
@@ -64,8 +69,8 @@ export function TaggedExports({ componentId, ...rest }: TaggedExportsProps) {
             );
           })}
         </div>
-      )}
-      {!loading && (
+      }
+      {showBanner && (
         <div className={styles.banner}>
           <img style={{ width: 16 }} src="https://static.bit.dev/bit-icons/lightbulb-thinking.svg" />
           <span>
@@ -75,7 +80,6 @@ export function TaggedExports({ componentId, ...rest }: TaggedExportsProps) {
           </span>
         </div>
       )}
-      {loading && Loader}
     </Section>
   );
 }

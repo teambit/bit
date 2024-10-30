@@ -1,5 +1,7 @@
 import { Group } from './command-groups';
-import { CommandOptions } from './legacy-command';
+
+type CommandOption = [string, string, string];
+export type CommandOptions = Array<CommandOption>;
 
 export interface Command {
   /**
@@ -90,26 +92,32 @@ export interface Command {
   examples?: Example[];
 
   /**
+   * whether to load aspects set in workspace.jsonc before running the command.
+   * default is true.
+   */
+  loadAspects?: boolean;
+
+  /**
    * do not set this. it is being set once the command run.
    * the values are those followed `--` in the command line. (e.g. `bit import -- --no-optional`)
    */
   _packageManagerArgs?: string[];
 
   /**
-   * Main command handler which is called when invoking new commands
-   * @param args  - arguments object as defined in name.
-   * @param flags - command flags as described in options.
-   * @return - JSX element which is rendered with ink
-   */
-  render?(args: CLIArgs, flags: Flags): Promise<RenderResult | React.ReactElement>;
-
-  /**
-   * Command handler which is called for legacy commands or when process.isTTY is false
+   * Command handler which prints the return value to the console and exits.
+   * If the command has both, `render` and `report`, this one will be called when process.isTTY is false.
    * @param args  - arguments object as defined in name.
    * @param flags - command flags as described in options.
    * @return - Report object. The Report.data is printed to the stdout as is.
    */
   report?(args: CLIArgs, flags: Flags): Promise<string | Report>;
+
+  /**
+   * Command handler which never exits the process
+   * @param args  - arguments object as defined in name.
+   * @param flags - command flags as described in options.
+   */
+  wait?(args: CLIArgs, flags: Flags): Promise<void>;
 
   /**
    * Optional handler to provide a raw result of the command.
@@ -124,6 +132,5 @@ export type Flags = { [flagName: string]: string | boolean | undefined | any };
 export type CLIArgs = Array<string[] | string>;
 export type GenericObject = { [k: string]: any };
 export type Report = { data: string; code: number };
-export type RenderResult = { data: React.ReactElement; code: number };
 export type CommandArg = { name: string; description?: string };
 export type Example = { cmd: string; description: string };

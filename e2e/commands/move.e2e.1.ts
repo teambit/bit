@@ -42,7 +42,7 @@ describe('bit move command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       output = helper.command.runCmd('bit move bar bar2');
     });
     it('should not throw an error saying the path is not a directory', () => {
@@ -55,7 +55,7 @@ describe('bit move command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.export();
 
@@ -75,6 +75,20 @@ describe('bit move command', function () {
     it('should not recognize the component as modified', () => {
       const output = helper.command.runCmd('bit status');
       expect(output.includes('modified components')).to.be.false;
+    });
+  });
+  describe('move directory manually then run bit move', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFoo();
+      helper.fixtures.tagComponentBarFoo();
+      helper.fs.moveSync('bar', 'baz');
+    });
+    it('should be able to run bit move with no error', () => {
+      expect(() => helper.command.move('bar', 'baz')).to.not.throw();
+      const bitmap = helper.bitMap.read();
+      expect(bitmap['bar/foo'].rootDir).to.equal('baz');
     });
   });
 });

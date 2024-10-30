@@ -25,6 +25,7 @@ export function Collapser({
   className,
   ...rest
 }: CollapserProps) {
+  const icon = `${placement}-rounded-corners`;
   return (
     <Tooltip content={tooltipContent}>
       <div
@@ -34,7 +35,7 @@ export function Collapser({
       >
         <div className={styles.circle}>
           <div>
-            <Icon of="double-right-big" />
+            <Icon of={icon} />
           </div>
         </div>
       </div>

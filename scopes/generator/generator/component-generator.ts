@@ -3,16 +3,15 @@ import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import path from 'path';
 import { Workspace } from '@teambit/workspace';
-import EnvsAspect, { EnvsMain } from '@teambit/envs';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import camelcase from 'camelcase';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { TrackerMain } from '@teambit/tracker';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
-import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
+import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
 import { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ComponentID } from '@teambit/component-id';
 import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
@@ -34,7 +33,9 @@ export type GenerateResult = {
   installMissingDependencies?: boolean;
 };
 
-export type OnComponentCreateFn = (generateResults: GenerateResult[]) => Promise<void>;
+export type InstallOptions = { optimizeReportForNonTerminal?: boolean };
+
+export type OnComponentCreateFn = (generateResults: GenerateResult[], installOptions?: InstallOptions) => Promise<void>;
 
 export class ComponentGenerator {
   constructor(
@@ -49,20 +50,22 @@ export class ComponentGenerator {
     private logger: Logger,
     private onComponentCreateSlot: OnComponentCreateSlot,
     private aspectId: string,
-    private envId?: ComponentID
+    private envId?: ComponentID,
+    private installOptions: InstallOptions = {}
   ) {}
 
-  async generate(): Promise<GenerateResult[]> {
+  async generate(force = false): Promise<GenerateResult[]> {
     const dirsToDeleteIfFailed: string[] = [];
     const generateResults = await pMapSeries(this.componentIds, async (componentId) => {
       try {
-        const componentPath = this.newComponentHelper.getNewComponentPath(
-          componentId,
-          this.options.path,
-          this.componentIds.length
-        );
-        if (fs.existsSync(path.join(this.workspace.path, componentPath))) {
-          throw new BitError(`unable to create a component at "${componentPath}", this path already exist`);
+        const componentPath = this.newComponentHelper.getNewComponentPath(componentId, {
+          pathFromUser: this.options.path,
+          componentsToCreate: this.componentIds.length,
+        });
+        if (!force && fs.existsSync(path.join(this.workspace.path, componentPath))) {
+          throw new BitError(
+            `unable to create a component at "${componentPath}", this path already exists, please use "--path" to create the component in a different path`
+          );
         }
         dirsToDeleteIfFailed.push(componentPath);
         return await this.generateOneComponent(componentId, componentPath);
@@ -101,7 +104,7 @@ export class ComponentGenerator {
   private async runOnComponentCreateHook(generateResults: GenerateResult[]) {
     const fns = this.onComponentCreateSlot.values();
     if (!fns.length) return;
-    await Promise.all(fns.map((fn) => fn(generateResults)));
+    await Promise.all(fns.map((fn) => fn(generateResults, this.installOptions)));
   }
 
   /**
@@ -164,13 +167,10 @@ export class ComponentGenerator {
       rootDir: componentPath,
       mainFile: mainFile?.relativePath,
       componentName: componentId.fullName,
-      defaultScope: this.options.scope,
+      defaultScope: this.options.scope || componentId.scope,
     });
     const component = await this.workspace.get(componentId);
     const hasEnvConfiguredOriginally = this.envs.hasEnvConfigured(component);
-    if (this.template.isApp) {
-      await this.workspace.use(componentId.toString());
-    }
     const envBeforeConfigChanges = this.envs.getEnv(component);
     let config = this.template.config;
     if (config && typeof config === 'function') {
@@ -223,7 +223,15 @@ export class ComponentGenerator {
         setBy: hasEnvConfiguredOriginally ? 'workspace variants' : '<default>',
       };
     };
-    const { envId, setBy } = getEnvData();
+    // eslint-disable-next-line prefer-const
+    let { envId, setBy } = getEnvData();
+    if (envId) {
+      const isInWorkspace = this.workspace.exists(envId);
+      const isSameAsThisEnvId = envId === this.envId?.toString() || envId === this.envId?.toStringWithoutVersion();
+      if (isSameAsThisEnvId && this.envId) {
+        envId = isInWorkspace ? this.envId.toStringWithoutVersion() : this.envId.toString();
+      }
+    }
     return {
       id: componentId,
       dir: componentPath,

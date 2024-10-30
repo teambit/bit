@@ -7,18 +7,22 @@ export class RemoveFragment implements ShowFragment {
   title = 'removed';
 
   async renderRow(component: Component) {
-    const isRemoved = this.remove.isRemoved(component);
+    const removedInfo = await this.remove.getRemoveInfo(component);
+    const isRemoved = removedInfo.removed;
+    const isRemovedStr = isRemoved.toString();
+    const range = removedInfo.range ? ` (range: ${removedInfo.range})` : '';
+
     return {
       title: this.title,
       // when it's not removed, set as an empty string so then it won't be shown in bit-show
-      content: isRemoved ? isRemoved.toString() : '',
+      content: isRemoved || range ? isRemovedStr + range : '',
     };
   }
 
   async json(component: Component) {
     return {
       title: this.title,
-      json: this.remove.getRemoveInfo(component),
+      json: await this.remove.getRemoveInfo(component),
     };
   }
 

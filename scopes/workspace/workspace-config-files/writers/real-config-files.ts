@@ -1,5 +1,5 @@
 import format from 'string-format';
-import { sha1 } from '@teambit/legacy/dist/utils';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import fs from 'fs-extra';
 import { join } from 'path';
 import pMapSeries from 'p-map-series';
@@ -43,13 +43,19 @@ export async function handleRealConfigFiles(
   envEntries: EnvConfigWriterEntry[],
   envCompsDirsMap: EnvCompsDirsMap,
   configsRootDir: string,
+  workspaceDir: string,
   opts: WriteConfigFilesOptions
 ): Promise<WrittenRealConfigFilesByHash> {
   const allEnvsCalculatedRealConfigFiles: EnvCalculatedRealConfigFiles[] = await pMapSeries(
     envEntries,
     async (envConfigFileEntry) => {
       const envMapVal = envCompsDirsMap[envConfigFileEntry.envId];
-      const realConfigFiles = await calculateOneEnvRealConfigFiles(envConfigFileEntry, envMapVal, configsRootDir);
+      const realConfigFiles = await calculateOneEnvRealConfigFiles(
+        envConfigFileEntry,
+        envMapVal,
+        configsRootDir,
+        workspaceDir
+      );
       const realConfigFilesWithHash = ensureHashOnConfigFiles(compact(realConfigFiles));
       return {
         envId: envConfigFileEntry.envId,
@@ -88,10 +94,16 @@ function ensureHashOnConfigFiles(configFiles: ConfigFile[]): Array<Required<Conf
 async function calculateOneEnvRealConfigFiles(
   envConfigFileEntry: EnvConfigWriterEntry,
   envMapValue: EnvMapValue,
-  configsRootDir: string
+  configsRootDir: string,
+  workspaceDir: string
 ) {
   const { configWriter, executionContext } = envConfigFileEntry;
-  const calculatedConfigFiles = configWriter.calcConfigFiles(executionContext, envMapValue, configsRootDir);
+  const calculatedConfigFiles = configWriter.calcConfigFiles(
+    executionContext,
+    envMapValue,
+    configsRootDir,
+    workspaceDir
+  );
   return calculatedConfigFiles;
 }
 

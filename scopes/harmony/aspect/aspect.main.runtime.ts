@@ -7,13 +7,12 @@ import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { EnvContext, Environment, EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
-import { ReactAspect, ReactMain } from '@teambit/react';
+import { ReactAspect, ReactEnv, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
-import { BabelAspect, BabelMain } from '@teambit/babel';
 import { ComponentID } from '@teambit/component-id';
 import { AspectList } from '@teambit/component';
-import WorkerAspect, { WorkerMain } from '@teambit/worker';
-import WorkspaceAspect, { ExtensionsOrigin, Workspace } from '@teambit/workspace';
+import { WorkerAspect, WorkerMain } from '@teambit/worker';
+import { WorkspaceAspect, ExtensionsOrigin, Workspace } from '@teambit/workspace';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { AspectAspect } from './aspect.aspect';
 import { AspectEnv } from './aspect.env';
@@ -29,13 +28,16 @@ import {
   UpdateAspectCmd,
 } from './aspect.cmd';
 import { getTemplates } from './aspect.templates';
+import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 
 export type AspectSource = { aspectName: string; source: string; level: string };
 
-const tsconfig = require('./typescript/tsconfig.json');
-
 export class AspectMain {
-  constructor(readonly aspectEnv: AspectEnv, private envs: EnvsMain, private workspace: Workspace) {}
+  constructor(
+    readonly aspectEnv: AspectEnv,
+    private envs: EnvsMain,
+    private workspace: Workspace
+  ) {}
 
   /**
    * compose your own aspect environment.
@@ -169,7 +171,7 @@ export class AspectMain {
         );
       }
     }
-    const allCompIds = pattern ? await this.workspace.idsByPattern(pattern) : await this.workspace.listIds();
+    const allCompIds = pattern ? await this.workspace.idsByPattern(pattern) : this.workspace.listIds();
     const allComps = await this.workspace.getMany(allCompIds);
     const alreadyUpToDate: ComponentID[] = [];
     const updatedComponentIds = await Promise.all(
@@ -211,27 +213,27 @@ export class AspectMain {
     BuilderAspect,
     AspectLoaderAspect,
     CompilerAspect,
-    BabelAspect,
     GeneratorAspect,
     WorkspaceAspect,
     CLIAspect,
     LoggerAspect,
     WorkerAspect,
+    DevFilesAspect,
   ];
 
   static async provider(
-    [react, envs, builder, aspectLoader, compiler, babel, generator, workspace, cli, loggerMain, workerMain]: [
+    [react, envs, builder, aspectLoader, compiler, generator, workspace, cli, loggerMain, workerMain, devFilesMain]: [
       ReactMain,
       EnvsMain,
       BuilderMain,
       AspectLoaderMain,
       CompilerMain,
-      BabelMain,
       GeneratorMain,
       Workspace,
       CLIMain,
       LoggerMain,
-      WorkerMain
+      WorkerMain,
+      DevFilesMain,
     ],
     config,
     slots,
@@ -239,35 +241,9 @@ export class AspectMain {
   ) {
     const logger = loggerMain.createLogger(AspectAspect.id);
 
-    const babelCompiler = babel.createCompiler({
-      babelTransformOptions: babelConfig,
-      distDir: 'dist',
-      distGlobPatterns: [`dist/**`, `!dist/**/*.d.ts`, `!dist/tsconfig.tsbuildinfo`],
-    });
-    const compilerOverride = envs.override({
-      getCompiler: () => {
-        return babelCompiler;
-      },
-    });
-
-    const transformer = (tsConfigMutator) => {
-      tsConfigMutator
-        .mergeTsConfig(tsconfig)
-        .setArtifactName('declaration')
-        .setDistGlobPatterns([`dist/**/*.d.ts`])
-        .setShouldCopyNonSupportedFiles(false);
-      return tsConfigMutator;
-    };
-    const tsCompiler = react.env.getCjsCompilerTask([transformer]);
-
-    const compilerTasksOverride = react.overrideCompilerTasks([
-      compiler.createTask('BabelCompiler', babelCompiler),
-      tsCompiler,
-    ]);
-
-    const aspectEnv = react.compose(
-      [compilerOverride, compilerTasksOverride],
-      new AspectEnv(react.reactEnv, aspectLoader, logger)
+    const aspectEnv = envs.merge<AspectEnv, ReactEnv>(
+      new AspectEnv(react.reactEnv, aspectLoader, devFilesMain, compiler, workerMain, logger),
+      react.reactEnv
     );
 
     const coreExporterTask = new CoreExporterTask(aspectEnv, aspectLoader);

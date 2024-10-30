@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { join } from 'path';
 import globby from 'globby';
 import chalk from 'chalk';
-import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
+import { PromptCanceled } from '@teambit/legacy.cli.prompts';
 import pMapSeries from 'p-map-series';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import yesno from 'yesno';
@@ -132,13 +132,13 @@ export class WorkspaceConfigFilesMain {
     const execContext = await this.getExecContext();
 
     let pathsToClean: string[] | undefined = [];
-    if (optionsWithDefaults.clean) {
-      pathsToClean = await this.calcPathsToClean({ writers: optionsWithDefaults.writers });
-    }
-
     let writeErr;
     let writeResults;
     try {
+      if (optionsWithDefaults.clean) {
+        pathsToClean = await this.calcPathsToClean({ writers: optionsWithDefaults.writers });
+      }
+
       writeResults = await this.write(execContext, optionsWithDefaults);
       const allWrittenFiles = writeResults.writersResult.flatMap((writerResult) => {
         return writerResult.extendingConfigFiles.flatMap((extendingConfigFile) => {
@@ -256,7 +256,13 @@ export class WorkspaceConfigFilesMain {
     configsRootDir: string,
     opts: WriteConfigFilesOptions
   ): Promise<OneConfigWriterIdResult> {
-    const writtenRealConfigFilesMap = await handleRealConfigFiles(envEntries, envCompsDirsMap, configsRootDir, opts);
+    const writtenRealConfigFilesMap = await handleRealConfigFiles(
+      envEntries,
+      envCompsDirsMap,
+      configsRootDir,
+      this.workspace.path,
+      opts
+    );
     const writtenExtendingConfigFiles = await handleExtendingConfigFiles(
       envEntries,
       envCompsDirsMap,

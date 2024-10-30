@@ -4,21 +4,26 @@ import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
-import TrackerAspect, { TrackerMain } from '@teambit/tracker';
-import { isDirEmpty } from '@teambit/legacy/dist/utils';
+import { TrackerAspect, TrackerMain } from '@teambit/tracker';
+import { PathLinuxRelative } from '@teambit/toolbox.path.path';
+import { isDirEmpty } from '@teambit/toolbox.fs.is-dir-empty';
 import { ComponentID } from '@teambit/component-id';
 import { Harmony } from '@teambit/harmony';
-import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { PkgAspect } from '@teambit/pkg';
 import { RenamingAspect } from '@teambit/renaming';
 import { EnvsAspect } from '@teambit/envs';
 import { NewComponentHelperAspect } from './new-component-helper.aspect';
+import { incrementPathRecursively } from '@teambit/component-writer';
 
 const aspectsConfigToIgnore: string[] = [PkgAspect.id, RenamingAspect.id];
 
 export class NewComponentHelperMain {
-  constructor(private workspace: Workspace, private harmony: Harmony, private tracker: TrackerMain) {}
+  constructor(
+    private workspace: Workspace,
+    private harmony: Harmony,
+    private tracker: TrackerMain
+  ) {}
   /**
    * when creating/forking a component, the user provides the new name and optionally the scope/namespace.
    * from this user input, create a ComponentID.
@@ -39,7 +44,14 @@ export class NewComponentHelperMain {
    * if not provided, generate the path based on the component-id.
    * the component will be written to that path.
    */
-  getNewComponentPath(componentId: ComponentID, pathFromUser?: string, componentsToCreate?: number): PathLinuxRelative {
+  getNewComponentPath(
+    componentId: ComponentID,
+    {
+      pathFromUser,
+      componentsToCreate,
+      incrementPathIfConflicted,
+    }: { pathFromUser?: string; componentsToCreate?: number; incrementPathIfConflicted?: boolean } = {}
+  ): PathLinuxRelative {
     if (pathFromUser) {
       const fullPath = path.join(this.workspace.path, pathFromUser);
       const componentPath = componentId.fullName;
@@ -53,15 +65,37 @@ export class NewComponentHelperMain {
       return pathFromUser;
     }
 
-    return this.workspace.consumer.composeRelativeComponentPath(componentId.changeScope(componentId.scope));
+    const generatedPath = this.workspace.consumer.composeRelativeComponentPath(
+      componentId.changeScope(componentId.scope)
+    );
+    if (!incrementPathIfConflicted) {
+      return generatedPath;
+    }
+
+    const existingPaths = this.workspace.bitMap.getAllRootDirs();
+    // e.g. existing "bar/foo" and currently writing "bar"
+    const existingParent = existingPaths.find((d) => d.startsWith(`${generatedPath}/`));
+    const existingExact = existingPaths.find((d) => d === generatedPath);
+    // e.g. existing "bar" and currently writing "bar/foo"
+    const existingChild = existingPaths.find((p) => generatedPath.startsWith(p));
+    if (existingParent || existingExact || existingChild) {
+      // if existingChild, you can't increment the generatedPath, it'll still be a sub-directory of the existingChild
+      const pathToIncrement = existingChild || generatedPath;
+      return incrementPathRecursively(pathToIncrement, existingPaths);
+    }
+    return generatedPath;
   }
+
   async writeAndAddNewComp(
     comp: Component,
     targetId: ComponentID,
-    options?: { path?: string; scope?: string; env?: string },
+    options?: { path?: string; scope?: string; env?: string; incrementPathIfConflicted?: boolean },
     config?: { [aspectName: string]: any }
   ) {
-    const targetPath = this.getNewComponentPath(targetId, options?.path);
+    const targetPath = this.getNewComponentPath(targetId, {
+      pathFromUser: options?.path,
+      incrementPathIfConflicted: options?.incrementPathIfConflicted,
+    });
     await this.throwForExistingPath(targetPath);
     await this.workspace.write(comp, targetPath);
     if (options?.env && config) {

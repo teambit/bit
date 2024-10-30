@@ -2,8 +2,8 @@ import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import glob from 'glob';
 import * as path from 'path';
+import { generateRandomStr } from '@teambit/toolbox.string.random';
 import * as fixtures from '../../src/fixtures/fixtures';
-import { generateRandomStr } from '../utils';
 import { ensureAndWriteJson } from './e2e-helper';
 import ScopesData from './e2e-scopes';
 

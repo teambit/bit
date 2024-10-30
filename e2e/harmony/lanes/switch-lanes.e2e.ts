@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import { statusWorkspaceIsCleanMsg } from '../../../src/constants';
-import { LANE_KEY } from '../../../src/consumer/bit-map/bit-map';
+import { LANE_KEY } from '@teambit/legacy.bit-map';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../../src/fixtures/fixtures';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../../npm-ci-registry';
@@ -23,7 +23,7 @@ describe('bit lane command', function () {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
+        helper.fixtures.addComponentBarFoo();
         helper.command.snapAllComponentsWithoutBuild();
         helper.command.export();
         helper.command.createLane();
@@ -276,7 +276,7 @@ describe('bit lane command', function () {
         helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
+        helper.fixtures.addComponentBarFoo();
         npmCiRegistry = new NpmCiRegistry(helper);
         npmCiRegistry.configureCiInPackageJsonHarmony();
         await npmCiRegistry.init();
@@ -319,4 +319,89 @@ describe('bit lane command', function () {
       });
     }
   );
+  describe('switch to main when main has updates on the remote', () => {
+    let beforeSwitch: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      const beforeUpdatingMain = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(beforeUpdatingMain);
+      beforeSwitch = helper.scopeHelper.cloneLocalScope();
+    });
+    it('when --head is used, it should switch to the head of main ', () => {
+      helper.command.switchLocalLane('main', '-x --head');
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.2');
+    });
+    it('when --head was not used, it should switch to where the main was before', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeSwitch);
+      helper.command.switchLocalLane('main', '-x');
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.1');
+    });
+  });
+  describe('switch to a lane when it has updates on the remote', () => {
+    let beforeSwitch: string;
+    let firstSnap: string;
+    let headSnap: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      firstSnap = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.mergeLane('dev', '-x');
+      helper.command.export();
+      const beforeUpdatingLane = helper.scopeHelper.cloneLocalScope();
+      helper.command.switchLocalLane('dev', '-x');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      headSnap = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.export();
+      helper.scopeHelper.getClonedLocalScope(beforeUpdatingLane);
+      beforeSwitch = helper.scopeHelper.cloneLocalScope();
+    });
+    it('when --head is used, it should switch to the head of the lane ', () => {
+      helper.command.switchLocalLane('dev', '-x --head');
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal(headSnap);
+      expect(bitmap.comp1.version).to.not.equal(firstSnap);
+    });
+    it('when --head was not used, it should switch to where the lane was before', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeSwitch);
+      helper.command.switchLocalLane('dev', '-x');
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.not.equal(headSnap);
+      expect(bitmap.comp1.version).to.equal(firstSnap);
+    });
+  });
+  describe('switch with --force-ours', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(1, undefined, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x --force-ours');
+    });
+    it('should switch successfully', () => {
+      helper.command.expectCurrentLaneToBe('main');
+    });
+    it('should not change the files and keep them same as the lane', () => {
+      const fileContent = helper.fs.readFile('comp1/index.js');
+      expect(fileContent).to.include('v2');
+    });
+  });
 });

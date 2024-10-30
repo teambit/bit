@@ -9,7 +9,7 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { UiMain, UIAspect } from '@teambit/ui';
 import { merge } from 'lodash';
-import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
+import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 import { TestsResult } from '@teambit/tests-results';
 import { ComponentsResults, CallbackFn, Tests } from './tester';
 import { TestCmd } from './test.cmd';
@@ -63,6 +63,11 @@ export type TesterOptions = {
    * show code coverage
    */
   coverage?: boolean;
+
+  /**
+   * update snapshot if supported by the tester
+   */
+  updateSnapshot?: boolean;
 
   callback?: CallbackFn;
 };
@@ -231,7 +236,7 @@ export class TesterMain {
       GraphqlMain,
       UiMain,
       DevFilesMain,
-      BuilderMain
+      BuilderMain,
     ],
     config: TesterExtensionConfig
   ) {

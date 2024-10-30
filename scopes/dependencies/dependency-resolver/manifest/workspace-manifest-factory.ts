@@ -1,7 +1,7 @@
 import { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Component } from '@teambit/component';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { fromPairs, pickBy, mapValues, uniq, difference } from 'lodash';
 import { SemVer } from 'semver';
 import pMapSeries from 'p-map-series';
@@ -42,7 +42,10 @@ const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
   excludeExtensionsDependencies: false,
 };
 export class WorkspaceManifestFactory {
-  constructor(private dependencyResolver: DependencyResolverMain, private aspectLoader: AspectLoaderMain) {}
+  constructor(
+    private dependencyResolver: DependencyResolverMain,
+    private aspectLoader: AspectLoaderMain
+  ) {}
 
   async createFromComponents(
     name: string,
@@ -153,14 +156,13 @@ export class WorkspaceManifestFactory {
         const coreAspectIds = this.aspectLoader.getCoreAspectIds();
         for (const comp of depList.toTypeArray('component') as ComponentDependency[]) {
           const [compIdWithoutVersion] = comp.id.split('@');
-          if (
-            !comp.isExtension &&
-            !coreAspectIds.includes(compIdWithoutVersion) &&
-            components.some((c) => c.id.isEqual(comp.componentId))
-          ) {
-            const pkgName = comp.getPackageName();
-            if (pkgName !== '@teambit/harmony') {
-              additionalDeps[pkgName] = `workspace:*`;
+          if (!comp.isExtension && !coreAspectIds.includes(compIdWithoutVersion)) {
+            const componentInWorkspace = components.find((c) => c.id.isEqual(comp.componentId));
+            if (componentInWorkspace) {
+              const pkgName = this.dependencyResolver.getPackageName(componentInWorkspace);
+              if (pkgName !== '@teambit/harmony') {
+                additionalDeps[pkgName] = `workspace:*`;
+              }
             }
           }
         }

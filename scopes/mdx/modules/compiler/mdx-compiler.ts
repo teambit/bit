@@ -144,7 +144,8 @@ function extractImports() {
             fromModule: dep,
           };
         }
-        return es6Import[dep].importSpecifiers.map((importSpecifier) => ({
+        const specifiers = es6Import[dep].importSpecifiers || [];
+        return specifiers.map((importSpecifier) => ({
           fromModule: dep,
           identifier: importSpecifier.name,
           isDefault: importSpecifier.isDefault,

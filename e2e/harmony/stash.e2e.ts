@@ -51,4 +51,86 @@ describe('bit stash command', function () {
       });
     });
   });
+  describe('stash and local have conflicting modification', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.fixtures.populateComponents(1, false, 'from-stash');
+      helper.command.stash();
+      helper.fs.outputFile('comp1/foo.js', 'console.log("hello");');
+      helper.fs.appendFile('comp1/index.js', '\n\n\nconsole.log("hello");');
+      helper.command.stashLoad('--manual');
+    });
+    it('should save the file with conflicts markers', () => {
+      const index = helper.fs.readFile('comp1/index.js');
+      expect(index).to.have.string('<<<<<<< 0.0.1 modified');
+      expect(index).to.have.string('from-stash');
+      expect(index).to.have.string('>>>>>>> stash');
+    });
+  });
+  describe('stash the modification from 0.0.1 then tag 0.0.2', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile('comp1/index.js', 'console.log("hello");\n\n');
+      helper.command.tagAllWithoutBuild();
+      helper.fs.appendFile('comp1/index.js', '\nconsole.log("from-stash");\n\n');
+      helper.command.stash();
+      helper.fs.outputFile('comp1/index.js', 'console.log("from-modification");\n\n');
+      helper.command.tagAllWithoutBuild();
+      helper.command.stashLoad();
+    });
+    it('should use 0.0.1 as the "base-version", find the modification from 0.0.1 and apply them on top of 0.0.2', () => {
+      const index = helper.fs.readFile('comp1/index.js');
+      expect(index).to.have.string('from-stash');
+      expect(index).to.have.string('from-modification');
+      expect(index).to.not.have.string('hello');
+    });
+  });
+  describe('stash and local have modification with a shared base - 0.0.1', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(1, false);
+      helper.fs.outputFile('comp1/index.js', 'console.log("hello");\n\n');
+      helper.command.tagAllWithoutBuild();
+      helper.fs.appendFile('comp1/index.js', '\nconsole.log("from-stash");\n\n');
+      helper.command.stash();
+      helper.fs.outputFile('comp1/index.js', 'console.log("from-modification");\n\n');
+      helper.command.stashLoad();
+    });
+    it('should use 0.0.1 as the "base-version", find the modification from 0.0.1 and apply them on the local modifications', () => {
+      const index = helper.fs.readFile('comp1/index.js');
+      expect(index).to.have.string('from-stash');
+      expect(index).to.have.string('from-modification');
+      expect(index).to.not.have.string('hello');
+    });
+  });
+  describe('stash new components along with modified', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagWithoutBuild('comp2');
+      helper.fixtures.populateComponents(2, undefined, 'version2');
+      helper.command.stash('--include-new');
+    });
+    it('should stash both of them', () => {
+      const stashList = helper.command.stashList();
+      expect(stashList).to.have.string('2 components');
+    });
+    it('should remove the new component from .bitmap', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('comp2');
+      expect(bitMap).to.not.have.property('comp1');
+    });
+    describe('stash load them', () => {
+      before(() => {
+        helper.command.stashLoad();
+      });
+      it('should re-create the new component', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.have.property('comp1');
+      });
+    });
+  });
 });

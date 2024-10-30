@@ -3,8 +3,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
-import { pipeOutput } from '@teambit/legacy/dist/utils/child_process';
-import createSymlinkOrCopy from '@teambit/legacy/dist/utils/fs/create-symlink-or-copy';
+import { createLinkOrSymlink } from '@teambit/toolbox.fs.link-or-symlink';
 import { EventEmitter } from 'events';
 import execa from 'execa';
 import fs from 'fs-extra';
@@ -13,7 +12,10 @@ import path, { join } from 'path';
 
 export default class PackageManager {
   private emitter = new EventEmitter();
-  constructor(readonly packageManagerName: string, readonly logger: Logger) {}
+  constructor(
+    readonly packageManagerName: string,
+    readonly logger: Logger
+  ) {}
 
   get name() {
     return this.packageManagerName;
@@ -133,5 +135,15 @@ function linkBitLegacyInCapsule(capsule) {
   // that the capusle fs does not deal with well (eg. identifying and deleting
   // a symlink rather than the what the symlink links to)
   fs.removeSync(bitLegacyPath);
-  createSymlinkOrCopy(localBitLegacyPath, bitLegacyPath);
+  createLinkOrSymlink(localBitLegacyPath, bitLegacyPath);
+}
+
+function pipeOutput(childProcess) {
+  const { stdout, stderr } = childProcess;
+  if (stdout) {
+    stdout.pipe(process.stdout);
+  }
+  if (stderr) {
+    stderr.pipe(process.stderr);
+  }
 }

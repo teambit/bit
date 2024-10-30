@@ -3,11 +3,10 @@ import fs from 'fs-extra';
 import { EOL } from 'os';
 import * as path from 'path';
 
-import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { NewerVersionFound } from '../../src/consumer/exceptions';
 import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
-import { FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
-import { UPDATE_DEPS_ON_IMPORT } from '../../src/api/consumer/lib/feature-toggle';
+import { Extensions, FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -21,13 +20,13 @@ describe('bit checkout command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.reInitLocalScope();
   });
   after(() => {
     helper.scopeHelper.destroy();
   });
   describe('for non existing component', () => {
     it('show an error saying the component was not found', () => {
+      helper.scopeHelper.reInitLocalScope();
       const useFunc = () => helper.command.runCmd('bit checkout 1.0.0 utils/non-exist');
       const error = new MissingBitMapComponent('utils/non-exist');
       helper.general.expectToThrow(useFunc, error);
@@ -35,8 +34,9 @@ describe('bit checkout command', function () {
   });
   describe('after the component was created', () => {
     before(() => {
+      helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo(barFooV1);
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
     });
     it('before tagging it should show an error saying the component was not tagged yet', () => {
       const output = helper.general.runWithTryCatch('bit checkout 1.0.0 bar/foo');
@@ -182,7 +182,7 @@ describe('bit checkout command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
       helper.fs.outputFile('bar/foo2.js');
       helper.command.tagAllWithoutBuild();
@@ -274,7 +274,7 @@ describe('bit checkout command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo(`${barFooV1}\n`);
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.fixtures.createComponentBarFoo(`${barFooV2}\n`);
       helper.fixtures.tagComponentBarFoo();
@@ -581,7 +581,7 @@ describe('bit checkout command', function () {
   });
   describe('checkout head with deps having different versions than workspace.jsonc', () => {
     let beforeCheckout: string;
-    const initWsWithVer = (ver: string) => {
+    const initWsWithVer = (ver: string, checkoutFlags = '') => {
       helper.scopeHelper.getClonedLocalScope(beforeCheckout);
       helper.workspaceJsonc.addPolicyToDependencyResolver({
         dependencies: {
@@ -589,12 +589,11 @@ describe('bit checkout command', function () {
         },
       });
       helper.npm.addFakeNpmPackage('lodash.get', ver.replace('^', '').replace('~', ''));
-      helper.command.checkoutHead(undefined, '-x');
+      helper.command.checkoutHead(undefined, `-x ${checkoutFlags}`);
     };
 
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.command.setFeatures(UPDATE_DEPS_ON_IMPORT);
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -629,6 +628,56 @@ describe('bit checkout command', function () {
       expect(policy).to.have.string('"lodash.get": "4.4.1"');
       expect(policy).to.have.string('"lodash.get": "^4.4.2"');
       expect(policy).to.have.string('>>>>>>> theirs');
+    });
+
+    it('if the ws has a lower exact version, and merge strategy is "theirs" it should update according to the head', () => {
+      initWsWithVer('4.4.1', '--auto-merge-resolve theirs');
+      const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+      expect(policy.dependencies['lodash.get']).to.equal('^4.4.2');
+    });
+
+    it('if the ws has a lower exact version, and merge strategy is "ours" it should keep the workspace.jsonc intact', () => {
+      initWsWithVer('4.4.1', '--auto-merge-resolve ours');
+      const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
+      expect(policy.dependencies['lodash.get']).to.equal('4.4.1');
+    });
+  });
+  describe('checkout reset with changes in component.json', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.ejectConf('comp1');
+      helper.componentJson.setExtension(Extensions.pkg, { name: 'new-name' }, 'comp1');
+      // an intermediate step make sure the component is modified
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(1);
+
+      helper.command.checkoutReset('-a -x');
+    });
+    it('status should not show the component as modified', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(0);
+    });
+  });
+  describe('checkout with a short hash', () => {
+    let snap1: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.snapAllComponentsWithoutBuild();
+      snap1 = helper.command.getHead('comp1');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.checkoutVersion(snap1.substring(0, 8), 'comp1', '-x');
+    });
+    it('bitmap should contain the full hash, not the short one', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp1.version).to.equal(snap1);
+    });
+    it('bit status should not throw an error', () => {
+      expect(() => helper.command.status()).to.not.throw();
     });
   });
 });

@@ -1,40 +1,49 @@
-import { render } from 'ink';
-import logger, { LoggerLevel } from '@teambit/legacy/dist/logger/logger';
-import { CLIArgs, Command, Flags, RenderResult } from '@teambit/legacy/dist/cli/command';
-import { parseCommandName } from '@teambit/legacy/dist/cli/command-registry';
+import logger, { shouldDisableLoader } from '@teambit/legacy/dist/logger/logger';
+import { CLIArgs, Command, Flags } from '@teambit/legacy/dist/cli/command';
 import loader from '@teambit/legacy/dist/cli/loader';
-import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
+import { handleErrorAndExit } from './handle-errors';
 import { TOKEN_FLAG_NAME } from '@teambit/legacy/dist/constants';
 import globalFlags from '@teambit/legacy/dist/cli/global-flags';
-import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
+import { Analytics } from '@teambit/legacy.analytics';
+import { OnCommandStartSlot } from './cli.main.runtime';
+import pMapSeries from 'p-map-series';
+
+type CommandResult = { data: any; exitCode: number };
 
 export class CommandRunner {
   private commandName: string;
-  constructor(private command: Command, private args: CLIArgs, private flags: Flags) {
+  constructor(
+    private command: Command,
+    private args: CLIArgs,
+    private flags: Flags,
+    private onCommandStartSlot: OnCommandStartSlot
+  ) {
     this.commandName = parseCommandName(this.command.name);
   }
 
   /**
    * run command using one of the handler, "json"/"report"/"render". once done, exit the process.
    */
-  async runCommand() {
+  async runCommand(shouldReturnResult = false): Promise<void | CommandResult> {
     try {
       this.bootstrapCommand();
+      await this.invokeOnCommandStart();
       this.determineConsoleWritingDuringCommand();
       if (this.flags.json) {
-        return await this.runJsonHandler();
-      }
-      if (this.shouldRunRender()) {
-        return await this.runRenderHandler();
+        return await this.runJsonHandler(shouldReturnResult);
       }
       if (this.command.report) {
-        return await this.runReportHandler();
+        return await this.runReportHandler(shouldReturnResult);
+      }
+      if (this.command.wait) {
+        return await this.runWaitHandler();
       }
     } catch (err: any) {
+      if (shouldReturnResult) throw err;
       return handleErrorAndExit(err, this.commandName);
     }
 
-    throw new Error(`command "${this.commandName}" doesn't implement "render" nor "report" methods`);
+    throw new Error(`command "${this.commandName}" doesn't implement "render" nor "report" nor "wait" methods`);
   }
 
   private bootstrapCommand() {
@@ -49,50 +58,41 @@ export class CommandRunner {
     }
   }
 
-  /**
-   * when both "render" and "report" were implemented, check whether it's a terminal.
-   * if it's a terminal, use "render", if not, use "report" because "report" is just a string
-   */
-  private shouldRunRender() {
-    const isTerminal = process.stdout.isTTY;
-    if (this.command.report && !isTerminal) {
-      return false;
-    }
-    return Boolean(this.command.render);
+  private async invokeOnCommandStart() {
+    const funcs = this.onCommandStartSlot.values();
+    await pMapSeries(funcs, (onCommandStart) => onCommandStart(this.commandName, this.args, this.flags));
   }
 
   /**
    * this works for both, Harmony commands and Legacy commands (the legacy-command-adapter
    * implements json() method)
    */
-  private async runJsonHandler() {
-    if (!this.flags.json) return null;
+  private async runJsonHandler(shouldReturnResult = false): Promise<CommandResult | undefined> {
+    if (!this.flags.json) return undefined;
     if (!this.command.json) throw new Error(`command "${this.commandName}" doesn't implement "json" method`);
     const result = await this.command.json(this.args, this.flags);
     const code = result.code || 0;
     const data = result.data || result;
-    return this.writeAndExit(JSON.stringify(data, null, 2), code);
+    if (shouldReturnResult) return { data, exitCode: code };
+    const isJsonStream = Boolean(this.flags.stream);
+    if (isJsonStream) data.end = true;
+    const jsonStr = isJsonStream ? `${JSON.stringify(data)}\n` : JSON.stringify(data, null, 2);
+    await this.writeAndExit(jsonStr, code);
   }
 
-  private async runRenderHandler() {
-    if (!this.command.render) throw new Error('runRenderHandler expects command.render to be implemented');
-    const result = await this.command.render(this.args, this.flags);
-    loader.off();
-
-    const { data, code } = toRenderResult(result);
-
-    const { waitUntilExit } = render(data);
-    await waitUntilExit();
-    return logger.exitAfterFlush(code, this.commandName);
-  }
-
-  private async runReportHandler() {
+  private async runReportHandler(shouldReturnResult = false): Promise<CommandResult | undefined> {
     if (!this.command.report) throw new Error('runReportHandler expects command.report to be implemented');
     const result = await this.command.report(this.args, this.flags);
     loader.off();
     const data = typeof result === 'string' ? result : result.data;
     const exitCode = typeof result === 'string' ? 0 : result.code;
-    return this.writeAndExit(`${data}\n`, exitCode);
+    if (shouldReturnResult) return { data, exitCode };
+    await this.writeAndExit(`${data}\n`, exitCode);
+  }
+
+  private async runWaitHandler() {
+    if (!this.command.wait) throw new Error('runReportHandler expects command.wait to be implemented');
+    await this.command.wait(this.args, this.flags);
   }
 
   /**
@@ -100,18 +100,13 @@ export class CommandRunner {
    * for internals commands, such as, _put, _fetch, the command.loader = false.
    */
   private determineConsoleWritingDuringCommand() {
-    if (this.command.loader && !this.flags.json && !this.flags['get-yargs-completions']) {
+    if (this.command.loader && !this.flags.json && !this.flags['get-yargs-completions'] && !shouldDisableLoader) {
       loader.on();
       loader.start(`running command "${this.commandName}"...`);
       logger.shouldWriteToConsole = true;
     } else {
       loader.off();
       logger.shouldWriteToConsole = false;
-    }
-    if (this.flags.log) {
-      // probably not necessary anymore. it is handled in src/logger - determineWritingLogToScreen()
-      const logValue = typeof this.flags.log === 'string' ? this.flags.log : undefined;
-      logger.switchToConsoleLogger(logValue as LoggerLevel);
     }
   }
 
@@ -121,11 +116,7 @@ export class CommandRunner {
   }
 }
 
-function toRenderResult(obj: RenderResult | React.ReactElement) {
-  return isRenderResult(obj) ? obj : { data: obj, code: 0 };
-}
-
-function isRenderResult(obj: RenderResult | any): obj is RenderResult {
-  // eslint-disable-next-line no-prototype-builtins
-  return typeof obj === 'object' && typeof obj.code === 'number' && obj.hasOwnProperty('data');
+export function parseCommandName(commandName: string): string {
+  if (!commandName) return '';
+  return commandName.split(' ')[0];
 }

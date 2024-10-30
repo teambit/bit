@@ -1,11 +1,9 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Scope } from '@teambit/legacy/dist/scope';
-import { PathLinuxRelative, pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
-import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import { PathLinuxRelative, pathNormalizeToLinux } from '@teambit/legacy.utils';
+import { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
+import { DataToPersist, RemovePath } from '@teambit/component.sources';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { isHash } from '@teambit/component-version';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
@@ -75,22 +73,6 @@ export default class ComponentWriter {
     this.skipUpdatingBitMap = skipUpdatingBitMap;
   }
 
-  /**
-   * write the component to the filesystem and update .bitmap with the details.
-   *
-   * bitMap gets updated before writing the files to the filesystem, because as part of writing the
-   * package-json file, the componentMap is needed to be stored with the updated version.
-   *
-   * when a component is not new, write the files according to the paths in .bitmap.
-   */
-  async write(): Promise<Component> {
-    if (!this.consumer) throw new Error('ComponentWriter.write expect to have a consumer');
-    await this.populateComponentsFilesToWrite();
-    this.component.dataToPersist.addBasePath(this.consumer.getPath());
-    await this.component.dataToPersist.persistAllToFS();
-    return this.component;
-  }
-
   async populateComponentsFilesToWrite(): Promise<Component> {
     if (this.isolated) throw new Error('for isolation, please use this.populateComponentsFilesToWriteForCapsule()');
     if (!this.component.files || !this.component.files.length) {
@@ -98,7 +80,6 @@ export default class ComponentWriter {
     }
     this.throwForImportingLegacyIntoHarmony();
     this.component.dataToPersist = new DataToPersist();
-    this._updateFilesBasePaths();
     this.component.componentMap = this.existingComponentMap || (await this.addComponentToBitMap(this.writeToPath));
     this.deleteBitDirContent = false;
     this._updateComponentRootPathAccordingToBitMap();
@@ -125,14 +106,14 @@ export default class ComponentWriter {
     this.component.files.forEach((file) => (file.override = this.override));
     this.component.files.map((file) => this.component.dataToPersist.addFile(file));
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.component.license && this.component.license.contents) {
       this.component.license.updatePaths({ newBase: this.writeToPath });
-      // $FlowFixMe this.component.license is set
       this.component.license.override = this.override;
-      // $FlowFixMe this.component.license is set
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.component.dataToPersist.addFile(this.component.license);
+    }
+    if (this.writeConfig) {
+      const vinylFile = await this.workspace.getComponentConfigVinylFile(this.component.id, { override: true }, true);
+      this.component.dataToPersist.addFile(vinylFile);
     }
   }
 
@@ -177,7 +158,7 @@ export default class ComponentWriter {
     this._updateFilesBasePaths();
   }
 
-  _updateFilesBasePaths() {
+  private _updateFilesBasePaths() {
     const newBase = this.writeToPath || '.';
     this.component.files.forEach((file) => file.updatePaths({ newBase }));
   }

@@ -5,7 +5,7 @@ import { ComponentID } from '@teambit/component-id';
 import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { ComponentDependency, SerializedComponentDependency, TYPE } from './component-dependency';
 import { DependencyLifecycleType } from '../dependency';
 import { DependencyFactory } from '../dependency-factory';
@@ -40,7 +40,8 @@ export class ComponentDependencyFactory implements DependencyFactory {
       serialized.lifecycle as DependencyLifecycleType,
       serialized.source,
       serialized.hidden,
-      serialized.optional
+      serialized.optional,
+      serialized.versionRange
     ) as unknown as ComponentDependency;
   }
 
@@ -51,11 +52,14 @@ export class ComponentDependencyFactory implements DependencyFactory {
     const devDeps = await mapSeries(legacyComponent.devDependencies.get(), (dep) =>
       this.transformLegacyComponentDepToSerializedDependency(dep, 'dev')
     );
+    const peerDeps = await mapSeries(legacyComponent.peerDependencies.get(), (dep) =>
+      this.transformLegacyComponentDepToSerializedDependency(dep, 'peer')
+    );
     const extensionDeps = await mapSeries(legacyComponent.extensions, (extension) =>
       this.transformLegacyComponentExtensionToSerializedDependency(extension, 'dev')
     );
     const filteredExtensionDeps: SerializedComponentDependency[] = compact(extensionDeps);
-    const serializedComponentDeps = [...runtimeDeps, ...devDeps, ...filteredExtensionDeps];
+    const serializedComponentDeps = [...runtimeDeps, ...devDeps, ...peerDeps, ...filteredExtensionDeps];
     const componentDeps: ComponentDependency[] = await mapSeries(serializedComponentDeps, (dep) => this.parse(dep));
     const dependencyList = new DependencyList(componentDeps);
     return dependencyList;
@@ -81,6 +85,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
       packageName,
       componentId: legacyDep.id.serialize(),
       version: legacyDep.id._legacy.getVersion().toString(),
+      versionRange: legacyDep.versionRange,
       __type: TYPE,
       lifecycle,
     };

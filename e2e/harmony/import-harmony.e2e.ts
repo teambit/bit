@@ -3,7 +3,6 @@ import path from 'path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-import { UPDATE_DEPS_ON_IMPORT } from '../../src/api/consumer/lib/feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -288,7 +287,7 @@ describe('import functionality on Harmony', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.outputFile('bar/foo.ts', `import cors from 'cors'; console.log(cors);`);
       helper.command.add('bar');
-      helper.command.install('cors@2.8.5 @types/cors@2.8.10');
+      helper.command.install('cors@^2.8.5 @types/cors@^2.8.10');
 
       // intermediate step, make sure the types are saved in the
       const show = helper.command.showComponentParsed('bar');
@@ -345,7 +344,6 @@ describe('import functionality on Harmony', function () {
     };
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.command.setFeatures(UPDATE_DEPS_ON_IMPORT);
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/foo.js', `const get = require('lodash.get'); console.log(get);`);
       helper.workspaceJsonc.addPolicyToDependencyResolver({
@@ -382,19 +380,26 @@ describe('import functionality on Harmony', function () {
     // create the following graph:
     // comp1 -> comp2 -> comp3 -> comp4
     // comp1 -> comp-a -> comp4
+    // comp1 -> comp-a2 -> comp3 -> comp4
     // comp1 -> comp-b
     before(() => {
       helper = new Helper();
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(4);
       helper.fs.outputFile('comp-a/index.js', `require('${helper.general.getPackageNameByCompName('comp4', false)}');`);
+      helper.fs.outputFile(
+        'comp-a2/index.js',
+        `require('${helper.general.getPackageNameByCompName('comp3', false)}');`
+      );
       helper.fs.outputFile('comp-b/index.js');
       helper.command.addComponent('comp-a');
       helper.command.addComponent('comp-b');
+      helper.command.addComponent('comp-a2');
       helper.command.compile();
       helper.fs.appendFile(
         'comp1/index.js',
-        `\nrequire('${helper.general.getPackageNameByCompName('comp-a', false)}');`
+        `\nrequire('${helper.general.getPackageNameByCompName('comp-a', false)}');
+        require('${helper.general.getPackageNameByCompName('comp-a2', false)}')`
       );
       helper.fs.appendFile(
         'comp1/index.js',
@@ -409,20 +414,21 @@ describe('import functionality on Harmony', function () {
       helper.command.importComponent('comp1', '-x');
     });
     it('without "through" should import all graphs between the given component and the workspace', () => {
-      helper.command.importComponent('comp4', '--dependents -x');
+      helper.command.importComponent('comp4', '--dependents -x --silent');
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('comp2');
       expect(bitMap).to.have.property('comp3');
       expect(bitMap).to.have.property('comp4');
       expect(bitMap).to.have.property('comp-a');
+      expect(bitMap).to.have.property('comp-a2');
       expect(bitMap).to.not.have.property('comp-b');
     });
-    it('with --dependents-through should limit to graph traversing through the given id', () => {
+    it('with --dependents-via should limit to graph traversing through the given id', () => {
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1', '-x');
 
-      helper.command.importComponent('comp4', `--dependents-through ${helper.scopes.remote}/comp2 -x`);
+      helper.command.importComponent('comp4', `--dependents-via ${helper.scopes.remote}/comp2 -x --silent`);
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property('comp2');
       expect(bitMap).to.have.property('comp3');

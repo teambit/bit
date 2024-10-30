@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 import { HASH_SIZE, AUTO_SNAPPED_MSG, FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
-import ComponentsPendingMerge from '../../src/consumer/component-ops/exceptions/components-pending-merge';
+import ComponentsPendingMerge from '../../src/consumer/exceptions/components-pending-merge';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { MergeConflictOnRemote } from '../../src/scope/exceptions';
@@ -23,7 +23,7 @@ describe('bit snap command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       output = helper.command.snapComponent('bar/foo');
     });
     it('should snap successfully', () => {
@@ -61,8 +61,8 @@ describe('bit snap command', function () {
       describe('then snap and tag again', () => {
         let secondTagOutput;
         before(() => {
-          helper.command.snapComponent('bar/foo -f');
-          secondTagOutput = helper.command.tagComponent('bar/foo -f');
+          helper.command.snapComponent('bar/foo', undefined, '--unmodified');
+          secondTagOutput = helper.command.tagComponent('bar/foo', undefined, '--unmodified');
         });
         it('should tag the next version', () => {
           expect(secondTagOutput).to.have.string('0.0.2');
@@ -111,11 +111,11 @@ describe('bit snap command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
-      helper.command.snapComponent('bar/foo');
+      helper.fixtures.addComponentBarFoo();
+      helper.command.snapComponent('bar/foo', undefined, '--unmodified');
       const compAfterSnap1 = helper.command.catComponent('bar/foo');
       firstSnap = compAfterSnap1.head;
-      helper.command.snapComponent('bar/foo -f');
+      helper.command.snapComponent('bar/foo', undefined, '--unmodified');
     });
     describe('untag the head snap', () => {
       before(() => {
@@ -138,7 +138,7 @@ describe('bit snap command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapComponent('bar/foo');
       firstSnap = helper.command.getHead('bar/foo');
       helper.command.export();
@@ -538,7 +538,7 @@ describe('bit snap command', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
+        helper.fixtures.addComponentBarFoo();
         helper.command.snapAllComponents();
         firstSnap = helper.command.getHead('bar/foo');
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
@@ -687,7 +687,7 @@ describe('bit snap command', function () {
       helper.command.export();
       helper.scopeHelper.getClonedLocalScope(authorFirstTag);
       helper.fixtures.populateComponents(1, false, ' v3');
-      helper.command.tagAllWithoutBuild('-s 0.0.3');
+      helper.command.tagAllWithoutBuild('--ver 0.0.3');
       helper.command.importAllComponents();
     });
     it('should prevent exporting the component', () => {
@@ -711,7 +711,7 @@ describe('bit snap command', function () {
       let localHeadV3: string;
       before(() => {
         localHeadV3 = helper.command.getHead('comp1');
-        helper.command.tagAllWithoutBuild('-s 0.0.4');
+        helper.command.tagAllWithoutBuild('--ver 0.0.4 --unmodified');
         beforeUntag = helper.scopeHelper.cloneLocalScope();
       });
       describe('reset all local versions', () => {

@@ -3,14 +3,14 @@ import { MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { Component, ComponentMap, IComponent } from '@teambit/component';
-import ScopeAspect, { ScopeMain } from '@teambit/scope';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import type { Environment } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
-import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
+import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Doc, DocPropList } from '@teambit/docs.entities.doc';
 import { isFunction } from 'lodash';
@@ -185,7 +185,7 @@ export class DocsMain {
       LoggerMain,
       DevFilesMain,
       EnvsMain,
-      ScopeMain
+      ScopeMain,
     ],
     config: DocsConfig,
     [docPropSlot, docReaderSlot]: [DocPropSlot, DocReaderSlot]

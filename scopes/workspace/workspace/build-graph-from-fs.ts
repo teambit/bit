@@ -21,7 +21,7 @@ export class GraphFromFsBuilder {
   private depth = 1;
   private consumer: Consumer;
   private importedIds: string[] = [];
-  private currentLane: Lane | null;
+  private currentLane: Lane | undefined;
   constructor(
     private workspace: Workspace,
     private logger: Logger,
@@ -110,7 +110,7 @@ export class GraphFromFsBuilder {
    * that all its flattened dependencies are there. no need to call importMany again for them.
    */
   private async importObjects(components: Component[]) {
-    const workspaceIds = await this.workspace.listIds();
+    const workspaceIds = this.workspace.listIds();
     const compOnWorkspaceOnly = components.filter((comp) => workspaceIds.find((id) => id.isEqual(comp.id)));
     const allDeps = (await Promise.all(compOnWorkspaceOnly.map((c) => this.getAllDepsUnfiltered(c)))).flat();
     const allDepsNotImported = allDeps.filter((d) => !this.importedIds.includes(d.toString()));
@@ -122,7 +122,7 @@ export class GraphFromFsBuilder {
       throwForDependencyNotFound: this.shouldThrowOnMissingDep,
       throwForSeederNotFound: this.shouldThrowOnMissingDep,
       reFetchUnBuiltVersion: false,
-      lane: this.currentLane || undefined,
+      lane: this.currentLane,
       reason: 'for building a graph from the workspace',
     });
     allDepsNotImported.map((id) => this.importedIds.push(id.toString()));

@@ -1,16 +1,12 @@
-import AbstractError from '../../../error/abstract-error';
+import { BitError } from '@teambit/bit-error';
 
-export default class UnexpectedNetworkError extends AbstractError {
+export default class UnexpectedNetworkError extends BitError {
   message: string;
   showDoctorMessage: boolean;
 
   constructor(message = 'unknown error') {
-    super();
+    super(`unexpected network error has occurred.
+${message ? `server responded with: "${message}"` : ''}`);
     this.message = message;
-    // @todo: delete this hack once a new version is deployed.
-    if (message && message.includes("warning: '_action' is not a valid command")) {
-      this.message =
-        'the server version is older than yours, it does not support the new four-steps export process, please update the server';
-    }
   }
 }

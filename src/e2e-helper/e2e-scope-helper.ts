@@ -4,10 +4,9 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import * as yaml from 'yaml';
 import * as ini from 'ini';
+import { createLinkOrSymlink } from '@teambit/toolbox.fs.link-or-symlink';
+import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { IS_WINDOWS } from '../constants';
-import { InteractiveInputs } from '../interactive/utils/run-interactive-cmd';
-import { generateRandomStr } from '../utils';
-import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import NpmHelper from './e2e-npm-helper';
@@ -20,6 +19,7 @@ type SetupWorkspaceOpts = {
   disableMissingManuallyConfiguredPackagesIssue?: boolean; // default to true. otherwise, it'll always show missing babel/jest from react-env
   registry?: string;
   initGit?: boolean;
+  generatePackageJson?: boolean;
   yarnRCConfig?: any;
   npmrcConfig?: any;
 };
@@ -84,7 +84,8 @@ export default class ScopeHelper {
   reInitLocalScope(opts?: SetupWorkspaceOpts) {
     this.cleanLocalScope();
     if (opts?.initGit) this.command.runCmd('git init');
-    this.initWorkspace();
+    const initWsOpts = opts?.generatePackageJson ? undefined : { 'no-package-json': true };
+    this.initWorkspace(undefined, initWsOpts);
 
     if (opts?.addRemoteScopeAsDefaultScope ?? true) this.workspaceJsonc.addDefaultScope();
     if (opts?.disablePreview ?? true) this.workspaceJsonc.disablePreview();
@@ -122,13 +123,9 @@ export default class ScopeHelper {
     this.command.new(templateName, flags, this.scopes.local, this.scopes.e2eDir);
   }
 
-  initWorkspace(workspacePath?: string) {
-    return this.command.runCmd(`bit init`, workspacePath);
-  }
-
-  async initInteractive(inputs: InteractiveInputs) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.command.runInteractiveCmd({ args: ['init', '--interactive'], inputs });
+  initWorkspace(workspacePath?: string, options?: Record<string, any>) {
+    const opts = this.command.parseOptions(options);
+    return this.command.runCmd(`bit init ${opts}`, workspacePath);
   }
 
   initLocalScopeWithOptions(options: Record<string, any>) {
@@ -143,13 +140,14 @@ export default class ScopeHelper {
     this.addRemoteScope();
   }
 
-  initNewLocalScope(deleteCurrentScope = true) {
+  initNewLocalScope(deleteCurrentScope = true, generatePackageJson = false) {
     if (deleteCurrentScope) {
       fs.removeSync(this.scopes.localPath);
     }
     this.scopes.setLocalScope();
     fs.ensureDirSync(this.scopes.localPath);
-    return this.initWorkspace();
+    const initWsOpts = generatePackageJson ? undefined : { 'no-package-json': true };
+    return this.initWorkspace(undefined, initWsOpts);
   }
   addRemoteScope(
     remoteScopePath: string = this.scopes.remotePath,
@@ -206,13 +204,13 @@ export default class ScopeHelper {
     return this.command.runCmd('bit init --bare', this.scopes.envPath);
   }
 
-  getNewBareScope(scopeNameSuffix = '-remote2', addOwnerPrefix = false) {
+  getNewBareScope(scopeNameSuffix = '-remote2', addOwnerPrefix = false, remoteScopeToAdd = this.scopes.remotePath) {
     const prefix = addOwnerPrefix ? `${DEFAULT_OWNER}.` : '';
     const scopeName = prefix + generateRandomStr() + scopeNameSuffix;
     const scopePath = path.join(this.scopes.e2eDir, scopeName);
     fs.emptyDirSync(scopePath);
     this.command.runCmd('bit init --bare', scopePath);
-    this.addRemoteScope(this.scopes.remotePath, scopePath);
+    this.addRemoteScope(remoteScopeToAdd, scopePath);
     const scopeWithoutOwner = scopeName.replace(prefix, '');
     return { scopeName, scopePath, scopeWithoutOwner };
   }
@@ -281,6 +279,6 @@ export default class ScopeHelper {
     console.log('aspectsRoot', aspectsRoot);
     console.log('localAspectsRoot', localAspectsRoot);
     fs.removeSync(aspectsRoot);
-    createSymlinkOrCopy(localAspectsRoot, aspectsRoot);
+    createLinkOrSymlink(localAspectsRoot, aspectsRoot);
   }
 }

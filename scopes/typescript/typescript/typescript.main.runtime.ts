@@ -11,16 +11,17 @@ import type { Workspace } from '@teambit/workspace';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import pMapSeries from 'p-map-series';
 import { TsserverClient, TsserverClientOpts } from '@teambit/ts-server';
-import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
-import WatcherAspect, { WatcherMain, WatchOptions } from '@teambit/watcher';
+import { TypescriptCompiler } from '@teambit/typescript.typescript-compiler';
+import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
+import { WatcherAspect, WatcherMain, WatchOptions } from '@teambit/watcher';
 import type { Component, ComponentID } from '@teambit/component';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import EnvsAspect, { EnvsMain } from '@teambit/envs';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
+import { flatten } from 'lodash';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
-import { TypescriptCompiler } from './typescript.compiler';
 import { TypeScriptParser } from './typescript.parser';
 import { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
 import { SchemaTransformerPlugin } from './schema-transformer.plugin';
@@ -63,10 +64,13 @@ import {
   ConstructorTransformer,
   ExpressionStatementTransformer,
   ModuleDeclarationTransformer,
+  ObjectLiteralExpressionTransformer,
+  ArrayLiteralExpressionTransformer,
+  PropertyAssignmentTransformer,
+  DecoratorTransformer,
+  LiteralValueTransformer,
 } from './transformers';
 import { CheckTypesCmd } from './cmds/check-types.cmd';
-import { TsconfigPathsPerEnv, TsconfigWriter } from './tsconfig-writer';
-import WriteTsconfigCmd from './cmds/write-tsconfig.cmd';
 import { RemoveTypesTask } from './remove-types-task';
 
 export type TsMode = 'build' | 'dev';
@@ -100,7 +104,6 @@ export class TypescriptMain {
     readonly scope: ScopeMain,
     readonly depResolver: DependencyResolverMain,
     private envs: EnvsMain,
-    private tsConfigWriter: TsconfigWriter,
     private aspectLoader: AspectLoaderMain
   ) {}
 
@@ -116,7 +119,15 @@ export class TypescriptMain {
     const configMutator = new TypescriptConfigMutator(options);
     const transformerContext: TsConfigTransformContext = {};
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
-    return new TypescriptCompiler(TypescriptAspect.id, this.logger, afterMutation.raw, tsModule);
+    const afterMutationWithoutTsconfig = { ...afterMutation.raw, tsconfig: '' };
+
+    return new TypescriptCompiler(
+      TypescriptAspect.id,
+      this.logger,
+      afterMutationWithoutTsconfig,
+      afterMutation.raw.tsconfig,
+      tsModule as any
+    );
   }
 
   /**
@@ -220,11 +231,23 @@ export class TypescriptMain {
   /**
    * create an instance of a typescript semantic schema extractor.
    */
-  createSchemaExtractor(tsconfig: any, tsserverPath?: string, contextPath?: string): SchemaExtractor {
+  createSchemaExtractor(
+    tsconfig: any,
+    tsserverPath?: string,
+    contextPath?: string,
+    schemaTransformers: SchemaTransformer[] = [],
+    apiTransformers: SchemaNodeTransformer[] = []
+  ): SchemaExtractor {
+    const schemaTransformersFromSlot = flatten(Array.from(this.schemaTransformerSlot.values()));
+    const apiTransformersFromSlot = flatten(Array.from(this.apiTransformerSlot.values()));
+
+    const allSchemaTransformers = schemaTransformers.concat(schemaTransformersFromSlot);
+    const allApiTransformers = apiTransformers.concat(apiTransformersFromSlot);
+
     return new TypeScriptExtractor(
       tsconfig,
-      this.schemaTransformerSlot,
-      this.apiTransformerSlot,
+      allSchemaTransformers,
+      allApiTransformers,
       this,
       tsserverPath || this.workspace?.path || '',
       contextPath || this.workspace?.path || '',
@@ -266,34 +289,6 @@ export class TypescriptMain {
       .flat()
       .map((f) => f.path);
     return files.filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'));
-  }
-
-  async cleanTsconfigJson(options: TsconfigWriterOptions = {}) {
-    const components = await this.workspace.list();
-    const runtime = await this.envs.createEnvironment(components);
-    const execContext = runtime.getEnvExecutionContext();
-
-    const results = await new TsconfigWriter(this.workspace, this.logger).clean(execContext, options);
-
-    return results;
-  }
-
-  async writeTsconfigJson(options: TsconfigWriterOptions = {}): Promise<{
-    cleanResults?: string[];
-    writeResults: TsconfigPathsPerEnv[];
-  }> {
-    const components = await this.workspace.list();
-    const runtime = await this.envs.createEnvironment(components);
-    const execContext = runtime.getEnvExecutionContext();
-
-    let cleanResults: string[] | undefined;
-    if (options.clean) {
-      cleanResults = await this.tsConfigWriter.clean(execContext, options);
-    }
-
-    const writeResults = await this.tsConfigWriter.write(execContext, options);
-
-    return { writeResults, cleanResults };
   }
 
   private async onPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
@@ -345,7 +340,7 @@ export class TypescriptMain {
       EnvsMain,
       WatcherMain,
       ScopeMain,
-      BuilderMain
+      BuilderMain,
     ],
     config,
     [schemaTransformerSlot, apiTransformerSlot]: [SchemaTransformerSlot, APITransformerSlot]
@@ -354,7 +349,6 @@ export class TypescriptMain {
     const logger = loggerExt.createLogger(TypescriptAspect.id);
 
     aspectLoader.registerPlugins([new SchemaTransformerPlugin(schemaTransformerSlot)]);
-    const tsconfigWriter = new TsconfigWriter(workspace, logger);
     const tsMain = new TypescriptMain(
       logger,
       schemaTransformerSlot,
@@ -363,7 +357,6 @@ export class TypescriptMain {
       scope,
       depResolver,
       envs,
-      tsconfigWriter,
       aspectLoader
     );
     tsMain.registerSchemaTransformer([
@@ -405,6 +398,11 @@ export class TypescriptMain {
       new ImportDeclarationTransformer(),
       new ExpressionStatementTransformer(),
       new ModuleDeclarationTransformer(),
+      new DecoratorTransformer(),
+      new ObjectLiteralExpressionTransformer(),
+      new ArrayLiteralExpressionTransformer(),
+      new PropertyAssignmentTransformer(),
+      new LiteralValueTransformer(),
     ]);
 
     if (workspace) {
@@ -418,8 +416,7 @@ export class TypescriptMain {
     builder.registerTagTasks([removeTypesTask]);
 
     const checkTypesCmd = new CheckTypesCmd(tsMain, workspace, logger);
-    const writeTsconfigCmd = new WriteTsconfigCmd(tsMain);
-    cli.register(checkTypesCmd, writeTsconfigCmd);
+    cli.register(checkTypesCmd);
 
     return tsMain;
   }

@@ -131,3 +131,71 @@ export function genericFunction<T>(a: T) {
 }
 
 export const gfnc2 = genericFunction<string>('');
+
+export function LogMethod(message: string) {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    const originalMethod = descriptor.value;
+    descriptor.value = function (...args: any[]) {
+      console.log(`Logging: ${message}`);
+      return originalMethod.apply(this, args);
+    };
+  };
+}
+
+export function CustomClassDecorator(config: {
+  name: string;
+  description: string;
+  fn?: () => string;
+  class?: ClassSomething;
+  arr?: [
+    string,
+    number,
+    boolean,
+    boolean,
+    number | undefined,
+    (a: string) => void,
+    { a: string; b: number },
+    ClassSomething,
+  ];
+}) {
+  return function (target: any) {
+    console.log(`Class ${config.name} - ${config.description}`);
+  };
+}
+
+@CustomClassDecorator({ name: 'ExampleClass2', description: 'This is an example class 2' })
+export class ExampleDecoratorOne {
+  @LogMethod('This is a log message')
+  exampleMethod() {
+    // Method logic
+  }
+}
+
+export function ValidateArgs(config: { type: string; required: boolean }) {
+  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    const originalMethod = descriptor.value;
+    descriptor.value = function (...args: any[]) {
+      if (args[0] && typeof args[0] !== config.type) {
+        throw new Error('Invalid argument type');
+      }
+      if (config.required && !args[0]) {
+        throw new Error('Argument is required');
+      }
+      return originalMethod.apply(this, args);
+    };
+  };
+}
+
+@CustomClassDecorator({
+  name: 'ExampleClass',
+  description: 'This is an example class',
+  fn: () => 'hi',
+  class: new ClassSomething('dsa'),
+  arr: ['hi', 5, true, false, undefined, () => {}, { a: 'hi', b: 5 }, new ClassSomething('dsa')],
+})
+export class ExampleDecoratorTwo {
+  @ValidateArgs({ type: 'string', required: true })
+  exampleMethod(input: string) {
+    // Method logic
+  }
+}

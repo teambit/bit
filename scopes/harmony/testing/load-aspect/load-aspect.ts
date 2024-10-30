@@ -1,6 +1,6 @@
 import { resolve, join } from 'path';
 import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
-import { findScopePath } from '@teambit/legacy/dist/utils';
+import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { readdirSync } from 'fs';
 import { Harmony, Aspect } from '@teambit/harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
@@ -12,9 +12,8 @@ import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-l
 import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
-import DependenciesAspect from '@teambit/dependencies';
+import { DependenciesAspect } from '@teambit/dependencies';
 
 function getPackageName(aspect: any, id: ComponentID) {
   return `@teambit/${id.name}`;
@@ -35,8 +34,10 @@ export async function loadAspect<T>(targetAspect: Aspect, cwd = process.cwd(), r
 }
 
 /**
- * returns an instance of Harmony. with this instance, you can get any aspect you loaded.
+ * returns an instance of Harmony. with this instance, you can get any aspect you loaded (or its dependencies).
  * e.g. `const workspace = harmony.get<Workspace>(WorkspaceAspect.id);`
+ * when used for tests, specify all aspects you need and call it once. this way, you make sure all of them are in sync
+ * and use the same instances of each other.
  */
 export async function loadManyAspects(
   targetAspects: Aspect[],
@@ -125,11 +126,9 @@ function clearGlobalsIfNeeded() {
   PackageJsonTransformer.packageJsonTransformersRegistry = [];
   // @ts-ignore
   ComponentLoader.loadDeps = undefined;
-  ExtensionDataList.coreExtensionsNames = new Map();
-  // @ts-ignore
-  WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;
-  // @ts-ignore
-  WorkspaceConfig.workspaceConfigIsExistRegistry = undefined;
+  // don't clear this one. it's a static list of core-ids. if you delete it, you'll have to call
+  // registerCoreExtensions() from @teambit/bit, which as far as I remember should not be a dependency of this aspect.
+  // ExtensionDataList.coreExtensionsNames = new Map();
   // @ts-ignore
   WorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
 }

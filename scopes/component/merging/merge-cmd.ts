@@ -3,28 +3,28 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import { compact } from 'lodash';
 import {
-  WILDCARD_HELP,
+  COMPONENT_PATTERN_HELP,
   AUTO_SNAPPED_MSG,
   MergeConfigFilename,
   FILE_CHANGES_CHECKOUT_MSG,
   CFG_FORCE_LOCAL_BUILD,
 } from '@teambit/legacy/dist/constants';
-import { FileStatus, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { ConfigMergeResult, WorkspaceConfigUpdateResult, WorkspaceDepsUpdates } from '@teambit/config-merger';
 import { BitError } from '@teambit/bit-error';
+import { FileStatus, MergeStrategy } from './merge-version';
 import { ApplyVersionResults, MergingMain, ApplyVersionResult } from './merging.main.runtime';
 
 export class MergeCmd implements Command {
-  name = 'merge [ids...]';
+  name = 'merge [component-pattern]';
   description = 'merge changes of the remote head into local - auto-snaps all merged components';
   helpUrl = 'reference/components/merging-changes';
   group = 'development';
+  arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   extendedDescription = `merge changes of the remote head into local when they are diverged. when on a lane, merge the remote head of the lane into the local
 and creates snaps for merged components that have diverged, on the lane.
 if no ids are specified, all pending-merge components will be merged. (run "bit status" to list them).
-optionally use '--abort' to revert the last merge. to revert a lane merge, use "bit lane merge-abort" command.
-${WILDCARD_HELP('merge')}`;
+optionally use '--abort' to revert the last merge. to revert a lane merge, use "bit lane merge-abort" command.`;
   alias = '';
   options = [
     ['', 'ours', 'DEPRECATED. use --auto-merge-resolve. in case of a conflict, keep the local modification'],
@@ -39,7 +39,7 @@ ${WILDCARD_HELP('merge')}`;
       'same as "--auto-merge-resolve manual". in case of merge conflict, write the files with the conflict markers',
     ],
     [
-      '',
+      'r',
       'auto-merge-resolve <merge-strategy>',
       'in case of a conflict, resolve according to the strategy: [ours, theirs, manual]',
     ],
@@ -53,10 +53,13 @@ ${WILDCARD_HELP('merge')}`;
   ] as CommandOptions;
   loader = true;
 
-  constructor(private merging: MergingMain, private globalConfig: GlobalConfigMain) {}
+  constructor(
+    private merging: MergingMain,
+    private globalConfig: GlobalConfigMain
+  ) {}
 
   async report(
-    [ids = []]: [string[]],
+    [pattern]: [string],
     {
       ours = false,
       theirs = false,
@@ -107,7 +110,7 @@ ${WILDCARD_HELP('merge')}`;
       mergeSnapResults,
       mergeSnapError,
     }: ApplyVersionResults = await this.merging.merge(
-      ids,
+      pattern,
       autoMergeResolve as any,
       abort,
       resolve,
@@ -263,7 +266,7 @@ ${mergeSnapError.message}
 
 export function getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult): string {
   if (!workspaceConfigUpdateResult) return '';
-  const { workspaceConfigConflictWriteError, workspaceDepsConflicts, workspaceDepsUpdates } =
+  const { workspaceConfigConflictWriteError, workspaceDepsConflicts, workspaceDepsUpdates, workspaceDepsUnchanged } =
     workspaceConfigUpdateResult;
 
   const getWorkspaceConflictsOutput = () => {
@@ -274,7 +277,23 @@ export function getWorkspaceConfigUpdateOutput(workspaceConfigUpdateResult?: Wor
     return chalk.yellow('workspace.jsonc has conflicts, please edit the file and fix them');
   };
 
-  return compact([getWorkspaceDepsOutput(workspaceDepsUpdates), getWorkspaceConflictsOutput()]).join('\n\n');
+  const getWorkspaceUnchangedDepsOutput = () => {
+    if (!workspaceDepsUnchanged) return '';
+    const title = '\nworkspace.jsonc was unable to update the following dependencies';
+    const body = Object.keys(workspaceDepsUnchanged)
+      .map((pkgName) => {
+        return `  ${pkgName}: ${workspaceDepsUnchanged[pkgName]}`;
+      })
+      .join('\n');
+
+    return `${chalk.underline(title)}\n${body}`;
+  };
+
+  return compact([
+    getWorkspaceUnchangedDepsOutput(),
+    getWorkspaceDepsOutput(workspaceDepsUpdates),
+    getWorkspaceConflictsOutput(),
+  ]).join('\n\n');
 }
 
 function getWorkspaceDepsOutput(workspaceDepsUpdates?: WorkspaceDepsUpdates): string {

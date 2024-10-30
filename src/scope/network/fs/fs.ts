@@ -1,9 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
-import { fetch, put, remove } from '../../../api/scope';
-import { action } from '../../../api/scope/lib/action';
-import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
-import { PushOptions } from '../../../api/scope/lib/put';
-import ComponentsList, { ListScopeResult } from '../../../consumer/component/components-list';
+import { fetch, put, remove, action, FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
+import { ComponentsList, ListScopeResult } from '@teambit/legacy.component-list';
 import Component from '../../../consumer/component/consumer-component';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
@@ -14,6 +11,7 @@ import Scope, { ScopeDescriptor } from '../../scope';
 import loadScope from '../../scope-loader';
 import { FsScopeNotLoaded } from '../exceptions';
 import { Network } from '../network';
+import { Ref } from '../../objects';
 
 export default class Fs implements Network {
   scopePath: string;
@@ -37,6 +35,7 @@ export default class Fs implements Network {
   }
 
   pushMany(objectList: ObjectList, pushOptions: PushOptions): Promise<string[]> {
+    // @ts-ignore for some reason, it finds two different ObjectList. try to remove it once all legacy are gone
     return put({ path: this.scopePath, objectList }, pushOptions);
   }
 
@@ -65,8 +64,9 @@ export default class Fs implements Network {
       .then((componentsIds) => componentsIds.map((componentId) => componentId.toString()));
   }
 
-  list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
-    return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards);
+  list(namespacesUsingWildcards?: string, includeDeleted = false): Promise<ListScopeResult[]> {
+    // @ts-ignore todo: remove after deleting teambit.legacy
+    return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards, includeDeleted);
   }
 
   show(bitId: ComponentID): Promise<Component> {
@@ -102,5 +102,10 @@ export default class Fs implements Network {
       this.scope = scope;
       return this;
     });
+  }
+
+  async hasObjects(hashes: string[]): Promise<string[]> {
+    const results = await this.getScope().objects.hasMultiple(hashes.map((h) => Ref.from(h)));
+    return results.map((result) => result.toString());
   }
 }

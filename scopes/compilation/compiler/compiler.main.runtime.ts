@@ -1,21 +1,21 @@
 import * as path from 'path';
 import fs from 'fs-extra';
-import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { IssuesClasses } from '@teambit/component-issues';
-import IssuesAspect, { IssuesMain } from '@teambit/issues';
+import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { Component } from '@teambit/component';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
-import WatcherAspect, { WatcherMain } from '@teambit/watcher';
+import { WatcherAspect, WatcherMain } from '@teambit/watcher';
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
 import { ComponentID } from '@teambit/component-id';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
-import UIAspect, { UiMain } from '@teambit/ui';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { UIAspect, UiMain } from '@teambit/ui';
+import { Workspace, WorkspaceAspect, WorkspaceComponentLoadOptions } from '@teambit/workspace';
 import { CompilerAspect } from './compiler.aspect';
 import { CompileCmd } from './compiler.cmd';
 import { CompilerService } from './compiler.service';
@@ -46,9 +46,11 @@ export class CompilerMain {
    */
   compileOnWorkspace(
     componentsIds: string[] | ComponentID[] | ComponentID[] = [], // when empty, it compiles all
-    options: CompileOptions = { initiator: CompilationInitiator.ComponentAdded }
+    options: CompileOptions = { initiator: CompilationInitiator.ComponentAdded },
+    noThrow?: boolean,
+    componentLoadOptions: WorkspaceComponentLoadOptions = {}
   ) {
-    return this.workspaceCompiler.compileComponents(componentsIds, options);
+    return this.workspaceCompiler.compileComponents(componentsIds, options, noThrow, componentLoadOptions);
   }
   /**
    * API to create a new compiler task, it facilitates the usage of multiple compilers.
@@ -151,7 +153,7 @@ export class CompilerMain {
     GeneratorMain,
     DependencyResolverMain,
     WatcherMain,
-    IssuesMain
+    IssuesMain,
   ]) {
     const logger = loggerMain.createLogger(CompilerAspect.id);
     const compilerService = new CompilerService();

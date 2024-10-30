@@ -12,12 +12,12 @@ import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
 import { ScopeListItem } from '../../scope/models/model-component';
 import Version, { DepEdge, Log } from '../../scope/models/version';
-import { pathNormalizeToLinux, sha1 } from '../../utils';
-import { PathLinux, PathOsBased, PathOsBasedRelative } from '../../utils/path';
-import ComponentMap from '../bit-map/component-map';
-import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
-import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
-import { Dist, License, SourceFile } from '../component/sources';
+import { pathNormalizeToLinux, PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
+import { ComponentMap } from '@teambit/legacy.bit-map';
+import { IgnoredDirectory } from './exceptions/ignored-directory';
+import ComponentsPendingImport from '../exceptions/components-pending-import';
+import { Dist, License, SourceFile, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
 import ComponentConfig, { ComponentConfigLoadOptions, ILegacyWorkspaceConfig } from '../config';
 import ComponentOverrides from '../config/component-overrides';
 import { ExtensionDataList } from '../config/extension-data';
@@ -28,10 +28,6 @@ import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './co
 import { Dependencies, Dependency } from './dependencies';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import MainFileRemoved from './exceptions/main-file-removed';
-import MissingFilesFromComponent from './exceptions/missing-files-from-component';
-import { NoComponentDir } from './exceptions/no-component-dir';
-import PackageJsonFile from './package-json-file';
-import DataToPersist from './sources/data-to-persist';
 import { ModelComponent } from '../../scope/models';
 import { ComponentLoadOptions } from './component-loader';
 import { getBindingPrefixByDefaultScope } from '../config/component-config';
@@ -56,6 +52,7 @@ export type ComponentProps = {
   bitJson?: ComponentConfig;
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
+  peerDependencies?: Dependency[];
   flattenedDependencies?: ComponentIdList;
   flattenedEdges?: DepEdge[];
   packageDependencies?: Record<string, string>;
@@ -102,6 +99,7 @@ export default class Component {
   dependencies: Dependencies;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
+  peerDependencies: Dependencies;
   flattenedDependencies: ComponentIdList;
   flattenedEdges: DepEdge[];
   packageDependencies: Record<string, string>;
@@ -164,6 +162,7 @@ export default class Component {
     bitJson,
     dependencies,
     devDependencies,
+    peerDependencies,
     flattenedDependencies,
     flattenedEdges,
     packageDependencies,
@@ -195,6 +194,7 @@ export default class Component {
     this.bitJson = bitJson;
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
+    this.setPeerDependencies(peerDependencies);
     this.flattenedDependencies = flattenedDependencies || new ComponentIdList();
     this.flattenedEdges = flattenedEdges || [];
     this.packageDependencies = packageDependencies || {};
@@ -236,6 +236,7 @@ export default class Component {
     const newInstance: Component = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     newInstance.setDependencies(this.dependencies.getClone());
     newInstance.setDevDependencies(this.devDependencies.getClone());
+    newInstance.setPeerDependencies(this.peerDependencies.getClone());
     newInstance.overrides = this.overrides.clone();
     newInstance.files = this.files.map((file) => file.clone());
     return newInstance;
@@ -260,6 +261,10 @@ export default class Component {
     this.devDependencies = new Dependencies(devDependencies);
   }
 
+  setPeerDependencies(peerDependencies?: Dependency[]) {
+    this.peerDependencies = new Dependencies(peerDependencies);
+  }
+
   setNewVersion(version = sha1(v4())) {
     this.previouslyUsedVersion = this.id.hasVersion() ? this.version : undefined;
     this.version = version;
@@ -276,7 +281,7 @@ export default class Component {
   /**
    * whether the component is deleted (soft removed)
    */
-  isRemoved(): Boolean {
+  isRemoved(): boolean {
     return Boolean(this.extensions.findCoreExtension(Extensions.remove)?.config?.removed || this.removed);
   }
 
@@ -300,6 +305,7 @@ export default class Component {
     return [
       ...this.dependencies.dependencies,
       ...this.devDependencies.dependencies,
+      ...this.peerDependencies.dependencies,
       ...this.extensionDependencies.dependencies,
     ];
   }
@@ -308,6 +314,7 @@ export default class Component {
     const dependencies = [
       ...this.dependencies.getClone(),
       ...this.devDependencies.getClone(),
+      ...this.peerDependencies.getClone(),
       ...this.extensionDependencies.getClone(),
     ];
     return new Dependencies(dependencies);
@@ -318,7 +325,11 @@ export default class Component {
   }
 
   getAllNonEnvsDependencies(): Dependency[] {
-    return [...this.dependencies.dependencies, ...this.devDependencies.dependencies];
+    return [
+      ...this.dependencies.dependencies,
+      ...this.devDependencies.dependencies,
+      ...this.peerDependencies.dependencies,
+    ];
   }
 
   getAllDependenciesIds(): ComponentIdList {
@@ -329,11 +340,13 @@ export default class Component {
   get depsIdsGroupedByType(): {
     dependencies: ComponentIdList;
     devDependencies: ComponentIdList;
+    peerDependencies: ComponentIdList;
     extensionDependencies: ComponentIdList;
   } {
     return {
       dependencies: this.dependencies.getAllIds(),
       devDependencies: this.devDependencies.getAllIds(),
+      peerDependencies: this.peerDependencies.getAllIds(),
       extensionDependencies: this.extensions.extensionsBitIds,
     };
   }
@@ -379,6 +392,7 @@ export default class Component {
       bindingPrefix: this.bindingPrefix,
       dependencies: this.dependencies.serialize(),
       devDependencies: this.devDependencies.serialize(),
+      peerDependencies: this.peerDependencies.serialize(),
       extensions: this.extensions.map((ext) => {
         const res = Object.assign({}, ext.toComponentObject());
         return res;
@@ -405,11 +419,9 @@ export default class Component {
   static isComponentInvalidByErrorType(err: Error): boolean {
     const invalidComponentErrors = [
       MainFileRemoved,
-      MissingFilesFromComponent,
       ComponentNotFoundInPath,
       ComponentOutOfSync,
       ComponentsPendingImport,
-      NoComponentDir,
       IgnoredDirectory,
     ];
     return invalidComponentErrors.some((errorType) => err instanceof errorType);
@@ -420,6 +432,7 @@ export default class Component {
     if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
     this.setDependencies(componentFromModel.dependencies.get());
     this.setDevDependencies(componentFromModel.devDependencies.get());
+    this.setPeerDependencies(componentFromModel.peerDependencies.get());
   }
 
   static async fromObject(object: Record<string, any>): Promise<Component> {
@@ -432,6 +445,7 @@ export default class Component {
       bindingPrefix,
       dependencies,
       devDependencies,
+      peerDependencies,
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,
@@ -452,6 +466,7 @@ export default class Component {
       bindingPrefix,
       dependencies,
       devDependencies,
+      peerDependencies,
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,
@@ -469,13 +484,6 @@ export default class Component {
     const object = JSON.parse(str);
     object.files = SourceFile.loadFromParsedStringArray(object.files);
 
-    // added if statement to support new and old version of remote ls
-    // old version of bit returns from server array of dists  and new version return object
-    if (object.dists && Array.isArray(object.dists)) {
-      object.dists = Dist.loadFromParsedStringArray(object.dists);
-    } else if (object.dists && object.dists.dists) {
-      object.dists = Dist.loadFromParsedStringArray(object.dists.dists);
-    }
     return this.fromObject(object);
   }
 
@@ -500,7 +508,7 @@ export default class Component {
     }
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     const compDirAbs = path.join(consumer.getPath(), componentMap.getComponentDir());
-    if (!fs.existsSync(compDirAbs)) throw new ComponentNotFoundInPath(compDirAbs);
+    if (!fs.existsSync(compDirAbs)) throw new ComponentNotFoundInPath(componentMap.getComponentDir());
 
     // Load the base entry from the root dir in map file in case it was imported using -path
     // Or created using bit create so we don't want all the path but only the relative one
@@ -582,7 +590,8 @@ async function getLoadedFiles(
     logger.error(`rethrowing an error of ${componentMap.noFilesError.message}`);
     throw componentMap.noFilesError;
   }
-  await componentMap.trackDirectoryChangesHarmony(consumer, id);
+  // @ts-ignore todo: remove after deleting teambit.legacy
+  await componentMap.trackDirectoryChangesHarmony(consumer);
   const sourceFiles = componentMap.files.map((file) => {
     const filePath = path.join(bitDir, file.relativePath);
     const sourceFile = SourceFile.load(filePath, bitDir, consumer.getPath(), {

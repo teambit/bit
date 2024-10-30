@@ -1,7 +1,7 @@
 import React from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { Install } from '@teambit/ui-foundation.ui.use-box.menu';
-import ComponentAspect, { ComponentUI, ConsumePlugin } from '@teambit/component';
+import { ComponentAspect, ComponentUI, ConsumePlugin } from '@teambit/component';
 import { PnpmAspect } from './pnpm.aspect';
 
 export class PnpmUI {

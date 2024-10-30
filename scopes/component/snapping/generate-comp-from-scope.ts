@@ -1,20 +1,20 @@
 import { ComponentID } from '@teambit/component-id';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import { ScopeMain } from '@teambit/scope';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { Component } from '@teambit/component';
 import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/component-schema';
 import { DependenciesMain } from '@teambit/dependencies';
-import DependencyResolverAspect, { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { FileData } from './snap-from-scope.cmd';
-import { SnapDataParsed } from './snapping.main.runtime';
+import { SnappingMain, SnapDataParsed } from './snapping.main.runtime';
 
 export type CompData = {
   componentId: ComponentID;
-  dependencies: ComponentID[];
+  dependencies: string[];
   aspects: Record<string, any> | undefined;
   message: string | undefined;
   files: FileData[] | undefined;
@@ -30,7 +30,11 @@ export type CompData = {
  * write the version and files into the scope as objects, so then it's possible to load Component object using the
  * ConsumerComponent.
  */
-export async function generateCompFromScope(scope: ScopeMain, compData: CompData): Promise<Component> {
+export async function generateCompFromScope(
+  scope: ScopeMain,
+  compData: CompData,
+  snapping: SnappingMain
+): Promise<Component> {
   if (!compData.files) throw new Error('generateComp: files are missing');
   const files = compData.files.map((file) => {
     return new SourceFile({ base: '.', path: file.path, contents: Buffer.from(file.content), test: false });
@@ -55,9 +59,12 @@ export async function generateCompFromScope(scope: ScopeMain, compData: CompData
       email: '',
     },
   });
-  const { version, files: filesBitObject } = await scope.legacyScope.sources.consumerComponentToVersion(
-    consumerComponent
-  );
+  // this is needed, otherwise in case of updating envs/aspects, the version-validator throws
+  // an error saying "the extension ${extensionId.toString()} is missing from the flattenedDependencies"
+  await snapping._addFlattenedDependenciesToComponents([consumerComponent]);
+
+  const { version, files: filesBitObject } =
+    await scope.legacyScope.sources.consumerComponentToVersion(consumerComponent);
   const modelComponent = scope.legacyScope.sources.findOrAddComponent(consumerComponent);
   consumerComponent.version = version.hash().toString();
   await scope.legacyScope.objects.writeObjectsToTheFS([version, modelComponent, ...filesBitObject.map((f) => f.file)]);
@@ -71,9 +78,11 @@ export async function addDeps(
   snapData: SnapDataParsed,
   scope: ScopeMain,
   deps: DependenciesMain,
-  depsResolver: DependencyResolverMain
+  depsResolver: DependencyResolverMain,
+  snapping: SnappingMain
 ) {
   const newDeps = snapData.newDependencies || [];
+  const updateDeps = snapData.dependencies || [];
   const compIdsData = newDeps.filter((dep) => dep.isComponent);
   const compIdsDataParsed = compIdsData.map((data) => ({
     ...data,
@@ -89,6 +98,7 @@ export async function addDeps(
   };
   const compDeps = compIdsDataParsed.filter((c) => c.type === 'runtime').map((dep) => toDependency(dep.id));
   const compDevDeps = compIdsDataParsed.filter((c) => c.type === 'dev').map((dep) => toDependency(dep.id));
+  const compPeerDeps = compIdsDataParsed.filter((c) => c.type === 'peer').map((dep) => toDependency(dep.id));
   const packageDeps = newDeps.filter((dep) => !dep.isComponent);
   const toPackageObj = (pkgs: Array<{ id: string; version?: string }>) => {
     return pkgs.reduce((acc, curr) => {
@@ -97,28 +107,58 @@ export async function addDeps(
       return acc;
     }, {});
   };
-  const dependenciesData = {
-    allDependencies: {
-      dependencies: compDeps,
-      devDependencies: compDevDeps,
-    },
-    allPackagesDependencies: {
-      packageDependencies: toPackageObj(packageDeps.filter((dep) => dep.type === 'runtime')),
-      devPackageDependencies: toPackageObj(packageDeps.filter((dep) => dep.type === 'dev')),
-      peerPackageDependencies: toPackageObj(packageDeps.filter((dep) => dep.type === 'peer')),
-    },
+  const getPkgObj = (type: 'runtime' | 'dev' | 'peer') => {
+    return toPackageObj(packageDeps.filter((dep) => dep.type === type));
+  };
+  const manipulateCurrentPkgs = (pkgs: Record<string, string>) => {
+    snapData.removeDependencies?.forEach((pkg) => {
+      delete pkgs[pkg];
+    });
+    Object.keys(pkgs).forEach((pkg) => {
+      const found = updateDeps.find((d) => d.startsWith(`${pkg}@`));
+      if (found) {
+        pkgs[pkg] = found.replace(`${pkg}@`, '');
+      }
+    });
+    return pkgs;
+  };
+  const manipulateCurrentDeps = (currentCompDeps: Dependency[]) => {
+    const afterRemoval = currentCompDeps.filter(
+      (dep) => !snapData.removeDependencies?.includes(dep.id.toStringWithoutVersion())
+    );
+    afterRemoval.forEach((dep) => {
+      const found = updateDeps.find((d) => d.startsWith(`${dep.id.toStringWithoutVersion()}@`));
+      if (found) {
+        dep.id = dep.id.changeVersion(found.replace(`${dep.id.toStringWithoutVersion()}@`, ''));
+      }
+    });
+    return afterRemoval;
   };
 
   const consumerComponent = component.state._consumer as ConsumerComponent;
+
+  const dependenciesData = {
+    allDependencies: {
+      dependencies: [...compDeps, ...manipulateCurrentDeps(consumerComponent.dependencies.get())],
+      devDependencies: [...compDevDeps, ...manipulateCurrentDeps(consumerComponent.devDependencies.get())],
+      peerDependencies: [...compPeerDeps, ...manipulateCurrentDeps(consumerComponent.peerDependencies.get())],
+    },
+    allPackagesDependencies: {
+      packageDependencies: { ...manipulateCurrentPkgs(consumerComponent.packageDependencies), ...getPkgObj('runtime') },
+      devPackageDependencies: {
+        ...manipulateCurrentPkgs(consumerComponent.devPackageDependencies),
+        ...getPkgObj('dev'),
+      },
+      peerPackageDependencies: {
+        ...manipulateCurrentPkgs(consumerComponent.peerPackageDependencies),
+        ...getPkgObj('peer'),
+      },
+    },
+  };
+
   // add the dependencies to the legacy ConsumerComponent object
   // it takes care of both: given dependencies (from the cli) and the overrides, which are coming from the env.
   await deps.loadDependenciesFromScope(consumerComponent, dependenciesData);
 
-  // add the dependencies data to the dependency-resolver aspect
-  const dependenciesListSerialized = (await depsResolver.extractDepsFromLegacy(component)).serialize();
-  const extId = DependencyResolverAspect.id;
-  const data = { dependencies: dependenciesListSerialized };
-  const existingExtension = component.config.extensions.findExtension(extId);
-  if (!existingExtension) throw new Error('unable to find DependencyResolver extension');
-  Object.assign(existingExtension.data, data);
+  await snapping.UpdateDepsAspectsSaveIntoDepsResolver(component, updateDeps);
 }

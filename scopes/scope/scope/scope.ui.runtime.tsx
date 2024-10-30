@@ -2,7 +2,7 @@ import type { ComponentUI, ComponentModel } from '@teambit/component';
 import { compact, flatten } from 'lodash';
 import { ComponentAspect } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { SidebarAspect, SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
 import { ComponentTreeNode } from '@teambit/component-tree';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
@@ -11,7 +11,7 @@ import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown'
 import { RouteProps } from 'react-router-dom';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
-import CommandBarAspect, { CommandBarUI, CommandHandler } from '@teambit/command-bar';
+import { CommandBarAspect, CommandBarUI, CommandHandler } from '@teambit/command-bar';
 import { ScopeModel } from '@teambit/scope.models.scope-model';
 import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
@@ -428,7 +428,7 @@ export class ScopeUI {
       OverviewLineSlot,
       ContextSlot,
       DrawerWidgetSlot,
-      ComponentFiltersSlot
+      ComponentFiltersSlot,
     ]
   ) {
     const scopeUi = new ScopeUI(

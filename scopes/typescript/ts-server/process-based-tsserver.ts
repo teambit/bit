@@ -16,8 +16,7 @@ import * as readline from 'readline';
 import { Logger } from '@teambit/logger';
 import { Readable, Writable } from 'stream';
 import * as decoder from 'string_decoder';
-// eslint-disable-next-line import/no-unresolved
-import protocol from 'typescript/lib/protocol';
+import type ts from 'typescript/lib/tsserverlibrary';
 import tempy from 'tempy';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CommandTypes } from './tsp-command-types';
@@ -27,7 +26,7 @@ export interface TspClientOptions {
   logger: Logger;
   tsserverPath: string;
   logToConsole?: boolean;
-  onEvent?: (event: protocol.Event) => void;
+  onEvent?: (event: ts.server.protocol.Event) => void;
 }
 
 export interface TsServerArgs {
@@ -38,44 +37,112 @@ export interface TsServerArgs {
   pluginProbeLocations?: string[];
 }
 
-export interface TypeScriptRequestTypes {
-  geterr: [protocol.GeterrRequestArgs, any];
-  geterrForProject: [protocol.GeterrForProjectRequestArgs, any];
-  compilerOptionsForInferredProjects: [
-    protocol.SetCompilerOptionsForInferredProjectsArgs,
-    protocol.SetCompilerOptionsForInferredProjectsResponse
+export interface StandardTsServerRequests {
+  [CommandTypes.ApplyCodeActionCommand]: [
+    ts.server.protocol.ApplyCodeActionCommandRequestArgs,
+    ts.server.protocol.ApplyCodeActionCommandResponse,
   ];
-  documentHighlights: [protocol.DocumentHighlightsRequestArgs, protocol.DocumentHighlightsResponse];
-  applyCodeActionCommand: [protocol.ApplyCodeActionCommandRequestArgs, protocol.ApplyCodeActionCommandResponse];
-  completionEntryDetails: [protocol.CompletionDetailsRequestArgs, protocol.CompletionDetailsResponse];
-  completionInfo: [protocol.CompletionsRequestArgs, protocol.CompletionInfoResponse];
-  configure: [protocol.ConfigureRequestArguments, protocol.ConfigureResponse];
-  definition: [protocol.FileLocationRequestArgs, protocol.DefinitionResponse];
-  definitionAndBoundSpan: [protocol.FileLocationRequestArgs, protocol.DefinitionInfoAndBoundSpanReponse];
-  docCommentTemplate: [protocol.FileLocationRequestArgs, protocol.DocCommandTemplateResponse];
-  format: [protocol.FormatRequestArgs, protocol.FormatResponse];
-  formatonkey: [protocol.FormatOnKeyRequestArgs, protocol.FormatResponse];
-  getApplicableRefactors: [protocol.GetApplicableRefactorsRequestArgs, protocol.GetApplicableRefactorsResponse];
-  getCodeFixes: [protocol.CodeFixRequestArgs, protocol.GetCodeFixesResponse];
-  getCombinedCodeFix: [protocol.GetCombinedCodeFixRequestArgs, protocol.GetCombinedCodeFixResponse];
-  getEditsForFileRename: [protocol.GetEditsForFileRenameRequestArgs, protocol.GetEditsForFileRenameResponse];
-  getEditsForRefactor: [protocol.GetEditsForRefactorRequestArgs, protocol.GetEditsForRefactorResponse];
-  getOutliningSpans: [protocol.FileRequestArgs, protocol.OutliningSpansResponse];
-  getSupportedCodeFixes: [null, protocol.GetSupportedCodeFixesResponse];
-  implementation: [protocol.FileLocationRequestArgs, protocol.ImplementationResponse];
-  jsxClosingTag: [protocol.JsxClosingTagRequestArgs, protocol.JsxClosingTagResponse];
-  navto: [protocol.NavtoRequestArgs, protocol.NavtoResponse];
-  navtree: [protocol.FileRequestArgs, protocol.NavTreeResponse];
-  occurrences: [protocol.FileLocationRequestArgs, protocol.OccurrencesResponse];
-  organizeImports: [protocol.OrganizeImportsRequestArgs, protocol.OrganizeImportsResponse];
-  projectInfo: [protocol.ProjectInfoRequestArgs, protocol.ProjectInfoResponse];
-  quickinfo: [protocol.FileLocationRequestArgs, protocol.QuickInfoResponse];
-  references: [protocol.FileLocationRequestArgs, protocol.ReferencesResponse];
-  rename: [protocol.RenameRequestArgs, protocol.RenameResponse];
-  signatureHelp: [protocol.SignatureHelpRequestArgs, protocol.SignatureHelpResponse];
-  typeDefinition: [protocol.FileLocationRequestArgs, protocol.TypeDefinitionResponse];
-  provideInlayHints: [protocol.InlayHintsRequestArgs, protocol.InlayHintsResponse];
+  [CommandTypes.CompletionDetails]: [
+    ts.server.protocol.CompletionDetailsRequestArgs,
+    ts.server.protocol.CompletionDetailsResponse,
+  ];
+  [CommandTypes.CompletionInfo]: [ts.server.protocol.CompletionsRequestArgs, ts.server.protocol.CompletionInfoResponse];
+  [CommandTypes.Configure]: [ts.server.protocol.ConfigureRequestArguments, ts.server.protocol.ConfigureResponse];
+  [CommandTypes.Definition]: [ts.server.protocol.FileLocationRequestArgs, ts.server.protocol.DefinitionResponse];
+  [CommandTypes.DefinitionAndBoundSpan]: [
+    ts.server.protocol.FileLocationRequestArgs,
+    ts.server.protocol.DefinitionInfoAndBoundSpanResponse,
+  ];
+  [CommandTypes.DocCommentTemplate]: [
+    ts.server.protocol.FileLocationRequestArgs,
+    ts.server.protocol.DocCommandTemplateResponse,
+  ];
+  [CommandTypes.DocumentHighlights]: [
+    ts.server.protocol.DocumentHighlightsRequestArgs,
+    ts.server.protocol.DocumentHighlightsResponse,
+  ];
+  [CommandTypes.Format]: [ts.server.protocol.FormatRequestArgs, ts.server.protocol.FormatResponse];
+  [CommandTypes.Formatonkey]: [ts.server.protocol.FormatOnKeyRequestArgs, ts.server.protocol.FormatResponse];
+  [CommandTypes.GetApplicableRefactors]: [
+    ts.server.protocol.GetApplicableRefactorsRequestArgs,
+    ts.server.protocol.GetApplicableRefactorsResponse,
+  ];
+  [CommandTypes.GetCodeFixes]: [ts.server.protocol.CodeFixRequestArgs, ts.server.protocol.CodeFixResponse];
+  [CommandTypes.GetCombinedCodeFix]: [
+    ts.server.protocol.GetCombinedCodeFixRequestArgs,
+    ts.server.protocol.GetCombinedCodeFixResponse,
+  ];
+  [CommandTypes.GetEditsForFileRename]: [
+    ts.server.protocol.GetEditsForFileRenameRequestArgs,
+    ts.server.protocol.GetEditsForFileRenameResponse,
+  ];
+  [CommandTypes.GetEditsForRefactor]: [
+    ts.server.protocol.GetEditsForRefactorRequestArgs,
+    ts.server.protocol.GetEditsForRefactorResponse,
+  ];
+  [CommandTypes.GetOutliningSpans]: [ts.server.protocol.FileRequestArgs, ts.server.protocol.OutliningSpansResponse];
+  [CommandTypes.GetSupportedCodeFixes]: [null, ts.server.protocol.GetSupportedCodeFixesResponse];
+  [CommandTypes.Implementation]: [
+    ts.server.protocol.FileLocationRequestArgs,
+    ts.server.protocol.ImplementationResponse,
+  ];
+  [CommandTypes.JsxClosingTag]: [ts.server.protocol.JsxClosingTagRequestArgs, ts.server.protocol.JsxClosingTagResponse];
+  [CommandTypes.Navto]: [ts.server.protocol.NavtoRequestArgs, ts.server.protocol.NavtoResponse];
+  [CommandTypes.NavTree]: [ts.server.protocol.FileRequestArgs, ts.server.protocol.NavTreeResponse];
+  [CommandTypes.OrganizeImports]: [
+    ts.server.protocol.OrganizeImportsRequestArgs,
+    ts.server.protocol.OrganizeImportsResponse,
+  ];
+  [CommandTypes.PrepareCallHierarchy]: [
+    ts.server.protocol.FileLocationRequestArgs,
+    ts.server.protocol.PrepareCallHierarchyResponse,
+  ];
+  [CommandTypes.ProvideCallHierarchyIncomingCalls]: [
+    ts.server.protocol.FileLocationRequestArgs,
+    ts.server.protocol.ProvideCallHierarchyIncomingCallsResponse,
+  ];
+  [CommandTypes.ProvideCallHierarchyOutgoingCalls]: [
+    ts.server.protocol.FileLocationRequestArgs,
+    ts.server.protocol.ProvideCallHierarchyOutgoingCallsResponse,
+  ];
+  [CommandTypes.ProjectInfo]: [ts.server.protocol.ProjectInfoRequestArgs, ts.server.protocol.ProjectInfoResponse];
+  [CommandTypes.ProvideInlayHints]: [ts.server.protocol.InlayHintsRequestArgs, ts.server.protocol.InlayHintsResponse];
+  [CommandTypes.Quickinfo]: [ts.server.protocol.FileLocationRequestArgs, ts.server.protocol.QuickInfoResponse];
+  [CommandTypes.References]: [ts.server.protocol.FileLocationRequestArgs, ts.server.protocol.ReferencesResponse];
+  [CommandTypes.Rename]: [ts.server.protocol.RenameRequestArgs, ts.server.protocol.RenameResponse];
+  [CommandTypes.SelectionRange]: [
+    ts.server.protocol.SelectionRangeRequestArgs,
+    ts.server.protocol.SelectionRangeResponse,
+  ];
+  [CommandTypes.SignatureHelp]: [ts.server.protocol.SignatureHelpRequestArgs, ts.server.protocol.SignatureHelpResponse];
+  [CommandTypes.TypeDefinition]: [
+    ts.server.protocol.FileLocationRequestArgs,
+    ts.server.protocol.TypeDefinitionResponse,
+  ];
+  [CommandTypes.UpdateOpen]: [ts.server.protocol.UpdateOpenRequestArgs, ts.server.protocol.Response];
 }
+
+export interface NoResponseTsServerRequests {
+  [CommandTypes.Change]: [ts.server.protocol.ChangeRequestArgs, null];
+  [CommandTypes.Close]: [ts.server.protocol.FileRequestArgs, null];
+  [CommandTypes.CompilerOptionsForInferredProjects]: [
+    ts.server.protocol.SetCompilerOptionsForInferredProjectsArgs,
+    ts.server.protocol.SetCompilerOptionsForInferredProjectsResponse,
+  ];
+  [CommandTypes.Configure]: [ts.server.protocol.ConfigureRequestArguments, ts.server.protocol.ConfigureResponse];
+  [CommandTypes.ConfigurePlugin]: [
+    ts.server.protocol.ConfigurePluginRequestArguments,
+    ts.server.protocol.ConfigurePluginResponse,
+  ];
+  [CommandTypes.Open]: [ts.server.protocol.OpenRequestArgs, null];
+}
+
+export interface AsyncTsServerRequests {
+  [CommandTypes.Geterr]: [ts.server.protocol.GeterrRequestArgs, ts.server.protocol.Response];
+  [CommandTypes.GeterrForProject]: [ts.server.protocol.GeterrForProjectRequestArgs, ts.server.protocol.Response];
+}
+
+export type TypeScriptRequestTypes = StandardTsServerRequests & NoResponseTsServerRequests & AsyncTsServerRequests;
 
 export class ProcessBasedTsServer {
   private readlineInterface: readline.ReadLine | null;
@@ -89,7 +156,10 @@ export class ProcessBasedTsServer {
   private logger: Logger;
   private cancellationPipeName: string | undefined;
 
-  constructor(private options: TspClientOptions, private tsServerArgs: TsServerArgs = {}) {
+  constructor(
+    private options: TspClientOptions,
+    private tsServerArgs: TsServerArgs = {}
+  ) {
     this.logger = options.logger;
   }
 
@@ -126,7 +196,7 @@ export class ProcessBasedTsServer {
       const tsserverPathIsModule = path.extname(tsserverPath) === '.js';
       const options = {
         silent: true,
-        execArgv: [...(maxTsServerMemory ? [`--max-old-space-size=${maxTsServerMemory}`] : [])],
+        execArgv: maxTsServerMemory ? [`--max-old-space-size=${maxTsServerMemory}`] : [],
       };
       this.tsServerProcess = tsserverPathIsModule ? cp.fork(tsserverPath, args, options) : cp.spawn(tsserverPath, args);
 
@@ -153,10 +223,10 @@ export class ProcessBasedTsServer {
     });
   }
 
-  async notify(command: CommandTypes.Open, args: protocol.OpenRequestArgs): Promise<void>;
-  async notify(command: CommandTypes.Close, args: protocol.FileRequestArgs): Promise<void>;
-  async notify(command: CommandTypes.Saveto, args: protocol.SavetoRequestArgs): Promise<void>;
-  async notify(command: CommandTypes.Change, args: protocol.ChangeRequestArgs): Promise<void>;
+  async notify(command: CommandTypes.Open, args: ts.server.protocol.OpenRequestArgs): Promise<void>;
+  async notify(command: CommandTypes.Close, args: ts.server.protocol.FileRequestArgs): Promise<void>;
+  async notify(command: CommandTypes.Saveto, args: ts.server.protocol.SavetoRequestArgs): Promise<void>;
+  async notify(command: CommandTypes.Change, args: ts.server.protocol.ChangeRequestArgs): Promise<void>;
   async notify(command: string, args: any): Promise<void> {
     await this.ensureServerIsRunning();
     this.sendMessage(command, true, args);
@@ -223,7 +293,7 @@ export class ProcessBasedTsServer {
 
   protected sendMessage(command: string, notification: boolean, args?: any): void {
     this.seq += 1;
-    const request: protocol.Request = {
+    const request: ts.server.protocol.Request = {
       command,
       seq: this.seq,
       type: 'request',
@@ -241,7 +311,7 @@ export class ProcessBasedTsServer {
     if (!messageString || messageString.startsWith('Content-Length:')) {
       return;
     }
-    let message: protocol.Message;
+    let message: ts.server.protocol.Message;
 
     try {
       message = JSON.parse(messageString);
@@ -268,7 +338,7 @@ export class ProcessBasedTsServer {
     }
   }
 
-  private resolveResponse(message: protocol.Message, request_seq: number, success: boolean) {
+  private resolveResponse(message: ts.server.protocol.Message, request_seq: number, success: boolean) {
     const deferred = this.deferreds[request_seq];
     this.log('request completed', { request_seq, success });
     if (deferred) {
@@ -281,15 +351,17 @@ export class ProcessBasedTsServer {
     }
   }
 
-  private isEvent(message: protocol.Message): message is protocol.Event {
+  private isEvent(message: ts.server.protocol.Message): message is ts.server.protocol.Event {
     return message.type === 'event';
   }
 
-  private isResponse(message: protocol.Message): message is protocol.Response {
+  private isResponse(message: ts.server.protocol.Message): message is ts.server.protocol.Response {
     return message.type === 'response';
   }
 
-  private isRequestCompletedEvent(message: protocol.Message): message is protocol.RequestCompletedEvent {
+  private isRequestCompletedEvent(
+    message: ts.server.protocol.Message
+  ): message is ts.server.protocol.RequestCompletedEvent {
     return this.isEvent(message) && message.event === 'requestCompleted';
   }
 

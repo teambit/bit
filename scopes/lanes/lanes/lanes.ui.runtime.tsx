@@ -1,13 +1,13 @@
 import React, { ReactNode, useContext } from 'react';
 import { Route, RouteProps } from 'react-router-dom';
 import { Slot, Harmony, SlotRegistry } from '@teambit/harmony';
-import { LaneCompare, LaneCompareProps as DefaultLaneCompareProps } from '@teambit/lanes.ui.compare.lane-compare';
+import { LaneCompare, type LaneCompareProps as DefaultLaneCompareProps } from '@teambit/lanes.ui.compare.lane-compare';
 import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
-import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import type { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
-import ScopeAspect, { ScopeContext, ScopeUI } from '@teambit/scope';
-import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
-import ComponentAspect, { ComponentUI, useIdFromLocation, ComponentID } from '@teambit/component';
+import { ScopeAspect, ScopeContext, ScopeUI } from '@teambit/scope';
+import { WorkspaceAspect, WorkspaceUI } from '@teambit/workspace';
+import { ComponentAspect, ComponentUI, useIdFromLocation, ComponentID } from '@teambit/component';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
 import { LaneOverview, LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.lane-overview';
 import {
@@ -25,6 +25,7 @@ import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-
 import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-compare';
 import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
 import { ScopeIcon } from '@teambit/scope.ui.scope-icon';
+import { CommandBarUI, CommandBarAspect } from '@teambit/command-bar';
 
 import { LanesAspect } from './lanes.aspect';
 import styles from './lanes.ui.module.scss';
@@ -37,7 +38,7 @@ export function useComponentFilters() {
   const laneFromUrl = useViewedLaneFromUrl();
   const laneComponentId =
     idFromLocation && !laneFromUrl?.isDefault()
-      ? lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl) ?? null
+      ? (lanesModel?.resolveComponentFromUrl(idFromLocation, laneFromUrl) ?? null)
       : null;
 
   if (laneComponentId === null || loading) {
@@ -84,7 +85,14 @@ export function useComponentId() {
 }
 
 export class LanesUI {
-  static dependencies = [UIAspect, ComponentAspect, WorkspaceAspect, ScopeAspect, ComponentCompareAspect];
+  static dependencies = [
+    UIAspect,
+    ComponentAspect,
+    WorkspaceAspect,
+    ScopeAspect,
+    ComponentCompareAspect,
+    CommandBarAspect,
+  ];
 
   static runtime = UIRuntime;
   static slots = [
@@ -279,6 +287,7 @@ export class LanesUI {
       <LaneSwitcher
         groupByScope={this.lanesHost === 'workspace'}
         mainIcon={this.lanesHost === 'scope' ? mainIcon : undefined}
+        // @ts-ignore @todo - fix this
         useLanes={useLanes}
       />
     );
@@ -345,12 +354,13 @@ export class LanesUI {
   };
 
   static async provider(
-    [uiUi, componentUI, workspaceUi, scopeUi, componentCompareUI]: [
+    [uiUi, componentUI, workspaceUi, scopeUi, componentCompareUI, commandBarUI]: [
       UiUI,
       ComponentUI,
       WorkspaceUI,
       ScopeUI,
-      ComponentCompareUI
+      ComponentCompareUI,
+      CommandBarUI,
     ],
     _,
     [routeSlot, overviewSlot, navSlot, menuWidgetSlot, laneProviderIgnoreSlot]: [
@@ -358,7 +368,7 @@ export class LanesUI {
       LaneOverviewLineSlot,
       LanesOrderedNavigationSlot,
       MenuWidgetSlot,
-      LaneProviderIgnoreSlot
+      LaneProviderIgnoreSlot,
     ],
     harmony: Harmony
   ) {
@@ -400,6 +410,9 @@ export class LanesUI {
       );
     });
     lanesUi.registerLanesDropdown();
+    if (workspace) {
+      lanesUi.registerMenuWidget(commandBarUI.CommandBarButton);
+    }
     return lanesUi;
   }
 }

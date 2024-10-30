@@ -10,6 +10,7 @@ import { Scope } from '@teambit/legacy/dist/scope';
 import fsx from 'fs-extra';
 import mapSeries from 'p-map-series';
 import { join } from 'path';
+import ssri from 'ssri';
 import execa from 'execa';
 import { PkgAspect } from './pkg.aspect';
 import { PkgExtensionConfig } from './pkg.main.runtime';
@@ -68,10 +69,9 @@ export class Publisher {
       publishParams.push(...extraArgsSplit);
     }
     const publishParamsStr = publishParams.join(' ');
-
+    const getPkgJson = async () => fsx.readJSON(`${capsule.path}/package.json`);
     const componentIdStr = capsule.id.toString();
     const errors: string[] = [];
-    let metadata: TaskMetadata = {};
     try {
       this.logger.off();
       // @todo: once capsule.exec works properly, replace this
@@ -79,15 +79,46 @@ export class Publisher {
       await execa(this.packageManager, publishParams, { cwd, stdio: 'inherit' });
       this.logger.on();
       this.logger.debug(`${componentIdStr}, successfully ran ${this.packageManager} ${publishParamsStr} at ${cwd}`);
-      const pkg = await fsx.readJSON(`${capsule.path}/package.json`);
-      metadata = this.options.dryRun ? {} : { publishedPackage: `${pkg.name}@${pkg.version}` };
-    } catch (err: any) {
-      const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}`;
+    } catch (err: unknown) {
+      const errorDetails = typeof err === 'object' && err && 'message' in err ? err.message : err;
+      const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}: ${errorDetails}`;
       this.logger.error(`${componentIdStr}, ${errorMsg}`);
-      errors.push(errorMsg);
+      let isPublished = false;
+      if (typeof errorDetails === 'string' && errorDetails.includes('EPERM') && tarPath) {
+        const pkgJson = await getPkgJson();
+        // sleep 5 seconds
+        await new Promise((resolve) => setTimeout(resolve, Number(process.env.NPM_WAKE_UP || 5000)));
+        const integrityOnNpm = await this.getIntegrityOnNpm(pkgJson.name, pkgJson.version);
+        if (integrityOnNpm && tarPath) {
+          const tarData = fsx.readFileSync(join(tarFolderPath, tarPath));
+          // If the integrity of the tarball in the registry matches the local one,
+          // we consider the package published
+          isPublished = ssri.checkData(tarData, integrityOnNpm) !== false;
+          this.logger.debug(
+            `${componentIdStr}, package ${pkgJson.name} is already on npm with version ${pkgJson.version}`
+          );
+        }
+      }
+      if (!isPublished) errors.push(errorMsg);
+    }
+    let metadata: TaskMetadata = {};
+    if (errors.length === 0 && !this.options.dryRun) {
+      const pkg = await fsx.readJSON(`${capsule.path}/package.json`);
+      metadata = { publishedPackage: `${pkg.name}@${pkg.version}` };
     }
     const component = capsule.component;
     return { component, metadata, errors, startTime, endTime: Date.now() };
+  }
+
+  private async getIntegrityOnNpm(pkgName: string, pkgVersion: string): Promise<string | undefined> {
+    const args = ['view', `${pkgName}@${pkgVersion}`, 'dist.integrity'];
+    try {
+      const results = await execa(this.packageManager, args);
+      return results.stdout;
+    } catch (err: unknown) {
+      this.logger.error(`failed running ${this.packageManager} ${args.join(' ')}: ${err}`, err);
+      return undefined;
+    }
   }
 
   private getTagFlagForPreRelease(id: ComponentID): string[] {

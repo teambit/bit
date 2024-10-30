@@ -1,5 +1,4 @@
-// eslint-disable-next-line import/no-unresolved
-import protocol from 'typescript/lib/protocol';
+import type ts from 'typescript/lib/tsserverlibrary';
 
 export const UNRESOLVED = '<<unresolved>>';
 
@@ -35,7 +34,7 @@ export const UNRESOLVED = '<<unresolved>>';
  *     b: number;
  * }
  */
-export function parseTypeFromQuickInfo(quickInfo: protocol.QuickInfoResponse | undefined): string {
+export function parseTypeFromQuickInfo(quickInfo: ts.server.protocol.QuickInfoResponse | undefined): string {
   if (!quickInfo?.body?.displayString) return '';
   const displayString = quickInfo.body.displayString;
   const splitByColon = displayString.split(':');
@@ -92,7 +91,7 @@ export function parseTypeFromQuickInfo(quickInfo: protocol.QuickInfoResponse | u
   }
 }
 
-export function parseReturnTypeFromQuickInfo(quickInfo: protocol.QuickInfoResponse | undefined): string {
+export function parseReturnTypeFromQuickInfo(quickInfo: ts.server.protocol.QuickInfoResponse | undefined): string {
   if (!quickInfo) return '';
   const typeStr = parseTypeFromQuickInfo(quickInfo);
   const array = typeStr.split('=>');

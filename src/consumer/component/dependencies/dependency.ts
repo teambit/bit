@@ -1,7 +1,26 @@
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
-import { PathLinux } from '../../../utils/path';
-import { ImportSpecifier } from './files-dependency-builder/types/dependency-tree-type';
+import { PathLinux } from '@teambit/toolbox.path.path';
+
+/**
+ * Import Specifier data.
+ * For example, `import foo from './bar' `, "foo" is the import-specifier and is default.
+ * Conversely, `import { foo } from './bar' `, here, "foo" is non-default.
+ */
+export type Specifier = {
+  isDefault: boolean;
+  name: string;
+  exported?: boolean;
+};
+
+/**
+ * ImportSpecifier are used to generate links from component to its dependencies.
+ * For example, a component might have a dependency: "import { foo } from './bar' ", when a link is generated, we use
+ * the import-specifier name, which is "foo" to generate the link correctly.
+ */
+export type ImportSpecifier = {
+  mainFile: Specifier;
+};
 
 /**
  * a dependency component may have multiple files that are required from the parent component, each
@@ -24,11 +43,13 @@ export default class Dependency {
   id: ComponentID;
   relativePaths: RelativePath[];
   packageName?: string;
+  versionRange?: string;
 
-  constructor(id: ComponentID, relativePaths: RelativePath[], packageName?: string) {
+  constructor(id: ComponentID, relativePaths: RelativePath[], packageName?: string, versionRange?: string) {
     this.id = id;
     this.relativePaths = relativePaths;
     this.packageName = packageName;
+    this.versionRange = versionRange;
   }
 
   serialize() {
@@ -36,6 +57,7 @@ export default class Dependency {
       id: this.id.toObject(),
       relativePaths: this.relativePaths,
       packageName: this.packageName,
+      versionRange: this.versionRange,
     };
   }
 
@@ -43,7 +65,8 @@ export default class Dependency {
     const id = ComponentID.fromObject(serialized.id);
     const relativePaths = serialized.relativePaths;
     const packageName = serialized.packageName;
-    return new Dependency(id, relativePaths, packageName);
+    const versionRange = serialized.versionRange;
+    return new Dependency(id, relativePaths, packageName, versionRange);
   }
 
   static getClone(dependency: Dependency): Record<string, any> {
@@ -51,6 +74,7 @@ export default class Dependency {
       id: dependency.id,
       relativePaths: R.clone(dependency.relativePaths),
       packageName: dependency.packageName,
+      versionRange: dependency.versionRange,
     };
   }
 }

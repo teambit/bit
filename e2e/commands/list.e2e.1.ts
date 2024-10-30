@@ -25,7 +25,7 @@ describe('bit list command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
     });
     it('should display "found 0 components"', () => {
       const output = helper.command.listLocalScope();
@@ -36,7 +36,7 @@ describe('bit list command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
     });
     it('should display "found 1 components"', () => {
@@ -50,7 +50,7 @@ describe('bit list command', function () {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopes();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
+        helper.fixtures.addComponentBarFoo();
         helper.fixtures.tagComponentBarFoo();
         helper.command.export();
         helper.scopeHelper.reInitLocalScope();
@@ -61,7 +61,7 @@ describe('bit list command', function () {
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo@0.0.1');
-        helper.command.tagComponent('bar/foo', 'msg', '-f');
+        helper.command.tagComponent('bar/foo', 'msg', '--unmodified');
         helper.command.export();
 
         helper.scopeHelper.getClonedLocalScope(clonedScopePath);

@@ -5,12 +5,19 @@ import { SchemaLocation, SchemaNode } from '../schema-node';
  * e.g. exporting mdx variables in the main index.ts file.
  */
 export class UnresolvedSchema extends SchemaNode {
-  constructor(readonly location: SchemaLocation, readonly name: string) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly name: string
+  ) {
     super();
   }
 
   toString() {
     return this.name;
+  }
+
+  toFullSignature(): string {
+    return this.toString();
   }
 
   toObject() {

@@ -1,11 +1,12 @@
-import AbstractError from '../../error/abstract-error';
+import { BitError } from '@teambit/bit-error';
+import chalk from 'chalk';
 
-export default class HashNotFound extends AbstractError {
+export default class HashNotFound extends BitError {
   hash: string;
   showDoctorMessage: boolean;
 
   constructor(hash: string) {
-    super();
+    super(`hash ${chalk.bold(hash)} not found`);
     this.hash = hash;
     this.showDoctorMessage = true;
   }

@@ -7,7 +7,11 @@ import Repository from './objects/repository';
 import ConsumerComponent from '../consumer/component';
 
 export default class VersionDependencies {
-  constructor(public component: ComponentVersion, public dependencies: ComponentVersion[], public version: Version) {}
+  constructor(
+    public component: ComponentVersion,
+    public dependencies: ComponentVersion[],
+    public version: Version
+  ) {}
 
   get allDependencies(): ComponentVersion[] {
     return this.dependencies;
@@ -41,6 +45,7 @@ export default class VersionDependencies {
       component,
       dependencies,
       devDependencies: [],
+      peerDependencies: [],
       extensionDependencies: [],
       missingDependencies: this.getMissingDependencies(),
     });

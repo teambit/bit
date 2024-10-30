@@ -1,5 +1,4 @@
-import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
-import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
+import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import mapSeries from 'p-map-series';
 import path from 'path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -26,7 +25,6 @@ import LegacyScope, { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope
 import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
 import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
-import { PersistOptions } from '@teambit/legacy/dist/scope/types';
 import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { DependencyResolverAspect, DependencyResolverMain, NodeLinker } from '@teambit/dependency-resolver';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
@@ -34,22 +32,24 @@ import { Remotes } from '@teambit/legacy/dist/remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import chokidar from '@teambit/chokidar';
+import chokidar from 'chokidar';
 import { Types } from '@teambit/legacy/dist/scope/object-registrar';
-import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
-import { remove } from '@teambit/legacy/dist/api/scope';
+import { remove, FETCH_OPTIONS, ExternalActions } from '@teambit/legacy.scope-api';
 import { BitError } from '@teambit/bit-error';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
-import EnvsAspect, { EnvsMain } from '@teambit/envs';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { compact, slice, difference, partition } from 'lodash';
+import { DepEdge } from '@teambit/legacy/dist/scope/models/version';
+import { getGlobalConfigPath } from '@teambit/legacy/dist/global-config/config';
+import { invalidateCache } from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
@@ -61,6 +61,12 @@ import { StagedConfig } from './staged-config';
 import { NoIdMatchPattern } from './exceptions/no-id-match-pattern';
 import { ScopeAspectsLoader, ScopeLoadAspectsOptions } from './scope-aspects-loader';
 import { ClearCacheAction } from './clear-cache-action';
+import { CatScopeCmd } from './debug-commands/cat-scope-cmd';
+import { CatComponentCmd } from './debug-commands/cat-component-cmd';
+import CatObjectCmd from './debug-commands/cat-object-cmd';
+import CatLaneCmd from './debug-commands/cat-lane-cmd';
+import { RunActionCmd } from './run-action/run-action.cmd';
+import { ScopeGarbageCollectorCmd } from './_scope-garbage-collector.cmd';
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
@@ -90,6 +96,19 @@ export type LoadOptions = {
    * In case the component we are loading is env, whether to load it as env (in a scope aspects capsule)
    */
   loadEnvs?: boolean;
+
+  /**
+   * Should we load the components' aspects (this useful when you only want sometime to load the component itself
+   * as aspect but not its aspects)
+   */
+  loadCompAspects?: boolean;
+
+  /**
+   * Should we load the components' custom envs when loading from the scope
+   * This is usually not required unless you load an aspect with custom env from the scope
+   * usually when signing aspects
+   */
+  loadCustomEnvs?: boolean;
 };
 
 export type ScopeConfig = {
@@ -308,6 +327,14 @@ export class ScopeMain implements ComponentFactory {
     return component;
   }
 
+  getDependencies(component: Component) {
+    return this.dependencyResolver.getDependencies(component);
+  }
+
+  componentPackageName(component: Component): string {
+    return this.dependencyResolver.getPackageName(component);
+  }
+
   private async upsertExtensionData(component: Component, extension: string, data: any) {
     if (!data) return;
     const existingExtension = component.state._consumer.extensions.findExtension(extension);
@@ -422,14 +449,6 @@ export class ScopeMain implements ComponentFactory {
    */
   fetch(ids: ComponentIdList) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
-  /**
-   * This function will get a component and sealed it's current state into the scope
-   *
-   * @param {Component[]} components A list of components to seal with specific persist options (such as message and version number)
-   * @param {PersistOptions} persistGeneralOptions General persistence options such as verbose
-   */
-  persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
-
   async delete(
     { ids, force, lanes }: { ids: string[]; force: boolean; lanes: boolean },
     headers?: Record<string, any>
@@ -463,13 +482,15 @@ export class ScopeMain implements ComponentFactory {
    * for long-running processes, such as `bit start` or `bit watch`, it's important to keep the following data up to date:
    * 1. scope-index (.bit/index.json file).
    * 2. remote-refs (.bit/refs/*).
+   * 3. global config. so for example if a user logs in or out it would be reflected.
    * it's possible that other commands (e.g. `bit import`) modified these files, while these processes are running.
    * Because these data are kept in memory, they're not up to date anymore.
    */
   async watchScopeInternalFiles() {
     const scopeIndexFile = this.legacyScope.objects.scopeIndex.getPath();
     const remoteLanesDir = this.legacyScope.objects.remoteLanes.basePath;
-    const pathsToWatch = [scopeIndexFile, remoteLanesDir];
+    const globalConfigFile = getGlobalConfigPath();
+    const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile];
     const watcher = chokidar.watch(pathsToWatch);
     watcher.on('ready', () => {
       this.logger.debug(`watchSystemFiles has started, watching ${pathsToWatch.join(', ')}`);
@@ -481,6 +502,9 @@ export class ScopeMain implements ComponentFactory {
         await this.legacyScope.objects.reLoadScopeIndex();
       } else if (filePath.startsWith(remoteLanesDir)) {
         this.legacyScope.objects.remoteLanes.removeFromCacheByFilePath(filePath);
+      } else if (filePath === globalConfigFile) {
+        this.logger.debug('global config file has been changed, invalidating its cache');
+        invalidateCache();
       } else {
         this.logger.error(
           'unknown file has been changed, please check why it is watched by scope.watchSystemFiles',
@@ -510,8 +534,7 @@ export class ScopeMain implements ComponentFactory {
       cache: true,
       reason: `which are unique flattened dependencies to get the graph of ${ids.length} ids`,
     });
-    const allFlattenedCompIds = await this.resolveMultipleComponentIds(allFlattenedUniq);
-    const dependencies = await this.getMany(allFlattenedCompIds);
+    const dependencies = await this.getMany(allFlattenedUniq);
     const allComponents: Component[] = [...components, ...dependencies];
 
     // build the graph
@@ -539,29 +562,31 @@ export class ScopeMain implements ComponentFactory {
     const componentsWithoutSavedGraph: Component[] = [];
 
     // try to add from saved graph
-    components.forEach((component) => {
-      const compGraph = this.getSavedGraphOfComponentIfExist(component);
-      if (!compGraph) {
-        componentsWithoutSavedGraph.push(component);
-        return;
-      }
-      graph.merge([graph]);
-    });
+    await Promise.all(
+      components.map(async (component) => {
+        const compGraph = await this.getSavedGraphOfComponentIfExist(component);
+        if (!compGraph) {
+          componentsWithoutSavedGraph.push(component);
+          return;
+        }
+        graph.merge([compGraph]);
+      })
+    );
     if (!componentsWithoutSavedGraph.length) {
       return graph;
     }
 
     // there are components that don't have the graph saved, create the graph by using Version objects of all flattened
-    const lane = (await this.legacyScope.getCurrentLaneObject()) || undefined;
+    const lane = await this.legacyScope.getCurrentLaneObject();
     await this.import(
       componentsWithoutSavedGraph.map((c) => c.id),
       { reFetchUnBuiltVersion: false, lane, reason: `to build graph-ids from the scope` }
     );
 
-    const allFlattened = componentsWithoutSavedGraph
+    const allFlattened: ComponentID[] = componentsWithoutSavedGraph
       .map((component) => component.state._consumer.getAllFlattenedDependencies())
       .flat();
-    const allFlattenedUniq = ComponentIdList.uniqFromArray(allFlattened);
+    const allFlattenedUniq = ComponentIdList.uniqFromArray(allFlattened.concat(ids));
 
     const addEdges = (compId: ComponentID, dependencies: ConsumerComponent['dependencies'], label: DepEdgeType) => {
       dependencies.get().forEach((dep) => {
@@ -582,9 +607,25 @@ export class ScopeMain implements ComponentFactory {
     return graph;
   }
 
-  private getSavedGraphOfComponentIfExist(component: Component): Graph<ComponentID, DepEdgeType> | null {
+  async getFlattenedEdges(id: ComponentID): Promise<DepEdge[] | undefined> {
+    let versionObj: Version;
+    try {
+      versionObj = await this.legacyScope.getVersionInstance(id);
+    } catch (err) {
+      return undefined;
+    }
+
+    const flattenedEdges = await versionObj.getFlattenedEdges(this.legacyScope.objects);
+    return flattenedEdges;
+  }
+
+  private async getSavedGraphOfComponentIfExist(component: Component): Promise<Graph<ComponentID, DepEdgeType> | null> {
     const consumerComponent = component.state._consumer as ConsumerComponent;
-    const flattenedEdges = consumerComponent.flattenedEdges;
+    const flattenedEdges = await this.getFlattenedEdges(component.id);
+    if (!flattenedEdges)
+      throw new Error(
+        'getSavedGraphOfComponentIfExist failed to get flattenedEdges, it must not be undefined because the version object exists'
+      );
     if (!flattenedEdges.length && consumerComponent.flattenedDependencies.length) {
       // there are flattenedDependencies, so must be edges, if they're empty, it's because the component was tagged
       // with a version < ~0.0.901, so this flattenedEdges wasn't exist.
@@ -598,6 +639,7 @@ export class ScopeMain implements ComponentFactory {
     const nodes = consumerComponent.flattenedDependencies;
 
     const graph = new Graph<ComponentID, DepEdgeType>();
+    graph.setNode(new Node(component.id.toString(), component.id));
     nodes.forEach((node) => graph.setNode(new Node(node.toString(), node)));
     edges.forEach((edge) => graph.setEdge(new Edge(edge.source.toString(), edge.target.toString(), edge.type)));
     return graph;
@@ -612,6 +654,7 @@ export class ScopeMain implements ComponentFactory {
       useCache = true,
       reFetchUnBuiltVersion = true,
       preferDependencyGraph = true,
+      includeUpdateDependents = false,
       lane,
       reason,
     }: {
@@ -634,6 +677,10 @@ export class ScopeMain implements ComponentFactory {
        */
       preferDependencyGraph?: boolean;
       /**
+       * include the updateDependents components on a lane (generally, on a workspace, it's not needed)
+       */
+      includeUpdateDependents?: boolean;
+      /**
        * reason why this import is needed (to show in the terminal)
        */
       reason?: string;
@@ -649,6 +696,7 @@ export class ScopeMain implements ComponentFactory {
       reFetchUnBuiltVersion,
       lane,
       preferDependencyGraph,
+      includeUpdateDependents,
       reason,
     });
   }
@@ -769,7 +817,7 @@ export class ScopeMain implements ComponentFactory {
   async loadMany(
     ids: ComponentID[],
     lane?: Lane,
-    opts: LoadOptions = { loadApps: true, loadEnvs: true }
+    opts: LoadOptions = { loadApps: true, loadEnvs: true, loadCompAspects: true, loadCustomEnvs: false }
   ): Promise<Component[]> {
     const components = await mapSeries(ids, (id) => this.load(id, lane, opts));
     return compact(components);
@@ -809,8 +857,13 @@ export class ScopeMain implements ComponentFactory {
   /**
    * get component log sorted by the timestamp in ascending order (from the earliest to the latest)
    */
-  async getLogs(id: ComponentID, shortHash = false, startsFrom?: string): Promise<ComponentLog[]> {
-    return this.legacyScope.loadComponentLogs(id, shortHash, startsFrom);
+  async getLogs(
+    id: ComponentID,
+    shortHash = false,
+    startsFrom?: string,
+    throwIfMissing = false
+  ): Promise<ComponentLog[]> {
+    return this.legacyScope.loadComponentLogs(id, shortHash, startsFrom, throwIfMissing);
   }
 
   async getStagedConfig() {
@@ -819,15 +872,22 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
-   * wether a component is soft-removed.
+   * whether a component is soft-removed.
    * the version is required as it can be removed on a lane. in which case, the version is the head in the lane.
    */
-  async isComponentRemoved(id: ComponentID): Promise<Boolean> {
+  async isComponentRemoved(id: ComponentID): Promise<boolean> {
     const version = id.version;
     if (!version) throw new Error(`isComponentRemoved expect to get version, got ${id.toString()}`);
     const modelComponent = await this.legacyScope.getModelComponent(id);
     const versionObj = await modelComponent.loadVersion(version, this.legacyScope.objects);
     return versionObj.isRemoved();
+  }
+
+  /**
+   * whether the id with the specified version exits in the local scope.
+   */
+  async isComponentInScope(id: ComponentID): Promise<boolean> {
+    return this.legacyScope.isComponentInScope(id);
   }
 
   /**
@@ -897,34 +957,35 @@ export class ScopeMain implements ComponentFactory {
     throwForNoMatch = true,
     filterByStateFunc?: (state: any, poolIds: ComponentID[]) => Promise<ComponentID[]>
   ) {
-    const patterns = pattern
-      .split(',')
-      .map((p) => p.trim())
-      .map((p) => p.split('@')[0]); // no need for the version
+    const patterns = pattern.split(',').map((p) => p.trim());
+
     if (patterns.every((p) => p.startsWith('!'))) {
       // otherwise it'll never match anything. don't use ".push()". it must be the first item in the array.
       patterns.unshift('**');
     }
     // check also as legacyId.toString, as it doesn't have the defaultScope
     const idsToCheck = (id: ComponentID) => [id._legacy.toStringWithoutVersion(), id.toStringWithoutVersion()];
-    const [statePatterns, nonStatePatterns] = partition(patterns, (p) => p.startsWith('$'));
-    const idsFiltered = nonStatePatterns.length
-      ? ids.filter((id) => multimatch(idsToCheck(id), nonStatePatterns).length)
+    const [statePatterns, nonStatePatterns] = partition(patterns, (p) => p.startsWith('$') || p.includes(' AND '));
+    const nonStatePatternsNoVer = nonStatePatterns.map((p) => p.split('@')[0]); // no need for the version
+    const idsFiltered = nonStatePatternsNoVer.length
+      ? ids.filter((id) => multimatch(idsToCheck(id), nonStatePatternsNoVer).length)
       : [];
 
     const idsStateFiltered = await mapSeries(statePatterns, async (statePattern) => {
       if (!filterByStateFunc) {
         throw new Error(`filter by a state (${statePattern}) is currently supported on the workspace only`);
       }
-      statePattern = statePattern.replace('$', '');
       if (statePattern.includes(' AND ')) {
-        const statePatternSplit = statePattern.split(' AND ').map((p) => p.trim());
-        if (statePatternSplit.length !== 2) throw new Error('invalid state pattern, can have only one "AND"');
-        const [stateF, nonStateF] = statePatternSplit;
-        const filteredByNonState = ids.filter((id) => multimatch(idsToCheck(id), [nonStateF]).length);
-        return filterByStateFunc(stateF, filteredByNonState);
+        let filteredByAnd: ComponentID[] = ids;
+        const patternSplit = statePattern.split(' AND ').map((p) => p.trim());
+        for await (const onePattern of patternSplit) {
+          filteredByAnd = onePattern.startsWith('$')
+            ? await filterByStateFunc(onePattern.replace('$', ''), filteredByAnd)
+            : filteredByAnd.filter((id) => multimatch(idsToCheck(id), [onePattern.split('@')[0]]).length);
+        }
+        return filteredByAnd;
       }
-      return filterByStateFunc(statePattern, ids);
+      return filterByStateFunc(statePattern.replace('$', ''), ids);
     });
     const idsStateFilteredFlat = idsStateFiltered.flat();
     const combineFilteredIds = () => {
@@ -1030,42 +1091,52 @@ export class ScopeMain implements ComponentFactory {
     return modelComponent.loadVersion(version, this.legacyScope.objects, throwIfNotExist);
   }
 
+  async getBitObjectVersionById(id: ComponentID, throwIfNotExist = false): Promise<Version | undefined> {
+    const modelComponent = await this.getBitObjectModelComponent(id, throwIfNotExist);
+    if (!modelComponent) return undefined;
+    return this.getBitObjectVersion(modelComponent, id.version, throwIfNotExist);
+  }
+
   /**
    * get a component and load its aspect
    */
   async load(
     id: ComponentID,
     lane?: Lane,
-    opts: LoadOptions = { loadApps: true, loadEnvs: true }
+    opts: LoadOptions = { loadApps: true, loadEnvs: true, loadCompAspects: true, loadCustomEnvs: false }
   ): Promise<Component | undefined> {
     const component = await this.get(id);
     if (!component) return undefined;
-    return this.loadCompAspects(component, lane, opts);
+    const optsWithDefaults = { loadApps: true, loadEnvs: true, loadCompAspects: true, ...opts };
+    return this.loadCompAspects(component, lane, optsWithDefaults);
   }
 
   async loadCompAspects(
     component: Component,
     lane?: Lane,
-    opts: LoadOptions = { loadApps: true, loadEnvs: true }
+    opts: LoadOptions = { loadApps: true, loadEnvs: true, loadCompAspects: true, loadCustomEnvs: false }
   ): Promise<Component> {
-    const aspectIds = component.state.aspects.ids;
+    const optsWithDefaults = { loadApps: true, loadEnvs: true, loadCompAspects: true, ...opts };
+    const aspectIds = optsWithDefaults.loadCompAspects ? component.state.aspects.ids : [];
     // load components from type aspects as aspects.
     // important! previously, this was running for any aspect, not only apps. (the if statement was `this.aspectLoader.isAspectComponent(component)`)
     // Ran suggests changing it and if it breaks something, we'll document is and fix it.
-    if (opts.loadApps) {
+    if (optsWithDefaults.loadApps) {
       const appData = component.state.aspects.get('teambit.harmony/application');
       if (appData?.data?.appName) {
         aspectIds.push(component.id.toString());
       }
     }
-    if (opts.loadEnvs) {
+    if (optsWithDefaults.loadEnvs) {
       const envsData = component.state.aspects.get(EnvsAspect.id);
       if (envsData?.data?.services || envsData?.data?.self || envsData?.data?.type === 'env') {
         aspectIds.push(component.id.toString());
       }
     }
     if (aspectIds && aspectIds.length) {
-      await this.loadAspects(aspectIds, true, component.id.toString(), lane);
+      await this.loadAspects(aspectIds, true, component.id.toString(), lane, {
+        loadCustomEnvs: optsWithDefaults.loadCustomEnvs,
+      });
     }
 
     return component;
@@ -1104,6 +1175,12 @@ export class ScopeMain implements ComponentFactory {
 
   async write() {
     // no-op (it's relevant for the workspace only)
+  }
+
+  async hasObjects(hashes: string[]): Promise<string[]> {
+    const refs = hashes.map((h) => Ref.from(h));
+    const results = await this.legacyScope.objects.hasMultiple(refs);
+    return results.map((r) => r.hash);
   }
 
   /**
@@ -1149,7 +1226,7 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain,
       EnvsMain,
       DependencyResolverMain,
-      GlobalConfigMain
+      GlobalConfigMain,
     ],
     config: ScopeConfig,
     [
@@ -1165,13 +1242,16 @@ export class ScopeMain implements ComponentFactory {
       OnPostExportSlot,
       OnPostObjectsPersistSlot,
       OnPreFetchObjectsSlot,
-      OnCompAspectReCalcSlot
+      OnCompAspectReCalcSlot,
     ],
     harmony: Harmony
   ) {
     const bitConfig: any = harmony.config.get('teambit.harmony/bit');
+    const debugCommands = [new CatScopeCmd(), new CatComponentCmd(), new CatObjectCmd(), new CatLaneCmd()];
+    const allCommands = [new ScopeCmd(), ...debugCommands, new RunActionCmd()];
     const legacyScope = await loadScopeIfExist(bitConfig?.cwd);
     if (!legacyScope) {
+      cli.register(...allCommands);
       return undefined;
     }
 
@@ -1194,11 +1274,11 @@ export class ScopeMain implements ComponentFactory {
       depsResolver,
       globalConfig
     );
+    cli.register(...allCommands, new ScopeGarbageCollectorCmd(scope));
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions(), undefined, 'scope.cli.registerOnStart');
     });
-    cli.register(new ScopeCmd());
 
     const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
       logger.debug(`onPutHook, started. (${ids.length} components)`);
@@ -1221,10 +1301,9 @@ export class ScopeMain implements ComponentFactory {
 
     const onPostExportHook = async (ids: ComponentID[], lanes: Lane[]): Promise<void> => {
       logger.debug(`onPostExportHook, started. (${ids.length} components)`);
-      const componentIds = await scope.resolveMultipleComponentIds(ids);
       const fns = postExportSlot.values();
       const data = {
-        ids: componentIds,
+        ids,
         lanes,
       };
       const metadata = { auth: getAuthData() };

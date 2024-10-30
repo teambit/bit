@@ -111,8 +111,7 @@ describe('bit import', function () {
         it('should throw an error', () => {
           expect(output).to.have.string('unable to import');
         });
-        // @TODO: FIX ON HARMONY!
-        it.skip('should import successfully if the --override flag is used', () => {
+        it('should import successfully if the --override flag is used', () => {
           output = helper.command.importComponent('global/simple --override');
           expect(componentFileLocation).to.be.a.file();
         });
@@ -134,8 +133,7 @@ describe('bit import', function () {
         it('should throw an error', () => {
           expect(output).to.have.string('unable to import');
         });
-        // @TODO: FIX ON HARMONY!
-        it.skip('should throw an error also when the --override flag is used', () => {
+        it('should throw an error also when the --override flag is used', () => {
           output = helper.general.runWithTryCatch(`bit import ${helper.scopes.remote}/global/simple --override`);
           expect(output).to.have.string('unable to import');
         });
@@ -191,8 +189,7 @@ describe('bit import', function () {
           it('should throw an error', () => {
             expect(output).to.have.string('unable to import');
           });
-          // @TODO: FIX ON HARMONY!
-          it.skip('should import successfully if the --override flag is used', () => {
+          it('should import successfully if the --override flag is used', () => {
             helper.command.runCmd(`bit import ${helper.scopes.remote}/global/simple -p my-custom-location --override`);
             expect(componentFileLocation).to.be.a.file();
           });
@@ -280,13 +277,12 @@ describe('bit import', function () {
       });
     });
   });
-  // @TODO: FIX ON HARMONY!
-  describe.skip('with an existing component in bit.map (as author)', () => {
+  describe('with an existing component in bit.map (as author)', () => {
     let localConsumerFiles;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.exportIds('bar/foo');
       const bitMap = helper.bitMap.read();
@@ -327,7 +323,7 @@ describe('bit import', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.scopeHelper.reInitLocalScope();
@@ -387,7 +383,7 @@ describe('bit import', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
     });

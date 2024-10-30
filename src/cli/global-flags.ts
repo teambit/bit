@@ -1,8 +1,5 @@
-interface GlobalFlags {
-  _token?: string;
-}
-
-class GlobalFlags implements GlobalFlags {
+class GlobalFlags {
+  private _token?: string;
   get token(): string | undefined {
     return this._token;
   }

@@ -52,7 +52,7 @@ export type UnmergedComponent = {
   mergedConfig?: Record<string, any>;
 };
 
-const UNMERGED_FILENAME = 'unmerged.json';
+export const UNMERGED_FILENAME = 'unmerged.json';
 
 export default class UnmergedComponents {
   filePath: string;

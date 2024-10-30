@@ -1,21 +1,20 @@
 import path from 'path';
 import { BuildTask, BuiltTaskResult, BuildContext, ComponentResult } from '@teambit/builder';
-import { Component, ComponentMap } from '@teambit/component';
+import { ComponentMap } from '@teambit/component';
 import { CapsuleList } from '@teambit/isolator';
 import { Linter } from './linter';
 import { LinterContext } from './linter-context';
 
 export class LintTask implements BuildTask {
-  constructor(readonly aspectId: string, readonly name = 'lint') {}
+  constructor(
+    readonly aspectId: string,
+    readonly name = 'lint'
+  ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const linter: Linter = context.env.getLinter();
     const rootDir = context.capsuleNetwork.capsulesRootDir;
-    const componentsDirMap = this.getComponentsDirectory(
-      rootDir,
-      context.components,
-      context.capsuleNetwork.graphCapsules
-    );
+    const componentsDirMap = this.getComponentsDirectory(rootDir, context.capsuleNetwork.originalSeedersCapsules);
 
     // @ts-ignore TODO: fix this
     const linterContext: LinterContext = {
@@ -40,12 +39,8 @@ export class LintTask implements BuildTask {
     };
   }
 
-  private getComponentsDirectory(
-    capsuleRootDir: string,
-    components: Component[],
-    capsuleList: CapsuleList
-  ): ComponentMap<string> {
-    return ComponentMap.as<string>(components, (component) => {
+  private getComponentsDirectory(capsuleRootDir: string, capsuleList: CapsuleList): ComponentMap<string> {
+    return ComponentMap.as<string>(capsuleList.getAllComponents(), (component) => {
       const fullPath = capsuleList.getCapsule(component.id)?.path || '';
       const relativePath = path.relative(capsuleRootDir, fullPath);
       return relativePath;

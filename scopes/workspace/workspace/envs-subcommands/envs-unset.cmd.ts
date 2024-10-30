@@ -2,6 +2,7 @@ import { Command } from '@teambit/cli';
 import { PATTERN_HELP, COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import chalk from 'chalk';
 import { Workspace } from '../workspace';
+import { installAfterEnvChangesMsg } from './envs-set.cmd';
 
 export class EnvsUnsetCmd implements Command {
   name = 'unset <component-pattern>';
@@ -28,6 +29,6 @@ ${PATTERN_HELP('env unset')}`;
       return chalk.yellow(`unable to find components matching the pattern with env configured in the .bitmap file`);
     }
     return `successfully removed .bitmap env configuration from the following component(s):
-${changed.map((id) => id.toString()).join('\n')}`;
+${changed.map((id) => id.toString()).join('\n')}\n${installAfterEnvChangesMsg}`;
   }
 }

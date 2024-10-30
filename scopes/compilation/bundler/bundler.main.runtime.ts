@@ -1,4 +1,4 @@
-import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
+import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect } from '@teambit/component';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';

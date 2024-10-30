@@ -6,8 +6,7 @@
 import fs from 'fs-extra';
 import * as pathlib from 'path';
 
-import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, DOT_GIT_DIR, OLD_BIT_MAP } from '../constants';
-import { LegacyWorkspaceConfig } from './config';
+import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, DOT_GIT_DIR, OLD_BIT_MAP, WORKSPACE_JSONC } from '../constants';
 
 export type ConsumerInfo = {
   path: string;
@@ -76,7 +75,7 @@ export async function getConsumerInfo(absPath: string): Promise<ConsumerInfo | u
   }
 
   async function pathHasConsumerConfig(path: string): Promise<boolean> {
-    const isExist = await LegacyWorkspaceConfig.isExist(path);
-    return !!isExist;
+    const wsPath = pathlib.join(path, WORKSPACE_JSONC);
+    return fs.pathExists(wsPath);
   }
 }

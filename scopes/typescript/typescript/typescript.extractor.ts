@@ -4,29 +4,36 @@ import { SchemaExtractor, SchemaExtractorOptions } from '@teambit/schema';
 import { TsserverClient } from '@teambit/ts-server';
 import type { Workspace } from '@teambit/workspace';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { SchemaNode, APISchema, ModuleSchema, UnImplementedSchema } from '@teambit/semantics.entities.semantic-schema';
+import {
+  SchemaNode,
+  APISchema,
+  ModuleSchema,
+  UnImplementedSchema,
+  IgnoredSchema,
+} from '@teambit/semantics.entities.semantic-schema';
 import { Component } from '@teambit/component';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 import { EnvContext } from '@teambit/envs';
 import { Formatter } from '@teambit/formatter';
 import { Logger } from '@teambit/logger';
-import AspectLoaderAspect, { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
+import { AspectLoaderAspect, AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
 import { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
 import { compact, flatten } from 'lodash';
-import { TypescriptMain, SchemaTransformerSlot, APITransformerSlot } from './typescript.main.runtime';
+import { TypescriptMain } from './typescript.main.runtime';
 import { TransformerNotFound } from './exceptions';
 import { SchemaExtractorContext } from './schema-extractor-context';
 import { Identifier } from './identifier';
 import { IdentifierList } from './identifier-list';
 import { ExtractorOptions } from './extractor-options';
 import { TypescriptAspect } from './typescript.aspect';
+import { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
 
 export class TypeScriptExtractor implements SchemaExtractor {
   constructor(
     private tsconfig: any,
-    private schemaTransformerSlot: SchemaTransformerSlot,
-    private apiTransformerSlot: APITransformerSlot,
+    private schemaTransformers: SchemaTransformer[],
+    private apiTransformers: SchemaNodeTransformer[],
     private tsMain: TypescriptMain,
     private rootTsserverPath: string,
     private rootContextPath: string,
@@ -179,7 +186,11 @@ export class TypeScriptExtractor implements SchemaExtractor {
 
   async transformAPI(schema: SchemaNode, context: SchemaExtractorContext): Promise<SchemaNode> {
     const apiTransformer = this.getAPITransformer(schema);
-    return apiTransformer ? apiTransformer.transform(schema, context) : schema;
+    const transformedApi = apiTransformer ? await apiTransformer.transform(schema, context) : schema;
+    if (!transformedApi) {
+      return new IgnoredSchema(schema);
+    }
+    return transformedApi;
   }
 
   async getComponentIDByPath(file: string) {
@@ -200,8 +211,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
    * select the correct transformer for a node.
    */
   getTransformer(node: Node, context: SchemaExtractorContext) {
-    const transformers = flatten(this.schemaTransformerSlot.values());
-    const transformer = transformers.find((singleTransformer) => {
+    const transformer = this.schemaTransformers.find((singleTransformer) => {
       return singleTransformer.predicate(node);
     });
     if (!transformer) {
@@ -213,8 +223,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
   }
 
   getAPITransformer(node: SchemaNode) {
-    const transformers = flatten(this.apiTransformerSlot.values());
-    const transformer = transformers.find((singleTransformer) => {
+    const transformer = this.apiTransformers.find((singleTransformer) => {
       return singleTransformer.predicate(node);
     });
     if (!transformer) {
@@ -229,14 +238,22 @@ export class TypeScriptExtractor implements SchemaExtractor {
       const tsconfig = getTsconfig(options.tsconfig)?.config || { compilerOptions: options.compilerOptions };
       const tsMain = context.getAspect<TypescriptMain>(TypescriptAspect.id);
       const aspectLoaderMain = context.getAspect<AspectLoaderMain>(AspectLoaderAspect.id);
-
       // When loading the env from a scope you don't have a workspace
       const rootPath = tsMain.workspace?.path || tsMain.scope.path || '';
 
+      const schemaTransformersFromOptions = options.schemaTransformers || [];
+      const schemaTransformersFromAspect = flatten(Array.from(tsMain.schemaTransformerSlot.values()));
+
+      const apiTransformersFromOptions = options.apiTransformers || [];
+      const apiTransformersFromAspect = flatten(Array.from(tsMain.apiTransformerSlot.values()));
+
+      const schemaTransformers = [...schemaTransformersFromOptions, ...schemaTransformersFromAspect];
+      const apiTransformers = [...apiTransformersFromOptions, ...apiTransformersFromAspect];
+
       return new TypeScriptExtractor(
         tsconfig,
-        tsMain.schemaTransformerSlot,
-        tsMain.apiTransformerSlot,
+        schemaTransformers,
+        apiTransformers,
         tsMain,
         rootPath,
         rootPath,

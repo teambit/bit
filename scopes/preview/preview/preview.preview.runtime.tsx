@@ -1,6 +1,9 @@
-import PubsubAspect, { PubsubPreview } from '@teambit/pubsub';
+import { PubsubAspect, PubsubPreview } from '@teambit/pubsub';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';
+// Using cross-fetch here instead of @pnpm/node-fetch
+// which is crucial in this context as preview operates from the frontend where proxy and CA cert handling are not required
+// Reverting to cross-fetch restores correct handling of relative URLs, ensuring that previews render correctly
 import crossFetch from 'cross-fetch';
 import memoize from 'memoizee';
 import { debounce, intersection, isObject } from 'lodash';

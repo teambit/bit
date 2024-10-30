@@ -1,7 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
-import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '../api/scope/lib/fetch';
-import { PushOptions } from '../api/scope/lib/put';
-import { ListScopeResult } from '../consumer/component/components-list';
+import { PushOptions, CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
+import { ListScopeResult } from '@teambit/legacy.component-list';
 import Component from '../consumer/component/consumer-component';
 import logger from '../logger/logger';
 import type { Scope } from '../scope';
@@ -13,7 +12,7 @@ import { connect } from '../scope/network';
 import { Network } from '../scope/network/network';
 import { ObjectItemsStream, ObjectList } from '../scope/objects/object-list';
 import RemovedObjects from '../scope/removed-components';
-import { cleanBang, isBitUrl } from '../utils';
+import { isBitUrl } from '@teambit/legacy.utils';
 import { InvalidRemote } from './exceptions';
 
 /**
@@ -28,7 +27,12 @@ export default class Remote {
   host: string;
   name: string;
 
-  constructor(host: string, name?: string, primary = false, private localScopeName?: string) {
+  constructor(
+    host: string,
+    name?: string,
+    primary = false,
+    private localScopeName?: string
+  ) {
     this.name = name || '';
     this.host = host;
     this.primary = primary;
@@ -51,8 +55,8 @@ export default class Remote {
     });
   }
 
-  list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
-    return this.connect().then((network) => network.list(namespacesUsingWildcards));
+  list(namespacesUsingWildcards?: string, includeDeleted = false): Promise<ListScopeResult[]> {
+    return this.connect().then((network) => network.list(namespacesUsingWildcards, includeDeleted));
   }
 
   show(bitId: ComponentID): Promise<Component | null | undefined> {
@@ -104,6 +108,9 @@ export default class Remote {
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]> {
     return this.connect().then((network) => network.listLanes(name, mergeData));
   }
+  async hasObjects(hashes: string[]): Promise<string[]> {
+    return this.connect().then((network) => network.hasObjects(hashes));
+  }
   async action<Options extends Record<string, any>, Result>(name: string, options: Options): Promise<Result> {
     const network = await this.connect();
     logger.debug(`[-] Running action ${name} on a remote ${this.name}, options: ${JSON.stringify(options)}`);
@@ -114,7 +121,7 @@ export default class Remote {
 
   static load(name: string, host: string, thisScope?: Scope): Remote {
     const primary = isPrimary(name);
-    if (primary) name = cleanBang(name);
+    if (primary) name = name.replace('!', '');
 
     return new Remote(name, host, primary, thisScope?.name);
   }

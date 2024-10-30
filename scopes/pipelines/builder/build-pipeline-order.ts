@@ -1,5 +1,5 @@
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
-import TesterAspect from '@teambit/tester';
+import { TesterAspect } from '@teambit/tester';
 import { EnvDefinition, Environment } from '@teambit/envs';
 import { BuildTask, BuildTaskHelper } from './build-task';
 import type { TaskSlot } from './builder.main.runtime';
@@ -47,7 +47,8 @@ export function calculatePipelineOrder(
   envs: EnvDefinition[],
   pipeNameOnEnv: PipeFunctionNames,
   tasks: string[] = [],
-  skipTests = false
+  skipTests = false,
+  skipTasks: string[] = []
 ): TasksQueue {
   const graphs: TasksLocationGraph[] = [];
   const locations: Location[] = ['start', 'middle', 'end']; // the order is important here!
@@ -70,16 +71,22 @@ export function calculatePipelineOrder(
     return { location, graph, pipelineEnvs: pipelineEnvsPerLocation };
   });
 
-  const tasksQueue = new TasksQueue();
+  let tasksQueue = new TasksQueue();
   locations.forEach((location) => addTasksToGraph(tasksQueue, dataPerLocation, location));
   if (tasks.length) {
-    return new TasksQueue(
+    tasksQueue = new TasksQueue(
       ...tasksQueue.filter(({ task }) => tasks.includes(task.name) || tasks.includes(task.aspectId))
     );
   }
   if (skipTests) {
-    return new TasksQueue(...tasksQueue.filter(({ task }) => task.aspectId !== TesterAspect.id));
+    tasksQueue = new TasksQueue(...tasksQueue.filter(({ task }) => task.aspectId !== TesterAspect.id));
   }
+  if (skipTasks.length) {
+    tasksQueue = new TasksQueue(
+      ...tasksQueue.filter(({ task }) => !skipTasks.includes(task.name) && !skipTasks.includes(task.aspectId))
+    );
+  }
+
   return tasksQueue;
 }
 

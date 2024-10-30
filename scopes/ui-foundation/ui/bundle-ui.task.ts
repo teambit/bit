@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
+import type { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
 import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { UIAspect } from './ui.aspect';
@@ -23,7 +23,10 @@ export class BundleUiTask implements BuildTask {
   name = BUNDLE_UI_TASK_NAME;
   location: TaskLocation = 'end';
 
-  constructor(private ui: UiMain, private logger: Logger) {}
+  constructor(
+    private ui: UiMain,
+    private logger: Logger
+  ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const capsule: Capsule | undefined = context.capsuleNetwork.seedersCapsules.find(

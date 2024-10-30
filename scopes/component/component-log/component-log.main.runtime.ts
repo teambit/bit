@@ -4,19 +4,21 @@ import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-lo
 import path from 'path';
 import moment from 'moment';
 import pMap from 'p-map';
-import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { compact } from 'lodash';
 import pMapSeries from 'p-map-series';
-import { Version } from '@teambit/legacy/dist/scope/models';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils/path';
+import { Source, Version } from '@teambit/legacy/dist/scope/models';
+import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { getFilesDiff } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
+import { getFilesDiff } from '@teambit/legacy.component-diff';
 import chalk from 'chalk';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
+import { diffLines } from 'diff';
 import { ComponentLogAspect } from './component-log.aspect';
 import LogCmd from './log-cmd';
 import { buildSnapGraph } from './snap-graph';
 import { LogFileCmd } from './log-file-cmd';
+import { BlameCmd } from './blame-cmd';
 
 export type FileLog = {
   hash: string;
@@ -28,6 +30,18 @@ export type FileLog = {
   fileHash: string;
   parentFileHash?: string;
   fileDiff?: string;
+};
+
+export type BlameLineInfo = {
+  lineNumber: number;
+  lineContent: string;
+  previousLineContent?: string;
+  username: string;
+  email?: string;
+  date: string;
+  message: string;
+  hash: string;
+  tag?: string;
 };
 
 export type FileHashDiffFromParent = {
@@ -42,7 +56,7 @@ export class ComponentLogMain {
   /**
    * get component log sorted by the timestamp in ascending order (from the earliest to the latest)
    */
-  async getLogs(id: string, isRemote?: boolean, shortHash = false): Promise<ComponentLog[]> {
+  async getLogs(id: string, isRemote?: boolean, shortHash = false, shortMessage = false): Promise<ComponentLog[]> {
     if (isRemote) {
       const consumer = this.workspace?.consumer;
       const bitId = ComponentID.fromString(id);
@@ -51,15 +65,16 @@ export class ComponentLogMain {
     }
     if (!this.workspace) throw new OutsideWorkspaceError();
     const componentId = await this.workspace.resolveComponentId(id);
-    const logs = await this.workspace.scope.getLogs(componentId, shortHash);
+    const logs = await this.workspace.scope.getLogs(componentId, shortHash, undefined, true);
     logs.forEach((log) => {
       log.date = log.date ? moment(new Date(parseInt(log.date))).format('YYYY-MM-DD HH:mm:ss') : undefined;
+      log.message = shortMessage ? log.message.split('\n')[0] : log.message;
     });
     return logs;
   }
 
-  async getLogsWithParents(id: string, fullHash = false) {
-    const logs = await this.getLogs(id, false, !fullHash);
+  async getLogsWithParents(id: string, fullHash = false, fullMessage = false) {
+    const logs = await this.getLogs(id, false, !fullHash, !fullMessage);
     const graph = buildSnapGraph(logs);
     const sorted = graph.toposort();
     return sorted.map((node) => this.stringifyLogInfoOneLine(node.attr));
@@ -105,7 +120,7 @@ export class ComponentLogMain {
     return results;
   }
 
-  async getFileHistoryHashes(filePath: string): Promise<FileLog[]> {
+  async getFileHistoryHashes(filePath: PathOsBasedAbsolute): Promise<FileLog[]> {
     const workspace = this.workspace;
     if (!workspace) throw new OutsideWorkspaceError();
     const componentId = await workspace.getComponentIdByPath(filePath);
@@ -171,6 +186,99 @@ export class ComponentLogMain {
     return results.filter((r) => r.fileHash !== r.parentFileHash);
   }
 
+  async blame(filePath: string): Promise<BlameLineInfo[]> {
+    const workspace = this.workspace;
+    if (!workspace) throw new OutsideWorkspaceError();
+    const absPath = path.isAbsolute(filePath) ? filePath : workspace.consumer.toAbsolutePath(filePath);
+    const reversedLogs = await this.getFileHistoryHashes(absPath);
+    const logs = reversedLogs.reverse();
+
+    const getFileContent = async (hash: string) => {
+      const source = (await workspace.scope.legacyScope.objects.load(Ref.from(hash), true)) as Source;
+      return source.contents.toString();
+    };
+
+    // Initialize the blame array with the current file content
+    const currentLog = logs[0];
+    let currentContentStr = await getFileContent(currentLog.fileHash);
+    const currentContentLines = currentContentStr.split('\n');
+    const blameArray: Partial<BlameLineInfo>[] = currentContentLines.map((lineContent, index) => ({
+      lineNumber: index + 1,
+      lineContent,
+    }));
+    const populateBlameArray = (lineNumber: number, log: FileLog) => {
+      blameArray[lineNumber].username = log.username;
+      blameArray[lineNumber].email = log.email;
+      blameArray[lineNumber].date = log.date;
+      blameArray[lineNumber].message = log.message;
+      blameArray[lineNumber].hash = log.hash;
+      blameArray[lineNumber].tag = log.tag;
+    };
+
+    // Keep track of unassigned lines
+    const unblamedLineIndices = new Set(blameArray.map((_, index) => index));
+
+    await pMapSeries(logs, async (logItem) => {
+      if (unblamedLineIndices.size === 0) return; // All lines have been assigned
+
+      const currentHash = logItem.fileHash;
+      const parentHash = logItem.parentFileHash;
+
+      // Skip if there is no parent to compare with
+      if (!parentHash) return;
+
+      currentContentStr = await getFileContent(currentHash);
+      const parentContentStr = await getFileContent(parentHash);
+
+      const diff = diffLines(parentContentStr, currentContentStr);
+
+      const removedLines: Record<number, string> = {};
+      const addedLines: number[] = [];
+
+      let currentLineNum = 0;
+
+      diff.forEach((part) => {
+        const lines = part.value.split('\n');
+        // Remove the last empty line if the string ends with a newline
+        if (lines[lines.length - 1] === '') lines.pop();
+
+        if (part.added) {
+          // Lines added in the current version
+          lines.forEach(() => {
+            if (unblamedLineIndices.has(currentLineNum)) {
+              populateBlameArray(currentLineNum, logItem);
+              addedLines.push(currentLineNum);
+              unblamedLineIndices.delete(currentLineNum);
+            }
+            currentLineNum++;
+          });
+        } else if (part.removed) {
+          lines.forEach((line, index) => {
+            removedLines[currentLineNum + index] = line;
+          });
+          // Lines removed from parent version; do not advance currentLineNum
+          // Since these lines are not in the current version, we ignore them
+        } else {
+          // Unchanged lines
+          currentLineNum += lines.length;
+        }
+      });
+      Object.keys(removedLines).forEach((lineNum) => {
+        if (addedLines.includes(parseInt(lineNum))) {
+          blameArray[parseInt(lineNum)].previousLineContent = removedLines[parseInt(lineNum)];
+        }
+      });
+    });
+
+    // Assign the oldest log info to any remaining unblamed lines
+    const oldestLog = logs[logs.length - 1];
+    unblamedLineIndices.forEach((lineIdx) => {
+      populateBlameArray(lineIdx, oldestLog);
+    });
+
+    return blameArray as BlameLineInfo[];
+  }
+
   async getFileLog(filePath: string) {
     const workspace = this.workspace;
     if (!workspace) throw new OutsideWorkspaceError();
@@ -233,7 +341,7 @@ export class ComponentLogMain {
   static runtime = MainRuntime;
   static async provider([cli, workspace]: [CLIMain, Workspace]) {
     const componentLog = new ComponentLogMain(workspace);
-    cli.register(new LogCmd(componentLog), new LogFileCmd(componentLog));
+    cli.register(new LogCmd(componentLog), new LogFileCmd(componentLog), new BlameCmd(componentLog));
     return componentLog;
   }
 }

@@ -186,7 +186,7 @@ describe('snap components from scope', function () {
       helper.command.export();
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
@@ -351,6 +351,346 @@ export const BasicIdInput = () => {
       const devFiles = catComp.extensions.find((e) => e.name === 'teambit.component/dev-files');
       expect(devFiles).to.not.be.undefined;
       expect(devFiles.data.devPatterns).to.not.be.undefined;
+    });
+  });
+  describe('snap a new component in a new lane and existing dependency', () => {
+    let catLane;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      const bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+
+      const data = [
+        {
+          componentId: `${helper.scopes.remote}/foo`,
+          files: [
+            {
+              path: 'index.ts',
+              content: '',
+            },
+          ],
+          isNew: true,
+          aspects: {
+            'teambit.react/react': {},
+            'teambit.envs/envs': {
+              env: 'teambit.react/react',
+            },
+          },
+          newDependencies: [
+            {
+              id: `${helper.scopes.remote}/comp1`,
+              isComponent: true,
+              type: 'runtime',
+            },
+          ],
+        },
+      ];
+      // console.log('data', JSON.stringify(data));
+      helper.command.snapFromScope(bareTag.scopePath, data, `--lane ${helper.scopes.remote}/dev`);
+      catLane = helper.command.catLane('dev', bareTag.scopePath);
+    });
+    it('should create the lane and snap the new component into the new lane', () => {
+      expect(catLane.components).to.have.lengthOf(1);
+    });
+  });
+  describe('adding dependents to the lane with --update-dependents flag', () => {
+    let comp3HeadOnLane: string;
+    let comp2HeadOnMain: string;
+    let remoteScope: string;
+    let snapResult: Record<string, any>;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      comp2HeadOnMain = helper.command.getHead('comp2');
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild('comp3', '--skip-auto-snap --unmodified');
+      comp3HeadOnLane = helper.command.getHeadOfLane('dev', 'comp3');
+      helper.command.export();
+      const bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+      const data = [
+        {
+          componentId: `${helper.scopes.remote}/comp2`,
+          // dependencies: [`${helper.scopes.remote}/comp3@latest`],
+          message: 'msg',
+        },
+      ];
+      const flags = `--lane ${helper.scopes.remote}/dev --update-dependents --push`;
+      // console.log('data', JSON.stringify(data), 'flags', flags);
+      snapResult = helper.command.snapFromScopeParsed(bareTag.scopePath, data, flags);
+      remoteScope = helper.scopeHelper.cloneRemoteScope();
+    });
+    it('should add the snapped component to the updateDependents prop and export it correctly to the remote', () => {
+      const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+      expect(lane).to.have.property('updateDependents');
+      expect(lane.updateDependents).to.have.lengthOf(1);
+
+      const updatedComp = lane.updateDependents[0];
+      const comp2 = helper.command.catComponent(updatedComp, helper.scopes.remotePath);
+      expect(comp2.dependencies[0].id.name).to.equal('comp3');
+      expect(comp2.dependencies[0].id.version).to.equal(comp3HeadOnLane);
+    });
+    it('should not add the snapped component to the components prop of the lane', () => {
+      const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+      expect(lane.components).to.have.lengthOf(1);
+      expect(lane.components[0].id.name).to.equal('comp3');
+    });
+    it('should indicate what components were exported', () => {
+      expect(snapResult.exportedIds).to.have.lengthOf(1);
+    });
+    describe('running bit-sign', () => {
+      it('should not throw', () => {
+        const signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
+
+        const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+        const comp2OnLane = lane.updateDependents[0];
+        const signCmd = () =>
+          helper.command.sign(
+            [comp2OnLane, `${helper.scopes.remote}/comp3@${comp3HeadOnLane}`],
+            `--lane ${helper.scopes.remote}/dev`,
+            signRemote.scopePath
+          );
+        expect(signCmd).to.not.throw();
+      });
+    });
+    describe('merging the lane into main from the scope', () => {
+      let bareMerge;
+      before(() => {
+        bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+        helper.command.mergeLaneFromScope(bareMerge.scopePath, `${helper.scopes.remote}/dev`, '--push');
+      });
+      it('should merge also the updateDependents components and export them successfully', () => {
+        const comp2 = helper.command.catComponent(`${helper.scopes.remote}/comp2`, helper.scopes.remotePath);
+        expect(comp2.head).to.not.equal(comp2HeadOnMain);
+
+        const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+        const comp2OnLane = lane.updateDependents[0];
+        const comp2OnLaneVer = comp2OnLane.split('@')[1];
+        expect(comp2.head).to.equal(comp2OnLaneVer);
+      });
+    });
+    describe('importing the lane to a new workspace', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+        helper.scopeHelper.getClonedRemoteScope(remoteScope);
+        helper.command.importLane('dev', '-x');
+      });
+      it('should not import the updateDependents components', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.not.have.property('comp2');
+      });
+      it('should not import the objects of the components in the updateDependents prop', () => {
+        expect(() => helper.command.catComponent(`${helper.scopes.remote}/comp2`)).to.throw();
+      });
+      it('should import the lane with the updateDependents prop', () => {
+        const lane = helper.command.catLane('dev');
+        expect(lane).to.have.property('updateDependents');
+        expect(lane.updateDependents).to.have.lengthOf(1);
+      });
+      describe('importing the component of the updateDependents to the workspace', () => {
+        before(() => {
+          helper.command.importComponent('comp2');
+        });
+        it('should import the component from main, not from the lane', () => {
+          const bitmap = helper.bitMap.read();
+          expect(bitmap).to.have.property('comp2');
+          expect(bitmap.comp2.version).to.equal('0.0.1');
+        });
+        describe('snapping and exporting the component', () => {
+          before(() => {
+            helper.command.snapAllComponentsWithoutBuild(); // it's modified because the comp3 version is changed
+            helper.command.export();
+          });
+          it('on the remote, it should remove the component from the updateDependents array', () => {
+            const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+            expect(lane).to.not.have.property('updateDependents');
+          });
+        });
+      });
+    });
+    describe('updating a component in the lane then running update-dependencies command to update the dependents', () => {
+      let updateDepsOutput: string;
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
+        helper.scopeHelper.getClonedRemoteScope(remoteScope);
+        helper.command.importLane('dev', '-x');
+        helper.command.snapComponentWithoutBuild('comp3', '--skip-auto-snap --unmodified');
+        helper.command.export();
+
+        const updateRemote = helper.scopeHelper.getNewBareScope('-remote-update');
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, updateRemote.scopePath);
+
+        const data = [
+          {
+            componentId: `${helper.scopes.remote}/comp2`,
+            dependencies: [`${helper.scopes.remote}/comp3`],
+          },
+        ];
+        // console.log('updateRemote.scopePath', updateRemote.scopePath);
+        // console.log(`bit update-dependencies '${JSON.stringify(data)}' --lane ${helper.scopes.remote}/dev`);
+        try {
+          updateDepsOutput = helper.command.updateDependencies(
+            data,
+            `--lane ${helper.scopes.remote}/dev`,
+            updateRemote.scopePath
+          );
+        } catch (err: any) {
+          updateDepsOutput = err.message;
+        }
+      });
+      // it's currently failing because comp3 is not in the npm registry, that's fine.
+      // all we care about here is that it won't fail because it cannot find the version of the dependency
+      it('should not throw an error saying it cannot find the version of the dependency', () => {
+        expect(updateDepsOutput).to.not.include('unable to find a version');
+        expect(updateDepsOutput).to.include('comp3 is not in the npm registry'); // not a mandatory test
+      });
+    });
+    describe('updating the dependent of the dependent', () => {
+      before(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteScope);
+        const bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+        const data = [
+          {
+            componentId: `${helper.scopes.remote}/comp1`,
+            message: 'msg',
+          },
+        ];
+        const flags = `--lane ${helper.scopes.remote}/dev --update-dependents --push`;
+        // console.log('data', JSON.stringify(data), 'flags', flags);
+        snapResult = helper.command.snapFromScopeParsed(bareTag.scopePath, data, flags);
+      });
+      it('should update successfully with dependencies from update-dependents and export it correctly', () => {
+        const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+        expect(lane).to.have.property('updateDependents');
+        expect(lane.updateDependents).to.have.lengthOf(2);
+
+        const comp1Str = lane.updateDependents.find((c) => c.includes('comp1'));
+        const comp2Str = lane.updateDependents.find((c) => c.includes('comp2'));
+        const comp2Ver = comp2Str.split('@')[1];
+        const comp1 = helper.command.catComponent(comp1Str, helper.scopes.remotePath);
+        expect(comp1.dependencies[0].id.name).to.equal('comp2');
+        expect(comp1.dependencies[0].id.version).to.equal(comp2Ver);
+      });
+    });
+  });
+  describe('updating packages (not components)', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('comp1/index.js', 'require("lodash.get")');
+      helper.npm.addFakeNpmPackage('lodash.get', '4.4.2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      const bareSnap = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareSnap.scopePath);
+      const data = [
+        {
+          componentId: `${helper.scopes.remote}/comp1`,
+          dependencies: ['lodash.get@4.5.0'],
+        },
+      ];
+      // console.log('data', JSON.stringify(data));
+      helper.command.snapFromScope(bareSnap.scopePath, data, '--push');
+    });
+    it('should update the package', () => {
+      const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, helper.scopes.remotePath);
+      expect(comp.packageDependencies['lodash.get']).to.equal('4.5.0');
+
+      const depResolver = comp.extensions.find((e) => e.name === Extensions.dependencyResolver).data;
+      const lodash = depResolver.dependencies.find((p) => p.id === 'lodash.get');
+      expect(lodash.version).to.equal('4.5.0');
+    });
+  });
+  describe('update-dependents when the dependency is an env', () => {
+    let snapResult;
+    let bareSnap;
+    let envSnapOnLane: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      const envName = helper.env.setCustomNewEnv();
+      helper.fixtures.populateComponents(1);
+      helper.command.setEnv('comp1', envName);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild(envName, '--skip-auto-snap --unmodified');
+      envSnapOnLane = helper.command.getHeadOfLane('dev', envName);
+      helper.command.export();
+      bareSnap = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareSnap.scopePath);
+      const data = [
+        {
+          componentId: `${helper.scopes.remote}/comp1`,
+          message: 'msg',
+        },
+      ];
+      const flags = `--lane ${helper.scopes.remote}/dev --update-dependents `;
+      // console.log(`bit _snap '${JSON.stringify(data)}' ${flags}`);
+      snapResult = helper.command.snapFromScopeParsed(bareSnap.scopePath, data, flags);
+    });
+    it('should save the env with the version it has on the lane', () => {
+      const snappedId = snapResult.snappedIds[0];
+      const catComp1 = helper.command.catComponent(snappedId, bareSnap.scopePath);
+      expect(catComp1.extensions[0].extensionId.version).to.equal(envSnapOnLane);
+      expect(catComp1.extensions[0].extensionId.version).to.not.equal('0.0.1');
+    });
+  });
+  describe('_snap with forkFrom prop', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.snapAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+    });
+    describe('snapping them all at the same time without dependencies changes', () => {
+      let data;
+      before(() => {
+        data = [
+          {
+            componentId: `${helper.scopes.remote}/compa`,
+            forkFrom: `${helper.scopes.remote}/comp1`,
+            message: `msg for first comp`,
+          },
+          {
+            componentId: `${helper.scopes.remote}/compb`,
+            forkFrom: `${helper.scopes.remote}/comp2`,
+            message: `msg for second comp`,
+          },
+          {
+            componentId: `${helper.scopes.remote}/compc`,
+            forkFrom: `${helper.scopes.remote}/comp3`,
+            message: `msg for third comp`,
+          },
+        ];
+        // console.log('command', `bit _snap '${JSON.stringify(data)}'`);
+        helper.command.snapFork(data);
+      });
+      it('should save the components and dependencies according to the new ids', () => {
+        const comp1Head = helper.command.getHead(`${helper.scopes.remote}/compa`);
+        const comp1OnBare = helper.command.catObject(comp1Head, true);
+        expect(comp1OnBare.log.message).to.equal('msg for first comp');
+        expect(comp1OnBare.dependencies[0].id.name).to.equal('compb');
+        expect(comp1OnBare.dependencies[0].packageName).to.equal(`@${helper.scopes.remote}/compb`);
+        const flattenedDepNames = comp1OnBare.flattenedDependencies.map((d) => d.name);
+        expect(flattenedDepNames).to.include('compb');
+        expect(flattenedDepNames).to.include('compc');
+        expect(flattenedDepNames).to.not.include('comp2');
+        expect(flattenedDepNames).to.not.include('comp3');
+      });
     });
   });
 });

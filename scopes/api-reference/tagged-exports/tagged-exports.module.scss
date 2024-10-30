@@ -23,11 +23,11 @@
 
 .banner {
   display: flex;
-  justify-content: center;
   align-items: center;
+  width: fit-content;
   background-color: rgba(247, 247, 245, 0.631372549);
   border-radius: 8px;
-  padding: 16px;
+  padding: 16px 32px;
   font-size: 16px;
   gap: 8px;
   > img {

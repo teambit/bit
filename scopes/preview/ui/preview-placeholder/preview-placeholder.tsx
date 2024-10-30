@@ -1,11 +1,11 @@
 import React, { useMemo, ComponentType, ReactNode } from 'react';
-import CompositionsAspect, { ComponentComposition, Composition } from '@teambit/compositions';
+import { CompositionsAspect, ComponentComposition, Composition } from '@teambit/compositions';
 import { H3, H5 } from '@teambit/design.ui.heading';
 import { capitalize } from '@teambit/toolbox.string.capitalize';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { ComponentModel } from '@teambit/component';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
-import DocsAspect from '@teambit/docs';
+import { DocsAspect } from '@teambit/docs';
 
 import styles from './preview-placeholder.module.scss';
 

@@ -1,5 +1,5 @@
 import { Component } from '@teambit/component';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { PreviewMain } from './preview.main.runtime';
 

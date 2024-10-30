@@ -115,6 +115,22 @@ describe('build command', function () {
       expect(errorOutput).to.have.string(`unable to get the following objects`);
     });
   });
+
+  describe('3 components use 3 different envs', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.setEnv('comp1', 'teambit.harmony/aspect');
+      helper.command.setEnv('comp2', 'teambit.react/react');
+      helper.command.setEnv('comp3', 'teambit.harmony/node');
+      helper.command.tagAllWithoutBuild();
+      helper.fs.appendFile('comp2/index.js');
+    });
+    it('should indicate when executing a build task on a dependency', () => {
+      const output = helper.command.build();
+      expect(output).to.have.string('[dependency] (node)');
+    });
+  });
 });
 
 function getNodeEnvExtension() {

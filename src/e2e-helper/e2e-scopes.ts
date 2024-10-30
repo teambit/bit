@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import { BIT_TEMP_ROOT } from '@teambit/defender.fs.global-bit-temp-dir';
-import { generateRandomStr } from '../utils';
+import { generateRandomStr } from '@teambit/toolbox.string.random';
 
 export const DEFAULT_OWNER = 'ci';
 

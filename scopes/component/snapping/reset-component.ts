@@ -2,7 +2,7 @@ import { BitError } from '@teambit/bit-error';
 import { ComponentID } from '@teambit/component-id';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import { ComponentsList } from '@teambit/legacy.component-list';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 
@@ -14,7 +14,7 @@ export type untagResult = { id: ComponentID; versions: string[]; component?: Mod
 export async function removeLocalVersion(
   scope: Scope,
   id: ComponentID,
-  lane: Lane | null,
+  lane?: Lane,
   head?: boolean,
   force = false
 ): Promise<untagResult> {
@@ -55,7 +55,7 @@ export async function removeLocalVersion(
 
 export async function removeLocalVersionsForAllComponents(
   consumer: Consumer,
-  lane: Lane | null,
+  lane?: Lane,
   head?: boolean
 ): Promise<untagResult[]> {
   const componentsToUntag = await getComponentsWithOptionToUntag(consumer);
@@ -65,7 +65,7 @@ export async function removeLocalVersionsForAllComponents(
 
 export async function removeLocalVersionsForMultipleComponents(
   componentsToUntag: ModelComponent[],
-  lane: Lane | null,
+  lane?: Lane,
   head?: boolean,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   force: boolean,

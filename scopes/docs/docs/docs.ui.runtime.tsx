@@ -3,16 +3,19 @@ import { flatten } from 'lodash';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { Slot } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
-import ComponentCompareAspect, { ComponentCompareUI } from '@teambit/component-compare';
+import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-compare';
 import { OverviewCompare } from '@teambit/docs.ui.overview-compare';
 import { OverviewCompareSection } from '@teambit/docs.ui.overview-compare-section';
-import APIReferenceAspect, { APIReferenceUI } from '@teambit/api-reference';
+import { APIReferenceAspect, APIReferenceUI } from '@teambit/api-reference';
 import { DocsAspect } from './docs.aspect';
 import { OverviewSection } from './overview.section';
 import type { TitleBadgeSlot, TitleBadge, OverviewOptionsSlot, OverviewOptions } from './overview';
 
 export class DocsUI {
-  constructor(readonly titleBadgeSlot: TitleBadgeSlot, readonly overviewOptionsSlot: OverviewOptionsSlot) {}
+  constructor(
+    readonly titleBadgeSlot: TitleBadgeSlot,
+    readonly overviewOptionsSlot: OverviewOptionsSlot
+  ) {}
 
   /**
    * register a new title badge into the overview section of a component.

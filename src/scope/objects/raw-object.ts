@@ -1,7 +1,7 @@
 import R from 'ramda';
 
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
-import { getStringifyArgs, inflate } from '../../utils';
+import { getStringifyArgs, inflate } from '@teambit/legacy.utils';
 import { typesObj as types } from '../object-registrar';
 import { BitObject } from '.';
 
@@ -65,6 +65,8 @@ export default class BitRawObject {
       case 'ScopeMeta':
       case 'VersionHistory':
         return JSON.stringify(this.parsedContent, ...args);
+      case 'Source':
+        return pretty ? JSON.stringify(JSON.parse(this.content.toString()), ...args) : this.content;
 
       default:
         return this.content;

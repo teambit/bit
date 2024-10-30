@@ -3,7 +3,7 @@ import { Workspace } from '@teambit/workspace';
 import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { DiffResults, DiffOptions } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
+import { DiffResults, DiffOptions } from '@teambit/legacy.component-diff';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { ComponentCompareMain } from '@teambit/component-compare';
@@ -86,8 +86,7 @@ export class LaneDiffGenerator {
 
     let idsToCheckDiff: ComponentIdList | undefined;
     if (pattern) {
-      const allIds = this.toLaneData.components.map((c) => c.id);
-      const compIds = await (this.workspace || this.scope).resolveMultipleComponentIds(allIds);
+      const compIds = this.toLaneData.components.map((c) => c.id);
       idsToCheckDiff = ComponentIdList.fromArray(await this.scope.filterIdsFromPoolIdsByPattern(pattern, compIds));
     }
 

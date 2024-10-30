@@ -1,15 +1,15 @@
 import path from 'path';
 import { uniq } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
-import logger from '@teambit/legacy/dist/logger/logger';
-import { getLastModifiedComponentTimestampMs } from '@teambit/legacy/dist/utils/fs/last-modified';
+import { getLastModifiedComponentTimestampMs } from '@teambit/toolbox.fs.last-modified';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { DependencyLoaderOpts } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
 import { Workspace } from '@teambit/workspace';
-import DependencyResolverAspect, { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DevFilesMain } from '@teambit/dev-files';
+import { Logger } from '@teambit/logger';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependenciesData } from './dependencies-data';
 import { updateDependenciesVersions } from './dependencies-versions-resolver';
@@ -23,13 +23,14 @@ export class DependenciesLoader {
     private component: Component,
     private depsResolver: DependencyResolverMain,
     private devFiles: DevFilesMain,
-    private aspectLoader: AspectLoaderMain
+    private aspectLoader: AspectLoaderMain,
+    private logger: Logger
   ) {
     this.idStr = this.component.id.toString();
   }
   async load(workspace: Workspace, opts: DependencyLoaderOpts) {
     const { dependenciesData, debugDependenciesData } = await this.getDependenciesData(workspace, opts);
-    const applyOverrides = new ApplyOverrides(this.component, this.depsResolver, workspace);
+    const applyOverrides = new ApplyOverrides(this.component, this.depsResolver, this.logger, workspace);
     applyOverrides.allDependencies = dependenciesData.allDependencies;
     applyOverrides.allPackagesDependencies = dependenciesData.allPackagesDependencies;
     if (debugDependenciesData) {
@@ -39,7 +40,7 @@ export class DependenciesLoader {
     applyOverrides.issues = dependenciesData.issues;
     const results = await applyOverrides.getDependenciesData();
     this.setDependenciesDataOnComponent(results.dependenciesData, results.overridesDependencies);
-    updateDependenciesVersions(
+    await updateDependenciesVersions(
       this.depsResolver,
       workspace,
       this.component,
@@ -57,7 +58,7 @@ export class DependenciesLoader {
   }
 
   async loadFromScope(dependenciesData: Partial<DependenciesData>) {
-    const applyOverrides = new ApplyOverrides(this.component, this.depsResolver);
+    const applyOverrides = new ApplyOverrides(this.component, this.depsResolver, this.logger);
     const { allDependencies, allPackagesDependencies, issues } = dependenciesData;
     if (allDependencies) applyOverrides.allDependencies = allDependencies;
     if (allPackagesDependencies) applyOverrides.allPackagesDependencies = allPackagesDependencies;
@@ -122,7 +123,7 @@ export class DependenciesLoader {
     if (wasModifiedAfterCache) {
       return null; // cache is invalid.
     }
-    logger.debug(`dependencies-loader, getting the dependencies data for ${this.idStr} from the cache`);
+    this.logger.debug(`dependencies-loader, getting the dependencies data for ${this.idStr} from the cache`);
     return DependenciesData.deserialize(cacheData.data);
   }
 
@@ -138,6 +139,7 @@ export class DependenciesLoader {
   ) {
     this.component.setDependencies(dependenciesData.allDependencies.dependencies);
     this.component.setDevDependencies(dependenciesData.allDependencies.devDependencies);
+    this.component.setPeerDependencies(dependenciesData.allDependencies.peerDependencies);
     this.component.packageDependencies = dependenciesData.allPackagesDependencies.packageDependencies ?? {};
     this.component.devPackageDependencies = dependenciesData.allPackagesDependencies.devPackageDependencies ?? {};
     this.component.peerPackageDependencies = dependenciesData.allPackagesDependencies.peerPackageDependencies ?? {};

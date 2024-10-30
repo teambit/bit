@@ -1,10 +1,10 @@
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { omit, uniq } from 'lodash';
 // @ts-ignore
 import { pipeline } from 'stream/promises';
 import { Scope } from '..';
-import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
+import { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import loader from '../../cli/loader';
 import logger from '../../logger/logger';
 import { Remote, Remotes } from '../../remotes';
@@ -15,12 +15,12 @@ import { Repository } from '../objects';
 import { ObjectItemsStream } from '../objects/object-list';
 import { ObjectsWritable } from './objects-writable-stream';
 import { WriteObjectsQueue } from './write-objects-queue';
-import { groupByLanes, groupByScopeName } from '../component-ops/scope-components-importer';
-import { concurrentFetchLimit } from '../../utils/concurrency';
+import { groupByScopeName } from '../component-ops/scope-components-importer';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
 import { ScopeNotFoundOrDenied } from '../../remotes/exceptions/scope-not-found-or-denied';
 import { Lane } from '../models';
 import { ComponentsPerRemote, MultipleComponentMerger } from '../component-ops/multiple-component-merger';
-import { pMapPool } from '../../utils/promise-with-concurrent';
 
 /**
  * due to the use of streams, this is memory efficient and can handle easily GBs of objects.
@@ -56,8 +56,7 @@ export class ObjectFetcher {
       allowExternal: Boolean(this.lane),
       ...this.fetchOptions,
     };
-    const idsGrouped =
-      this.groupedHashes || (this.lane ? groupByLanes(this.ids, [this.lane]) : groupByScopeName(this.ids));
+    const idsGrouped = this.groupedHashes || (this.lane ? this.groupByLanes(this.lane) : groupByScopeName(this.ids));
     const scopes = Object.keys(idsGrouped);
     logger.debug(
       `[-] Running fetch on ${scopes.length} remote(s), to get ${this.ids.length} id(s), lane: ${
@@ -130,6 +129,30 @@ ${failedScopesErr.join('\n')}`);
         );
       })
     );
+  }
+
+  private groupByLanes(lane: Lane): { [scopeName: string]: string[] } {
+    const compIds = this.fetchOptions.includeUpdateDependents
+      ? lane.toComponentIdsIncludeUpdateDependents()
+      : lane.toComponentIds();
+    const grouped: { [scopeName: string]: string[] } = {};
+
+    const isLaneIncludeId = (id: ComponentID, laneBitIds: ComponentIdList) => {
+      if (laneBitIds.has(id)) return true;
+      const foundWithoutVersion = laneBitIds.searchWithoutVersion(id);
+      return foundWithoutVersion;
+    };
+
+    this.ids.forEach((id) => {
+      if (isLaneIncludeId(id, compIds)) {
+        (grouped[lane.scope] ||= []).push(id.toString());
+      } else {
+        // if not found on a lane, fetch from main.
+        (grouped[id.scope] ||= []).push(id.toString());
+      }
+    });
+
+    return grouped;
   }
 
   private async fetchFromSingleRemote(scopeName: string, ids: string[]): Promise<ObjectItemsStream | null> {

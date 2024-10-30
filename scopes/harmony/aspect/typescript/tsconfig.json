@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "lib": [
-      "es2019", "DOM", "ES6" ,"DOM.Iterable", "ScriptHost"
+      "ES2022", "DOM" ,"DOM.Iterable", "ScriptHost"
     ],
     "target": "es2015",
     "module": "CommonJS",
@@ -24,9 +24,13 @@
     "resolveJsonModule": true
   },
   "exclude": [
+    "artifacts",
+    "public",
     "dist",
     "esm.mjs",
-    "package.json"
+    "node_modules",
+    "package.json",
+    "**/*.cjs"
   ],
   "include": [
     "**/*",

@@ -1,12 +1,12 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { SlotRegistry, Slot } from '@teambit/harmony';
-import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
-import ScopeAspect, { ScopeMain } from '@teambit/scope';
+import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { ComponentID } from '@teambit/component-id';
-import IpcEventsAspect, { IpcEventsMain } from '@teambit/ipc-events';
+import { IpcEventsAspect, IpcEventsMain } from '@teambit/ipc-events';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
 import pMapSeries from 'p-map-series';
 import { WatchCommand } from './watch.cmd';
 import { Watcher, WatchOptions } from './watcher';
@@ -27,6 +27,7 @@ export class WatcherMain {
   ) {}
 
   async watch(opts: WatchOptions) {
+    if (!this.workspace) throw new OutsideWorkspaceError();
     const watcher = new Watcher(this.workspace, this.pubsub, this, opts);
     await watcher.watch();
   }
@@ -67,7 +68,7 @@ export class WatcherMain {
       PubsubMain,
       LoggerMain,
       IpcEventsMain,
-      GlobalConfigMain
+      GlobalConfigMain,
     ],
     _,
     [onPreWatchSlot]: [OnPreWatchSlot]

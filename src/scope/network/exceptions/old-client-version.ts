@@ -1,6 +1,6 @@
-import AbstractError from '../../../error/abstract-error';
+import { BitError } from '@teambit/bit-error';
 
-export default class OldClientVersion extends AbstractError {
+export default class OldClientVersion extends BitError {
   message: string;
   code: number;
 

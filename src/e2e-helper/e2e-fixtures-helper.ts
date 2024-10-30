@@ -13,6 +13,7 @@ import ScopeHelper from './e2e-scope-helper';
 import ScopesData from './e2e-scopes';
 
 export type GenerateEnvJsoncOptions = {
+  extends?: string;
   policy?: Record<string, any>;
   patterns?: Record<string, string[]>;
 };
@@ -57,34 +58,21 @@ export default class FixtureHelper {
   createComponentUtilsIsString(impl?: string = fixtures.isString) {
     this.fs.createFile('utils', 'is-string.js', impl);
   }
-
   addComponentBarFoo() {
-    return this.command.addComponent('bar/foo.js', { i: 'bar/foo' });
-  }
-
-  addComponentBarFooAsDir() {
     return this.command.addComponent('bar', { i: 'bar/foo' });
-  }
-
-  addComponentUtilsIsType() {
-    return this.command.addComponent('utils/is-type.js', { i: 'utils/is-type' });
   }
   createComponentIsType() {
     this.fs.createFile('is-type', 'is-type.js');
   }
-  addComponentUtilsIsTypeAsDir() {
+  addComponentUtilsIsType() {
     return this.command.addComponent('is-type', { i: 'utils/is-type' });
   }
   createComponentIsString(impl = fixtures.isStringHarmony) {
     this.fs.createFile('is-string', 'is-string.js', impl);
   }
   addComponentUtilsIsString() {
-    return this.command.addComponent('utils/is-string.js', { i: 'utils/is-string' });
-  }
-  addComponentUtilsIsStringAsDir() {
     return this.command.addComponent('is-string', { i: 'utils/is-string' });
   }
-
   tagComponentBarFoo() {
     return this.command.tagWithoutBuild('bar/foo');
   }
@@ -113,55 +101,6 @@ export default class FixtureHelper {
     const distFile = path.join(cwd, newName);
     if (this.debugMode) console.log(chalk.green(`copying fixture ${sourceFile} to ${distFile}\n`)); // eslint-disable-line
     fs.copySync(sourceFile, distFile);
-  }
-
-  /**
-   * populates the local workspace with the following components:
-   * 'bar/foo'         => requires a file from 'utils/is-string' component
-   * 'utils/is-string' => requires a file from 'utils/is-type' component
-   * 'utils/is-type'
-   * in other words, the dependency chain is: bar/foo => utils/is-string => utils/is-type
-   */
-  populateWorkspaceWithThreeComponents() {
-    this.fs.createFile('utils', 'is-type.js', fixtures.isType);
-    this.addComponentUtilsIsType();
-    this.fs.createFile('utils', 'is-string.js', fixtures.isString);
-    this.addComponentUtilsIsString();
-    this.createComponentBarFoo(fixtures.barFooFixture);
-    this.addComponentBarFoo();
-  }
-
-  populateWorkspaceWithComponentsWithV2() {
-    this.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2);
-    this.addComponentUtilsIsType();
-    this.fs.createFile('utils', 'is-string.js', fixtures.isStringV2);
-    this.addComponentUtilsIsString();
-    this.createComponentBarFoo(fixtures.barFooFixtureV2);
-    this.addComponentBarFoo();
-  }
-
-  populateWorkspaceWithThreeComponentsAndModulePath(useDefaultScope = true) {
-    this.fs.createFile('utils', 'is-type.js', fixtures.isType);
-    this.addComponentUtilsIsType();
-
-    const isStringFixture = useDefaultScope
-      ? fixtures.isStringModulePath(this.scopes.remote)
-      : fixtures.isStringModulePathNoScope;
-    this.fs.createFile('utils', 'is-string.js', isStringFixture);
-    this.addComponentUtilsIsString();
-
-    const barFooFixture = useDefaultScope
-      ? fixtures.barFooModulePath(this.scopes.remote)
-      : fixtures.barFooModulePathNoScope;
-    this.createComponentBarFoo(barFooFixture);
-    this.addComponentBarFoo();
-  }
-
-  /**
-   * @deprecated use populateWorkspaceWithThreeComponents()
-   */
-  populateWorkspaceWithComponents() {
-    this.populateWorkspaceWithThreeComponents();
   }
 
   /**
@@ -207,7 +146,8 @@ export default class FixtureHelper {
     if (index === numOfComponents) return `module.exports = () => 'comp${index}${additionalStr}';`;
     const nextComp = `comp${index + 1}`;
     return `const ${nextComp} = require('../${nextComp}');
-module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
+
+module.exports = () => \`comp${index}${additionalStr} and $\{${nextComp}()}\`;`;
   }
 
   private getEsmImplForPopulate(numOfComponents: number, index: number, additionalStr = ''): string {
@@ -312,45 +252,6 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
   }
 
   /**
-   * populates the local workspace with the following components:
-   * 'utils/is-string' => requires a file from 'utils/is-type' component
-   * 'utils/is-type'
-   * in other words, the dependency chain is: utils/is-string => utils/is-type
-   */
-  populateWorkspaceWithTwoComponents() {
-    this.fs.createFile('utils', 'is-type.js', fixtures.isType);
-    this.addComponentUtilsIsType();
-    this.fs.createFile('utils', 'is-string.js', fixtures.isString);
-    this.addComponentUtilsIsString();
-  }
-
-  /**
-   * populates the local workspace with the one component "utils/is-type".
-   */
-  populateWorkspaceWithUtilsIsType() {
-    this.fs.createFile('utils', 'is-type.js', fixtures.isType);
-    this.addComponentUtilsIsType();
-  }
-
-  /**
-   * populates the local workspace with the following components:
-   * 'bar/foo'         => requires a file from 'utils/is-string' component
-   * 'utils/is-string' => requires a file from 'utils/is-type' component
-   * 'utils/is-type'   => requires the left-pad package
-   * in other words, the dependency chain is: bar/foo => utils/is-string => utils/is-type => left-pad
-   */
-  populateWorkspaceWithComponentsAndPackages() {
-    this.npm.initNpm();
-    this.npm.installNpmPackage('left-pad', '1.3.0');
-    this.fs.createFile('utils', 'is-type.js', fixtures.isTypeLeftPad);
-    this.addComponentUtilsIsType();
-    this.fs.createFile('utils', 'is-string.js', fixtures.isString);
-    this.addComponentUtilsIsString();
-    this.createComponentBarFoo(fixtures.barFooFixture);
-    this.addComponentBarFoo();
-  }
-
-  /**
    * extract the global-remote g-zipped scope into the e2e-test, so it'll be ready to consume.
    * this is an alternative to import directly from bit-dev.
    *
@@ -395,10 +296,13 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
       docs: ['**/*.docs.*'],
       tests: ['**/*.spec.*', '**/*.test.*'],
     };
-    const envJsoncFileContentJson = {
+    const envJsoncFileContentJson: GenerateEnvJsoncOptions = {
       policy: options.policy || {},
       patterns: options.patterns || defaultPatterns,
     };
+    if (options.extends) {
+      envJsoncFileContentJson.extends = options.extends;
+    }
     this.fs.outputFile(envJsoncFile, JSON.stringify(envJsoncFileContentJson, null, 2));
   }
 

@@ -1,13 +1,14 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import BuilderAspect from '@teambit/builder';
+import { BuilderAspect } from '@teambit/builder';
 import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import DependencyResolverAspect, {
+import {
+  DependencyResolverAspect,
   DependencyList,
   DependencyResolverMain,
   SerializedDependency,
@@ -19,13 +20,14 @@ import {
   FieldsDiff,
   FileDiff,
   getFilesDiff,
-} from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import { diffBetweenComponentsObjects } from '@teambit/legacy/dist/consumer/component-ops/components-object-diff';
+  diffBetweenComponentsObjects,
+} from '@teambit/legacy.component-diff';
 import { TesterMain, TesterAspect } from '@teambit/tester';
-import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
 import { componentCompareSchema } from './component-compare.graphql';
 import { ComponentCompareAspect } from './component-compare.aspect';
 import { DiffCmd } from './diff-cmd';
+import { ImporterAspect, ImporterMain } from '@teambit/importer';
 
 export type ComponentCompareResult = {
   id: string;
@@ -47,6 +49,7 @@ export class ComponentCompareMain {
     private logger: Logger,
     private tester: TesterMain,
     private depResolver: DependencyResolverMain,
+    private importer: ImporterMain,
     private workspace?: Workspace
   ) {}
 
@@ -58,6 +61,11 @@ export class ComponentCompareMain {
     if (!modelComponent) {
       throw new BitError(`component ${compareCompId.toString()} doesn't have any version yet`);
     }
+
+    // import missing components that might be on main
+    await this.importer.importObjectsFromMainIfExist([baseCompId, compareCompId], {
+      cache: true,
+    });
 
     const baseVersion = baseCompId.version as string;
     const compareVersion = compareCompId.version as string;
@@ -128,11 +136,13 @@ export class ComponentCompareMain {
     return this.getConfigForDiffByCompObject(component);
   }
 
-  async getConfigForDiffByCompObject(component: Component) {
+  async getConfigForDiffByCompObject(component: Component, modifiedIds?: ComponentID[]) {
     const depData = this.depResolver.getDependencies(component);
+    const modifiedIdsStr = modifiedIds?.map((id) => id.toStringWithoutVersion());
     const serializedToString = (dep: SerializedDependency) => {
       const idWithoutVersion = dep.__type === 'package' ? dep.id : dep.id.split('@')[0];
-      return `${idWithoutVersion}@${dep.version} (${dep.lifecycle}) ${dep.source ? `(${dep.source})` : ''}`;
+      const version = modifiedIdsStr?.includes(idWithoutVersion) ? `<modified>` : dep.version;
+      return `${idWithoutVersion}@${version} (${dep.lifecycle}) ${dep.source ? `(${dep.source})` : ''}`;
     };
     const serializeAndSort = (deps: DependencyList) => {
       const serialized = deps.serialize().map(serializedToString);
@@ -182,6 +192,8 @@ export class ComponentCompareMain {
         throw new BitError(`component ${component.id.toString()} doesn't have any version yet`);
       }
       const repository = consumer.scope.objects;
+      const idList = ComponentIdList.fromArray([component.id.changeVersion(version)]);
+      await consumer.scope.scopeImporter.importWithoutDeps(idList, { cache: true, reason: 'to show diff' });
       const fromVersionObject: Version = await modelComponent.loadVersion(version, repository);
       const versionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
       const fsFiles = consumerComponent.files;
@@ -204,7 +216,8 @@ export class ComponentCompareMain {
         throw new BitError(`component ${id.toString()} doesn't have any version yet`);
       }
       const repository = consumer.scope.objects;
-
+      const idList = ComponentIdList.fromArray([id.changeVersion(version), id.changeVersion(toVersion)]);
+      await consumer.scope.scopeImporter.importWithoutDeps(idList, { cache: true, reason: 'to show diff' });
       const fromVersionObject: Version = await modelComponent.loadVersion(version, repository);
       const toVersionObject: Version = await modelComponent.loadVersion(toVersion, repository);
       const fromVersionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
@@ -218,19 +231,26 @@ export class ComponentCompareMain {
     }
 
     async function getComponentDiff(component: Component): Promise<DiffResults> {
-      const diffResult = { id: component.id, hasDiff: false };
+      const diffResult: DiffResults = { id: component.id, hasDiff: false };
       const consumerComponent = component.state._consumer as ConsumerComponent;
       if (!consumerComponent.componentFromModel) {
+        if (component.isDeleted()) {
+          // component exists in the model but not in the filesystem, show all files as deleted
+          // the reason it is loaded without componentFromModel is because it was loaded from the scope, not workspace.
+          // as a proof, consumerComponent.loadedFromFileSystem is false.
+          const modelFiles = consumerComponent.files;
+          diffResult.filesDiff = await getFilesDiff(modelFiles, [], component.id.version, component.id.version);
+          if (hasDiff(diffResult)) diffResult.hasDiff = true;
+          return diffResult;
+        }
         // it's a new component. not modified. show all files as new.
         const fsFiles = consumerComponent.files;
-        // @ts-ignore version must be defined as the component.componentFromModel do exist
         diffResult.filesDiff = await getFilesDiff([], fsFiles, component.id.version, component.id.version);
         if (hasDiff(diffResult)) diffResult.hasDiff = true;
         return diffResult;
       }
       const modelFiles = consumerComponent.componentFromModel.files;
       const fsFiles = consumerComponent.files;
-      // @ts-ignore version must be defined as the component.componentFromModel do exist
       diffResult.filesDiff = await getFilesDiff(modelFiles, fsFiles, component.id.version, component.id.version);
       await updateFieldsDiff(consumerComponent.componentFromModel, consumerComponent, diffResult, diffOpts);
 
@@ -284,9 +304,10 @@ export class ComponentCompareMain {
     WorkspaceAspect,
     TesterAspect,
     DependencyResolverAspect,
+    ImporterAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([graphql, component, scope, loggerMain, cli, workspace, tester, depResolver]: [
+  static async provider([graphql, component, scope, loggerMain, cli, workspace, tester, depResolver, importer]: [
     GraphqlMain,
     ComponentMain,
     ScopeMain,
@@ -294,10 +315,19 @@ export class ComponentCompareMain {
     CLIMain,
     Workspace,
     TesterMain,
-    DependencyResolverMain
+    DependencyResolverMain,
+    ImporterMain,
   ]) {
     const logger = loggerMain.createLogger(ComponentCompareAspect.id);
-    const componentCompareMain = new ComponentCompareMain(component, scope, logger, tester, depResolver, workspace);
+    const componentCompareMain = new ComponentCompareMain(
+      component,
+      scope,
+      logger,
+      tester,
+      depResolver,
+      importer,
+      workspace
+    );
     cli.register(new DiffCmd(componentCompareMain));
     graphql.register(componentCompareSchema(componentCompareMain));
     return componentCompareMain;

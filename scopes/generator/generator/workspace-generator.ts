@@ -4,20 +4,20 @@ import { Harmony } from '@teambit/harmony';
 import { Component } from '@teambit/component';
 import execa from 'execa';
 import pMapSeries from 'p-map-series';
-import UIAspect, { UiMain } from '@teambit/ui';
+import { UIAspect, UiMain } from '@teambit/ui';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import ForkingAspect, { ForkingMain } from '@teambit/forking';
-import { init } from '@teambit/legacy/dist/api/consumer';
-import ImporterAspect, { ImporterMain } from '@teambit/importer';
+import { ForkingAspect, ForkingMain } from '@teambit/forking';
+import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
-import getGitExecutablePath from '@teambit/legacy/dist/utils/git/git-executable';
-import GitNotFound from '@teambit/legacy/dist/utils/git/exceptions/git-not-found';
-import { resolve, join } from 'path';
+import { getGitExecutablePath, GitNotFound } from '@teambit/git.modules.git-executable';
+import { join } from 'path';
+import { compact, some } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
-import GitAspect, { GitMain } from '@teambit/git';
+import { GitAspect, GitMain } from '@teambit/git';
 import { InstallAspect, InstallMain } from '@teambit/install';
-import WorkspaceConfigFilesAspect, { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+import { HostInitializerMain } from '@teambit/host-initializer';
+import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 // import { ComponentGenerator } from './component-generator';
 import { WorkspaceTemplate, WorkspaceContext } from './workspace-template';
 import { NewOptions } from './new.cmd';
@@ -27,7 +27,6 @@ import { GeneratorMain } from './generator.main.runtime';
 export type GenerateResult = { id: ComponentID; dir: string; files: string[]; envId: string };
 
 export class WorkspaceGenerator {
-  private workspacePath: string;
   private harmony: Harmony;
   private workspace: Workspace;
   private install: InstallMain;
@@ -38,34 +37,40 @@ export class WorkspaceGenerator {
   private wsConfigFiles: WorkspaceConfigFilesMain;
   private generator: GeneratorMain;
 
-  // private componentGenerator?: ComponentGenerator;
-
   constructor(
     private workspaceName: string,
+    private workspacePath: string,
     private options: NewOptions & { currentDir?: boolean },
     private template: WorkspaceTemplate,
     private aspectComponent?: Component
-  ) {
-    this.workspacePath = options.currentDir ? process.cwd() : resolve(this.workspaceName);
-  }
+  ) {}
 
   async generate(): Promise<string> {
-    if (!this.options.currentDir && fs.existsSync(this.workspacePath)) {
-      throw new Error(`unable to create a workspace at "${this.workspaceName}", this path already exist`);
-    }
     await fs.ensureDir(this.workspacePath);
     try {
       process.chdir(this.workspacePath);
       await this.initGit();
-      await init(this.workspacePath, this.options.skipGit, false, false, false, false, false, false, {});
+      await HostInitializerMain.init(
+        this.workspacePath,
+        this.options.skipGit,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        {}
+      );
       await this.writeWorkspaceFiles();
       await this.reloadBitInWorkspaceDir();
       // Setting the workspace to be in install context to prevent errors during the workspace generation
       // the workspace will be in install context until the end of the generation install process
       this.workspace.inInstallContext = true;
       await this.setupGitBitmapMergeDriver();
-      await this.createComponentsFromRemote();
       await this.forkComponentsFromRemote();
+      await this.installBeforeCreateComponentsIfNeeded();
+      await this.createComponentsFromRemote();
       await this.importComponentsFromRemote();
       await this.workspace.clearCache();
       await this.install.install(undefined, {
@@ -74,6 +79,11 @@ export class WorkspaceGenerator {
         copyPeerToRuntimeOnRoot: true,
         copyPeerToRuntimeOnComponents: false,
         updateExisting: false,
+        // This is not needed anymore since PR:
+        // keep it here for a while to make sure it doesn't break anything
+        // skip pruning here to prevent cases which it caused an error about
+        // tsconfig not found because the env location was changed
+        // skipPrune: true,
       });
 
       // compile the components again now that we have the dependencies installed
@@ -147,6 +157,34 @@ export class WorkspaceGenerator {
     this.git = this.harmony.get<GitMain>(GitAspect.id);
     this.wsConfigFiles = this.harmony.get<WorkspaceConfigFilesMain>(WorkspaceConfigFilesAspect.id);
     this.generator = this.harmony.get<GeneratorMain>(GeneratorAspect.id);
+  }
+
+  private async installBeforeCreateComponentsIfNeeded() {
+    if (this.options.empty || !this.template.create) return;
+    const configuredEnvs = this.generator.getConfiguredEnvs();
+    if (!configuredEnvs.length) return;
+    const workspaceContext = this.getWorkspaceContext();
+    const componentsToCreate = this.template.create(workspaceContext);
+    const aspectsForComponentsToCreate = compact(
+      componentsToCreate.map((componentToCreate) => componentToCreate.aspect)
+    );
+    const needInstall = some(aspectsForComponentsToCreate, (aspect) => {
+      return configuredEnvs.includes(aspect);
+    });
+    if (needInstall) {
+      this.logger?.console(
+        `installing dependencies in workspace using to load components templates from the following envs: ${configuredEnvs.join(
+          ', '
+        )}`
+      );
+      await this.install.install(undefined, {
+        dedupe: true,
+        import: false,
+        copyPeerToRuntimeOnRoot: true,
+        copyPeerToRuntimeOnComponents: false,
+        updateExisting: false,
+      });
+    }
   }
 
   private async createComponentsFromRemote() {

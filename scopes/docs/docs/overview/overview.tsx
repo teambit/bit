@@ -81,7 +81,10 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
   }, [component.id.toString(), defaultLoadingState]);
 
   return (
-    <div className={styles.overviewWrapper} key={`${component.id.toString()}`}>
+    <div
+      className={classNames(styles.overviewWrapper, isLoading && styles.noOverflow)}
+      key={`${component.id.toString()}`}
+    >
       {showHeader && (
         <ComponentOverview
           className={classNames(styles.componentOverviewBlock, !isScaling && styles.legacyPreview)}

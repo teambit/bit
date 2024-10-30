@@ -46,7 +46,7 @@ export default class WorkspaceJsoncHelper {
   ) {
     const workspaceJsonc = this.read(bitJsoncDir);
     const variants = workspaceJsonc['teambit.workspace/variants'] || {};
-    const newVariant = replaceExisting ? {} : variants[variant] ?? {};
+    const newVariant = replaceExisting ? {} : (variants[variant] ?? {});
     assign(newVariant, { [key]: val });
     this.setVariant(bitJsoncDir, variant, newVariant);
   }

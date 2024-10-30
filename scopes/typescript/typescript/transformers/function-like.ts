@@ -31,8 +31,9 @@ export class FunctionLikeTransformer implements SchemaTransformer {
 
   async transform(node: SignatureDeclaration, context: SchemaExtractorContext): Promise<SchemaNode> {
     const name = this.getName(node);
+    const nodeModifiers = ts.canHaveModifiers(node) ? ts.getModifiers(node) : undefined;
     const getQuickInfoFromDefaultModifier = async () => {
-      const defaultModifier = node.modifiers?.find((modifier) => modifier.kind === ts.SyntaxKind.DefaultKeyword);
+      const defaultModifier = nodeModifiers?.find((modifier) => modifier.kind === ts.SyntaxKind.DefaultKeyword);
       if (defaultModifier) return context.getQuickInfo(defaultModifier);
       if (node.kind === ts.SyntaxKind.ArrowFunction) return context.getQuickInfo(node.equalsGreaterThanToken);
       return null;
@@ -45,10 +46,14 @@ export class FunctionLikeTransformer implements SchemaTransformer {
     )) as ParameterSchema[];
 
     const returnType = await context.resolveType(node, returnTypeStr, Boolean(info));
-    const modifiers = node.modifiers?.map((modifier) => modifier.getText()) || [];
+    const modifiers = nodeModifiers?.map((modifier) => modifier.getText()) || [];
     const typeParameters = node.typeParameters?.map((typeParam) => typeParam.name.getText());
     const location = context.getLocation(node);
     const doc = await context.jsDocToDocSchema(node);
+    const nodeDecorators = ts.canHaveDecorators(node) ? ts.getDecorators(node) : undefined;
+    const decorators = nodeDecorators?.length
+      ? await pMapSeries(nodeDecorators, (decorator) => context.computeSchema(decorator))
+      : undefined;
 
     return new FunctionLikeSchema(
       location,
@@ -58,7 +63,8 @@ export class FunctionLikeTransformer implements SchemaTransformer {
       displaySig,
       modifiers as Modifier[],
       doc,
-      typeParameters
+      typeParameters,
+      decorators
     );
   }
 }

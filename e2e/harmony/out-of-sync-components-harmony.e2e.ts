@@ -17,7 +17,7 @@ describe('components that are not synced between the scope and the consumer', fu
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       const bitMap = helper.bitMap.read();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -30,7 +30,7 @@ describe('components that are not synced between the scope and the consumer', fu
     });
     describe('bit tag', () => {
       it('should tag the component to the next version of what the scope has', () => {
-        const output = helper.command.runCmd('bit tag bar/foo --force --patch');
+        const output = helper.command.runCmd('bit tag bar/foo --unmodified --patch');
         expect(output).to.have.string('0.0.2');
       });
     });
@@ -50,9 +50,10 @@ describe('components that are not synced between the scope and the consumer', fu
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
       helper.fs.deletePath('.bit');
+      helper.command.init();
       scopeOutOfSync = helper.scopeHelper.cloneLocalScope();
     });
     describe('bit build', () => {
@@ -91,6 +92,7 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.command.export();
       helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.2
       helper.fs.deletePath('.bit');
+      helper.command.init();
       helper.scopeHelper.addRemoteScope();
     });
     it('bit import should not throw', () => {
@@ -110,6 +112,7 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
       helper.fs.deletePath('.bit');
+      helper.command.init();
       helper.scopeHelper.addRemoteScope();
     });
     it('should recrate the lane', () => {

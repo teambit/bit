@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { SourceFileTransformer } from '.';
+import { SourceFileTransformer } from './index';
 
 export const exportTransformer: SourceFileTransformer = (mapping: Record<string, string>) => {
   return (context) => {
@@ -36,7 +36,6 @@ export const exportTransformer: SourceFileTransformer = (mapping: Record<string,
 
         return ts.factory.updateExportDeclaration(
           node,
-          node.decorators,
           node.modifiers,
           node.isTypeOnly,
           updatedExportClause,
@@ -56,11 +55,11 @@ export const exportTransformer: SourceFileTransformer = (mapping: Record<string,
           }
         }
 
-        return ts.factory.updateExportAssignment(node, node.decorators, node.modifiers, expression);
+        return ts.factory.updateExportAssignment(node, node.modifiers, expression);
       }
 
       return ts.visitEachChild(node, visit, context);
     };
-    return (node) => ts.visitNode(node, visit);
+    return (node) => ts.visitNode(node, visit) as ts.SourceFile;
   };
 };

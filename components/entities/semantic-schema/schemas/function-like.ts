@@ -33,7 +33,8 @@ export class FunctionLikeSchema extends SchemaNode {
     signature: string,
     readonly modifiers: Modifier[] = [],
     doc?: DocSchema,
-    readonly typeParams?: string[] // generics e.g. <T>myFunction
+    readonly typeParams?: string[],
+    readonly decorators?: SchemaNode[]
   ) {
     super();
     this.params = params;
@@ -43,15 +44,49 @@ export class FunctionLikeSchema extends SchemaNode {
   }
 
   getNodes() {
-    return [...this.params, this.returnType];
+    return [...this.params, this.returnType, ...(this.decorators || [])];
   }
 
-  toString() {
+  toString(options?: { color?: boolean }) {
+    const bold = options?.color ? chalk.bold : (text: string) => text;
     const paramsStr = this.params.map((param) => param.toString()).join(', ');
     const typeParamsStr = this.typeParams ? `<${this.typeParams.join(', ')}>` : '';
-    return `${this.modifiersToString()}${typeParamsStr}${chalk.bold(
+    const decoratorsStr = this.decorators?.map((decorator) => decorator.toString(options)).join('\n');
+    return `${this.decorators ? `${decoratorsStr}\n` : ''}${this.modifiersToString()}${typeParamsStr}${bold(
       this.name
-    )}(${paramsStr}): ${this.returnType.toString()}`;
+    )}(${paramsStr}): ${this.returnType.toString(options)}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let result = '';
+    if (options?.showDocs && this.doc) {
+      result += `${this.doc.toFullSignature()}\n`;
+    }
+    const decoratorsStr = this.decorators?.map((decorator) => decorator.toString()).join('\n');
+    if (decoratorsStr) {
+      result += `${decoratorsStr}\n`;
+    }
+    const modifiersStr = this.modifiersToString();
+    const typeParamsStr = this.typeParams ? `<${this.typeParams.join(', ')}>` : '';
+    const paramsStr = this.params
+      .map((param) => {
+        let paramStr = '';
+        if (param.isSpread) {
+          paramStr += '...';
+        }
+        paramStr += param.name;
+        if (param.isOptional) {
+          paramStr += '?';
+        }
+        paramStr += `: ${param.type.toString()}`;
+        if (param.defaultValue !== undefined) {
+          paramStr += ` = ${param.defaultValue}`;
+        }
+        return paramStr;
+      })
+      .join(', ');
+    result += `${modifiersStr}${this.name}${typeParamsStr}(${paramsStr}): ${this.returnType.toString()}`;
+    return result;
   }
 
   isDeprecated(): boolean {
@@ -63,10 +98,15 @@ export class FunctionLikeSchema extends SchemaNode {
   }
 
   generateSignature(): string {
-    return FunctionLikeSchema.createSignature(this.name, this.params, this.returnType);
+    return FunctionLikeSchema.createSignature(this.name, this.params, this.returnType, this.decorators);
   }
 
-  static createSignature(name: string, params: ParameterSchema[], returnType: SchemaNode): string {
+  static createSignature(
+    name: string,
+    params: ParameterSchema[],
+    returnType: SchemaNode,
+    decorators?: SchemaNode[]
+  ): string {
     const paramsStr = params
       .map((param) => {
         let type = param.type.toString();
@@ -74,7 +114,8 @@ export class FunctionLikeSchema extends SchemaNode {
         return `${param.name}${param.isOptional ? '?' : ''}: ${type}`;
       })
       .join(', ');
-    return `${name}(${paramsStr}): ${returnType.toString()}`;
+    const decoratorsStr = decorators?.map((decorator) => decorator.toString()).join('\n');
+    return `${decorators ? `${decoratorsStr}\n` : ''}${name}(${paramsStr}): ${returnType.toString()}`;
   }
 
   toObject() {
@@ -87,6 +128,7 @@ export class FunctionLikeSchema extends SchemaNode {
       modifiers: this.modifiers,
       doc: this.doc?.toObject(),
       typeParams: this.typeParams,
+      decorators: this.decorators?.map((decorator) => decorator.toObject()),
     };
   }
 
@@ -99,7 +141,8 @@ export class FunctionLikeSchema extends SchemaNode {
       obj.signature,
       obj.modifiers,
       obj.doc ? DocSchema.fromObject(obj.doc) : undefined,
-      obj.typeParams
+      obj.typeParams,
+      obj.decorators?.map((decorator) => SchemaRegistry.fromObject(decorator))
     );
   }
 

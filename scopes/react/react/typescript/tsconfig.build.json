@@ -19,8 +19,12 @@
     "resolveJsonModule": true
   },
   "exclude": [
+    "artifacts",
+    "public",
     "dist",
-    "package.json"
+    "node_modules",
+    "package.json",
+    "**/*.cjs"
   ],
   "include": [
     "**/*",

@@ -30,6 +30,11 @@ export type PackageManagerInstallOptions = {
 
   lockfileOnly?: boolean;
 
+  /**
+   * When false, the package manager will not write the node_modules directory
+   */
+  enableModulesDir?: boolean;
+
   nodeLinker?: 'hoisted' | 'isolated';
 
   packageManagerConfigRootDir?: string;
@@ -109,6 +114,23 @@ export type PackageManagerInstallOptions = {
    * you can use this option to exclusively hoist the phantom dependencies (recommended).
    */
   hoistPatterns?: string[];
+
+  /**
+   * When true, dependencies from the workspace are hoisted to node_modules/.pnpm/node_modules
+   * even if they are found in the root node_modules
+   */
+  hoistInjectedDependencies?: boolean;
+
+  /**
+   * Tells pnpm to automatically install peer dependencies. It is true by default.
+   */
+  autoInstallPeers?: boolean;
+
+  /**
+   * Tells the package manager to return the list of dependencies that has to be built.
+   * This is used by Ripple CI.
+   */
+  returnListOfDepsRequiringBuild?: boolean;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

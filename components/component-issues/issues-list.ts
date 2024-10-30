@@ -19,6 +19,9 @@ import { NonLoadedEnv } from './non-loaded-env';
 import { ExternalEnvWithoutVersion } from './external-env-without-version';
 import { RemovedDependencies } from './removed-dependencies';
 import { SelfReference } from './self-reference';
+import { ImportFromDirectory } from './import-from-directory';
+import { DeprecatedDependencies } from './deprecated-dependencies';
+import { RemovedEnv } from './removed-env';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
@@ -40,7 +43,10 @@ export const IssuesClasses = {
   NonLoadedEnv,
   ExternalEnvWithoutVersion,
   RemovedDependencies,
+  RemovedEnv,
+  DeprecatedDependencies,
   SelfReference,
+  ImportFromDirectory,
 };
 export type IssuesNames = keyof typeof IssuesClasses;
 
@@ -90,13 +96,15 @@ export class IssuesList {
     this._issues = this._issues.filter((issue) => issue.constructor.name !== IssueClass.name);
   }
 
-  /**
-   * Use getIssueByName to prevent issues when getting different instances while using both bit from bvm and from the repo
-   * @param IssueClass
-   * @returns
-   */
+  hasTagBlockerIssues(): boolean {
+    return this._issues.some((issue) => issue.isTagBlocker);
+  }
+
   getIssue<T extends ComponentIssue>(IssueClass: { new (): T }): T | undefined {
-    return this._issues.find((issue) => issue instanceof IssueClass) as T | undefined;
+    // don't use instanceof, e.g. `this._issues.find((issue) => issue instanceof IssueClass)`
+    // the "component-issues" package can come from different sources, so the "instanceof" won't work.
+    // use only getIssueByName for this.
+    return this.getIssueByName(IssueClass.name as IssuesNames);
   }
 
   getIssueByName<T extends ComponentIssue>(issueType: IssuesNames): T | undefined {

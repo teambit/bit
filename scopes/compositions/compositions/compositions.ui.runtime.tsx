@@ -8,13 +8,16 @@ import { CompositionCompare } from '@teambit/compositions.ui.composition-compare
 import { ComponentCompareUI, ComponentCompareAspect } from '@teambit/component-compare';
 import { CompositionsSection } from './composition.section';
 import { CompositionsAspect } from './compositions.aspect';
-import { MenuBarWidget } from './compositions';
+import { CompositionContent, MenuBarWidget } from './compositions';
 
 export type CompositionsMenuSlot = SlotRegistry<MenuBarWidget[]>;
 export type EmptyStateSlot = SlotRegistry<ComponentType>;
 
 export class CompositionsUI {
-  constructor(private menuBarWidgetSlot: CompositionsMenuSlot, private emptyStateSlot: EmptyStateSlot) {}
+  constructor(
+    private menuBarWidgetSlot: CompositionsMenuSlot,
+    private emptyStateSlot: EmptyStateSlot
+  ) {}
   /**
    * register a new tester empty state. this allows to register a different empty state from each environment for example.
    */
@@ -28,7 +31,14 @@ export class CompositionsUI {
   }
 
   getCompositionsCompare = () => {
-    return <CompositionCompare emptyState={this.emptyStateSlot} />;
+    return (
+      <CompositionCompare
+        emptyState={this.emptyStateSlot}
+        PreviewView={(compositionProps) => {
+          return <CompositionContent {...compositionProps} fullContentHeight forceHeight={'100%'} />;
+        }}
+      />
+    );
   };
 
   static dependencies = [ComponentAspect, ComponentCompareAspect];

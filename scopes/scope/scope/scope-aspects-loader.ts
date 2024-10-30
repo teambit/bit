@@ -21,6 +21,7 @@ import { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } fro
 import { Logger } from '@teambit/logger';
 import { EnvsMain } from '@teambit/envs';
 import { NodeLinker } from '@teambit/dependency-resolver';
+import { BitError } from '@teambit/bit-error';
 import { ScopeMain } from './scope.main.runtime';
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
@@ -118,23 +119,33 @@ needed-for: ${neededFor || '<unknown>'}`);
     opts: {
       packageManagerConfigRootDir?: string;
       workspaceName?: string;
+      loadCustomEnvs?: string;
     } = {}
   ): Promise<{ manifests: ManifestOrAspect[]; potentialPluginsIds: string[] }> {
     ids = uniq(ids);
+    const optsWithDefaults = { loadCustomEnvs: false, ...opts };
     this.logger.debug(`getManifestsGraphRecursively, ids:\n${ids.join('\n')}`);
     const nonVisitedId = ids.filter((id) => !visited.includes(id));
     if (!nonVisitedId.length) {
       return { manifests: [], potentialPluginsIds: [] };
     }
     const components = await this.getNonLoadedAspects(nonVisitedId, lane);
-    // Adding all the envs ids to the array to support case when one (or more) of the aspects has custom aspect env
-    const customEnvsIds = components
-      .map((component) => this.envs.getEnvId(component))
-      .filter((envId) => !this.aspectLoader.isCoreEnv(envId));
-    // In case there is custom env we need to load it right away, otherwise we will fail during the require aspects
-    await this.getManifestsAndLoadAspects(customEnvsIds, undefined, lane);
+    // This is usually not required, right now it required when signing aspects with custom envs.
+    // if you see another case where it's required, please consult @Gilad before passing it as true
+    // as it might have performance implications (like creating unnecessary capsules for aspects that are not needed
+    // during bit create for example, like loading the env of the env (aka bitdev.general/envs/bit-env) when
+    // loading the component's env.)
+    if (optsWithDefaults.loadCustomEnvs) {
+      // Adding all the envs ids to the array to support case when one (or more) of the aspects has custom aspect env
+      const customEnvsIds = components
+        .map((component) => this.envs.getEnvId(component))
+        .filter((envId) => !this.aspectLoader.isCoreEnv(envId));
+
+      // In case there is custom env we need to load it right away, otherwise we will fail during the require aspects
+      await this.getManifestsAndLoadAspects(customEnvsIds, undefined, lane);
+    }
     visited.push(...nonVisitedId);
-    const manifests = await this.requireAspects(components, throwOnError, opts);
+    const manifests = await this.requireAspects(components, throwOnError, optsWithDefaults);
     const potentialPluginsIds = compact(
       manifests.map((manifest, index) => {
         if (this.aspectLoader.isValidAspect(manifest)) return undefined;
@@ -154,7 +165,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       this.logger.debug(
         `getManifestsGraphRecursively, id: ${manifest.id || '<unknown>'}, found ${depIds.length}: ${depIds.join(', ')}`
       );
-      const { manifests: loaded } = await this.getManifestsGraphRecursively(depIds, visited, throwOnError, lane);
+      const { manifests: loaded } = await this.getManifestsGraphRecursively(depIds, visited, throwOnError, lane, opts);
       manifests.push(...loaded);
     });
 
@@ -225,15 +236,28 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   private async compileIfNoDist(capsule: Capsule, component: Component) {
-    const env = this.envs.getEnv(component);
-    const compiler: Compiler = env.env.getCompiler();
+    let compiler: Compiler | undefined;
+    try {
+      const env = this.envs.getEnv(component);
+      compiler = env.env.getCompiler();
+    } catch (err: any) {
+      this.logger.info(
+        `compileIfNoDist: failed loading compiler for ${component.id.toString()} in capsule ${capsule.path}, error: ${
+          err.message
+        }`
+      );
+    }
     const distDir = compiler?.distDir || DEFAULT_DIST_DIRNAME;
     const distExists = existsSync(join(capsule.path, distDir));
     if (distExists) return;
+    if (!compiler) {
+      throw new BitError(`unable to compile aspect/env ${component.id.toString()}, no compiler found`);
+    }
 
     const compiledCode = (
       await Promise.all(
         component.filesystem.files.flatMap(async (file) => {
+          // @ts-ignore - we know it's not null, we have throw error above if yes
           if (!compiler.isFileSupported(file.path)) {
             return [
               {
@@ -242,8 +266,9 @@ needed-for: ${neededFor || '<unknown>'}`);
               },
             ] as TranspileFileOutputOneFile[];
           }
-
+          // @ts-ignore - we know it's not null, we have throw error above if yes
           if (compiler.transpileFile) {
+            // @ts-ignore - we know it's not null, we have throw error above if yes
             return compiler.transpileFile(file.contents.toString('utf8'), {
               filePath: file.path,
               componentDir: capsule.path,
@@ -257,6 +282,7 @@ needed-for: ${neededFor || '<unknown>'}`);
 
     await Promise.all(
       compact(compiledCode).map((compiledFile) => {
+        // @ts-ignore - we know it's not null, we have throw error above if yes
         const path = compiler.getDistPathBySrcPath(compiledFile.outputPath);
         return capsule?.outputFile(path, compiledFile.outputText);
       })

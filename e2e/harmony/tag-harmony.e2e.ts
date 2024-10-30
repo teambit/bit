@@ -38,7 +38,7 @@ describe('tag components on Harmony', function () {
     });
     describe('tag without build after full tag', () => {
       before(() => {
-        helper.command.tagAllWithoutBuild('-s 1.0.0');
+        helper.command.tagAllWithoutBuild('--ver 1.0.0 --unmodified');
       });
       it('should not save the builder data from the previous version', () => {
         const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
@@ -86,7 +86,7 @@ describe('tag components on Harmony', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents();
-      helper.command.softTag('--all');
+      helper.command.softTag();
     });
     it('should add a property of nextVersion in .bitmap file', () => {
       const bitMap = helper.bitMap.readComponentsMapOnly();
@@ -131,7 +131,7 @@ describe('tag components on Harmony', function () {
     });
     describe('soft tag with specific version and message', () => {
       before(() => {
-        helper.command.softTag('-a -s 2.0.0 -m "my custom message"');
+        helper.command.softTag('--ver 2.0.0 --unmodified -m "my custom message"');
       });
       it('should save the version and the message into the .bitmap file', () => {
         const bitMap = helper.bitMap.readComponentsMapOnly();
@@ -159,8 +159,8 @@ describe('tag components on Harmony', function () {
     describe('soft tag after soft tag', () => {
       let tagOutput;
       before(() => {
-        helper.command.softTag('-a -s 2.0.0');
-        tagOutput = helper.command.softTag('-a -s 3.0.0');
+        helper.command.softTag('--ver 2.0.0');
+        tagOutput = helper.command.softTag('--ver 3.0.0');
       });
       it('should show the output according to the new soft-tag', () => {
         expect(tagOutput).to.have.string('3.0.0');
@@ -176,7 +176,7 @@ describe('tag components on Harmony', function () {
     });
     describe('untag', () => {
       before(() => {
-        helper.command.softTag('-a -s 3.0.0');
+        helper.command.softTag('--ver 3.0.0');
         helper.command.resetSoft('--all');
       });
       it('should remove the nextVersion from the .bitmap file', () => {
@@ -232,9 +232,9 @@ describe('tag components on Harmony', function () {
       beforeTagScope = helper.scopeHelper.cloneLocalScope();
     });
     it('should fail without --skip-tests', () => {
-      expect(() => helper.command.tagAllComponents()).to.throw(
-        'Failed task 1: "teambit.defender/tester:TestComponents" of env "teambit.harmony/node"'
-      );
+      const cmd = () => helper.command.tagAllComponents();
+      const error = new Error('Failed task 1: "teambit.defender/tester:JestTest" of env "teambit.harmony/node"');
+      helper.general.expectToThrow(cmd, error);
       const stagedConfigPath = helper.general.getStagedConfigPath();
       expect(stagedConfigPath).to.not.be.a.path();
     });
@@ -242,9 +242,9 @@ describe('tag components on Harmony', function () {
       helper.scopeHelper.getClonedLocalScope(beforeTagScope);
       expect(() => helper.command.tagAllComponents('--skip-tests')).to.not.throw();
     });
-    it('should succeed with --force-deploy', () => {
+    it('should succeed with --ignore-build-errors', () => {
       helper.scopeHelper.getClonedLocalScope(beforeTagScope);
-      expect(() => helper.command.tagAllComponents('--force-deploy')).to.not.throw();
+      expect(() => helper.command.tagAllComponents('--ignore-build-errors')).to.not.throw();
     });
   });
   describe('modified one component, the rest are auto-tag pending', () => {
@@ -361,13 +361,30 @@ describe('tag components on Harmony', function () {
       expect(tagOutput).to.have.string('comp1@0.0.2-dev.0');
     });
   });
+  describe('invalid pre-release after normal tag', () => {
+    let result: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      result = helper.general.runWithTryCatch(`bit tag --unmodified --pre-release "h?h"`);
+    });
+    it('should throw an error', () => {
+      expect(result).to.have.string('is not a valid semantic version');
+    });
+    it('should not create a new version', () => {
+      const comp = helper.command.catComponent('comp1');
+      const ver1Hash = comp.versions['0.0.1'];
+      expect(comp.head).to.equal(ver1Hash);
+    });
+  });
   describe('soft-tag pre-release', () => {
     let tagOutput: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.workspaceJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
-      tagOutput = helper.command.softTag('--all --pre-release dev');
+      tagOutput = helper.command.softTag('--pre-release dev');
     });
     it('should save the pre-release name in the .bitmap file', () => {
       const bitMap = helper.bitMap.read();

@@ -26,9 +26,47 @@ export class InterfaceSchema extends SchemaNode {
     return this.members;
   }
 
-  toString() {
-    const membersStr = this.members.map((m) => `* ${m.toString()}`).join('\n');
-    return `${chalk.bold.underline(this.name)}\n${membersStr}`;
+  toString(options?: { color?: boolean }): string {
+    const boldUnderline = options?.color ? chalk.bold.underline : (str: string) => str;
+    const membersStr = this.members.map((m) => `* ${m.toString(options)}`).join('\n');
+    return `${boldUnderline(this.name)}\n${membersStr}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let result = '';
+
+    if (options?.showDocs && this.doc) {
+      result += `${this.doc.toFullSignature()}\n`;
+    }
+
+    let interfaceDeclaration = `interface ${this.name}`;
+
+    if (this.typeParams && this.typeParams.length > 0) {
+      interfaceDeclaration += `<${this.typeParams.join(', ')}>`;
+    }
+
+    if (this.extendsNodes && this.extendsNodes.length > 0) {
+      const extendsStr = this.extendsNodes.map((node) => node.toFullSignature(options)).join(', ');
+      interfaceDeclaration += ` extends ${extendsStr}`;
+    }
+
+    result += `${interfaceDeclaration} {\n`;
+
+    const membersStr = this.members
+      .map((member) => {
+        const memberStr = member.toFullSignature(options);
+        return memberStr
+          .split('\n')
+          .map((line) => `  ${line}`)
+          .join('\n');
+      })
+      .join('\n');
+
+    result += `${membersStr}\n`;
+
+    result += `}`;
+
+    return result;
   }
 
   toObject() {

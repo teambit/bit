@@ -1,15 +1,14 @@
 import fs from 'fs-extra';
+import { isAbsolute } from 'path';
 import { BitError } from '@teambit/bit-error';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { isEmpty } from 'lodash';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { isDir } from '@teambit/legacy/dist/utils';
-import moveSync from '@teambit/legacy/dist/utils/fs/move-sync';
-import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import { isDir, PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy.utils';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
-import { PathChangeResult } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import { PathChangeResult } from '@teambit/legacy.bit-map';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
-import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
+import { RemovePath } from '@teambit/component.sources';
 import { MoverAspect } from './mover.aspect';
 import { MoveCmd } from './move-cmd';
 
@@ -17,24 +16,26 @@ export class MoverMain {
   constructor(private workspace: Workspace) {}
 
   async movePaths({ from, to }: { from: PathOsBasedRelative; to: PathOsBasedRelative }): Promise<PathChangeResult[]> {
-    const consumer = await this.workspace.consumer;
+    const consumer = this.workspace.consumer;
     const fromExists = fs.existsSync(from);
     const toExists = fs.existsSync(to);
     if (fromExists && toExists) {
       throw new BitError(`unable to move because both paths from (${from}) and to (${to}) already exist`);
     }
     if (!fromExists && !toExists) throw new BitError(`both paths from (${from}) and to (${to}) do not exist`);
-    if (!consumer.isLegacy && fromExists && !isDir(from)) {
+    if (fromExists && !isDir(from)) {
       throw new BitError(`bit move supports moving directories only, not files.
-  files withing a component dir are automatically tracked, no action is needed.
-  to change the main-file, use "bit add <component-dir> --main <new-main-file>"`);
+files withing a component dir are automatically tracked, no action is needed.
+to change the main-file, use "bit add <component-dir> --main <new-main-file>"`);
+    }
+    if (toExists && !isDir(to)) {
+      throw new BitError(`unable to move because the destination path (${to}) is a file and not a directory`);
     }
     const fromRelative = consumer.getPathRelativeToConsumer(from);
     const toRelative = consumer.getPathRelativeToConsumer(to);
     const fromAbsolute = consumer.toAbsolutePath(fromRelative);
     const toAbsolute = consumer.toAbsolutePath(toRelative);
-    const existingPath = fromExists ? fromAbsolute : toAbsolute;
-    const changes = consumer.bitMap.updatePathLocation(fromRelative, toRelative, existingPath);
+    const changes = consumer.bitMap.updatePathLocation(fromRelative, toRelative);
     if (fromExists && !toExists) {
       // user would like to physically move the file. Otherwise (!fromExists and toExists), user would like to only update bit.map
       moveSync(fromAbsolute, toAbsolute);
@@ -82,3 +83,17 @@ export class MoverMain {
 MoverAspect.addRuntime(MoverMain);
 
 export default MoverMain;
+
+export function moveSync(src: PathOsBasedAbsolute, dest: PathOsBasedAbsolute, options?: Record<string, any>) {
+  if (!isAbsolute(src) || !isAbsolute(dest)) {
+    throw new Error(`moveSync, src and dest must be absolute. Got src "${src}", dest "${dest}"`);
+  }
+  try {
+    fs.moveSync(src, dest, options);
+  } catch (err: any) {
+    if (err.message.includes('Cannot move') && err.message.includes('into itself')) {
+      throw new BitError(`unable to move '${src}' into itself '${dest}'`);
+    }
+    throw err;
+  }
+}

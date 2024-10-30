@@ -3,6 +3,8 @@ import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Workspace } from '../workspace';
 
+export const installAfterEnvChangesMsg = chalk.yellow("please run 'bit install' for the changes to take effect");
+
 export class EnvsSetCmd implements Command {
   name = 'set <component-pattern> <env>';
   description = 'Assigns one or more components a development environment (env)';
@@ -27,7 +29,7 @@ export class EnvsSetCmd implements Command {
       description: "configures 'ui/button' to use the 'teambit.community/envs/community-mdx@1.95.16' env",
     },
     {
-      cmd: 'set "ui/**" teambit.react/react-env',
+      cmd: 'set "*/ui/**" teambit.react/react-env',
       description:
         "configures all components that have the 'ui' namespace to use the latest version of the teambit.react/react-env env",
     },
@@ -43,6 +45,6 @@ export class EnvsSetCmd implements Command {
     await this.workspace.setEnvToComponents(envId, componentIds);
     return `assigned ${chalk.bold(envId.toString())} env to the following component(s):
 ${componentIds.map((compId) => compId.toString()).join('\n')}\n
-please run 'bit install' for env replace changes to take effect`;
+${installAfterEnvChangesMsg}`;
   }
 }

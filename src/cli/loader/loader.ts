@@ -1,13 +1,20 @@
 import ora, { Ora, PersistOptions } from 'ora';
+import cliSpinners from 'cli-spinners';
 import prettyTime from 'pretty-time';
+import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 
-import { SPINNER_TYPE } from '../../constants';
+const SPINNER_TYPE = cliSpinners.dots;
 
 export class Loader {
+  shouldSendServerEvents = false;
   private spinner: Ora | null;
 
   get isStarted() {
     return !!this.spinner;
+  }
+
+  get isSpinning() {
+    return this.spinner?.isSpinning;
   }
 
   on(): Loader {
@@ -18,6 +25,7 @@ export class Loader {
   }
 
   off(): Loader {
+    if (this.shouldSendServerEvents) sendEventsToClients('onLoader', { method: 'off' });
     this.stop();
     this.spinner = null;
     return this;
@@ -36,10 +44,14 @@ export class Loader {
   }
 
   setTextAndRestart(text: string): Loader {
+    if (this.shouldSendServerEvents) sendEventsToClients('onLoader', { method: 'setTextAndRestart', args: [text] });
     if (this.spinner) {
       this.spinner.stop();
       this.spinner.text = text;
       this.spinner.start();
+    } else if (process.argv.includes('--stream')) {
+      // eslint-disable-next-line no-console
+      console.log(JSON.stringify({ loader: text }));
     }
     return this;
   }
@@ -49,11 +61,13 @@ export class Loader {
   }
 
   stop(): Loader {
+    if (this.shouldSendServerEvents) sendEventsToClients('onLoader', { method: 'stop' });
     if (this.spinner) this.spinner.stop();
     return this;
   }
 
   succeed(text?: string, startTime?: [number, number]): Loader {
+    if (this.shouldSendServerEvents) sendEventsToClients('onLoader', { method: 'succeed', args: [text, startTime] });
     if (text && startTime) {
       const duration = process.hrtime(startTime);
       text = `${text} (completed in ${prettyTime(duration)})`;
@@ -63,11 +77,13 @@ export class Loader {
   }
 
   fail(text?: string): Loader {
+    if (this.shouldSendServerEvents) sendEventsToClients('onLoader', { method: 'fail', args: [text] });
     if (this.spinner) this.spinner.fail(text);
     return this;
   }
 
   warn(text?: string): Loader {
+    if (this.shouldSendServerEvents) sendEventsToClients('onLoader', { method: 'warn', args: [text] });
     if (this.spinner) this.spinner.warn(text);
     return this;
   }
@@ -78,6 +94,7 @@ export class Loader {
   }
 
   stopAndPersist(options?: PersistOptions): Loader {
+    if (this.shouldSendServerEvents) sendEventsToClients('onLoader', { method: 'stopAndPersist', args: [options] });
     if (this.spinner) this.spinner.stopAndPersist(options);
     return this;
   }

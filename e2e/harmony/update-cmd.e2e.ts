@@ -39,7 +39,7 @@ describe('update command', function () {
         };
         helper.componentJson.write(componentJson, 'comp2');
         helper.command.install('is-positive@1.0.0');
-        helper.command.update('--yes --latest');
+        helper.command.update('--yes');
         configFile = helper.workspaceJsonc.read(helper.scopes.localPath);
         componentJson = helper.componentJson.read('comp2');
       });
@@ -82,7 +82,7 @@ describe('update command', function () {
           },
         });
         helper.command.install();
-        helper.command.update('--yes is-posit* --latest');
+        helper.command.update('--yes is-posit*');
         configFile = helper.workspaceJsonc.read(helper.scopes.localPath);
       });
       it('should update the version range of the selected package', function () {
@@ -102,7 +102,7 @@ describe('update command', function () {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.populateComponents(1);
         helper.command.dependenciesSet('comp1', 'is-negative@1.0.0');
-        helper.command.update('--yes --latest');
+        helper.command.update('--yes');
       });
       it('should update the version range', function () {
         const showOutput = helper.command.showComponentParsed('comp1');
@@ -116,7 +116,7 @@ describe('update command', function () {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.populateComponents(1);
         helper.command.dependenciesSet('comp1', 'is-negative@1.0.0');
-        helper.command.update('--yes');
+        helper.command.update('--yes --semver');
       });
       it('should update the version range', function () {
         const showOutput = helper.command.showComponentParsed('comp1');
@@ -129,7 +129,7 @@ describe('update command', function () {
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('savePrefix', '^');
         helper.fixtures.populateComponents(1);
         helper.command.dependenciesSet('comp1', 'is-negative@1.0.0');
-        helper.command.update('--yes');
+        helper.command.update('--yes --semver');
       });
       it('should update the version range', function () {
         const showOutput = helper.command.showComponentParsed('comp1');
@@ -193,7 +193,7 @@ const isPositive = require("is-positive");`
         helper.workspaceJsonc.setupDefault();
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('savePrefix', '^');
         helper.command.import(`${helper.scopes.remote}/comp1`);
-        helper.command.update('--yes --latest');
+        helper.command.update('--yes');
         configFile = helper.workspaceJsonc.read(helper.scopes.localPath);
       });
       it('should add an updated version of the dependency from the model to the workspace policies', function () {
@@ -228,7 +228,7 @@ const isPositive = require("is-positive");`
         helper.scopeHelper.addRemoteScope();
         helper.workspaceJsonc.setupDefault();
         helper.command.import(`${helper.scopes.remote}/comp1`);
-        helper.command.update('--yes --latest');
+        helper.command.update('--yes');
         configFile = helper.workspaceJsonc.read(helper.scopes.localPath);
       });
       it('should add an updated version of the dependency from the model to the bitmap', function () {
@@ -276,7 +276,7 @@ const isPositive = require("is-positive");`
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.import(`${helper.scopes.remote}/comp1`);
-      helper.command.update('--yes --latest');
+      helper.command.update('--yes');
     });
     after(() => {
       npmCiRegistry.destroy();
@@ -326,7 +326,7 @@ const isPositive = require("is-positive");`
       helper.scopeHelper.addRemoteScope();
       helper.command.import(`${helper.scopes.remote}/comp1@0.0.1`);
       helper.command.import(`${helper.scopes.remote}/comp1new@0.0.1`);
-      helper.command.update('--yes --latest');
+      helper.command.update('--yes');
       configFile = helper.workspaceJsonc.read(helper.scopes.localPath);
     });
     after(() => {

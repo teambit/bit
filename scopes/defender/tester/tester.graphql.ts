@@ -2,7 +2,7 @@ import { GraphqlMain, Schema } from '@teambit/graphql';
 import { ComponentFactory } from '@teambit/component';
 import { withFilter } from 'graphql-subscriptions';
 import { ComponentID } from '@teambit/component-id';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { TesterMain } from './tester.main.runtime';
 import { OnTestsChanged } from './tester.service';

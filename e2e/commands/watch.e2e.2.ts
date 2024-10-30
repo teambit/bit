@@ -20,7 +20,7 @@ chai.use(require('chai-fs'));
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponentsTS();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
     });
     describe('run bit watch', () => {
@@ -84,7 +84,7 @@ chai.use(require('chai-fs'));
           helper.command.tagIncludeUnmodifiedWithoutBuild();
           helper.fs.appendFile('comp1/index.ts', '   ');
           await watchRunner.waitForWatchToRebuildComponent();
-          helper.command.tagWithoutBuild('comp1', '--force');
+          helper.command.tagWithoutBuild('comp1', '--unmodified');
 
           // as an intermediate step, make sure it's 0.0.2
           const bitMap = helper.bitMap.read();

@@ -14,6 +14,6 @@ export function typeReferenceTransformer(mapping: Record<string, string>): ts.Tr
       return ts.visitEachChild(node, visit, context);
     };
 
-    return (node) => ts.visitNode(node, visit);
+    return (node) => ts.visitNode(node, visit) as ts.SourceFile;
   };
 }

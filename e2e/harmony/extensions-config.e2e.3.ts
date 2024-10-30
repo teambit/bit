@@ -28,7 +28,7 @@ describe('harmony extension config', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
+        helper.fixtures.addComponentBarFoo();
         helper.extensions.addExtensionToVariant('*', 'teambit.scope/scope', config);
         helper.command.tagAllComponents();
         componentVersionModel = helper.command.catComponent('bar/foo@0.0.1');
@@ -56,7 +56,7 @@ describe('harmony extension config', function () {
         const EXTENSION_FOLDER = 'dummy-extension-without-logs';
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
+        helper.fixtures.addComponentBarFoo();
         helper.workspaceJsonc.addDefaultScope();
         helper.workspaceJsonc.disablePreview();
         helper.fixtures.copyFixtureExtensions(EXTENSION_FOLDER);
@@ -119,7 +119,7 @@ describe('harmony extension config', function () {
             expect(componentModel.flattenedDependencies[0].name).to.equal('dummy-extension-without-logs');
           });
           it('should auto tag the component when tagging the extension again', () => {
-            output = helper.command.tagComponent('dummy-extension-without-logs', 'message', '-f');
+            output = helper.command.tagComponent('dummy-extension-without-logs', 'message', '--unmodified');
             expect(output).to.have.string('auto-tagged dependents');
             expect(output).to.have.string('bar/foo@0.0.2');
           });
@@ -239,7 +239,7 @@ describe('harmony extension config', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       const depResolverConfig = {
         policy: {
           dependencies: {

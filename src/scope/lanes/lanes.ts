@@ -1,15 +1,15 @@
 import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { ComponentID } from '@teambit/component-id';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { Scope } from '..';
-import { LaneNotFound } from '../../api/scope/lib/exceptions/lane-not-found';
+import { LaneNotFound } from '@teambit/legacy.scope-api';
 import logger from '../../logger/logger';
 import { Lane, LaneHistory, Version } from '../models';
 import { BitObject, Repository } from '../objects';
 import { IndexType, LaneItem } from '../objects/scope-index';
 import { ScopeJson, TrackLane } from '../scope-json';
 import { LaneComponent, Log } from '../models/lane';
-import { pMapPool } from '../../utils/promise-with-concurrent';
 
 export default class Lanes {
   objects: Repository;
@@ -24,11 +24,11 @@ export default class Lanes {
   }
 
   /** don't use it outside of Lanes. Use scope.loadLane instead */
-  async loadLane(id: LaneId): Promise<Lane | null> {
-    if (id.isDefault()) return null; // main lane is not saved
+  async loadLane(id: LaneId): Promise<Lane | undefined> {
+    if (id.isDefault()) return undefined; // main lane is not saved
     const filter = (lane: LaneItem) => lane.toLaneId().isEqual(id);
     const hash = this.objects.getHashFromIndex(IndexType.lanes, filter);
-    if (!hash) return null;
+    if (!hash) return undefined;
     // this makes sure to delete index.json in case it's outdated
     const obj = await this.objects._getBitObjectsByHashes([hash]);
     const lane = obj[0] as Lane;

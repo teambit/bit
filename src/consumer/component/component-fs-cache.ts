@@ -1,14 +1,13 @@
 import cacache, { GetCacheObject } from 'cacache';
 import path from 'path';
 import fs from 'fs-extra';
-import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '../../api/consumer/lib/feature-toggle';
-import { PathOsBasedAbsolute } from '../../utils/path';
-import type { ComponentMapFile } from '../bit-map/component-map';
+import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '@teambit/harmony.modules.feature-toggle';
+import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { ComponentMapFile } from '@teambit/legacy.bit-map';
 import logger from '../../logger/logger';
 
 const WORKSPACE_CACHE = 'cache';
 const COMPONENTS_CACHE = 'components';
-const LAST_TRACK = 'last-track';
 const DOCS = 'docs';
 const DEPS = 'deps';
 const VERSIONS = 'versions';
@@ -20,15 +19,6 @@ export class ComponentFsCache {
   constructor(private scopePath: string) {
     this.basePath = path.join(this.scopePath, WORKSPACE_CACHE, COMPONENTS_CACHE);
     this.isNoFsCacheFeatureEnabled = isFeatureEnabled(NO_FS_CACHE_FEATURE);
-  }
-
-  async getLastTrackTimestamp(idStr: string): Promise<number> {
-    const results = await this.getFromCacheIfExist(LAST_TRACK, idStr);
-    return results ? parseInt(results.data.toString()) : 0;
-  }
-
-  async setLastTrackTimestamp(idStr: string, timestamp: number): Promise<void> {
-    await this.saveDataInCache(idStr, LAST_TRACK, Buffer.from(timestamp.toString()));
   }
 
   /**
@@ -66,6 +56,10 @@ export class ComponentFsCache {
 
   async deleteAllDependenciesDataCache() {
     await cacache.rm.all(this.getCachePath(DEPS));
+  }
+
+  async deleteDependenciesDataCache(idStr: string) {
+    await cacache.rm.entry(this.getCachePath(DEPS), idStr);
   }
 
   async listDependenciesDataCache() {

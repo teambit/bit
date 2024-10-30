@@ -11,13 +11,13 @@ import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-m
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
-import { getBasicLog } from '@teambit/legacy/dist/utils/bit/basic-log';
 import { Component } from '@teambit/component';
-import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
+import { deleteComponentsFiles } from '@teambit/remove';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { sha1 } from '@teambit/legacy/dist/utils';
+import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
+import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
-import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
 import { BuilderMain, OnTagOpts } from '@teambit/builder';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
 import {
@@ -35,6 +35,7 @@ export type onTagIdTransformer = (id: ComponentID) => ComponentID | null;
 export type BasicTagSnapParams = {
   message: string;
   skipTests?: boolean;
+  skipTasks?: string;
   build?: boolean;
   ignoreBuildErrors?: boolean;
   rebuildDepsGraph?: boolean;
@@ -52,9 +53,14 @@ export type BasicTagParams = BasicTagSnapParams & {
 };
 
 function updateDependenciesVersions(
-  componentsToTag: ConsumerComponent[],
+  allComponentsToTag: ConsumerComponent[],
   dependencyResolver: DependencyResolverMain
-): void {
+) {
+  // filter out removed components.
+  // if a component has a deleted-component as a dependency, it was probably running "bit install <dep>" with a version
+  // from main. we want to keep it as the user requested. Otherwise, this changes the dependency version to the newly
+  // snapped one unintentionally.
+  const componentsToTag = allComponentsToTag.filter((c) => !c.isRemoved());
   const getNewDependencyVersion = (id: ComponentID): ComponentID | null => {
     const foundDependency = componentsToTag.find((component) => component.id.isEqualWithoutVersion(id));
     return foundDependency ? id.changeVersion(foundDependency.version) : null;
@@ -174,6 +180,7 @@ export async function tagModelComponent({
   ids,
   tagDataPerComp,
   populateArtifactsFrom,
+  populateArtifactsIgnorePkgJson,
   message,
   editor,
   exactVersion,
@@ -181,6 +188,7 @@ export async function tagModelComponent({
   preReleaseId,
   ignoreNewestVersion = false,
   skipTests = false,
+  skipTasks,
   skipAutoTag,
   soft,
   build,
@@ -194,6 +202,7 @@ export async function tagModelComponent({
   dependencyResolver,
   copyLogFromPreviousSnap = false,
   exitOnFirstFailedTask = false,
+  updateDependentsOnLane = false, // on lane, adds it into updateDependents prop
 }: {
   workspace?: Workspace;
   scope: ScopeMain;
@@ -203,6 +212,7 @@ export async function tagModelComponent({
   ids: ComponentIdList;
   tagDataPerComp?: TagDataPerComp[];
   populateArtifactsFrom?: ComponentID[];
+  populateArtifactsIgnorePkgJson?: boolean;
   copyLogFromPreviousSnap?: boolean;
   exactVersion?: string | null | undefined;
   releaseType?: ReleaseType;
@@ -211,6 +221,7 @@ export async function tagModelComponent({
   packageManagerConfigRootDir?: string;
   dependencyResolver: DependencyResolverMain;
   exitOnFirstFailedTask?: boolean;
+  updateDependentsOnLane?: boolean;
 } & BasicTagParams): Promise<{
   taggedComponents: ConsumerComponent[];
   autoTaggedResults: AutoTagResult[];
@@ -233,8 +244,12 @@ export async function tagModelComponent({
   // ids without versions are new. it's impossible that tagged (and not-modified) components has
   // them as dependencies.
   const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
-  const autoTagData =
+  const autoTagDataWithLocalOnly =
     skipAutoTag || !consumer ? [] : await getAutoTagInfo(consumer, ComponentIdList.fromArray(idsToTriggerAutoTag));
+  const localOnly = workspace?.listLocalOnly();
+  const autoTagData = localOnly
+    ? autoTagDataWithLocalOnly.filter((autoTagItem) => !localOnly.hasWithoutVersion(autoTagItem.component.id))
+    : autoTagDataWithLocalOnly;
   const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
   const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
   const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
@@ -310,7 +325,15 @@ export async function tagModelComponent({
     await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
     if (!build) emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
-    await addComponentsToScope(snapping, allComponentsToTag, lane, Boolean(build), consumer, tagDataPerComp);
+    await addComponentsToScope(
+      snapping,
+      allComponentsToTag,
+      lane,
+      Boolean(build),
+      consumer,
+      tagDataPerComp,
+      updateDependentsOnLane
+    );
 
     if (workspace) {
       const modelComponents = await Promise.all(
@@ -332,9 +355,10 @@ export async function tagModelComponent({
       isSnap,
       populateArtifactsFrom,
     };
+    const skipTasksParsed = skipTasks ? skipTasks.split(',').map((t) => t.trim()) : undefined;
     const seedersOnly = !workspace; // if tag from scope, build only the given components
-    const isolateOptions = { packageManagerConfigRootDir, seedersOnly };
-    const builderOptions = { exitOnFirstFailedTask, skipTests };
+    const isolateOptions = { packageManagerConfigRootDir, seedersOnly, populateArtifactsIgnorePkgJson };
+    const builderOptions = { exitOnFirstFailedTask, skipTests, skipTasks: skipTasksParsed };
 
     const componentsToBuild = allComponentsToTag.filter((c) => !c.isRemoved());
     if (componentsToBuild.length) {
@@ -425,30 +449,24 @@ async function removeMergeConfigFromComponents(
 async function addComponentsToScope(
   snapping: SnappingMain,
   components: ConsumerComponent[],
-  lane: Lane | null,
+  lane: Lane | undefined,
   shouldValidateVersion: boolean,
   consumer?: Consumer,
-  tagDataPerComp?: TagDataPerComp[]
+  tagDataPerComp?: TagDataPerComp[],
+  updateDependentsOnLane?: boolean
 ) {
-  if (consumer) {
-    await mapSeries(components, async (component) => {
-      await snapping._addCompToObjects({
-        source: component,
-        consumer,
-        lane,
-        shouldValidateVersion,
-      });
+  await mapSeries(components, async (component) => {
+    const results = await snapping._addCompToObjects({
+      source: component,
+      lane,
+      shouldValidateVersion,
+      updateDependentsOnLane,
     });
-  } else {
-    await mapSeries(components, async (component) => {
-      const results = await snapping._addCompFromScopeToObjects(component, lane);
-
-      // in case "tagData.isNew", the version object has "parents" that should not be there.
-      // they got created as a workaround to generate a new component from the scope without having a workspace.
+    if (!consumer) {
       const tagData = tagDataPerComp?.find((t) => t.componentId.isEqualWithoutVersion(component.id));
       if (tagData?.isNew) results.version.removeAllParents();
-    });
-  }
+    }
+  });
 }
 
 /**
@@ -528,7 +546,7 @@ function setCurrentSchema(components: ConsumerComponent[]) {
 
 function addBuildStatus(components: ConsumerComponent[], buildStatus: BuildStatus) {
   components.forEach((component) => {
-    component.buildStatus = buildStatus;
+    component.buildStatus = component.isRemoved() ? BuildStatus.Skipped : buildStatus;
   });
 }
 

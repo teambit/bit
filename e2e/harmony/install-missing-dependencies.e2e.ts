@@ -14,7 +14,7 @@ describe('install missing dependencies', function () {
     helper.fixtures.createComponentBarFoo(
       'const isPositive = require("is-positive");const compiler = require("@teambit/compiler")'
     );
-    helper.fixtures.addComponentBarFooAsDir();
+    helper.fixtures.addComponentBarFoo();
     helper.command.install('--add-missing-deps');
     helper.command.tagAllWithoutBuild();
     helper.command.export();

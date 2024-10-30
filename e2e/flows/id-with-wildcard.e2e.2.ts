@@ -1,7 +1,7 @@
 import { NoIdMatchPattern } from '@teambit/scope';
 import { expect } from 'chai';
 
-import NoIdMatchWildcard from '../../src/api/consumer/lib/exceptions/no-id-match-wildcard';
+import { NoIdMatchWildcard } from '@teambit/lister';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('component id with wildcard', function () {
@@ -22,7 +22,7 @@ describe('component id with wildcard', function () {
       helper.fs.createFile('utils/fs/read', 'read.js');
       helper.fs.createFile('utils/fs/write', 'write.js');
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.addComponent('utils/is/*', { n: 'utils/is' });
       helper.command.addComponent('utils/fs/*', { n: 'utils/fs' });
       scopeAfterAdd = helper.scopeHelper.cloneLocalScope();

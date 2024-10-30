@@ -1,10 +1,13 @@
 import React from 'react';
 import classnames from 'classnames';
 import { useLocation } from 'react-router-dom';
-import { Link } from '@teambit/base-react.navigation.link';
+import { Link as BaseLink } from '@teambit/base-react.navigation.link';
 import { NavPluginProps } from '../menu/nav-plugin';
 
 import styles from './top-bar-nav.module.scss';
+
+// @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
+const Link = BaseLink as any;
 
 export function TopBarNav({
   href,

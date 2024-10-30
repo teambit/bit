@@ -4,9 +4,9 @@ import { BitIdStr } from '@teambit/legacy-bit-id';
 import ValidationError from '../../../error/validation-error';
 import Scope from '../../../scope/scope';
 import { fetchRemoteVersions } from '../../../scope/scope-remotes';
-import { isValidPath } from '../../../utils';
-import validateType from '../../../utils/validate-type';
+import { isValidPath } from '@teambit/legacy.utils';
 import Dependency from './dependency';
+import { validateType } from '../../../scope/validate-type';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
 export const DEPENDENCIES_TYPES_UI_MAP = {
@@ -149,7 +149,7 @@ export default class Dependencies {
           `failed validating ${bitId.toString()}, one of the dependencies has the same id as the component`
         );
       }
-      const permittedProperties = ['id', 'relativePaths', 'packageName'];
+      const permittedProperties = ['id', 'relativePaths', 'packageName', 'versionRange'];
       const currentProperties = Object.keys(dependency);
       currentProperties.forEach((currentProp) => {
         if (!permittedProperties.includes(currentProp)) {

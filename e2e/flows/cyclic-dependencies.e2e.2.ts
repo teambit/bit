@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { IssuesClasses } from '@teambit/component-issues';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../src/fixtures/fixtures';
 
 const fixtureA = `const b = require('../b/b');
 console.log('got ' + b() + ' and got A')`;
@@ -86,31 +85,32 @@ describe('cyclic dependencies', function () {
       });
     });
   });
-  // @TODO: FIX ON HARMONY!
-  describe.skip('a complex case with a long chain of dependencies', () => {
+  describe('a complex case with a long chain of dependencies', () => {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       // isString => isType
-      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
+      helper.fixtures.createComponentIsType();
+      helper.fixtures.createComponentIsString();
       helper.fixtures.addComponentUtilsIsType();
       helper.fixtures.addComponentUtilsIsString();
+      helper.command.linkAndRewire();
       helper.command.tagAllWithoutBuild();
 
       // A1 => A2 => A3 (leaf)
       // B1 => B2 => B3 => B4
       // A1 => B1, B2 => A1
       // B4 => is-string => is-type (leaf)
-      helper.fs.createFile('comp', 'A1.js', "const A2 = require('./A2'); const B1 = require ('./B1');");
-      helper.fs.createFile('comp', 'A2.js', "const A3 = require('./A3')");
-      helper.fs.createFile('comp', 'A3.js', "console.log('Im a leaf')");
-      helper.fs.createFile('comp', 'B1.js', "const B2 = require('./B2');");
-      helper.fs.createFile('comp', 'B2.js', "const B3 = require('./B3'); const A1 = require ('./A1');");
-      helper.fs.createFile('comp', 'B3.js', "const B4 = require('./B4')");
-      helper.fs.createFile('comp', 'B4.js', "const isString = require('../utils/is-string')");
-      helper.command.addComponent('comp/*.js', { n: 'comp' });
-      output = helper.command.tagAllWithoutBuild();
+      helper.fs.outputFile('comp/A1/index.js', "const A2 = require('../A2'); const B1 = require ('../B1');");
+      helper.fs.outputFile('comp/A2/index.js', "const A3 = require('../A3')");
+      helper.fs.outputFile('comp/A3/index.js', "console.log('Im a leaf')");
+      helper.fs.outputFile('comp/B1/index.js', "const B2 = require('../B2');");
+      helper.fs.outputFile('comp/B2/index.js', "const B3 = require('../B3'); const A1 = require ('../A1');");
+      helper.fs.outputFile('comp/B3/index.js', "const B4 = require('../B4')");
+      helper.fs.outputFile('comp/B4/index.js', "const isString = require('../../is-string/is-string')");
+      helper.command.addComponent('comp/**', { n: 'comp' });
+      helper.command.linkAndRewire();
+      output = helper.command.tagAllWithoutBuild('--ignore-issues="CircularDependencies"');
     });
     it('should be able to tag with no errors', () => {
       expect(output).to.have.string('7 component(s) tagged');
@@ -399,30 +399,33 @@ describe('cyclic dependencies', function () {
           const list = helper.command.listLocalScope();
           expect(list).to.have.string('comp/a1');
         });
-        it('should not show a clean workspace', () => {
-          helper.command.expectStatusToBeClean();
+        it('bit status should the circular dependency issue', () => {
+          const status = helper.command.status();
+          expect(status).to.have.string('issues found');
+          expect(status).to.have.string('circular dependencies');
         });
       });
     });
   });
-  // @TODO: FIX ON HARMONY!
-  describe.skip('same component require itself using module path (@bit/component-name)', () => {
+  describe('same component require itself using module path', () => {
     let tagOutput;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       // after export, the author now has a link from node_modules.
-      helper.fixtures.createComponentBarFoo(`require('${helper.general.getRequireBitPath('bar', 'foo')}');`);
-      tagOutput = helper.command.tagAllWithoutBuild();
+      helper.fixtures.createComponentBarFoo(`require('@${helper.scopes.remote}/bar.foo');`);
     });
-    it('should tag successfully with no error', () => {
+    it('should block the tag by default', () => {
+      expect(() => helper.command.tagAllWithoutBuild()).to.throw();
+    });
+    it('should tag successfully with --ignore-issues flag and should not save the component itself as a dependency', () => {
+      tagOutput = helper.command.tagAllWithoutBuild('--ignore-issues=SelfReference');
       // we had a bug where this was leading to an error "unable to save Version object, it has dependencies but its flattenedDependencies is empty"
       expect(tagOutput).to.have.string('1 component(s) tagged');
-    });
-    it('should not save the component itself as a dependency', () => {
+
       const catComponent = helper.command.catComponent('bar/foo@latest');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       expect(catComponent.dependencies).to.be.lengthOf(0);

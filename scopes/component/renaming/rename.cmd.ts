@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { RenamingMain } from '.';
+import { RenamingMain } from './renaming.main.runtime';
 
 export type RenameOptions = {
   scope?: string;
@@ -8,13 +8,13 @@ export type RenameOptions = {
   refactor?: boolean;
   preserve?: boolean;
   ast?: boolean;
-  delete?: boolean;
+  deprecate?: boolean;
 };
 
 export class RenameCmd implements Command {
   name = 'rename <current-name> <new-name>';
   description =
-    'rename component. if exported, create a new component and deprecate the original component. otherwise just renames current component';
+    'rename component. if exported, create a new component and delete the original component. otherwise just renames current component';
   helpUrl = 'reference/components/renaming-components';
   arguments = [
     {
@@ -30,11 +30,12 @@ export class RenameCmd implements Command {
   skipWorkspace = true;
   alias = '';
   options = [
-    ['s', 'scope <scope-name>', 'define the scope for the newly created component'],
+    ['s', 'scope <scope-name>', 'define the scope for the new component'],
     ['r', 'refactor', 'update the import/require statements in all dependent components (in the same workspace)'],
     ['', 'preserve', 'avoid renaming files and variables/classes according to the new component name'],
-    ['', 'ast', 'EXPERIMENTAL. use ast to transform files instead of regex'],
-    ['', 'delete', 'EXPERIMENTAL. instead of deprecating the original component, delete it'],
+    ['', 'ast', 'use ast to transform files instead of regex'],
+    ['', 'delete', 'DEPRECATED. this is now the default'],
+    ['', 'deprecate', 'instead of deleting the original component, deprecating it'],
     [
       'p',
       'path <relative-path>',

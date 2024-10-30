@@ -1,16 +1,17 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { compact, uniq } from 'lodash';
-import { installationErrorOutput, compilationErrorOutput, getWorkspaceConfigUpdateOutput } from '@teambit/merging';
 import {
+  installationErrorOutput,
+  compilationErrorOutput,
+  getWorkspaceConfigUpdateOutput,
   FileStatus,
   MergeOptions,
   MergeStrategy,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
+} from '@teambit/merging';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { immutableUnshift } from '@teambit/legacy/dist/utils';
-import { formatPlainComponentItem } from '@teambit/legacy/dist/cli/chalk-box';
+import { immutableUnshift } from '@teambit/legacy.utils';
 import { ImporterMain } from './importer.main.runtime';
 import { ImportOptions, ImportDetails, ImportStatus, ImportResult } from './import-components';
 
@@ -28,9 +29,12 @@ type ImportFlags = {
   filterEnvs?: string;
   saveInLane?: boolean;
   dependencies?: boolean;
+  dependenciesHead?: boolean;
   dependents?: boolean;
   dependentsDryRun?: boolean;
-  dependentsThrough?: string;
+  dependentsVia?: string;
+  dependentsAll?: boolean;
+  silent?: boolean;
   allHistory?: boolean;
   fetchDeps?: boolean;
   trackOnly?: boolean;
@@ -74,6 +78,7 @@ export class ImportCmd implements Command {
       'dependencies',
       'import all dependencies (bit components only) of imported components and write them to the workspace',
     ],
+    ['', 'dependencies-head', 'same as --dependencies, except it imports the dependencies with their head version'],
     [
       '',
       'dependents',
@@ -81,14 +86,20 @@ export class ImportCmd implements Command {
     ],
     [
       '',
-      'dependents-through <string>',
+      'dependents-via <string>',
       'same as --dependents except the traversal must go through the specified component. to specify multiple components, wrap with quotes and separate by a comma',
     ],
     [
       '',
-      'dependents-dry-run',
-      'same as --dependents, except it prints the found dependents and wait for confirmation before importing them',
+      'dependents-all',
+      'same as --dependents except not prompting for selecting paths but rather selecting all paths and showing final confirmation before importing',
     ],
+    [
+      '',
+      'dependents-dry-run',
+      'DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and wait for confirmation before importing them',
+    ],
+    ['', 'silent', 'no prompt for --dependents/--dependents-via flags'],
     [
       '',
       'filter-envs <envs>',
@@ -153,14 +164,10 @@ export class ImportCmd implements Command {
       return formatPlainComponentItemWithVersions(bitId, details);
     });
     const getWsConfigUpdateLogs = () => {
-      // @TODO: uncomment the line below once UPDATE_DEPS_ON_IMPORT is enabled by default
-      // if (!importFlags.verbose) return '';
       const logs = workspaceConfigUpdateResult?.logs;
       if (!logs || !logs.length) return '';
       const logsStr = logs.join('\n');
-      return `${chalk.underline(
-        'verbose logs of workspace config update'
-      )}\n(this is temporarily. once this feature is enabled, use --verbose to see these logs)\n${logsStr}`;
+      return `${chalk.underline('verbose logs of workspace config update')}\n${logsStr}`;
     };
     const upToDateSuffix = lane ? ' on the lane' : '';
     const upToDateStr = upToDateCount === 0 ? '' : `, ${upToDateCount} components are up to date${upToDateSuffix}`;
@@ -208,15 +215,21 @@ export class ImportCmd implements Command {
       filterEnvs,
       saveInLane = false,
       dependencies = false,
+      dependenciesHead = false,
       dependents = false,
       dependentsDryRun = false,
-      dependentsThrough,
+      silent,
+      dependentsVia,
+      dependentsAll,
       allHistory = false,
       fetchDeps = false,
       trackOnly = false,
       includeDeprecated = false,
     }: ImportFlags
   ): Promise<ImportResult> {
+    if (dependentsDryRun) {
+      this.importer.logger.warn(`the "--dependents-dry-run" flag is deprecated and is now the default behavior`);
+    }
     if (objects && merge) {
       throw new BitError(' --objects and --merge flags cannot be used together');
     }
@@ -226,14 +239,14 @@ export class ImportCmd implements Command {
     if (!ids.length && dependencies) {
       throw new BitError('you have to specify ids to use "--dependencies" flag');
     }
+    if (!ids.length && dependenciesHead) {
+      throw new BitError('you have to specify ids to use "--dependencies-head" flag');
+    }
     if (!ids.length && dependents) {
       throw new BitError('you have to specify ids to use "--dependents" flag');
     }
-    if (!ids.length && dependentsDryRun) {
-      throw new BitError('you have to specify ids to use "--dependents-dry-run" flag');
-    }
-    if (!ids.length && dependentsThrough) {
-      throw new BitError('you have to specify ids to use "--dependents-through" flag');
+    if (!ids.length && dependentsVia) {
+      throw new BitError('you have to specify ids to use "--dependents-via" flag');
     }
     if (!ids.length && trackOnly) {
       throw new BitError('you have to specify ids to use "--track-only" flag');
@@ -263,9 +276,11 @@ export class ImportCmd implements Command {
       writeConfigFiles: !skipWriteConfigFiles,
       saveInLane,
       importDependenciesDirectly: dependencies,
+      importHeadDependenciesDirectly: dependenciesHead,
       importDependents: dependents,
-      dependentsDryRun,
-      dependentsThrough,
+      dependentsVia,
+      dependentsAll,
+      silent,
       allHistory,
       fetchDeps,
       trackOnly,
@@ -284,6 +299,14 @@ Also, check that the requested version exists on main or the checked out lane`;
   return `${title}\n${subTitle}\n${body}`;
 }
 
+function formatPlainComponentItem({ scope, name, version, deprecated }: any) {
+  return chalk.cyan(
+    `- ${scope ? `${scope}/` : ''}${name}@${version ? version.toString() : 'latest'}  ${
+      deprecated ? chalk.yellow('[deprecated]') : ''
+    }`
+  );
+}
+
 function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails: ImportDetails) {
   const status: ImportStatus = importDetails.status;
   const id = bitId.toStringWithoutVersion();
@@ -292,7 +315,9 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
     if (importDetails.latestVersion) {
       return `${importDetails.versions.length} new version(s) available, latest ${importDetails.latestVersion}`;
     }
-    return `new versions: ${importDetails.versions.join(', ')}`;
+    return importDetails.versions.length > 5
+      ? `${importDetails.versions.length} new versions`
+      : `new versions: ${importDetails.versions.join(', ')}`;
   };
   const versions = getVersionsOutput();
   const usedVersion = status === 'added' ? `, currently used version ${bitId.version}` : '';
@@ -308,7 +333,7 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
   };
   const conflictMessage = getConflictMessage();
   const deprecated = importDetails.deprecated && !importDetails.removed ? chalk.yellow('deprecated') : '';
-  const removed = importDetails.removed ? chalk.red('removed') : '';
+  const removed = importDetails.removed ? chalk.red('deleted') : '';
   const missingDeps = importDetails.missingDeps.length
     ? chalk.red(`missing dependencies: ${importDetails.missingDeps.map((d) => d.toString()).join(', ')}`)
     : '';

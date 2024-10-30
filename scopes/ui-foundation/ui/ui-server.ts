@@ -5,7 +5,7 @@ import { Logger } from '@teambit/logger';
 import express, { Express } from 'express';
 import fallback from 'express-history-api-fallback';
 import { Port } from '@teambit/toolbox.network.get-port';
-import { stripTrailingChar } from '@teambit/legacy/dist/utils';
+import { stripTrailingChar } from '@teambit/toolbox.string.strip-trailing-char';
 import { Server } from 'http';
 import httpProxy from 'http-proxy';
 import { join } from 'path';
@@ -127,10 +127,6 @@ export class UIServer {
     this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${port}`);
 
     this.setReady();
-  }
-
-  getPluginsComponents() {
-    return this.plugins.map((plugin) => plugin.render);
   }
 
   private async setupServerSideRendering({ root, port, app }: { root: string; port: number; app: Express }) {

@@ -3,6 +3,7 @@ import { ComponentID } from '@teambit/component-id';
 import {
   ClassSchema,
   EnumSchema,
+  ExportSchema,
   FunctionLikeSchema,
   InterfaceSchema,
   ModuleSchema,
@@ -35,15 +36,25 @@ export class APISchema extends SchemaNode {
     this.module = module;
     this.internals = internals;
     this.componentId = componentId;
-    this.taggedModuleExports = this.listTaggedExports(module);
-    if (taggedModuleExports.length > 0) {
-      this.taggedModuleExports = this.taggedModuleExports.concat(taggedModuleExports);
-    }
+    taggedModuleExports = (taggedModuleExports.length && taggedModuleExports) || this.listTaggedExports(module);
+    this.taggedModuleExports = taggedModuleExports;
   }
 
-  listTaggedExports(module?: ModuleSchema) {
+  listTaggedExports(module?: ModuleSchema): SchemaNode[] {
     if (!module) return [];
-    return module.exports.filter((e) => e.doc?.hasTag(TagName.exports));
+    return module.exports
+      .filter((e) => {
+        if (ExportSchema.isExportSchema(e)) {
+          return e.exportNode.doc?.hasTag(TagName.exports) || e.doc?.hasTag(TagName.exports);
+        }
+        return e.doc?.hasTag(TagName.exports);
+      })
+      .map((e) => {
+        if (ExportSchema.isExportSchema(e)) {
+          return e.exportNode;
+        }
+        return e;
+      });
   }
 
   toString() {
@@ -57,12 +68,17 @@ export class APISchema extends SchemaNode {
   toStringPerType() {
     const title = chalk.inverse(`API Schema of ${this.componentId.toString()}\n`);
     const getSection = (ClassObj, sectionName: string) => {
-      const objects = this.module.exports.filter((exp) => exp instanceof ClassObj);
+      const objects = this.module.exports.filter((exp) => {
+        if (ExportSchema.isExportSchema(exp)) {
+          return exp.exportNode instanceof ClassObj;
+        }
+        return exp instanceof ClassObj;
+      });
       if (!objects.length) {
         return '';
       }
 
-      return `${chalk.green.bold(sectionName)}\n${objects.map((c) => c.toString()).join('\n')}\n\n`;
+      return `${chalk.green.bold(sectionName)}\n${objects.map((c) => c.toString({ color: true })).join('\n')}\n\n`;
     };
 
     return (
@@ -77,6 +93,54 @@ export class APISchema extends SchemaNode {
       getSection(TypeRefSchema, 'TypeReferences') +
       getSection(UnresolvedSchema, 'Unresolved')
     );
+  }
+
+  toFullSignature(options: { showDocs?: boolean; showTitles?: boolean } = { showDocs: true }): string {
+    const title = `API Schema of ${this.componentId.toString()}\n\n`;
+
+    const exportGroups: { [key: string]: SchemaNode[] } = {};
+
+    for (const exp of this.module.exports) {
+      const node = ExportSchema.isExportSchema(exp) ? exp.exportNode : exp;
+      const constructorName = node.constructor.name;
+
+      if (!exportGroups[constructorName]) {
+        exportGroups[constructorName] = [];
+      }
+
+      exportGroups[constructorName].push(exp);
+    }
+
+    let output = options.showTitles ? title : '';
+
+    for (const [sectionName, exports] of Object.entries(exportGroups)) {
+      const readableSectionName = options.showTitles ? this.getReadableSectionName(sectionName) : '';
+
+      output += `${readableSectionName}\n\n`;
+
+      const sectionBody = exports.map((exp) => exp.toFullSignature(options)).join('\n\n');
+
+      output += `${sectionBody}\n\n`;
+    }
+
+    return output.trim();
+  }
+
+  private getReadableSectionName(constructorName: string): string {
+    const sectionNameMap: { [key: string]: string } = {
+      ModuleSchema: 'Namespaces',
+      ClassSchema: 'Classes',
+      InterfaceSchema: 'Interfaces',
+      FunctionLikeSchema: 'Functions',
+      VariableLikeSchema: 'Variables',
+      TypeSchema: 'Types',
+      EnumSchema: 'Enums',
+      TypeRefSchema: 'Type References',
+      UnresolvedSchema: 'Unresolved',
+      ReactSchema: 'React Components',
+    };
+
+    return sectionNameMap[constructorName] || constructorName;
   }
 
   listSignatures() {

@@ -1,13 +1,17 @@
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { MainRuntime } from '@teambit/cli';
-import UIAspect, { UiMain } from '@teambit/ui';
+import { UIAspect, UiMain } from '@teambit/ui';
 import { ComponentAspect, ComponentMain } from '@teambit/component';
 import { HarmonyAppOptions } from './harmony-app-options';
 import { HarmonyUiAppAspect } from './harmony-ui-app.aspect';
 // import { HarmonyUIApp } from './ui.application';
 
 export class HarmonyUiAppMain {
-  constructor(private application: ApplicationMain, private ui: UiMain, private componentAspect: ComponentMain) {}
+  constructor(
+    private application: ApplicationMain,
+    private ui: UiMain,
+    private componentAspect: ComponentMain
+  ) {}
 
   /**
    * register a new harmony UI application.

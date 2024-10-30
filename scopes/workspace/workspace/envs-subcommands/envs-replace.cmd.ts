@@ -1,6 +1,7 @@
 import { Command } from '@teambit/cli';
 import chalk from 'chalk';
 import { Workspace } from '../workspace';
+import { installAfterEnvChangesMsg } from './envs-set.cmd';
 
 export class EnvsReplaceCmd implements Command {
   name = 'replace <current-env> <new-env>';
@@ -27,6 +28,6 @@ export class EnvsReplaceCmd implements Command {
     await this.workspace.setEnvToComponents(envId, componentIds);
     return `added ${chalk.bold(envId.toString())} env to the following component(s):
 ${componentIds.map((compId) => compId.toString()).join('\n')}\n
-please run 'bit install' for env replace changes to take effect`;
+${installAfterEnvChangesMsg}`;
   }
 }

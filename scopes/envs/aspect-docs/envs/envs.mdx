@@ -103,8 +103,8 @@ For example:
 ```
 
 > <p style={{ color: '#c31313' }}>Never use the '*' wildcard in a workspace that uses multiple environments!</p>
-> Instead, use exclusive namespaces or directories to select and configure each group of components to use its own environment
-> (see an example in the next section).
+> Instead, use exclusive namespaces or directories to select and configure each group of components to use its own
+> environment (see an example in the next section).
 
 <br />
 <br />
@@ -480,6 +480,8 @@ Returns a linter to be used by the Linter service.
 For example:
 
 ```ts
+import { ESLintLinter } from '@teambit/defender.eslint-linter';
+
 export class ReactEnv implements Environment {
 
     constructor(){
@@ -492,11 +494,10 @@ export class ReactEnv implements Environment {
     // ...
 
     getLinter() {
-        const eslintConfig = require.resolve('./eslint/eslintrc')
-        return this.eslint.createLinter({
-            config: eslintConfig,
-            // resolve all plugins from the react environment
-            pluginPath: __dirname,
+        return ESLintLinter.from({
+          configPath: require.resolve('./eslint/eslintrc'),
+          // resolve all plugins from the react environment.
+          pluginsPath: __dirname,
         });
     }
 }
@@ -732,7 +733,10 @@ import { ReactExtensionAspect } from './react-extension.aspect';
 const tsconfig = require('./typescript/tsconfig.json');
 
 export class ReactExtensionMain {
-  constructor(private react: ReactMain, private envs: EnvsMain) {}
+  constructor(
+    private react: ReactMain,
+    private envs: EnvsMain
+  ) {}
 
   icon() {
     return 'https://static.bit.dev/extensions-icons/react.svg';

@@ -1,18 +1,18 @@
 import { ComponentID, AspectList, AspectEntry, ResolveComponentIdFunc } from '@teambit/component';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
 import { ExtensionDataList, configEntryToDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
-import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { JsonVinyl } from '@teambit/component.sources';
 import detectIndent from 'detect-indent';
 import detectNewline from 'detect-newline';
 import fs from 'fs-extra';
 import path from 'path';
-import stringifyPackage from 'stringify-package';
 import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { merge } from 'lodash';
 import { AlreadyExistsError } from './exceptions';
 
 interface ComponentConfigFileOptions {
-  indent: number;
+  indent: string;
   newLine: '\r\n' | '\n' | undefined;
 }
 
@@ -28,7 +28,7 @@ interface ComponentConfigFileJson {
   defaultScope?: string;
 }
 
-const DEFAULT_INDENT = 2;
+const DEFAULT_INDENT = '  ';
 const DEFAULT_NEWLINE = '\n';
 
 export class ComponentConfigFile {
@@ -53,7 +53,7 @@ export class ComponentConfigFile {
     }
     const content = await fs.readFile(filePath, 'utf-8');
     const parsed: ComponentConfigFileJson = parseComponentJsonContent(content, componentDir);
-    const indent = detectIndent(content).amount;
+    const indent = detectIndent(content).indent;
     const newLine = detectNewline(content);
     const componentId = ComponentID.fromObject(parsed.componentId, parsed.defaultScope || outsideDefaultScope);
     const aspects = await aspectListFactory(ExtensionDataList.fromConfigObject(parsed.extensions));
@@ -72,14 +72,27 @@ export class ComponentConfigFile {
     return path.join(componentRootFolder, COMPONENT_CONFIG_FILE_NAME);
   }
 
-  async write(options: WriteConfigFileOptions = {}): Promise<void> {
+  async toVinylFile(options: WriteConfigFileOptions = {}): Promise<JsonVinyl> {
     const json = this.toJson();
     const filePath = ComponentConfigFile.composePath(this.componentDir);
     const isExist = await fs.pathExists(filePath);
     if (isExist && !options.override) {
       throw new AlreadyExistsError(filePath);
     }
-    return fs.writeJsonSync(filePath, json, { spaces: this.options.indent, EOL: this.options.newLine });
+
+    return JsonVinyl.load({
+      base: path.dirname(filePath),
+      path: filePath,
+      content: json,
+      override: true,
+      indent: this.options.indent,
+      newline: this.options.newLine,
+    });
+  }
+
+  async write(options: WriteConfigFileOptions = {}): Promise<void> {
+    const vinyl = await this.toVinylFile(options);
+    await vinyl.write();
   }
 
   async addAspect(
@@ -129,11 +142,6 @@ export class ComponentConfigFile {
       defaultScope: this.defaultScope,
       extensions: this.aspects.toConfigObject(),
     };
-  }
-
-  toString(): string {
-    const json = this.toJson();
-    return stringifyPackage(json, this.options.indent, this.options.newLine);
   }
 }
 

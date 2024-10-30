@@ -2,7 +2,7 @@ import ts from 'typescript';
 import { replaceName } from './replaceName';
 
 export function classNamesTransformer(nameMapping: Record<string, string>): ts.TransformerFactory<ts.SourceFile> {
-  return (context) => {
+  return (context: ts.TransformationContext) => {
     const { factory } = context;
 
     const visit: ts.Visitor = (node) => {
@@ -17,7 +17,6 @@ export function classNamesTransformer(nameMapping: Record<string, string>): ts.T
               const newMemberName = replaceName(oldMemberName, nameMapping);
               return factory.updatePropertyDeclaration(
                 member,
-                member.decorators,
                 member.modifiers,
                 newMemberName ? ts.factory.createIdentifier(newMemberName) : member.name,
                 member.questionToken,
@@ -33,7 +32,6 @@ export function classNamesTransformer(nameMapping: Record<string, string>): ts.T
               const updatedParameters = member.parameters.map((param) => {
                 return ts.factory.updateParameterDeclaration(
                   param,
-                  param.decorators,
                   param.modifiers,
                   param.dotDotDotToken,
                   param.name,
@@ -45,7 +43,6 @@ export function classNamesTransformer(nameMapping: Record<string, string>): ts.T
 
               return factory.updateMethodDeclaration(
                 member,
-                member.decorators,
                 member.modifiers,
                 member.asteriskToken,
                 newMemberName ? ts.factory.createIdentifier(newMemberName) : member.name,
@@ -61,7 +58,6 @@ export function classNamesTransformer(nameMapping: Record<string, string>): ts.T
 
           return factory.updateClassDeclaration(
             node,
-            node.decorators,
             node.modifiers,
             factory.createIdentifier(newName),
             node.typeParameters,
@@ -72,6 +68,6 @@ export function classNamesTransformer(nameMapping: Record<string, string>): ts.T
       }
       return ts.visitEachChild(node, visit, context);
     };
-    return (node) => ts.visitNode(node, visit);
+    return (node) => ts.visitNode(node, visit) as ts.SourceFile;
   };
 }

@@ -1,26 +1,27 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { buildRegistry } from '@teambit/legacy/dist/cli';
 import legacyLogger from '@teambit/legacy/dist/logger/logger';
-import { Command } from '@teambit/legacy/dist/cli/command';
+import { CLIArgs, Flags, Command } from '@teambit/legacy/dist/cli/command';
 import pMapSeries from 'p-map-series';
 import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
-import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
+import { HostInitializerMain } from '@teambit/host-initializer';
+import { loadConsumerIfExist, getConsumerInfo } from '@teambit/legacy/dist/consumer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { getCommandId } from './get-command-id';
-import { LegacyCommandAdapter } from './legacy-command-adapter';
-import { CLIParser } from './cli-parser';
+import { CLIParser, findCommandByArgv } from './cli-parser';
 import { CompletionCmd } from './completion.cmd';
 import { CliCmd, CliGenerateCmd } from './cli.cmd';
 import { HelpCmd } from './help.cmd';
 import { VersionCmd } from './version.cmd';
 
 export type CommandList = Array<Command>;
-export type OnStart = (hasWorkspace: boolean, currentCommand: string) => Promise<void>;
+export type OnStart = (hasWorkspace: boolean, currentCommand: string, commandObject?: Command) => Promise<void>;
+export type OnCommandStart = (commandName: string, args: CLIArgs, flags: Flags) => Promise<void>;
 export type OnBeforeExitFn = () => Promise<void>;
 
 export type OnStartSlot = SlotRegistry<OnStart>;
+export type OnCommandStartSlot = SlotRegistry<OnCommandStart>;
 export type CommandsSlot = SlotRegistry<CommandList>;
 export type OnBeforeExitSlot = SlotRegistry<OnBeforeExitFn>;
 
@@ -29,6 +30,7 @@ export class CLIMain {
   constructor(
     private commandsSlot: CommandsSlot,
     private onStartSlot: OnStartSlot,
+    readonly onCommandStartSlot: OnCommandStartSlot,
     private onBeforeExitSlot: OnBeforeExitSlot,
     private logger: Logger
   ) {}
@@ -72,6 +74,12 @@ export class CLIMain {
     return this.commands.find((command) => getCommandId(command.name) === name);
   }
 
+  getCommandByNameOrAlias(name: string): Command | undefined {
+    const command = this.getCommand(name);
+    if (command) return command;
+    return this.commands.find((cmd) => cmd.alias === name);
+  }
+
   /**
    * when running `bit help`, commands are grouped by categories.
    * this method helps registering a new group by providing its name and a description.
@@ -86,8 +94,20 @@ export class CLIMain {
     }
   }
 
+  /**
+   * onStart is when bootstrapping the CLI. (it happens before onCommandStart)
+   */
   registerOnStart(onStartFn: OnStart) {
     this.onStartSlot.register(onStartFn);
+    return this;
+  }
+
+  /**
+   * onCommandStart is when a command is about to start and we have the command object and the parsed args and flags
+   * already. (it happens after onStart)
+   */
+  registerOnCommandStart(onCommandStartFn: OnCommandStart) {
+    this.onCommandStartSlot.register(onCommandStartFn);
     return this;
   }
 
@@ -117,14 +137,16 @@ export class CLIMain {
    */
   async run(hasWorkspace: boolean) {
     await this.invokeOnStart(hasWorkspace);
-    const CliParser = new CLIParser(this.commands, this.groups);
-    await CliParser.parse();
+    const CliParser = new CLIParser(this.commands, this.groups, this.onCommandStartSlot);
+    const commandRunner = await CliParser.parse();
+    await commandRunner.runCommand();
   }
 
   private async invokeOnStart(hasWorkspace: boolean) {
     const onStartFns = this.onStartSlot.values();
-    const currentCommand = process.argv[2];
-    await pMapSeries(onStartFns, (onStart) => onStart(hasWorkspace, currentCommand));
+    const foundCmd = findCommandByArgv(this.commands);
+    const currentCommandName = process.argv[2];
+    await pMapSeries(onStartFns, (onStart) => onStart(hasWorkspace, currentCommandName, foundCmd));
   }
 
   private setDefaults(command: Command) {
@@ -139,6 +161,9 @@ export class CLIMain {
     if (command.loader === undefined) {
       command.loader = true;
     }
+    if (command.loadAspects === undefined) {
+      command.loadAspects = true;
+    }
     if (command.helpUrl && !isFullUrl(command.helpUrl)) {
       command.helpUrl = `https://bit.dev/${command.helpUrl}`;
     }
@@ -146,24 +171,31 @@ export class CLIMain {
 
   static dependencies = [LoggerAspect];
   static runtime = MainRuntime;
-  static slots = [Slot.withType<CommandList>(), Slot.withType<OnStart>(), Slot.withType<OnBeforeExitFn>()];
+  static slots = [
+    Slot.withType<CommandList>(),
+    Slot.withType<OnStart>(),
+    Slot.withType<OnCommandStart>(),
+    Slot.withType<OnBeforeExitFn>(),
+  ];
 
   static async provider(
     [loggerMain]: [LoggerMain],
     config,
-    [commandsSlot, onStartSlot, onBeforeExitSlot]: [CommandsSlot, OnStartSlot, OnBeforeExitSlot]
+    [commandsSlot, onStartSlot, onCommandStartSlot, onBeforeExitSlot]: [
+      CommandsSlot,
+      OnStartSlot,
+      OnCommandStartSlot,
+      OnBeforeExitSlot,
+    ]
   ) {
     const logger = loggerMain.createLogger(CLIAspect.id);
-    const cliMain = new CLIMain(commandsSlot, onStartSlot, onBeforeExitSlot, logger);
-    const legacyRegistry = buildRegistry();
+    const cliMain = new CLIMain(commandsSlot, onStartSlot, onCommandStartSlot, onBeforeExitSlot, logger);
     await ensureWorkspaceAndScope();
-    const legacyCommands = legacyRegistry.commands;
-    const legacyCommandsAdapters = legacyCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
     const cliGenerateCmd = new CliGenerateCmd(cliMain);
     const cliCmd = new CliCmd(cliMain);
     const helpCmd = new HelpCmd(cliMain);
     cliCmd.commands.push(cliGenerateCmd);
-    cliMain.register(...legacyCommandsAdapters, new CompletionCmd(), cliCmd, helpCmd, new VersionCmd());
+    cliMain.register(new CompletionCmd(), cliCmd, helpCmd, new VersionCmd());
     return cliMain;
   }
 }
@@ -180,6 +212,11 @@ async function ensureWorkspaceAndScope() {
   try {
     await loadConsumerIfExist();
   } catch (err) {
+    const potentialWsPath = process.cwd();
+    const consumerInfo = await getConsumerInfo(potentialWsPath);
+    if (consumerInfo && !consumerInfo.hasScope && consumerInfo.hasBitMap && consumerInfo.hasConsumerConfig) {
+      await HostInitializerMain.init(potentialWsPath);
+    }
     // do nothing. it could fail for example with ScopeNotFound error, which is taken care of in "bit init".
   }
 }

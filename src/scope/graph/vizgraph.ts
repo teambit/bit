@@ -1,12 +1,14 @@
 import execa from 'execa';
+import tempy from 'tempy';
 import os from 'os';
 import fs from 'fs-extra';
 import { Graph } from 'graphlib';
 import graphviz, { Digraph } from 'graphviz';
+import { instance } from '@viz-js/viz';
 import { Graph as ClearGraph } from '@teambit/graph.cleargraph';
+import { generateRandomStr } from '@teambit/toolbox.string.random';
 import * as path from 'path';
 import logger from '../../logger/logger';
-import { generateRandomStr } from '../../utils';
 
 export type GraphConfig = {
   layout?: string; // dot Layout to use in the graph
@@ -30,7 +32,6 @@ export default class VisualDependencyGraph {
 
   static async loadFromGraphlib(graphlib: Graph, config: GraphConfig = {}): Promise<VisualDependencyGraph> {
     const mergedConfig = Object.assign({}, defaultConfig, config);
-    await checkGraphvizInstalled(config.graphVizPath);
     const graph: Digraph = VisualDependencyGraph.buildDependenciesGraph(graphlib, mergedConfig);
     return new VisualDependencyGraph(graphlib, graph, mergedConfig);
   }
@@ -41,7 +42,6 @@ export default class VisualDependencyGraph {
     markIds?: string[]
   ): Promise<VisualDependencyGraph> {
     const mergedConfig = { ...defaultConfig, ...config };
-    await checkGraphvizInstalled(config.graphVizPath);
     const graph: Digraph = VisualDependencyGraph.buildDependenciesGraphFromClearGraph(
       clearGraph,
       mergedConfig,
@@ -131,11 +131,32 @@ export default class VisualDependencyGraph {
   }
 
   /**
+   * with this library no need to install Graphviz in the OS.
+   * it supports SVG and other formats (run vs.format to see all formats), but not "png" nor "gif".
+   *
+   * returns the path to the rendered file.
+   */
+  async renderUsingViz(format: string = 'svg'): Promise<string> {
+    const dot = this.dot();
+    const viz = await instance();
+    const result = viz.render(dot, { format });
+    if (result.errors.length) {
+      throw new Error(
+        `failed to render the graph, errors:\n${result.errors.map((e) => `${e.level}: ${e.message}`).join('\n')}`
+      );
+    }
+    const file = tempy.file({ extension: 'svg' });
+    await fs.writeFile(file, result.output);
+    return file;
+  }
+
+  /**
    * Creates an image from the module dependency graph.
    * @param  {String} imagePath
    * @return {Promise}
    */
   async image(imagePath: string = this.getTmpFilename()): Promise<string> {
+    await checkGraphvizInstalled();
     const options: Record<string, any> = createGraphvizOptions(this.config);
     const type: string = path.extname(imagePath).replace('.', '') || 'png';
     options.type = type;
@@ -158,6 +179,11 @@ export default class VisualDependencyGraph {
    * @return {dot}
    */
   dot() {
+    const { G, E, N } = createGraphvizOptions(this.config);
+    Object.keys(G).forEach((key) => this.graph.set(key, G[key]));
+    Object.keys(E).forEach((key) => this.graph.setEdgeAttribut(key, E[key]));
+    Object.keys(N).forEach((key) => this.graph.setNodeAttribut(key, N[key]));
+
     return this.graph.to_dot();
   }
 }
@@ -212,7 +238,7 @@ function createGraphvizOptions(config: GraphConfig) {
       fontname: 'Arial',
       color: '#c6c5fe',
       fontcolor: '#c6c5fe',
-      fontsize: '14px',
+      fontsize: '14',
     }),
   };
 }

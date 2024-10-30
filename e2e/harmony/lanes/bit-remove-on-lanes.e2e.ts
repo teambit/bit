@@ -174,7 +174,7 @@ describe('bit lane command', function () {
       expect(() => helper.command.export()).to.not.throw();
     });
   });
-  describe('soft-remove main component when on a lane', () => {
+  describe('delete main component when on a lane', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
@@ -183,12 +183,19 @@ describe('bit lane command', function () {
       helper.command.createLane();
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
       helper.command.export();
-      helper.command.softRemoveOnLane('comp2');
     });
-    it('should remove the component from the workspace', () => {
-      const list = helper.command.listParsed();
-      expect(list).to.have.lengthOf(1);
-      expect(list[0].id).to.not.have.string('comp2');
+    it('should throw an error suggesting to switch to main or using --update-main flag', () => {
+      expect(() => helper.command.softRemoveOnLane('comp2')).to.throw('unable to delete');
+    });
+    describe('using --update-main flag', () => {
+      before(() => {
+        helper.command.softRemoveOnLane('comp2', '--update-main');
+      });
+      it('should remove the component from the workspace', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
+        expect(list[0].id).to.not.have.string('comp2');
+      });
     });
   });
   describe('soft remove on lane when a forked lane is merging this lane', () => {
@@ -201,7 +208,7 @@ describe('bit lane command', function () {
       helper.command.export();
       helper.command.createLane('lane-b');
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       beforeRemoveScope = helper.scopeHelper.cloneLocalScope();
@@ -273,7 +280,7 @@ describe('bit lane command', function () {
       helper.command.export();
       helper.command.createLane('lane-b');
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       beforeRemoveScope = helper.scopeHelper.cloneLocalScope();
@@ -317,10 +324,10 @@ describe('bit lane command', function () {
         expect(staged).to.include(`${helper.scopes.remote}/comp2`);
       });
     });
-    describe('when merging with --no-snap', () => {
+    describe('when merging with --no-auto-snap', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeMerge);
-        output = helper.command.mergeLane('lane-a', '-x --no-snap');
+        output = helper.command.mergeLane('lane-a', '-x --no-auto-snap');
       });
       it('bit status should not show the component as soft-removed from remote', () => {
         const status = helper.command.statusJson();
@@ -376,7 +383,7 @@ describe('bit lane command', function () {
       laneBws = helper.scopeHelper.cloneLocalScope();
       helper.command.switchLocalLane('lane-a', '-x');
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.softRemoveOnLane('bar/foo');
@@ -470,6 +477,9 @@ describe('bit lane command', function () {
     });
   });
   describe('remove on lane with --update-main then merge to main', () => {
+    let localWs: string;
+    let remoteScope: string;
+    let headOnLane: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1, false);
@@ -478,31 +488,65 @@ describe('bit lane command', function () {
       helper.command.createLane();
       helper.command.softRemoveOnLane('comp1', '--update-main');
       helper.command.snapAllComponentsWithoutBuild();
+      headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
       helper.command.export();
-      helper.command.switchLocalLane('main', '-x');
-      helper.command.mergeLane('dev', '-x');
+      localWs = helper.scopeHelper.cloneLocalScope();
+      remoteScope = helper.scopeHelper.cloneRemoteScope();
     });
-    it('should be marked as removed on main', () => {
-      const removeData = helper.command.showAspectConfig('comp1', Extensions.remove);
-      expect(removeData.config.removed).to.be.true;
-    });
-    it('bit status should show the component as staged', () => {
-      const status = helper.command.statusJson();
-      expect(status.stagedComponents).to.have.lengthOf(1);
-    });
-    it('bitmap should not have the component', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap).to.not.have.property('comp1');
-    });
-    describe('export and import the component to a new workspace', () => {
+    describe('merge from the workspace', () => {
       before(() => {
-        helper.command.export();
-        helper.scopeHelper.reInitLocalScope();
-        helper.scopeHelper.addRemoteScope();
-        helper.command.importComponent('comp1', '-x');
+        helper.command.switchLocalLane('main', '-x');
+        helper.command.mergeLane('dev', '-x');
       });
-      it('should show the component as removed', () => {
+      it('should be marked as removed on main', () => {
         const removeData = helper.command.showAspectConfig('comp1', Extensions.remove);
+        expect(removeData.config.removed).to.be.true;
+      });
+      it('bit status should show the component as staged', () => {
+        const status = helper.command.statusJson();
+        expect(status.stagedComponents).to.have.lengthOf(1);
+      });
+      it('bitmap should not have the component', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap).to.not.have.property('comp1');
+      });
+      describe('export and import the component to a new workspace', () => {
+        before(() => {
+          helper.command.export();
+          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.addRemoteScope();
+          helper.command.importComponent('comp1', '-x');
+        });
+        it('should show the component as removed', () => {
+          const removeData = helper.command.showAspectConfig('comp1', Extensions.remove);
+          expect(removeData.config.removed).to.be.true;
+        });
+      });
+    });
+    describe('merge from scope', () => {
+      let bareMerge;
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(localWs);
+        helper.scopeHelper.getClonedRemoteScope(remoteScope);
+        bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+        mergeOutput = helper.command.mergeLaneFromScope(bareMerge.scopePath, `${helper.scopes.remote}/dev`);
+      });
+      it('should indicate in the output the new head, not the only one', () => {
+        expect(mergeOutput).to.have.string(headOnLane);
+        expect(mergeOutput).to.not.have.string('0.0.1');
+      });
+      it('should merge successfully to main', () => {
+        const headOnMain = helper.command.getHead('comp1', bareMerge.scopePath);
+        expect(headOnMain).to.equal(headOnLane);
+      });
+      it('should be marked as removed on main', () => {
+        const removeData = helper.command.showAspectConfig(
+          `${helper.scopes.remote}/comp1`,
+          Extensions.remove,
+          bareMerge.scopePath
+        );
         expect(removeData.config.removed).to.be.true;
       });
     });

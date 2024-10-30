@@ -8,7 +8,11 @@ import { TagName, TagSchema } from './tag';
 export class ReturnTagSchema extends TagSchema {
   readonly type?: SchemaNode;
 
-  constructor(readonly location: SchemaLocation, readonly comment?: string, type?: SchemaNode) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly comment?: string,
+    type?: SchemaNode
+  ) {
     super(location, TagName.return, comment);
     this.type = type;
   }
@@ -16,6 +20,12 @@ export class ReturnTagSchema extends TagSchema {
   toString() {
     const comment = this.comment ? ` ${this.comment}` : '';
     return `@${this.tagName}${comment}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const typeStr = this.type ? ` {${this.type.toFullSignature(options)}}` : '';
+    const comment = this.comment ? ` ${this.comment}` : '';
+    return `@${this.tagName}${typeStr}${comment}`;
   }
 
   toObject() {

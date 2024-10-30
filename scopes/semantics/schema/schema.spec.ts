@@ -3,13 +3,13 @@ import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import { APISchema, UnknownSchema } from '@teambit/semantics.entities.semantic-schema';
 import chaiSubset from 'chai-subset';
-import TrackerAspect, { TrackerMain } from '@teambit/tracker';
+import { TrackerAspect, TrackerMain } from '@teambit/tracker';
 import { loadAspect, loadManyAspects } from '@teambit/harmony.testing.load-aspect';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { ComponentID } from '@teambit/component-id';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { SchemaMain } from './schema.main.runtime';
-import { SchemaAspect } from '.';
+import { SchemaAspect } from './schema.aspect';
 
 chai.use(chaiSubset);
 

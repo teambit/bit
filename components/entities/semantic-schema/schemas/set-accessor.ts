@@ -23,6 +23,11 @@ export class SetAccessorSchema extends SchemaNode {
     return `set ${chalk.bold(this.name)}(${this.param.toString()})`;
   }
 
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const paramStr = this.param.toFullSignature(options);
+    return `set ${this.name}(${paramStr})`;
+  }
+
   toObject() {
     return {
       ...super.toObject(),

@@ -10,6 +10,7 @@ import type { BaseComponentTemplateOptions } from './component-template';
 export type CreateOptions = BaseComponentTemplateOptions & {
   env?: string;
   aspect?: string;
+  force?: boolean;
 };
 
 export class CreateCmd implements Command {
@@ -58,6 +59,7 @@ export class CreateCmd implements Command {
     ['t', 'template <string>', 'env-id of the template. alias for --aspect.'],
     ['p', 'path <string>', 'relative path in the workspace. by default the path is `<scope>/<namespace>/<name>`'],
     ['e', 'env <string>', "set the component's environment. (overrides the env from variants and the template)"],
+    ['f', 'force', 'replace existing files at the target location'],
   ] as CommandOptions;
 
   constructor(private generator: GeneratorMain) {}
@@ -66,6 +68,7 @@ export class CreateCmd implements Command {
     [templateName, componentNames]: [string, string[]],
     options: Partial<CreateOptions> & {
       template?: string | ComponentID;
+      force?: boolean;
     }
   ) {
     options.aspectId = options.aspectId ?? options.template;

@@ -1,20 +1,20 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
 import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
-import RemoveAspect, { RemoveMain } from '@teambit/remove';
-import { UPDATE_DEPS_ON_IMPORT, isFeatureEnabled } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
-import { ApplyVersionResults, FailedComponents } from '@teambit/merging';
-import ImporterAspect, { ImporterMain } from '@teambit/importer';
-import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
-import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
+import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import {
+  ApplyVersionResults,
+  FailedComponents,
+  threeWayMerge,
   getMergeStrategyInteractive,
   MergeStrategy,
-  threeWayMerge,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+} from '@teambit/merging';
+import { ImporterAspect, ImporterMain } from '@teambit/importer';
+import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
+import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import mapSeries from 'p-map-series';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Version, ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
@@ -24,15 +24,17 @@ import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
 import { applyVersion, ComponentStatus, ComponentStatusBase, throwForFailures } from './checkout-version';
 import { RevertCmd } from './revert-cmd';
+import { ComponentMap } from '@teambit/legacy.bit-map';
 
 export type CheckoutProps = {
   version?: string; // if reset/head/latest is true, the version is undefined
   ids?: ComponentID[];
   head?: boolean;
+  ancestor?: number; // how many generations to go backward
   latest?: boolean;
   main?: boolean; // relevant for "revert" only
   promptMergeOptions?: boolean;
-  mergeStrategy?: MergeStrategy | null; // strategy to use in case of conflicts
+  mergeStrategy?: MergeStrategy; // strategy to use in case of conflicts
   forceOurs?: boolean; // regardless of conflicts, use ours
   forceTheirs?: boolean; // regardless of conflicts, use theirs
   verbose?: boolean;
@@ -45,6 +47,8 @@ export type CheckoutProps = {
   workspaceOnly?: boolean;
   versionPerId?: ComponentID[]; // if given, the ComponentID.version is the version to checkout to.
   skipUpdatingBitmap?: boolean; // needed for stash
+  loadStash?: boolean;
+  stashedBitmapEntries?: Array<Partial<ComponentMap>>;
   restoreMissingComponents?: boolean; // in case .bitmap has a component and it's missing from the workspace, restore it (from model)
   allowAddingComponentsFromScope?: boolean; // in case the id doesn't exist in .bitmap, add it from the scope (relevant for switch)
   includeLocallyDeleted?: boolean; // include components that were deleted locally. currently enabled for "bit checkout reset" only.
@@ -67,10 +71,12 @@ export class CheckoutMain {
   ) {}
 
   async checkout(checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
+    this.workspace.inInstallContext = true;
     const consumer = this.workspace.consumer;
     const { version, ids, promptMergeOptions } = checkoutProps;
     await this.syncNewComponents(checkoutProps);
     const addedComponents = await this.restoreMissingComponents(checkoutProps);
+    const newComponents = await this.addNewComponents(checkoutProps);
     const bitIds = ComponentIdList.fromArray(ids?.map((id) => id) || []);
     // don't use Promise.all, it loads the components and this operation must be in sequence.
     const allComponentStatusBeforeMerge = await mapSeries(bitIds, (id) =>
@@ -98,7 +104,7 @@ export class CheckoutMain {
     const getComponentsStatusOfMergeNeeded = async (): Promise<ComponentStatus[]> => {
       const tmp = new Tmp(consumer.scope);
       try {
-        const afterMergeAttempt = await Promise.all(compsNeedMerge.map((c) => this.getMergeStatus(c)));
+        const afterMergeAttempt = await Promise.all(compsNeedMerge.map((c) => this.getMergeStatus(c, checkoutProps)));
         await tmp.clear();
         return afterMergeAttempt;
       } catch (err: any) {
@@ -165,8 +171,9 @@ export class CheckoutMain {
         verbose: checkoutProps.verbose,
         resetConfig: checkoutProps.reset,
         skipUpdatingBitMap: checkoutProps.skipUpdatingBitmap || checkoutProps.revert,
-        shouldUpdateWorkspaceConfig: isFeatureEnabled(UPDATE_DEPS_ON_IMPORT),
+        shouldUpdateWorkspaceConfig: true,
         reasonForBitmapChange: 'checkout',
+        mergeStrategy: checkoutProps.mergeStrategy,
       };
       componentWriterResults = await this.componentWriter.writeMany(manyComponentsWriterOpts);
     }
@@ -185,6 +192,7 @@ export class CheckoutMain {
       components: appliedVersionComponents,
       removedComponents: componentIdsToRemove,
       addedComponents,
+      newComponents,
       version,
       failedComponents,
       leftUnresolvedConflicts,
@@ -225,6 +233,44 @@ export class CheckoutMain {
     });
 
     return missing;
+  }
+
+  async addNewComponents(checkoutProps: CheckoutProps): Promise<undefined | ComponentID[]> {
+    const stashedBitmapEntries = checkoutProps.stashedBitmapEntries;
+    if (!stashedBitmapEntries) return;
+    const newBitmapEntries = stashedBitmapEntries.filter((entry) => entry.defaultScope);
+    if (!newBitmapEntries.length) return;
+    const newComps = await mapSeries(newBitmapEntries, async (bitmapEntry) => {
+      const id = bitmapEntry.id!;
+      const existingId = this.workspace.bitMap.getBitmapEntryIfExist(id, { ignoreVersion: true });
+      if (existingId) return;
+      const modelComponent = ModelComponent.fromBitId(id);
+      const repo = this.workspace.scope.legacyScope.objects;
+      const consumerComp = await modelComponent.toConsumerComponent(id.version, id.scope, repo);
+      const newCompId = ComponentID.fromObject({ name: id.fullName }, bitmapEntry.defaultScope!);
+      await this.componentWriter.writeMany({
+        components: [consumerComp],
+        skipDependencyInstallation: true,
+        writeToPath: bitmapEntry.rootDir,
+        skipUpdatingBitMap: true,
+      });
+
+      this.workspace.consumer.bitMap.addComponent({
+        componentId: newCompId,
+        files: consumerComp.files.map((f) => ({
+          name: f.basename,
+          relativePath: f.relative,
+          test: f.test,
+        })),
+        mainFile: bitmapEntry.mainFile!,
+        config: bitmapEntry.config,
+        defaultScope: bitmapEntry.defaultScope,
+      });
+      await this.workspace.triggerOnComponentAdd(newCompId, { compile: true });
+      return newCompId;
+    });
+    await this.workspace.bitMap.write();
+    return compact(newComps);
   }
 
   async checkoutByCLIValues(componentPattern: string, checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
@@ -300,7 +346,7 @@ export class CheckoutMain {
     const idsOnWorkspace = await getIds();
 
     const currentLane = await this.workspace.consumer.getCurrentLaneObject();
-    const currentLaneIds = currentLane?.toBitIds();
+    const currentLaneIds = currentLane?.toComponentIds();
     const ids = currentLaneIds ? idsOnWorkspace.filter((id) => currentLaneIds.hasWithoutVersion(id)) : idsOnWorkspace;
     checkoutProps.ids = ids.map((id) => (checkoutProps.head || checkoutProps.latest ? id.changeVersion(LATEST) : id));
   }
@@ -311,9 +357,8 @@ export class CheckoutMain {
     if (!lane) {
       return [];
     }
-    const laneBitIds = lane.toBitIds();
-    const newIds = laneBitIds.filter((bitId) => !ids.find((id) => id.isEqualWithoutVersion(bitId)));
-    const newComponentIds = await this.workspace.resolveMultipleComponentIds(newIds);
+    const laneBitIds = lane.toComponentIds();
+    const newComponentIds = laneBitIds.filter((bitId) => !ids.find((id) => id.isEqualWithoutVersion(bitId)));
     const nonRemovedNewIds: ComponentID[] = [];
     await Promise.all(
       newComponentIds.map(async (id) => {
@@ -333,6 +378,7 @@ export class CheckoutMain {
     const {
       version,
       head: headVersion,
+      ancestor,
       reset,
       revert,
       main,
@@ -340,6 +386,7 @@ export class CheckoutMain {
       versionPerId,
       forceOurs,
       forceTheirs,
+      loadStash,
     } = checkoutProps;
     const repo = consumer.scope.objects;
 
@@ -388,6 +435,10 @@ export class CheckoutMain {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (reset) return component!.id.version as string;
       if (headVersion) return componentModel.headIncludeRemote(repo);
+      if (ancestor) {
+        const previousParent = await componentModel.getRefOfAncestor(repo, ancestor);
+        return componentModel.getTagOfRefIfExists(previousParent)?.toString() || previousParent.toString();
+      }
       // we verified previously that head exists in case of "main"
       if (main) return componentModel.head?.toString() as string;
       if (latestVersion) {
@@ -448,9 +499,10 @@ export class CheckoutMain {
 
     const newId = id.changeVersion(newVersion);
 
-    if (reset || !isModified || revert || !currentlyUsedVersion || forceTheirs || forceOurs) {
+    if (reset || (!isModified && !loadStash) || revert || !currentlyUsedVersion || forceTheirs || forceOurs) {
       // if the component is not modified, no need to try merge the files, they will be written later on according to the
       // checked out version. same thing when no version is specified, it'll be reset to the model-version later.
+      // in case of "loadStash", we want to merge the stashed modifications regardless whether it's modified currently.
 
       // if !currentlyUsedVersion it only exists in the model, so just write it. (happening during bit-switch/bit-lane-import)
       return { currentComponent: component, componentFromModel: componentVersion, id: newId };
@@ -464,12 +516,10 @@ export class CheckoutMain {
     return { currentComponent: component, componentFromModel: componentVersion, id: newId, propsForMerge };
   }
 
-  private async getMergeStatus({
-    currentComponent: componentFromFS,
-    componentFromModel,
-    id,
-    propsForMerge,
-  }: ComponentStatusBeforeMergeAttempt): Promise<ComponentStatus> {
+  private async getMergeStatus(
+    { currentComponent: componentFromFS, componentFromModel, id, propsForMerge }: ComponentStatusBeforeMergeAttempt,
+    checkoutProps: CheckoutProps
+  ): Promise<ComponentStatus> {
     if (!propsForMerge) throw new Error(`propsForMerge is missing for ${id.toString()}`);
     if (!componentFromFS) throw new Error(`componentFromFS is missing for ${id.toString()}`);
     const consumer = this.workspace.consumer;
@@ -484,14 +534,23 @@ export class CheckoutMain {
     // experience of "git stash", then "git checkout", then "git stash pop". practically, we want the changes done on 0.0.2
     // to be added to 0.0.1
     // if there is no modification, it doesn't go the threeWayMerge anyway, so it doesn't matter what the base is.
-    const baseVersion = currentlyUsedVersion;
+    let baseVersion = currentlyUsedVersion;
     const newVersion = id.version as string;
-    const baseComponent: Version = await componentModel.loadVersion(baseVersion, repo);
+    let baseComponent: Version = await componentModel.loadVersion(baseVersion, repo);
     const otherComponent: Version = await componentModel.loadVersion(newVersion, repo);
+    const { loadStash } = checkoutProps;
+    if (loadStash && otherComponent.parents.length) {
+      // for stash, we want the stashed modifications to be added on top of the current version.
+      // for this to happen, the "base" must be the parent of the stashed version.
+      const parent = otherComponent.parents[0];
+      baseVersion = parent.toString();
+      baseComponent = await componentModel.loadVersion(baseVersion, repo);
+    }
+
     const mergeResults = await threeWayMerge({
-      consumer,
+      scope: consumer.scope,
       otherComponent,
-      otherLabel: newVersion,
+      otherLabel: loadStash ? 'stash' : newVersion,
       currentComponent: componentFromFS,
       currentLabel: `${currentlyUsedVersion} modified`,
       baseComponent,
@@ -511,7 +570,7 @@ export class CheckoutMain {
     LoggerMain,
     ComponentWriterMain,
     ImporterMain,
-    RemoveMain
+    RemoveMain,
   ]) {
     const logger = loggerMain.createLogger(CheckoutAspect.id);
     const checkoutMain = new CheckoutMain(workspace, logger, compWriter, importer, remove);

@@ -16,6 +16,7 @@ export default class LogCmd implements Command {
     ['', 'parents', 'show parents and lanes data'],
     ['o', 'one-line', 'show each log entry in one line'],
     ['f', 'full-hash', 'show full hash of the snap (default to the first 9 characters for --one-line/--parents flags)'],
+    ['m', 'full-message', 'show full message of the snap (default to the first line for --one-line/--parents flags)'],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
   remoteOp = true; // should support log against remote
@@ -31,14 +32,18 @@ export default class LogCmd implements Command {
       parents = false,
       oneLine = false,
       fullHash = false,
-    }: { remote: boolean; parents: boolean; oneLine?: boolean; fullHash?: boolean }
+      fullMessage,
+    }: { remote: boolean; parents: boolean; oneLine?: boolean; fullHash?: boolean; fullMessage?: boolean }
   ) {
-    if (!parents && !oneLine) fullHash = true;
+    if (!parents && !oneLine) {
+      fullHash = true;
+      fullMessage = true;
+    }
     if (parents) {
-      const logs = await this.componentLog.getLogsWithParents(id, fullHash);
+      const logs = await this.componentLog.getLogsWithParents(id, fullHash, fullMessage);
       return logs.join('\n');
     }
-    const logs = await this.componentLog.getLogs(id, remote, !fullHash);
+    const logs = await this.componentLog.getLogs(id, remote, !fullHash, !fullMessage);
     if (oneLine) {
       return logOneLine(logs.reverse());
     }
@@ -69,8 +74,10 @@ export function paintAuthor(email: string | null | undefined, username: string |
 }
 
 function paintLog(log: LegacyComponentLog): string {
-  const { message, date, tag, hash, username, email } = log;
-  const title = tag ? `tag ${tag} (${hash})\n` : `snap ${hash}\n`;
+  const { message, date, tag, hash, username, email, deleted, deprecated } = log;
+  const deletedStr = deleted ? c.red(' [deleted]') : '';
+  const deprecatedStr = !deleted && deprecated ? c.yellow(' [deprecated]') : '';
+  const title = tag ? `tag ${tag} (${hash})${deletedStr}${deprecatedStr}\n` : `snap ${hash}\n`;
   return (
     c.yellow(title) +
     paintAuthor(email, username) +

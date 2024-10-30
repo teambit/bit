@@ -1,10 +1,12 @@
+import Spinnies from 'dreidels';
 import loader from '@teambit/legacy/dist/cli/loader';
 import logger, { IBitLogger } from '@teambit/legacy/dist/logger/logger';
 import chalk from 'chalk';
-
+import { platform } from 'os';
 import { ConsoleOnStart, LongProcessLogger } from './long-process-logger';
 
 export class Logger implements IBitLogger {
+  private spinnies?: Spinnies;
   constructor(private extensionName: string) {}
 
   trace(message: string, ...meta: any[]) {
@@ -29,6 +31,16 @@ export class Logger implements IBitLogger {
   get isLoaderStarted() {
     return loader.isStarted;
   }
+
+  get isSpinning() {
+    return loader.isSpinning;
+  }
+
+  get multiSpinner(): Spinnies {
+    if (!this.spinnies) this.spinnies = new Spinnies();
+    return this.spinnies;
+  }
+
   /**
    * use it for a long running process. upon creation it logs the `processDescription`.
    * if the process involves iteration over a list of items, such as running tag on a list of
@@ -150,5 +162,13 @@ export class Logger implements IBitLogger {
   private colorMessage(message: string) {
     if (logger.isJsonFormat) return `${this.extensionName}, ${message}`;
     return `${chalk.bold(this.extensionName)}, ${message}`;
+  }
+
+  /**
+   * a recent change on Windows caused the check mark to be printed as purple.
+   * see https://github.com/chalk/chalk/issues/625
+   */
+  static successSymbol() {
+    return platform() === 'win32' ? chalk.green('✓') : chalk.green('✔');
   }
 }

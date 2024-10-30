@@ -1,15 +1,22 @@
+import React from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { gql } from '@apollo/client';
+import { useMutation, gql } from '@apollo/client';
 import { CloudUser } from '@teambit/cloud.models.cloud-user';
 
+export const SET_REDIRECT_URL_MUTATION = gql`
+  mutation SetRedirectUrl($redirectUrl: String!) {
+    setRedirectUrl(redirectUrl: $redirectUrl)
+  }
+`;
+
 export const CURRENT_USER_QUERY = gql`
-  query CurrentUser($redirectUrl: String!) {
+  query CurrentUser {
     getCurrentUser {
       username
       displayName
       profileImage
     }
-    loginUrl(redirectUrl: $redirectUrl)
+    loginUrl
     isLoggedIn
   }
 `;
@@ -20,13 +27,27 @@ export function useCurrentUser(): {
   isLoggedIn?: boolean;
   loading?: boolean;
 } {
+  const [setRedirectUrl] = useMutation(SET_REDIRECT_URL_MUTATION);
+
+  React.useEffect(() => {
+    const redirectUrl = window.location.href;
+    setRedirectUrl({ variables: { redirectUrl } }).catch((error) => {
+      // eslint-disable-next-line no-console
+      console.error('Error setting redirect URL:', error);
+    });
+  }, [window.location.href]);
+
   const { data, loading } = useDataQuery(CURRENT_USER_QUERY, {
-    variables: {
-      redirectUrl: window.location.href,
-    },
+    fetchPolicy: 'cache-first',
   });
+
   return {
-    currentUser: data?.getCurrentUser,
+    currentUser: {
+      username: data?.getCurrentUser?.username ?? undefined,
+      displayName: data?.getCurrentUser?.displayName ?? undefined,
+      profileImage: data?.getCurrentUser?.profileImage ?? undefined,
+      isLoggedIn: data?.isLoggedIn,
+    },
     loginUrl: data?.loginUrl,
     isLoggedIn: data?.isLoggedIn,
     loading,

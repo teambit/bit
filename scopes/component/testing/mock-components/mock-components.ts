@@ -1,12 +1,12 @@
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { loadManyAspects } from '@teambit/harmony.testing.load-aspect';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { InstallAspect } from '@teambit/install';
 import type { InstallMain } from '@teambit/install';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import path from 'path';
-import TrackerAspect, { TrackerMain } from '@teambit/tracker';
+import { TrackerAspect, TrackerMain } from '@teambit/tracker';
 import { ComponentID } from '@teambit/component-id';
 
 type CompDirs = {
@@ -29,10 +29,9 @@ export async function mockComponents(
   const harmony = await loadManyAspects([WorkspaceAspect, TrackerAspect, InstallAspect, CompilerAspect], workspacePath);
   const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
   const tracker = harmony.get<TrackerMain>(TrackerAspect.id);
-  const results: CompDirs[] = [];
-  await pMapSeries(compsDirs, async (compDir) => {
+  const results: CompDirs[] = await pMapSeries(compsDirs, async (compDir) => {
     const { componentId } = await tracker.track({ rootDir: compDir });
-    results.push({ id: componentId, dir: compDir });
+    return { id: componentId, dir: compDir };
   });
   await workspace.bitMap.write();
   const install = harmony.get<InstallMain>(InstallAspect.id);

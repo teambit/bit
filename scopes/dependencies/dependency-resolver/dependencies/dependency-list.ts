@@ -1,5 +1,5 @@
 import { uniqBy, property } from 'lodash';
-import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
+import { SNAP_VERSION_PREFIX, snapToSemver } from '@teambit/component-package-version';
 import { Dependency, DependencyLifecycleType, SerializedDependency, SemverVersion, PackageName } from './dependency';
 import { KEY_NAME_BY_LIFECYCLE_TYPE } from './constants';
 import { ComponentDependency } from './component-dependency';
@@ -60,13 +60,22 @@ export class DependencyList {
     return this.dependencies.find((dep) => removeVersion(dep.id) === componentIdStrWithoutVersion);
   }
 
-  findByPkgNameOrCompId(id: string, version?: string): Dependency | undefined {
+  findByPkgNameOrCompId(
+    id: string,
+    version?: string,
+    lifecycle: DependencyLifecycleType = 'runtime'
+  ): Dependency | undefined {
     const findByVariousStrategies = () => {
       // try by full-id or package-name
-      const found = this.dependencies.find(
+      const found = this.dependencies.filter(
         (dep) => dep.id === id || dep.getPackageName?.() === id || dep.id.startsWith(`${id}@`)
       );
-      if (found) return found;
+      if (found.length) {
+        if (found.length === 1) return found[0];
+        const foundByLifecycle = found.find((dep) => dep.lifecycle === lifecycle);
+        if (foundByLifecycle) return foundByLifecycle;
+        return found[0];
+      }
       const compDeps = this.toTypeArray<ComponentDependency>('component');
 
       // try by component-name
@@ -148,7 +157,7 @@ export class DependencyList {
           : KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
       const entry = dep.toManifest();
       if (entry) {
-        manifest[keyName][entry.packageName] = entry.version;
+        manifest[keyName][entry.packageName] = snapToSemver(entry.version);
         if (dep.optional && dep.lifecycle === 'peer') {
           manifest.peerDependenciesMeta[entry.packageName] = { optional: true };
         }

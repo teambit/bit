@@ -51,6 +51,10 @@ export class ClassDeclarationTransformer implements SchemaTransformer {
   }
 
   async transform(node: ClassDeclaration, context: SchemaExtractorContext) {
+    const nodeDecorators = ts.canHaveDecorators(node) ? ts.getDecorators(node) : undefined;
+    const decorators = nodeDecorators?.length
+      ? await pMapSeries(nodeDecorators, (decorator) => context.computeSchema(decorator))
+      : undefined;
     const className = this.getName(node);
     const extendsExpressionsWithTypeArgs = await this.getExpressionWithTypeArgs(
       node,
@@ -69,7 +73,8 @@ export class ClassDeclarationTransformer implements SchemaTransformer {
     });
     const signature = node.name ? await context.getQuickInfoDisplayString(node.name) : undefined;
     const members = await pMapSeries(node.members, async (member) => {
-      const isPrivate = member.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.PrivateKeyword);
+      const memberModifiers = ts.canHaveModifiers(member) ? ts.getModifiers(member) : undefined;
+      const isPrivate = memberModifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.PrivateKeyword);
       if (isPrivate) {
         return null;
       }
@@ -89,7 +94,8 @@ export class ClassDeclarationTransformer implements SchemaTransformer {
       doc,
       typeParameters,
       extendsExpressionsWithTypeArgs,
-      implementsExpressionsWithTypeArgs
+      implementsExpressionsWithTypeArgs,
+      decorators
     );
   }
 }

@@ -86,6 +86,10 @@ export async function getDivergeData({
     versionParentsFromObjects,
   });
   const unmergedData = repo.unmergedComponents.getEntry(modelComponent.toComponentId());
+  if (!versionParents.find((p) => p.hash.isEqual(targetHead))) {
+    throw new Error(`error: a remote of "${modelComponent.id()}" points to ${targetHead}, which is missing from the VersionHistory object for some reason.
+running "bit import" should fix the issue.`);
+  }
 
   return getDivergeDataBetweenTwoSnaps(
     modelComponent.id(),

@@ -1,4 +1,3 @@
-import { ComponentType } from 'react';
 import { ProxyEntry } from './ui-root';
 
 export type StartPluginOptions = {
@@ -17,8 +16,6 @@ export interface StartPlugin {
   initiate(startOptions: StartPluginOptions): void;
 
   getProxy?(): ProxyEntry[];
-
-  render: ComponentType;
 
   /** promise that resolves when the plugin completed initiation */
   readonly whenReady: Promise<void>;

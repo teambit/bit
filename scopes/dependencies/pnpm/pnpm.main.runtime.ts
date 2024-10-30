@@ -1,4 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
+import { CloudAspect, CloudMain } from '@teambit/cloud';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 
@@ -7,11 +8,11 @@ import { PnpmPackageManager } from './pnpm.package-manager';
 
 export class PnpmMain {
   static runtime = MainRuntime;
-  static dependencies = [DependencyResolverAspect, LoggerAspect];
+  static dependencies = [DependencyResolverAspect, LoggerAspect, CloudAspect];
 
-  static async provider([depResolver, loggerExt]: [DependencyResolverMain, LoggerMain]) {
+  static async provider([depResolver, loggerExt, cloud]: [DependencyResolverMain, LoggerMain, CloudMain]) {
     const logger = loggerExt.createLogger(PnpmAspect.id);
-    const packageManager = new PnpmPackageManager(depResolver, logger);
+    const packageManager = new PnpmPackageManager(depResolver, logger, cloud);
     depResolver.registerPackageManager(packageManager);
     return new PnpmMain(packageManager);
   }

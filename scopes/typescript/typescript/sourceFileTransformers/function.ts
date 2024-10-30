@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { SourceFileTransformer } from '.';
+import { SourceFileTransformer } from './index';
 import { replaceName } from './replaceName';
 
 export const functionNamesTransformer: SourceFileTransformer = (mapping: Record<string, string>) => {
@@ -28,14 +28,13 @@ export const functionNamesTransformer: SourceFileTransformer = (mapping: Record<
         const functionName = node.name?.getText() ?? '';
         const newName = Object.entries(mapping).find(([key]) => functionName.includes(key))?.[1] ?? functionName;
         const parameters = node.parameters.map((param) => {
-          const newParamType = param.type ? ts.visitNode(param.type, updateTypeReference) : param.type;
+          const newParamType = param.type ? (ts.visitNode(param.type, updateTypeReference) as ts.TypeNode) : param.type;
           if (ts.isIdentifier(param.name)) {
             const oldName = param.name.getText();
             const newParamName = Object.keys(mapping).find((key) => oldName.includes(key));
             if (newParamName) {
               return ts.factory.updateParameterDeclaration(
                 param,
-                param.decorators,
                 param.modifiers,
                 param.dotDotDotToken,
                 ts.factory.createIdentifier(newParamName),
@@ -61,7 +60,6 @@ export const functionNamesTransformer: SourceFileTransformer = (mapping: Record<
             const newParamName = ts.factory.createObjectBindingPattern(elements);
             return ts.factory.updateParameterDeclaration(
               param,
-              param.decorators,
               param.modifiers,
               param.dotDotDotToken,
               newParamName,
@@ -77,7 +75,6 @@ export const functionNamesTransformer: SourceFileTransformer = (mapping: Record<
           const updatedBody = node.body && ts.isBlock(node.body) ? updateReturnStatement(node.body) : node.body;
           return ts.factory.updateFunctionDeclaration(
             node,
-            node.decorators,
             node.modifiers,
             node.asteriskToken,
             newName ? ts.factory.createIdentifier(newName) : node.name,
@@ -168,6 +165,6 @@ export const functionNamesTransformer: SourceFileTransformer = (mapping: Record<
       }
       return ts.factory.createBlock([], true);
     }
-    return (node) => ts.visitNode(node, visit);
+    return (node) => ts.visitNode(node, visit) as ts.SourceFile;
   };
 };

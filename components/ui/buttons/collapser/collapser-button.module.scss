@@ -2,64 +2,54 @@
 
 .collapser {
   position: absolute;
-  bottom: 8px;
+  bottom: 80px;
   z-index: $nav-z-index;
   cursor: pointer;
-  // transition: right 300ms, left 300ms ease-in-out;
-  &.right {
-    left: 8px;
-    &.open {
-      .circle {
-        > div {
-          transform: rotate(-0.5turn);
-          transform-origin: center;
-        }
-      }
-    }
-  }
+  transition:
+    right 300ms,
+    left 300ms ease-in-out;
 
-  &.left {
-    right: 8px;
+  &.open {
     .circle {
       > div {
-        transform: rotate(-0.5turn);
+        transform: rotate(-0.5turn) translateY(2px);
         transform-origin: center;
-      }
-    }
-    &.open {
-      .circle {
-        > div {
-          transform: rotate(0turn);
-          transform-origin: center;
-        }
       }
     }
   }
 }
-
 .circle {
-  display: flex;
-  align-items: center;
   height: 100%;
-  font-size: 20px;
-  padding: 6px;
-  background-color: rgba(145, 145, 145, 0.2);
-  background-color: var(--border-medium-color, #6c707c);
-
-  border-radius: 5px;
-
+  font-size: 12px;
+  padding: 10px;
+  background-color: var(--bit-bg-color, #fff);
   // TODO - @oded - unify with other shadows. this shadow is different. talk to amir
-  // box-shadow: 0 -1px 1px 0 rgba(0, 0, 0, 0.09), 0 1px 2px 0 rgba(0, 0, 0, 0.23);
+  box-shadow:
+    0 -1px 1px 0 rgba(0, 0, 0, 0.09),
+    0 1px 2px 0 rgba(0, 0, 0, 0.23);
   transition: padding 300ms ease-in-out;
 
-  &:hover {
-    background-color: var(--border-high-color, #6c707c);
+  > div {
+    transition: transform 300ms ease-in-out;
   }
 
-  > div {
-    display: flex;
-    align-items: center;
-    transition: transform 300ms ease-in-out;
-    height: fit-content;
+  .right & {
+    border-top-right-radius: 50%;
+    border-bottom-right-radius: 50%;
+
+    padding-left: 10px;
+    &:hover {
+      padding-left: 16px;
+    }
+  }
+
+  .left & {
+    border-top-left-radius: 50%;
+    border-bottom-left-radius: 50%;
+
+    padding-right: 10px;
+    &:hover {
+      padding-right: 16px;
+    }
   }
 }

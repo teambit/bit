@@ -1,7 +1,7 @@
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
-import { CLIAspect, MainRuntime, CLIMain, CommandList } from '@teambit/cli';
+import { CLIAspect, MainRuntime, CLIMain, CommandList, Command } from '@teambit/cli';
 import { ComponentAspect } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -38,6 +38,8 @@ import { EnvsReplaceCmd } from './envs-subcommands/envs-replace.cmd';
 import { ScopeSetCmd } from './scope-subcommands/scope-set.cmd';
 import { UseCmd } from './use.cmd';
 import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
+import { UnuseCmd } from './unuse.cmd';
+import { LocalOnlyCmd, LocalOnlyListCmd, LocalOnlySetCmd, LocalOnlyUnsetCmd } from './commands/local-only-cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -53,7 +55,7 @@ export type WorkspaceDeps = [
   BundlerMain,
   AspectLoaderMain,
   EnvsMain,
-  GlobalConfigMain
+  GlobalConfigMain,
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -139,10 +141,15 @@ export class WorkspaceMain {
       OnAspectsResolveSlot,
       OnRootAspectAddedSlot,
       OnBitmapChangeSlot,
-      OnWorkspaceConfigChangeSlot
+      OnWorkspaceConfigChangeSlot,
     ],
     harmony: Harmony
   ) {
+    const currentCmd = process.argv[2];
+    if (currentCmd === 'init') {
+      // avoid loading the consumer/workspace for "bit init". otherwise, "bit init --reset" can't fix corrupted .bitmap
+      return undefined;
+    }
     const bitConfig: any = harmony.config.get('teambit.harmony/bit');
     const consumer = await getConsumer(bitConfig.cwd);
     if (!consumer) {
@@ -255,20 +262,34 @@ export class WorkspaceMain {
     });
     graphql.register(workspaceSchema);
     const capsuleCmd = getCapsulesCommands(isolator, scope, workspace);
-    const commands: CommandList = [new EjectConfCmd(workspace), capsuleCmd, new UseCmd(workspace)];
+    const commands: CommandList = [
+      new EjectConfCmd(workspace),
+      capsuleCmd,
+      new UseCmd(workspace),
+      new UnuseCmd(workspace),
+    ];
 
     commands.push(new PatternCommand(workspace));
+    const localOnlyCmd = new LocalOnlyCmd();
+    localOnlyCmd.commands = [
+      new LocalOnlySetCmd(workspace),
+      new LocalOnlyUnsetCmd(workspace),
+      new LocalOnlyListCmd(workspace),
+    ];
+    commands.push(localOnlyCmd);
     cli.register(...commands);
     component.registerHost(workspace);
 
-    cli.registerOnStart(async (_hasWorkspace: boolean, currentCommand: string) => {
-      if (currentCommand === 'mini-status' || currentCommand === 'ms') {
-        return; // mini-status should be super fast.
+    cli.registerOnStart(async (_hasWorkspace: boolean, currentCommand: string, commandObject?: Command) => {
+      const hasSafeModeFlag = process.argv.includes('--safe-mode');
+      if (hasSafeModeFlag || (commandObject && !commandObject.loadAspects)) {
+        return;
       }
       if (currentCommand === 'install') {
         workspace.inInstallContext = true;
       }
       await workspace.importCurrentLaneIfMissing();
+      logger.profile('workspace.registerOnStart');
       const loadAspectsOpts = {
         runSubscribers: false,
         skipDeps: !config.autoLoadAspectsDeps,
@@ -284,6 +305,7 @@ export class WorkspaceMain {
       componentIds.forEach((id) => {
         workspace.clearComponentCache(id);
       });
+      logger.profile('workspace.registerOnStart');
     });
 
     // add sub-commands "set" and "unset" to envs command.

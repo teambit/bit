@@ -2,6 +2,7 @@ import { Command } from '@teambit/cli';
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Workspace } from '../workspace';
+import { installAfterEnvChangesMsg } from './envs-set.cmd';
 
 export class EnvsUpdateCmd implements Command {
   name = 'update [env-id] [pattern]';
@@ -45,7 +46,8 @@ export class EnvsUpdateCmd implements Command {
         })
         .join('\n\n');
       const title = chalk.green(`the following component(s) env has been successfully updated:\n`);
-      return title + body;
+      const suffix = `\n${installAfterEnvChangesMsg}`;
+      return title + body + suffix;
     }
     if (alreadyUpToDate.length) {
       return chalk.green(

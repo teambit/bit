@@ -1,4 +1,4 @@
-import { APISchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { APISchema, ExportSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 
@@ -13,6 +13,7 @@ export type APINode<T extends SchemaNode = SchemaNode> = {
   renderer: APINodeRenderer;
   componentId: ComponentID;
   exported: boolean;
+  alias?: string;
 };
 
 export class APIReferenceModel {
@@ -31,7 +32,10 @@ export class APIReferenceModel {
   taggedAPINodes: APINode<SchemaNode>[] = [];
   componentId: ComponentID;
 
-  constructor(public _api: APISchema, _renderers: APINodeRenderer[]) {
+  constructor(
+    public _api: APISchema,
+    _renderers: APINodeRenderer[]
+  ) {
     this.componentId = _api.componentId as any;
     this.apiNodes = this.mapToAPINode(_api, _renderers, this.componentId);
     this.apiByType = this.groupByType(this.apiNodes);
@@ -64,7 +68,7 @@ export class APIReferenceModel {
 
     const internalSchemaNodes = internals
       .reduce((acc, next) => {
-        return acc.concat([...next.exports, ...next.internals]);
+        return acc.concat([...next.internals]);
       }, new Array<SchemaNode>())
       .filter((schemaNode) => !exportedInternalKeySet.has(this.internalAPIKey(schemaNode)));
 
@@ -72,29 +76,45 @@ export class APIReferenceModel {
     const nonDefaultRenderers = renderers.filter((renderer) => !renderer.default);
 
     return exportedSchemaNodes
-      .map((schemaNode) => ({
-        componentId,
-        api: schemaNode,
-        exported: true,
-        renderer:
-          nonDefaultRenderers.find((renderer) => renderer.predicate(schemaNode)) ||
-          defaultRenderers.find((renderer) => renderer.predicate(schemaNode)),
-      }))
+      .map(
+        (schemaNode) =>
+          ({
+            componentId,
+            api: ExportSchema.isExportSchema(schemaNode) ? schemaNode.exportNode : schemaNode,
+            alias: ExportSchema.isExportSchema(schemaNode) ? schemaNode.alias : undefined,
+            exported: true,
+            renderer:
+              nonDefaultRenderers.find((renderer) =>
+                renderer.predicate(ExportSchema.isExportSchema(schemaNode) ? schemaNode.exportNode : schemaNode)
+              ) ||
+              defaultRenderers.find((renderer) =>
+                renderer.predicate(ExportSchema.isExportSchema(schemaNode) ? schemaNode.exportNode : schemaNode)
+              ),
+          }) as APINode
+      )
       .concat(
-        internalSchemaNodes.map((schemaNode) => ({
-          componentId,
-          api: schemaNode,
-          exported: false,
-          renderer:
-            nonDefaultRenderers.find((renderer) => renderer.predicate(schemaNode)) ||
-            defaultRenderers.find((renderer) => renderer.predicate(schemaNode)),
-        }))
+        internalSchemaNodes.map(
+          (schemaNode) =>
+            ({
+              componentId,
+              api: schemaNode,
+              exported: false,
+              renderer:
+                nonDefaultRenderers.find((renderer) => renderer.predicate(schemaNode)) ||
+                defaultRenderers.find((renderer) => renderer.predicate(schemaNode)),
+            }) as APINode
+        )
       )
       .filter((schemaNode) => schemaNode.renderer) as APINode[];
   }
 
   getByType(type: string): APINode<SchemaNode>[] {
     return this.apiByType.get(type) ?? [];
+  }
+
+  getByName(node: SchemaNode): APINode | undefined {
+    if (!node.name) return undefined;
+    return this.apiByName.get(node.name) ?? this.apiByName.get(this.internalAPIKey(node));
   }
 
   groupByType(apiNodes: APINode[]): Map<string, APINode[]> {
@@ -107,8 +127,9 @@ export class APIReferenceModel {
 
   groupByName(apiNodes: APINode[]): Map<string, APINode> {
     return apiNodes.reduce((accum, next) => {
-      if (!next.api.name) return accum;
-      const key = next.exported ? next.api.name : this.internalAPIKey(next.api);
+      const name = next.alias || next.api.name;
+      if (!name) return accum;
+      const key = next.exported ? name : this.internalAPIKey(next.api);
       accum.set(key, next);
       return accum;
     }, new Map<string, APINode>());

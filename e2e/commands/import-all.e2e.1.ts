@@ -11,12 +11,11 @@ describe('bit import command with no ids', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  // @TODO: FIX ON HARMONY!
-  describe.skip('with a component in bit.map', () => {
+  describe('with a component in bit.map and --merge flag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
       const bitMap = helper.bitMap.read();
@@ -24,25 +23,23 @@ describe('bit import command with no ids', function () {
       helper.scopeHelper.addRemoteScope();
       helper.bitMap.write(bitMap);
     });
-    it('should display a successful message with the list of installed components', () => {
-      const output = helper.command.importAllComponents(true);
-      expect(output.includes('successfully imported one component')).to.be.true;
+    it('should throw an error and suggest using bit checkout reset', () => {
+      expect(() => helper.command.importAllComponents(true)).to.throw('checkout reset');
     });
   });
-  // @TODO: FIX ON HARMONY!
-  describe.skip('with components in bit.map when they are modified locally', () => {
+  describe('with components in bit.map when they are modified locally', () => {
     let localScope;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
       const bitMap = helper.bitMap.read();
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.bitMap.write(bitMap);
-      helper.command.importAllComponents(true);
+      helper.command.checkoutReset('--all');
       const barFooFixtureV2 = "module.exports = function foo() { return 'got foo v2'; };";
       helper.fs.createFile('bar', 'foo.js', barFooFixtureV2);
       localScope = helper.scopeHelper.cloneLocalScope();
@@ -58,34 +55,24 @@ describe('bit import command with no ids', function () {
       });
       it('should display a successful message', () => {
         expect(output).to.have.string('successfully imported');
-        expect(output).to.have.string('bar/foo');
       });
     });
     describe('with --override flag', () => {
-      let output;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
-        output = helper.command.runCmd('bit import --override');
       });
-      it('should display a successful message', () => {
-        expect(output).to.have.string('successfully imported');
-        expect(output).to.have.string('bar/foo');
-      });
-      it('should override them all', () => {
-        const statusOutput = helper.command.runCmd('bit status');
-        expect(statusOutput).to.not.have.string('modified components');
-        expect(statusOutput).to.not.have.string('bar/foo');
+      it('should throw an error and suggest using bit checkout reset', () => {
+        expect(() => helper.command.import('--override')).to.throw('checkout reset');
       });
     });
     describe('with --merge=manual flag', () => {
       let output;
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
-        output = helper.command.runCmd('bit import --merge=manual');
+        output = helper.command.runCmd(`bit import ${helper.scopes.remote}/bar/foo --merge=manual`);
       });
       it('should display a successful message', () => {
         expect(output).to.have.string('successfully imported');
-        expect(output).to.have.string('bar/foo');
       });
       it('should show them as modified', () => {
         const statusOutput = helper.command.runCmd('bit status');
@@ -97,12 +84,11 @@ describe('bit import command with no ids', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.command.tagAllComponents();
-        output = helper.command.runCmd('bit import --merge=manual');
+        output = helper.command.runCmd(`bit import ${helper.scopes.remote}/bar/foo --merge=manual`);
       });
       it('should display a successful message', () => {
         // before, it'd throw an error component-not-found as the tag exists only locally
         expect(output).to.have.string('successfully imported');
-        expect(output).to.have.string('bar/foo');
       });
     });
   });
@@ -111,7 +97,7 @@ describe('bit import command with no ids', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       const bitMap = helper.bitMap.read();
       helper.scopeHelper.reInitLocalScope();

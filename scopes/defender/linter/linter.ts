@@ -35,6 +35,11 @@ export type ComponentLintResult = {
   totalWarningCount: number;
 
   /**
+   * whether the component is clean (have no issues at all)
+   */
+  isClean: boolean;
+
+  /**
    * lint results for each one of the component files
    */
   results: LintResult[];
@@ -146,6 +151,11 @@ export type LintResults = {
   totalComponentsWithFixableErrorCount?: number;
   totalComponentsWithFixableWarningCount?: number;
   totalComponentsWithWarningCount: number;
+
+  /**
+   * whether all the linted components is clean (have no issues at all)
+   */
+  isClean: boolean;
 
   errors: Error[];
 };

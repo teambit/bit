@@ -2,7 +2,7 @@ import React from 'react';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
 import classNames from 'classnames';
 import { ScopeID } from '@teambit/scopes.scope-id';
-import { ComponentCard, ComponentCardPluginType, PluginProps } from '@teambit/explorer.ui.component-card';
+import { ComponentCard, type ComponentCardPluginType, type PluginProps } from '@teambit/explorer.ui.component-card';
 import { ComponentModel } from '@teambit/component';
 import { LoadPreview } from '@teambit/workspace.ui.load-preview';
 

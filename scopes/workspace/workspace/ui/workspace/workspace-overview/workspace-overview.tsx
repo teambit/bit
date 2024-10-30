@@ -9,7 +9,7 @@ import { useCloudScopes } from '@teambit/cloud.hooks.use-cloud-scopes';
 import { ScopeID } from '@teambit/scopes.scope-id';
 import { compact } from 'lodash';
 import { WorkspaceComponentCard } from '@teambit/workspace.ui.workspace-component-card';
-import { ComponentCardPluginType, PluginProps } from '@teambit/explorer.ui.component-card';
+import type { ComponentCardPluginType, PluginProps } from '@teambit/explorer.ui.component-card';
 import { WorkspaceContext } from '../workspace-context';
 import styles from './workspace-overview.module.scss';
 import { LinkPlugin } from './link-plugin';

@@ -1,10 +1,10 @@
 const configs = require('eslint-plugin-mdx/lib/configs');
 
 module.exports = {
-  extends: ['plugin:jest/recommended'],
-  plugins: ['jest'],
+  extends: ['plugin:jest/recommended', 'plugin:import/recommended', 'plugin:react-hooks/recommended'],
+  plugins: ['jest', 'import'],
   settings: {
-    'mdx/code-blocks': true,
+    'mdx/code-blocks': false,
     jest: {
       version: 27,
     },
@@ -17,6 +17,7 @@ module.exports = {
     browser: true,
     mocha: true,
     node: true,
+    es6: true,
   },
   overrides: [
     {
@@ -39,6 +40,8 @@ module.exports = {
       },
 
       rules: {
+        'no-useless-constructor': 'off',
+        '@typescript-eslint/no-useless-constructor': 'off',
         '@typescript-eslint/camelcase': 'off',
         'import/no-extraneous-dependencies': 'off',
         'import/prefer-default-export': 'off',

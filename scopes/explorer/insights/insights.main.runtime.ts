@@ -1,7 +1,7 @@
 import { CLIAspect, MainRuntime, CLIMain } from '@teambit/cli';
 import { GraphAspect, GraphMain } from '@teambit/graph';
 import { IssuesClasses } from '@teambit/component-issues';
-import IssuesAspect, { IssuesMain } from '@teambit/issues';
+import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
 import { Component } from '@teambit/component';
 import { InsightsAspect } from './insights.aspect';

@@ -22,7 +22,10 @@ import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-c
 import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { ComponentCompareProps, TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
+import type {
+  ComponentCompareProps,
+  TabItem,
+} from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { groupByVersion } from '@teambit/component.ui.component-compare.utils.group-by-version';
 import { sortTabs } from '@teambit/component.ui.component-compare.utils.sort-tabs';
 import { sortByDateDsc } from '@teambit/component.ui.component-compare.utils.sort-logs';
@@ -101,7 +104,7 @@ function CompareMenuNav({ tabs, state, hooks, changes: changed }: ComponentCompa
           {
             ...tab,
             props: {
-              ...(tab.props || {}),
+              ...tab.props,
               key,
               displayName: (!loading && tab.displayName) || undefined,
               active: isActive,
@@ -276,6 +279,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   } = props;
 
   const baseVersion = useCompareQueryParam('baseVersion');
+
   const component = useContext(ComponentContext);
   const componentDescriptor = useContext(ComponentDescriptorContext);
   const location = useLocation();

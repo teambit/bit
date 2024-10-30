@@ -1,3 +1,5 @@
+import type { DevFilesMain } from '@teambit/dev-files';
+import { DevFilesAspect } from '@teambit/dev-files';
 import { Harmony } from '@teambit/harmony';
 import { merge, omit } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
@@ -8,8 +10,6 @@ import { Component, ComponentID } from '@teambit/component';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment, EnvContext } from '@teambit/envs';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
-import type { JestMain } from '@teambit/jest';
-import { JestAspect } from '@teambit/jest';
 import type { PkgMain, PackageJsonProps } from '@teambit/pkg';
 import { SchemaMain, SchemaAspect } from '@teambit/schema';
 import { PkgAspect } from '@teambit/pkg';
@@ -28,9 +28,8 @@ import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { FormatterContext } from '@teambit/formatter';
 import { LinterContext } from '@teambit/linter';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ESLintMain, ESLintAspect, EslintConfigTransformer } from '@teambit/eslint';
-import { PrettierMain, PrettierAspect, PrettierConfigTransformer } from '@teambit/prettier';
-import WorkerAspect, { WorkerMain } from '@teambit/worker';
+import { EslintConfigTransformer } from '@teambit/defender.eslint.config-mutator';
+import { WorkerAspect, WorkerMain } from '@teambit/worker';
 
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
@@ -40,10 +39,10 @@ import { getTemplates } from './react.templates';
 import { ReactAppOptions } from './apps/web/react-app-options';
 import { ReactSchema } from './react.schema';
 import { ReactAPITransformer } from './react.api.transformer';
+import { PrettierConfigTransformer } from '@teambit/defender.prettier.config-mutator';
 
 type ReactDeps = [
   EnvsMain,
-  JestMain,
   TypescriptMain,
   CompilerMain,
   WebpackMain,
@@ -51,14 +50,13 @@ type ReactDeps = [
   GraphqlMain,
   PkgMain,
   TesterMain,
-  ESLintMain,
-  PrettierMain,
   ApplicationMain,
   GeneratorMain,
   DependencyResolverMain,
   LoggerMain,
   SchemaMain,
-  WorkerMain
+  WorkerMain,
+  DevFilesMain,
 ];
 
 export type ReactMainConfig = {
@@ -314,8 +312,11 @@ export class ReactMain {
    * @param jestModulePath absolute path to jest
    */
   overrideJestConfig(jestConfigPath: string, jestModulePath?: string) {
+    const buildTransformers = [() => jestConfigPath];
     return this.envs.override({
       getTester: () => this.reactEnv.getTester(jestConfigPath, jestModulePath),
+      getBuildPipe: () =>
+        this.reactEnv.getBuildPipe({ jestModifier: { transformers: buildTransformers, module: jestModulePath } }),
     });
   }
 
@@ -402,7 +403,6 @@ export class ReactMain {
   static runtime = MainRuntime;
   static dependencies = [
     EnvsAspect,
-    JestAspect,
     TypescriptAspect,
     CompilerAspect,
     WebpackAspect,
@@ -410,20 +410,18 @@ export class ReactMain {
     GraphqlAspect,
     PkgAspect,
     TesterAspect,
-    ESLintAspect,
-    PrettierAspect,
     ApplicationAspect,
     GeneratorAspect,
     DependencyResolverAspect,
     LoggerAspect,
     SchemaAspect,
     WorkerAspect,
+    DevFilesAspect,
   ];
 
   static async provider(
     [
       envs,
-      jestAspect,
       tsAspect,
       compiler,
       webpack,
@@ -431,14 +429,13 @@ export class ReactMain {
       graphql,
       pkg,
       tester,
-      eslint,
-      prettier,
       application,
       generator,
       dependencyResolver,
       loggerMain,
       schemaMain,
       workerMain,
+      devFilesMain,
     ]: ReactDeps,
     config: ReactMainConfig,
     slots,
@@ -446,17 +443,16 @@ export class ReactMain {
   ) {
     const logger = loggerMain.createLogger(ReactAspect.id);
     const reactEnv = new ReactEnv(
-      jestAspect,
       tsAspect,
       compiler,
       webpack,
       workspace,
+      workerMain,
       pkg,
       tester,
       config,
-      eslint,
-      prettier,
       dependencyResolver,
+      devFilesMain,
       logger,
       CompilerAspect.id
     );

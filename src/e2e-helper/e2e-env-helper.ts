@@ -1,15 +1,12 @@
-import fs from 'fs-extra';
 import * as path from 'path';
-import { getRootComponentDir } from '@teambit/bit-roots';
-
-import { generateRandomStr } from '../utils';
+import { getRootComponentDir } from '@teambit/workspace.root-components';
 import CommandHelper from './e2e-command-helper';
 import ExtensionsHelper from './e2e-extensions-helper';
 import FixtureHelper, { GenerateEnvJsoncOptions } from './e2e-fixtures-helper';
 import FsHelper from './e2e-fs-helper';
-import { ensureAndWriteJson } from './e2e-helper';
 import ScopeHelper from './e2e-scope-helper';
 import ScopesData from './e2e-scopes';
+import { ENV_POLICY } from '../../e2e/harmony/dependencies/env-jsonc-policies.e2e';
 
 type SetCustomEnvOpts = {
   skipInstall?: boolean;
@@ -45,26 +42,12 @@ export default class EnvHelper {
     this.extensions = extensions;
   }
 
-  importCompiler(id?: string) {
-    if (!id) {
-      id = `${this.scopes.env}/compilers/babel`;
-      this.createCompiler();
-    }
-    return this.command.runCmd(`bit import ${id} --compiler`);
-  }
-
   rootCompDirDep(envName: string, depComponentName: string) {
     return path.join(this.rootCompDir(envName), 'node_modules', `@${this.scopes.remote}/${depComponentName}`);
   }
 
   rootCompDir(envName: string) {
-    return getRootComponentDir(this.scopes.localPath, envName);
-  }
-
-  importTypescriptCompiler(version = '3.0.0') {
-    this.fixtures.ensureGlobalRemoteScope();
-    this.scopeHelper.addGlobalRemoteScope();
-    return this.importCompiler(`${this.scopes.globalRemote}/compilers/typescript@${version}`);
+    return getRootComponentDir(path.join(this.scopes.localPath, 'node_modules/.bit_roots'), envName);
   }
 
   getTypeScriptSettingsForES5() {
@@ -78,140 +61,6 @@ export default class EnvHelper {
         },
       },
     };
-  }
-
-  importDummyCompiler(dummyType = 'dummy') {
-    const id = `${this.scopes.env}/compilers/dummy`;
-    this.createDummyCompiler(dummyType);
-    return this.command.runCmd(`bit import ${id} --compiler`);
-  }
-
-  changeDummyCompilerCode(originalCode: string, replaceTo: string) {
-    const compilerPath = path.join('.bit/components/compilers/dummy', this.scopes.env, '0.0.1/compiler.js');
-    const compilerContent = this.fs.readFile(compilerPath);
-    const changedCompiler = compilerContent.replace(originalCode, replaceTo);
-    this.fs.outputFile(compilerPath, changedCompiler);
-  }
-
-  importDummyTester(dummyType = 'dummy') {
-    const id = `${this.scopes.env}/testers/dummy`;
-    this.createDummyTester(dummyType);
-    return this.command.runCmd(`bit import ${id} --tester`);
-  }
-
-  importTester(id = `${this.scopes.globalRemote}/testers/mocha@0.0.12`) {
-    this.fixtures.ensureGlobalRemoteScope();
-    this.scopeHelper.addGlobalRemoteScope();
-    this.command.runCmd(`bit import ${id} --tester`);
-  }
-
-  createDummyCompiler(dummyType = 'dummy') {
-    // if (this.dummyCompilerCreated) return this.scope.addRemoteScope(this.scopes.envScopePath);
-
-    // TODO: this is not really a scope but a workspace
-    const tempScope = `${generateRandomStr()}-temp`;
-    const tempScopePath = path.join(this.scopes.e2eDir, tempScope);
-    fs.emptyDirSync(tempScopePath);
-
-    this.scopeHelper.initWorkspace(tempScopePath);
-
-    const sourceDir = path.join(this.fixtures.getFixturesDir(), 'compilers', dummyType);
-    const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
-    fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
-
-    this.command.addComponent('compiler.js', { i: 'compilers/dummy' }, tempScopePath);
-    this.command.runCmd('bit tag compilers/dummy -m msg', tempScopePath);
-
-    fs.emptyDirSync(this.scopes.envPath);
-    this.command.runCmd('bit init --bare', this.scopes.envPath);
-    this.command.runCmd(`bit remote add file://${this.scopes.envPath}`, tempScopePath);
-    this.command.runCmd(`bit export ${this.scopes.env} compilers/dummy`, tempScopePath);
-    this.scopeHelper.addRemoteScope(this.scopes.envPath);
-    this.dummyCompilerCreated = true;
-    return true;
-  }
-
-  createDummyTester(dummyType: string) {
-    if (this.dummyTesterCreated) return this.scopeHelper.addRemoteScope(this.scopes.envPath);
-
-    // TODO: this is not really a scope but a workspace
-    const tempScope = `${generateRandomStr()}-temp`;
-    const tempScopePath = path.join(this.scopes.e2eDir, tempScope);
-    fs.emptyDirSync(tempScopePath);
-
-    this.scopeHelper.initWorkspace(tempScopePath);
-
-    const sourceDir = path.join(this.fixtures.getFixturesDir(), 'testers', dummyType);
-    const tester = fs.readFileSync(path.join(sourceDir, 'tester.js'), 'utf-8');
-    fs.writeFileSync(path.join(tempScopePath, 'tester.js'), tester);
-
-    ensureAndWriteJson(path.join(tempScopePath, 'package.json'), {
-      name: 'dummy-compiler',
-      version: '1.0.0',
-      dependencies: {
-        mocha: '6.1.4',
-        chai: '4.2.0',
-      },
-    });
-    this.command.runCmd('npm install', tempScopePath);
-    this.command.addComponent('tester.js', { i: 'testers/dummy' }, tempScopePath);
-    this.command.runCmd('bit tag testers/dummy -m msg', tempScopePath);
-
-    fs.emptyDirSync(this.scopes.envPath);
-    this.command.runCmd('bit init --bare', this.scopes.envPath);
-    this.command.runCmd(`bit remote add file://${this.scopes.envPath}`, tempScopePath);
-    this.command.runCmd(`bit export ${this.scopes.env} testers/dummy`, tempScopePath);
-    this.scopeHelper.addRemoteScope(this.scopes.envPath);
-    this.dummyTesterCreated = true;
-    return true;
-  }
-
-  createCompiler() {
-    if (this.compilerCreated) return this.scopeHelper.addRemoteScope(this.scopes.envPath);
-
-    const tempScope = `${generateRandomStr()}-temp`;
-    const tempScopePath = path.join(this.scopes.e2eDir, tempScope);
-    fs.emptyDirSync(tempScopePath);
-
-    this.scopeHelper.initWorkspace(tempScopePath);
-
-    const sourceDir = path.join(this.fixtures.getFixturesDir(), 'compilers', 'babel');
-    const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
-    fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
-
-    const babelCorePackageJson = { name: 'babel-core', version: '6.25.0' };
-    const babelPluginTransformObjectRestSpreadPackageJson = {
-      name: 'babel-plugin-transform-object-rest-spread',
-      version: '6.23.0',
-    };
-    const babelPresetLatestPackageJson = { name: 'babel-preset-latest', version: '6.24.1' };
-    const vinylPackageJson = { name: 'vinyl', version: '2.1.0' };
-
-    const nodeModulesDir = path.join(tempScopePath, 'node_modules');
-
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-core', 'package.json'), babelCorePackageJson);
-    ensureAndWriteJson(
-      path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'package.json'),
-      babelPluginTransformObjectRestSpreadPackageJson
-    );
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'package.json'), babelPresetLatestPackageJson);
-    ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'package.json'), vinylPackageJson);
-
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-core', 'index.js'), '');
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'index.js'), '');
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'index.js'), '');
-    ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'index.js'), '');
-
-    this.command.addComponent('compiler.js', { i: 'compilers/babel' }, tempScopePath);
-    this.command.runCmd('bit tag compilers/babel -m msg', tempScopePath);
-
-    fs.emptyDirSync(this.scopes.envPath);
-    this.command.runCmd('bit init --bare', this.scopes.envPath);
-    this.command.runCmd(`bit remote add file://${this.scopes.envPath}`, tempScopePath);
-    this.command.runCmd(`bit export ${this.scopes.env} compilers/babel`, tempScopePath);
-    this.scopeHelper.addRemoteScope(this.scopes.envPath);
-    this.compilerCreated = true;
-    return true;
   }
 
   /**
@@ -253,12 +102,12 @@ export default class EnvHelper {
   /**
    * This will generate env in the new format (using the *.bit-env.* plugin)
    * @param extensionsBaseFolder
-   * @returns
+   * @returns env name
    */
   setCustomNewEnv(
     extensionsBaseFolder = 'react-based-env',
     basePackages: string[] = ['@teambit/react.react-env'],
-    envJsoncOptions: GenerateEnvJsoncOptions,
+    envJsoncOptions: GenerateEnvJsoncOptions = { policy: ENV_POLICY },
     runInstall = true,
     targetFolder?: string,
     id?: string

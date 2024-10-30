@@ -381,7 +381,7 @@ function findMostCommonVersion(versions: SemverVersion[]): MostCommonVersion {
     count: 0,
   };
   forEach(counts, (count, version) => {
-    if (count > result.count) {
+    if (count > result.count || (count === result.count && semver.gt(version, result.version))) {
       result.version = version;
       result.count = count;
     }

@@ -27,10 +27,10 @@ describe('bit export command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
-      helper.command.tagComponent('bar/foo -f');
+      helper.command.tagComponent('bar/foo --unmodified');
       helper.command.exportIds('bar/foo');
     });
     it('should export it with no errors', () => {
@@ -44,7 +44,7 @@ describe('bit export command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo'); // v1
 
@@ -103,7 +103,7 @@ describe('bit export command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
       output = helper.command.exportIds('bar/foo', undefined, false);
@@ -116,7 +116,7 @@ describe('bit export command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo('// v2');
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagIncludeUnmodified('2.0.0');
       helper.command.export();
       helper.fixtures.createComponentBarFoo('// v1');
@@ -146,7 +146,7 @@ describe('bit export command', function () {
       helper.command.runCmd('bit init --bare --shared nonExistGroup', helper.scopes.remotePath);
       helper.scopeHelper.addRemoteScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.workspaceJsonc.setupDefault();
       helper.command.tagAllComponents();
       scopeBeforeExport = helper.scopeHelper.cloneLocalScope();
@@ -225,12 +225,12 @@ describe('bit export command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
       helper.command.export();
-      helper.command.tagComponent('bar/foo -f');
+      helper.command.tagComponent('bar/foo --unmodified');
       helper.command.export();
-      helper.command.tagComponent('bar/foo -f');
+      helper.command.tagComponent('bar/foo --unmodified');
       output = helper.command.exportIds('bar/foo');
     });
     // this was a bug where on the third export, it parses the id "bar/foo" as: { scope: bar, name: foo }

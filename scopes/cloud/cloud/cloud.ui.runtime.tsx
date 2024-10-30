@@ -5,13 +5,16 @@ import { SubMenu } from '@teambit/design.controls.menu';
 // import { useThemePicker, useNextTheme } from '@teambit/base-react.themes.theme-switcher';
 import { Slot } from '@teambit/harmony';
 import { UserBar, UserBarItem, UserBarItemSlot, UserBarSection, UserBarSectionSlot } from '@teambit/cloud.ui.user-bar';
-import LanesAspect, { LanesUI } from '@teambit/lanes';
-import WorkspaceAspect, { WorkspaceUI } from '@teambit/workspace';
+import { LanesAspect, LanesUI } from '@teambit/lanes';
+import { WorkspaceAspect, WorkspaceUI } from '@teambit/workspace';
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { CloudAspect } from './cloud.aspect';
 
 export class CloudUI {
-  constructor(private userBarSectionSlot: UserBarSectionSlot, private userBarItemSlot: UserBarItemSlot) {}
+  constructor(
+    private userBarSectionSlot: UserBarSectionSlot,
+    private userBarItemSlot: UserBarItemSlot
+  ) {}
   /**
    * register a new user bar item.
    */
@@ -41,6 +44,10 @@ export class CloudUI {
   listUserBarSections() {
     return flatten(this.userBarSectionSlot.values());
   }
+
+  CloudUserBar = () => {
+    return <UserBar sections={this.listUserBarSections()} items={this.listUserBarItems()} />;
+  };
 
   static runtime = UIRuntime;
 
@@ -150,13 +157,13 @@ export class CloudUI {
       //   },
       // },
     ]);
-    const userBarItems = cloudUI.listUserBarItems();
-    const userBarSections = cloudUI.listUserBarSections();
-    const CloudUserBar = () => <UserBar sections={userBarSections} items={userBarItems} />;
-    workspace.registerMenuWidget([CloudUserBar]);
+    workspace.registerMenuWidget([cloudUI.CloudUserBar]);
     if (workspace) {
-      lanes.registerMenuWidget(CloudUserBar);
-      component.registerRightSideMenuItem({ item: <CloudUserBar key={'cloud-user-bar-comp-menu'} />, order: 100 });
+      lanes.registerMenuWidget(cloudUI.CloudUserBar);
+      component.registerRightSideMenuItem({
+        item: <cloudUI.CloudUserBar key={'cloud-user-bar-comp-menu'} />,
+        order: 100,
+      });
     }
     return cloudUI;
   }

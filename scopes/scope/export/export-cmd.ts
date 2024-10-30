@@ -36,7 +36,7 @@ export class ExportCmd implements Command {
     [
       '',
       'origin-directly',
-      'EXPERIMENTAL. avoid export to the central hub, instead, export directly to the original scopes. not recommended!',
+      'avoid export to the central hub, instead, export directly to the original scopes. not recommended!',
     ],
     [
       '',
@@ -46,15 +46,16 @@ export class ExportCmd implements Command {
     [
       '',
       'head-only',
-      'EXPERIMENTAL. in case previous export failed and locally it shows exported and only one snap/tag was created, try using this flag',
+      'in case previous export failed and locally it shows exported and only one snap/tag was created, try using this flag',
     ],
     [
       '',
       'ignore-missing-artifacts',
-      "EXPERIMENTAL. don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote",
+      "don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote",
     ],
     ['', 'fork-lane-new-scope', 'allow exporting a forked lane into a different scope than the original scope'],
     ['', 'open-browser', 'open a browser once the export is completed in the cloud job url'],
+    ['', 'verbose', 'per exported component, show the versions being exported'],
     ['j', 'json', 'show output in json format'],
   ] as CommandOptions;
   loader = true;
@@ -75,30 +76,50 @@ export class ExportCmd implements Command {
       headOnly,
       forkLaneNewScope = false,
       openBrowser = false,
+      verbose = false,
     }: any
   ): Promise<string> {
-    const { componentsIds, nonExistOnBitMap, removedIds, missingScope, exportedLanes, ejectResults, rippleJobs } =
-      await this.exportMain.export({
-        ids,
-        eject,
-        includeNonStaged: all || allVersions,
-        allVersions: allVersions || all,
-        originDirectly,
-        resumeExportId: resume,
-        headOnly,
-        ignoreMissingArtifacts,
-        forkLaneNewScope,
-      });
-    if (isEmpty(componentsIds) && isEmpty(nonExistOnBitMap) && isEmpty(missingScope)) {
+    const {
+      componentsIds,
+      newIdsOnRemote,
+      nonExistOnBitMap,
+      removedIds,
+      missingScope,
+      exportedLanes,
+      ejectResults,
+      rippleJobs,
+    } = await this.exportMain.export({
+      ids,
+      eject,
+      includeNonStaged: all || allVersions,
+      allVersions: allVersions || all,
+      originDirectly,
+      resumeExportId: resume,
+      headOnly,
+      ignoreMissingArtifacts,
+      forkLaneNewScope,
+    });
+
+    if (isEmpty(componentsIds) && isEmpty(nonExistOnBitMap) && isEmpty(missingScope) && !exportedLanes.length) {
       return chalk.yellow('nothing to export');
     }
+    const exportedLane = exportedLanes[0]?.id();
+    const getExportedIds = () => {
+      if (!verbose) return componentsIds.join('\n');
+      return componentsIds
+        .map((id) => {
+          const versions = newIdsOnRemote
+            .filter((newId) => newId.isEqualWithoutVersion(id))
+            .map((newId) => newId.version);
+          return `${id.toString()} - ${versions.join(', ') || 'n/a'}`;
+        })
+        .join('\n');
+    };
     const exportOutput = () => {
-      if (isEmpty(componentsIds)) return '';
-      const lanesOutput = exportedLanes.length ? ` from lane ${chalk.bold(exportedLanes[0].name)}` : '';
+      if (isEmpty(componentsIds)) return exportedLane ? `exported the lane ${chalk.bold(exportedLane)}` : '';
+      const lanesOutput = exportedLanes.length ? ` the lane ${chalk.bold(exportedLanes[0].id())} and` : '';
       return chalk.green(
-        `exported the following ${componentsIds.length} component(s)${lanesOutput}:\n${chalk.bold(
-          componentsIds.join('\n')
-        )}`
+        `exported${lanesOutput} the following ${componentsIds.length} component(s):\n${chalk.bold(getExportedIds())}`
       );
     };
     const nonExistOnBitMapOutput = () => {

@@ -29,16 +29,19 @@ export class ObjectsWritable extends Writable {
   ) {
     super({ objectMode: true });
     if (!this.componentsPerRemote[remoteName]) this.componentsPerRemote[remoteName] = [];
-    this.timeoutId = setInterval(() => {
-      this.intervalCounter += 1;
-      const timeLapsedInMinutes = this.intervalCounter * TIMEOUT_MINUTES_WARNING;
-      const msg = `fetching from ${remoteName} takes more than ${timeLapsedInMinutes} minutes. make sure the remote is responsive`;
-      logger.warn(msg);
-      logger.console(`\n${msg}`, 'warn', 'yellow');
-      if (timeLapsedInMinutes > TIMEOUT_MINUTES_EXIT) {
-        throw new Error(`fetching from ${remoteName} takes more than ${TIMEOUT_MINUTES_EXIT} minutes. exiting...`);
-      }
-    }, TIMEOUT_MINUTES_WARNING * 60 * 1000);
+    this.timeoutId = setInterval(
+      () => {
+        this.intervalCounter += 1;
+        const timeLapsedInMinutes = this.intervalCounter * TIMEOUT_MINUTES_WARNING;
+        const msg = `fetching from ${remoteName} takes more than ${timeLapsedInMinutes} minutes. make sure the remote is responsive`;
+        logger.warn(msg);
+        logger.console(`\n${msg}`, 'warn', 'yellow');
+        if (timeLapsedInMinutes > TIMEOUT_MINUTES_EXIT) {
+          throw new Error(`fetching from ${remoteName} takes more than ${TIMEOUT_MINUTES_EXIT} minutes. exiting...`);
+        }
+      },
+      TIMEOUT_MINUTES_WARNING * 60 * 1000
+    );
   }
   async _write(obj: ObjectItem, _, callback: Function) {
     logger.trace('ObjectsWritable.write', obj.ref);

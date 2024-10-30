@@ -3,14 +3,14 @@ import { Command, CommandOptions } from '@teambit/cli';
 import Table from 'cli-table';
 import chalk from 'chalk';
 import archy from 'archy';
-import { generateDependenciesInfoTable } from '@teambit/legacy/dist/cli/templates/component-template';
-import { IdNotFoundInGraph } from '@teambit/legacy/dist/scope/exceptions/id-not-found-in-graph';
-import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
+import { ComponentIdGraph } from '@teambit/graph';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { generateDependenciesInfoTable } from './template';
 import { DependenciesMain } from './dependencies.main.runtime';
 
 type GetDependenciesFlags = {
   tree: boolean;
+  scope?: boolean;
 };
 
 export type SetDependenciesFlags = {
@@ -27,16 +27,19 @@ export class DependenciesGetCmd implements Command {
   group = 'info';
   description = 'show direct and indirect dependencies of the given component';
   alias = '';
-  options = [['t', 'tree', 'EXPERIMENTAL. render dependencies as a tree, similar to "npm ls"']] as CommandOptions;
+  options = [
+    ['', 'scope', 'get the data from the scope instead of the workspace'],
+    ['t', 'tree', 'render dependencies as a tree, similar to "npm ls"'],
+  ] as CommandOptions;
 
   constructor(private deps: DependenciesMain) {}
 
-  async report([id]: [string], { tree = false }: GetDependenciesFlags) {
-    const results = await this.deps.getDependencies(id);
+  async report([id]: [string], { tree = false, scope = false }: GetDependenciesFlags) {
+    const results = await this.deps.getDependencies(id, scope);
 
     if (tree) {
-      const idWithVersion = results.workspaceGraph._getIdWithLatestVersion(results.id);
-      const getGraphAsTree = (graph: DependencyGraph) => {
+      const idWithVersion = results.id;
+      const getGraphAsTree = (graph: ComponentIdGraph) => {
         try {
           const graphAsTree = graph.getDependenciesAsObjectTree(idWithVersion.toString());
           return archy(graphAsTree);
@@ -49,32 +52,17 @@ export class DependenciesGetCmd implements Command {
           throw err;
         }
       };
-      const workspaceTree = getGraphAsTree(results.workspaceGraph);
-      const scopeTree = getGraphAsTree(results.scopeGraph);
-      return `${chalk.green('workspace')}:\n${workspaceTree}\n\n${chalk.green('scope')}:\n${scopeTree}`;
+      const graphTree = getGraphAsTree(results.graph);
+      return graphTree;
     }
-    const workspaceGraph = results.workspaceGraph.getDependenciesInfo(results.id);
-    const getScopeDependencies = () => {
-      try {
-        return results.scopeGraph.getDependenciesInfo(results.id);
-      } catch (err) {
-        if (err instanceof IdNotFoundInGraph) return []; // component might be new
-        throw err;
-      }
-    };
-    const scopeGraph = getScopeDependencies();
-    if (!scopeGraph.length && !workspaceGraph.length) {
+    const depsInfo = results.graph.getDependenciesInfo(results.id);
+    if (!depsInfo.length) {
       return `no dependencies found for ${results.id.toString()}.
 try running "bit cat-component ${results.id.toStringWithoutVersion()}" to see whether the component/version exists locally`;
     }
 
-    const scopeTable = generateDependenciesInfoTable(scopeGraph, results.id);
-    const workspaceTable = generateDependenciesInfoTable(workspaceGraph, results.id);
-    return `${chalk.bold('Dependencies originated from workspace')}
-${workspaceTable || '<none>'}
-
-${chalk.bold('Dependencies originated from scope')}
-${scopeTable || '<none>'}`;
+    const depsTable = generateDependenciesInfoTable(depsInfo, results.id);
+    return `${depsTable || '<none>'}`;
   }
 }
 
@@ -240,7 +228,7 @@ export class DependenciesBlameCmd implements Command {
     },
   ];
   group = 'info';
-  description = 'EXPERIMENTAL. find out which snap/tag changed a dependency version';
+  description = 'find out which snap/tag changed a dependency version';
   alias = '';
   options = [] as CommandOptions;
 
@@ -295,7 +283,7 @@ export class DependenciesUsageCmd implements Command {
     },
   ];
   group = 'info';
-  description = 'EXPERIMENTAL. find components that use the specified dependency';
+  description = 'find components that use the specified dependency';
   alias = '';
   options = [['', 'depth <number>', 'max display depth of the dependency graph']] as CommandOptions;
 
@@ -331,5 +319,43 @@ export class DependenciesCmd implements Command {
     return chalk.red(
       `"${unrecognizedSubcommand}" is not a subcommand of "dependencies", please run "bit dependencies --help" to list the subcommands`
     );
+  }
+}
+
+export class SetPeerCmd implements Command {
+  name = 'set-peer <component-id> <range>';
+  arguments = [
+    { name: 'component-id', description: 'the component to set as always peer' },
+    {
+      name: 'range',
+      description: 'the default range to use for the componnent, when added to peerDependencies',
+    },
+  ];
+  group = 'info';
+  description = 'set a component as always peer';
+  alias = '';
+  options = [];
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([componentId, range]: [string, string]) {
+    await this.deps.setPeer(componentId, range != null ? range.toString() : range);
+    return `${chalk.green('successfully marked the component as a peer component')}`;
+  }
+}
+
+export class UnsetPeerCmd implements Command {
+  name = 'unset-peer <component-id>';
+  arguments = [{ name: 'component-id', description: 'the component to unset as always peer' }];
+  group = 'info';
+  description = 'unset a component as always peer';
+  alias = '';
+  options = [];
+
+  constructor(private deps: DependenciesMain) {}
+
+  async report([componentId]: [string]) {
+    await this.deps.unsetPeer(componentId);
+    return `${chalk.green('successfully marked the component as not a peer component')}`;
   }
 }

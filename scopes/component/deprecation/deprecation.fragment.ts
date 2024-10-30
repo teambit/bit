@@ -10,9 +10,10 @@ export class DeprecationFragment implements ShowFragment {
     const deprecationInfo = await this.deprecation.getDeprecationInfo(component);
     const isDeprecate = deprecationInfo.isDeprecate.toString();
     const newId = deprecationInfo.newId ? ` (new-id: ${deprecationInfo.newId})` : '';
+    const range = deprecationInfo.range ? ` (range: ${deprecationInfo.range})` : '';
     return {
       title: this.title,
-      content: isDeprecate + newId,
+      content: isDeprecate + newId + range,
     };
   }
 

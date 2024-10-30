@@ -7,6 +7,7 @@ import {
   WorkspacePolicyConfigKeysNames,
   WorkspacePolicyEntry,
 } from '@teambit/dependency-resolver';
+import { snapToSemver } from '@teambit/component-package-version';
 import tempy from 'tempy';
 import fs from 'fs-extra';
 import { MainRuntime } from '@teambit/cli';
@@ -15,21 +16,24 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
-import mergeFiles, { MergeFileParams } from '@teambit/legacy/dist/utils/merge-files';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
+import { MergeStrategy, mergeFiles, MergeFileParams } from '@teambit/merging';
 import { ConfigMergeResult, parseVersionLineWithConflict } from './config-merge-result';
 import { ConfigMergerAspect } from './config-merger.aspect';
+import { AggregatedDeps } from './aggregated-deps';
 
-type PkgEntry = { name: string; version: string; force: boolean };
+export type PkgEntry = { name: string; version: string; force: boolean };
 
 const WS_DEPS_FIELDS = ['dependencies', 'peerDependencies'];
 
 export type WorkspaceDepsUpdates = { [pkgName: string]: [string, string] }; // from => to
 export type WorkspaceDepsConflicts = Record<WorkspacePolicyConfigKeysNames, Array<{ name: string; version: string }>>; // the pkg value is in a format of CONFLICT::OURS::THEIRS
+export type WorkspaceDepsUnchanged = { [pkgName: string]: string }; // the pkg value is the message why it wasn't updated
 
 export type WorkspaceConfigUpdateResult = {
   workspaceDepsUpdates?: WorkspaceDepsUpdates; // in case workspace.jsonc has been updated with dependencies versions
   workspaceDepsConflicts?: WorkspaceDepsConflicts; // in case workspace.jsonc has conflicts
+  workspaceDepsUnchanged?: WorkspaceDepsUnchanged; // in case the deps in workspace.jsonc couldn't be updated
   workspaceConfigConflictWriteError?: Error; // in case workspace.jsonc has conflicts and we failed to write the conflicts to the file
   logs?: string[]; // verbose details about the updates/conflicts for each one of the deps
 };
@@ -123,56 +127,39 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     await fs.writeFile(wsJsoncPath, conflictFile);
   }
 
-  async updateWorkspaceJsoncWithDepsIfNeeded(
-    allConfigMerge: ConfigMergeResult[]
-  ): Promise<{ workspaceDepsUpdates?: WorkspaceDepsUpdates; workspaceDepsConflicts?: WorkspaceDepsConflicts }> {
+  async updateWorkspaceJsoncWithDepsIfNeeded(allConfigMerge: ConfigMergeResult[]): Promise<{
+    workspaceDepsUpdates?: WorkspaceDepsUpdates;
+    workspaceDepsConflicts?: WorkspaceDepsConflicts;
+    workspaceDepsUnchanged?: WorkspaceDepsUnchanged;
+  }> {
     const allResults = allConfigMerge.map((c) => c.getDepsResolverResult());
 
     // aggregate all dependencies that can be updated (not conflicting)
-    const nonConflictDeps: { [pkgName: string]: string[] } = {};
-    const nonConflictSources: { [pkgName: string]: string[] } = {}; // for logging/debugging purposes
+    const nonConflictDeps = new AggregatedDeps();
     allConfigMerge.forEach((configMerge) => {
       const mergedConfig = configMerge.getDepsResolverResult()?.mergedConfig;
       if (!mergedConfig || mergedConfig === '-') return;
       const mergedConfigPolicy = mergedConfig.policy || {};
       DEPENDENCIES_FIELDS.forEach((depField) => {
-        if (!mergedConfigPolicy[depField]) return;
-        mergedConfigPolicy[depField].forEach((pkg: PkgEntry) => {
-          if (pkg.force) return; // we only care about auto-detected dependencies
-          if (nonConflictDeps[pkg.name]) {
-            if (!nonConflictDeps[pkg.name].includes(pkg.version)) nonConflictDeps[pkg.name].push(pkg.version);
-            nonConflictSources[pkg.name].push(configMerge.compIdStr);
-            return;
-          }
-          nonConflictDeps[pkg.name] = [pkg.version];
-          nonConflictSources[pkg.name] = [configMerge.compIdStr];
-        });
+        mergedConfigPolicy[depField]?.forEach((pkg: PkgEntry) => nonConflictDeps.push(pkg, configMerge.compIdStr));
       });
     });
 
     // aggregate all dependencies that have conflicts
-    const conflictDeps: { [pkgName: string]: string[] } = {};
-    const conflictDepsSources: { [pkgName: string]: string[] } = {}; // for logging/debugging purposes
+    const conflictDeps = new AggregatedDeps();
     allConfigMerge.forEach((configMerge) => {
       const mergedConfigConflict = configMerge.getDepsResolverResult()?.conflict;
       if (!mergedConfigConflict) return;
       DEPENDENCIES_FIELDS.forEach((depField) => {
-        if (!mergedConfigConflict[depField]) return;
-        mergedConfigConflict[depField].forEach((pkg: PkgEntry) => {
-          if (pkg.force) return; // we only care about auto-detected dependencies
-          if (conflictDeps[pkg.name]) {
-            if (!conflictDeps[pkg.name].includes(pkg.version)) conflictDeps[pkg.name].push(pkg.version);
-            conflictDepsSources[pkg.name].push(configMerge.compIdStr);
-            return;
-          }
-          conflictDeps[pkg.name] = [pkg.version];
-          conflictDepsSources[pkg.name] = [configMerge.compIdStr];
-        });
+        mergedConfigConflict[depField]?.forEach((pkg: PkgEntry) => conflictDeps.push(pkg, configMerge.compIdStr));
       });
     });
 
-    const notConflictedPackages = Object.keys(nonConflictDeps);
-    const conflictedPackages = Object.keys(conflictDeps);
+    // uncomment to get the aggregated deps of both the conflicted and non-conflicted
+    // console.log('nonConflictDeps', nonConflictDeps.toString(), 'conflictDeps', conflictDeps.toString());
+
+    const notConflictedPackages = nonConflictDeps.depsNames;
+    const conflictedPackages = conflictDeps.depsNames;
     if (!notConflictedPackages.length && !conflictedPackages.length) return {};
 
     const workspaceConfig = this.config.workspaceConfig;
@@ -183,24 +170,26 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
       return {};
     }
 
+    const workspaceDepsUnchanged: { [pkgName: string]: string } = {};
+
     // calculate the workspace.json updates
-    const workspaceJsonUpdates = {};
+    const workspaceJsonUpdates: WorkspaceDepsUpdates = {};
     notConflictedPackages.forEach((pkgName) => {
-      if (nonConflictDeps[pkgName].length > 1) {
-        // we only want the deps that the other lane has them in the workspace.json and that all comps use the same dep.
-        return;
-      }
       DEPENDENCIES_FIELDS.forEach((depField) => {
         if (!policy[depField]?.[pkgName]) return; // doesn't exists in the workspace.json
         const currentVer = policy[depField][pkgName];
-        const newVer = nonConflictDeps[pkgName][0];
+        if (!nonConflictDeps.hasSameVersions(pkgName)) {
+          // we only want the deps that the other lane has them in the workspace.json and that all comps use the same dep.
+          workspaceDepsUnchanged[pkgName] = nonConflictDeps.reportMultipleVersions(pkgName);
+          return;
+        }
+        const newVer = nonConflictDeps.getFirstVersion(pkgName);
         if (currentVer === newVer) return;
         workspaceJsonUpdates[pkgName] = [currentVer, newVer];
         policy[depField][pkgName] = newVer;
+        const compIds = nonConflictDeps.getCompIdsBy(pkgName).join(', ');
         this.logger.debug(
-          `update workspace.jsonc: ${pkgName} from ${currentVer} to ${newVer}. Triggered by: ${nonConflictSources[
-            pkgName
-          ].join(', ')}`
+          `update workspace.jsonc: ${pkgName} from ${currentVer} to ${newVer}. Triggered by: ${compIds}`
         );
       });
     });
@@ -209,20 +198,22 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     const workspaceJsonConflicts = { dependencies: [], peerDependencies: [] };
     const conflictPackagesToRemoveFromConfigMerge: string[] = [];
     conflictedPackages.forEach((pkgName) => {
-      if (conflictDeps[pkgName].length > 1) {
+      if (!conflictDeps.hasSameVersions(pkgName)) {
         // we only want the deps that the other lane has them in the workspace.json and that all comps use the same dep.
+        workspaceDepsUnchanged[pkgName] = conflictDeps.reportMultipleVersions(pkgName);
         return;
       }
-      const conflictRaw = conflictDeps[pkgName][0];
+      const conflictRaw = conflictDeps.getFirstVersion(pkgName);
       const [, currentVal, otherVal] = conflictRaw.split('::');
-
+      // in case of a snap, the otherVal is the snap-hash, we need to convert it to semver
+      const otherValValid = snapToSemver(otherVal);
       WS_DEPS_FIELDS.forEach((depField) => {
         if (!policy[depField]?.[pkgName]) return;
         const currentVerInWsJson = policy[depField][pkgName];
         if (!currentVerInWsJson) return;
         // the version is coming from the workspace.jsonc
         conflictPackagesToRemoveFromConfigMerge.push(pkgName);
-        if (semver.satisfies(otherVal, currentVerInWsJson)) {
+        if (semver.satisfies(otherValValid, currentVerInWsJson)) {
           // the other version is compatible with the current version in the workspace.json
           return;
         }
@@ -232,10 +223,9 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
           force: false,
         });
         conflictPackagesToRemoveFromConfigMerge.push(pkgName);
+        const compIds = conflictDeps.getCompIdsBy(pkgName).join(', ');
         this.logger.debug(
-          `conflict workspace.jsonc: ${pkgName} current: ${currentVerInWsJson}, other: ${otherVal}. Triggered by: ${conflictDepsSources[
-            pkgName
-          ].join(', ')}`
+          `conflict workspace.jsonc: ${pkgName} current: ${currentVerInWsJson}, other: ${otherValValid}. Triggered by: ${compIds}`
         );
       });
     });
@@ -268,10 +258,18 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     return {
       workspaceDepsUpdates: Object.keys(workspaceJsonUpdates).length ? workspaceJsonUpdates : undefined,
       workspaceDepsConflicts: Object.keys(workspaceJsonConflicts).length ? workspaceJsonConflicts : undefined,
+      workspaceDepsUnchanged: Object.keys(workspaceDepsUnchanged).length ? workspaceDepsUnchanged : undefined,
     };
   }
 
-  async updateDepsInWorkspaceConfig(components: ConsumerComponent[]): Promise<WorkspaceConfigUpdateResult | undefined> {
+  async updateDepsInWorkspaceConfig(
+    components: ConsumerComponent[],
+    mergeStrategy?: MergeStrategy
+  ): Promise<WorkspaceConfigUpdateResult | undefined> {
+    if (mergeStrategy === 'ours') {
+      this.logger.debug('mergeStrategy is "ours", skipping the workspace.jsonc update');
+      return undefined;
+    }
     const workspacePolicy = this.depsResolver.getWorkspacePolicyFromConfig();
     const workspacePolicyObj = workspacePolicy.entries.reduce((acc, current) => {
       acc[current.dependencyId] = current.value.version;
@@ -282,7 +280,8 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
       const deps = this.depsResolver.getDependenciesFromLegacyComponent(component);
       deps.forEach((dep) => {
         if (dep.source !== 'auto') return;
-        const depId = dep.idWithoutVersion;
+        const depId = dep.getPackageName?.();
+        if (!depId) return; // unclear when this happens.
         if (!workspacePolicyObj[depId]) return;
         if (workspacePolicyObj[depId] === dep.version) return;
         if (componentDepsWithMultipleVer[depId]?.includes(dep.version)) return;
@@ -349,6 +348,10 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
           // depInCompVer is a version, depInWsVer is a range
           const potentialRangeChar = depInWsVer[0];
           const newRange = potentialRangeChar + depInCompVer;
+          if (newRange === depInWsVer) {
+            addNotUpdateToLogs(`the min version from ws ${depInWsVer} is the same as ${depInCompVer} from comp`);
+            return;
+          }
           if (!semver.validRange(newRange)) {
             const warnMsg = `failed to add the range "${potentialRangeChar}" to ${depInCompVer}, the result is not a valid range`;
             this.logger.warn(warnMsg);
@@ -363,6 +366,10 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
         }
       };
       const addToConflict = () => {
+        if (mergeStrategy === 'theirs') {
+          addToUpdate();
+          return;
+        }
         workspaceDepsConflicts[lifeCycle].push({ name: depId, version: `CONFLICT::${depInWsVer}::${depInCompVer}` });
         logs.push(`${depId} - conflict. ours: ${depInWsVer}, theirs: ${depInCompVer}`);
       };
@@ -491,7 +498,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     Workspace,
     ConfigMain,
     LoggerMain,
-    DependencyResolverMain
+    DependencyResolverMain,
   ]) {
     const logger = loggerMain.createLogger(ConfigMergerAspect.id);
     return new ConfigMergerMain(workspace, logger, config, depsResolver);

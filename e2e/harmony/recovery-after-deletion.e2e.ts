@@ -96,7 +96,7 @@ describe('recovery after component/scope deletion', function () {
           describe('bit tag without --rebuild-deps-graph', () => {
             let tagOutput;
             before(() => {
-              tagOutput = helper.command.tagWithoutBuild('comp1', '--force');
+              tagOutput = helper.command.tagWithoutBuild('comp1', '--unmodified');
             });
             it('should succeed', () => {
               expect(tagOutput).to.have.string('1 component(s) tagged');
@@ -110,7 +110,7 @@ describe('recovery after component/scope deletion', function () {
           describe('bit tag with --rebuild-deps-graph', () => {
             let tagOutput;
             before(() => {
-              tagOutput = helper.command.tagWithoutBuild('comp1', '--force --rebuild-deps-graph');
+              tagOutput = helper.command.tagWithoutBuild('comp1', '--unmodified --rebuild-deps-graph');
             });
             it('should succeed', () => {
               expect(tagOutput).to.have.string('1 component(s) tagged');
@@ -184,7 +184,7 @@ describe('recovery after component/scope deletion', function () {
           });
           describe('bit tag --rebuild-deps-graph', () => {
             it('should throw an error about missing dependencies', () => {
-              expect(() => helper.command.tagWithoutBuild('comp1', '--force --rebuild-deps-graph')).to.throw(
+              expect(() => helper.command.tagWithoutBuild('comp1', '--unmodified --rebuild-deps-graph')).to.throw(
                 'has the following dependencies missing'
               );
             });
@@ -195,7 +195,7 @@ describe('recovery after component/scope deletion', function () {
           // and when the installation fails, bit-tag fails as well.
           describe('bit tag without --rebuild-deps-graph', () => {
             it('should succeed', () => {
-              expect(() => helper.command.tagWithoutBuild('comp1', '--force')).to.not.throw();
+              expect(() => helper.command.tagWithoutBuild('comp1', '--unmodified')).to.not.throw();
             });
           });
         });
@@ -227,7 +227,7 @@ describe('recovery after component/scope deletion', function () {
           describe('bit tag without --rebuild-deps-graph', () => {
             let tagOutput;
             before(() => {
-              tagOutput = helper.command.tagWithoutBuild('comp1', '--force');
+              tagOutput = helper.command.tagWithoutBuild('comp1', '--unmodified');
             });
             it('should succeed', () => {
               expect(tagOutput).to.have.string('1 component(s) tagged');
@@ -241,7 +241,7 @@ describe('recovery after component/scope deletion', function () {
           describe('bit tag with --rebuild-deps-graph', () => {
             let tagOutput;
             before(() => {
-              tagOutput = helper.command.tagWithoutBuild('comp1', '--force --rebuild-deps-graph');
+              tagOutput = helper.command.tagWithoutBuild('comp1', '--unmodified --rebuild-deps-graph');
             });
             it('should succeed', () => {
               expect(tagOutput).to.have.string('1 component(s) tagged');
@@ -289,7 +289,7 @@ describe('recovery after component/scope deletion', function () {
           });
           describe('bit tag --rebuild-deps-graph', () => {
             it('should throw an error about missing dependencies', () => {
-              expect(() => helper.command.tagWithoutBuild('comp1', '--force --rebuild-deps-graph')).to.throw(
+              expect(() => helper.command.tagWithoutBuild('comp1', '--unmodified --rebuild-deps-graph')).to.throw(
                 'has the following dependencies missing'
               );
             });
@@ -300,7 +300,7 @@ describe('recovery after component/scope deletion', function () {
           // and when the installation fails, bit-tag fails as well.
           describe('bit tag without --rebuild-deps-graph', () => {
             it('should succeed', () => {
-              expect(() => helper.command.tagWithoutBuild('comp1', '--force')).to.not.throw();
+              expect(() => helper.command.tagWithoutBuild('comp1', '--unmodified')).to.not.throw();
             });
           });
         });
@@ -340,7 +340,7 @@ describe('recovery after component/scope deletion', function () {
             let tagOutput;
             before(() => {
               helper.command.importAllComponents(); // otherwise, it shows "your workspace has outdated objects" warning.
-              tagOutput = helper.command.tagWithoutBuild('comp2', '--force');
+              tagOutput = helper.command.tagWithoutBuild('comp2', '--unmodified');
             });
             it('should succeed', () => {
               expect(tagOutput).to.have.string('1 component(s) tagged');
@@ -387,7 +387,7 @@ describe('recovery after component/scope deletion', function () {
               helper.command.importAllComponents();
             });
             it('should throw ComponentNotFound error because it is a direct dependency', () => {
-              const cmd = () => helper.command.tagWithoutBuild('comp2', '--rebuild-deps-graph --force');
+              const cmd = () => helper.command.tagWithoutBuild('comp2', '--rebuild-deps-graph --unmodified');
               const err = new ComponentNotFound(`${remote2Name}/comp3@0.0.1`);
               helper.general.expectToThrow(cmd, err);
             });
@@ -571,7 +571,9 @@ describe('recovery after component/scope deletion', function () {
               expect(comp3.orphanedVersions).to.have.property('0.0.1');
             });
             it('should not throw an error on bit-tag of comp1', () => {
-              expect(() => helper.command.tagWithoutBuild(`${helper.scopes.remote}/comp1`, '--force')).to.not.throw();
+              expect(() =>
+                helper.command.tagWithoutBuild(`${helper.scopes.remote}/comp1`, '--unmodified')
+              ).to.not.throw();
             });
           });
         });
@@ -579,7 +581,7 @@ describe('recovery after component/scope deletion', function () {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(beforeImportScope);
             helper.command.import(`${helper.scopes.remote}/comp1 ${remote2Name}/comp3`);
-            helper.command.tagComponent(`${remote2Name}/comp3@0.0.8`, undefined, '--force');
+            helper.command.tagComponent(`${remote2Name}/comp3@0.0.8`, undefined, '--unmodified');
             helper.command.export();
             helper.command.importAllComponents();
           });

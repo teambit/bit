@@ -39,90 +39,73 @@ export class SnapCmd implements Command {
       'open an editor to write a snap message per component. optionally specify the editor-name (defaults to vim).',
     ],
     ['', 'skip-tests', 'skip running component tests during snap process'],
+    [
+      '',
+      'skip-tasks <string>',
+      `skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes.
+specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)`,
+    ],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
     [
       '',
       'disable-snap-pipeline',
       'skip the snap pipeline. this will for instance skip packing and publishing component version for install, and app deployment',
     ],
-    ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
     ['', 'ignore-build-errors', 'proceed to snap pipeline even when build pipeline fails'],
     ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
     [
       'i',
-      'ignore-issues [issues]',
+      'ignore-issues <issues>',
       `ignore component issues (shown in "bit status" as "issues found"), issues to ignore:
 [${Object.keys(IssuesClasses).join(', ')}]
 to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
     ],
-    ['a', 'all', 'DEPRECATED (not needed anymore, now the default). snap all new and modified components'],
     [
       '',
       'fail-fast',
       'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
-    [
-      'f',
-      'force',
-      'DEPRECATED (use "--skip-tests" or "--unmodified" instead). force-snap even if tests are failing and even when component has not changed',
-    ],
   ] as CommandOptions;
   loader = true;
 
-  constructor(private snapping: SnappingMain, private logger: Logger, private globalConfig: GlobalConfigMain) {}
+  constructor(
+    private snapping: SnappingMain,
+    private logger: Logger,
+    private globalConfig: GlobalConfigMain
+  ) {}
 
   async report(
     [pattern]: string[],
     {
       message = '',
-      all = false,
-      force = false,
       unmerged = false,
       editor = '',
       ignoreIssues,
       build,
       skipTests = false,
+      skipTasks,
       skipAutoSnap = false,
       disableSnapPipeline = false,
-      forceDeploy = false,
       ignoreBuildErrors = false,
       rebuildDepsGraph,
       unmodified = false,
       failFast = false,
     }: {
-      all?: boolean;
-      force?: boolean;
       unmerged?: boolean;
       editor?: string;
       ignoreIssues?: string;
       skipAutoSnap?: boolean;
       disableSnapPipeline?: boolean;
-      forceDeploy?: boolean;
       unmodified?: boolean;
       failFast?: boolean;
     } & BasicTagSnapParams
   ) {
     build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
     const disableTagAndSnapPipelines = disableSnapPipeline;
-    if (all) {
-      this.logger.consoleWarning(
-        `--all is deprecated, please omit it. By default all new and modified components are snapped, to snap all components add --unmodified`
-      );
-    }
-    if (force) {
-      this.logger.consoleWarning(
-        `--force is deprecated, use either --skip-tests or --ignore-build-errors depending on the use case`
-      );
-      if (pattern) unmodified = true;
-    }
     if (!message && !editor) {
       this.logger.consoleWarning(
         `--message will be mandatory in the next few releases. make sure to add a message with your snap, will be displayed in the version history`
       );
-    }
-    if (forceDeploy) {
-      this.logger.consoleWarning(`--force-deploy is deprecated, use --ignore-build-errors instead`);
-      ignoreBuildErrors = true;
     }
 
     const results = await this.snapping.snap({
@@ -133,6 +116,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       ignoreIssues,
       build,
       skipTests,
+      skipTasks,
       skipAutoSnap,
       disableTagAndSnapPipelines,
       ignoreBuildErrors,

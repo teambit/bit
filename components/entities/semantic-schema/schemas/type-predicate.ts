@@ -26,10 +26,23 @@ export class TypePredicateSchema extends SchemaNode {
     this.type = type;
   }
 
-  toString() {
+  toString(options?: { color?: boolean }) {
     const assertsKeyword = this.hasAssertsModifier ? 'asserts ' : '';
-    const typeStr = this.type ? ` is ${this.type.toString()}` : '';
+    const typeStr = this.type ? ` is ${this.type.toString(options)}` : '';
     return assertsKeyword + this.name + typeStr;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const assertsKeyword = this.hasAssertsModifier ? 'asserts ' : '';
+    const typeSignature = this.type ? ` is ${this.type.toFullSignature(options)}` : '';
+    let signature = `${assertsKeyword}${this.name}${typeSignature}`;
+
+    if (options?.showDocs && this.doc) {
+      const docString = this.doc.toFullSignature();
+      signature = `${docString}\n${signature}`;
+    }
+
+    return signature;
   }
 
   toObject() {

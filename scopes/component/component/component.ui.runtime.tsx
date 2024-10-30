@@ -3,17 +3,17 @@ import flatten from 'lodash.flatten';
 import copy from 'copy-to-clipboard';
 import type { RouteProps } from 'react-router-dom';
 import type { LinkProps } from '@teambit/base-react.navigation.link';
-import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
+import { CommandBarAspect, CommandBarUI, CommandEntry } from '@teambit/command-bar';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import PreviewAspect, { ClickInsideAnIframeEvent } from '@teambit/preview';
-import PubsubAspect, { BitBaseEvent, PubsubUI } from '@teambit/pubsub';
-import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
+import { PreviewAspect, ClickInsideAnIframeEvent } from '@teambit/preview';
+import { PubsubAspect, BitBaseEvent, PubsubUI } from '@teambit/pubsub';
+import { ReactRouterAspect, ReactRouterUI } from '@teambit/react-router';
 import { UIRuntime } from '@teambit/ui';
 import { groupBy } from 'lodash';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import { MenuItem, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
-import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import type { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { Import } from '@teambit/ui-foundation.ui.use-box.menu';
 import { snapToSemver } from '@teambit/component-package-version';
 import { AspectSection } from './aspect.section';
@@ -327,7 +327,7 @@ export class ComponentUI {
       MenuItemSlot,
       ComponentPageSlot,
       ComponentSearchResultSlot,
-      RightSideMenuSlot
+      RightSideMenuSlot,
     ]
   ) {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)
@@ -358,6 +358,10 @@ export class ComponentUI {
     componentUI.registerRoute(aspectSection.route);
     componentUI.registerWidget(aspectSection.navigationLink, aspectSection.order);
     componentUI.registerConsumeMethod(componentUI.bitMethod);
+    componentUI.registerRightSideMenuItem({
+      item: <commandBarUI.CommandBarButton />,
+      order: 90,
+    });
     return componentUI;
   }
 }

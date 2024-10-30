@@ -18,7 +18,7 @@ describe('scope components index mechanism', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
     });
     it('should save the component in the index.json file', () => {
@@ -91,7 +91,7 @@ describe('scope components index mechanism', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
 
       // as an intermediate step, make sure bit list shows one component
@@ -127,7 +127,7 @@ describe('scope components index mechanism', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScope();
         helper.fixtures.createComponentBarFoo();
-        helper.fixtures.addComponentBarFooAsDir();
+        helper.fixtures.addComponentBarFoo();
         helper.command.tagAllWithoutBuild();
         const indexJsonWithBarFoo = helper.general.getComponentsFromIndexJson();
         helper.command.reset('bar/foo');

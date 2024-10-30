@@ -69,7 +69,7 @@ describe('bit scope command', function () {
       helper.command.renameScope('my-scope', helper.scopes.remote, '--refactor');
     });
     it('should change the package name in the component files', () => {
-      const comp2Content = helper.fs.readFile('comp2/index.js');
+      const comp2Content = helper.fs.readFile(`${helper.scopes.remote}/comp2/index.js`);
       expect(comp2Content).to.not.include('my-scope');
       expect(comp2Content).to.include(helper.scopes.remote);
     });
@@ -85,7 +85,7 @@ describe('bit scope command', function () {
       helper.fixtures.populateComponents(3);
       helper.command.tagWithoutBuild('comp3', '--skip-auto-tag');
       helper.command.export();
-      helper.command.renameScope(helper.scopes.remote, 'my-scope', '--refactor');
+      helper.command.renameScope(helper.scopes.remote, 'my-scope', '--refactor --deprecate');
     });
     it('should deprecate the exported one (comp3)', () => {
       const showDeprecation = helper.command.showAspectConfig(`${helper.scopes.remote}/comp3`, Extensions.deprecation);
@@ -146,6 +146,27 @@ describe('bit scope command', function () {
     it('should compile the renamed components', () => {
       const linkPath = path.join(helper.scopes.localPath, 'node_modules', '@new-org/my-scope1.comp1/dist');
       expect(linkPath).to.be.a.directory();
+    });
+  });
+  describe('bit scope fork when the paths of two components conflicting', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.fs.outputFile('comp1/ui/index.js');
+      helper.command.addComponent('comp1/ui', '--id comp1/ui');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+    });
+    it('should not throw an error about a component is nested in another component dir', () => {
+      const cmd = () => helper.command.forkScope(helper.scopes.remote, 'org.scope', '-x');
+      expect(cmd).to.not.throw();
     });
   });
 });

@@ -1,3 +1,4 @@
+import { CloudMain } from '@teambit/cloud';
 import {
   DependencyResolverMain,
   extendWithComponentsFromDir,
@@ -12,11 +13,13 @@ import {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
+import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { Logger } from '@teambit/logger';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
-import { readModulesManifest } from '@pnpm/modules-yaml';
+import { Config } from '@pnpm/config';
+import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
 import {
   buildDependenciesHierarchy,
   DependenciesHierarchy,
@@ -25,16 +28,31 @@ import {
 } from '@pnpm/reviewing.dependencies-hierarchy';
 import { renderTree } from '@pnpm/list';
 import { readWantedLockfile } from '@pnpm/lockfile-file';
-import { ProjectManifest } from '@pnpm/types';
+import { type ProjectManifest, type DepPath } from '@pnpm/types';
+import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
+import { ServerSendOutStream } from '@teambit/legacy/dist/logger/pino-logger';
 import { join } from 'path';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
 
+export type { RebuildFn };
+
+export interface InstallResult {
+  dependenciesChanged: boolean;
+  rebuild: RebuildFn;
+  storeDir: string;
+  depsRequiringBuild?: DepPath[];
+}
+
+type ReadConfigResult = Promise<{ config: Config; warnings: string[] }>;
+
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
+  readonly modulesManifestCache: Map<string, Modules> = new Map();
+  private username: string;
 
-  private _readConfig = async (dir?: string) => {
+  private _readConfig = async (dir?: string): ReadConfigResult => {
     const { config, warnings } = await readConfig(dir);
     if (config?.fetchRetries && config?.fetchRetries < 5) {
       config.fetchRetries = 5;
@@ -44,14 +62,18 @@ export class PnpmPackageManager implements PackageManager {
     return { config, warnings };
   };
 
-  public readConfig = memoize(this._readConfig);
+  public readConfig: (dir?: string) => ReadConfigResult = memoize(this._readConfig);
 
-  constructor(private depResolver: DependencyResolverMain, private logger: Logger) {}
+  constructor(
+    private depResolver: DependencyResolverMain,
+    private logger: Logger,
+    private cloud: CloudMain
+  ) {}
 
   async install(
     { rootDir, manifests }: InstallationContext,
     installOptions: PackageManagerInstallOptions = {}
-  ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string }> {
+  ): Promise<InstallResult> {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
@@ -81,7 +103,8 @@ export class PnpmPackageManager implements PackageManager {
         }
       });
     }
-    const { dependenciesChanged, rebuild, storeDir } = await install(
+    this.modulesManifestCache.delete(rootDir);
+    const { dependenciesChanged, rebuild, storeDir, depsRequiringBuild } = await install(
       rootDir,
       manifests,
       config.storeDir,
@@ -90,6 +113,8 @@ export class PnpmPackageManager implements PackageManager {
       proxyConfig,
       networkConfig,
       {
+        autoInstallPeers: installOptions.autoInstallPeers ?? true,
+        enableModulesDir: installOptions.enableModulesDir,
         engineStrict: installOptions.engineStrict ?? config.engineStrict,
         excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
         lockfileOnly: installOptions.lockfileOnly,
@@ -98,19 +123,19 @@ export class PnpmPackageManager implements PackageManager {
         nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
         includeOptionalDeps: installOptions.includeOptionalDeps,
         ignorePackageManifest: installOptions.ignorePackageManifest,
-        dedupeInjectedDeps: installOptions.dedupeInjectedDeps,
+        dedupeInjectedDeps: installOptions.dedupeInjectedDeps ?? false,
         dryRun: installOptions.dryRun,
         overrides: installOptions.overrides,
         hoistPattern: installOptions.hoistPatterns ?? config.hoistPattern,
         publicHoistPattern: config.shamefullyHoist
           ? ['*']
           : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
-        hoistWorkspacePackages: installOptions.hoistWorkspacePackages,
+        hoistWorkspacePackages: installOptions.hoistWorkspacePackages ?? false,
+        hoistInjectedDependencies: installOptions.hoistInjectedDependencies,
         packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
         preferOffline: installOptions.preferOffline,
         rootComponents: installOptions.rootComponents,
         rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
-        peerDependencyRules: installOptions.peerDependencyRules,
         sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
         sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
         pnpmHomeDir: config.pnpmHomeDir,
@@ -118,10 +143,13 @@ export class PnpmPackageManager implements PackageManager {
         hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
         reportOptions: {
           appendOnly: installOptions.optimizeReportForNonTerminal,
+          process: process.env.BIT_CLI_SERVER_NO_TTY ? { ...process, stdout: new ServerSendOutStream() } : undefined,
           throttleProgress: installOptions.throttleProgress,
           hideProgressPrefix: installOptions.hideProgressPrefix,
           hideLifecycleOutput: installOptions.hideLifecycleOutput,
+          peerDependencyRules: installOptions.peerDependencyRules,
         },
+        returnListOfDepsRequiringBuild: installOptions.returnListOfDepsRequiringBuild,
       },
       this.logger
     );
@@ -131,7 +159,7 @@ export class PnpmPackageManager implements PackageManager {
       // this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
       // this.logger.consoleSuccess('installing dependencies using pnpm');
     }
-    return { dependenciesChanged, rebuild, storeDir };
+    return { dependenciesChanged, rebuild, storeDir, depsRequiringBuild };
   }
 
   async getPeerDependencyIssues(
@@ -181,22 +209,45 @@ export class PnpmPackageManager implements PackageManager {
 
   async getNetworkConfig?(): Promise<PackageManagerNetworkConfig> {
     const { config } = await this.readConfig();
+    if (!this.username) {
+      this.username = (await this.cloud.getCurrentUser())?.username ?? 'anonymous';
+    }
     // We need to use config.rawConfig as it will only contain the settings defined by the user.
     // config contains default values of the settings when they are not defined by the user.
-    return {
-      maxSockets: config.rawConfig['max-sockets'],
-      networkConcurrency: config.rawConfig['network-concurrency'],
-      fetchRetries: config.rawConfig['fetch-retries'],
-      fetchTimeout: config.rawConfig['fetch-timeout'],
-      fetchRetryMaxtimeout: config.rawConfig['fetch-retry-maxtimeout'],
-      fetchRetryMintimeout: config.rawConfig['fetch-retry-mintimeout'],
-      strictSSL: config.rawConfig['strict-ssl'],
-      // These settings don't have default value, so it is safe to read them from config
-      // ca is automatically populated from the content of the file specified by cafile.
-      ca: config.ca,
-      cert: config.cert,
-      key: config.key,
+    const result: PackageManagerNetworkConfig = {
+      userAgent: `bit user/${this.username}`,
     };
+    if (config.rawConfig['max-sockets'] != null) {
+      result.maxSockets = config.rawConfig['max-sockets'];
+    }
+    if (config.rawConfig['network-concurrency'] != null) {
+      result.networkConcurrency = config.rawConfig['network-concurrency'];
+    }
+    if (config.rawConfig['fetch-retries'] != null) {
+      result.fetchRetries = config.rawConfig['fetch-retries'];
+    }
+    if (config.rawConfig['fetch-timeout'] != null) {
+      result.fetchTimeout = config.rawConfig['fetch-timeout'];
+    }
+    if (config.rawConfig['fetch-retry-maxtimeout'] != null) {
+      result.fetchRetryMaxtimeout = config.rawConfig['fetch-retry-maxtimeout'];
+    }
+    if (config.rawConfig['fetch-retry-mintimeout'] != null) {
+      result.fetchRetryMintimeout = config.rawConfig['fetch-retry-mintimeout'];
+    }
+    if (config.rawConfig['strict-ssl'] != null) {
+      result.strictSSL = config.rawConfig['strict-ssl'];
+    }
+    if (config.ca != null) {
+      result.ca = config.ca;
+    }
+    if (config.cert != null) {
+      result.cert = config.cert;
+    }
+    if (config.key != null) {
+      result.key = config.key;
+    }
+    return result;
   }
 
   async getRegistries(): Promise<Registries> {
@@ -240,8 +291,15 @@ export class PnpmPackageManager implements PackageManager {
     return modulesState.injectedDeps[`node_modules/${packageName}`] ?? modulesState.injectedDeps[componentDir] ?? [];
   }
 
-  _readModulesManifest(lockfileDir: string) {
-    return readModulesManifest(join(lockfileDir, 'node_modules'));
+  async _readModulesManifest(lockfileDir: string): Promise<Modules | undefined> {
+    if (this.modulesManifestCache.has(lockfileDir)) {
+      return this.modulesManifestCache.get(lockfileDir);
+    }
+    const modulesManifest = await readModulesManifest(join(lockfileDir, 'node_modules'));
+    if (modulesManifest) {
+      this.modulesManifestCache.set(lockfileDir, modulesManifest);
+    }
+    return modulesManifest ?? undefined;
   }
 
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
@@ -256,7 +314,7 @@ export class PnpmPackageManager implements PackageManager {
     const search = createPackagesSearcher([depName]);
     const lockfile = await readWantedLockfile(opts.lockfileDir, { ignoreIncompatible: false });
     const projectPaths = Object.keys(lockfile?.importers ?? {})
-      .filter((id) => !id.startsWith('node_modules/.bit_roots'))
+      .filter((id) => !id.includes(`${BIT_ROOTS_DIR}/`))
       .map((id) => join(opts.lockfileDir, id));
     const cache = new Map();
     const modulesManifest = await this._readModulesManifest(opts.lockfileDir);
@@ -277,6 +335,7 @@ export class PnpmPackageManager implements PackageManager {
           default: 'https://registry.npmjs.org',
         },
         search,
+        virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
       })
     ).map(([projectPath, builtDependenciesHierarchy]) => {
       pkgNamesToComponentIds(builtDependenciesHierarchy, { cache, getPkgLocation });

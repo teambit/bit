@@ -3,8 +3,8 @@ import tempy from 'tempy';
 import fs from 'fs-extra';
 import yesno from 'yesno';
 import chalk from 'chalk';
-import BitMap from '@teambit/legacy/dist/consumer/bit-map';
-import { PromptCanceled } from '@teambit/legacy/dist/prompts/exceptions';
+import { BitMap } from '@teambit/legacy.bit-map';
+import { PromptCanceled } from '@teambit/legacy.cli.prompts';
 import { ScopeMain } from '@teambit/scope';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { StagedSnaps } from '@teambit/legacy/dist/scope/staged-snaps';
@@ -26,7 +26,11 @@ type Snapshot = {
 };
 
 export class LastMerged {
-  constructor(private scope: ScopeMain, private consumer: Consumer, private logger: Logger) {}
+  constructor(
+    private scope: ScopeMain,
+    private consumer: Consumer,
+    private logger: Logger
+  ) {}
 
   get path() {
     return this.scope.getLastMergedPath();
@@ -76,6 +80,20 @@ export class LastMerged {
     if (copyOfStagedConfig) {
       await fs.copyFile(copyOfStagedConfig, this.getLastMergedStagedConfigPath());
     }
+  }
+
+  async restoreLaneObjectFromLastMerged() {
+    if (!fs.pathExistsSync(this.path)) {
+      throw new BitError(`unable to abort the last lane-merge because "bit export" was running since then`);
+    }
+    const lastLane = await this.getLastMergedLaneContentIfExists();
+    if (!lastLane) {
+      throw new BitError(
+        `unable to revert the last lane-merge because the ${LAST_MERGED_LANE_FILENAME} is missing from ${this.path}`
+      );
+    }
+    const laneFromBackup = await BitObject.parseObject(lastLane, LAST_MERGED_LANE_FILENAME);
+    await this.scope.legacyScope.objects.writeObjectsToTheFS([laneFromBackup]);
   }
 
   async restoreFromLastMerged(mergeAbortOpts: MergeAbortOpts, currentLane?: Lane | null) {

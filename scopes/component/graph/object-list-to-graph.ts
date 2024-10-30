@@ -46,7 +46,8 @@ export async function bitObjectListToGraph(bitObjectsList: BitObjectList): Promi
         if (!versionInfo.version) {
           return;
         }
-        const { dependencies, devDependencies, extensionDependencies } = versionInfo.version.depsIdsGroupedByType;
+        const { dependencies, devDependencies, peerDependencies, extensionDependencies } =
+          versionInfo.version.depsIdsGroupedByType;
         const addDep = (depId: ComponentID, edge: Dependency) => {
           const depIdStr = depId.toString();
           nodes.push(new Node(depIdStr, depId));
@@ -54,8 +55,10 @@ export async function bitObjectListToGraph(bitObjectsList: BitObjectList): Promi
         };
         const runTime = new Dependency('runtime');
         const dev = new Dependency('dev');
+        const peer = new Dependency('peer');
         dependencies.forEach((depId) => addDep(depId, runTime));
         [...devDependencies, ...extensionDependencies].forEach((depId) => addDep(depId, dev));
+        peerDependencies.forEach((depId) => addDep(depId, peer));
       });
     })
   );

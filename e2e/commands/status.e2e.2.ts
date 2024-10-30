@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { MISSING_DEPS_SPACE } from '@teambit/component-issues';
+import { IssuesClasses, MISSING_DEPS_SPACE } from '@teambit/component-issues';
 import { IMPORT_PENDING_MSG, statusFailureMsg, statusInvalidComponentsMsg } from '../../src/constants';
 import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -45,7 +45,7 @@ describe('bit status command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       output = helper.command.runCmd('bit status');
     });
     it('should display that component as a new component', () => {
@@ -93,7 +93,7 @@ describe('bit status command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       output = helper.command.runCmd('bit status');
     });
@@ -115,7 +115,7 @@ describe('bit status command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       // modify the component
       helper.fixtures.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };");
@@ -144,7 +144,7 @@ describe('bit status command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
       output = helper.command.runCmd('bit status');
@@ -164,7 +164,7 @@ describe('bit status command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
       // modify the component
@@ -189,7 +189,7 @@ describe('bit status command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
       // modify the component
@@ -213,7 +213,7 @@ describe('bit status command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
       helper.fixtures.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };"); // modify the component
@@ -236,7 +236,7 @@ describe('bit status command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
       helper.scopeHelper.reInitLocalScope();
@@ -270,7 +270,7 @@ describe('bit status command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
       helper.fixtures.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };"); // modify the component
@@ -350,7 +350,7 @@ describe('bit status command', function () {
         expect(output).to.have.string('component files were deleted');
       });
       describe('running bit diff', () => {
-        it('should throw an exception MissingFilesFromComponent', () => {
+        it('should throw an exception ComponentNotFoundInPath', () => {
           const diffFunc = () => helper.command.diff('bar/foo');
           const error = new ComponentNotFoundInPath('bar');
           helper.general.expectToThrow(diffFunc, error);
@@ -382,7 +382,7 @@ describe('bit status command', function () {
       describe('running bit diff', () => {
         it('should throw an exception ComponentNotFoundInPath', () => {
           const diffFunc = () => helper.command.diff('bar/foo');
-          const error = new ComponentNotFoundInPath(path.join(helper.scopes.localPath, 'bar'));
+          const error = new ComponentNotFoundInPath('bar');
           helper.general.expectToThrow(diffFunc, error);
         });
       });
@@ -394,7 +394,7 @@ describe('bit status command', function () {
       helper.scopeHelper.reInitLocalScope();
       const fooFixture = "require ('@bit/scope.bar.baz');";
       helper.fixtures.createComponentBarFoo(fooFixture);
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       output = helper.command.runCmd('bit status');
     });
     it('should show the missing component as missing', () => {
@@ -407,7 +407,7 @@ describe('bit status command', function () {
       helper.scopeHelper.reInitLocalScope();
       const fooFixture = "require ('@bit/scope.bar.baz');";
       helper.fixtures.createComponentBarFoo(fooFixture);
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.npm.initNpm();
       helper.packageJson.addKeyValue({ dependencies: { '@bit/scope.bar.baz': '1.0.0' } });
     });
@@ -430,7 +430,7 @@ describe('bit status command', function () {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentUtilsIsString();
       helper.fixtures.createComponentBarFoo(fixtures.barFooFixture);
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.addComponent('utils', { i: 'utils/is-string' });
 
       // an intermediate step, make sure bar/foo is before utils/is-string
@@ -452,12 +452,24 @@ describe('bit status command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo('const a = "./b"; import(a); require(a);');
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.compile();
     });
     it('status should not show the component as missing packages', () => {
       const output = helper.command.runCmd('bit status');
       expect(output).to.not.have.string(statusFailureMsg);
+    });
+  });
+  describe('import from the index file', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.fs.outputFile('comp1/index.ts', `export { hello } from './foo';`);
+      helper.fs.outputFile('comp1/foo.ts', `export const hello = 'world';`);
+      helper.fs.outputFile('comp1/bar.ts', `import { hello } from '.';`);
+      helper.command.addComponent('comp1');
+    });
+    it('should show an ImportFromDirectory issue', () => {
+      helper.command.expectStatusToHaveIssue(IssuesClasses.ImportFromDirectory.name);
     });
   });
 });

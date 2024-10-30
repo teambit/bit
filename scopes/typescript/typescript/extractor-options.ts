@@ -1,3 +1,5 @@
+import { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
+
 export type ExtractorOptions = {
   /**
    * name of the string.
@@ -18,4 +20,14 @@ export type ExtractorOptions = {
    * typescript compiler options. always overrides all.
    */
   compilerOptions?: string;
+
+  /**
+   * schema transformers.
+   */
+  schemaTransformers?: SchemaTransformer[];
+
+  /**
+   * api transformers.
+   */
+  apiTransformers?: SchemaNodeTransformer[];
 };

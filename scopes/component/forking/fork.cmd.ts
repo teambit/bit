@@ -1,7 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentConfig } from '@teambit/generator';
 import chalk from 'chalk';
-import { ForkingMain } from '.';
+import { ForkingMain } from './forking.main.runtime';
 
 export type ForkOptions = {
   scope?: string;
@@ -49,14 +49,14 @@ export class ForkCmd implements Command {
     ],
     ['', 'preserve', 'avoid refactoring file and variable/class names according to the new component name'],
     ['', 'no-link', 'avoid saving a reference to the original component'],
-    ['', 'ast', 'EXPERIMENTAL. use ast to transform files instead of regex'],
+    ['', 'ast', 'use ast to transform files instead of regex'],
   ] as CommandOptions;
 
   example: [
     {
       cmd: 'fork teambit.base-ui/input/button ui/button';
       description: "create a component named 'ui/button', forked from the remote 'input/button' component";
-    }
+    },
   ];
   loader = true;
   remoteOp = true;

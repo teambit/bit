@@ -9,24 +9,27 @@ import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/legacy/dist/utils';
-import { PathLinux, PathLinuxRelative, PathOsBased, removeFileExtension } from '@teambit/legacy/dist/utils/path';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import { getExt } from '@teambit/toolbox.fs.extension-getter';
+import {
+  pathNormalizeToLinux,
+  pathRelativeLinux,
+  PathLinux,
+  PathLinuxRelative,
+  PathOsBased,
+  removeFileExtension,
+} from '@teambit/legacy.utils';
+import { ResolvedPackageData } from '../resolve-pkg-data';
+import { ComponentMap } from '@teambit/legacy.bit-map';
 import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { RelativePath } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
-import { getDependencyTree } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder';
-import {
-  FileObject,
-  ImportSpecifier,
-  DependenciesTree,
-} from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
+import { RelativePath, ImportSpecifier } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
+import { getDependencyTree } from '../files-dependency-builder';
+import { FileObject, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
 import { DevFilesMain } from '@teambit/dev-files';
 import { Workspace } from '@teambit/workspace';
-import { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
-import { ResolvedPackageData } from '@teambit/legacy/dist/utils/packages';
-import { DependencyDetector } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
+import { AspectLoaderMain } from '@teambit/aspect-loader';
+import { DependencyDetector } from '../files-dependency-builder/detector-hook';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 import { DependenciesData } from './dependencies-data';
 import { AllDependencies, AllPackagesDependencies } from './apply-overrides';
@@ -50,6 +53,12 @@ export type DebugComponentsDependency = {
   version?: string;
   componentIdResolvedFrom?: 'DependencyPkgJson' | 'DependencyPath';
   packageName?: string;
+};
+
+type PushToDepsArrayOpts = {
+  fileType: FileType;
+  depDebug: DebugComponentsDependency;
+  isPeer?: boolean;
 };
 
 export class AutoDetectDeps {
@@ -81,6 +90,7 @@ export class AutoDetectDeps {
     this.allDependencies = {
       dependencies: [],
       devDependencies: [],
+      peerDependencies: [],
     };
     this.allPackagesDependencies = {
       packageDependencies: {},
@@ -284,6 +294,9 @@ export class AutoDetectDeps {
     // happens when in the same component one file requires another one. In this case, there is
     // noting to do regarding the dependencies
     if (componentId.isEqual(this.componentId, { ignoreVersion: true })) {
+      if (importSource === '.' || importSource.endsWith('/..')) {
+        (this.issues.getOrCreate(IssuesClasses.ImportFromDirectory).data[originFile] ||= []).push(importSource);
+      }
       return false;
     }
 
@@ -347,7 +360,7 @@ export class AutoDetectDeps {
         id: currentComponentsDeps.id,
         importSource,
       };
-      this.pushToDependenciesArray(currentComponentsDeps, fileType, depDebug);
+      this.pushToDependenciesArray(currentComponentsDeps, { fileType, depDebug });
     }
     return false;
   }
@@ -398,8 +411,28 @@ export class AutoDetectDeps {
         return;
       }
       this.addImportNonMainIssueIfNeeded(originFile, compDep);
-      const currentComponentsDeps = new Dependency(existingId, [], compDep.name);
-      this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, depDebug);
+      const isPeer = compDep.packageJsonContent?.bit?.peer;
+      let peerVersionRange: string | undefined;
+      if (isPeer) {
+        const defaultPeerRange = compDep.packageJsonContent?.bit?.defaultPeerRange;
+        if (!defaultPeerRange) {
+          peerVersionRange = '*';
+        } else if (['~', '^', '>='].includes(defaultPeerRange)) {
+          if (semver.valid(compDep.concreteVersion)) {
+            peerVersionRange = `${defaultPeerRange}${compDep.concreteVersion}`;
+          } else {
+            peerVersionRange = `${defaultPeerRange}0.0.0-${compDep.concreteVersion}`;
+          }
+        } else {
+          peerVersionRange = defaultPeerRange;
+        }
+      }
+      const currentComponentsDeps = new Dependency(existingId, [], compDep.name, peerVersionRange);
+      this._pushToDependenciesIfNotExist(currentComponentsDeps, {
+        fileType,
+        depDebug,
+        isPeer,
+      });
     });
   }
 
@@ -423,7 +456,7 @@ export class AutoDetectDeps {
       // some files such as scss/json are needed to be imported as non-main
       return;
     }
-    const pkgRootDir = dependencyPkgData.packageJsonContent?.componentRootFolder;
+    const pkgRootDir = dependencyPkgData.packageJsonPath && path.dirname(dependencyPkgData.packageJsonPath);
     if (pkgRootDir && !fs.existsSync(path.join(pkgRootDir, DEFAULT_DIST_DIRNAME))) {
       // the dependency wasn't compiled yet. the issue is probably because depMain points to the dist
       // and depFullPath is in the source.
@@ -497,25 +530,13 @@ export class AutoDetectDeps {
     if (!error) return;
     logger.errorAndAddBreadCrumb(
       'dependency-resolver.processErrors',
-      'got an error from the driver while resolving dependencies'
+      `got an error from the driver while resolving dependencies from "${originFile}"`
     );
     logger.error('dependency-resolver.processErrors', error);
     if (error.code === 'PARSING_ERROR') {
       const location = error.lineNumber && error.column ? ` (line: ${error.lineNumber}, column: ${error.column})` : '';
       this.issues.getOrCreate(IssuesClasses.ParseErrors).data[originFile] = error.message + location;
     } else this.issues.getOrCreate(IssuesClasses.ResolveErrors).data[originFile] = error.message;
-  }
-
-  private getCoreAspectsPackagesAndIds(): Record<string, string> {
-    const allCoreAspectsIds = this.aspectLoader.getCoreAspectIds();
-    const coreAspectsPackagesAndIds = {};
-
-    allCoreAspectsIds.forEach((id) => {
-      const packageName = getCoreAspectPackageName(id);
-      coreAspectsPackagesAndIds[packageName] = id;
-    });
-
-    return coreAspectsPackagesAndIds;
   }
 
   /**
@@ -525,7 +546,7 @@ export class AutoDetectDeps {
    * which case we recognizes that the current originFile is a core-extension and avoid filtering.
    */
   private processCoreAspects(originFile: PathLinuxRelative) {
-    const coreAspects = this.getCoreAspectsPackagesAndIds();
+    const coreAspects = this.aspectLoader.getCoreAspectsPackagesAndIds();
 
     // const scopes = coreAspects.map((id) => {
     //   const id = id.split()
@@ -589,34 +610,28 @@ export class AutoDetectDeps {
     this.debugDependenciesData.unidentifiedPackages = unidentifiedPackages;
   }
 
-  private _pushToDependenciesIfNotExist(
-    dependency: Dependency,
-    fileType: FileType,
-    depDebug: DebugComponentsDependency
-  ) {
+  private _pushToDependenciesIfNotExist(dependency: Dependency, opts: PushToDepsArrayOpts) {
     const existingDependency = this.getExistingDependency(this.allDependencies.dependencies, dependency.id);
     const existingDevDependency = this.getExistingDependency(this.allDependencies.devDependencies, dependency.id);
     // no need to enter dev dependency to devDependencies if it exists already in dependencies
-    if (existingDependency || (existingDevDependency && fileType.isTestFile)) {
+    if (existingDependency || (existingDevDependency && opts.fileType.isTestFile)) {
       return;
     }
     // at this point, either, it doesn't exist at all and should be entered.
     // or it exists in devDependencies but now it comes from non-dev file, which should be entered
     // as non-dev.
-    this.pushToDependenciesArray(dependency, fileType, depDebug);
+    this.pushToDependenciesArray(dependency, opts);
   }
 
-  private pushToDependenciesArray(
-    currentComponentsDeps: Dependency,
-    fileType: FileType,
-    depDebug: DebugComponentsDependency
-  ) {
-    if (fileType.isTestFile) {
+  private pushToDependenciesArray(currentComponentsDeps: Dependency, opts: PushToDepsArrayOpts) {
+    if (opts.fileType.isTestFile) {
       this.allDependencies.devDependencies.push(currentComponentsDeps);
+    } else if (opts.isPeer) {
+      this.allDependencies.peerDependencies.push(currentComponentsDeps);
     } else {
       this.allDependencies.dependencies.push(currentComponentsDeps);
     }
-    this.debugDependenciesData.components.push(depDebug);
+    this.debugDependenciesData.components.push(opts.depDebug);
   }
 
   private getExistingDependency(dependencies: Dependency[], id: ComponentID): Dependency | null | undefined {

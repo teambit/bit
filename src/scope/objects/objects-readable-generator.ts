@@ -5,7 +5,6 @@ import { BitObject, Ref, Repository } from '.';
 import { Scope } from '..';
 import logger from '../../logger/logger';
 import { getAllVersionHashesMemoized } from '../component-ops/traverse-versions';
-import { HashMismatch } from '../exceptions';
 import { Lane, LaneHistory, ModelComponent, Version } from '../models';
 import { ObjectItem } from './object-list';
 
@@ -21,7 +20,10 @@ export type ComponentWithCollectOptions = {
 export class ObjectsReadableGenerator {
   public readable: Readable;
   private pushed: string[] = [];
-  constructor(private repo: Repository, private callbackOnceDone: Function) {
+  constructor(
+    private repo: Repository,
+    private callbackOnceDone: Function
+  ) {
     this.readable = new Readable({ objectMode: true, read() {} });
   }
   async pushObjectsToReadable(componentsWithOptions: ComponentWithCollectOptions[]) {
@@ -124,51 +126,40 @@ export class ObjectsReadableGenerator {
       const versionData = { ref: ver.hash(), buffer: await ver.asRaw(this.repo), type: ver.getType() };
       return [...versionObjects, versionData];
     };
-    try {
-      if (!this.pushed.includes(component.hash().toString())) {
-        const componentData = {
-          ref: component.hash(),
-          buffer: await component.asRaw(this.repo),
-          type: component.getType(),
-        };
-        this.push(componentData);
-      }
-      const allVersions: Version[] = [];
-      if (includeVersionHistory) {
-        const versionHistory = await component.getAndPopulateVersionHistory(this.repo, version.hash());
-        const versionHistoryData = {
-          ref: versionHistory.hash(),
-          buffer: await versionHistory.asRaw(this.repo),
-          type: versionHistory.getType(),
-        };
-        this.push(versionHistoryData);
-      }
-      if (collectParents) {
-        const allParentsHashes = await getAllVersionHashesMemoized({
-          modelComponent: component,
-          repo: this.repo,
-          startFrom: version.hash(),
-          stopAt: collectParentsUntil ? [collectParentsUntil] : undefined,
-        });
-        const missingParentsHashes = allParentsHashes.filter((h) => !h.isEqual(version.hash()));
-        const parentVersions = await pMapSeries(missingParentsHashes, (parentHash) => parentHash.load(this.repo));
-        allVersions.push(...(parentVersions as Version[]));
-        // note: don't bring the head. otherwise, component-delta of the head won't bring all history of this comp.
-      }
-      allVersions.push(version);
-      await pMapSeries(allVersions, async (ver) => {
-        const versionObjects = await collectVersionObjects(ver);
-        this.pushManyObjects(versionObjects);
-      });
-    } catch (err: any) {
-      logger.error(`component-version.toObjects ${componentWithOptions.component.id()} got an error`, err);
-      // @ts-ignore
-      const originalVersionHash = component.getRef(componentWithOptions.version).toString();
-      const currentVersionHash = version.hash().toString();
-      if (originalVersionHash !== currentVersionHash) {
-        throw new HashMismatch(component.id(), componentWithOptions.version, originalVersionHash, currentVersionHash);
-      }
-      throw err;
+    if (!this.pushed.includes(component.hash().toString())) {
+      const componentData = {
+        ref: component.hash(),
+        buffer: await component.asRaw(this.repo),
+        type: component.getType(),
+      };
+      this.push(componentData);
     }
+    const allVersions: Version[] = [];
+    if (includeVersionHistory) {
+      const versionHistory = await component.getAndPopulateVersionHistory(this.repo, version.hash());
+      const versionHistoryData = {
+        ref: versionHistory.hash(),
+        buffer: await versionHistory.asRaw(this.repo),
+        type: versionHistory.getType(),
+      };
+      this.push(versionHistoryData);
+    }
+    if (collectParents) {
+      const allParentsHashes = await getAllVersionHashesMemoized({
+        modelComponent: component,
+        repo: this.repo,
+        startFrom: version.hash(),
+        stopAt: collectParentsUntil ? [collectParentsUntil] : undefined,
+      });
+      const missingParentsHashes = allParentsHashes.filter((h) => !h.isEqual(version.hash()));
+      const parentVersions = await pMapSeries(missingParentsHashes, (parentHash) => parentHash.load(this.repo));
+      allVersions.push(...(parentVersions as Version[]));
+      // note: don't bring the head. otherwise, component-delta of the head won't bring all history of this comp.
+    }
+    allVersions.push(version);
+    await pMapSeries(allVersions, async (ver) => {
+      const versionObjects = await collectVersionObjects(ver);
+      this.pushManyObjects(versionObjects);
+    });
   }
 }

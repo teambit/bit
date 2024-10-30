@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 describe('bit reset command', function () {
@@ -16,7 +16,7 @@ describe('bit reset command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       localScope = helper.scopeHelper.cloneLocalScope();
       const output = helper.command.listLocalScope();
@@ -118,7 +118,7 @@ describe('bit reset command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fs.createFile('bar2', 'foo2.js');
       helper.command.addComponent('bar2', { i: 'bar/foo2' });
       helper.fs.createFile('bar3', 'foo3.js');
@@ -166,9 +166,9 @@ describe('bit reset command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentIsType();
-      helper.fixtures.addComponentUtilsIsTypeAsDir();
+      helper.fixtures.addComponentUtilsIsType();
       helper.fixtures.createComponentIsString();
-      helper.fixtures.addComponentUtilsIsStringAsDir();
+      helper.fixtures.addComponentUtilsIsString();
       helper.command.linkAndRewire();
       helper.command.tagAllWithoutBuild();
       localScope = helper.scopeHelper.cloneLocalScope();

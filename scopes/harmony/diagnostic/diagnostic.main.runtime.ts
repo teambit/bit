@@ -1,9 +1,9 @@
-import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { MainRuntime } from '@teambit/cli';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
-import GraphqlAspect, { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { DiagnosticAspect } from './diagnostic.aspect';
 import { DiagnosticRoute } from './diagnostic.route';
 import { DiagnosticGraphql } from './diagnostic.graphql';
@@ -38,7 +38,7 @@ export class DiagnosticMain {
   }
 
   static getBitVersion() {
-    const version = getHarmonyVersion(true);
+    const version = getBitVersion();
     return { version };
   }
 

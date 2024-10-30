@@ -1,24 +1,24 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import { ComponentID } from '@teambit/component-id';
-import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
+import { createLinkOrSymlink } from '@teambit/toolbox.fs.link-or-symlink';
 
 export default class Symlink {
   src: string; // current existing path
   dest: string; // new symlink path
   componentId: ComponentID | null | undefined;
-  constructor(src: string, dest: string, componentId?: ComponentID, private avoidHardLink = false) {
+  constructor(
+    src: string,
+    dest: string,
+    componentId?: ComponentID,
+    private avoidHardLink = false
+  ) {
     this.src = src;
     this.dest = dest;
     this.componentId = componentId;
   }
   write() {
-    return createSymlinkOrCopy(
-      this.src,
-      this.dest,
-      this.componentId ? this.componentId.toString() : null,
-      this.avoidHardLink
-    );
+    return createLinkOrSymlink(this.src, this.dest, this.componentId?.toString(), this.avoidHardLink);
   }
 
   /**

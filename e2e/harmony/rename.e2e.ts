@@ -15,7 +15,7 @@ describe('bit rename command', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('rename an exported component', () => {
+  describe('rename an exported component with --deprecate', () => {
     let scopeAfterExport: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -26,7 +26,7 @@ describe('bit rename command', function () {
     });
     describe('rename with no flag', () => {
       before(() => {
-        helper.command.rename('comp1', 'comp2');
+        helper.command.rename('comp1', 'comp2', '--deprecate');
       });
       it('should create a new component', () => {
         const status = helper.command.statusJson();
@@ -247,7 +247,7 @@ describe('bit rename command', function () {
       helper.command.install();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.command.rename('my-aspect', 'foo');
+      helper.command.rename('my-aspect', 'foo', '--deprecate');
     });
     it('should rename the files', () => {
       expect(path.join(helper.scopes.localPath, `${helper.scopes.remote}/foo`, 'foo.aspect.ts')).to.be.a.file();
@@ -264,6 +264,17 @@ describe('bit rename command', function () {
       const fileContent = helper.fs.readFile(path.join(`${helper.scopes.remote}/my-aspect`, 'my-aspect.aspect.ts'));
       expect(fileContent).to.have.string('MyAspectAspect');
       expect(fileContent).to.not.have.string('FooAspect');
+    });
+  });
+  describe('rename a new component including the namespace and the scope-name', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+    });
+    it('should not throw ComponentNotFound', () => {
+      expect(() => helper.command.rename('comp1', 'ui/comp2', '--scope another-scope')).to.not.throw();
+      const list = helper.command.listParsed();
+      expect(list[0].id).to.equal('another-scope/ui/comp2');
     });
   });
 });

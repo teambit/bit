@@ -3,7 +3,7 @@ import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { ComponentCompareMain } from '@teambit/component-compare';
 import chalk from 'chalk';
-import { outputDiffResults } from '@teambit/legacy/dist/consumer/component-ops/components-diff';
+import { outputDiffResults } from '@teambit/legacy.component-diff';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { LaneDiffGenerator } from './lane-diff-generator';
 
@@ -37,7 +37,11 @@ component-pattern format: ${COMPONENT_PATTERN_HELP}`,
   remoteOp = true;
   skipWorkspace = true;
 
-  constructor(private workspace: Workspace, private scope: ScopeMain, private componentCompare: ComponentCompareMain) {}
+  constructor(
+    private workspace: Workspace,
+    private scope: ScopeMain,
+    private componentCompare: ComponentCompareMain
+  ) {}
 
   async report([values = []]: [string[]], { pattern }: { pattern?: string }) {
     const laneDiffGenerator = new LaneDiffGenerator(this.workspace, this.scope, this.componentCompare);

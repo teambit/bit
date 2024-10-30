@@ -1,5 +1,5 @@
 import { ComponentFactory } from '@teambit/component';
-import gql from 'graphql-tag';
+import { gql } from 'graphql-tag';
 
 import { ReactMain } from './react.main.runtime';
 

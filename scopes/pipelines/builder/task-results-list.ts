@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import { BuildTaskHelper } from './build-task';
 import { TasksQueue } from './tasks-queue';
@@ -13,7 +14,9 @@ export class TaskResultsList {
      */
     public tasksResults: TaskResults[],
 
-    public capsuleRootDir: string
+    public capsuleRootDir: string,
+
+    private logger: Logger
   ) {}
 
   hasErrors(): boolean {
@@ -21,6 +24,7 @@ export class TaskResultsList {
   }
 
   throwErrorsIfExist() {
+    this.logStackTrace();
     const errorMessage = this.getErrorMessageFormatted();
     if (errorMessage) {
       throw new BitError(errorMessage);
@@ -30,7 +34,7 @@ export class TaskResultsList {
   /**
    * group errors from all tasks and show them nicely to the user
    */
-  public getErrorMessageFormatted(): string | null {
+  getErrorMessageFormatted(): string | null {
     const tasksErrors: string[] = [];
     let totalErrors = 0;
     this.tasksResults.forEach((taskResult) => {
@@ -64,5 +68,20 @@ export class TaskResultsList {
     const rawErrors = componentResult.errors || [];
     const errors = rawErrors.map((e) => (typeof e === 'string' ? e : e.toString()));
     return `component: ${componentResult.component.id.toString()}\n${errors.join('\n')}`;
+  }
+
+  private logStackTrace() {
+    this.tasksResults.forEach((taskResult) => {
+      taskResult.componentsResults.forEach((componentResult) => {
+        componentResult.errors?.forEach((error) => {
+          if (error instanceof Error) {
+            this.logger.error(
+              `failed running task ${taskResult.task.name} on ${componentResult.component.id.toString()}`,
+              error
+            );
+          }
+        });
+      });
+    });
   }
 }

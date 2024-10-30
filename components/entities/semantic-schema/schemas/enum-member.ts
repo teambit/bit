@@ -20,6 +20,22 @@ export class EnumMemberSchema extends SchemaNode {
     return `${this.name}=${this.value}`;
   }
 
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let result = '';
+
+    if (options?.showDocs && this.doc) {
+      result += `${this.doc.toFullSignature()}\n`;
+    }
+
+    if (this.value !== undefined) {
+      result += `${this.name} = ${this.value}`;
+    } else {
+      result += `${this.name}`;
+    }
+
+    return result;
+  }
+
   toObject() {
     return {
       ...super.toObject(),

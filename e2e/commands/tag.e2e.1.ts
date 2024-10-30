@@ -23,7 +23,7 @@ describe('bit tag command', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       const bitMap = helper.bitMap.read();
       bitMap['bar/foo'].mainFile = '';
       helper.bitMap.write(bitMap);
@@ -60,29 +60,29 @@ describe('bit tag command', function () {
         );
       });
       it('Should increment the patch version when no version type specified', () => {
-        output = helper.command.tagWithoutBuild('components/default', '-f');
+        output = helper.command.tagWithoutBuild('components/default', '--unmodified');
         expect(output).to.have.string('components/default@0.0.1');
       });
       it('Should increment the patch version when --patch flag specified', () => {
-        output = helper.command.tagWithoutBuild('components/patch', '-f --patch');
+        output = helper.command.tagWithoutBuild('components/patch', '--unmodified --patch');
         expect(output).to.have.string('components/patch@0.0.2');
       });
       it('Should increment the minor version when --minor flag specified', () => {
-        output = helper.command.tagWithoutBuild('components/minor', '-f --minor');
+        output = helper.command.tagWithoutBuild('components/minor', '--unmodified --minor');
         expect(output).to.have.string('components/minor@0.1.0');
       });
       it('Should increment the major version when --major flag specified', () => {
-        output = helper.command.tagWithoutBuild('components/major', '-f --major');
+        output = helper.command.tagWithoutBuild('components/major', '--unmodified --major');
         expect(output).to.have.string('components/major@1.0.0');
       });
       it('Should set the exact version when specified on new component', () => {
         helper.fs.createFile('components/exact2', 'exact-new.js');
         helper.command.addComponent('components/exact2', { i: 'components/exact-new' });
-        output = helper.command.tagWithoutBuild('components/exact-new@5.12.10', '-f');
+        output = helper.command.tagWithoutBuild('components/exact-new@5.12.10', '--unmodified');
         expect(output).to.have.string('components/exact-new@5.12.10');
       });
       it('Should set the exact version when specified on existing component', () => {
-        output = helper.command.tagWithoutBuild('components/exact@3.3.3', '-f');
+        output = helper.command.tagWithoutBuild('components/exact@3.3.3', '--unmodified');
         expect(output).to.have.string('components/exact@3.3.3');
       });
       it('Should increment patch version of dependent when using other flag on tag dependency', () => {
@@ -92,7 +92,7 @@ describe('bit tag command', function () {
         helper.command.addComponent('components/dependency components/dependent', { n: 'components' });
         helper.command.linkAndRewire();
         helper.command.tagAllWithoutBuild();
-        helper.command.tagWithoutBuild('components/dependency', '-f --major');
+        helper.command.tagWithoutBuild('components/dependency', '--unmodified --major');
         const listOutput = helper.command.listLocalScopeParsed();
         expect(listOutput).to.deep.include({
           id: 'my-scope/components/dependency',
@@ -110,8 +110,8 @@ describe('bit tag command', function () {
         });
       });
       it('Should throw error when the version already exists', () => {
-        helper.command.tagWithoutBuild('components/exact --ver 5.5.5', '-f');
-        const tagWithExisting = () => helper.command.tagWithoutBuild('components/exact --ver 5.5.5', '-f');
+        helper.command.tagWithoutBuild('components/exact --ver 5.5.5', '--unmodified');
+        const tagWithExisting = () => helper.command.tagWithoutBuild('components/exact --ver 5.5.5', '--unmodified');
         const error = new VersionAlreadyExists('5.5.5', 'my-scope/components/exact');
         helper.general.expectToThrow(tagWithExisting, error);
       });
@@ -131,7 +131,7 @@ describe('bit tag command', function () {
       helper.command.addComponent('bar/', { i: 'bar/foo' });
       helper.fs.deletePath('bar/foo.js');
       try {
-        helper.command.runCmd('bit tag -a');
+        helper.command.runCmd('bit tag');
       } catch (err: any) {
         errMsg = err.message;
       }
@@ -145,7 +145,7 @@ describe('bit tag command', function () {
       helper.scopeHelper.reInitLocalScope();
       const impl = 'hello\r\n world\r\n';
       helper.fixtures.createComponentBarFoo(impl);
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
     });
     it('should write the file to the model with Linux EOL characters', () => {

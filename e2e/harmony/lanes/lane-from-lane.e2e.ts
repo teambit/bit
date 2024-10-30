@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import Helper from '../../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../../src/fixtures/fixtures';
-import { removeChalkCharacters } from '../../../src/utils';
+import { removeChalkCharacters } from '@teambit/legacy.utils';
 
 chai.use(require('chai-fs'));
 
@@ -39,7 +39,7 @@ describe('bit lane command', function () {
       // laneB
       helper.command.createLane('lane-b');
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.snapAllComponentsWithoutBuild();
 
       beforeSwitchingBack = helper.scopeHelper.cloneLocalScope();

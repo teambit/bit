@@ -3,10 +3,17 @@ import { Logger } from '@teambit/logger';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component';
 import { BuildStatus } from '@teambit/legacy/dist/constants';
-import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { SignMain } from './sign.main.runtime';
 
-type SignOptions = { alwaysSucceed: boolean; push: boolean; lane?: string; rebuild?: boolean; originalScope?: boolean };
+export type SignOptions = {
+  alwaysSucceed?: boolean;
+  push?: boolean;
+  lane?: string;
+  rebuild?: boolean;
+  originalScope?: boolean;
+  saveLocally?: boolean;
+};
 export class SignCmd implements Command {
   name = 'sign [component...]';
   private = true;
@@ -25,19 +32,21 @@ export class SignCmd implements Command {
       'original-scope',
       'sign components from the original scope. works only when all components are from the same scope',
     ],
+    ['', 'save-locally', 'save the signed components locally on the bare-scope for debugging purposes'],
   ] as CommandOptions;
 
-  constructor(private signMain: SignMain, private logger: Logger) {}
+  constructor(
+    private signMain: SignMain,
+    private logger: Logger
+  ) {}
 
-  async report([components = []]: [string[]], { alwaysSucceed, push, lane, rebuild, originalScope }: SignOptions) {
-    const harmonyVersion = getHarmonyVersion();
+  async report([components = []]: [string[]], signOptions: SignOptions) {
+    const harmonyVersion = getBitVersion();
     this.logger.console(`signing using ${harmonyVersion} version`); // eslint-disable-line no-console
     const componentIds = components.map((c) => ComponentID.fromString(c));
     this.warnForMissingVersions(componentIds);
-    if (push && rebuild) {
-      throw new Error('you can not use --push and --rebuild together');
-    }
-    const results = await this.signMain.sign(componentIds, originalScope, push, lane, rebuild);
+    const { alwaysSucceed, lane } = signOptions;
+    const results = await this.signMain.sign(componentIds, lane, signOptions);
     if (!results) {
       return chalk.bold('no more components left to sign');
     }

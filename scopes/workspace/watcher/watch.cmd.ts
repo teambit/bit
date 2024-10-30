@@ -3,20 +3,22 @@ import moment from 'moment';
 import { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { BitBaseEvent, PubsubMain } from '@teambit/pubsub';
-import { OnComponentEventResult } from '@teambit/workspace';
+import { OnComponentEventResult, Workspace } from '@teambit/workspace';
 
 // import IDs and events
 import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
 
-import { EventMessages, WatchOptions } from './watcher';
+import { EventMessages, RootDirs, WatchOptions } from './watcher';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 import { CheckTypes } from './check-types';
 import { WatcherMain } from './watcher.main.runtime';
 
-export type WatchCmdOpts = {
+type WatchCmdOpts = {
   verbose?: boolean;
   skipPreCompilation?: boolean;
   checkTypes?: string | boolean;
+  import?: boolean;
+  skipImport?: boolean;
 };
 
 export class WatchCommand implements Command {
@@ -33,8 +35,14 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
     [
       't',
       'check-types [string]',
-      'EXPERIMENTAL. show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project',
+      'show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project',
     ],
+    [
+      'i',
+      'import',
+      'DEPRECATED. it is now the default. helpful when using git. import component objects if .bitmap changed not by bit',
+    ],
+    ['', 'skip-import', 'do not import component objects if .bitmap changed not by bit'],
   ] as CommandOptions;
 
   constructor(
@@ -70,7 +78,10 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
   };
 
   async report(cliArgs: [], watchCmdOpts: WatchCmdOpts) {
-    const { verbose, checkTypes } = watchCmdOpts;
+    const { verbose, checkTypes, import: importIfNeeded, skipImport } = watchCmdOpts;
+    if (importIfNeeded) {
+      this.logger.consoleWarning('the "--import" flag is deprecated and is now the default behavior');
+    }
     const getCheckTypesEnum = () => {
       switch (checkTypes) {
         case undefined:
@@ -92,6 +103,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
       preCompile: !watchCmdOpts.skipPreCompilation,
       spawnTSServer: Boolean(checkTypes), // if check-types is enabled, it must spawn the tsserver.
       checkTypes: getCheckTypesEnum(),
+      import: !skipImport,
     };
     await this.watcher.watch(watchOpts);
     return 'watcher terminated';
@@ -102,14 +114,14 @@ function getMessages(logger: Logger): EventMessages {
   return {
     onAll: (event: string, path: string) => logger.console(`Event: "${event}". Path: ${path}`),
     onStart: () => {},
-    onReady: (workspace, watchPathsSortByComponent, verbose?: boolean) => {
+    onReady: (workspace: Workspace, watchPathsSortByComponent: RootDirs, verbose?: boolean) => {
       clearOutdatedData();
       if (verbose) {
         logger.console(formatWatchPathsSortByComponent(watchPathsSortByComponent));
       }
       logger.console(
         chalk.yellow(
-          `Watching for component changes in workspace ${workspace.config.name} (${moment().format('HH:mm:ss')})...\n`
+          `Watching for component changes in workspace ${workspace.name} (${moment().format('HH:mm:ss')})...\n`
         )
       );
     },
@@ -146,9 +158,9 @@ function printOnFileEvent(
     logger.console(`${failureMsg}\n\n`);
     return;
   }
-  logger.console(`The file(s) ${files} have been ${eventMsgPlaceholder}.\n\n`);
-  logger.console(formatCompileResults(buildResults, verbose));
-  logger.console(`Finished. (${duration}ms)`);
+  logger.console(`The file(s) ${files} have been ${eventMsgPlaceholder}.\n`);
+  logger.console(formatCompileResults(buildResults));
+  logger.console(`Finished (${duration}ms).`);
   logger.console(chalk.yellow(`Watching for component changes (${moment().format('HH:mm:ss')})...`));
 }
 

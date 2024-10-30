@@ -2,9 +2,8 @@ import { BitError } from '@teambit/bit-error';
 import { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Logger } from '@teambit/logger';
-import { UIServerConsole } from '@teambit/ui-foundation.cli.ui-server-console';
-import React from 'react';
 import openBrowser from 'react-dev-utils/openBrowser';
+import chalk from 'chalk';
 import type { UiMain } from './ui.main.runtime';
 
 type StartArgs = [userPattern: string];
@@ -58,23 +57,7 @@ export class StartCmd implements Command {
     private logger: Logger
   ) {}
 
-  // async report([uiRootName, userPattern]: StartArgs, { dev, port, rebuild, verbose }: StartFlags): Promise<string> {
-  //   this.logger.off();
-  //   const pattern = userPattern && userPattern.toString();
-
-  //   const uiServer = await this.ui.createRuntime({
-  //     uiRootName,
-  //     pattern,
-  //     dev,
-  //     port: port ? parseInt(port) : undefined,
-  //     rebuild,
-  //     verbose,
-  //   });
-
-  //   return `Bit server has started on port ${uiServer.port}`;
-  // }
-
-  async render(
+  async wait(
     [userPattern]: StartArgs,
     {
       dev,
@@ -86,8 +69,9 @@ export class StartCmd implements Command {
       skipUiBuild,
       uiRootName: uiRootAspectIdOrName,
     }: StartFlags
-  ): Promise<React.ReactElement> {
-    this.logger.off();
+  ) {
+    const spinnies = this.logger.multiSpinner;
+
     if (!this.ui.isHostAvailable()) {
       throw new BitError(
         `bit start can only be run inside a bit workspace or a bit scope - please ensure you are running the command in the correct directory`
@@ -95,6 +79,9 @@ export class StartCmd implements Command {
     }
     const appName = this.ui.getUiName(uiRootAspectIdOrName);
     await this.ui.invokePreStart({ skipCompilation });
+    this.logger.off();
+    spinnies.add('ui-server', { text: `Starting UI server for ${appName}` });
+
     const uiServer = this.ui.createRuntime({
       uiRootAspectIdOrName,
       skipUiBuild,
@@ -105,23 +92,27 @@ export class StartCmd implements Command {
       verbose,
     });
 
-    if (!noBrowser) {
-      uiServer
-        .then(async (server) => {
-          if (!server.buildOptions?.launchBrowserOnStart) return undefined;
+    uiServer
+      .then(async (server) => {
+        const url = this.ui.publicUrl || server.fullUrl;
+        spinnies.succeed('ui-server', { text: `UI server is ready at ${chalk.cyan(url)}` });
+        if (!server.buildOptions?.launchBrowserOnStart) return undefined;
 
-          await server.whenReady;
-
-          return openBrowser(this.ui.publicUrl || server.fullUrl);
-        })
-        .catch((error) => this.logger.error(error));
-    }
+        await server.whenReady;
+        const name = server.getName();
+        const message = chalk.green(`You can now view '${chalk.cyan(name)}' components in the browser.
+Bit server is running on ${chalk.cyan(url)}`);
+        spinnies.add('summary', { text: message, status: 'non-spinnable' });
+        if (!noBrowser) {
+          openBrowser(url);
+        }
+        return undefined;
+      })
+      .catch((error) => this.logger.error(error));
 
     // DO NOT CHANGE THIS - this meant to be an async hook.
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.ui.invokeOnStart();
     this.ui.clearConsole();
-
-    return <UIServerConsole appName={appName} futureUiServer={uiServer} url={this.ui.publicUrl} />;
   }
 }

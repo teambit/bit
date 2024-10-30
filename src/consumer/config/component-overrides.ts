@@ -7,7 +7,7 @@ import {
   OVERRIDE_COMPONENT_PREFIX,
   DEPENDENCIES_FIELDS,
 } from '../../constants';
-import { SourceFile } from '../component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import ComponentConfig from './component-config';
 import { ExtensionDataList } from './extension-data';
 import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';

@@ -1,5 +1,3 @@
-import { Scope } from '../../../scope';
+import { initScope } from '@teambit/legacy.scope-api';
 
-export default function init(path: string = process.cwd(), name: string, groupName: string): Promise<Scope> {
-  return Scope.ensure(path, name, groupName).then((scope) => scope.ensureDir());
-}
+export default initScope;

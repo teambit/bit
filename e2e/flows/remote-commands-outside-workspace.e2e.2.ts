@@ -20,7 +20,7 @@ describe('bit remote command', function () {
       helper.workspaceJsonc.setupDefault();
       helper.command.runCmd(`bit remote add file://${helper.scopes.remotePath} --global`);
       helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFooAsDir();
+      helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.scopeHelper.cleanLocalScope();
@@ -42,11 +42,13 @@ describe('bit remote command', function () {
       const output = helper.command.listRemoteScope(false);
       expect(output).to.have.string('found 1 components');
     });
-    // @TODO: FIX ON HARMONY!
-    // it was showing the old show.
-    it.skip('bit show should show the component and not throw an error about missing workspace', () => {
-      const output = helper.command.showComponent(`${helper.scopes.remote}/bar/foo --remote`);
+    it('bit show --legacy should show the component and not throw an error about missing workspace', () => {
+      const output = helper.command.showComponent(`${helper.scopes.remote}/bar/foo --legacy --remote`);
       expect(output).to.have.string('bar/foo');
+    });
+    it('bit show without --legacy should throw a descriptive error', () => {
+      const cmd = () => helper.command.showComponent(`${helper.scopes.remote}/bar/foo --remote`);
+      expect(cmd).to.throw('error: the current directory is not a workspace nor a scope');
     });
     describe('bit remove with --remote flag', () => {
       let output;

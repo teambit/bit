@@ -1,6 +1,6 @@
-// eslint-disable-next-line import/no-unresolved
-import { Diagnostic } from 'typescript/lib/protocol';
-import { DiagnosticMessageChain } from 'typescript';
+import { DiagnosticMessageChain, server } from 'typescript';
+
+type Diagnostic = server.protocol.Diagnostic;
 
 /**
  * mostly taken from ts repo, src/compiler/program.ts "formatDiagnosticsWithColorAndContext" method.

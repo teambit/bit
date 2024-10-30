@@ -13,27 +13,34 @@ import { Logger as PinoLogger, Level } from 'pino';
 import yn from 'yn';
 import pMapSeries from 'p-map-series';
 
-import { Analytics } from '../analytics/analytics';
+import { Analytics } from '@teambit/legacy.analytics';
 import { getSync } from '../api/consumer/lib/global-config';
 import defaultHandleError from '../cli/default-error-handler';
 import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS } from '../constants';
 import { getWinstonLogger } from './winston-logger';
 import { getPinoLogger } from './pino-logger';
 import { Profiler } from './profiler';
+import loader from '../cli/loader';
 
 export { Level as LoggerLevel };
 
 const jsonFormat =
   yn(getSync(CFG_LOG_JSON_FORMAT), { default: false }) || yn(process.env.JSON_LOGS, { default: false });
 
+export const shouldDisableLoader = yn(process.env.BIT_DISABLE_SPINNER);
+export const shouldDisableConsole =
+  yn(process.env.BIT_DISABLE_CONSOLE) || process.argv.includes('--json') || process.argv.includes('-j');
+
 const LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
+
+const DEFAULT_LEVEL = 'debug';
 
 const logLevel = getLogLevel();
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { winstonLogger, createExtensionLogger } = getWinstonLogger(logLevel, jsonFormat);
 
-const { pinoLogger, pinoLoggerConsole } = getPinoLogger(logLevel, jsonFormat);
+const { pinoLogger, pinoLoggerConsole, pinoSSELogger } = getPinoLogger(logLevel, jsonFormat);
 
 export interface IBitLogger {
   trace(message: string, ...meta: any[]): void;
@@ -75,12 +82,13 @@ class BitLogger implements IBitLogger {
    * it set before the command-registrar is loaded. at this stage we don't know for sure the "-j"
    * is actually "json". that's why this variable is overridden once the command-registrar is up.
    */
-  shouldWriteToConsole = !process.argv.includes('--json') && !process.argv.includes('-j');
+  shouldWriteToConsole = !shouldDisableConsole;
   /**
    * helpful to get a list in the .bit/command-history of all commands that were running on this workspace.
    * it's written only if the consumer is loaded. otherwise, the commandHistory.fileBasePath is undefined
    */
   commandHistoryBasePath: string | undefined;
+  shouldConsoleProfiler = false;
   constructor(logger: PinoLogger) {
     this.logger = logger;
     this.profiler = new Profiler();
@@ -147,7 +155,7 @@ class BitLogger implements IBitLogger {
         this.trace('a wrong color provided to logger.console method');
       }
     }
-    pinoLoggerConsole[level](messageStr);
+    loader.stopAndPersist({ text: messageStr });
   }
 
   /**
@@ -169,7 +177,7 @@ class BitLogger implements IBitLogger {
     const msg = this.profiler.profile(id);
     if (!msg) return;
     const fullMsg = `${id}: ${msg}`;
-    console ? this.console(fullMsg) : this.info(fullMsg);
+    console || this.shouldConsoleProfiler ? this.console(fullMsg) : this.info(fullMsg);
   }
 
   registerOnBeforeExitFn(fn: Function) {
@@ -265,7 +273,17 @@ class BitLogger implements IBitLogger {
 
   switchToConsoleLogger(level?: Level) {
     this.logger = pinoLoggerConsole;
-    this.logger.level = level || 'debug';
+    this.logger.level = level || DEFAULT_LEVEL;
+  }
+
+  switchToSSELogger(level?: Level) {
+    this.logger = pinoSSELogger;
+    this.logger.level = level || DEFAULT_LEVEL;
+  }
+
+  switchToLogger(logger: PinoLogger, level?: Level) {
+    this.logger = logger;
+    this.logger.level = level || DEFAULT_LEVEL;
   }
 }
 
@@ -300,21 +318,34 @@ function determineWritingLogToScreen() {
     return;
   }
 
-  // more common scenario is when the user enters `--log` flag. It can be just "--log", which defaults to info.
-  // or it can have a level: `--log=error` or `--log error`: both syntaxes are supported
-  if (process.argv.includes('--log')) {
-    const level = process.argv.find((arg) => LEVELS.includes(arg)) as Level | undefined;
-    logger.switchToConsoleLogger(level || 'info');
-    return;
+  if (process.argv.includes(`--log=profile`)) {
+    logger.shouldConsoleProfiler = true;
   }
-  LEVELS.forEach((level) => {
-    if (process.argv.includes(`--log=${level}`)) {
-      logger.switchToConsoleLogger(level as Level);
-    }
-  });
+  const level = getLevelFromArgv(process.argv);
+  if (level) {
+    logger.switchToConsoleLogger(level);
+  }
 }
 
 determineWritingLogToScreen();
+
+/**
+ * more common scenario is when the user enters `--log` flag. It can be just "--log", which defaults to info.
+ * or it can have a level: `--log=error` or `--log error`: both syntaxes are supported
+ */
+export function getLevelFromArgv(argv: string[]): Level | undefined {
+  let foundLevel: Level | undefined;
+  if (argv.includes('--log')) {
+    const found = process.argv.find((arg) => LEVELS.includes(arg)) as Level | undefined;
+    return found || DEFAULT_LEVEL;
+  }
+  LEVELS.forEach((level) => {
+    if (argv.includes(`--log=${level}`)) {
+      foundLevel = level as Level;
+    }
+  });
+  return foundLevel;
+}
 
 function getLogLevel(): Level {
   const defaultLevel = 'debug';
@@ -335,6 +366,9 @@ function isLevel(maybeLevel: Level | string): maybeLevel is Level {
 export function writeLogToScreen(levelOrPrefix = '') {
   if (isLevel(levelOrPrefix)) {
     logger.switchToConsoleLogger(levelOrPrefix);
+  }
+  if (levelOrPrefix === 'profile') {
+    logger.shouldConsoleProfiler = true;
   }
   // @todo: implement
   // const prefixes = levelOrPrefix.split(',');

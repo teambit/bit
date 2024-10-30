@@ -1,9 +1,10 @@
 import chalk from 'chalk';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { Command, CommandOptions } from '@teambit/cli';
-import { fromBase64 } from '@teambit/legacy/dist/utils';
+import { compact } from 'lodash';
+import { fromBase64 } from '@teambit/legacy.utils';
 import { BitError } from '@teambit/bit-error';
-import { MergeLanesMain } from './merge-lanes.main.runtime';
+import { MergeFromScopeResult, MergeLanesMain } from './merge-lanes.main.runtime';
 
 type Flags = {
   pattern?: string;
@@ -28,7 +29,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
   arguments = [
     {
       name: 'from-lane',
-      description: 'lane-id to merge from',
+      description: `lane-id to merge from or "${DEFAULT_LANE}"`,
     },
     {
       name: 'to-lane',
@@ -73,10 +74,13 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     if (includeDeps && !pattern) {
       throw new BitError(`"--include-deps" flag is relevant only for --pattern flag`);
     }
+    if (fromLane === DEFAULT_LANE && !toLane) {
+      throw new BitError('to merge from the main lane, specify the target lane');
+    }
 
     const titleBase64Decoded = titleBase64 ? fromBase64(titleBase64) : undefined;
 
-    const { mergedNow, mergedPreviously, exportedIds } = await this.mergeLanes.mergeFromScope(
+    const { mergedNow, unmerged, exportedIds, conflicts, mergeSnapError } = await this.mergeLanes.mergeFromScope(
       fromLane,
       toLane || DEFAULT_LANE,
       {
@@ -95,15 +99,27 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     );
     const mergedOutput = mergedNow.length ? `${mergedTitle}\n${mergedNow.join('\n')}` : '';
 
-    const nonMergedTitle = chalk.bold(
-      `the following ${mergedPreviously.length} components were already merged before, they were left intact`
+    const nonMergedTitle = chalk.bold(`the following ${unmerged.length} components were not merged`);
+    const nonMergedOutput = unmerged.length
+      ? `${nonMergedTitle}\n${unmerged.map((u) => `${u.id} (${u.reason})`).join('\n')}`
+      : '';
+
+    const conflictsTitle = chalk.bold(
+      `the following ${conflicts?.length} components have conflicts, the merge was not completed`
     );
-    const nonMergedOutput = mergedPreviously.length ? `\n${nonMergedTitle}\n${mergedPreviously.join('\n')}` : '';
+    const conflictsOutput = conflicts?.length
+      ? `${conflictsTitle}\n${conflicts
+          .map((u) => `${u.id} (files: ${u.files.join(', ') || 'N/A'}) (config: ${u.config})`)
+          .join('\n')}`
+      : '';
 
-    const exportedTitle = chalk.green(`successfully exported ${exportedIds.length} components`);
-    const exportedOutput = exportedIds.length ? `\n${exportedTitle}\n${exportedIds.join('\n')}` : '';
+    const mergeSnapErrorTitle = chalk.bold(`the following error was thrown while snapping the components:`);
+    const mergeSnapErrorOutput = mergeSnapError ? `${mergeSnapErrorTitle}\n${chalk.red(mergeSnapError.message)}` : '';
 
-    return mergedOutput + nonMergedOutput + exportedOutput;
+    const exportedTitle = chalk.bold(`successfully exported ${exportedIds.length} components`);
+    const exportedOutput = exportedIds.length ? `${exportedTitle}\n${exportedIds.join('\n')}` : '';
+
+    return compact([mergedOutput, nonMergedOutput, conflictsOutput, mergeSnapErrorOutput, exportedOutput]).join('\n\n');
   }
   async json(
     [fromLane, toLane]: [string, string],
@@ -112,7 +128,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     if (includeDeps && !pattern) {
       throw new BitError(`"--include-deps" flag is relevant only for --pattern flag`);
     }
-    let results: any;
+    let results: MergeFromScopeResult;
     try {
       results = await this.mergeLanes.mergeFromScope(fromLane, toLane || DEFAULT_LANE, {
         push,
@@ -124,9 +140,21 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
       });
       return {
         code: 0,
-        data: results,
+        data: {
+          ...results,
+          mergedNow: results.mergedNow.map((id) => id.toString()),
+          mergedPreviously: results.mergedPreviously.map((id) => id.toString()),
+          exportedIds: results.exportedIds.map((id) => id.toString()),
+          unmerged: results.unmerged.map(({ id, reason }) => ({ id: id.toString(), reason })),
+          conflicts: results.conflicts?.map(({ id, ...rest }) => ({ id: id.toString(), ...rest })),
+          snappedIds: results.snappedIds?.map((id) => id.toString()),
+          mergeSnapError: results.mergeSnapError
+            ? { message: results.mergeSnapError.message, stack: results.mergeSnapError.stack }
+            : undefined,
+        },
       };
     } catch (err: any) {
+      this.mergeLanes.logger.error('merge-lane-from-scope.json, error: ', err);
       return {
         code: 1,
         error: err.message,

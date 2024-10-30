@@ -2,15 +2,15 @@ import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component
 import { compact, flatten } from 'lodash';
 import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { Menu, MenuWidgetSlot, MenuWidget } from '@teambit/ui-foundation.ui.menu';
-import SidebarAspect, { SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
+import { SidebarAspect, SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
 import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import { GraphAspect, GraphUI } from '@teambit/graph';
 import React, { ReactNode } from 'react';
 import { RouteProps } from 'react-router-dom';
-import CommandBarAspect, { CommandBarUI, CommandHandler } from '@teambit/command-bar';
+import { CommandBarAspect, CommandBarUI, CommandHandler } from '@teambit/command-bar';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { ComponentFilters } from '@teambit/component.ui.component-filters.component-filter-context';
@@ -200,7 +200,7 @@ export class WorkspaceUI {
       SidebarUI,
       ComponentTreeUI,
       CommandBarUI,
-      GraphUI
+      GraphUI,
     ],
     config,
     [
@@ -220,7 +220,7 @@ export class WorkspaceUI {
       SidebarItemSlot,
       DrawerWidgetSlot,
       ComponentFiltersSlot,
-      MenuWidgetSlot
+      MenuWidgetSlot,
     ]
   ) {
     componentTree.registerTreeNode(new ComponentTreeWidget());
@@ -276,6 +276,8 @@ export class WorkspaceUI {
         element: workspaceUI.componentUi.getComponentUI(WorkspaceAspect.id),
       },
     ]);
+
+    workspaceUI.registerMenuWidget([commandBarUI.CommandBarButton]);
 
     return workspaceUI;
   }

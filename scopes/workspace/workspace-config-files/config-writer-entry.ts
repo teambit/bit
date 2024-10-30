@@ -93,7 +93,12 @@ export interface ConfigWriterEntry {
    * for example if the component uses babel to compile, then tsconfig is not relevant.
    * @param env
    */
-  calcConfigFiles(executionContext: ExecutionContext, env: Environment, dir: string): ConfigFile[] | undefined;
+  calcConfigFiles(
+    executionContext: ExecutionContext,
+    env: Environment,
+    dir: string,
+    workspaceDir?: string
+  ): ConfigFile[] | undefined;
 
   /**
    * Provide a function that knows how to merge 2 config files together.

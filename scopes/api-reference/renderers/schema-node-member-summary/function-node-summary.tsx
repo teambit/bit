@@ -39,7 +39,7 @@ export function FunctionNodeSummary({
   const signature =
     __schema === SetAccessorSchema.name
       ? `(${(node as SetAccessorSchema).param.toString()}) => void`
-      : transformSignature(node)?.split(name)[1];
+      : (transformSignature(node)?.split(name)[1] ?? node.signature);
 
   const { renderers } = apiNodeRendererProps;
   const returnTypeRenderer = returnType && renderers.find((renderer) => renderer.predicate(returnType));

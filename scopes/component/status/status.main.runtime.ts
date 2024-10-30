@@ -2,20 +2,20 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import pMapSeries from 'p-map-series';
 import { LaneId } from '@teambit/lane-id';
 import { IssuesClasses, IssuesList } from '@teambit/component-issues';
-import WorkspaceAspect, { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import LanesAspect, { LanesMain } from '@teambit/lanes';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { LanesAspect, LanesMain } from '@teambit/lanes';
 import { ComponentID } from '@teambit/component-id';
 import { Component, InvalidComponent } from '@teambit/component';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { BEFORE_STATUS } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
-import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
+import { ComponentsList } from '@teambit/legacy.component-list';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
-import IssuesAspect, { IssuesMain } from '@teambit/issues';
+import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
 import { MiniStatusCmd, MiniStatusOpts } from './mini-status-cmd';
@@ -43,6 +43,7 @@ export type StatusResult = {
   currentLaneId: LaneId;
   forkedLaneId?: LaneId;
   workspaceIssues: string[];
+  localOnly: ComponentID[];
 };
 
 export type MiniStatusResults = {
@@ -73,9 +74,8 @@ export class StatusMain {
       loadDocs: false,
       loadCompositions: false,
     };
-    const { components: allComps, invalidComponents: allInvalidComponents } = await this.workspace.listWithInvalid(
-      loadOpts
-    );
+    const { components: allComps, invalidComponents: allInvalidComponents } =
+      await this.workspace.listWithInvalid(loadOpts);
     const consumer = this.workspace.consumer;
     const laneObj = await consumer.getCurrentLaneObject();
     const componentsList = new ComponentsList(consumer);
@@ -123,6 +123,7 @@ export class StatusMain {
     const currentLane = await consumer.getCurrentLaneObject();
     const forkedLaneId = currentLane?.forkedFrom;
     const workspaceIssues = this.workspace.getWorkspaceIssues();
+    const localOnly = this.workspace.listLocalOnly();
 
     const sortObjectsWithId = <T>(objectsWithId: Array<T & { id: ComponentID }>): Array<T & { id: ComponentID }> => {
       return objectsWithId.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
@@ -158,11 +159,12 @@ export class StatusMain {
       currentLaneId,
       forkedLaneId,
       workspaceIssues: workspaceIssues.map((err) => err.message),
+      localOnly,
     };
   }
 
   async statusMini(componentPattern?: string, opts: MiniStatusOpts = {}): Promise<MiniStatusResults> {
-    const ids = componentPattern ? await this.workspace.idsByPattern(componentPattern) : await this.workspace.listIds();
+    const ids = componentPattern ? await this.workspace.idsByPattern(componentPattern) : this.workspace.listIds();
     const compFiles = await pMapSeries(ids, (id) => this.workspace.getFilesModification(id));
     const modified: ComponentID[] = [];
     const newComps: ComponentID[] = [];
@@ -225,7 +227,7 @@ export class StatusMain {
     InsightsMain,
     IssuesMain,
     RemoveMain,
-    LanesMain
+    LanesMain,
   ]) {
     const statusMain = new StatusMain(workspace, issues, insights, remove, lanes);
     cli.register(new StatusCmd(statusMain), new MiniStatusCmd(statusMain));

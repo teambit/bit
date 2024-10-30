@@ -5,7 +5,7 @@ import { MainRuntime } from '@teambit/cli';
 import { merge } from 'lodash';
 import { BuildTask } from '@teambit/builder';
 import { Aspect } from '@teambit/harmony';
-import AspectAspect, { AspectMain } from '@teambit/aspect';
+import { AspectAspect, AspectMain } from '@teambit/aspect';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain, ReactEnv, UseWebpackModifiers } from '@teambit/react';

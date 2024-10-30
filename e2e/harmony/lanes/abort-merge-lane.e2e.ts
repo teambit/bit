@@ -22,7 +22,7 @@ describe('bit lane merge-abort command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.createLane('lane-b');
-      helper.fixtures.populateComponents(1, undefined, 'v2');
+      helper.fixtures.populateComponents(1, undefined, 'version2');
       helper.command.snapComponentWithoutBuild('comp1');
       helper.command.export();
       helper.command.switchLocalLane('lane-a', '-x');
@@ -44,7 +44,7 @@ describe('bit lane merge-abort command', function () {
     });
     it('should reset the source code to pre-merge', () => {
       const comp1Content = helper.fs.readFile('comp1/index.js');
-      expect(comp1Content).to.not.include('v2');
+      expect(comp1Content).to.not.include('version2');
     });
   });
   describe('when the merged lane introduced new components', () => {

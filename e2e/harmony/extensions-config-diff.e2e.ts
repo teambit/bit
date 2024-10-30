@@ -18,7 +18,7 @@ describe('extensions config diff', function () {
     helper.workspaceJsonc.disablePreview();
     helper.fixtures.populateExtensions(4);
     helper.fixtures.createComponentBarFoo();
-    helper.fixtures.addComponentBarFooAsDir();
+    helper.fixtures.addComponentBarFoo();
     helper.extensions.addExtensionToVariant('bar', 'my-scope/ext1', { key: 'val-variant' });
     helper.extensions.addExtensionToVariant('bar', 'my-scope/ext2', { key: 'val-variant' });
     helper.extensions.addExtensionToVariant('bar', 'my-scope/ext3', { key: 'val-variant' });
@@ -102,7 +102,7 @@ describe('extensions config diff', function () {
     describe.skip('change extension version', () => {
       before(() => {
         reEjectAndCheckStatusBefore(helper);
-        helper.command.tagComponent('ext1', 'sss', '-f');
+        helper.command.tagComponent('ext1', 'sss', '--unmodified');
         helper.componentJson.removeExtension('my-scope/ext1@0.0.21');
         helper.componentJson.setExtension('my-scope/ext1@0.0.2', { key: 'val' });
       });

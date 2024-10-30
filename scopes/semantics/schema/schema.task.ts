@@ -24,7 +24,11 @@ export class SchemaTask implements BuildTask {
   readonly location: TaskLocation = 'end';
   readonly description = 'extract api schema for a set of components';
 
-  constructor(readonly aspectId: string, private schema: SchemaMain, private logger: Logger) {}
+  constructor(
+    readonly aspectId: string,
+    private schema: SchemaMain,
+    private logger: Logger
+  ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const startTime = Date.now();
@@ -33,6 +37,8 @@ export class SchemaTask implements BuildTask {
     const rootDir = context.capsuleNetwork.capsulesRootDir;
     await pMapSeries(capsules, async (capsule) => {
       const component = capsule.component;
+      const isTaskDisabled = this.schema.isSchemaTaskDisabled(component);
+      if (isTaskDisabled) return;
       try {
         const schema = await this.schema.getSchema(component, false, true, rootDir, capsule.path);
         const schemaObj = schema.toObject();

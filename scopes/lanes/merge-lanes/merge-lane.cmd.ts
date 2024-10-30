@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
-import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { mergeReport } from '@teambit/merging';
+import { mergeReport, MergeStrategy } from '@teambit/merging';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
@@ -15,7 +14,11 @@ export class MergeLaneCmd implements Command {
 to merge the lane from the local scope without updating it first, use "--skip-fetch" flag.
 
 when the current and merge candidate lanes are diverged in history and the files could be merged with no conflicts,
-these components will be snap-merged to complete the merge. use "no-snap" to opt-out, or "tag" to tag instead.
+these components will be snap-merged to complete the merge. use "no-auto-snap" to opt-out, or "tag" to tag instead.
+
+when the components are not diverged in history, and the current lane is behind the merge candidate, the merge will
+simply update the components and the heads according to the merge candidate.
+to opt-out, use "--no-snap", the components will be written as the merge candidate, and will be left as modified.
 
 in case a component in both ends don't share history (no snap is found in common), the merge will require "--resolve-unrelated" flag.
 this flag keeps the history of one end and saves a reference to the other end. the decision of which end to keep is determined by the following:
@@ -45,24 +48,25 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       'same as "--auto-merge-resolve manual". in case of merge conflict, write the files with the conflict markers',
     ],
     [
-      '',
+      'r',
       'auto-merge-resolve <merge-strategy>',
       'in case of a merge conflict, resolve according to the provided strategy: [ours, theirs, manual]',
     ],
     ['', 'ours', 'DEPRECATED. use --auto-merge-resolve. in case of a conflict, keep local modifications'],
     ['', 'theirs', 'DEPRECATED. use --auto-merge-resolve. in case of a conflict, override local with incoming changes'],
     ['', 'workspace', 'merge only lane components that are in the current workspace'],
-    ['', 'no-snap', 'do not auto snap after merge completed without conflicts'],
+    [
+      '',
+      'no-auto-snap',
+      'do not auto snap after merge completed without conflicts of diverged components (see command description)',
+    ],
+    ['', 'no-snap', 'do not pass snaps from the other lane even for non-diverged components (see command description)'],
     ['', 'tag', 'auto-tag all lane components after merging into main (or tag-merge in case of snap-merge)'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
     ['', 'no-squash', 'relevant for merging lanes into main, which by default squashes all lane snaps'],
-    [
-      '',
-      'squash',
-      'EXPERIMENTAL. relevant for merging a lane into another non-main lane, which by default does not squash',
-    ],
+    ['', 'squash', 'relevant for merging a lane into another non-main lane, which by default does not squash'],
     [
       '',
       'ignore-config-changes',
@@ -74,7 +78,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     [
       '',
       'include-deps',
-      'relevant for "--pattern" and "--workspace". merge also dependencies of the specified components',
+      'relevant for "pattern" and "--workspace". merge also dependencies of the specified components',
     ],
     [
       '',
@@ -96,7 +100,10 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
   private = true;
   remoteOp = true;
 
-  constructor(private mergeLanes: MergeLanesMain, private globalConfig: GlobalConfigMain) {}
+  constructor(
+    private mergeLanes: MergeLanesMain,
+    private globalConfig: GlobalConfigMain
+  ) {}
 
   async report(
     [name, pattern]: [string, string],
@@ -108,6 +115,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       build,
       workspace: existingOnWorkspaceOnly = false,
       squash = false,
+      noAutoSnap = false,
       noSnap = false,
       tag = false,
       message: snapMessage = '',
@@ -127,6 +135,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       autoMergeResolve?: string;
       workspace?: boolean;
       build?: boolean;
+      noAutoSnap: boolean;
       noSnap: boolean;
       tag: boolean;
       message: string;
@@ -158,7 +167,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     }
     if (manual) autoMergeResolve = 'manual';
     const mergeStrategy = autoMergeResolve;
-    if (noSnap && snapMessage) throw new BitError('unable to use "no-snap" and "message" flags together');
+    if (noAutoSnap && snapMessage) throw new BitError('unable to use "no-snap" and "message" flags together');
     if (includeDeps && !pattern && !existingOnWorkspaceOnly) {
       throw new BitError(`"--include-deps" flag is relevant only for --workspace and --pattern flags`);
     }
@@ -173,13 +182,14 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     if (resolveUnrelated && typeof resolveUnrelated === 'boolean') {
       resolveUnrelated = 'ours';
     }
-    const { mergeResults, deleteResults, configMergeResults } = await this.mergeLanes.mergeLane(name, {
+    const { mergeResults, deleteResults, configMergeResults } = await this.mergeLanes.mergeLaneByCLI(name, {
       build,
       // @ts-ignore
       mergeStrategy,
       ours,
       theirs,
       existingOnWorkspaceOnly,
+      noAutoSnap,
       noSnap,
       snapMessage,
       keepReadme,

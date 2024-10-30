@@ -3,7 +3,7 @@ import { EdgeModel, GraphModel, NodeModel } from '../query';
 import { CompareGraphModel } from './compare-graph-model';
 import { CompareNodeModel } from './compare-node-model';
 
-const toShortId = (node: NodeModel) => node.component.id.toStringWithoutVersion();
+const toShortId = (node: NodeModel) => node.componentId.toStringWithoutVersion();
 
 // this is to get a key with versions ignored so that we'll have a unique set of component nodes
 const toShortIdFromNodeId = (nodeId: string) => nodeId.split('@')[0];
@@ -30,16 +30,17 @@ export function diffGraph(
   const allNodes: Array<CompareNodeModel> = [];
   for (const baseNode of baseNodes) {
     const compareNode = compareNodesMap.get(toShortId(baseNode));
+
     if (compareNode) {
       allNodes.push({
         ...baseNode,
-        compareVersion: compareNode.component.version,
-        status: compareNode.component.id.isEqual(baseNode.component.id) ? undefined : 'modified',
+        compareVersion: compareNode.componentId.version,
+        status: compareNode.componentId.isEqual(baseNode.componentId) ? undefined : 'modified',
       });
     } else {
       allNodes.push({
         ...baseNode,
-        compareVersion: baseNode.component.version,
+        compareVersion: baseNode.componentId.version,
         status: 'deleted',
       });
     }

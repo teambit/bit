@@ -9,7 +9,8 @@ import { Scope } from '..';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, PREVIOUS_DEFAULT_LANE } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
-import { getStringifyArgs, sha1 } from '../../utils';
+import { getStringifyArgs } from '@teambit/legacy.utils';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { hasVersionByRef } from '../component-ops/traverse-versions';
 import { BitObject, Ref, Repository } from '../objects';
 import { Version } from '.';
@@ -26,6 +27,8 @@ export type LaneProps = {
   schema?: string;
   readmeComponent?: LaneReadmeComponent;
   forkedFrom?: LaneId;
+  updateDependents?: ComponentID[];
+  overrideUpdateDependents?: boolean;
 };
 
 const OLD_LANE_SCHEMA = '0.0.0';
@@ -45,6 +48,14 @@ export default class Lane extends BitObject {
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
   isNew = false; // doesn't get saved in the object. only needed for in-memory instance
   hasChanged = false; // doesn't get saved in the object. only needed for in-memory instance
+  /**
+   * populated when a user clicks on "update" in the UI. it's a list of components that are dependents on the
+   * components in the lane. their dependencies are updated according to the lane.
+   * from the CLI perspective, it's added by "bit _snap" and merged by "bit _merge-lane".
+   * otherwise, the user is not aware of it. it's not imported to the workspace and the objects are not fetched.
+   */
+  updateDependents?: ComponentID[];
+  private overrideUpdateDependents?: boolean;
   constructor(props: LaneProps) {
     super();
     if (!props.name) throw new TypeError('Lane constructor expects to get a name parameter');
@@ -56,6 +67,8 @@ export default class Lane extends BitObject {
     this.readmeComponent = props.readmeComponent;
     this.forkedFrom = props.forkedFrom;
     this.schema = props.schema || OLD_LANE_SCHEMA;
+    this.updateDependents = props.updateDependents;
+    this.overrideUpdateDependents = props.overrideUpdateDependents;
   }
   id(): string {
     return this.scope + LANE_REMOTE_DELIMITER + this.name;
@@ -99,6 +112,8 @@ export default class Lane extends BitObject {
         },
         forkedFrom: this.forkedFrom && this.forkedFrom.toObject(),
         schema: this.schema,
+        updateDependents: this.updateDependents?.map((c) => c.toString()),
+        overrideUpdateDependents: this.overrideUpdateDependents,
       },
       (val) => !!val
     );
@@ -147,6 +162,8 @@ export default class Lane extends BitObject {
         head: laneObject.readmeComponent.head && new Ref(laneObject.readmeComponent.head),
       },
       forkedFrom: laneObject.forkedFrom && LaneId.from(laneObject.forkedFrom.name, laneObject.forkedFrom.scope),
+      updateDependents: laneObject.updateDependents?.map((c) => ComponentID.fromString(c)),
+      overrideUpdateDependents: laneObject.overrideUpdateDependents,
       hash: laneObject.hash || hash,
       schema: laneObject.schema,
     });
@@ -171,6 +188,39 @@ export default class Lane extends BitObject {
       this.hasChanged = true;
     }
   }
+  removeComponentFromUpdateDependentsIfExist(componentId: ComponentID) {
+    const updateDependentsList = ComponentIdList.fromArray(this.updateDependents || []);
+    const exist = updateDependentsList.searchWithoutVersion(componentId);
+    if (!exist) return;
+    this.updateDependents = updateDependentsList.removeIfExist(exist);
+    if (!this.updateDependents.length) this.updateDependents = undefined;
+    this.hasChanged = true;
+  }
+  addComponentToUpdateDependents(componentId: ComponentID) {
+    this.removeComponentFromUpdateDependentsIfExist(componentId);
+    (this.updateDependents ||= []).push(componentId);
+    this.hasChanged = true;
+  }
+  removeAllUpdateDependents() {
+    if (this.updateDependents?.length) return;
+    this.updateDependents = undefined;
+    this.hasChanged = true;
+  }
+  shouldOverrideUpdateDependents() {
+    return this.overrideUpdateDependents;
+  }
+  /**
+   * !!! important !!!
+   * this should get called only on a "temp lane", such as running "bit _snap", which the scope gets destroys after the
+   * command is done. when _scope exports the lane, this "overrideUpdateDependents" is not saved to the remote-scope.
+   *
+   * on a user local lane object, this prop should never be true. otherwise, it'll override the remote-scope data.
+   */
+  setOverrideUpdateDependents(overrideUpdateDependents: boolean) {
+    this.overrideUpdateDependents = overrideUpdateDependents;
+    this.hasChanged = true;
+  }
+
   removeComponent(id: ComponentID): boolean {
     const existsComponent = this.getComponent(id);
     if (!existsComponent) return false;
@@ -245,6 +295,9 @@ export default class Lane extends BitObject {
   toComponentIds(): ComponentIdList {
     return ComponentIdList.fromArray(this.components.map((c) => c.id.changeVersion(c.head.toString())));
   }
+  toComponentIdsIncludeUpdateDependents(): ComponentIdList {
+    return ComponentIdList.fromArray(this.toComponentIds().concat(this.updateDependents || []));
+  }
   toLaneId() {
     return new LaneId({ scope: this.scope, name: this.name });
   }
@@ -267,6 +320,13 @@ export default class Lane extends BitObject {
   setSchemaToNotSupportDeletedData() {
     this.schema = OLD_LANE_SCHEMA;
     this.hasChanged = true;
+  }
+  getCompHeadIncludeUpdateDependents(componentId: ComponentID): Ref | undefined {
+    const comp = this.getComponent(componentId);
+    if (comp) return comp.head;
+    const fromUpdateDependents = this.updateDependents?.find((c) => c.isEqualWithoutVersion(componentId));
+    if (fromUpdateDependents) return Ref.from(fromUpdateDependents.version);
+    return undefined;
   }
   validate() {
     const message = `unable to save Lane object "${this.id()}"`;
@@ -300,6 +360,7 @@ export default class Lane extends BitObject {
     return new Lane({
       ...this,
       hash: this._hash,
+      overrideUpdateDependents: this.overrideUpdateDependents,
       components: cloneDeep(this.components),
     });
   }

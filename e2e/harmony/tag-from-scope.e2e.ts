@@ -102,6 +102,7 @@ describe('tag components on Harmony', function () {
           data[0].versionToTag = '1.0.1';
           data[1].versionToTag = '0.0.3';
           data[2].versionToTag = '0.0.6';
+          // console.log(`bit _tag '${JSON.stringify(data)}' --push`, 'cwd', bareTag.scopePath);
           helper.command.tagFromScope(bareTag.scopePath, data, '--push');
         });
         it('should export the modified components to the remote', () => {
@@ -273,6 +274,46 @@ describe('tag components on Harmony', function () {
       const fileHash = compOnRemote.files[0].file;
       const fileContent = helper.command.catObject(fileHash, undefined, helper.scopes.remotePath);
       expect(fileContent).to.not.have.string('v2');
+    });
+  });
+
+  describe('tagging multiple components in the same machine with dependencies specified as ranges', () => {
+    let bareTag;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(3);
+      helper.command.snapAllComponents();
+      helper.command.export();
+
+      bareTag = helper.scopeHelper.getNewBareScope('-bare-tag');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+      const data = [
+        {
+          componentId: `${helper.scopes.remote}/comp1`,
+          versionToTag: `1.0.0`,
+          dependencies: [`${helper.scopes.remote}/comp2@^1.0.0`],
+          message: `msg for first comp`,
+        },
+        {
+          componentId: `${helper.scopes.remote}/comp2`,
+          versionToTag: `0.0.2`,
+          dependencies: [`${helper.scopes.remote}/comp1@^0.0.5`],
+          message: `msg for second comp`,
+        },
+        {
+          componentId: `${helper.scopes.remote}/comp3`,
+          versionToTag: `0.0.5`,
+          message: `msg for third comp`,
+        },
+      ];
+      // console.log('data', JSON.stringify(data));
+      helper.command.tagFromScope(bareTag.scopePath, data);
+    });
+    // previously it was throwing an error: "unable to find a version that satisfies "^1.0.0" of "4f87ef31-remote/comp2@^1.0.0""
+    it('should ignore the semver on the dependencies and set the version according to the currently tagged versions', () => {
+      const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@1.0.0`, bareTag.scopePath);
+      expect(comp1.dependencies[0].id.version).to.equal('0.0.2');
+      expect(comp1.dependencies[0].id.version).to.not.equal('1.0.0');
     });
   });
 });

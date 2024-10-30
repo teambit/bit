@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: cimg/node:20.10.0
+    - image: cimg/node:20.11.1
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -87,7 +87,7 @@ commands: # reusable commands
         default: 'BASE_IMAGE'
         type: string
       docker_build_arg_value:
-        default: 'node:20.10.0'
+        default: 'node:20.11.1'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -116,7 +116,7 @@ commands: # reusable commands
         default: 'BASE_IMAGE'
         type: string
       docker_build_arg_value:
-        default: 'node:20.10.0'
+        default: 'node:20.11.1'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -198,13 +198,13 @@ commands: # reusable commands
   windows_set_node_version:
     parameters:
       version:
-        default: 20.10.0
+        default: 20.11.1
         type: string
     steps:
       - run: choco upgrade nvm -y
       - run: nvm -v
-      - run: nvm install 20.10.0
-      - run: nvm use 20.10.0
+      - run: nvm install 20.11.1
+      - run: nvm use 20.11.1
       - run: node -v
   windows_add_bvm_to_path:
     steps:
@@ -257,26 +257,6 @@ jobs:
           paths:
             - bit
 
-  symphony_docker_build:
-    machine:
-      image: ubuntu-2004:202111-02
-    steps:
-      - attach_workspace:
-          at: ./
-      - run:
-          name: set bit.dev registry (@teambit)
-          # command: npm config set @teambit:registry https://node.bit.dev
-          command: npm config set @teambit:registry https://node-registry.bit.cloud
-      - run:
-          name: set bit.dev registry (@bitdev)
-          # command: npm config set @teambit:registry https://node.bit.dev
-          command: npm config set @bitdev:registry https://node-registry.bit.cloud
-      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:`npm show @teambit/bit version` .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:latest .
-      - run: cd bit && docker push bitcli/bit-symphony:`npm show @teambit/bit version`
-      - run: cd bit && docker push bitcli/bit-symphony:latest
-
   # docker_build:
   #   machine:
   #     image: ubuntu-2004:202111-02
@@ -292,8 +272,8 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:20.10.0"
-          docker_tag_suffix: "-node-20.10.0"
+          docker_build_arg_value: "node:20.11.1"
+          docker_tag_suffix: "-node-20.11.1"
 
   # docker_non_root_build:
   #   machine:
@@ -312,10 +292,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:20.10.0"
+          docker_build_arg_value: "node:20.11.1"
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-20.10.0"
+          docker_tag_suffix: "-node-20.11.1"
 
   server_docker_build_node_20:
     machine:
@@ -325,10 +305,10 @@ jobs:
           at: ./
       - docker_build_and_push:
           docker_build_arg_name: "BIT_IMAGE"
-          docker_build_arg_value: "`npm show @teambit/bit version`-node-20.10.0"
+          docker_build_arg_value: "`npm show @teambit/bit version`-node-20.11.1"
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-20.10.0"
+          docker_tag_suffix: "-node-20.11.1"
 
   set_ssh_key:
     <<: *defaults
@@ -415,6 +395,7 @@ jobs:
           name: 'Run unit tests'
           command: 'cd bit && npm run test-circle'
           environment:
+            FORCE_COLOR: 1
             MOCHA_FILE: junit/unit-test-results.xml
           when: always
       - store_test_results:
@@ -436,7 +417,9 @@ jobs:
           at: ./
       - run:
           name: 'run ESLint'
-          command: 'cd bit && npm run lint-circle'
+          command: 'cd bit && node --max-old-space-size=4096 node_modules/eslint/bin/eslint.js "{src,e2e,scopes,components}/**/*.{ts,tsx}" --format junit -o junit/eslint-results.xml'
+          environment:
+            NODE_OPTIONS: --max-old-space-size=4096
       - store_test_results:
           path: bit/junit
       - store_artifacts:
@@ -456,6 +439,12 @@ jobs:
       - run:
           name: 'make sure there is no "ramda" imported to Harmony'
           command: 'cd bit && ./scripts/validate-no-ramda.sh'
+      - run:
+          name: 'make sure there is no import aspects from default export'
+          command: 'cd bit && ./scripts/validate-import-named-aspects.sh'
+      - run:
+          name: 'make sure the packages used in legacy are specified in package.json'
+          command: 'cd bit && node scripts/validate-pkg-exist-in-pkg-json.js'
       - persist_to_workspace:
           root: .
           paths:
@@ -472,7 +461,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.24-v2
+          key: core-aspect-env-v0.0.60-v1
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
@@ -486,9 +475,8 @@ jobs:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
-      # - run: bvm install 0.0.910
       - run: bvm upgrade
-      # - run: bvm install 1.5.36
+      # - run: bvm install 1.7.41
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
@@ -498,13 +486,14 @@ jobs:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
+      - run: cd bit && bbit init
       - run:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.0.24-v2
+          key: core-aspect-env-v0.0.60-v1
           paths:
-            - /home/circleci/Library/Caches/Bit/capsules/caec9a1075d4addee151dbe7e351b809aaa4b088
+            - /home/circleci/Library/Caches/Bit/capsules/caec9a107
       - run: cd bit && npm run link-bit-legacy
       # - run: cd bit && bbit compile
 
@@ -534,6 +523,7 @@ jobs:
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
+      NODE_OPTIONS: --max-old-space-size=15000
     steps:
       - attach_workspace:
           at: ./
@@ -547,7 +537,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.24-v2
+          key: core-aspect-env-v0.0.60-v1
       # - update_ssh_agent
       # temporary, check if we can remove it
       - run: cd bit && bit cc
@@ -574,6 +564,7 @@ jobs:
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
+      NODE_OPTIONS: --max-old-space-size=15000
     steps:
       - attach_workspace:
           at: ./
@@ -583,7 +574,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.24-v2
+          key: core-aspect-env-v0.0.60-v1
       - bit_config:
           env: "hub"
       - restore_cache:
@@ -642,6 +633,7 @@ jobs:
             - bit/.git/bit
             - bit/.bitmap
             - bit/workspace.jsonc
+            - bit/scopes/harmony/cli-reference
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
@@ -853,7 +845,7 @@ jobs:
       - run: cd bit && git diff
       - run:
           name: export components
-          command: cd bit && bit export
+          command: cd bit && bit export --verbose
           no_output_timeout: '20m'
       - run:
           name: backup bit objects (after export)
@@ -895,7 +887,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.24-v2
+          key: core-aspect-env-v0.0.60-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -913,7 +905,6 @@ jobs:
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
-            NODE_OPTIONS: --no-warnings --max-old-space-size=5000
           when: always
       - store_test_results:
           path: bit/junit
@@ -932,9 +923,9 @@ jobs:
       # - run: node -v
       # - run: npm -v
       # - run: yarn -v
-      # # - run: choco install nodejs --version 20.10.0
+      # # - run: choco install nodejs --version 20.11.1
       # # - run: node -v
-      # - run: cinst nodejs --version 20.10.0
+      # - run: cinst nodejs --version 20.11.1
       # - run: node -v
 
   windows_checkout_code:
@@ -1355,11 +1346,6 @@ workflows:
           <<: *master_only_filter
           requires:
             - bit_tag
-      - symphony_docker_build:
-          requires:
-            - bit_export
-            - bit_tag
-            - sleep_5_minutes
       # - docker_build:
       #     requires:
       #       - harmony_publish_to_gcloud
@@ -1503,12 +1489,6 @@ workflows:
           requires:
             - bit_tag
             - harmony_deploy_approval_job
-      - symphony_docker_build:
-          requires:
-            - harmony_deploy_approval_job
-            - bit_tag
-            - bit_export
-            - sleep_5_minutes
       # - docker_build:
       #     requires:
       #       - harmony_deploy_approval_job
@@ -1545,19 +1525,6 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - docker_build_node_20
-  # uncomment to debug symphony_docker_build
-  # symphony_docker_build_workflow:
-  #   jobs:
-  #     - checkout_code:
-  #         filters:
-  #           branches:
-  #             only: circle-docker-symphony
-  #     - symphony_docker_build:
-  #         filters:
-  #           branches:
-  #             only: circle-docker-symphony
-  #         requires:
-  #           - checkout_code
 
   # uncomment to update esbuild arm64 cache
   # get_arm64_workflow_packages:
@@ -1572,58 +1539,36 @@ workflows:
   #     - checkout_code:
   #         filters:
   #           branches:
-  #             only: improve-bundling
+  #             only: manual-release
   #     - bundle_version_linux:
   #         filters:
   #           branches:
-  #             only: improve-bundling
+  #             only: manual-release
   #     - bundle_version_macos:
   #         filters:
   #           branches:
-  #             only: improve-bundling
+  #             only: manual-release
   #     - bundle_version_windows:
   #         filters:
   #           branches:
-  #             only: improve-bundling
+  #             only: manual-release
   #     - harmony_publish_to_gcloud:
   #         filters:
   #           branches:
-  #             only: improve-bundling
+  #             only: manual-release
   #         requires:
   #           - bundle_version_linux
   #           - bundle_version_macos
   #           - bundle_version_windows
   #           - checkout_code # This is needed to generate index.json
-  #     # - docker_build:
-  #     #     requires:
-  #     #       - checkout_code
-  #     #       - harmony_publish_to_gcloud
-  # #     - docker_build_node_18:
-  # #         requires:
-  # #           - checkout_code
-  # #           - harmony_publish_to_gcloud
   #     - docker_build_node_20:
   #         requires:
   #           - checkout_code
   #           - harmony_publish_to_gcloud
-  #     # - docker_non_root_build:
-  #     #     requires:
-  #     #       - checkout_code
-  #     #       - harmony_publish_to_gcloud
-  # #     - docker_non_root_build_node_18:
-  # #         requires:
-  # #           - checkout_code
-  # #           - harmony_publish_to_gcloud
   #     - docker_non_root_build_node_20:
   #         requires:
   #           - checkout_code
   #           - harmony_publish_to_gcloud
-  #     # - server_docker_build:
-  #     #     requires:
-  #     #       - docker_build
-  # #     - server_docker_build_node_18:
-  # #         requires:
-  # #           - docker_build_node_18
   #     - server_docker_build_node_20:
   #         requires:
   #           - docker_build_node_20

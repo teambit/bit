@@ -66,8 +66,9 @@ export class SourceFileTransformer implements SchemaTransformer {
     return ast.statements.filter((statement) => {
       if (statement.kind === ts.SyntaxKind.ExportDeclaration || statement.kind === ts.SyntaxKind.ExportAssignment)
         return true;
+      const modifiers = ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined;
       const isExport = Boolean(
-        statement.modifiers?.find((modifier) => {
+        modifiers?.find((modifier) => {
           return modifier.kind === ts.SyntaxKind.ExportKeyword;
         })
       );
@@ -77,9 +78,10 @@ export class SourceFileTransformer implements SchemaTransformer {
 
   private listInternalNodes(ast: SourceFile): Node[] {
     return ast.statements.filter((statement) => {
+      const modifiers = ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined;
       if (
         !(statement.kind === ts.SyntaxKind.ExportDeclaration || statement.kind === ts.SyntaxKind.ExportAssignment) &&
-        !statement.modifiers?.find((modifier) => {
+        !modifiers?.find((modifier) => {
           return modifier.kind === ts.SyntaxKind.ExportKeyword;
         })
       ) {

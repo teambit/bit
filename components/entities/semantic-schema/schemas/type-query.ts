@@ -7,7 +7,11 @@ import { SchemaRegistry } from '../schema-registry';
 export class TypeQuerySchema extends SchemaNode {
   readonly type: SchemaNode;
 
-  constructor(readonly location: SchemaLocation, type: SchemaNode, readonly signature: string) {
+  constructor(
+    readonly location: SchemaLocation,
+    type: SchemaNode,
+    readonly signature: string
+  ) {
     super();
     this.type = type;
   }
@@ -20,8 +24,12 @@ export class TypeQuerySchema extends SchemaNode {
     return this.signature;
   }
 
-  toString() {
-    return `typeof ${this.type.toString()}`;
+  toString(options?: { color?: boolean }) {
+    return `typeof ${this.type.toString(options)}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    return `typeof ${this.type.toFullSignature(options)}`;
   }
 
   toObject() {

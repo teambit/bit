@@ -38,8 +38,10 @@
   },
 
   /**
-   * comment in to include generator templates in your workspace.
-   * browse more dev environments: https://bit.dev/docs/getting-started/composing/dev-environments
+  * Enable generator templates by uncommenting the desired environments below.
+  * These generators scaffold components for Node, React, Vue, and Angular.
+  * After uncommenting, run `bit install` to make them available in your workspace.
+  * Explore more dev environments at: https://bit.dev/docs/getting-started/composing/dev-environments
   **/
   "teambit.generator/generator": {
     "envs": [

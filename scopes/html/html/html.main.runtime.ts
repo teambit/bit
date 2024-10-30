@@ -107,10 +107,10 @@ export class HtmlMain {
     return this.envs.compose(this.envs.merge(targetEnv, this.htmlEnv), transformers);
   }
 
-  static async provider([envs, react]: [EnvsMain, ReactMain]) // config,
-  // slots,
-  // harmony: Harmony
-  {
+  static async provider([envs, react]: [EnvsMain, ReactMain]) {
+    // config,
+    // slots,
+    // harmony: Harmony
     const htmlEnv: HtmlEnv = envs.merge<HtmlEnv, ReactEnv>(new HtmlEnv(), react.reactEnv);
     envs.registerEnv(htmlEnv);
     // if (generator) {

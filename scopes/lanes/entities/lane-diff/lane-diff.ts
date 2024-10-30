@@ -9,7 +9,11 @@ export type PlainLaneDiff = {
 };
 
 export class LaneDiff {
-  constructor(readonly sourceLane: LaneId, readonly diff: LaneComponentDiff[], readonly targetLane?: LaneId) {}
+  constructor(
+    readonly sourceLane: LaneId,
+    readonly diff: LaneComponentDiff[],
+    readonly targetLane?: LaneId
+  ) {}
 
   /**
    * count components that are up to date.

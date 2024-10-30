@@ -1,11 +1,11 @@
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import { MainRuntime } from '@teambit/cli';
-import { parse } from 'comment-json';
-import ScopeAspect, { ScopeMain } from '@teambit/scope';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { flatten, isFunction } from 'lodash';
 import { SlotRegistry, Slot } from '@teambit/harmony';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import { EnvsAspect } from '@teambit/envs';
+import type { EnvJsonc, EnvsMain } from '@teambit/envs';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { Component, ComponentMain, ComponentAspect } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -32,6 +32,13 @@ type DevPattern = string[] | DevPatternDescriptor;
  * dev pattern is a list of strings or a function that returns a list of strings. an example to a pattern can be "[*.spec.ts]"
  */
 export type DevPatterns = ((component: Component) => DevPattern) | DevPattern;
+
+export type EnvJsoncPatterns = {
+  compositions?: string[];
+  docs?: string[];
+  tests?: string[];
+  [key: string]: string[] | undefined;
+};
 
 /**
  * slot for dev file patterns.
@@ -131,28 +138,30 @@ export class DevFilesMain {
     return envPatternsObject;
   }
 
+  mergeEnvManifestPatterns(parent: EnvJsonc, child: EnvJsonc): Partial<EnvJsonc> {
+    const merged: Partial<EnvJsonc> = {
+      patterns: { ...parent.patterns, ...child.patterns },
+    };
+    return merged;
+  }
+
   private async computeDevPatternsFromEnvJsoncFile(
     envId: string,
     legacyFiles?: SourceFile[]
   ): Promise<string[] | undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
     if (isCoreEnv) return undefined;
-    let envJson;
+    let envJsonc;
     if (legacyFiles) {
-      envJson = legacyFiles.find((file) => {
-        return file.relative === 'env.jsonc' || file.relative === 'env.json';
-      });
+      envJsonc = this.envs.getEnvManifest(undefined, legacyFiles);
     } else {
       const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
-      envJson = envComponent.filesystem.files.find((file) => {
-        return file.relative === 'env.jsonc' || file.relative === 'env.json';
-      });
+      envJsonc = this.envs.getEnvManifest(envComponent, undefined);
     }
 
-    if (!envJson) return undefined;
+    if (!envJsonc) return undefined;
 
-    const object = parse(envJson.contents.toString('utf8'));
-    return object.patterns;
+    return envJsonc.patterns;
   }
 
   /**
@@ -231,6 +240,7 @@ export class DevFilesMain {
   ) {
     const devFiles = new DevFilesMain(envs, workspace, devPatternSlot, config);
     componentAspect.registerShowFragments([new DevFilesFragment(devFiles)]);
+    envs.registerEnvJsoncMergeCustomizer(devFiles.mergeEnvManifestPatterns.bind(devFiles));
 
     const calcDevOnLoad = async (component: Component) => {
       return {

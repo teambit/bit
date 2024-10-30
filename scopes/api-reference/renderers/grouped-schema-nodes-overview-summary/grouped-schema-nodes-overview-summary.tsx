@@ -11,10 +11,14 @@ import { VariableNodeSummary, EnumMemberSummary } from '@teambit/api-reference.r
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import defaultTheme from '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme';
-import { Link } from '@teambit/base-react.navigation.link';
+import { Link as BaseLink } from '@teambit/base-react.navigation.link';
+import pluralize from 'pluralize';
 import classnames from 'classnames';
 
 import styles from './grouped-schema-nodes-overview-summary.module.scss';
+
+// @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
+const Link = BaseLink as any;
 
 export type SchemaNodesSummaryProps = {
   name: string;
@@ -95,9 +99,6 @@ export function SchemaNodesSummary({
 
   const rootRef = React.useRef<HTMLDivElement>(null);
 
-  const [areAllExpanded, setAreAllExpanded] = React.useState(false);
-  const expandCollapseIcon = 'https://static.bit.dev/bit-icons/thin-arrow-down.svg';
-
   return (
     <div ref={rootRef} {...rest} className={classnames(styles.groupNodesContainer, className)}>
       <div className={styles.heading}>
@@ -111,13 +112,6 @@ export function SchemaNodesSummary({
             <Link href={`~api-reference?selectedAPI=${name}`}>{name}</Link>
           </div>
         </div>
-        <div className={classnames(styles.headingRight)} onClick={() => setAreAllExpanded(!areAllExpanded)}>
-          <img
-            src={expandCollapseIcon}
-            alt={areAllExpanded ? 'Collapse All' : 'Expand All'}
-            className={areAllExpanded ? styles.expanded : styles.collapsed}
-          />
-        </div>
       </div>
       {description && <div className={styles.description}>{description}</div>}
       {groupedNodes.map(([type, groupedMembersByType], index) => {
@@ -128,7 +122,9 @@ export function SchemaNodesSummary({
           <div key={`${type}-${index}`} className={classnames(styles.memberSummary)}>
             {!skipRenderingTable && (
               <div className={styles.propertiesOverview}>
-                <div className={styles.propertiesTitle}>{type === 'enum members' ? 'Members' : 'Properties'}</div>
+                <div className={styles.propertiesTitle}>
+                  {type === 'enum members' ? 'Members' : pluralize(type ?? 'properties')}
+                </div>
                 <div className={styles.table}>
                   <HeadingRow
                     className={classnames(styles.row, styles.headingRow)}
@@ -147,7 +143,6 @@ export function SchemaNodesSummary({
                   <SchemaMethodMember
                     key={`${member.__schema}-${member.name}`}
                     member={member}
-                    initialState={areAllExpanded}
                     apiNodeRendererProps={apiNodeRendererProps}
                   />
                 ))}
@@ -162,24 +157,15 @@ export function SchemaNodesSummary({
 
 function SchemaMethodMember({
   member,
-  initialState,
   apiNodeRendererProps,
 }: {
   member: SchemaNode;
-  initialState?: boolean;
   apiNodeRendererProps: APINodeRenderProps;
 }) {
-  const [isExpanded, setIsExpanded] = React.useState(initialState);
-  React.useEffect(() => {
-    setIsExpanded(initialState);
-  }, [initialState]);
-
   const memberSignature =
     member.__schema === SetAccessorSchema.name
       ? `(${(member as SetAccessorSchema).param.toString()}) => void`
-      : transformSignature(member)?.split(member.name ?? '')[1];
-
-  const icon = 'https://static.bit.dev/bit-icons/thin-arrow-down.svg';
+      : (transformSignature(member)?.split(member.name ?? '')[1] ?? member.signature);
 
   const { renderers } = apiNodeRendererProps;
   const { doc } = member;
@@ -214,63 +200,55 @@ function SchemaMethodMember({
             </SyntaxHighlighter>
           </div>
         )}
-        <div className={styles.icon}>
-          <img
-            className={isExpanded ? styles.expanded : styles.collapsed}
-            src={icon}
-            alt={isExpanded ? 'collapse' : 'expand'}
-            onClick={() => setIsExpanded(!isExpanded)}
-          />
-        </div>
       </div>
-      {isExpanded && (
-        <div className={styles.expandedRow}>
-          <div className={styles.leftPlaceholder}></div>
-          <div className={styles.expandedRowDetails}>
-            {doc?.comment && <div className={styles.description}>{doc?.comment || ''}</div>}
-            {params.length > 0 && (
-              <div className={styles.paramsContainer}>
-                <HeadingRow className={styles.paramHeading} headings={paramTypeHeadings} colNumber={4} />
-                {params.map((param) => {
-                  const paramRenderer = renderers.find((renderer) => renderer.predicate(param));
-                  if (paramRenderer?.Component) {
-                    return (
-                      <paramRenderer.Component
-                        {...apiNodeRendererProps}
-                        key={`param-${param.name}`}
-                        depth={(apiNodeRendererProps.depth ?? 0) + 1}
-                        apiNode={{ ...apiNodeRendererProps.apiNode, renderer: paramRenderer, api: param }}
-                        metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
-                      />
-                    );
-                  }
+
+      <div className={styles.expandedRow}>
+        <div className={styles.leftPlaceholder}></div>
+        <div className={styles.expandedRowDetails}>
+          {doc?.comment && <div className={styles.description}>{doc?.comment || ''}</div>}
+          {params.length > 0 && (
+            <div className={styles.paramsContainer}>
+              <HeadingRow className={styles.paramHeading} headings={paramTypeHeadings} colNumber={4} />
+              {params.map((param) => {
+                const paramRenderer = renderers.find((renderer) => renderer.predicate(param));
+                if (paramRenderer?.Component) {
                   return (
-                    <defaultParamRenderer.Component
+                    <paramRenderer.Component
                       {...apiNodeRendererProps}
                       key={`param-${param.name}`}
                       depth={(apiNodeRendererProps.depth ?? 0) + 1}
-                      apiNode={{ ...apiNodeRendererProps.apiNode, renderer: defaultParamRenderer, api: param }}
+                      apiNode={{ ...apiNodeRendererProps.apiNode, renderer: paramRenderer, api: param }}
                       metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
                     />
                   );
-                })}
-              </div>
-            )}
-            {returnType && (
-              <div className={styles.returnContainer}>
-                <h3 className={styles.subtitle}>Returns</h3>
-                {(returnTypeRenderer && (
-                  <returnTypeRenderer.Component
+                }
+                return (
+                  <defaultParamRenderer.Component
                     {...apiNodeRendererProps}
-                    apiNode={{ ...apiNodeRendererProps.apiNode, api: returnType, renderer: returnTypeRenderer }}
+                    key={`param-${param.name}`}
                     depth={(apiNodeRendererProps.depth ?? 0) + 1}
+                    apiNode={{ ...apiNodeRendererProps.apiNode, renderer: defaultParamRenderer, api: param }}
+                    metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
                   />
-                )) || <div className={nodeStyles.node}>{returnType.toString()}</div>}
-              </div>
-            )}
-          </div>
+                );
+              })}
+            </div>
+          )}
+          {returnType && (
+            <div className={styles.returnContainer}>
+              <h3 className={styles.subtitle}>Returns</h3>
+              {(returnTypeRenderer && (
+                <returnTypeRenderer.Component
+                  {...apiNodeRendererProps}
+                  apiNode={{ ...apiNodeRendererProps.apiNode, api: returnType, renderer: returnTypeRenderer }}
+                  depth={(apiNodeRendererProps.depth ?? 0) + 1}
+                  metadata={{ ...apiNodeRendererProps.metadata, [returnType.__schema]: { columnView: true } }}
+                />
+              )) || <div className={nodeStyles.node}>{returnType.toString()}</div>}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -1,8 +1,7 @@
 import chalk from 'chalk';
 import { compact } from 'lodash';
-import { applyVersionReport, installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
+import { applyVersionReport, installationErrorOutput, MergeStrategy, compilationErrorOutput } from '@teambit/merging';
 import { Command, CommandOptions } from '@teambit/cli';
-import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { LanesMain } from './lanes.main.runtime';
 
@@ -19,23 +18,27 @@ export class SwitchCmd implements Command {
     },
   ];
   options = [
+    ['h', 'head', 'switch to the head of the lane/main (fetches the latest changes from the remote)'],
     [
-      'n',
-      'alias <string>',
-      "relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote",
-    ],
-    [
-      'm',
-      'merge [strategy]',
+      'r',
+      'auto-merge-resolve <merge-strategy>',
       'merge local changes with the checked out version. strategy should be "theirs", "ours" or "manual"',
     ],
-    ['a', 'get-all', 'checkout all components in a lane, including those not currently in the workspace'],
+    ['', 'force-ours', 'do not merge, preserve local files as is'],
+    ['', 'force-theirs', 'do not merge, just overwrite with incoming files'],
+    ['a', 'get-all', 'DEPRECATED. this is currently the default behavior'],
+    ['', 'workspace-only', 'checkout only the components in the workspace to the selected lane'],
     ['x', 'skip-dependency-installation', 'do not install dependencies of the imported components'],
     [
       'p',
       'pattern <component-pattern>',
       `switch only the lane components matching the specified component-pattern. only works when the workspace is empty\n
 ${COMPONENT_PATTERN_HELP}`,
+    ],
+    [
+      'n',
+      'alias <string>',
+      "relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote",
     ],
     ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
@@ -46,16 +49,24 @@ ${COMPONENT_PATTERN_HELP}`,
   async report(
     [lane]: [string],
     {
+      head,
       alias,
-      merge,
+      autoMergeResolve,
+      forceOurs,
+      forceTheirs,
       getAll = false,
+      workspaceOnly = false,
       skipDependencyInstallation = false,
       pattern,
       json = false,
     }: {
+      head?: boolean;
       alias?: string;
-      merge?: MergeStrategy;
+      autoMergeResolve?: MergeStrategy;
+      forceOurs?: boolean;
+      forceTheirs?: boolean;
       getAll?: boolean;
+      workspaceOnly?: boolean;
       skipDependencyInstallation?: boolean;
       override?: boolean;
       pattern?: string;
@@ -63,12 +74,18 @@ ${COMPONENT_PATTERN_HELP}`,
     }
   ) {
     const { components, failedComponents, installationError, compilationError } = await this.lanes.switchLanes(lane, {
+      head,
       alias,
-      merge,
-      getAll,
+      merge: autoMergeResolve,
+      forceOurs,
+      forceTheirs,
+      workspaceOnly,
       pattern,
       skipDependencyInstallation,
     });
+    if (getAll) {
+      this.lanes.logger.warn('the --get-all flag is deprecated and currently the default behavior');
+    }
     if (json) {
       return JSON.stringify({ components, failedComponents }, null, 4);
     }

@@ -1,5 +1,5 @@
 import ts from 'typescript';
-import { SourceFileTransformer } from '.';
+import { SourceFileTransformer } from './index';
 import { replaceName } from './replaceName';
 
 export const expressionStatementTransformer: SourceFileTransformer = (mapping: Record<string, string>) => {
@@ -21,7 +21,7 @@ export const expressionStatementTransformer: SourceFileTransformer = (mapping: R
 
     const visit: ts.Visitor = (node) => {
       if (ts.isExpressionStatement(node)) {
-        return ts.factory.updateExpressionStatement(node, ts.visitNode(node.expression, visit));
+        return ts.factory.updateExpressionStatement(node, ts.visitNode(node.expression, visit) as ts.Expression);
       }
 
       if (ts.isPropertyAccessExpression(node)) {
@@ -29,7 +29,11 @@ export const expressionStatementTransformer: SourceFileTransformer = (mapping: R
         if (ts.isIdentifier(node.name)) {
           newName = replaceIdentifierText(node.name);
         }
-        return ts.factory.updatePropertyAccessExpression(node, ts.visitNode(node.expression, visit), newName);
+        return ts.factory.updatePropertyAccessExpression(
+          node,
+          ts.visitNode(node.expression, visit) as ts.Expression,
+          newName
+        );
       }
 
       if (ts.isIdentifier(node)) {
@@ -39,6 +43,6 @@ export const expressionStatementTransformer: SourceFileTransformer = (mapping: R
       return ts.visitEachChild(node, visit, context);
     };
 
-    return (node) => ts.visitNode(node, visit);
+    return (node) => ts.visitNode(node, visit) as ts.SourceFile;
   };
 };

@@ -25,9 +25,7 @@
   }
 }
 
-.ignoreWhitespaceSettings,
-.wordWrapSettings,
-.splitSettings {
+.diffOnlySettings .splitSettings {
   padding-bottom: 8px;
   &:hover {
     background: var(--on-surface-neutral-low-color, #282828);
@@ -35,6 +33,7 @@
 }
 
 .ignoreWhitespaceSettings,
+.diffOnlySettings,
 .wordWrapSettings {
   > label {
     padding: 8px 8px 8px 0px;

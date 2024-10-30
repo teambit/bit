@@ -38,14 +38,14 @@ export interface DependencyResolverWorkspaceConfig {
 
   /**
    * A client certificate to pass when accessing the registry. Values should be in PEM format (Windows calls it "Base-64 encoded X.509 (.CER)") with newlines replaced by the string "\n". For example:
-   * cert="-----BEGIN CERTIFICATE-----\nXXXX\nXXXX\n-----END CERTIFICATE-----"
+   * cert="----BEGIN CERTIFICATE-----\nXXXX\nXXXX\n-----END CERTIFICATE----"
    * It is not the path to a certificate file (and there is no "certfile" option).
    */
   cert?: string;
 
   /**
    * A client key to pass when accessing the registry. Values should be in PEM format with newlines replaced by the string "\n". For example:
-   * key="-----BEGIN PRIVATE KEY-----\nXXXX\nXXXX\n-----END PRIVATE KEY-----"
+   * key="----BEGIN PRIVATE KEY-----\nXXXX\nXXXX\n-----END PRIVATE KEY----"
    * It is not the path to a key file (and there is no "keyfile" option).
    */
   key?: string;
@@ -197,4 +197,15 @@ export interface DependencyResolverWorkspaceConfig {
    * you can use this option to exclusively hoist the phantom dependencies (recommended).
    */
   hoistPatterns?: string[];
+
+  /**
+   * When true, dependencies from the workspace are hoisted to node_modules/.pnpm/node_modules
+   * even if they are found in the root node_modules
+   */
+  hoistInjectedDependencies?: boolean;
+
+  /**
+   * Tells pnpm to automatically install peer dependencies. It is true by default.
+   */
+  autoInstallPeers?: boolean;
 }

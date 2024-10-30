@@ -1,7 +1,7 @@
 import React from 'react';
 import { Section } from '@teambit/component';
 import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
-import { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
+import type { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { DependenciesCompare } from './ui/dependencies-compare';
 
 export class GraphCompareSection implements Section, TabItem {

@@ -44,12 +44,12 @@ export class ComponentSearcher extends FuzzySearcher<ComponentModel, ComponentSe
   }
 
   protected override toSearchResult = ({ item }: FuzzySearchItem<ComponentSearchIdx>): SearchResult => {
-    const { navigate, resultPlugins } = this.options;
+    const { resultPlugins } = this.options;
     const { component } = item;
 
     return {
       id: component.id.fullName,
-      action: () => navigate(`/${component.id.fullName}`),
+      action: `/${component.id.fullName}`,
       children: <ComponentResult component={component} plugins={resultPlugins} />,
     };
   };

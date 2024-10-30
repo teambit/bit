@@ -1,10 +1,9 @@
 // eslint-disable-next-line max-classes-per-file
-import type { Command } from '@teambit/legacy/dist/cli/command';
-import type { CommandOptions } from '@teambit/legacy/dist/cli/legacy-command';
+import type { Command, CommandOptions } from '@teambit/legacy/dist/cli/command';
 import legacyLogger from '@teambit/legacy/dist/logger/logger';
-import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
+import { handleErrorAndExit } from './handle-errors';
 import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
-import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 import readline from 'readline';
 import { CLIParser } from './cli-parser';
 import { CLIMain } from './cli.main.runtime';
@@ -31,7 +30,7 @@ export class CliGenerateCmd implements Command {
   async report(args, { metadata, docs }: GenerateOpts & { docs?: boolean }): Promise<string> {
     if (docs) {
       return `---
-description: 'Bit command synopses. Bit version: ${getHarmonyVersion()}'
+description: 'Bit command synopses. Bit version: ${getBitVersion()}'
 labels: ['cli', 'mdx', 'docs']
 ---
       `;
@@ -64,7 +63,7 @@ export class CliCmd implements Command {
       completer: (line, cb) => completer(line, cb, this.cliMain),
     });
 
-    const cliParser = new CLIParser(this.cliMain.commands, this.cliMain.groups);
+    const cliParser = new CLIParser(this.cliMain.commands, this.cliMain.groups, this.cliMain.onCommandStartSlot);
 
     rl.prompt();
 
@@ -73,7 +72,8 @@ export class CliCmd implements Command {
       rl.on('line', async (line) => {
         const cmd = line.trim().split(' ');
         try {
-          await cliParser.parse(cmd);
+          const commandRunner = await cliParser.parse(cmd);
+          await commandRunner.runCommand();
         } catch (err: any) {
           await handleErrorAndExit(err, cmd[0]);
         }

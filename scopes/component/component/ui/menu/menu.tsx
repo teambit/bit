@@ -6,6 +6,7 @@ import * as semver from 'semver';
 import { SlotRegistry } from '@teambit/harmony';
 import { DropdownComponentVersion, GetActiveTabIndex, VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
+import { ComponentID } from '@teambit/component-id';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
@@ -17,7 +18,6 @@ import { useComponent as useComponentQuery, UseComponentType, Filters } from '..
 import { CollapsibleMenuNav } from './menu-nav';
 import { OrderedNavigationSlot, ConsumeMethodSlot, ConsumePluginProps } from './nav-plugin';
 import { useIdFromLocation } from '../use-component-from-location';
-import { ComponentID } from '../..';
 import styles from './menu.module.scss';
 
 export type RightSideMenuItem = { item: ReactNode; order: number };
@@ -292,7 +292,7 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
   const localVersion = isWorkspace && !isNew && (!viewedLane || lanesModel?.isViewingCurrentLane());
 
   const currentVersion =
-    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : _currentVersion ?? '';
+    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : (_currentVersion ?? '');
 
   const consumeMethodProps: ConsumePluginProps | undefined = React.useMemo(() => {
     return id

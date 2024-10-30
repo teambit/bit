@@ -8,20 +8,28 @@ import { isSnap } from '@teambit/component-version';
 import { Component, ComponentID } from '@teambit/component';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { getBasicLog } from '@teambit/legacy/dist/utils/bit/basic-log';
+import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy/dist/constants';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { PostSign } from '@teambit/legacy/dist/scope/actions';
 import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
-import { Remotes } from '@teambit/legacy/dist/remotes';
+import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
 import { ComponentIdList } from '@teambit/component-id';
 import Version, { Log } from '@teambit/legacy/dist/scope/models/version';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
-import LanesAspect, { LanesMain } from '@teambit/lanes';
+import { LanesAspect, LanesMain } from '@teambit/lanes';
+import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
-import { SignCmd } from './sign.cmd';
+import { SignCmd, SignOptions } from './sign.cmd';
 import { SignAspect } from './sign.aspect';
+import { ExportAspect, ExportMain } from '@teambit/export';
+
+type ObjectsPerRemote = {
+  remote: Remote;
+  objectList: ObjectList;
+  exportedIds?: string[];
+};
 
 export type SignResult = {
   components: Component[];
@@ -40,7 +48,8 @@ export class SignMain {
     private onPostSignSlot: OnPostSignSlot,
     private lanes: LanesMain,
     private snapping: SnappingMain,
-    private harmony: Harmony
+    private harmony: Harmony,
+    private exporter: ExportMain
   ) {}
 
   /**
@@ -54,12 +63,16 @@ export class SignMain {
    */
   async sign(
     ids: ComponentID[],
-    originalScope?: boolean,
-    push?: boolean,
     laneIdStr?: string,
-    rebuild?: boolean
+    { originalScope, push, rebuild, saveLocally }: SignOptions = {}
   ): Promise<SignResult | null> {
     this.throwIfOnWorkspace();
+    if (push && rebuild) {
+      throw new BitError('you can not use --push and --rebuild together');
+    }
+    if (saveLocally && push && originalScope) {
+      throw new BitError('no need to use --save-locally when pushing to the original scope, it is done automatically');
+    }
     let lane: Lane | undefined;
     if (!originalScope) {
       const longProcessLogger = this.logger.createLongProcessLogger('import objects');
@@ -71,13 +84,16 @@ export class SignMain {
         this.scope.legacyScope.setCurrentLaneId(laneId);
         this.scope.legacyScope.scopeImporter.shouldOnlyFetchFromCurrentLane = true;
       }
-      await this.scope.import(ids, { lane, reason: 'which are the seeders for the sign process' });
+      await this.scope.import(ids, {
+        lane,
+        includeUpdateDependents: true,
+        reason: 'which are the seeders for the sign process',
+      });
       longProcessLogger.end('success');
     }
     const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids, rebuild);
     if (ids.length && componentsToSkip.length) {
-      // eslint-disable-next-line no-console
-      console.log(`the following component(s) were already signed successfully:
+      this.logger.console(`the following component(s) were already signed successfully or marked as skipped:
 ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     }
     if (!componentsToSign.length) {
@@ -86,7 +102,11 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
 
     // using `loadMany` instead of `getMany` to make sure component aspects are loaded.
     this.logger.setStatusLine(`loading ${componentsToSign.length} components and their aspects...`);
-    const components = await this.scope.loadMany(componentsToSign, lane, { loadApps: false, loadEnvs: false });
+    const components = await this.scope.loadMany(componentsToSign, lane, {
+      loadApps: false,
+      loadEnvs: true,
+      loadCustomEnvs: true,
+    });
     this.logger.clearStatusLine();
     // it's enough to check the first component whether it's a snap or tag, because it can't be a mix of both
     const shouldRunSnapPipeline = isSnap(components[0].id.version);
@@ -108,6 +128,9 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       } else {
         await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus, lane);
       }
+    }
+    if (saveLocally) {
+      await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
     }
     await this.triggerOnPostSign(components);
 
@@ -199,13 +222,33 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       // the components should be exported to the lane-scope, not to their original scope.
       objectList.addScopeName(lane.scope);
     }
+
+    const scopeRemotes = await getScopeRemotes(this.scope.legacyScope);
+    const objectsPerRemote = objectList.objects.reduce((acc, current) => {
+      const scope: string = current.scope as string;
+      if (acc[scope]) acc[scope].push(current);
+      else acc[scope] = [current];
+      return acc;
+    }, {});
+    const manyObjectsPerRemote: ObjectsPerRemote[] = await Promise.all(
+      Object.keys(objectsPerRemote).map(async (scopeName) => {
+        const remote = await scopeRemotes.resolve(scopeName, this.scope.legacyScope);
+        return { remote, objectList: new ObjectList(objectsPerRemote[scopeName]) };
+      })
+    );
+    const shouldPushToCentralHub = this.exporter.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes);
+
     const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
-    await http.pushToCentralHub(objectList, {
-      origin: 'sign',
-      sign: true,
-      signComponents: signComponents.map((id) => id.toString()),
-      idsHashMaps,
-    });
+    if (shouldPushToCentralHub) {
+      await http.pushToCentralHub(objectList, {
+        origin: 'sign',
+        sign: true,
+        signComponents: signComponents.map((id) => id.toString()),
+        idsHashMaps,
+      });
+    } else {
+      await this.exporter.pushToRemotesCarefully(manyObjectsPerRemote);
+    }
   }
 
   private async getComponentIdsToSign(
@@ -224,7 +267,9 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const componentsToSign: ComponentID[] = [];
     const componentsToSkip: ComponentID[] = [];
     components.forEach((component) => {
-      if (component.state._consumer.buildStatus === BuildStatus.Succeed) {
+      if (component.state._consumer.buildStatus === BuildStatus.Skipped) {
+        componentsToSkip.push(component.id);
+      } else if (component.state._consumer.buildStatus === BuildStatus.Succeed) {
         rebuild ? componentsToSign.push(component.id) : componentsToSkip.push(component.id);
       } else {
         componentsToSign.push(component.id);
@@ -235,25 +280,34 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
 
   static runtime = MainRuntime;
 
-  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, LanesAspect, SnappingAspect];
+  static dependencies = [
+    CLIAspect,
+    ScopeAspect,
+    LoggerAspect,
+    BuilderAspect,
+    LanesAspect,
+    SnappingAspect,
+    ExportAspect,
+  ];
 
   static slots = [Slot.withType<OnPostSignSlot>()];
 
   static async provider(
-    [cli, scope, loggerMain, builder, lanes, snapping]: [
+    [cli, scope, loggerMain, builder, lanes, snapping, exporter]: [
       CLIMain,
       ScopeMain,
       LoggerMain,
       BuilderMain,
       LanesMain,
-      SnappingMain
+      SnappingMain,
+      ExportMain,
     ],
     _,
     [onPostSignSlot]: [OnPostSignSlot],
     harmony
   ) {
     const logger = loggerMain.createLogger(SignAspect.id);
-    const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes, snapping, harmony);
+    const signMain = new SignMain(scope, logger, builder, onPostSignSlot, lanes, snapping, harmony, exporter);
     cli.register(new SignCmd(signMain, logger));
     return signMain;
   }
