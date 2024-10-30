@@ -2000,10 +2000,18 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async resolveEnvManifest(envId: string): Promise<EnvJsonc> {
     const envComponentId = ComponentID.fromString(envId);
     const resolvedEnvComponentId = await this.resolveComponentId(envComponentId);
-    const envComponent = await this.get(resolvedEnvComponentId, undefined, true, false, {
-      executeLoadSlot: false,
-      loadExtensions: false,
+    // const envComponent = await this.get(resolvedEnvComponentId, undefined, true, false, {
+    //   executeLoadSlot: false,
+    //   loadExtensions: false,
+    // });
+
+    // We need to load the env component with the slot and extensions to get the env manifest of the parent
+    // already resolved
+    const envComponent = await this.get(resolvedEnvComponentId, undefined, true, true, {
+      executeLoadSlot: true,
+      loadExtensions: true,
     });
+
     // TODO: caching this
     const alreadyResolved = this.envs.getEnvManifest(envComponent);
     if (alreadyResolved) return alreadyResolved;
