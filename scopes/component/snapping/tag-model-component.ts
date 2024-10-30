@@ -388,12 +388,22 @@ export async function tagModelComponent({
               const index = selector.indexOf('@', 1);
               const name = selector.substring(0, index);
               const version = selector.substring(index + 1);
-              if (consumerComponent.dependenciesGraph.packages[`${name}@pending:`]) {
-                consumerComponent.dependenciesGraph.packages[`${name}@pending:`].resolution = {
+              const pendingNode = consumerComponent.dependenciesGraph.nodes.find(
+                ({ pkgId }) => pkgId === `${name}@pending:`
+              );
+              if (pendingNode) {
+                pendingNode.attr = pendingNode.attr ?? {};
+                pendingNode.attr.resolution = {
                   integrity,
                 };
                 resolvedVersions.push({ name, version });
               }
+              // if (consumerComponent.dependenciesGraph.packages[`${name}@pending:`]) {
+              // consumerComponent.dependenciesGraph.packages[`${name}@pending:`].resolution = {
+              // integrity,
+              // };
+              // resolvedVersions.push({ name, version });
+              // }
             }
             let s = JSON.stringify(consumerComponent.dependenciesGraph, null, 2);
             for (const { name, version } of resolvedVersions) {

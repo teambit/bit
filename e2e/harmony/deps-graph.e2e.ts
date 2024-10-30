@@ -20,7 +20,7 @@ chai.use(require('chai-fs'));
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe.only('single component', () => {
+  describe('single component', () => {
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -102,7 +102,7 @@ chai.use(require('chai-fs'));
       });
     });
   });
-  describe('two components with different peer dependencies', function () {
+  describe.only('two components with different peer dependencies', function () {
     const env1DefaultPeerVersion = '16.0.0';
     const env2DefaultPeerVersion = '17.0.0';
     let randomStr: string;
@@ -198,7 +198,8 @@ chai.use(require('chai-fs'));
       // console.log(JSON.stringify(depsGraph2, null, 2));
     });
     it('should update integrity of dependency component', () => {
-      expect(depsGraph2.packages[`@ci/${randomStr}.comp1@0.0.1`].resolution.integrity).to.match(/^sha512-/);
+      const node = depsGraph2.nodes.find(({ pkgId }) => pkgId === `@ci/${randomStr}.comp1@0.0.1`);
+      expect(node.attr.resolution.integrity).to.match(/^sha512-/);
     });
     describe('importing a component that depends on another component and was export together with that component', () => {
       before(async () => {
