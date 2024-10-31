@@ -8,7 +8,7 @@ import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/work
 import { compact } from 'lodash';
 import pMapSeries from 'p-map-series';
 import { Source, Version } from '@teambit/legacy/dist/scope/models';
-import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
+import { pathNormalizeToLinux, PathOsBased, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { getFilesDiff } from '@teambit/legacy.component-diff';
 import chalk from 'chalk';
@@ -30,6 +30,8 @@ export type FileLog = {
   fileHash: string;
   parentFileHash?: string;
   fileDiff?: string;
+  hidden?: boolean;
+  parentHashes?: string[];
 };
 
 export type BlameLineInfo = {
@@ -44,6 +46,13 @@ export type BlameLineInfo = {
   tag?: string;
 };
 
+export type LogOpts = {
+  isRemote?: boolean;
+  shortHash?: boolean;
+  shortMessage?: boolean;
+  showHidden?: boolean;
+};
+
 export type FileHashDiffFromParent = {
   filePath: string; // path OS absolute
   hash?: string; // if undefined, the file was deleted in this snap
@@ -56,7 +65,8 @@ export class ComponentLogMain {
   /**
    * get component log sorted by the timestamp in ascending order (from the earliest to the latest)
    */
-  async getLogs(id: string, isRemote?: boolean, shortHash = false, shortMessage = false): Promise<ComponentLog[]> {
+  async getLogs(id: string, options: LogOpts = {}): Promise<ComponentLog[]> {
+    const { isRemote = false, shortHash = false, shortMessage = false } = options;
     if (isRemote) {
       const consumer = this.workspace?.consumer;
       const bitId = ComponentID.fromString(id);
@@ -70,11 +80,11 @@ export class ComponentLogMain {
       log.date = log.date ? moment(new Date(parseInt(log.date))).format('YYYY-MM-DD HH:mm:ss') : undefined;
       log.message = shortMessage ? log.message.split('\n')[0] : log.message;
     });
-    return logs;
+    return options.showHidden ? logs : logs.filter((l) => !l.hidden);
   }
 
-  async getLogsWithParents(id: string, fullHash = false, fullMessage = false) {
-    const logs = await this.getLogs(id, false, !fullHash, !fullMessage);
+  async getLogsWithParents(id: string, options: LogOpts) {
+    const logs = await this.getLogs(id, options);
     const graph = buildSnapGraph(logs);
     const sorted = graph.toposort();
     return sorted.map((node) => this.stringifyLogInfoOneLine(node.attr));
@@ -131,7 +141,7 @@ export class ComponentLogMain {
 
     const rootDir = workspace.componentDir(componentId, undefined);
 
-    const logs = await this.getLogs(componentId.toString());
+    const logs = await this.getLogs(componentId.toString(), { showHidden: true });
 
     const filePathAsLinux = pathNormalizeToLinux(filePath);
     const filePathRelativeInComponent = filePathAsLinux.replace(`${rootDir}/`, '');
@@ -177,20 +187,34 @@ export class ComponentLogMain {
           message: logItem.message,
           fileHash,
           parentFileHash: getParentFileHash(),
+          hidden: logItem.hidden,
+          parentHashes: versionObj?.parents.map((p) => p.toString()),
         });
       },
       { concurrency: 100 }
     );
 
     // remove entries that their fileHash is the same as their parent.
-    return results.filter((r) => r.fileHash !== r.parentFileHash);
+    // however, if their parent is hidden, because they're going to be removed, use their parents.
+    results.forEach((result) => {
+      const parents = result.parentHashes || [];
+      if (parents.length !== 1) return;
+      const onlyParent = parents[0];
+      const parentResult = results.find((r) => r.hash === onlyParent);
+      if (parentResult && parentResult.hidden) {
+        result.parentFileHash = parentResult.parentFileHash;
+      }
+    });
+    return results.filter((r) => !r.hidden).filter((r) => r.fileHash !== r.parentFileHash);
   }
 
-  async blame(filePath: string): Promise<BlameLineInfo[]> {
+  async blame(filePath: PathOsBased): Promise<BlameLineInfo[]> {
     const workspace = this.workspace;
     if (!workspace) throw new OutsideWorkspaceError();
     const absPath = path.isAbsolute(filePath) ? filePath : workspace.consumer.toAbsolutePath(filePath);
     const reversedLogs = await this.getFileHistoryHashes(absPath);
+    if (!reversedLogs.length) return [];
+    // reverse order so it'll be from newer to older
     const logs = reversedLogs.reverse();
 
     const getFileContent = async (hash: string) => {

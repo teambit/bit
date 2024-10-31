@@ -364,7 +364,8 @@ if you're willing to lose the history from the head to the specified version, us
         scope: this.scope.legacyScope,
         ids: componentIds,
         idsWithFutureScope: componentIds,
-        allVersions: false,
+        exportHeadsOnly: true,
+        includeParents: true, // in order to export the previous snaps with "hidden" prop changed.
         exportOrigin: 'tag',
       });
       exportedIds = exported;
