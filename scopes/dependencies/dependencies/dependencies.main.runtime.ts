@@ -414,7 +414,7 @@ export class DependenciesMain {
     AspectLoaderMain,
     ScopeMain,
     GraphMain,
-    LoggerMain,
+    LoggerMain
   ]) {
     const logger = loggerMain.createLogger(DependenciesAspect.id);
     const depsMain = new DependenciesMain(workspace, scope, depsResolver, devFiles, aspectLoader, graph, logger);

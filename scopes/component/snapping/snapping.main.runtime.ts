@@ -1523,7 +1523,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     DependenciesMain,
     ApplicationMain,
     ForkingMain,
-    InstallMain,
+    InstallMain
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(

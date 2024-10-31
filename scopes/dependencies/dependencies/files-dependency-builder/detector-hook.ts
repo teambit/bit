@@ -3,6 +3,8 @@ export type FileContext = {
    * extension of the file. (e.g. `.js`, '.jsx', '.ts', etc.)
    */
   ext: string;
+
+  filename: string;
 };
 
 export type DependencyContext = {
@@ -51,18 +53,20 @@ export interface DependencyDetector {
 export class DetectorHook {
   static hooks: DependencyDetector[] = [];
 
-  isSupported(ext: string): boolean {
+  isSupported(ext: string, filename: string): boolean {
     return !!DetectorHook.hooks.find((hook) => {
       return hook.isSupported({
         ext,
+        filename,
       });
     });
   }
 
-  getDetector(ext: string): DependencyDetector | undefined {
+  getDetector(ext: string, filename: string): DependencyDetector | undefined {
     return DetectorHook.hooks.find((hook) => {
       return hook.isSupported({
         ext,
+        filename,
       });
     });
   }
