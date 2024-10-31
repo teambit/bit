@@ -128,9 +128,11 @@ export class Filter {
     const compIds = ComponentIdList.fromArray(ids);
     const componentsFromModel = await this.getModelComps(ids);
     const compsDuringMerge = this.byDuringMergeState();
+    const localOnly = this.workspace.listLocalOnly();
     const comps = componentsFromModel
       .filter((c) => compIds.hasWithoutVersion(c.toComponentId()))
       .filter((c) => !compsDuringMerge.hasWithoutVersion(c.toComponentId()))
+      .filter((c) => !localOnly.hasWithoutVersion(c.toComponentId()))
       .filter((c) => c.isHeadSnap());
     return comps.map((c) => c.toComponentIdWithHead());
   }

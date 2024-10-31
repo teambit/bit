@@ -644,8 +644,12 @@ export default class CommandHelper {
     return this.runCmd(`bit revert ${pattern} ${to} ${flags}`);
   }
 
-  stash() {
-    return this.runCmd('bit stash save');
+  stash(flags = '') {
+    return this.runCmd(`bit stash save ${flags}`);
+  }
+
+  stashList(flags = '') {
+    return this.runCmd(`bit stash list ${flags}`);
   }
 
   stashLoad(flags = '') {
@@ -831,6 +835,9 @@ export default class CommandHelper {
       });
     });
     return this.runCmd(`bit _snap '${JSON.stringify(data)}' ${options}`, cwd);
+  }
+  snapFork(data: Record<string, any>, options = '') {
+    return this.snapFromScope(this.scopes.localPath, data, options);
   }
   snapFromScopeParsed(cwd: string, data: Record<string, any>, options = '') {
     const output = this.snapFromScope(cwd, data, `${options} --json`);

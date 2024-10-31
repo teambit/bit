@@ -16,6 +16,7 @@ import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';
 import { DebugDependencies, FileType } from './auto-detect-deps';
 import { Logger } from '@teambit/logger';
+import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -77,6 +78,23 @@ export class ApplyOverrides {
     this.debugDependenciesData = { components: [] };
   }
 
+  private async setOverridesDependencies() {
+    const overrides = await this.getOverridesData();
+    this.component.overrides = overrides;
+  }
+
+  private async getOverridesData() {
+    if (this.component.overrides) return this.component.overrides;
+    const overrides = await ComponentOverrides.loadFromConsumer(
+      this.component.id,
+      this.workspace!.consumer.config,
+      this.component.componentFromModel?.overrides,
+      this.component.bitJson!,
+      this.component.files
+    );
+    return overrides;
+  }
+
   get consumer(): Consumer | undefined {
     return this.workspace?.consumer;
   }
@@ -86,6 +104,7 @@ export class ApplyOverrides {
     overridesDependencies: OverridesDependencies;
     autoDetectOverrides?: Record<string, any>;
   }> {
+    await this.setOverridesDependencies();
     await this.populateDependencies();
     const dependenciesData = new DependenciesData(
       this.allDependencies,

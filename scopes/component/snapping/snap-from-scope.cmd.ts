@@ -23,6 +23,8 @@ export type SnapDataPerCompRaw = {
     type?: 'runtime' | 'dev' | 'peer'; // default "runtime".
   }>;
   removeDependencies?: string[];
+  forkFrom?: string; // origin id to fork from. the componentId is the new id. (no need to populate isNew prop).
+  version?: string; // relevant when passing "--tag". optionally, specify the semver to tag. default to "patch".
 };
 
 type SnapFromScopeOptions = {
@@ -31,6 +33,7 @@ type SnapFromScopeOptions = {
   ignoreIssues?: string;
   disableSnapPipeline?: boolean;
   updateDependents?: boolean;
+  tag?: boolean;
 } & BasicTagSnapParams;
 
 export class SnapFromScopeCmd implements Command {
@@ -53,6 +56,8 @@ the input data is a stringified JSON of an array of the following object.
     type?: 'runtime' | 'dev' | 'peer'; // default "runtime".
   }>;
   removeDependencies?: string[]; // component-id (for components) or package-name (for packages) to remove from the dependencies.
+  forkFrom?: string;      // origin id to fork from. the componentId is the new id. (no need to populate isNew prop).
+  version?: string; // relevant when passing "--tag". optionally, specify the semver to tag. default to "patch".
 }
 an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "first snap"}]'
 `;
@@ -78,6 +83,8 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       'update-dependents',
       'when snapped on a lane, mark it as update-dependents so it will be skipped from the workspace',
     ],
+    ['', 'tag', 'make a tag instead of a snap'],
+    ['', 'stream', 'relevant for --json only. stream loader as json strings'],
     ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;
@@ -112,6 +119,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       ignoreBuildErrors = false,
       rebuildDepsGraph,
       updateDependents,
+      tag,
     }: SnapFromScopeOptions
   ) {
     const disableTagAndSnapPipelines = disableSnapPipeline;
@@ -135,6 +143,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       ignoreBuildErrors,
       rebuildDepsGraph,
       updateDependents,
+      tag,
     });
 
     return {

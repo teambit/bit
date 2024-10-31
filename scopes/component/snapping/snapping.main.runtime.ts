@@ -61,7 +61,9 @@ import {
 } from './reset-component';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
-import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
+import { createLane, createLaneInScope } from '@teambit/lanes.modules.create-lane';
+import { ForkingAspect, ForkingMain } from '@teambit/forking';
+import { InstallAspect, InstallMain } from '@teambit/install';
 
 export type TagDataPerComp = {
   componentId: ComponentID;
@@ -86,6 +88,7 @@ export type SnapDataParsed = {
     type: 'runtime' | 'dev' | 'peer';
   }[];
   removeDependencies?: string[];
+  forkFrom?: ComponentID;
 };
 
 export type SnapResults = BasicTagResults & {
@@ -127,7 +130,9 @@ export class SnappingMain {
     private builder: BuilderMain,
     private importer: ImporterMain,
     private deps: DependenciesMain,
-    private application: ApplicationMain
+    private application: ApplicationMain,
+    private forking: ForkingMain,
+    private install: InstallMain
   ) {
     this.objectsRepo = this.scope?.legacyScope?.objects;
   }
@@ -376,6 +381,188 @@ if you're willing to lose the history from the head to the specified version, us
     };
   }
 
+  async forkAndSnap(
+    snapDataPerCompRaw: SnapDataPerCompRaw[],
+    params: {
+      push?: boolean;
+      ignoreIssues?: string;
+      lane?: string;
+      updateDependents?: boolean;
+      tag?: boolean;
+    } & Partial<BasicTagParams>
+  ): Promise<SnapFromScopeResults> {
+    const allAreForkedFrom = snapDataPerCompRaw.every((s) => s.forkFrom);
+    if (!allAreForkedFrom) {
+      throw new BitError(`when forkedFrom prop is used, all components must have the forkedFrom prop`);
+    }
+    let lane: Lane | undefined;
+    const laneIdStr = params.lane;
+    if (laneIdStr) {
+      const laneId = LaneId.parse(laneIdStr);
+      try {
+        lane = await this.importer.importLaneObject(laneId);
+      } catch (err: any) {
+        if (err.constructor.name !== LaneNotFound.name) throw err;
+        // if the lane is not found, it's probably because it's new. create a new lane.
+        lane = await createLane(this.workspace, laneId.name, laneId.scope);
+      }
+    }
+    const snapDataPerComp = snapDataPerCompRaw.map((snapData) => {
+      return {
+        componentId: ComponentID.fromString(snapData.componentId),
+        dependencies: snapData.dependencies || [],
+        aspects: snapData.aspects,
+        message: snapData.message,
+        files: snapData.files,
+        isNew: snapData.isNew,
+        mainFile: snapData.mainFile,
+        newDependencies: (snapData.newDependencies || []).map((dep) => ({
+          id: dep.id,
+          version: dep.version,
+          isComponent: dep.isComponent ?? true,
+          type: dep.type ?? 'runtime',
+        })),
+        removeDependencies: snapData.removeDependencies,
+        forkFrom: ComponentID.fromString(snapData.forkFrom!),
+        version: snapData.version,
+      };
+    });
+
+    // console.log('snapDataPerComp', JSON.stringify(snapDataPerComp, undefined, 2));
+
+    const allCompIds = snapDataPerComp.map((s) => s.componentId);
+    const forkedFromData = compact(snapDataPerComp.map((t) => (t.forkFrom ? t : null)));
+    const forkMultipleData: Array<{
+      sourceId: string;
+      targetId?: string;
+      targetScope?: string;
+      env?: string;
+    }> = forkedFromData.map((f) => ({
+      sourceId: f.forkFrom!.toString(),
+      targetId: f.componentId.fullName,
+      targetScope: f.componentId.scope,
+    }));
+    const forkResults = await this.forking.forkMultipleFromRemote(forkMultipleData, { refactor: true });
+    const newEnvData: Record<string, ComponentID[]> = {};
+    forkedFromData.forEach((f) => {
+      const bitmapElem = this.workspace.bitMap.getBitmapEntry(f.componentId);
+      // @ts-ignore
+      const env = bitmapElem?.config?.['teambit.envs/envs'].env;
+      if (!env) return;
+      const found = forkedFromData.find((fo) => fo.forkFrom?.toStringWithoutVersion() === env);
+      if (!found) return;
+      const newEnvStr = found.componentId.toString();
+      if (!newEnvData[newEnvStr]) newEnvData[newEnvStr] = [];
+      newEnvData[newEnvStr].push(f.componentId);
+    });
+    await pMapSeries(Object.entries(newEnvData), async ([env, compIds]) => {
+      await this.workspace.setEnvToComponents(ComponentID.fromString(env), compIds, false);
+    });
+    const getSnapData = (id: ComponentID): SnapDataParsed => {
+      const snapData = snapDataPerComp.find((t) => {
+        return t.componentId.isEqual(id, { ignoreVersion: true });
+      });
+      if (!snapData) throw new Error(`unable to find ${id.toString()} in snapDataPerComp`);
+      return snapData;
+    };
+    const newForkedComponents = await this.workspace.getMany(forkResults.map((f) => f.targetCompId));
+
+    await Promise.all(
+      newForkedComponents.map(async (comp) => {
+        const snapData = getSnapData(comp.id);
+        if (snapData.files?.length) {
+          await this.updateSourceFiles(comp, snapData.files);
+          await this.workspace.write(comp);
+        }
+        if (snapData.aspects) {
+          const bitmapElem = this.workspace.bitMap.getBitmapEntry(comp.id);
+          if (!bitmapElem) throw new Error(`unable to find ${comp.id.toString()} in the bitmap`);
+          const currentConfig = bitmapElem.config;
+          if (!currentConfig) {
+            this.workspace.bitMap.setEntireConfig(comp.id, snapData.aspects);
+            return;
+          }
+          const currentEnvSettings = currentConfig['teambit.envs/envs'];
+          const currentEnv = currentEnvSettings !== '-' && currentEnvSettings.env;
+          const newEnv = snapData.aspects['teambit.envs/envs']?.env;
+          if (!currentEnv || !newEnv) {
+            this.workspace.bitMap.setEntireConfig(comp.id, { ...currentConfig, ...snapData.aspects });
+            return;
+          }
+          const currentEnvWithPotentialVer = Object.keys(currentConfig).find(
+            (c) => c === currentEnv || c.startsWith(`${currentEnv}@`)
+          );
+          if (currentEnvWithPotentialVer) delete currentConfig[currentEnvWithPotentialVer];
+          delete currentConfig['teambit.envs/envs'];
+          this.workspace.bitMap.setEntireConfig(comp.id, { ...currentConfig, ...snapData.aspects });
+        }
+      })
+    );
+    await this.workspace.bitMap.write();
+    // if you don't clear the cache here, the installation assumes all components have the old env.
+    await this.workspace.clearCache();
+    await this.install.install(undefined, {
+      dedupe: true,
+      import: false,
+      copyPeerToRuntimeOnRoot: true,
+      copyPeerToRuntimeOnComponents: false,
+      updateExisting: false,
+    });
+    // if we don't clear the cache here, the "build" process during tag doesn't install the necessary packages
+    // on the capsules.
+    await this.workspace.clearCache();
+    const components = await this.workspace.getMany(forkedFromData.map((f) => f.componentId));
+
+    const consumerComponents = components.map((c) => c.state._consumer);
+    const ids = ComponentIdList.fromArray(allCompIds);
+    await this.throwForVariousIssues(components, params.ignoreIssues);
+    const shouldTag = Boolean(params.tag);
+    const results = await tagModelComponent({
+      ...params,
+      scope: this.scope,
+      consumerComponents,
+      tagDataPerComp: snapDataPerComp.map((s) => ({
+        componentId: s.componentId,
+        message: s.message,
+        dependencies: [],
+        versionToTag: shouldTag ? s.version || 'patch' : undefined,
+      })),
+      snapping: this,
+      builder: this.builder,
+      dependencyResolver: this.dependencyResolver,
+      skipAutoTag: true,
+      persist: true,
+      isSnap: !shouldTag,
+      ids,
+      message: params.message as string,
+      updateDependentsOnLane: params.updateDependents,
+    });
+
+    const { taggedComponents } = results;
+    let exportedIds: ComponentIdList | undefined;
+    if (params.push) {
+      const updatedLane = lane ? await this.scope.legacyScope.loadLane(lane.toLaneId()) : undefined;
+      const { exported } = await this.exporter.exportMany({
+        scope: this.scope.legacyScope,
+        ids,
+        idsWithFutureScope: ids,
+        allVersions: false,
+        laneObject: updatedLane,
+        // no need other snaps. only the latest one. without this option, when snapping on lane from another-scope, it
+        // may throw an error saying the previous snaps don't exist on the filesystem.
+        // (see the e2e - "snap on a lane when the component is new to the lane and the scope")
+        exportHeadsOnly: true,
+      });
+      exportedIds = exported;
+    }
+
+    return {
+      snappedComponents: taggedComponents,
+      snappedIds: taggedComponents.map((comp) => comp.id),
+      exportedIds,
+    };
+  }
+
   async snapFromScope(
     snapDataPerCompRaw: SnapDataPerCompRaw[],
     params: {
@@ -383,8 +570,11 @@ if you're willing to lose the history from the head to the specified version, us
       ignoreIssues?: string;
       lane?: string;
       updateDependents?: boolean;
+      tag?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<SnapFromScopeResults> {
+    const hasForkedFrom = snapDataPerCompRaw.some((s) => s.forkFrom);
+    if (hasForkedFrom) return this.forkAndSnap(snapDataPerCompRaw, params);
     if (this.workspace) {
       throw new BitError(
         `unable to run this command from a workspace, please create a new bare-scope and run it from there`
@@ -427,6 +617,7 @@ if you're willing to lose the history from the head to the specified version, us
           type: dep.type ?? 'runtime',
         })),
         removeDependencies: snapData.removeDependencies,
+        version: snapData.version,
       };
     });
 
@@ -499,6 +690,7 @@ if you're willing to lose the history from the head to the specified version, us
 
     const consumerComponents = components.map((c) => c.state._consumer);
     const ids = ComponentIdList.fromArray(allCompIds);
+    const shouldTag = Boolean(params.tag);
     const results = await tagModelComponent({
       ...params,
       scope: this.scope,
@@ -507,13 +699,14 @@ if you're willing to lose the history from the head to the specified version, us
         componentId: s.componentId,
         message: s.message,
         dependencies: [],
+        versionToTag: shouldTag ? s.version || 'patch' : undefined,
       })),
       snapping: this,
       builder: this.builder,
       dependencyResolver: this.dependencyResolver,
       skipAutoTag: true,
       persist: true,
-      isSnap: true,
+      isSnap: !shouldTag,
       ids,
       message: params.message as string,
       updateDependentsOnLane: params.updateDependents,
@@ -1113,7 +1306,7 @@ another option, in case this dependency is not in main yet is to remove all refe
         }
         return;
       }
-      const currentFile = currentFiles.find((f) => f.path === file.path);
+      const currentFile = currentFiles.find((f) => f.relative === file.path);
       if (currentFile) {
         currentFile.contents = Buffer.from(file.content);
       } else {
@@ -1294,6 +1487,8 @@ another option, in case this dependency is not in main yet is to remove all refe
     GlobalConfigAspect,
     DependenciesAspect,
     ApplicationAspect,
+    ForkingAspect,
+    InstallAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1310,6 +1505,8 @@ another option, in case this dependency is not in main yet is to remove all refe
     globalConfig,
     deps,
     application,
+    forking,
+    install,
   ]: [
     Workspace,
     CLIMain,
@@ -1324,6 +1521,8 @@ another option, in case this dependency is not in main yet is to remove all refe
     GlobalConfigMain,
     DependenciesMain,
     ApplicationMain,
+    ForkingMain,
+    InstallMain,
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(
@@ -1337,7 +1536,9 @@ another option, in case this dependency is not in main yet is to remove all refe
       builder,
       importer,
       deps,
-      application
+      application,
+      forking,
+      install
     );
     const snapCmd = new SnapCmd(snapping, logger, globalConfig);
     const tagCmd = new TagCmd(snapping, logger, globalConfig);

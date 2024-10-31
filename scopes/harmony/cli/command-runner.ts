@@ -74,7 +74,10 @@ export class CommandRunner {
     const code = result.code || 0;
     const data = result.data || result;
     if (shouldReturnResult) return { data, exitCode: code };
-    await this.writeAndExit(JSON.stringify(data, null, 2), code);
+    const isJsonStream = Boolean(this.flags.stream);
+    if (isJsonStream) data.end = true;
+    const jsonStr = isJsonStream ? `${JSON.stringify(data)}\n` : JSON.stringify(data, null, 2);
+    await this.writeAndExit(jsonStr, code);
   }
 
   private async runReportHandler(shouldReturnResult = false): Promise<CommandResult | undefined> {

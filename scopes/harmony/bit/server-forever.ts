@@ -9,7 +9,7 @@
 
 import net from 'net';
 import crypto from 'crypto';
-import { spawn } from 'node-pty';
+import { spawn } from '@lydell/node-pty';
 
 export function spawnPTY() {
   // Create a PTY (terminal emulation) running the 'bit server' process
