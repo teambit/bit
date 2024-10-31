@@ -34,6 +34,7 @@ type FileInfo = {
   content: string | object;
   type: string;
   ast: any;
+  filename: string;
 };
 
 type Options = {
@@ -102,6 +103,7 @@ const getFileInfo = (filename: string): FileInfo => {
     type: '',
     // initialized with the content
     ast: content,
+    filename,
   };
 };
 
@@ -112,13 +114,13 @@ const getFileInfo = (filename: string): FileInfo => {
  * JavaScript or unknown content. We can deal with it later.
  */
 const getDetector = (fileInfo: FileInfo, options?: Options): Detective | undefined => {
-  const { ext } = fileInfo;
+  const { ext, filename } = fileInfo;
   const normalizedOptions: Options = options || {};
 
   // from env detectors
   if (options?.envDetectors) {
     for (const detector of options.envDetectors) {
-      if (detector.isSupported({ ext })) {
+      if (detector.isSupported({ ext, filename })) {
         fileInfo.type = detector.type || '';
         return detector.detect as Detective;
       }
@@ -140,8 +142,8 @@ const getDetector = (fileInfo: FileInfo, options?: Options): Detective | undefin
   }
 
   // from global detector hook (legacy)
-  if (detectorHook.isSupported(ext)) {
-    const detector = detectorHook.getDetector(ext);
+  if (detectorHook.isSupported(ext, filename)) {
+    const detector = detectorHook.getDetector(ext, filename);
     if (detector) {
       fileInfo.type = ext;
       typeToDetective[ext] = detector.detect as Detective;
@@ -210,41 +212,8 @@ const getDepsFromFile = (filename: string, options?: Options): string[] => {
   return normalizeDeps(deps, normalizedOptions?.includeCore);
 };
 
-/**
- * Finds the list of dependencies for the given file
- *
- * @param {String|Object} content - File's content or AST
- * @param {Object} [options]
- * @param {String} [options.type] - The type of content being passed in. Useful if you want to use a non-js detective
- * @return {String[]}
- */
-// eslint-disable-next-line complexity
-const precinct = (content: string | object, options?: string | Options): BuiltinDeps => {
-  // Legacy form backCompat where type was the second parameter
-  const normalizedOptions: Options = typeof options === 'string' ? { type: options } : options || {};
-  const type = normalizedOptions.type || '';
-
-  debug('options given: ', normalizedOptions);
-
-  const fileInfo: FileInfo = {
-    content,
-    ast: content,
-    ext: type ? '' : '.js',
-    type,
-  };
-
-  const detective = getDetector(fileInfo, normalizedOptions) || getJsDetector(fileInfo, normalizedOptions);
-  if (!detective) {
-    return [];
-  }
-
-  const deps = detective(fileInfo.ast, normalizedOptions[fileInfo.type]);
-  // @ts-ignore
-  precinct.ast = detective.ast || fileInfo.ast;
-
-  return deps;
+const precinct = {
+  paperwork: getDepsFromFile,
 };
-
-precinct.paperwork = getDepsFromFile;
 
 export default precinct;
