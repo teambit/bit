@@ -237,6 +237,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     throwForMissingArtifacts,
     isOnMain = true,
     exportHeadsOnly, // relevant when exporting from bare-scope, especially when re-exporting existing versions, the normal calculation based on getDivergeData won't work
+    includeParents, // relevant when exportHeadsOnly is used. sometimes the parents head are needed as well
     filterOutExistingVersions, // go to the remote and check whether the version exists there. if so, don't export it
     exportOrigin = 'export',
   }: {
@@ -250,6 +251,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     throwForMissingArtifacts?: boolean;
     isOnMain?: boolean;
     exportHeadsOnly?: boolean;
+    includeParents?: boolean;
     filterOutExistingVersions?: boolean;
     exportOrigin?: ExportOrigin;
   }): Promise<{
@@ -325,10 +327,15 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       if (exportHeadsOnly) {
         const head =
           laneObject?.getCompHeadIncludeUpdateDependents(modelComponent.toComponentId()) || modelComponent.head;
-        if (!head)
+        if (!head) {
           throw new Error(
             `getVersionsToExport should export the head only, but the head of ${modelComponent.id()} is missing`
           );
+        }
+        if (includeParents) {
+          const headVersion = await modelComponent.loadVersion(head.toString(), scope.objects);
+          return [head, ...headVersion.parents];
+        }
         return [head];
       }
       const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects);

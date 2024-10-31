@@ -1,4 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
+import chalk from 'chalk';
 import { ComponentLogMain } from './component-log.main.runtime';
 import { getEmptyTableWithoutStyle } from './log-cmd';
 
@@ -14,6 +15,7 @@ export class BlameCmd implements Command {
 
   async report([filePath]: [string], { includeMessage = false }: { includeMessage?: boolean }) {
     const results = await this.componentLog.blame(filePath);
+    if (!results.length) return chalk.yellow('no results found');
     const table = getEmptyTableWithoutStyle();
     results.forEach(({ hash, tag, username, date, message, lineNumber, lineContent }) => {
       const shortHash = hash.substring(0, 9);
