@@ -11,7 +11,7 @@ import docsParser from '../../jsdoc/parser';
 import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
 import { ScopeListItem } from '../../scope/models/model-component';
-import Version, { DepEdge, Log } from '../../scope/models/version';
+import Version, { DepEdge, Log, DependenciesGraph } from '../../scope/models/version';
 import { pathNormalizeToLinux, PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { ComponentMap } from '@teambit/legacy.bit-map';
@@ -100,7 +100,7 @@ export default class Component {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
   peerDependencies: Dependencies;
-  dependenciesGraph: any;
+  dependenciesGraph?: DependenciesGraph;
   flattenedDependencies: ComponentIdList;
   flattenedEdges: DepEdge[];
   packageDependencies: Record<string, string>;

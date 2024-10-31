@@ -52,6 +52,38 @@ type ExternalHead = { head: Ref; laneId: LaneId };
 type SquashData = { previousParents: Ref[]; laneId: LaneId };
 type VersionOrigin = { id: { scope: string; name: string }; lane?: { scope: string; name: string; hash: string } };
 
+export type DependencyNode = {
+  pkgId: string;
+  attr: {
+    component?: {
+      scope: string;
+      name: string;
+    };
+    resolution: {
+      integrity: string;
+    };
+  };
+};
+
+export type DependencyEdge = {
+  id: string;
+  neighbours: DependencyNeighbour[];
+  attr: {
+    pkgId: string;
+  };
+};
+
+export type DependencyNeighbour = {
+  id: string;
+  type: 'prod' | 'optional';
+};
+
+export type DependenciesGraph = {
+  directDependencies: {};
+  nodes: DependencyNode[];
+  edges: DependencyEdge[];
+};
+
 export type VersionProps = {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
@@ -100,7 +132,7 @@ export default class Version extends BitObject {
   peerDependencies: Dependencies;
   flattenedDependencies: ComponentIdList;
   dependenciesGraphRef?: Ref;
-  _dependenciesGraph?: any; // caching for the dependencies graph
+  _dependenciesGraph?: DependenciesGraph; // caching for the dependencies graph
   flattenedEdgesRef?: Ref; // ref to a BitObject Source file, which is a JSON object containing the flattened edge
   _flattenedEdges?: DepEdge[]; // caching for the flattenedEdges
   /**

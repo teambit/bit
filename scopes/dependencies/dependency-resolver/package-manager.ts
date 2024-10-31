@@ -1,6 +1,7 @@
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
 import { ComponentMap } from '@teambit/component';
+import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
 import { Registries } from './registry';
 import { DepsFilterFn } from './manifest';
 import { NetworkConfig, ProxyConfig } from './dependency-resolver.main.runtime';
@@ -132,7 +133,7 @@ export type PackageManagerInstallOptions = {
    */
   returnListOfDepsRequiringBuild?: boolean;
 
-  dependenciesGraph?: any;
+  dependenciesGraph?: DependenciesGraph;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -214,5 +215,5 @@ export interface PackageManager {
     componentRootDir: string,
     pkgName: string,
     componentRelativeDir: string
-  ): Promise<any>;
+  ): Promise<DependenciesGraph>;
 }

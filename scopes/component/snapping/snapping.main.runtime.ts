@@ -786,12 +786,14 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
             this.workspace.rootComponentsPath,
             consumerComponent.componentMap.rootDir
           );
-        }
-        for (const node of consumerComponent.dependenciesGraph.nodes) {
-          if (node.pkgId.includes('@pending:')) {
-            const parsed = dp.parse(node.pkgId);
-            if (parsed.name && componentIdByPkgName.has(parsed.name)) {
-              node.attr.component = componentIdByPkgName.get(parsed.name);
+          if (consumerComponent.dependenciesGraph) {
+            for (const node of consumerComponent.dependenciesGraph.nodes) {
+              if (node.pkgId.includes('@pending:')) {
+                const parsed = dp.parse(node.pkgId);
+                if (parsed.name && componentIdByPkgName.has(parsed.name)) {
+                  node.attr.component = componentIdByPkgName.get(parsed.name);
+                }
+              }
             }
           }
         }

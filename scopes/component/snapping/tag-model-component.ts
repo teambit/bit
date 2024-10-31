@@ -385,6 +385,7 @@ export async function tagModelComponent({
           if (consumerComponent.dependenciesGraph) {
             const resolvedVersions: Array<{ name: string; version: string }> = [];
             for (const [selector, integrity] of packageIntegritiesByPublishedPackages.entries()) {
+              if (integrity == null) continue;
               const index = selector.indexOf('@', 1);
               const name = selector.substring(0, index);
               const version = selector.substring(index + 1);

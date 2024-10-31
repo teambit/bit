@@ -42,6 +42,7 @@ import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-conve
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
+import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
 
 export type { RebuildFn };
 
@@ -78,7 +79,7 @@ export class PnpmPackageManager implements PackageManager {
   ) {}
 
   async dependenciesGraphToLockfile(
-    dependenciesGraph: any,
+    dependenciesGraph: DependenciesGraph,
     manifests: Record<string, ProjectManifest>,
     rootDir: string
   ) {
@@ -404,7 +405,7 @@ export class PnpmPackageManager implements PackageManager {
     componentRootDir: string,
     pkgName: string,
     componentRelativeDir: string
-  ): Promise<any> {
+  ): Promise<DependenciesGraph> {
     const lockfile = await readWantedLockfile(workspaceDir, { ignoreIncompatible: false });
     if (!lockfile) {
       throw new BitError('Cannot get the depednency graph without a lockfile. Try running "bit install".');

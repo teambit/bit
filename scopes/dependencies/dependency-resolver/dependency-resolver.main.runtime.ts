@@ -22,6 +22,7 @@ import {
   CFG_ISOLATED_SCOPE_CAPSULES,
   getCloudDomain,
 } from '@teambit/legacy/dist/constants';
+import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { DetectorHook } from '@teambit/dependencies';
@@ -565,7 +566,7 @@ export class DependencyResolverMain {
     workspaceDir: string,
     rootComponentsPath: string,
     componentRelativeDir: string
-  ): Promise<any> {
+  ): Promise<DependenciesGraph | undefined> {
     const dirInEnvRoot = this.getComponentDirInBitRoots(component, {
       workspacePath: workspaceDir,
       rootComponentsPath,
