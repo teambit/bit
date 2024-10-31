@@ -45,6 +45,10 @@ export type Target = {
    */
   components: Component[];
 
+  componentDirectoryMap?: {
+    [componentId: string]: string;
+  };
+
   /**
    * output path of the target
    */
