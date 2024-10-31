@@ -323,6 +323,11 @@ export class APIForIDE {
     return results;
   }
 
+  async blame(filePath: string) {
+    const results = await this.componentLog.blame(filePath);
+    return results;
+  }
+
   async changedFilesFromParent(id: string): Promise<FileHashDiffFromParent[]> {
     const results = await this.componentLog.getChangedFilesFromParent(id);
     return results;

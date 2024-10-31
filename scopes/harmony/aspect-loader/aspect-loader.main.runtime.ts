@@ -61,6 +61,7 @@ export type LoadExtByManifestContext = {
 export type LoadExtByManifestOptions = {
   throwOnError?: boolean;
   hideMissingModuleError?: boolean;
+  ignoreErrorFunc?: (err: Error) => boolean;
   ignoreErrors?: boolean;
   /**
    * If this is enabled then we will show loading error only once for a given extension
@@ -782,6 +783,8 @@ export class AspectLoaderMain {
       if (mergedOptions.ignoreErrors) return;
       if ((e.code === 'MODULE_NOT_FOUND' || e.code === 'ERR_MODULE_NOT_FOUND') && mergedOptions.hideMissingModuleError)
         return;
+
+      if (mergedOptions.ignoreErrorFunc && mergedOptions.ignoreErrorFunc(e)) return;
       // TODO: improve texts
       const errorMsg = e.message.split('\n')[0];
       const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids, errorMsg, neededFor);
@@ -881,7 +884,7 @@ export class AspectLoaderMain {
     [onAspectLoadErrorSlot, onLoadRequireableExtensionSlot, pluginSlot]: [
       OnAspectLoadErrorSlot,
       OnLoadRequireableExtensionSlot,
-      PluginDefinitionSlot,
+      PluginDefinitionSlot
     ],
     harmony: Harmony
   ) {

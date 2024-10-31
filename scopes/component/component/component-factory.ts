@@ -31,6 +31,12 @@ export type LoadAspectsOptions = {
   (considering throwOnError as well) */
   hideMissingModuleError?: boolean;
 
+  /* The `ignoreErrorFunc` property is an optional parameter that can be passed to the `LoadAspectsOptions` object in
+  the `ComponentFactory` interface. If provided, it will be called with the error that occurred during the loading of
+  aspects. If the function returns `true`, the method will ignore the error and continue loading the other aspects.
+  If the function returns `false`, the method will print/throw the error. */
+  ignoreErrorFunc?: (err: Error) => boolean;
+
   /* The `ignoreErrors` property is an optional boolean parameter that can be passed to the `LoadAspectsOptions` object in
   the `ComponentFactory` interface. If set to `true`, it will cause the `loadAspects` method to ignore any errors that
   occur during the loading of aspects and continue loading the other aspects. If set to `false` or not provided, the
