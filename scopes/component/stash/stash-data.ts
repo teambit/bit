@@ -10,10 +10,7 @@ export type StashDataObj = {
 };
 
 export class StashData {
-  constructor(
-    readonly metadata: StashMetadata,
-    readonly stashCompsData: StashCompData[]
-  ) {}
+  constructor(readonly metadata: StashMetadata, readonly stashCompsData: StashCompData[]) {}
 
   toObject(): StashDataObj {
     return {
