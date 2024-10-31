@@ -1,7 +1,7 @@
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-converter';
 import { expect } from 'chai';
 
-describe.only('convertLockfileToGraph', () => {
+describe('convertLockfileToGraph simple case', () => {
   const lockfile = {
     lockfileVersion: '9.0',
     snapshots: {
@@ -14,6 +14,13 @@ describe.only('convertLockfileToGraph', () => {
     },
     packages: {
       'foo@1.0.0': {
+        engines: {
+          node: '>=8',
+          npm: '>=6',
+        },
+        hasBin: true,
+        os: ['darwin'],
+        cpu: ['arm64'],
         resolution: {
           integrity: 'sha512-000',
         },
@@ -47,6 +54,13 @@ describe.only('convertLockfileToGraph', () => {
       {
         pkgId: 'foo@1.0.0',
         attr: {
+          engines: {
+            node: '>=8',
+            npm: '>=6',
+          },
+          hasBin: true,
+          os: ['darwin'],
+          cpu: ['arm64'],
           resolution: {
             integrity: 'sha512-000',
           },

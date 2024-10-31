@@ -15,6 +15,7 @@ import { Doclet } from '../../jsdoc/types';
 import logger from '../../logger/logger';
 import { getStringifyArgs, PathLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
+import { PackageInfo } from '@pnpm/lockfile.types';
 import VersionInvalid from '../exceptions/version-invalid';
 import { BitObject, Ref } from '../objects';
 import { ObjectItem } from '../objects/object-list';
@@ -59,10 +60,7 @@ export type DependencyNode = {
       scope: string;
       name: string;
     };
-    resolution: {
-      integrity: string;
-    };
-  };
+  } & PackageInfo;
 };
 
 export type DependencyEdge = {

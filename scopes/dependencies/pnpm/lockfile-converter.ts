@@ -2,8 +2,9 @@ import { LockfileFileV9 } from '@pnpm/lockfile.types';
 import * as dp from '@pnpm/dependency-path';
 import pick from 'ramda/src/pick';
 import partition from 'ramda/src/partition';
+import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
 
-export function convertLockfileToGraph(lockfile: LockfileFileV9) {
+export function convertLockfileToGraph(lockfile: LockfileFileV9): Pick<DependenciesGraph, 'nodes' | 'edges'> {
   const nodes: any[] = [];
   const edges: any[] = [];
   for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
@@ -54,7 +55,7 @@ export function convertLockfileToGraph(lockfile: LockfileFileV9) {
   return { edges, nodes };
 }
 
-export function convertGraphToLockfile(graph): LockfileFileV9 {
+export function convertGraphToLockfile(graph: DependenciesGraph): LockfileFileV9 {
   const packages = {};
   const snapshots = {};
   for (const edge of graph.edges) {
@@ -78,7 +79,28 @@ export function convertGraphToLockfile(graph): LockfileFileV9 {
       );
     }
     const node = graph.nodes.find(({ pkgId }) => edge.attr.pkgId === pkgId);
-    packages[edge.attr.pkgId].resolution = node.attr.resolution;
+    if (node) {
+      Object.assign(
+        packages[edge.attr.pkgId],
+        pick(
+          [
+            'bundledDependencies',
+            'cpu',
+            'deprecated',
+            'engines',
+            'hasBin',
+            'libc',
+            'name',
+            'os',
+            'peerDependencies',
+            'peerDependenciesMeta',
+            'resolution',
+            'version',
+          ],
+          node.attr
+        )
+      );
+    }
   }
   return {
     lockfileVersion: '9.0',
