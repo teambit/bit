@@ -3832,6 +3832,11 @@
         "show full message of the snap (default to the first line for --one-line/--parents flags)"
       ],
       [
+        "",
+        "show-hidden",
+        "show hidden snaps (snaps are marked as hidden typically when the following tag has the same files/config)"
+      ],
+      [
         "j",
         "json",
         "json format"
