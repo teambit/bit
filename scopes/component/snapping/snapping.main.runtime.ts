@@ -363,7 +363,6 @@ if you're willing to lose the history from the head to the specified version, us
       const { exported } = await this.exporter.exportMany({
         scope: this.scope.legacyScope,
         ids: componentIds,
-        idsWithFutureScope: componentIds,
         exportHeadsOnly: true,
         includeParents: true, // in order to export the previous snaps with "hidden" prop changed.
         exportOrigin: 'tag',
@@ -546,7 +545,6 @@ if you're willing to lose the history from the head to the specified version, us
       const { exported } = await this.exporter.exportMany({
         scope: this.scope.legacyScope,
         ids,
-        idsWithFutureScope: ids,
         allVersions: false,
         laneObject: updatedLane,
         // no need other snaps. only the latest one. without this option, when snapping on lane from another-scope, it
@@ -720,7 +718,6 @@ if you're willing to lose the history from the head to the specified version, us
       const { exported } = await this.exporter.exportMany({
         scope: this.scope.legacyScope,
         ids,
-        idsWithFutureScope: ids,
         allVersions: false,
         laneObject: updatedLane,
         // no need other snaps. only the latest one. without this option, when snapping on lane from another-scope, it
@@ -1523,7 +1520,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     DependenciesMain,
     ApplicationMain,
     ForkingMain,
-    InstallMain
+    InstallMain,
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(

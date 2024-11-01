@@ -479,7 +479,6 @@ please create a new lane instead, which will include all components of this lane
       scope: this.scope.legacyScope,
       laneObject: lane,
       ids: new ComponentIdList(),
-      idsWithFutureScope: new ComponentIdList(),
       allVersions: false,
     });
   }
