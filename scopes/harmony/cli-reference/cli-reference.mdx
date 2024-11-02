@@ -1230,6 +1230,18 @@ workspace, but also mark it as deleted from the lane, so it won't be merged late
 | --------------- | :--------------: | ---------------------------- |
 | `--id <string>` |                  | show a specific history item |
 
+### lane history-diff
+
+**Usage**: `lane history-diff <from-history-id> <to-history-id>`
+
+**Description**: EXPERIMENTAL. show diff between two lane-history ids  
+run "bit lane history" to find these history-ids
+
+| **Option**                      | **Option alias** | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--lane <lane-name>`            |       `-l`       | the name of the lane to diff. if not specified, the current lane is used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `--pattern <component-pattern>` |                  | show lane-diff for components conforming to the specified component-pattern only component-pattern format: component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
+
 ### lane checkout
 
 **Usage**: `lane checkout <history-id>`

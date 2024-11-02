@@ -4371,6 +4371,26 @@
         "private": false
       },
       {
+        "name": "history-diff <from-history-id> <to-history-id>",
+        "alias": "",
+        "options": [
+          [
+            "l",
+            "lane <lane-name>",
+            "the name of the lane to diff. if not specified, the current lane is used"
+          ],
+          [
+            "",
+            "pattern <component-pattern>",
+            "show lane-diff for components conforming to the specified component-pattern only\ncomponent-pattern format: component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          ]
+        ],
+        "description": "EXPERIMENTAL. show diff between two lane-history ids",
+        "extendedDescription": "run \"bit lane history\" to find these history-ids",
+        "group": "ungrouped",
+        "private": false
+      },
+      {
         "name": "checkout <history-id>",
         "alias": "",
         "options": [
