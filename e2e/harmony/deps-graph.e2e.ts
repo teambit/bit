@@ -20,7 +20,7 @@ chai.use(require('chai-fs'));
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('single component', () => {
+  describe.only('single component', () => {
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -196,7 +196,9 @@ chai.use(require('chai-fs'));
       depsGraph2 = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
       // expect(depsGraph.importers['.'].dependencies.react).to.eq('17.0.0');
       expect(depsGraph2.directDependencies['react@17.0.0']).to.eq('17.0.0');
-      // console.log(JSON.stringify(depsGraph2, null, 2));
+    });
+    it('should add direct dependency with pending version', () => {
+      expect(depsGraph2.directDependencies[`@ci/${randomStr}.comp1@*`]).to.match(/^pending:\(/);
     });
     it('should update integrity of dependency component', () => {
       comp1Node = depsGraph2.nodes.find(({ pkgId }) => pkgId === `@ci/${randomStr}.comp1@0.0.1`);

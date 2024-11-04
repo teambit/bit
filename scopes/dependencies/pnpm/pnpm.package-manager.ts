@@ -439,32 +439,11 @@ export class PnpmPackageManager implements PackageManager {
         directDependencies[`${name}@${componentDevImporter[depType]?.[name]?.specifier ?? '*'}`] = version;
       }
     }
-    partialLockfile = JSON.parse(JSON.stringify(partialLockfile).replaceAll(/file:[^'"(]+/g, 'pending:'));
-    console.log(
-      JSON.stringify(
-        {
-          ...convertLockfileToGraph(partialLockfile),
-          directDependencies,
-        },
-        null,
-        2
-      )
-    );
+    partialLockfile = replaceFileVersionsWithPendingVersions(partialLockfile);
     return {
       ...convertLockfileToGraph(partialLockfile),
-      directDependencies,
+      directDependencies: replaceFileVersionsWithPendingVersions(directDependencies),
     };
-    // partialLockfile.importers = {
-    // ['.' as ProjectId]:
-    // partialLockfile.packages![`${pkgName}@${partialLockfile.importers[componentRootDir].dependencies[pkgName]}`],
-    // };
-    // partialLockfile['directDependencies'] = directDependencies;
-    // partialLockfile.importers['.'].devDependencies = componentDevImporter.devDependencies;
-    // partialLockfile.importers['.'].specifiers = {
-    // ...componentDevImporter.specifiers,
-    // ...specifiers,
-    // };
-    // return partialLockfile;
   }
 }
 
@@ -497,4 +476,8 @@ function tryReadPackageJson(pkgDir: string) {
   } catch (err) {
     return undefined;
   }
+}
+
+function replaceFileVersionsWithPendingVersions<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj).replaceAll(/file:[^'"(]+/g, 'pending:'));
 }
