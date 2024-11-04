@@ -76,8 +76,14 @@ export type DependencyNeighbour = {
   type: 'prod' | 'optional';
 };
 
+export type DirectDependency = {
+  name: string;
+  specifier: string;
+  nodeId: string;
+};
+
 export type DependenciesGraph = {
-  directDependencies: {};
+  directDependencies: DirectDependency[];
   nodes: DependencyNode[];
   edges: DependencyEdge[];
 };

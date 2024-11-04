@@ -20,7 +20,7 @@ chai.use(require('chai-fs'));
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe.only('single component', () => {
+  describe('single component', () => {
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -186,7 +186,7 @@ chai.use(require('chai-fs'));
       const versionObj = helper.command.catComponent('comp1@latest');
       const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
       // expect(depsGraph.importers['.'].dependencies.react).to.eq('16.0.0');
-      expect(depsGraph.directDependencies['react@16.0.0']).to.eq('16.0.0');
+      expect(depsGraph.directDependencies).deep.include({ name: 'react', specifier: '16.0.0', nodeId: 'react@16.0.0' });
       // console.log(JSON.stringify(depsGraph, null, 2));
     });
     let depsGraph2;
@@ -195,10 +195,18 @@ chai.use(require('chai-fs'));
       const versionObj = helper.command.catComponent('comp2@latest');
       depsGraph2 = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
       // expect(depsGraph.importers['.'].dependencies.react).to.eq('17.0.0');
-      expect(depsGraph2.directDependencies['react@17.0.0']).to.eq('17.0.0');
+      expect(depsGraph2.directDependencies).deep.include({
+        name: 'react',
+        specifier: '17.0.0',
+        nodeId: 'react@17.0.0',
+      });
     });
-    it('should add direct dependency with pending version', () => {
-      expect(depsGraph2.directDependencies[`@ci/${randomStr}.comp1@*`]).to.match(/^pending:\(/);
+    it('should replace pending version in direct dependency', () => {
+      expect(depsGraph2.directDependencies).deep.include({
+        name: `@ci/${randomStr}.comp1`,
+        specifier: '*',
+        nodeId: `@ci/${randomStr}.comp1@0.0.1(react@17.0.0)`,
+      });
     });
     it('should update integrity of dependency component', () => {
       comp1Node = depsGraph2.nodes.find(({ pkgId }) => pkgId === `@ci/${randomStr}.comp1@0.0.1`);
@@ -302,7 +310,7 @@ chai.use(require('chai-fs'));
       helper.scopeHelper.destroy();
     });
   });
-  describe('graph data is update during tagging components from the scope', () => {
+  describe('graph data is updated during tagging components from the scope', () => {
     let bareTag;
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();

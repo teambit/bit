@@ -43,6 +43,7 @@ import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
 import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
+import * as dp from '@pnpm/dependency-path';
 
 export type { RebuildFn };
 
@@ -97,9 +98,13 @@ export class PnpmPackageManager implements PackageManager {
       };
       for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
         for (const [name, spec] of Object.entries(manifest[depType] ?? {})) {
-          const directDep = dependenciesGraph.directDependencies[`${name}@${spec}`];
-          if (directDep) {
-            lockfile.importers![projectId][depType][name] = { version: directDep, specifier: spec };
+          const directDepNodeId = dependenciesGraph.directDependencies.find(
+            (directDep) => directDep.name === name && directDep.specifier === spec
+          )?.nodeId;
+          if (directDepNodeId) {
+            const parsed = dp.parse(directDepNodeId);
+            const ref = `${parsed.version}${parsed.peersSuffix ?? ''}`;
+            lockfile.importers![projectId][depType][name] = { version: ref, specifier: spec };
             // lockfile.importers[projectId][depType][name] = directDep;
             // lockfile.importers[projectId].specifiers[name] = spec;
           }
@@ -426,9 +431,9 @@ export class PnpmPackageManager implements PackageManager {
       { forceSharedFormat: true }
     ) as any;
     const componentDevImporter = partialLockfile.importers![componentRelativeDir];
-    const directDependencies = {};
+    const directDependencies = [] as Array<{ name: string; specifier: string; nodeId: string }>;
     for (const [name, { version, specifier }] of Object.entries(componentDevImporter.devDependencies ?? {}) as any) {
-      directDependencies[`${name}@${specifier}`] = version;
+      directDependencies.push({ name, specifier, nodeId: dp.refToRelative(version, name)! });
     }
     const lockedPkg =
       partialLockfile.snapshots![
@@ -436,7 +441,11 @@ export class PnpmPackageManager implements PackageManager {
       ];
     for (const depType of ['dependencies', 'optionalDependencies']) {
       for (const [name, version] of Object.entries(lockedPkg[depType] ?? {}) as any) {
-        directDependencies[`${name}@${componentDevImporter[depType]?.[name]?.specifier ?? '*'}`] = version;
+        directDependencies.push({
+          name,
+          specifier: componentDevImporter[depType]?.[name]?.specifier ?? '*',
+          nodeId: dp.refToRelative(version, name)!,
+        });
       }
     }
     partialLockfile = replaceFileVersionsWithPendingVersions(partialLockfile);

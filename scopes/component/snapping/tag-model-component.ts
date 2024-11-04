@@ -19,7 +19,7 @@ import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { BuilderMain, OnTagOpts } from '@teambit/builder';
-import { Log } from '@teambit/legacy/dist/scope/models/version';
+import { Log, type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
 import {
   MessagePerComponent,
   MessagePerComponentFetcher,
@@ -406,11 +406,10 @@ export async function tagModelComponent({
               // resolvedVersions.push({ name, version });
               // }
             }
-            let s = JSON.stringify(consumerComponent.dependenciesGraph, null, 2);
-            for (const { name, version } of resolvedVersions) {
-              s = s.replaceAll(`${name}@pending:`, `${name}@${version}`);
-            }
-            consumerComponent.dependenciesGraph = JSON.parse(s);
+            consumerComponent.dependenciesGraph = replacePendingVersions(
+              consumerComponent.dependenciesGraph,
+              resolvedVersions
+            ) as DependenciesGraph;
 
             // Re-add the component to scope objects to persist the changes
             await snapping._addCompToObjects({
@@ -657,4 +656,12 @@ export async function updateComponentsVersions(
   await workspace.scope.legacyScope.stagedSnaps.write();
 
   return stagedConfig;
+}
+
+function replacePendingVersions(obj: unknown, resolvedVersions: Array<{ name: string; version: string }>): unknown {
+  let s = JSON.stringify(obj, null, 2);
+  for (const { name, version } of resolvedVersions) {
+    s = s.replaceAll(`${name}@pending:`, `${name}@${version}`);
+  }
+  return JSON.parse(s);
 }

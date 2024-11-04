@@ -50,6 +50,7 @@ import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package
 import { getDivergeData } from './component-ops/get-diverge-data';
 import { StagedSnaps } from './staged-snaps';
 import { collectGarbage } from './garbage-collector';
+import { type DependenciesGraph } from './models/version';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -795,8 +796,8 @@ once done, to continue working, please run "bit cc"`
     return scope;
   }
 
-  public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<any> {
-    let allGraph: any;
+  public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {
+    let allGraph: DependenciesGraph | undefined;
     await Promise.all(
       componentIds.map(async (componentId) => {
         const graph = await this.getDependenciesGraphByComponentId(componentId);
@@ -804,17 +805,17 @@ once done, to continue working, please run "bit cc"`
         if (allGraph == null) {
           allGraph = graph;
         } else {
-          for (const directDepSelector in graph.directDependencies) {
-            if (!allGraph.directDependencies[directDepSelector]) {
-              allGraph.directDependencies[directDepSelector] = graph.directDependencies[directDepSelector];
+          for (const directDep of graph.directDependencies) {
+            const existingDirectDep = allGraph.directDependencies.find(
+              ({ name, specifier }) => name === directDep.name && specifier === directDep.specifier
+            );
+            if (existingDirectDep == null) {
+              allGraph.directDependencies.push(directDep);
             } else if (
-              allGraph.directDependencies[directDepSelector] !== graph.directDependencies[directDepSelector] &&
-              semver.lt(
-                removeSuffix(allGraph.directDependencies[directDepSelector]),
-                removeSuffix(graph.directDependencies[directDepSelector])
-              )
+              existingDirectDep.nodeId !== directDep.nodeId &&
+              semver.lt(removeSuffix(existingDirectDep.nodeId), removeSuffix(directDep))
             ) {
-              allGraph.directDependencies[directDepSelector] = graph.directDependencies[directDepSelector];
+              existingDirectDep.nodeId = directDep.nodeId;
             }
           }
           allGraph.nodes.push(...graph.nodes);
