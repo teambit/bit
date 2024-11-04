@@ -56,7 +56,7 @@ export class Plugins {
 
   async loadModule(path: string) {
     NativeCompileCache.uninstall();
-    const module = await esmLoader(path);
+    const module = await esmLoader(path, true);
     const defaultModule = module.default;
     defaultModule.__path = path;
     defaultModule.__resolvedPath = require.resolve(path);
