@@ -314,6 +314,7 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
         <UseBoxDropdown
           position="bottom-end"
           className={classnames(styles.useBox, styles.hideOnMobile)}
+          dropClass={styles.useBoxContainer}
           Menu={<ConsumeMethodsMenu methods={methods} componentName={id.name} />}
         />
       )}
