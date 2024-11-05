@@ -20,7 +20,7 @@ chai.use(require('chai-fs'));
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('single component', () => {
+  describe.only('single component', () => {
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -52,11 +52,8 @@ chai.use(require('chai-fs'));
     it('should save dependencies graph to the model', () => {
       const versionObj = helper.command.catComponent('comp1@latest');
       const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
-      // expect(depsGraph.importers['.'].dependencies.react).to.eq('18.3.1');
-      // expect(depsGraph.importers['.'].devDependencies['is-odd']).to.eq('1.0.0');
-      expect(depsGraph.directDependencies['react@18.3.1']).to.eq('18.3.1');
-      expect(depsGraph.directDependencies['is-odd@1.0.0']).to.eq('1.0.0');
-      console.log(JSON.stringify(depsGraph, null, 2));
+      expect(depsGraph.directDependencies).deep.include({ name: 'react', specifier: '18.3.1', nodeId: 'react@18.3.1' });
+      expect(depsGraph.directDependencies).deep.include({ name: 'is-odd', specifier: '1.0.0', nodeId: 'is-odd@1.0.0' });
     });
     describe('sign component and use dependency graph to generate a lockfile', () => {
       let signOutput: string;
@@ -102,7 +99,7 @@ chai.use(require('chai-fs'));
       });
     });
   });
-  describe.only('two components with different peer dependencies', function () {
+  describe('two components with different peer dependencies', function () {
     const env1DefaultPeerVersion = '16.0.0';
     const env2DefaultPeerVersion = '17.0.0';
     let randomStr: string;

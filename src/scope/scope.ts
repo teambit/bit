@@ -4,7 +4,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import R from 'ramda';
 import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
-import { removeSuffix } from '@pnpm/dependency-path';
+import * as dp from '@pnpm/dependency-path';
 import semver from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
@@ -813,7 +813,7 @@ once done, to continue working, please run "bit cc"`
               allGraph.directDependencies.push(directDep);
             } else if (
               existingDirectDep.nodeId !== directDep.nodeId &&
-              semver.lt(removeSuffix(existingDirectDep.nodeId), removeSuffix(directDep))
+              nodeIdLessThan(existingDirectDep.nodeId, directDep.nodeId)
             ) {
               existingDirectDep.nodeId = directDep.nodeId;
             }
@@ -823,7 +823,6 @@ once done, to continue working, please run "bit cc"`
         }
       })
     );
-    // console.log(JSON.stringify(allGraph, null, 2))
     return allGraph;
   }
 
@@ -858,4 +857,12 @@ export function pathHasAll(patterns: string[]): (absPath: string) => boolean {
 
     return state;
   };
+}
+
+function nodeIdLessThan(nodeId1: string, nodeId2: string): boolean {
+  const parsed1 = dp.parse(nodeId1);
+  if (!parsed1?.version) return false;
+  const parsed2 = dp.parse(nodeId2);
+  if (!parsed2?.version) return false;
+  return semver.lt(parsed1.version, parsed2.version);
 }

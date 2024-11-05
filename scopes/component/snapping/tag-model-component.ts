@@ -659,7 +659,7 @@ export async function updateComponentsVersions(
 }
 
 function replacePendingVersions(obj: unknown, resolvedVersions: Array<{ name: string; version: string }>): unknown {
-  let s = JSON.stringify(obj, null, 2);
+  let s = JSON.stringify(obj);
   for (const { name, version } of resolvedVersions) {
     s = s.replaceAll(`${name}@pending:`, `${name}@${version}`);
   }
