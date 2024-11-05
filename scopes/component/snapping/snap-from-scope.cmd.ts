@@ -90,10 +90,49 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   loader = true;
   private = true;
 
-  constructor(private snapping: SnappingMain, private logger: Logger) {}
+  constructor(
+    private snapping: SnappingMain,
+    private logger: Logger
+  ) {}
 
-  async report([data]: [string], options: SnapFromScopeOptions) {
-    const results = await this.json([data], options);
+  async report(
+    [data]: [string],
+    {
+      push = false,
+      message = '',
+      lane,
+      ignoreIssues,
+      build = false,
+      skipTests = false,
+      disableSnapPipeline = false,
+      ignoreBuildErrors = false,
+      rebuildDepsGraph,
+      updateDependents,
+      tag,
+    }: SnapFromScopeOptions
+  ) {
+    const disableTagAndSnapPipelines = disableSnapPipeline;
+    if (disableTagAndSnapPipelines && ignoreBuildErrors) {
+      throw new BitError('you can use either ignore-build-errors or disable-snap-pipeline, but not both');
+    }
+    if (updateDependents && !lane) {
+      throw new BitError('update-dependents flag is only available when snapping from a lane');
+    }
+
+    const snapDataPerCompRaw = this.parseData(data);
+    const results = await this.snapping.snapFromScope(snapDataPerCompRaw, {
+      push,
+      message,
+      lane,
+      ignoreIssues,
+      build,
+      skipTests,
+      disableTagAndSnapPipelines,
+      ignoreBuildErrors,
+      rebuildDepsGraph,
+      updateDependents,
+      tag,
+    });
 
     const { snappedIds, exportedIds } = results;
 
@@ -129,24 +168,36 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
     const snapDataPerCompRaw = this.parseData(data);
 
-    const results = await this.snapping.snapFromScope(snapDataPerCompRaw, {
-      push,
-      message,
-      lane,
-      ignoreIssues,
-      build,
-      skipTests,
-      disableTagAndSnapPipelines,
-      ignoreBuildErrors,
-      rebuildDepsGraph,
-      updateDependents,
-      tag,
-    });
+    try {
+      const results = await this.snapping.snapFromScope(snapDataPerCompRaw, {
+        push,
+        message,
+        lane,
+        ignoreIssues,
+        build,
+        skipTests,
+        disableTagAndSnapPipelines,
+        ignoreBuildErrors,
+        rebuildDepsGraph,
+        updateDependents,
+        tag,
+      });
 
-    return {
-      exportedIds: results.exportedIds?.map((id) => id.toString()),
-      snappedIds: results.snappedIds.map((id) => id.toString()),
-    };
+      return {
+        code: 0,
+        data: {
+          exportedIds: results.exportedIds?.map((id) => id.toString()),
+          snappedIds: results.snappedIds.map((id) => id.toString()),
+        },
+      };
+    } catch (err: any) {
+      this.logger.error('snap-from-scope.json, error: ', err);
+      return {
+        code: 1,
+        error: err.message,
+        stack: err.stack,
+      };
+    }
   }
   private parseData(data: string): SnapDataPerCompRaw[] {
     let dataParsed: unknown;
