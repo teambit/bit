@@ -452,6 +452,7 @@ export class PnpmPackageManager implements PackageManager {
     return {
       ...convertLockfileToGraph(partialLockfile),
       directDependencies: replaceFileVersionsWithPendingVersions(directDependencies),
+      schemaVersion: '1.0',
     };
   }
 }

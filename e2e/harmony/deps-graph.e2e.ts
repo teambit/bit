@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
+import { DEPS_GRAPH } from '@teambit/harmony.modules.feature-toggle';
 import { addDistTag } from '@pnpm/registry-mock';
 import path from 'path';
 import chai, { expect } from 'chai';
@@ -16,9 +17,11 @@ chai.use(require('chai-fs'));
   let helper: Helper;
   before(() => {
     helper = new Helper();
+    helper.command.setFeatures(DEPS_GRAPH);
   });
   after(() => {
     helper.scopeHelper.destroy();
+    helper.command.resetFeatures();
   });
   describe.only('single component', () => {
     before(async () => {

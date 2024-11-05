@@ -1,5 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import * as dp from '@pnpm/dependency-path';
+import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
@@ -761,7 +762,11 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     this.logger.profile('snap._addFlattenedDependenciesToComponents');
   }
 
-  async _addDependenciesGraphToComponents(consumerComponents: ConsumerComponent[], components: Component[]) {
+  async _addDependenciesGraphToComponents(
+    consumerComponents: ConsumerComponent[],
+    components: Component[]
+  ): Promise<void> {
+    if (!isFeatureEnabled(DEPS_GRAPH)) return;
     loader.start('importing missing dependencies...');
     this.logger.profile('snap._addDependenciesGraphToComponents');
     const componentIdByPkgName = new Map<string, { scope: string; name: string }>();

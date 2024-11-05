@@ -1,6 +1,5 @@
 import rimraf from 'rimraf';
 import { v4 } from 'uuid';
-import { Version } from '@teambit/legacy/dist/scope/models';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';

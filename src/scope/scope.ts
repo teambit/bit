@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import * as pathLib from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import R from 'ramda';
 import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
@@ -798,6 +799,7 @@ once done, to continue working, please run "bit cc"`
 
   public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {
     let allGraph: DependenciesGraph | undefined;
+    if (!isFeatureEnabled(DEPS_GRAPH)) return undefined;
     await Promise.all(
       componentIds.map(async (componentId) => {
         const graph = await this.getDependenciesGraphByComponentId(componentId);
