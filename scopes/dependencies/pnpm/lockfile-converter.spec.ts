@@ -1,8 +1,9 @@
+import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-converter';
 import { expect } from 'chai';
 
 describe('convertLockfileToGraph simple case', () => {
-  const lockfile = {
+  const lockfile: LockfileFileV9 = {
     lockfileVersion: '9.0',
     snapshots: {
       'foo@1.0.0': {
