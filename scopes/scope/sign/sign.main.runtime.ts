@@ -64,7 +64,7 @@ export class SignMain {
   async sign(
     ids: ComponentID[],
     laneIdStr?: string,
-    { originalScope, push, rebuild, saveLocally }: SignOptions = {}
+    { originalScope, push, rebuild, saveLocally, reuseCapsules, tasks }: SignOptions = {}
   ): Promise<SignResult | null> {
     this.throwIfOnWorkspace();
     if (push && rebuild) {
@@ -113,7 +113,15 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const { builderDataMap, pipeResults } = await this.builder.tagListener(
       components,
       { throwOnError: false, isSnap: shouldRunSnapPipeline },
-      { seedersOnly: true, installOptions: { copyPeerToRuntimeOnComponents: true, installPeersFromEnvs: true } }
+      {
+        seedersOnly: true,
+        getExistingAsIs: reuseCapsules,
+        emptyRootDir: !reuseCapsules,
+        installOptions: { copyPeerToRuntimeOnComponents: true, installPeersFromEnvs: true },
+      },
+      {
+        tasks: tasks ? tasks.split(',').map((task) => task.trim()) : [],
+      }
     );
     const legacyBuildResults = this.scope.builderDataMapToLegacyOnTagResults(builderDataMap);
     const legacyComponents = components.map((c) => c.state._consumer);
