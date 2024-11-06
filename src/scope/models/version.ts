@@ -83,6 +83,7 @@ export type DirectDependency = {
 };
 
 export type DependenciesGraph = {
+  schemaVersion: string;
   directDependencies: DirectDependency[];
   nodes: DependencyNode[];
   edges: DependencyEdge[];
