@@ -22,7 +22,7 @@ import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
 import { Config } from '@pnpm/config';
-import { type ProjectId } from '@pnpm/types';
+import { type ProjectId, type ProjectManifest, type DepPath } from '@pnpm/types';
 import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
 import {
   buildDependenciesHierarchy,
@@ -33,7 +33,6 @@ import {
 import { renderTree } from '@pnpm/list';
 import { writeLockfileFile, getLockfileImporterId, convertToLockfileFile } from '@pnpm/lockfile.fs';
 import { readWantedLockfile } from '@pnpm/lockfile-file';
-import { type ProjectManifest, type DepPath } from '@pnpm/types';
 import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
 import { ServerSendOutStream } from '@teambit/legacy/dist/logger/pino-logger';
 import { join } from 'path';

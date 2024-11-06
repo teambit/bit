@@ -1,7 +1,6 @@
 import { LockfileFileV9 } from '@pnpm/lockfile.types';
 import * as dp from '@pnpm/dependency-path';
-import pick from 'ramda/src/pick';
-import partition from 'ramda/src/partition';
+import { pick, partition } from 'lodash';
 import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
 
 export function convertLockfileToGraph(lockfile: LockfileFileV9): Pick<DependenciesGraph, 'nodes' | 'edges'> {
@@ -33,23 +32,20 @@ export function convertLockfileToGraph(lockfile: LockfileFileV9): Pick<Dependenc
     edges.push(edge);
     nodes.push({
       pkgId,
-      attr: pick(
-        [
-          'bundledDependencies',
-          'cpu',
-          'deprecated',
-          'engines',
-          'hasBin',
-          'libc',
-          'name',
-          'os',
-          'peerDependencies',
-          'peerDependenciesMeta',
-          'resolution',
-          'version',
-        ],
-        lockfile.packages![pkgId]
-      ),
+      attr: pick(lockfile.packages![pkgId], [
+        'bundledDependencies',
+        'cpu',
+        'deprecated',
+        'engines',
+        'hasBin',
+        'libc',
+        'name',
+        'os',
+        'peerDependencies',
+        'peerDependenciesMeta',
+        'resolution',
+        'version',
+      ]),
     });
   }
   return { edges, nodes };
@@ -61,7 +57,7 @@ export function convertGraphToLockfile(graph: DependenciesGraph): LockfileFileV9
   for (const edge of graph.edges) {
     snapshots[edge.id] = {};
     packages[edge.attr.pkgId] = {};
-    const [prodDeps, optionalDeps] = partition((dep) => dep.type === 'prod', edge.neighbours);
+    const [prodDeps, optionalDeps] = partition(edge.neighbours, (dep) => dep.type === 'prod');
     if (prodDeps.length) {
       snapshots[edge.id].dependencies = Object.fromEntries(
         prodDeps.map(({ id }) => {
@@ -82,23 +78,20 @@ export function convertGraphToLockfile(graph: DependenciesGraph): LockfileFileV9
     if (node) {
       Object.assign(
         packages[edge.attr.pkgId],
-        pick(
-          [
-            'bundledDependencies',
-            'cpu',
-            'deprecated',
-            'engines',
-            'hasBin',
-            'libc',
-            'name',
-            'os',
-            'peerDependencies',
-            'peerDependenciesMeta',
-            'resolution',
-            'version',
-          ],
-          node.attr
-        )
+        pick(node.attr, [
+          'bundledDependencies',
+          'cpu',
+          'deprecated',
+          'engines',
+          'hasBin',
+          'libc',
+          'name',
+          'os',
+          'peerDependencies',
+          'peerDependenciesMeta',
+          'resolution',
+          'version',
+        ])
       );
     }
   }
