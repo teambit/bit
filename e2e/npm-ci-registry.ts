@@ -57,7 +57,9 @@ export default class NpmCiRegistry {
 
   _establishRegistry(): Promise<void> {
     return new Promise((resolve, reject) => {
-      prepare();
+      prepare({
+        uplinkedRegistry: 'https://node-registry.bit.cloud/',
+      });
       this.registryServer = startRegistryMock({ detached: true });
       let resolved = false;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

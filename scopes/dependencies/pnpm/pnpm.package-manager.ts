@@ -40,7 +40,7 @@ import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-conve
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
-import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
+import { type DependenciesGraph, type DirectDependency } from '@teambit/legacy/dist/scope/models/version';
 import * as dp from '@pnpm/dependency-path';
 
 export type { RebuildFn };
@@ -92,19 +92,16 @@ export class PnpmPackageManager implements PackageManager {
         dependencies: {},
         devDependencies: {},
         optionalDependencies: {},
-        // specifiers: {},
       };
       for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
-        for (const [name, spec] of Object.entries(manifest[depType] ?? {})) {
+        for (const [name, specifier] of Object.entries(manifest[depType] ?? {})) {
           const directDepNodeId = dependenciesGraph.directDependencies.find(
-            (directDep) => directDep.name === name && directDep.specifier === spec
+            (directDep) => directDep.name === name && directDep.specifier === specifier
           )?.nodeId;
           if (directDepNodeId) {
             const parsed = dp.parse(directDepNodeId);
             const ref = `${parsed.version}${parsed.peersSuffix ?? ''}`;
-            lockfile.importers![projectId][depType][name] = { version: ref, specifier: spec };
-            // lockfile.importers[projectId][depType][name] = directDep;
-            // lockfile.importers[projectId].specifiers[name] = spec;
+            lockfile.importers![projectId][depType][name] = { version: ref, specifier };
           }
         }
       }
@@ -428,9 +425,9 @@ export class PnpmPackageManager implements PackageManager {
         skipped: new Set(),
       }),
       { forceSharedFormat: true }
-    ) as any;
+    );
     const componentDevImporter = partialLockfile.importers![componentRelativeDir];
-    const directDependencies = [] as Array<{ name: string; specifier: string; nodeId: string }>;
+    const directDependencies: DirectDependency[] = [];
     for (const [name, { version, specifier }] of Object.entries(componentDevImporter.devDependencies ?? {}) as any) {
       directDependencies.push({ name, specifier, nodeId: dp.refToRelative(version, name)! });
     }
@@ -438,8 +435,8 @@ export class PnpmPackageManager implements PackageManager {
       partialLockfile.snapshots![
         `${pkgName}@${partialLockfile.importers![componentRootDir].dependencies![pkgName].version}`
       ];
-    for (const depType of ['dependencies', 'optionalDependencies']) {
-      for (const [name, version] of Object.entries(lockedPkg[depType] ?? {}) as any) {
+    for (const depType of ['dependencies' as const, 'optionalDependencies' as const]) {
+      for (const [name, version] of Object.entries(lockedPkg[depType] ?? {})) {
         directDependencies.push({
           name,
           specifier: componentDevImporter[depType]?.[name]?.specifier ?? '*',
