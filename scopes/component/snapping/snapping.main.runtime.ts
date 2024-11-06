@@ -958,41 +958,46 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     consumerComponents: ConsumerComponent[],
     components: Component[]
   ): Promise<void> {
-    if (!isFeatureEnabled(DEPS_GRAPH)) return;
-    loader.start('importing missing dependencies...');
-    this.logger.profile('snap._addDependenciesGraphToComponents');
-    const componentIdByPkgName = new Map<string, { scope: string; name: string }>();
-    consumerComponents.map((consumerComponent, index) => {
-      if (consumerComponent.componentMap?.rootDir) {
-        componentIdByPkgName.set(this.dependencyResolver.getPackageName(components[index]), {
-          scope: consumerComponent.componentMap.id.scope,
-          name: consumerComponent.componentMap.id.fullName,
-        });
-      }
-    });
-    await Promise.all(
-      consumerComponents.map(async (consumerComponent, index) => {
+    try {
+      this.logger.profile('snap._addDependenciesGraphToComponents');
+      const componentIdByPkgName = new Map<string, { scope: string; name: string }>();
+      consumerComponents.map((consumerComponent, index) => {
         if (consumerComponent.componentMap?.rootDir) {
-          consumerComponent.dependenciesGraph = await this.dependencyResolver.getDependenciesGraph(
-            components[index],
-            this.workspace.path,
-            this.workspace.rootComponentsPath,
-            consumerComponent.componentMap.rootDir
-          );
-          if (consumerComponent.dependenciesGraph) {
-            for (const node of consumerComponent.dependenciesGraph.nodes) {
-              if (node.pkgId.includes('@pending:')) {
-                const parsed = dp.parse(node.pkgId);
-                if (parsed.name && componentIdByPkgName.has(parsed.name)) {
-                  node.attr.component = componentIdByPkgName.get(parsed.name);
+          componentIdByPkgName.set(this.dependencyResolver.getPackageName(components[index]), {
+            scope: consumerComponent.componentMap.id.scope,
+            name: consumerComponent.componentMap.id.fullName,
+          });
+        }
+      });
+      await Promise.all(
+        consumerComponents.map(async (consumerComponent, index) => {
+          if (consumerComponent.componentMap?.rootDir) {
+            consumerComponent.dependenciesGraph = await this.dependencyResolver.getDependenciesGraph(
+              components[index],
+              this.workspace.path,
+              this.workspace.rootComponentsPath,
+              consumerComponent.componentMap.rootDir
+            );
+            if (consumerComponent.dependenciesGraph) {
+              for (const node of consumerComponent.dependenciesGraph.nodes) {
+                if (node.pkgId.includes('@pending:')) {
+                  const parsed = dp.parse(node.pkgId);
+                  if (parsed.name && componentIdByPkgName.has(parsed.name)) {
+                    node.attr.component = componentIdByPkgName.get(parsed.name);
+                  }
                 }
               }
             }
           }
-        }
-      })
-    );
-    this.logger.profile('snap._addDependenciesGraphToComponents');
+        })
+      );
+      this.logger.profile('snap._addDependenciesGraphToComponents');
+    } catch (err) {
+      // If the dependencies graph feature is disabled, we ignore the error
+      if (isFeatureEnabled(DEPS_GRAPH)) {
+        throw err;
+      }
+    }
   }
 
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
