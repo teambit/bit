@@ -1,4 +1,3 @@
-import path from 'path';
 import { CloudMain } from '@teambit/cloud';
 import { BitError } from '@teambit/bit-error';
 import {
@@ -111,11 +110,12 @@ export class PnpmPackageManager implements PackageManager {
         }
       }
     }
-    lockfile['bit'] = {
-      restoredFromModel: true,
-    };
-    // console.log(JSON.stringify(lockfile, null, 2))
-    await writeLockfileFile(path.join(rootDir, 'pnpm-lock.yaml'), lockfile);
+    Object.assign(lockfile, {
+      bit: {
+        restoredFromModel: true,
+      },
+    });
+    await writeLockfileFile(join(rootDir, 'pnpm-lock.yaml'), lockfile);
   }
 
   async install(

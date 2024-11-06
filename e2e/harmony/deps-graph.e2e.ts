@@ -80,7 +80,7 @@ chai.use(require('chai-fs'));
         const capsulesDir = signOutput.match(/running installation in root dir (\/[^\s]+)/)?.[1];
         expect(capsulesDir).to.be.a('string');
         lockfile = yaml.load(fs.readFileSync(path.join(stripAnsi(capsulesDir!), 'pnpm-lock.yaml'), 'utf8'));
-        expect(lockfile['bit'].restoredFromModel).to.eq(true);
+        expect(lockfile['bit'].restoredFromModel).to.eq(true); // eslint-disable-line
       });
       it('should not update dependencies in the lockfile', () => {
         expect(lockfile.packages).to.have.property('@pnpm.e2e/pkg-with-1-dep@100.0.0');

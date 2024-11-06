@@ -962,7 +962,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     loader.start('importing missing dependencies...');
     this.logger.profile('snap._addDependenciesGraphToComponents');
     const componentIdByPkgName = new Map<string, { scope: string; name: string }>();
-    consumerComponents.map(async (consumerComponent, index) => {
+    consumerComponents.map((consumerComponent, index) => {
       if (consumerComponent.componentMap?.rootDir) {
         componentIdByPkgName.set(this.dependencyResolver.getPackageName(components[index]), {
           scope: consumerComponent.componentMap.id.scope,

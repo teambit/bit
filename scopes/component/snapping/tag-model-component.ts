@@ -382,7 +382,7 @@ export async function tagModelComponent({
       // console.log(packageIntegritiesByPublishedPackages);
 
       await Promise.all(
-        allComponentsToTag.map(async (consumerComponent, index) => {
+        allComponentsToTag.map(async (consumerComponent) => {
           if (consumerComponent.dependenciesGraph) {
             const resolvedVersions: Array<{ name: string; version: string }> = [];
             for (const [selector, integrity] of packageIntegritiesByPublishedPackages.entries()) {

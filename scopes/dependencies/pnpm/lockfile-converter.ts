@@ -13,8 +13,8 @@ export function convertLockfileToGraph(lockfile: LockfileFileV9): Pick<Dependenc
       { depTypeField: 'dependencies', depType: 'prod' },
       { depTypeField: 'optionalDependencies', depType: 'optional' },
     ]) {
-      for (const pkgName in snapshot[depTypeField]) {
-        const subDepPath = dp.refToRelative(snapshot[depTypeField][pkgName], pkgName);
+      for (const [pkgName, ref] of Object.entries((snapshot[depTypeField] ?? {}) as Record<string, string>)) {
+        const subDepPath = dp.refToRelative(ref, pkgName);
         if (subDepPath == null) continue;
         neighbours.push({ id: subDepPath, type: depType });
       }
