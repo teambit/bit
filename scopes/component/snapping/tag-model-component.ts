@@ -392,7 +392,7 @@ export async function tagModelComponent({
                 ({ pkgId }) => pkgId === `${name}@pending:`
               );
               if (pendingNode) {
-                pendingNode.attr = pendingNode.attr ?? {};
+                pendingNode.attr = pendingNode.attr ?? { resolution: {} };
                 pendingNode.attr.resolution = {
                   integrity,
                 };
