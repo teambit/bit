@@ -523,6 +523,7 @@ if you're willing to lose the history from the head to the specified version, us
     const shouldTag = Boolean(params.tag);
     const results = await tagModelComponent({
       ...params,
+      components,
       scope: this.scope,
       consumerComponents,
       tagDataPerComp: snapDataPerComp.map((s) => ({
@@ -971,10 +972,6 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     });
     await Promise.all(
       consumerComponents.map(async (consumerComponent, index) => {
-        // console.log('>>>', consumerComponent.componentMap?.rootDir);
-        // console.log('>>>', consumerComponent.componentMap?.id);
-        // console.log('>>>', consumerComponent.componentMap?.id?.scope);
-        // console.log('>>>fullname', consumerComponent.componentMap?.id?.fullName);
         if (consumerComponent.componentMap?.rootDir) {
           consumerComponent.dependenciesGraph = await this.dependencyResolver.getDependenciesGraph(
             components[index],
