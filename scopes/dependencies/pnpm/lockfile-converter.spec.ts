@@ -81,6 +81,12 @@ describe('convertLockfileToGraph simple case', () => {
     expect(graph).to.eql(expected);
   });
   it('should convert the graph object to the lockfile object', () => {
-    expect(convertGraphToLockfile(graph)).to.eql(lockfile);
+    expect(
+      convertGraphToLockfile({
+        ...graph,
+        directDependencies: [],
+        schemaVersion: '1.0.0',
+      })
+    ).to.eql(lockfile);
   });
 });
