@@ -17,12 +17,22 @@ export class YarnUI {
 
   constructor(private compUI: ComponentUI) {}
 
+  private getNpmConfig(registry: string, authToken?: string): string {
+    const registryUrl = 'https://node-registry.bit.cloud';
+    const configs = [
+      `${registry}:registry="${registryUrl}"`,
+      authToken ? `"//node-registry.bit.cloud/:_authToken=${authToken}"` : undefined,
+    ].filter(Boolean);
+    return `npm config set ${configs.join(' ')}`;
+  }
+
   private consumeMethod: ConsumePlugin = ({
     packageName: packageNameFromProps,
     id: componentId,
     latest: latestFromProps,
     options,
     componentModel,
+    authToken,
   }) => {
     const packageName = componentModel?.packageName || packageNameFromProps;
     const latest = componentModel?.latest || latestFromProps;
@@ -30,6 +40,7 @@ export class YarnUI {
     const registry = packageName.split('/')[0];
     const packageVersion =
       componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version as string)}`;
+    const npmConfig = this.getNpmConfig(registry, authToken);
 
     return {
       Title: (
@@ -37,7 +48,7 @@ export class YarnUI {
       ),
       Component: !options?.hide ? (
         <Install
-          config={`npm config set '${registry}:registry' https://node-registry.bit.cloud`}
+          config={npmConfig}
           componentName={componentId.name}
           packageManager="yarn"
           copyString={`yarn add ${packageName}${packageVersion}`}

@@ -11,4 +11,5 @@ export type GetComponentsOptions = {
   RightNode?: React.ReactNode;
   className?: string;
   routes?: RouteProps[];
+  authToken?: string;
 };
