@@ -659,6 +659,38 @@
         ]
       },
       {
+        "name": "fork <original-scope> [new-scope] [pattern]",
+        "options": [
+          [
+            "",
+            "ast",
+            "use ast to transform files instead of regex"
+          ],
+          [
+            "x",
+            "skip-dependency-installation",
+            "do not install packages of the imported components"
+          ]
+        ],
+        "description": "fork all components of the original-scope and refactor the source-code to use the new scope name",
+        "extendedDescription": "optionally, provide [pattern] to limit the fork to specific components",
+        "group": "development",
+        "arguments": [
+          {
+            "name": "original-scope",
+            "description": "the original scope to fork"
+          },
+          {
+            "name": "new-scope",
+            "description": "the new scope to fork to, default to the default-scope of the workspace"
+          },
+          {
+            "name": "pattern",
+            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          }
+        ]
+      },
+      {
         "name": "rename <current-scope-name> <new-scope-name>",
         "options": [
           [
@@ -715,38 +747,6 @@
           {
             "name": "new-owner-name",
             "description": "a new owner name to replace the current owner name"
-          }
-        ]
-      },
-      {
-        "name": "fork <original-scope> [new-scope] [pattern]",
-        "options": [
-          [
-            "",
-            "ast",
-            "use ast to transform files instead of regex"
-          ],
-          [
-            "x",
-            "skip-dependency-installation",
-            "do not install packages of the imported components"
-          ]
-        ],
-        "description": "fork all components of the original-scope and refactor the source-code to use the new scope name",
-        "extendedDescription": "optionally, provide [pattern] to limit the fork to specific components",
-        "group": "development",
-        "arguments": [
-          {
-            "name": "original-scope",
-            "description": "the original scope to fork"
-          },
-          {
-            "name": "new-scope",
-            "description": "the new scope to fork to, default to the default-scope of the workspace"
-          },
-          {
-            "name": "pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
           }
         ]
       }
@@ -1270,75 +1270,43 @@
     ]
   },
   {
-    "name": "watch",
-    "alias": "",
+    "name": "list [remote-scope]",
+    "alias": "ls",
     "options": [
-      [
-        "v",
-        "verbose",
-        "show all watch events and compiler verbose output"
-      ],
-      [
-        "",
-        "skip-pre-compilation",
-        "skip compilation step before starting to watch"
-      ],
-      [
-        "t",
-        "check-types [string]",
-        "show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project"
-      ],
       [
         "i",
-        "import",
-        "DEPRECATED. it is now the default. helpful when using git. import component objects if .bitmap changed not by bit"
+        "ids",
+        "show only component ids, unformatted"
       ],
       [
-        "",
-        "skip-import",
-        "do not import component objects if .bitmap changed not by bit"
-      ]
-    ],
-    "description": "automatically recompile modified components (on save)",
-    "extendedDescription": "by default, the watcher doesn't use polling, to keep the CPU idle.\nif this doesn't work well for you, run \"bit config set watch_use_polling true\" to use polling.",
-    "group": "development",
-    "private": false
-  },
-  {
-    "name": "deprecate <component-name>",
-    "alias": "d",
-    "options": [
-      [
-        "",
-        "new-id <string>",
-        "if replaced by another component, enter the new component id. alternatively use \"bit rename --deprecate\" to do this automatically"
+        "s",
+        "scope",
+        "show only components stored in the local scope, including indirect dependencies"
       ],
       [
-        "",
-        "range <string>",
-        "enter a Semver range to deprecate specific versions. see https://www.npmjs.com/package/semver#ranges for the range syntax"
+        "o",
+        "outdated",
+        "highlight outdated components, in comparison with their latest remote version (if one exists)"
+      ],
+      [
+        "d",
+        "include-deleted",
+        "EXPERIMENTAL. show also deleted components"
+      ],
+      [
+        "j",
+        "json",
+        "show the output in JSON format"
+      ],
+      [
+        "n",
+        "namespace <string>",
+        "show only components in the specified namespace/s e.g. '-n ui' or '*/ui'"
       ]
     ],
-    "description": "deprecate a component",
+    "description": "list components on a workspace or a remote scope (with flag).",
     "extendedDescription": "",
-    "group": "collaborate",
-    "private": false,
-    "remoteOp": true,
-    "skipWorkspace": true,
-    "arguments": [
-      {
-        "name": "component-name",
-        "description": "component name or component id"
-      }
-    ]
-  },
-  {
-    "name": "undeprecate <id>",
-    "alias": "",
-    "options": [],
-    "description": "undeprecate a deprecated component (local/remote)",
-    "extendedDescription": "",
-    "group": "collaborate",
+    "group": "discover",
     "private": false,
     "remoteOp": true,
     "skipWorkspace": true
@@ -1448,6 +1416,45 @@
         "private": false
       }
     ]
+  },
+  {
+    "name": "deprecate <component-name>",
+    "alias": "d",
+    "options": [
+      [
+        "",
+        "new-id <string>",
+        "if replaced by another component, enter the new component id. alternatively use \"bit rename --deprecate\" to do this automatically"
+      ],
+      [
+        "",
+        "range <string>",
+        "enter a Semver range to deprecate specific versions. see https://www.npmjs.com/package/semver#ranges for the range syntax"
+      ]
+    ],
+    "description": "deprecate a component",
+    "extendedDescription": "",
+    "group": "collaborate",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true,
+    "arguments": [
+      {
+        "name": "component-name",
+        "description": "component name or component id"
+      }
+    ]
+  },
+  {
+    "name": "undeprecate <id>",
+    "alias": "",
+    "options": [],
+    "description": "undeprecate a deprecated component (local/remote)",
+    "extendedDescription": "",
+    "group": "collaborate",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true
   },
   {
     "name": "add [path...]",
@@ -1651,6 +1658,41 @@
         "description": "the name for the new workspace and workspace directory that will be created"
       }
     ]
+  },
+  {
+    "name": "watch",
+    "alias": "",
+    "options": [
+      [
+        "v",
+        "verbose",
+        "show all watch events and compiler verbose output"
+      ],
+      [
+        "",
+        "skip-pre-compilation",
+        "skip compilation step before starting to watch"
+      ],
+      [
+        "t",
+        "check-types [string]",
+        "show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project"
+      ],
+      [
+        "i",
+        "import",
+        "DEPRECATED. it is now the default. helpful when using git. import component objects if .bitmap changed not by bit"
+      ],
+      [
+        "",
+        "skip-import",
+        "do not import component objects if .bitmap changed not by bit"
+      ]
+    ],
+    "description": "automatically recompile modified components (on save)",
+    "extendedDescription": "by default, the watcher doesn't use polling, to keep the CPU idle.\nif this doesn't work well for you, run \"bit config set watch_use_polling true\" to use polling.",
+    "group": "development",
+    "private": false
   },
   {
     "name": "build [component-pattern]",
@@ -1894,6 +1936,660 @@
             "description": "the app's name is registered by the app (run 'bit app list' to list the names of the available apps)"
           }
         ]
+      }
+    ]
+  },
+  {
+    "name": "compile [component-names...]",
+    "alias": "",
+    "options": [
+      [
+        "c",
+        "changed",
+        "compile only new and modified components"
+      ],
+      [
+        "v",
+        "verbose",
+        "show more data, such as, dist paths"
+      ],
+      [
+        "j",
+        "json",
+        "return the compile results in json format"
+      ],
+      [
+        "d",
+        "delete-dist-dir",
+        "delete existing dist folder before writing new compiled files"
+      ]
+    ],
+    "description": "compile components in the workspace",
+    "extendedDescription": "",
+    "group": "development",
+    "private": false,
+    "arguments": [
+      {
+        "name": "component-names...",
+        "description": "a list of component names or component IDs (defaults to all components)"
+      }
+    ]
+  },
+  {
+    "name": "install [packages...]",
+    "alias": "in",
+    "options": [
+      [
+        "t",
+        "type [lifecycleType]",
+        "\"runtime\" (default) or \"peer\" (dev is not a valid option)"
+      ],
+      [
+        "u",
+        "update",
+        "update all dependencies to latest version according to their semver range"
+      ],
+      [
+        "",
+        "update-existing",
+        "DEPRECATED (not needed anymore, it is the default now). update existing dependencies version and types"
+      ],
+      [
+        "",
+        "save-prefix [savePrefix]",
+        "set the prefix to use when adding dependency to workspace.jsonc"
+      ],
+      [
+        "",
+        "skip-dedupe",
+        "do not dedupe dependencies on installation"
+      ],
+      [
+        "",
+        "skip-import",
+        "do not import bit objects post installation"
+      ],
+      [
+        "",
+        "skip-compile",
+        "do not compile components"
+      ],
+      [
+        "",
+        "skip-write-config-files",
+        "do not write config files (such as eslint, tsconfig, prettier, etc...)"
+      ],
+      [
+        "a",
+        "add-missing-deps",
+        "install all missing dependencies"
+      ],
+      [
+        "",
+        "add-missing-peers",
+        "install all missing peer dependencies"
+      ],
+      [
+        "",
+        "recurring-install",
+        "automatically run install again if there are non loaded old envs in your workspace"
+      ],
+      [
+        "",
+        "no-optional [noOptional]",
+        "do not install optional dependencies (works with pnpm only)"
+      ],
+      [
+        "",
+        "lockfile-only",
+        "dependencies are not written to node_modules. Only the lockfile is updated"
+      ]
+    ],
+    "description": "installs workspace dependencies",
+    "extendedDescription": "when no package is specified, all workspace dependencies are installed and all workspace components are imported.",
+    "group": "development",
+    "private": false,
+    "arguments": [
+      {
+        "name": "packages...",
+        "description": "a list of packages to install (separated by spaces)"
+      }
+    ]
+  },
+  {
+    "name": "uninstall [packages...]",
+    "alias": "un",
+    "options": [],
+    "description": "uninstall dependencies",
+    "extendedDescription": "",
+    "group": "development",
+    "private": false
+  },
+  {
+    "name": "update [package-patterns...]",
+    "alias": "up",
+    "options": [
+      [
+        "y",
+        "yes",
+        "automatically update all outdated versions for packages specified in pattern (all if no pattern supplied) - use carefully as could result in breaking updates for dependencies"
+      ],
+      [
+        "",
+        "patch",
+        "update to the latest patch version. Semver rules are ignored"
+      ],
+      [
+        "",
+        "minor",
+        "update to the latest minor version. Semver rules are ignored"
+      ],
+      [
+        "",
+        "major",
+        "update to the latest major version. Semver rules are ignored"
+      ],
+      [
+        "",
+        "semver",
+        "update to the newest version respecting semver"
+      ]
+    ],
+    "description": "update dependencies. By default, dependencies are updated to the highest semver compatible versions.",
+    "extendedDescription": "",
+    "group": "development",
+    "private": false,
+    "arguments": [
+      {
+        "name": "package-patterns...",
+        "description": "a string list of package names, or patterns (separated by spaces or commas), e.g. \"@teambit/**,@my-org/ui.**\". The patterns should be in glob format. By default, all packages are selected."
+      }
+    ]
+  },
+  {
+    "name": "link [component-names...]",
+    "alias": "",
+    "options": [
+      [
+        "j",
+        "json",
+        "return the output as JSON"
+      ],
+      [
+        "",
+        "verbose",
+        "verbose output"
+      ],
+      [
+        "r",
+        "rewire",
+        "Replace relative paths with module paths in code (e.g. \"../foo\" => \"@bit/foo\")"
+      ],
+      [
+        "",
+        "target <dir>",
+        "link to an external directory (similar to npm-link) so other projects could use these components"
+      ],
+      [
+        "",
+        "skip-fetching-objects",
+        "skip fetch missing objects from remotes before linking"
+      ],
+      [
+        "",
+        "peers",
+        "link peer dependencies of the components too"
+      ]
+    ],
+    "description": "create links in the node_modules directory, to core aspects and to components in the workspace",
+    "extendedDescription": "",
+    "group": "development",
+    "private": false,
+    "arguments": [
+      {
+        "name": "component-names...",
+        "description": "names or IDs of the components to link"
+      }
+    ]
+  },
+  {
+    "name": "move <current-component-dir> <new-component-dir>",
+    "alias": "mv",
+    "options": [],
+    "description": "move a component to a different filesystem path",
+    "extendedDescription": "(note: this does NOT affect the component's name or scope, just its location in the workspace)",
+    "group": "development",
+    "private": false,
+    "arguments": [
+      {
+        "name": "current-component-dir",
+        "description": "the component's current directory (relative to the workspace root)"
+      },
+      {
+        "name": "new-component-dir",
+        "description": "the new directory (relative to the workspace root) to create and move the component's files to"
+      }
+    ]
+  },
+  {
+    "name": "import [component-patterns...]",
+    "alias": "",
+    "options": [
+      [
+        "p",
+        "path <path>",
+        "import components into a specific directory (a relative path in the workspace)"
+      ],
+      [
+        "o",
+        "objects",
+        "import components objects to the local scope without checkout (without writing them to the file system). This is the default behavior for import with no id argument"
+      ],
+      [
+        "O",
+        "override",
+        "override local changes"
+      ],
+      [
+        "v",
+        "verbose",
+        "show verbose output for inspection"
+      ],
+      [
+        "j",
+        "json",
+        "return the output as JSON"
+      ],
+      [
+        "x",
+        "skip-dependency-installation",
+        "do not auto-install dependencies of the imported components"
+      ],
+      [
+        "",
+        "skip-write-config-files",
+        "do not write config files (such as eslint, tsconfig, prettier, etc...)"
+      ],
+      [
+        "m",
+        "merge [strategy]",
+        "merge local changes with the imported version. strategy should be \"theirs\", \"ours\" or \"manual\""
+      ],
+      [
+        "",
+        "dependencies",
+        "import all dependencies (bit components only) of imported components and write them to the workspace"
+      ],
+      [
+        "",
+        "dependencies-head",
+        "same as --dependencies, except it imports the dependencies with their head version"
+      ],
+      [
+        "",
+        "dependents",
+        "import components found while traversing from the imported components upwards to the workspace components"
+      ],
+      [
+        "",
+        "dependents-via <string>",
+        "same as --dependents except the traversal must go through the specified component. to specify multiple components, wrap with quotes and separate by a comma"
+      ],
+      [
+        "",
+        "dependents-all",
+        "same as --dependents except not prompting for selecting paths but rather selecting all paths and showing final confirmation before importing"
+      ],
+      [
+        "",
+        "dependents-dry-run",
+        "DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and wait for confirmation before importing them"
+      ],
+      [
+        "",
+        "silent",
+        "no prompt for --dependents/--dependents-via flags"
+      ],
+      [
+        "",
+        "filter-envs <envs>",
+        "only import components that have the specified environment (e.g., \"teambit.react/react-env\")"
+      ],
+      [
+        "",
+        "save-in-lane",
+        "when checked out to a lane and the component is not on the remote-lane, save it in the lane (defaults to save on main)"
+      ],
+      [
+        "",
+        "all-history",
+        "relevant for fetching all components objects. avoid optimizations, fetch all history versions, always"
+      ],
+      [
+        "",
+        "fetch-deps",
+        "fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data"
+      ],
+      [
+        "",
+        "track-only",
+        "do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap"
+      ],
+      [
+        "",
+        "include-deprecated",
+        "when importing with patterns, include deprecated components (default to exclude them)"
+      ]
+    ],
+    "description": "import components from their remote scopes to the local workspace",
+    "extendedDescription": "",
+    "group": "collaborate",
+    "private": false,
+    "remoteOp": true,
+    "arguments": [
+      {
+        "name": "component-patterns...",
+        "description": "component IDs or component patterns (separated by space). Use patterns to import groups of components using a common scope or namespace. E.g., \"utils/*\" (wrap with double quotes)"
+      }
+    ]
+  },
+  {
+    "name": "fetch [ids...]",
+    "alias": "",
+    "options": [
+      [
+        "l",
+        "lanes",
+        "fetch component objects from lanes. note, it does not save the remote lanes objects locally, only the refs"
+      ],
+      [
+        "c",
+        "components",
+        "fetch components"
+      ],
+      [
+        "",
+        "all-history",
+        "for each component, fetch all its versions. by default, only the latest version is fetched"
+      ],
+      [
+        "j",
+        "json",
+        "return the output as JSON"
+      ],
+      [
+        "",
+        "from-original-scopes",
+        "fetch indirect dependencies from their original scope as opposed to from their dependents"
+      ]
+    ],
+    "description": "fetch remote objects and store locally",
+    "extendedDescription": "for lanes, use \"/\" as a separator between the remote and the lane name, e.g. teambit.ui/fix-button",
+    "group": "ungrouped",
+    "private": true
+  },
+  {
+    "name": "remove <component-pattern>",
+    "alias": "rm",
+    "options": [
+      [
+        "t",
+        "track",
+        "keep tracking component in .bitmap (default = false), helps transform a tagged-component to new"
+      ],
+      [
+        "",
+        "keep-files",
+        "keep component files (just untrack the component)"
+      ],
+      [
+        "f",
+        "force",
+        "removes the component from the scope, even if used as a dependency. WARNING: you will need to fix the components that depend on this component"
+      ],
+      [
+        "s",
+        "silent",
+        "skip confirmation"
+      ]
+    ],
+    "description": "remove component(s) from the local workspace",
+    "extendedDescription": "to mark components as deleted on the remote scope, use \"bit delete\".",
+    "group": "collaborate",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ],
+    "examples": [
+      {
+        "cmd": "remove \"$deprecated\"",
+        "description": "remove all components that are deprecated"
+      }
+    ]
+  },
+  {
+    "name": "delete <component-pattern>",
+    "alias": "",
+    "options": [
+      [
+        "",
+        "lane",
+        "when on a lane, delete the component from this lane only. avoid merging it to main or other lanes"
+      ],
+      [
+        "",
+        "update-main",
+        "delete component/s on the main lane after merging this lane into main"
+      ],
+      [
+        "",
+        "range <string>",
+        "EXPERIMENTAL. enter a Semver range to delete specific tags (cannot be used for snaps). see https://www.npmjs.com/package/semver#ranges for the range syntax"
+      ],
+      [
+        "s",
+        "silent",
+        "skip confirmation"
+      ],
+      [
+        "",
+        "hard",
+        "NOT-RECOMMENDED. delete a component completely from a remote scope. careful! this is a permanent change that could corrupt dependents."
+      ],
+      [
+        "f",
+        "force",
+        "relevant for --hard. allow the deletion even if used as a dependency. WARNING: components that depend on this component will corrupt"
+      ]
+    ],
+    "description": "mark components as deleted on the remote",
+    "extendedDescription": "to remove components from your local workspace only, use \"bit remove\" command.\nthis command marks the components as deleted, and after snap/tag and export they will be marked as deleted from the remote scope as well.\n",
+    "group": "collaborate",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
+  },
+  {
+    "name": "recover <component-name>",
+    "alias": "",
+    "options": [
+      [
+        "x",
+        "skip-dependency-installation",
+        "do not install packages in case of importing components"
+      ],
+      [
+        "",
+        "skip-write-config-files",
+        "do not write config files (such as eslint, tsconfig, prettier, etc...)"
+      ]
+    ],
+    "description": "recover component(s) soft-deleted from the workspace, or a remote scope",
+    "extendedDescription": "",
+    "group": "collaborate",
+    "private": false
+  },
+  {
+    "name": "pack <componentId> [scopePath]",
+    "alias": "",
+    "options": [
+      [
+        "d",
+        "out-dir <out-dir>",
+        "directory to put the result tar file"
+      ],
+      [
+        "o",
+        "override",
+        "override existing pack file"
+      ],
+      [
+        "k",
+        "keep",
+        "should keep isolated environment [default = false]"
+      ],
+      [
+        "p",
+        "prefix",
+        "keep custom (binding) prefix"
+      ],
+      [
+        "j",
+        "json",
+        "return the output as JSON"
+      ]
+    ],
+    "description": "create tar for npm publish",
+    "extendedDescription": "",
+    "group": "collaborate",
+    "private": true
+  },
+  {
+    "name": "publish <component-pattern>",
+    "alias": "",
+    "options": [
+      [
+        "d",
+        "dry-run",
+        "npm publish --dry-run"
+      ],
+      [
+        "",
+        "allow-staged",
+        "allow publishing components that were not exported yet (not recommended)"
+      ],
+      [
+        "j",
+        "json",
+        "return the output as JSON"
+      ]
+    ],
+    "description": "publish components to npm (npm publish)",
+    "extendedDescription": "",
+    "group": "collaborate",
+    "private": true,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
+  },
+  {
+    "name": "refactor <sub-command>",
+    "alias": "",
+    "options": [],
+    "description": "source code refactoring / codemod",
+    "extendedDescription": "",
+    "group": "development",
+    "private": false,
+    "commands": [
+      {
+        "name": "dependency-name <old-id> <new-id>",
+        "alias": "",
+        "options": [],
+        "description": "replace the dependency's old package-name with a new one in the code",
+        "extendedDescription": "the `<old-id>` and `<new-id>` arguments can be either a component-id or a package-name.",
+        "group": "development",
+        "private": false
+      }
+    ]
+  },
+  {
+    "name": "fork <source-component-id> [target-component-name]",
+    "alias": "",
+    "options": [
+      [
+        "s",
+        "scope <string>",
+        "default scope for the new component"
+      ],
+      [
+        "p",
+        "path <string>",
+        "relative path in the workspace for the new component. by default the path is `<scope>/<namespace>/<name>`"
+      ],
+      [
+        "r",
+        "refactor",
+        "update the import/require statements in all dependent components (in the same workspace)"
+      ],
+      [
+        "x",
+        "skip-dependency-installation",
+        "do not install packages of the imported components"
+      ],
+      [
+        "e",
+        "env <string>",
+        "set the environment for the new component"
+      ],
+      [
+        "",
+        "skip-config",
+        "do not copy the config (aspects-config, env, etc) to the new component. helpful when it fails during aspect loading"
+      ],
+      [
+        "",
+        "preserve",
+        "avoid refactoring file and variable/class names according to the new component name"
+      ],
+      [
+        "",
+        "no-link",
+        "avoid saving a reference to the original component"
+      ],
+      [
+        "",
+        "ast",
+        "use ast to transform files instead of regex"
+      ]
+    ],
+    "description": "create a new component forked from an existing one (copies source files and configs)",
+    "extendedDescription": "",
+    "group": "collaborate",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true,
+    "arguments": [
+      {
+        "name": "source-component-id",
+        "description": "the component id of the source component"
+      },
+      {
+        "name": "target-component-name",
+        "description": "the name for the new component (component name without scope, e.g. name/spaces/my-button). to set a different scope, use the '--scope' flag"
       }
     ]
   },
@@ -2187,437 +2883,6 @@
     ]
   },
   {
-    "name": "list [remote-scope]",
-    "alias": "ls",
-    "options": [
-      [
-        "i",
-        "ids",
-        "show only component ids, unformatted"
-      ],
-      [
-        "s",
-        "scope",
-        "show only components stored in the local scope, including indirect dependencies"
-      ],
-      [
-        "o",
-        "outdated",
-        "highlight outdated components, in comparison with their latest remote version (if one exists)"
-      ],
-      [
-        "d",
-        "include-deleted",
-        "EXPERIMENTAL. show also deleted components"
-      ],
-      [
-        "j",
-        "json",
-        "show the output in JSON format"
-      ],
-      [
-        "n",
-        "namespace <string>",
-        "show only components in the specified namespace/s e.g. '-n ui' or '*/ui'"
-      ]
-    ],
-    "description": "list components on a workspace or a remote scope (with flag).",
-    "extendedDescription": "",
-    "group": "discover",
-    "private": false,
-    "remoteOp": true,
-    "skipWorkspace": true
-  },
-  {
-    "name": "compile [component-names...]",
-    "alias": "",
-    "options": [
-      [
-        "c",
-        "changed",
-        "compile only new and modified components"
-      ],
-      [
-        "v",
-        "verbose",
-        "show more data, such as, dist paths"
-      ],
-      [
-        "j",
-        "json",
-        "return the compile results in json format"
-      ],
-      [
-        "d",
-        "delete-dist-dir",
-        "delete existing dist folder before writing new compiled files"
-      ]
-    ],
-    "description": "compile components in the workspace",
-    "extendedDescription": "",
-    "group": "development",
-    "private": false,
-    "arguments": [
-      {
-        "name": "component-names...",
-        "description": "a list of component names or component IDs (defaults to all components)"
-      }
-    ]
-  },
-  {
-    "name": "install [packages...]",
-    "alias": "in",
-    "options": [
-      [
-        "t",
-        "type [lifecycleType]",
-        "\"runtime\" (default) or \"peer\" (dev is not a valid option)"
-      ],
-      [
-        "u",
-        "update",
-        "update all dependencies to latest version according to their semver range"
-      ],
-      [
-        "",
-        "update-existing",
-        "DEPRECATED (not needed anymore, it is the default now). update existing dependencies version and types"
-      ],
-      [
-        "",
-        "save-prefix [savePrefix]",
-        "set the prefix to use when adding dependency to workspace.jsonc"
-      ],
-      [
-        "",
-        "skip-dedupe",
-        "do not dedupe dependencies on installation"
-      ],
-      [
-        "",
-        "skip-import",
-        "do not import bit objects post installation"
-      ],
-      [
-        "",
-        "skip-compile",
-        "do not compile components"
-      ],
-      [
-        "",
-        "skip-write-config-files",
-        "do not write config files (such as eslint, tsconfig, prettier, etc...)"
-      ],
-      [
-        "a",
-        "add-missing-deps",
-        "install all missing dependencies"
-      ],
-      [
-        "",
-        "add-missing-peers",
-        "install all missing peer dependencies"
-      ],
-      [
-        "",
-        "recurring-install",
-        "automatically run install again if there are non loaded old envs in your workspace"
-      ],
-      [
-        "",
-        "no-optional [noOptional]",
-        "do not install optional dependencies (works with pnpm only)"
-      ],
-      [
-        "",
-        "lockfile-only",
-        "dependencies are not written to node_modules. Only the lockfile is updated"
-      ]
-    ],
-    "description": "installs workspace dependencies",
-    "extendedDescription": "when no package is specified, all workspace dependencies are installed and all workspace components are imported.",
-    "group": "development",
-    "private": false,
-    "arguments": [
-      {
-        "name": "packages...",
-        "description": "a list of packages to install (separated by spaces)"
-      }
-    ]
-  },
-  {
-    "name": "uninstall [packages...]",
-    "alias": "un",
-    "options": [],
-    "description": "uninstall dependencies",
-    "extendedDescription": "",
-    "group": "development",
-    "private": false
-  },
-  {
-    "name": "update [package-patterns...]",
-    "alias": "up",
-    "options": [
-      [
-        "y",
-        "yes",
-        "automatically update all outdated versions for packages specified in pattern (all if no pattern supplied) - use carefully as could result in breaking updates for dependencies"
-      ],
-      [
-        "",
-        "patch",
-        "update to the latest patch version. Semver rules are ignored"
-      ],
-      [
-        "",
-        "minor",
-        "update to the latest minor version. Semver rules are ignored"
-      ],
-      [
-        "",
-        "major",
-        "update to the latest major version. Semver rules are ignored"
-      ],
-      [
-        "",
-        "semver",
-        "update to the newest version respecting semver"
-      ]
-    ],
-    "description": "update dependencies. By default, dependencies are updated to the highest semver compatible versions.",
-    "extendedDescription": "",
-    "group": "development",
-    "private": false,
-    "arguments": [
-      {
-        "name": "package-patterns...",
-        "description": "a string list of package names, or patterns (separated by spaces or commas), e.g. \"@teambit/**,@my-org/ui/**\". The patterns should be in glob format. By default, all packages are selected."
-      }
-    ]
-  },
-  {
-    "name": "link [component-names...]",
-    "alias": "",
-    "options": [
-      [
-        "j",
-        "json",
-        "return the output as JSON"
-      ],
-      [
-        "",
-        "verbose",
-        "verbose output"
-      ],
-      [
-        "r",
-        "rewire",
-        "Replace relative paths with module paths in code (e.g. \"../foo\" => \"@bit/foo\")"
-      ],
-      [
-        "",
-        "target <dir>",
-        "link to an external directory (similar to npm-link) so other projects could use these components"
-      ],
-      [
-        "",
-        "skip-fetching-objects",
-        "skip fetch missing objects from remotes before linking"
-      ],
-      [
-        "",
-        "peers",
-        "link peer dependencies of the components too"
-      ]
-    ],
-    "description": "create links in the node_modules directory, to core aspects and to components in the workspace",
-    "extendedDescription": "",
-    "group": "development",
-    "private": false,
-    "arguments": [
-      {
-        "name": "component-names...",
-        "description": "names or IDs of the components to link"
-      }
-    ]
-  },
-  {
-    "name": "move <current-component-dir> <new-component-dir>",
-    "alias": "mv",
-    "options": [],
-    "description": "move a component to a different filesystem path",
-    "extendedDescription": "(note: this does NOT affect the component's name or scope, just its location in the workspace)",
-    "group": "development",
-    "private": false,
-    "arguments": [
-      {
-        "name": "current-component-dir",
-        "description": "the component's current directory (relative to the workspace root)"
-      },
-      {
-        "name": "new-component-dir",
-        "description": "the new directory (relative to the workspace root) to create and move the component's files to"
-      }
-    ]
-  },
-  {
-    "name": "import [component-patterns...]",
-    "alias": "",
-    "options": [
-      [
-        "p",
-        "path <path>",
-        "import components into a specific directory (a relative path in the workspace)"
-      ],
-      [
-        "o",
-        "objects",
-        "import components objects to the local scope without checkout (without writing them to the file system). This is the default behavior for import with no id argument"
-      ],
-      [
-        "O",
-        "override",
-        "override local changes"
-      ],
-      [
-        "v",
-        "verbose",
-        "show verbose output for inspection"
-      ],
-      [
-        "j",
-        "json",
-        "return the output as JSON"
-      ],
-      [
-        "x",
-        "skip-dependency-installation",
-        "do not auto-install dependencies of the imported components"
-      ],
-      [
-        "",
-        "skip-write-config-files",
-        "do not write config files (such as eslint, tsconfig, prettier, etc...)"
-      ],
-      [
-        "m",
-        "merge [strategy]",
-        "merge local changes with the imported version. strategy should be \"theirs\", \"ours\" or \"manual\""
-      ],
-      [
-        "",
-        "dependencies",
-        "import all dependencies (bit components only) of imported components and write them to the workspace"
-      ],
-      [
-        "",
-        "dependencies-head",
-        "same as --dependencies, except it imports the dependencies with their head version"
-      ],
-      [
-        "",
-        "dependents",
-        "import components found while traversing from the imported components upwards to the workspace components"
-      ],
-      [
-        "",
-        "dependents-via <string>",
-        "same as --dependents except the traversal must go through the specified component. to specify multiple components, wrap with quotes and separate by a comma"
-      ],
-      [
-        "",
-        "dependents-all",
-        "same as --dependents except not prompting for selecting paths but rather selecting all paths and showing final confirmation before importing"
-      ],
-      [
-        "",
-        "dependents-dry-run",
-        "DEPRECATED. (this is the default now). same as --dependents, except it prints the found dependents and wait for confirmation before importing them"
-      ],
-      [
-        "",
-        "silent",
-        "no prompt for --dependents/--dependents-via flags"
-      ],
-      [
-        "",
-        "filter-envs <envs>",
-        "only import components that have the specified environment (e.g., \"teambit.react/react-env\")"
-      ],
-      [
-        "",
-        "save-in-lane",
-        "when checked out to a lane and the component is not on the remote-lane, save it in the lane (defaults to save on main)"
-      ],
-      [
-        "",
-        "all-history",
-        "relevant for fetching all components objects. avoid optimizations, fetch all history versions, always"
-      ],
-      [
-        "",
-        "fetch-deps",
-        "fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data"
-      ],
-      [
-        "",
-        "track-only",
-        "do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap"
-      ],
-      [
-        "",
-        "include-deprecated",
-        "when importing with patterns, include deprecated components (default to exclude them)"
-      ]
-    ],
-    "description": "import components from their remote scopes to the local workspace",
-    "extendedDescription": "",
-    "group": "collaborate",
-    "private": false,
-    "remoteOp": true,
-    "arguments": [
-      {
-        "name": "component-patterns...",
-        "description": "component IDs or component patterns (separated by space). Use patterns to import groups of components using a common scope or namespace. E.g., \"utils/*\" (wrap with double quotes)"
-      }
-    ]
-  },
-  {
-    "name": "fetch [ids...]",
-    "alias": "",
-    "options": [
-      [
-        "l",
-        "lanes",
-        "fetch component objects from lanes. note, it does not save the remote lanes objects locally, only the refs"
-      ],
-      [
-        "c",
-        "components",
-        "fetch components"
-      ],
-      [
-        "",
-        "all-history",
-        "for each component, fetch all its versions. by default, only the latest version is fetched"
-      ],
-      [
-        "j",
-        "json",
-        "return the output as JSON"
-      ],
-      [
-        "",
-        "from-original-scopes",
-        "fetch indirect dependencies from their original scope as opposed to from their dependents"
-      ]
-    ],
-    "description": "fetch remote objects and store locally",
-    "extendedDescription": "for lanes, use \"/\" as a separator between the remote and the lane name, e.g. teambit.ui/fix-button",
-    "group": "ungrouped",
-    "private": true
-  },
-  {
     "name": "eject <component-pattern>",
     "alias": "E",
     "options": [
@@ -2652,118 +2917,6 @@
         "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
-  },
-  {
-    "name": "remove <component-pattern>",
-    "alias": "rm",
-    "options": [
-      [
-        "t",
-        "track",
-        "keep tracking component in .bitmap (default = false), helps transform a tagged-component to new"
-      ],
-      [
-        "",
-        "keep-files",
-        "keep component files (just untrack the component)"
-      ],
-      [
-        "f",
-        "force",
-        "removes the component from the scope, even if used as a dependency. WARNING: you will need to fix the components that depend on this component"
-      ],
-      [
-        "s",
-        "silent",
-        "skip confirmation"
-      ]
-    ],
-    "description": "remove component(s) from the local workspace",
-    "extendedDescription": "to mark components as deleted on the remote scope, use \"bit delete\".",
-    "group": "collaborate",
-    "private": false,
-    "remoteOp": true,
-    "skipWorkspace": true,
-    "arguments": [
-      {
-        "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      }
-    ],
-    "examples": [
-      {
-        "cmd": "remove \"$deprecated\"",
-        "description": "remove all components that are deprecated"
-      }
-    ]
-  },
-  {
-    "name": "delete <component-pattern>",
-    "alias": "",
-    "options": [
-      [
-        "",
-        "lane",
-        "when on a lane, delete the component from this lane only. avoid merging it to main or other lanes"
-      ],
-      [
-        "",
-        "update-main",
-        "delete component/s on the main lane after merging this lane into main"
-      ],
-      [
-        "",
-        "range <string>",
-        "EXPERIMENTAL. enter a Semver range to delete specific tags (cannot be used for snaps). see https://www.npmjs.com/package/semver#ranges for the range syntax"
-      ],
-      [
-        "s",
-        "silent",
-        "skip confirmation"
-      ],
-      [
-        "",
-        "hard",
-        "NOT-RECOMMENDED. delete a component completely from a remote scope. careful! this is a permanent change that could corrupt dependents."
-      ],
-      [
-        "f",
-        "force",
-        "relevant for --hard. allow the deletion even if used as a dependency. WARNING: components that depend on this component will corrupt"
-      ]
-    ],
-    "description": "mark components as deleted on the remote",
-    "extendedDescription": "to remove components from your local workspace only, use \"bit remove\" command.\nthis command marks the components as deleted, and after snap/tag and export they will be marked as deleted from the remote scope as well.\n",
-    "group": "collaborate",
-    "private": false,
-    "remoteOp": true,
-    "skipWorkspace": true,
-    "arguments": [
-      {
-        "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      }
-    ]
-  },
-  {
-    "name": "recover <component-name>",
-    "alias": "",
-    "options": [
-      [
-        "x",
-        "skip-dependency-installation",
-        "do not install packages in case of importing components"
-      ],
-      [
-        "",
-        "skip-write-config-files",
-        "do not write config files (such as eslint, tsconfig, prettier, etc...)"
-      ]
-    ],
-    "description": "recover component(s) soft-deleted from the workspace, or a remote scope",
-    "extendedDescription": "",
-    "group": "collaborate",
-    "private": false
   },
   {
     "name": "resume-export <export-id> <remotes...>",
@@ -3322,13 +3475,23 @@
         "when snapped on a lane, mark it as update-dependents so it will be skipped from the workspace"
       ],
       [
+        "",
+        "tag",
+        "make a tag instead of a snap"
+      ],
+      [
+        "",
+        "stream",
+        "relevant for --json only. stream loader as json strings"
+      ],
+      [
         "j",
         "json",
         "output as json format"
       ]
     ],
     "description": "snap components from a bare-scope",
-    "extendedDescription": "this command should be running from a new bare scope, it first imports the components it needs and then processes the snap.\nthe input data is a stringified JSON of an array of the following object.\n{\n  componentId: string;     // ids always have scope, so it's safe to parse them from string\n  dependencies?: string[]; // dependencies include versions. for components use component-id. e.g. [teambit.compilation/compiler@1.0.0, lodash@4.17.21]\n  aspects?: Record<string,any> // e.g. { \"teambit.react/react\": {}, \"teambit.envs/envs\": { \"env\": \"teambit.react/react\" } }\n  message?: string;       // tag-message.\n  files?: Array<{path: string, content: string}>; // replace content of specified source-files. the content is base64 encoded.\n  isNew?: boolean;        // if it's new, it'll be generated from the given files. otherwise, it'll be fetched from the scope and updated.\n  mainFile?: string;      // relevant when isNew is true. default to \"index.ts\".\n  newDependencies?: Array<{  // new dependencies (components and packages) to add.\n    id: string;              // component-id or package-name. e.g. \"teambit.react/react\" or \"lodash\".\n    version?: string;        // version of the package. e.g. \"2.0.3\". for packages, it is mandatory.\n    isComponent?: boolean;   // default true. if false, it's a package dependency\n    type?: 'runtime' | 'dev' | 'peer'; // default \"runtime\".\n  }>;\n  removeDependencies?: string[]; // component-id (for components) or package-name (for packages) to remove from the dependencies.\n}\nan example of the final data: '[{\"componentId\":\"ci.remote2/comp-b\",\"message\": \"first snap\"}]'\n",
+    "extendedDescription": "this command should be running from a new bare scope, it first imports the components it needs and then processes the snap.\nthe input data is a stringified JSON of an array of the following object.\n{\n  componentId: string;     // ids always have scope, so it's safe to parse them from string\n  dependencies?: string[]; // dependencies include versions. for components use component-id. e.g. [teambit.compilation/compiler@1.0.0, lodash@4.17.21]\n  aspects?: Record<string,any> // e.g. { \"teambit.react/react\": {}, \"teambit.envs/envs\": { \"env\": \"teambit.react/react\" } }\n  message?: string;       // tag-message.\n  files?: Array<{path: string, content: string}>; // replace content of specified source-files. the content is base64 encoded.\n  isNew?: boolean;        // if it's new, it'll be generated from the given files. otherwise, it'll be fetched from the scope and updated.\n  mainFile?: string;      // relevant when isNew is true. default to \"index.ts\".\n  newDependencies?: Array<{  // new dependencies (components and packages) to add.\n    id: string;              // component-id or package-name. e.g. \"teambit.react/react\" or \"lodash\".\n    version?: string;        // version of the package. e.g. \"2.0.3\". for packages, it is mandatory.\n    isComponent?: boolean;   // default true. if false, it's a package dependency\n    type?: 'runtime' | 'dev' | 'peer'; // default \"runtime\".\n  }>;\n  removeDependencies?: string[]; // component-id (for components) or package-name (for packages) to remove from the dependencies.\n  forkFrom?: string;      // origin id to fork from. the componentId is the new id. (no need to populate isNew prop).\n  version?: string; // relevant when passing \"--tag\". optionally, specify the semver to tag. default to \"patch\".\n}\nan example of the final data: '[{\"componentId\":\"ci.remote2/comp-b\",\"message\": \"first snap\"}]'\n",
     "group": "ungrouped",
     "private": true
   },
@@ -3464,6 +3627,11 @@
             "p",
             "pattern",
             "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          ],
+          [
+            "",
+            "include-new",
+            "EXPERIMENTAL. by default, only modified components are stashed. use this flag to include new components"
           ],
           [
             "m",
@@ -3664,6 +3832,11 @@
         "show full message of the snap (default to the first line for --one-line/--parents flags)"
       ],
       [
+        "",
+        "show-hidden",
+        "show hidden snaps (snaps are marked as hidden typically when the following tag has the same files/config)"
+      ],
+      [
         "j",
         "json",
         "json format"
@@ -3693,6 +3866,27 @@
       ]
     ],
     "description": "EXPERIMENTAL. show file history",
+    "extendedDescription": "",
+    "group": "info",
+    "private": false,
+    "arguments": [
+      {
+        "name": "filepath",
+        "description": "file path relative to the workspace"
+      }
+    ]
+  },
+  {
+    "name": "blame <filepath>",
+    "alias": "",
+    "options": [
+      [
+        "m",
+        "include-message",
+        "show the commit message"
+      ]
+    ],
+    "description": "EXPERIMENTAL. per line, show who and when was the last to modify it",
     "extendedDescription": "",
     "group": "info",
     "private": false,
@@ -4177,6 +4371,26 @@
         "private": false
       },
       {
+        "name": "history-diff <from-history-id> <to-history-id>",
+        "alias": "",
+        "options": [
+          [
+            "l",
+            "lane <lane-name>",
+            "the name of the lane to diff. if not specified, the current lane is used"
+          ],
+          [
+            "",
+            "pattern <component-pattern>",
+            "show lane-diff for components conforming to the specified component-pattern only\ncomponent-pattern format: component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          ]
+        ],
+        "description": "EXPERIMENTAL. show diff between two lane-history ids",
+        "extendedDescription": "run \"bit lane history\" to find these history-ids",
+        "group": "ungrouped",
+        "private": false
+      },
+      {
         "name": "checkout <history-id>",
         "alias": "",
         "options": [
@@ -4546,92 +4760,6 @@
     ]
   },
   {
-    "name": "pack <componentId> [scopePath]",
-    "alias": "",
-    "options": [
-      [
-        "d",
-        "out-dir <out-dir>",
-        "directory to put the result tar file"
-      ],
-      [
-        "o",
-        "override",
-        "override existing pack file"
-      ],
-      [
-        "k",
-        "keep",
-        "should keep isolated environment [default = false]"
-      ],
-      [
-        "p",
-        "prefix",
-        "keep custom (binding) prefix"
-      ],
-      [
-        "j",
-        "json",
-        "return the output as JSON"
-      ]
-    ],
-    "description": "create tar for npm publish",
-    "extendedDescription": "",
-    "group": "collaborate",
-    "private": true
-  },
-  {
-    "name": "publish <component-pattern>",
-    "alias": "",
-    "options": [
-      [
-        "d",
-        "dry-run",
-        "npm publish --dry-run"
-      ],
-      [
-        "",
-        "allow-staged",
-        "allow publishing components that were not exported yet (not recommended)"
-      ],
-      [
-        "j",
-        "json",
-        "return the output as JSON"
-      ]
-    ],
-    "description": "publish components to npm (npm publish)",
-    "extendedDescription": "",
-    "group": "collaborate",
-    "private": true,
-    "arguments": [
-      {
-        "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      }
-    ]
-  },
-  {
-    "name": "refactor <sub-command>",
-    "alias": "",
-    "options": [],
-    "description": "source code refactoring / codemod",
-    "extendedDescription": "",
-    "group": "development",
-    "private": false,
-    "commands": [
-      {
-        "name": "dependency-name <old-id> <new-id>",
-        "alias": "",
-        "options": [],
-        "description": "replace the dependency's old package-name with a new one in the code",
-        "extendedDescription": "the `<old-id>` and `<new-id>` arguments can be either a component-id or a package-name.",
-        "group": "development",
-        "private": false
-      }
-    ]
-  },
-  {
     "name": "login",
     "alias": "",
     "options": [
@@ -4877,73 +5005,6 @@
       {
         "name": "new-name",
         "description": "the new component name (without its scope name. use --scope to define the new component's scope)"
-      }
-    ]
-  },
-  {
-    "name": "fork <source-component-id> [target-component-name]",
-    "alias": "",
-    "options": [
-      [
-        "s",
-        "scope <string>",
-        "default scope for the new component"
-      ],
-      [
-        "p",
-        "path <string>",
-        "relative path in the workspace for the new component. by default the path is `<scope>/<namespace>/<name>`"
-      ],
-      [
-        "r",
-        "refactor",
-        "update the import/require statements in all dependent components (in the same workspace)"
-      ],
-      [
-        "x",
-        "skip-dependency-installation",
-        "do not install packages of the imported components"
-      ],
-      [
-        "e",
-        "env <string>",
-        "set the environment for the new component"
-      ],
-      [
-        "",
-        "skip-config",
-        "do not copy the config (aspects-config, env, etc) to the new component. helpful when it fails during aspect loading"
-      ],
-      [
-        "",
-        "preserve",
-        "avoid refactoring file and variable/class names according to the new component name"
-      ],
-      [
-        "",
-        "no-link",
-        "avoid saving a reference to the original component"
-      ],
-      [
-        "",
-        "ast",
-        "use ast to transform files instead of regex"
-      ]
-    ],
-    "description": "create a new component forked from an existing one (copies source files and configs)",
-    "extendedDescription": "",
-    "group": "collaborate",
-    "private": false,
-    "remoteOp": true,
-    "skipWorkspace": true,
-    "arguments": [
-      {
-        "name": "source-component-id",
-        "description": "the component id of the source component"
-      },
-      {
-        "name": "target-component-name",
-        "description": "the name for the new component (component name without scope, e.g. name/spaces/my-button). to set a different scope, use the '--scope' flag"
       }
     ]
   },

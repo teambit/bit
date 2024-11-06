@@ -107,6 +107,10 @@ export class APIForIDE {
     await this.writeToCmdHistory(str);
   }
 
+  getProcessPid() {
+    return process.pid;
+  }
+
   private async writeToCmdHistory(str: string) {
     await fs.appendFile(path.join(this.workspace.scope.path, CMD_HISTORY), `${new Date().toISOString()} ${str}\n`);
   }
@@ -316,6 +320,11 @@ export class APIForIDE {
 
   async logFile(filePath: string) {
     const results = await this.componentLog.getFileHistoryHashes(filePath);
+    return results;
+  }
+
+  async blame(filePath: string) {
+    const results = await this.componentLog.blame(filePath);
     return results;
   }
 

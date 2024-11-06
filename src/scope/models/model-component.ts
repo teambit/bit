@@ -553,6 +553,7 @@ export default class Component extends BitObject {
         onLane: versionInfo.onLane,
         deleted: versionInfo.tag && removeRange && semver.satisfies(versionInfo.tag, removeRange),
         deprecated: versionInfo.tag && deprecationRange && semver.satisfies(versionInfo.tag, deprecationRange),
+        hidden: versionInfo.version?.hidden,
       };
     });
     // sort from earliest to latest

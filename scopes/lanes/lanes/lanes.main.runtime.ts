@@ -6,7 +6,7 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
-import { LaneDiffCmd, LaneDiffGenerator, LaneDiffResults } from '@teambit/lanes.modules.diff';
+import { LaneDiffCmd, LaneDiffGenerator, LaneDiffResults, LaneHistoryDiffCmd } from '@teambit/lanes.modules.diff';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
@@ -479,7 +479,6 @@ please create a new lane instead, which will include all components of this lane
       scope: this.scope.legacyScope,
       laneObject: lane,
       ids: new ComponentIdList(),
-      idsWithFutureScope: new ComponentIdList(),
       allVersions: false,
     });
   }
@@ -1188,6 +1187,7 @@ please create a new lane instead, which will include all components of this lane
       new LaneEjectCmd(lanesMain),
     ];
     laneCmd.commands.push(new LaneHistoryCmd(lanesMain));
+    laneCmd.commands.push(new LaneHistoryDiffCmd(lanesMain, workspace, scope, componentCompare));
     laneCmd.commands.push(new LaneCheckoutCmd(lanesMain));
     laneCmd.commands.push(new LaneRevertCmd(lanesMain));
     cli.register(laneCmd, switchCmd, new CatLaneHistoryCmd(lanesMain));

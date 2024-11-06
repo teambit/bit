@@ -92,6 +92,7 @@ export class WorkspaceAspectsLoader {
       runSubscribers: true,
       skipDeps: false,
       hideMissingModuleError: !!this.workspace.inInstallContext,
+      ignoreErrorFunc: this.workspace.inInstallContext ? ignoreAspectLoadingError : () => false,
       ignoreErrors: false,
       resolveEnvsFromRoots: this.resolveEnvsFromRoots,
       forceLoad: false,
@@ -155,6 +156,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       idsWithoutCore,
       mergedOpts.throwOnError,
       mergedOpts.hideMissingModuleError,
+      mergedOpts.ignoreErrorFunc,
       neededFor,
       mergedOpts.runSubscribers
     );
@@ -220,6 +222,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     seeders: string[],
     throwOnError: boolean,
     hideMissingModuleError: boolean,
+    ignoreErrorFunc?: (err: Error) => boolean,
     neededFor?: string,
     runSubscribers = true
   ): Promise<{ manifests: Array<Aspect | ExtensionManifest>; requireableComponents: RequireableComponent[] }> {
@@ -242,7 +245,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     await this.aspectLoader.loadExtensionsByManifests(
       manifests,
       { seeders, neededFor },
-      { throwOnError, hideMissingModuleError }
+      { throwOnError, hideMissingModuleError, ignoreErrorFunc }
     );
     return { manifests, requireableComponents };
   }
@@ -733,6 +736,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       useScopeAspectsCapsule: true,
       throwOnError: false,
       hideMissingModuleError: !!this.workspace.inInstallContext,
+      ignoreErrorFunc: this.workspace.inInstallContext ? ignoreAspectLoadingError : undefined,
       resolveEnvsFromRoots: this.resolveEnvsFromRoots,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
@@ -906,4 +910,13 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     nonWorkspaceIds = nonWorkspaceComps.map((c) => c.id);
     return { workspaceIds, nonWorkspaceIds };
   }
+}
+
+function ignoreAspectLoadingError(err: Error) {
+  // Ignoring that error as probably we are in the middle of the installation process
+  // so we didn't yet compile the aspect to esm correctly
+  if (err.message.includes(`Cannot use 'import.meta' outside a module`)) {
+    return true;
+  }
+  return false;
 }

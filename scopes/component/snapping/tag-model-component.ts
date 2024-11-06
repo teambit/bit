@@ -28,6 +28,7 @@ import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 
 export type onTagIdTransformer = (id: ComponentID) => ComponentID | null;
@@ -424,6 +425,7 @@ export async function tagModelComponent({
 
       addBuildStatus(componentsToBuild, BuildStatus.Succeed);
       await mapSeries(componentsToBuild, (consumerComponent) => snapping._enrichComp(consumerComponent));
+      if (populateArtifactsFrom) await updateHiddenProp(scope, populateArtifactsFrom);
     }
   }
 
@@ -664,4 +666,25 @@ function replacePendingVersions(obj: unknown, resolvedVersions: Array<{ name: st
     s = s.replaceAll(`${name}@pending:`, `${name}@${version}`);
   }
   return JSON.parse(s);
+}
+
+/**
+ * relevant for "_tag" (tag-from-scope) command.
+ * the new tag uses the same files/config/build-artifacts as the previous snap.
+ * we want to mark the previous snap as hidden. so then "bit log" and "bit blame" won't show it.
+ */
+async function updateHiddenProp(scope: ScopeMain, ids: ComponentID[]) {
+  const log = await getBasicLog();
+  log.message = 'marked as hidden';
+  await pMapPool(
+    ids,
+    async (id) => {
+      const versionObj = await scope.getBitObjectVersionById(id);
+      if (!versionObj) return;
+      versionObj.hidden = true;
+      versionObj.addModifiedLog(log);
+      scope.legacyScope.objects.add(versionObj);
+    },
+    { concurrency: 50 }
+  );
 }

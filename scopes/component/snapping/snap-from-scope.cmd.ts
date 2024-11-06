@@ -23,6 +23,8 @@ export type SnapDataPerCompRaw = {
     type?: 'runtime' | 'dev' | 'peer'; // default "runtime".
   }>;
   removeDependencies?: string[];
+  forkFrom?: string; // origin id to fork from. the componentId is the new id. (no need to populate isNew prop).
+  version?: string; // relevant when passing "--tag". optionally, specify the semver to tag. default to "patch".
 };
 
 type SnapFromScopeOptions = {
@@ -31,6 +33,7 @@ type SnapFromScopeOptions = {
   ignoreIssues?: string;
   disableSnapPipeline?: boolean;
   updateDependents?: boolean;
+  tag?: boolean;
 } & BasicTagSnapParams;
 
 export class SnapFromScopeCmd implements Command {
@@ -53,6 +56,8 @@ the input data is a stringified JSON of an array of the following object.
     type?: 'runtime' | 'dev' | 'peer'; // default "runtime".
   }>;
   removeDependencies?: string[]; // component-id (for components) or package-name (for packages) to remove from the dependencies.
+  forkFrom?: string;      // origin id to fork from. the componentId is the new id. (no need to populate isNew prop).
+  version?: string; // relevant when passing "--tag". optionally, specify the semver to tag. default to "patch".
 }
 an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "first snap"}]'
 `;
@@ -78,6 +83,8 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       'update-dependents',
       'when snapped on a lane, mark it as update-dependents so it will be skipped from the workspace',
     ],
+    ['', 'tag', 'make a tag instead of a snap'],
+    ['', 'stream', 'relevant for --json only. stream loader as json strings'],
     ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;
@@ -88,8 +95,44 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     private logger: Logger
   ) {}
 
-  async report([data]: [string], options: SnapFromScopeOptions) {
-    const results = await this.json([data], options);
+  async report(
+    [data]: [string],
+    {
+      push = false,
+      message = '',
+      lane,
+      ignoreIssues,
+      build = false,
+      skipTests = false,
+      disableSnapPipeline = false,
+      ignoreBuildErrors = false,
+      rebuildDepsGraph,
+      updateDependents,
+      tag,
+    }: SnapFromScopeOptions
+  ) {
+    const disableTagAndSnapPipelines = disableSnapPipeline;
+    if (disableTagAndSnapPipelines && ignoreBuildErrors) {
+      throw new BitError('you can use either ignore-build-errors or disable-snap-pipeline, but not both');
+    }
+    if (updateDependents && !lane) {
+      throw new BitError('update-dependents flag is only available when snapping from a lane');
+    }
+
+    const snapDataPerCompRaw = this.parseData(data);
+    const results = await this.snapping.snapFromScope(snapDataPerCompRaw, {
+      push,
+      message,
+      lane,
+      ignoreIssues,
+      build,
+      skipTests,
+      disableTagAndSnapPipelines,
+      ignoreBuildErrors,
+      rebuildDepsGraph,
+      updateDependents,
+      tag,
+    });
 
     const { snappedIds, exportedIds } = results;
 
@@ -112,6 +155,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       ignoreBuildErrors = false,
       rebuildDepsGraph,
       updateDependents,
+      tag,
     }: SnapFromScopeOptions
   ) {
     const disableTagAndSnapPipelines = disableSnapPipeline;
@@ -124,23 +168,36 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
     const snapDataPerCompRaw = this.parseData(data);
 
-    const results = await this.snapping.snapFromScope(snapDataPerCompRaw, {
-      push,
-      message,
-      lane,
-      ignoreIssues,
-      build,
-      skipTests,
-      disableTagAndSnapPipelines,
-      ignoreBuildErrors,
-      rebuildDepsGraph,
-      updateDependents,
-    });
+    try {
+      const results = await this.snapping.snapFromScope(snapDataPerCompRaw, {
+        push,
+        message,
+        lane,
+        ignoreIssues,
+        build,
+        skipTests,
+        disableTagAndSnapPipelines,
+        ignoreBuildErrors,
+        rebuildDepsGraph,
+        updateDependents,
+        tag,
+      });
 
-    return {
-      exportedIds: results.exportedIds?.map((id) => id.toString()),
-      snappedIds: results.snappedIds.map((id) => id.toString()),
-    };
+      return {
+        code: 0,
+        data: {
+          exportedIds: results.exportedIds?.map((id) => id.toString()),
+          snappedIds: results.snappedIds.map((id) => id.toString()),
+        },
+      };
+    } catch (err: any) {
+      this.logger.error('snap-from-scope.json, error: ', err);
+      return {
+        code: 1,
+        error: err.message,
+        stack: err.stack,
+      };
+    }
   }
   private parseData(data: string): SnapDataPerCompRaw[] {
     let dataParsed: unknown;

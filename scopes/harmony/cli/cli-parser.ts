@@ -231,7 +231,6 @@ export class CLIParser {
   private logCommandHelp(help: string) {
     const command = findCommandByArgv(this.commands);
 
-    const replacer = (_, p1, p2) => `${p1}${chalk.green(p2)}`;
     const lines = help.split('\n');
     const linesWithoutEmpty = compact(lines);
     const cmdLine = linesWithoutEmpty[0];
@@ -275,7 +274,21 @@ export class CLIParser {
     }
 
     // show the flags in green
-    const optionsColored = options.map((opt) => opt.replace(/(--)([\w-]+)/, replacer).replace(/(-)([\w-]+)/, replacer));
+    const optionsColored = options.map((optLine) => {
+      const match = optLine.match(/^(\s*)(.+?)(\s{2,}.*)/);
+      if (match) {
+        const leadingSpaces = match[1];
+        const optionPart = match[2];
+        const rest = match[3];
+        const coloredOptionPart = optionPart.replace(
+          /(^|[^a-zA-Z0-9])(--?[a-zA-Z][a-zA-Z-]*)/g,
+          (m, p1, p2) => p1 + chalk.green(p2)
+        );
+        return leadingSpaces + coloredOptionPart + rest;
+      } else {
+        return optLine;
+      }
+    });
     const argsColored = args.map((arg) => arg.replace(/^ {2}\S+/, (argName) => chalk.green(argName))); // regex: two spaces then the first word until a white space
     const optionsStr = options.length ? `\n${STANDARD_GROUP}\n${optionsColored.join('\n')}\n` : '';
     const argumentsStr = args.length ? `\nArguments:\n${argsColored.join('\n')}\n` : '';

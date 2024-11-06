@@ -1215,6 +1215,13 @@ export class InstallMain {
     }
   }
 
+  async onComponentChange(component: Component) {
+    const isEnv = this.envs.isEnv(component);
+    if (isEnv) {
+      await this.reloadEnvs([component.id]);
+    }
+  }
+
   static slots = [Slot.withType<PreLinkSlot>(), Slot.withType<PreInstallSlot>(), Slot.withType<PostInstallSlot>()];
   static dependencies = [
     DependencyResolverAspect,
@@ -1307,6 +1314,7 @@ export class InstallMain {
     // workspace.registerOnAspectsResolve(installExt.onAspectsResolveSubscriber.bind(installExt));
     if (workspace) {
       workspace.registerOnRootAspectAdded(installExt.onRootAspectAddedSubscriber.bind(installExt));
+      workspace.registerOnComponentChange(installExt.onComponentChange.bind(installExt));
     }
     cli.register(...commands);
     return installExt;

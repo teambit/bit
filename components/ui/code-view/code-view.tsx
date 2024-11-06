@@ -137,6 +137,8 @@ export function CodeView({
     // for some reason, SyntaxHighlighter doesnt support scss or sass highlighting, only css. I need to check how to fix this properly
     if (langFromFileEnding === 'scss' || langFromFileEnding === 'sass') return 'css';
     if (langFromFileEnding === 'mdx') return 'md';
+    if (langFromFileEnding === 'vue') return 'html';
+
     return langFromFileEnding;
   }, [fileContent]);
 

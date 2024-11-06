@@ -189,7 +189,9 @@ export class DependencyInstaller {
         };
       });
     }
-    const hidePackageManagerOutput = !!(this.installingContext.inCapsule && process.env.VERBOSE_PM_OUTPUT !== 'true');
+    const isJsonCmd = process.argv.includes('--json') || process.argv.includes('-j');
+    const hidePackageManagerOutput =
+      Boolean(this.installingContext.inCapsule && process.env.VERBOSE_PM_OUTPUT !== 'true') || isJsonCmd;
 
     // Make sure to take other default if passed options with only one option
     const calculatedPmOpts = {

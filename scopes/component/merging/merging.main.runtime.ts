@@ -96,6 +96,7 @@ export type ApplyVersionResults = {
   failedComponents?: FailedComponents[];
   removedComponents?: ComponentID[];
   addedComponents?: ComponentID[]; // relevant when restoreMissingComponents is true (e.g. bit lane merge-abort)
+  newComponents?: ComponentID[]; // relevant for "bit stash load". (stashedBitmapEntries is populated)
   resolvedComponents?: ConsumerComponent[]; // relevant for bit merge --resolve
   abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
   mergeSnapResults?: MergeSnapResults;

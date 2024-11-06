@@ -111,18 +111,21 @@ export class PreviewStartPlugin implements StartPlugin {
     };
     const previewServer = this.serversMap[id];
     const spinnerId = getSpinnerId(id);
-    const errors = results.errors || [];
-    const hasErrors = !!errors.length;
-    const warnings = getWarningsWithoutIgnored(results.warnings);
-    const hasWarnings = !!warnings.length;
-    const url = `http://localhost:${previewServer.port}`;
-    const text = getSpinnerDoneMessage(this.serversMap[id], errors, warnings, url);
-    if (hasErrors) {
-      this.logger.multiSpinner.fail(spinnerId, { text });
-    } else if (hasWarnings) {
-      this.logger.multiSpinner.warn(spinnerId, { text });
-    } else {
-      this.logger.multiSpinner.succeed(spinnerId, { text });
+    const spinner = this.logger.multiSpinner.spinners[spinnerId];
+    if (spinner && spinner.isActive()) {
+      const errors = results.errors || [];
+      const hasErrors = !!errors.length;
+      const warnings = getWarningsWithoutIgnored(results.warnings);
+      const hasWarnings = !!warnings.length;
+      const url = `http://localhost:${previewServer.port}`;
+      const text = getSpinnerDoneMessage(this.serversMap[id], errors, warnings, url);
+      if (hasErrors) {
+        this.logger.multiSpinner.fail(spinnerId, { text });
+      } else if (hasWarnings) {
+        this.logger.multiSpinner.warn(spinnerId, { text });
+      } else {
+        this.logger.multiSpinner.succeed(spinnerId, { text });
+      }
     }
 
     const noneAreCompiling = Object.values(this.serversState).every((x) => !x.isCompiling);

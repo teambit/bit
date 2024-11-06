@@ -24,6 +24,7 @@ import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
 import { applyVersion, ComponentStatus, ComponentStatusBase, throwForFailures } from './checkout-version';
 import { RevertCmd } from './revert-cmd';
+import { ComponentMap } from '@teambit/legacy.bit-map';
 
 export type CheckoutProps = {
   version?: string; // if reset/head/latest is true, the version is undefined
@@ -47,6 +48,7 @@ export type CheckoutProps = {
   versionPerId?: ComponentID[]; // if given, the ComponentID.version is the version to checkout to.
   skipUpdatingBitmap?: boolean; // needed for stash
   loadStash?: boolean;
+  stashedBitmapEntries?: Array<Partial<ComponentMap>>;
   restoreMissingComponents?: boolean; // in case .bitmap has a component and it's missing from the workspace, restore it (from model)
   allowAddingComponentsFromScope?: boolean; // in case the id doesn't exist in .bitmap, add it from the scope (relevant for switch)
   includeLocallyDeleted?: boolean; // include components that were deleted locally. currently enabled for "bit checkout reset" only.
@@ -74,6 +76,7 @@ export class CheckoutMain {
     const { version, ids, promptMergeOptions } = checkoutProps;
     await this.syncNewComponents(checkoutProps);
     const addedComponents = await this.restoreMissingComponents(checkoutProps);
+    const newComponents = await this.addNewComponents(checkoutProps);
     const bitIds = ComponentIdList.fromArray(ids?.map((id) => id) || []);
     // don't use Promise.all, it loads the components and this operation must be in sequence.
     const allComponentStatusBeforeMerge = await mapSeries(bitIds, (id) =>
@@ -189,6 +192,7 @@ export class CheckoutMain {
       components: appliedVersionComponents,
       removedComponents: componentIdsToRemove,
       addedComponents,
+      newComponents,
       version,
       failedComponents,
       leftUnresolvedConflicts,
@@ -229,6 +233,44 @@ export class CheckoutMain {
     });
 
     return missing;
+  }
+
+  async addNewComponents(checkoutProps: CheckoutProps): Promise<undefined | ComponentID[]> {
+    const stashedBitmapEntries = checkoutProps.stashedBitmapEntries;
+    if (!stashedBitmapEntries) return;
+    const newBitmapEntries = stashedBitmapEntries.filter((entry) => entry.defaultScope);
+    if (!newBitmapEntries.length) return;
+    const newComps = await mapSeries(newBitmapEntries, async (bitmapEntry) => {
+      const id = bitmapEntry.id!;
+      const existingId = this.workspace.bitMap.getBitmapEntryIfExist(id, { ignoreVersion: true });
+      if (existingId) return;
+      const modelComponent = ModelComponent.fromBitId(id);
+      const repo = this.workspace.scope.legacyScope.objects;
+      const consumerComp = await modelComponent.toConsumerComponent(id.version, id.scope, repo);
+      const newCompId = ComponentID.fromObject({ name: id.fullName }, bitmapEntry.defaultScope!);
+      await this.componentWriter.writeMany({
+        components: [consumerComp],
+        skipDependencyInstallation: true,
+        writeToPath: bitmapEntry.rootDir,
+        skipUpdatingBitMap: true,
+      });
+
+      this.workspace.consumer.bitMap.addComponent({
+        componentId: newCompId,
+        files: consumerComp.files.map((f) => ({
+          name: f.basename,
+          relativePath: f.relative,
+          test: f.test,
+        })),
+        mainFile: bitmapEntry.mainFile!,
+        config: bitmapEntry.config,
+        defaultScope: bitmapEntry.defaultScope,
+      });
+      await this.workspace.triggerOnComponentAdd(newCompId, { compile: true });
+      return newCompId;
+    });
+    await this.workspace.bitMap.write();
+    return compact(newComps);
   }
 
   async checkoutByCLIValues(componentPattern: string, checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {

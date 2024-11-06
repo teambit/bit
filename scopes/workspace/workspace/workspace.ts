@@ -368,7 +368,10 @@ export class Workspace implements ComponentFactory {
     const autoTagPending = await this.consumer.listComponentsForAutoTagging(
       ComponentIdList.fromArray(modifiedComponents)
     );
-    const comps = autoTagPending.filter((autoTagComp) => !newComponents.has(autoTagComp.componentId));
+    const localOnly = this.listLocalOnly();
+    const comps = autoTagPending
+      .filter((autoTagComp) => !newComponents.has(autoTagComp.componentId))
+      .filter((autoTagComp) => !localOnly.has(autoTagComp.componentId));
     return comps.map((c) => c.id);
   }
 
@@ -1953,11 +1956,13 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    * configure an environment to the given components in the .bitmap file, this configuration overrides other, such as
    * overrides in workspace.jsonc.
    */
-  async setEnvToComponents(envId: ComponentID, componentIds: ComponentID[]) {
+  async setEnvToComponents(envId: ComponentID, componentIds: ComponentID[], verifyEnv = true) {
     const envStrWithPossiblyVersion = await this.resolveEnvIdWithPotentialVersionForConfig(envId);
-    const envComp = await this.get(ComponentID.fromString(envStrWithPossiblyVersion));
-    const isEnv = this.envs.isEnv(envComp);
-    if (!isEnv) throw new BitError(`the component ${envComp.id.toString()} is not an env`);
+    if (verifyEnv) {
+      const envComp = await this.get(ComponentID.fromString(envStrWithPossiblyVersion));
+      const isEnv = this.envs.isEnv(envComp);
+      if (!isEnv) throw new BitError(`the component ${envComp.id.toString()} is not an env`);
+    }
     const envIdStrNoVersion = envId.toStringWithoutVersion();
     await this.unsetEnvFromComponents(componentIds);
     await Promise.all(
