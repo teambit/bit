@@ -2,6 +2,7 @@ import fs from 'fs';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { DEPS_GRAPH } from '@teambit/harmony.modules.feature-toggle';
 import { addDistTag } from '@pnpm/registry-mock';
+import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import path from 'path';
 import chai, { expect } from 'chai';
 import stripAnsi from 'strip-ansi';
@@ -60,7 +61,7 @@ chai.use(require('chai-fs'));
     });
     describe('sign component and use dependency graph to generate a lockfile', () => {
       let signOutput: string;
-      let lockfile: any;
+      let lockfile: LockfileFileV9;
       before(async () => {
         helper.command.export();
         helper.scopeHelper.cloneLocalScope();
@@ -79,13 +80,13 @@ chai.use(require('chai-fs'));
         const capsulesDir = signOutput.match(/running installation in root dir (\/[^\s]+)/)?.[1];
         expect(capsulesDir).to.be.a('string');
         lockfile = yaml.load(fs.readFileSync(path.join(stripAnsi(capsulesDir!), 'pnpm-lock.yaml'), 'utf8'));
-        expect(lockfile.bit.restoredFromModel).to.eq(true);
+        expect(lockfile['bit'].restoredFromModel).to.eq(true);
       });
       it('should not update dependencies in the lockfile', () => {
-        expect(lockfile.packages).to.have.a.property('@pnpm.e2e/pkg-with-1-dep@100.0.0');
-        expect(lockfile.packages).to.have.a.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.0.0');
-        expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/pkg-with-1-dep@100.1.0');
-        expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.1.0');
+        expect(lockfile.packages).to.have.property('@pnpm.e2e/pkg-with-1-dep@100.0.0');
+        expect(lockfile.packages).to.have.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.0.0');
+        expect(lockfile.packages).to.not.have.property('@pnpm.e2e/pkg-with-1-dep@100.1.0');
+        expect(lockfile.packages).to.not.have.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.1.0');
       });
     });
     describe('imported component uses dependency graph to generate a lockfile', () => {
@@ -225,10 +226,10 @@ chai.use(require('chai-fs'));
         expect(lockfile.bit.restoredFromModel).to.eq(true);
       });
       it('should import the component with its own resolved versions', () => {
-        expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/foo@100.1.0');
-        expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/bar@100.1.0');
-        expect(lockfile.packages).to.have.a.property('@pnpm.e2e/foo@100.0.0');
-        expect(lockfile.packages).to.have.a.property('@pnpm.e2e/bar@100.0.0');
+        expect(lockfile.packages).to.not.have.property('@pnpm.e2e/foo@100.1.0');
+        expect(lockfile.packages).to.not.have.property('@pnpm.e2e/bar@100.1.0');
+        expect(lockfile.packages).to.have.property('@pnpm.e2e/foo@100.0.0');
+        expect(lockfile.packages).to.have.property('@pnpm.e2e/bar@100.0.0');
       });
     });
   });
@@ -290,13 +291,13 @@ chai.use(require('chai-fs'));
       expect(lockfile.bit.restoredFromModel).to.eq(true);
     });
     it('should resolve to one version of the peer dependency, the highest one', () => {
-      expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/peer-a@1.0.0');
-      expect(lockfile.packages).to.not.have.a.property('@pnpm.e2e/abc@1.0.0');
-      expect(lockfile.packages).to.have.a.property('@pnpm.e2e/peer-a@1.0.1');
-      expect(lockfile.packages).to.have.a.property('@pnpm.e2e/abc@2.0.0');
+      expect(lockfile.packages).to.not.have.property('@pnpm.e2e/peer-a@1.0.0');
+      expect(lockfile.packages).to.not.have.property('@pnpm.e2e/abc@1.0.0');
+      expect(lockfile.packages).to.have.property('@pnpm.e2e/peer-a@1.0.1');
+      expect(lockfile.packages).to.have.property('@pnpm.e2e/abc@2.0.0');
     });
     it('imported component is not installed as a dependency', () => {
-      expect(lockfile.packages).to.not.have.a.property(`@ci/${randomStr}.bar@0.0.1`);
+      expect(lockfile.packages).to.not.have.property(`@ci/${randomStr}.bar@0.0.1`);
     });
     after(() => {
       npmCiRegistry.destroy();
