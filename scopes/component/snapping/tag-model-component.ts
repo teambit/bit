@@ -378,8 +378,6 @@ export async function tagModelComponent({
       snapping._updateComponentsByTagResult(componentsToBuild, buildResult);
       const packageIntegritiesByPublishedPackages = snapping._getPublishedPackages(componentsToBuild);
       publishedPackages.push(...Array.from(packageIntegritiesByPublishedPackages.keys()));
-      // TODO: update the integrities in the dependencies graphs
-      // console.log(packageIntegritiesByPublishedPackages);
 
       await Promise.all(
         allComponentsToTag.map(async (consumerComponent) => {
@@ -400,12 +398,6 @@ export async function tagModelComponent({
                 };
                 resolvedVersions.push({ name, version });
               }
-              // if (consumerComponent.dependenciesGraph.packages[`${name}@pending:`]) {
-              // consumerComponent.dependenciesGraph.packages[`${name}@pending:`].resolution = {
-              // integrity,
-              // };
-              // resolvedVersions.push({ name, version });
-              // }
             }
             consumerComponent.dependenciesGraph = replacePendingVersions(
               consumerComponent.dependenciesGraph,
