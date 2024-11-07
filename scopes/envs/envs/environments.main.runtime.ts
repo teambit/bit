@@ -1,4 +1,6 @@
 import { isCoreAspect } from '@teambit/bit';
+import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import pLocate from 'p-locate';
 import { parse } from 'comment-json';
 import { SourceFile } from '@teambit/component.sources';
@@ -44,7 +46,7 @@ export type EnvJsonc = {
 export type ResolvedEnvJsonc = Omit<EnvJsonc, 'extends'>;
 
 export type EnvJsoncMergeCustomizer = (parentObj: EnvJsonc, childObj: EnvJsonc) => Partial<EnvJsonc>;
-export type EnvJsoncResolver = (parentId: string) => Promise<ResolvedEnvJsonc>;
+export type EnvJsoncResolver = (parentId: string, envExtendsDeps?: LegacyDependency[]) => Promise<ResolvedEnvJsonc>;
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 export type EnvJsoncMergeCustomizerRegistry = SlotRegistry<EnvJsoncMergeCustomizer>;
@@ -302,7 +304,11 @@ export class EnvsMain {
     return data.resolvedEnvJsonc;
   }
 
-  async calculateEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): Promise<EnvJsonc | undefined> {
+  async calculateEnvManifest(
+    envComponent?: Component,
+    legacyFiles?: SourceFile[],
+    envExtendsDeps?: LegacyDependency[]
+  ): Promise<EnvJsonc | undefined> {
     // TODO: maybe throw an error here?
     if (!envComponent && !legacyFiles) return undefined;
     // @ts-ignore
@@ -315,17 +321,17 @@ export class EnvsMain {
 
     const object: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true);
     if (!object.extends) return object;
-    const resolvedObject = await this.recursivelyMergeWithParentManifest(object);
+    const resolvedObject = await this.recursivelyMergeWithParentManifest(object, envExtendsDeps);
 
     return resolvedObject;
   }
 
-  async recursivelyMergeWithParentManifest(object: EnvJsonc): Promise<EnvJsonc> {
+  async recursivelyMergeWithParentManifest(object: EnvJsonc, envExtendsDeps?: LegacyDependency[]): Promise<EnvJsonc> {
     if (!object.extends) return object;
     const parentEnvId = object.extends;
     const resolver = this.getAllRegisteredEnvJsoncResolvers()[0];
 
-    const parentObject: EnvJsonc = await resolver(parentEnvId);
+    const parentObject: EnvJsonc = await resolver(parentEnvId, envExtendsDeps);
     const mergedObject = this.mergeEnvManifests(parentObject, object);
     if (mergedObject.extends) {
       return this.recursivelyMergeWithParentManifest(mergedObject);
@@ -466,6 +472,15 @@ export class EnvsMain {
     }
   }
 
+  getOrCalculateEnvId(component: Component): Promise<ComponentID> {
+    try {
+      const idStr = this.getEnvId(component);
+      return Promise.resolve(ComponentID.fromString(idStr));
+    } catch (err) {
+      return this.calculateEnvId(component);
+    }
+  }
+
   /**
    * get an environment Descriptor.
    */
@@ -479,16 +494,16 @@ export class EnvsMain {
     const componentDescriptor = await this.getComponentEnvDescriptor(component, opts);
     if (!componentDescriptor) return undefined;
     const envComponentSelfDescriptor = await this.getEnvSelfDescriptor(component);
-    const resolvedEnvJsonc = await this.calculateEnvManifest(component);
+    // const resolvedEnvJsonc = await this.calculateEnvManifest(component);
     const result = componentDescriptor;
     if (envComponentSelfDescriptor) {
       // @ts-ignore
       result.self = envComponentSelfDescriptor;
     }
-    if (resolvedEnvJsonc) {
-      // @ts-ignore
-      result.resolvedEnvJsonc = resolvedEnvJsonc;
-    }
+    // if (resolvedEnvJsonc) {
+    //   // @ts-ignore
+    //   result.resolvedEnvJsonc = resolvedEnvJsonc;
+    // }
     return result;
   }
 

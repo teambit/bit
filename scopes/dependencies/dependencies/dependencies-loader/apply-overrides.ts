@@ -12,11 +12,11 @@ import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { ComponentMap } from '@teambit/legacy.bit-map';
+import { Logger } from '@teambit/logger';
+import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';
 import { DebugDependencies, FileType } from './auto-detect-deps';
-import { Logger } from '@teambit/logger';
-import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -83,15 +83,22 @@ export class ApplyOverrides {
     this.component.overrides = overrides;
   }
 
+  private getEnvExtendsDeps() {
+    const envExtendsDeps = this.allDependencies.dependencies.length
+      ? this.allDependencies.dependencies
+      : this.component.componentFromModel?.dependencies.dependencies;
+    return envExtendsDeps;
+  }
+
   private async getOverridesData() {
     if (this.component.overrides) return this.component.overrides;
+
     const overrides = await ComponentOverrides.loadFromConsumer(
-      this.component.id,
-      this.workspace!.consumer.config,
-      this.component.componentFromModel?.overrides,
-      this.component.bitJson!,
-      this.component.files
+      this.component,
+      this.getEnvExtendsDeps(),
+      this.workspace!.consumer.config
     );
+
     return overrides;
   }
 
@@ -207,7 +214,8 @@ export class ApplyOverrides {
     this.autoDetectOverrides = await this.workspace?.getAutoDetectOverrides(
       this.component.extensions,
       this.component.id,
-      this.component.files
+      this.component.files,
+      this.getEnvExtendsDeps()
     );
   }
 
@@ -601,7 +609,11 @@ export class ApplyOverrides {
   }
 
   private async applyAutoDetectedPeersFromEnvOnEnvItSelf(): Promise<void> {
-    const envPolicy = await this.depsResolver.getEnvPolicyFromEnvId(this.component.id, this.component.files);
+    const envPolicy = await this.depsResolver.getEnvPolicyFromEnvId(
+      this.component.id,
+      this.component.files,
+      this.getEnvExtendsDeps()
+    );
     if (!envPolicy) return;
     const envPolicyManifest = envPolicy.selfPolicy.toVersionManifest();
 

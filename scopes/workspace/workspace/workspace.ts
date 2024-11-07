@@ -1,5 +1,7 @@
 /* eslint-disable max-lines */
 import memoize from 'memoizee';
+import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { parse } from 'comment-json';
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -2002,13 +2004,23 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return comp.id.toString();
   }
 
-  async resolveEnvManifest(envId: string): Promise<EnvJsonc> {
-    const envComponentId = ComponentID.fromString(envId);
-    const resolvedEnvComponentId = await this.resolveComponentId(envComponentId);
-    // const envComponent = await this.get(resolvedEnvComponentId, undefined, true, false, {
-    //   executeLoadSlot: false,
-    //   loadExtensions: false,
-    // });
+  async resolveEnvManifest(envId: string, envExtendsDeps: LegacyDependency[] = []): Promise<EnvJsonc> {
+    if (this.aspectLoader.isCoreEnv(envId)) return {};
+
+    const splitted = envId.split('@');
+    const envIdWithVersion = envId.startsWith('@') ? `@${splitted[1]}` : splitted[0];
+    const foundEnv = envExtendsDeps.find(
+      (dep) => dep.id.toStringWithoutVersion() === envIdWithVersion || dep.packageName === envIdWithVersion
+    );
+    let id = envId;
+    if (foundEnv?.id) {
+      if (foundEnv.id.version.includes('-new')) {
+        id = foundEnv.id.toStringWithoutVersion();
+      } else {
+        id = foundEnv.id.toString();
+      }
+    }
+    const resolvedEnvComponentId = await this.resolveComponentId(id);
 
     // We need to load the env component with the slot and extensions to get the env manifest of the parent
     // already resolved
@@ -2029,6 +2041,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       throw new BitError(`unable to find env.jsonc file in ${envId}`);
     }
     const envManifest: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true);
+
     return envManifest;
   }
 
@@ -2167,8 +2180,18 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     );
   }
 
-  async getAutoDetectOverrides(configuredExtensions: ExtensionDataList, id: ComponentID, legacyFiles: SourceFile[]) {
-    let policy = await this.dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
+  async getAutoDetectOverrides(
+    configuredExtensions: ExtensionDataList,
+    id: ComponentID,
+    legacyFiles: SourceFile[],
+    envExtendedDeps?: LegacyDependency[]
+  ) {
+    let policy = await this.dependencyResolver.mergeVariantPolicies(
+      configuredExtensions,
+      id,
+      legacyFiles,
+      envExtendedDeps
+    );
     // this is needed for "bit install" to install the dependencies from the merge config (see https://github.com/teambit/bit/pull/6849)
     const depsDataOfMergeConfig = this.getDepsDataOfMergeConfig(id);
     if (depsDataOfMergeConfig) {
