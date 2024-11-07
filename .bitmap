@@ -37,6 +37,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/application"
     },
+    "apply": {
+        "name": "apply",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/apply",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@0.0.60": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
+    },
     "array/duplications-finder": {
         "name": "array/duplications-finder",
         "scope": "teambit.toolbox",
