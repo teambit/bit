@@ -5137,6 +5137,16 @@
         "",
         "save-locally",
         "save the signed components locally on the bare-scope for debugging purposes"
+      ],
+      [
+        "",
+        "reuse-capsules",
+        "avoid deleting the capsules root-dir before starting the build"
+      ],
+      [
+        "",
+        "tasks <string>",
+        "build the specified task(s) only. for multiple tasks, separate by a comma and wrap with quotes.\nspecify the task-name (e.g. \"TypescriptCompiler\") or the task-aspect-id (e.g. teambit.compilation/compiler)"
       ]
     ],
     "description": "complete the build process for components",

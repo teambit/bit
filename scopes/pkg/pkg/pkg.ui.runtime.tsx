@@ -17,12 +17,22 @@ export class PkgUI {
 
   constructor(private compUI: ComponentUI) {}
 
+  private getNpmConfig(registry: string, authToken?: string): string {
+    const registryUrl = 'https://node-registry.bit.cloud';
+    const configs = [
+      `${registry}:registry="${registryUrl}"`,
+      authToken ? `"//node-registry.bit.cloud/:_authToken=${authToken}"` : undefined,
+    ].filter(Boolean);
+    return `npm config set ${configs.join(' ')}`;
+  }
+
   private npmConsumeMethod: ConsumePlugin = ({
     packageName: packageNameFromProps,
     latest: latestFromProps,
     id: componentId,
     options,
     componentModel,
+    authToken,
   }) => {
     const packageName = componentModel?.packageName || packageNameFromProps;
     const latest = componentModel?.latest || latestFromProps;
@@ -31,12 +41,13 @@ export class PkgUI {
 
     const packageVersion =
       componentId.version === latest ? '' : `@${this.compUI.formatToInstallableVersion(componentId.version as string)}`;
+    const npmConfig = this.getNpmConfig(registry, authToken);
 
     return {
       Title: <img style={{ width: '30px' }} src="https://static.bit.dev/brands/logo-npm-new.svg" />,
       Component: !options?.hide ? (
         <Install
-          config={`npm config set '${registry}:registry' https://node-registry.bit.cloud`}
+          config={npmConfig}
           componentName={componentId.name}
           packageManager="npm"
           copyString={`npm i ${packageName}${packageVersion}`}
