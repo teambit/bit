@@ -1544,14 +1544,12 @@ export class DependencyResolverMain {
         configuredExtensions: ExtensionDataList,
         id: ComponentID,
         legacyFiles: SourceFile[],
-        legacyComponent: LegacyComponent,
         envExtendsDeps?: LegacyDependency[]
       ) => {
         const policy = await dependencyResolver.mergeVariantPolicies(
           configuredExtensions,
           id,
           legacyFiles,
-          legacyComponent,
           envExtendsDeps
         );
         return policy.toLegacyDepsOverrides();
