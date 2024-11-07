@@ -547,8 +547,7 @@ export class DependencyResolverMain {
   ) {
     const envId = this.envs.getEnvId(component);
     const rootComponentsRelativePath = relative(options.workspacePath, options.rootComponentsPath);
-    const getRelativeRootComponentDir = getRootComponentDir.bind(null, rootComponentsRelativePath ?? '');
-    return getRelativeRootComponentDir(envId);
+    return getRootComponentDir(rootComponentsRelativePath ?? '', envId);
   }
 
   /**
@@ -563,17 +562,20 @@ export class DependencyResolverMain {
 
   async getDependenciesGraph(
     component: Component,
-    workspaceDir: string,
-    rootComponentsPath: string,
-    componentRelativeDir: string
+    componentRelativeDir: string,
+    options: {
+      workspacePath: string;
+      rootComponentsPath: string;
+      componentIdByPkgName: Map<string, { scope: string; name: string }>;
+    }
   ): Promise<DependenciesGraph | undefined> {
-    const dirInEnvRoot = this.getComponentDirInBitRoots(component, {
-      workspacePath: workspaceDir,
-      rootComponentsPath,
+    return this.getPackageManager()?.getDependenciesGraph?.({
+      workspacePath: options.workspacePath,
+      componentRootDir: this.getComponentDirInBitRoots(component, options),
+      pkgName: this.getPackageName(component),
+      componentRelativeDir,
+      componentIdByPkgName: options.componentIdByPkgName,
     });
-    const pkgName = this.getPackageName(component);
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
-    return packageManager?.getDependenciesGraph?.(workspaceDir, dirInEnvRoot, pkgName, componentRelativeDir);
   }
 
   /**

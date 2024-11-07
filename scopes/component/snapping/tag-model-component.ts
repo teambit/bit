@@ -29,7 +29,7 @@ import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
-import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
+import { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 
 export type onTagIdTransformer = (id: ComponentID) => ComponentID | null;
 
@@ -379,31 +379,16 @@ export async function tagModelComponent({
       const packageIntegritiesByPublishedPackages = snapping._getPublishedPackages(componentsToBuild);
       publishedPackages.push(...Array.from(packageIntegritiesByPublishedPackages.keys()));
 
+      const _addIntegritiesToDependenciesGraph = addIntegritiesToDependenciesGraph.bind(
+        null,
+        packageIntegritiesByPublishedPackages
+      );
       await Promise.all(
         allComponentsToTag.map(async (consumerComponent) => {
           if (consumerComponent.dependenciesGraph) {
-            const resolvedVersions: Array<{ name: string; version: string }> = [];
-            for (const [selector, integrity] of packageIntegritiesByPublishedPackages.entries()) {
-              if (integrity == null) continue;
-              const index = selector.indexOf('@', 1);
-              const name = selector.substring(0, index);
-              const version = selector.substring(index + 1);
-              const pendingNode = consumerComponent.dependenciesGraph.nodes.find(
-                ({ pkgId }) => pkgId === `${name}@pending:`
-              );
-              if (pendingNode) {
-                if (!pendingNode.attr) {
-                  pendingNode.attr = { resolution: { integrity } };
-                } else {
-                  pendingNode.attr.resolution = { integrity };
-                }
-                resolvedVersions.push({ name, version });
-              }
-            }
-            consumerComponent.dependenciesGraph = replacePendingVersions(
-              consumerComponent.dependenciesGraph,
-              resolvedVersions
-            ) as DependenciesGraph;
+            consumerComponent.dependenciesGraph = _addIntegritiesToDependenciesGraph(
+              consumerComponent.dependenciesGraph
+            );
 
             // Re-add the component to scope objects to persist the changes
             await snapping._addCompToObjects({
@@ -450,6 +435,38 @@ export async function tagModelComponent({
     stagedConfig,
     removedComponents,
   };
+}
+
+/**
+ * Updates the dependencies graph by replacing all "pending" version numbers of component dependencies
+ * with the actual version numbers of the recently published packages. It also attaches the integrity
+ * checksums of these components to ensure data integrity for each resolved dependency.
+ *
+ * @param packageIntegritiesByPublishedPackages - A map of package names and versions to their integrity checksums.
+ * @param dependenciesGraph - The current dependencies graph, containing nodes with potentially "pending" versions.
+ * @returns A new DependenciesGraph with updated versions and integrity checksums for all previously pending dependencies.
+ */
+function addIntegritiesToDependenciesGraph(
+  packageIntegritiesByPublishedPackages: PackageIntegritiesByPublishedPackages,
+  dependenciesGraph: DependenciesGraph
+): DependenciesGraph {
+  const resolvedVersions: Array<{ name: string; version: string }> = [];
+  for (const [selector, integrity] of packageIntegritiesByPublishedPackages.entries()) {
+    if (integrity == null) continue;
+    const index = selector.indexOf('@', 1);
+    const name = selector.substring(0, index);
+    const version = selector.substring(index + 1);
+    const pendingNode = dependenciesGraph.nodes.find(({ pkgId }) => pkgId === `${name}@pending:`);
+    if (pendingNode) {
+      if (!pendingNode.attr) {
+        pendingNode.attr = { resolution: { integrity } };
+      } else {
+        pendingNode.attr.resolution = { integrity };
+      }
+      resolvedVersions.push({ name, version });
+    }
+  }
+  return replacePendingVersions(dependenciesGraph, resolvedVersions) as DependenciesGraph;
 }
 
 async function removeDeletedComponentsFromBitmap(

@@ -67,6 +67,8 @@ import { createLane, createLaneInScope } from '@teambit/lanes.modules.create-lan
 import { ForkingAspect, ForkingMain } from '@teambit/forking';
 import { InstallAspect, InstallMain } from '@teambit/install';
 
+export type PackageIntegritiesByPublishedPackages = Map<string, string | undefined>;
+
 export type TagDataPerComp = {
   componentId: ComponentID;
   dependencies: ComponentID[];
@@ -960,34 +962,20 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
   ): Promise<void> {
     try {
       this.logger.profile('snap._addDependenciesGraphToComponents');
-      const componentIdByPkgName = new Map<string, { scope: string; name: string }>();
-      consumerComponents.map((consumerComponent, index) => {
-        if (consumerComponent.componentMap?.rootDir) {
-          componentIdByPkgName.set(this.dependencyResolver.getPackageName(components[index]), {
-            scope: consumerComponent.componentMap.id.scope,
-            name: consumerComponent.componentMap.id.fullName,
-          });
-        }
-      });
+      const componentIdByPkgName = this._getComponentIdByPkgNameMap(consumerComponents, components);
+      const options = {
+        workspacePath: this.workspace.path,
+        rootComponentsPath: this.workspace.rootComponentsPath,
+        componentIdByPkgName,
+      };
       await Promise.all(
         consumerComponents.map(async (consumerComponent, index) => {
           if (consumerComponent.componentMap?.rootDir) {
             consumerComponent.dependenciesGraph = await this.dependencyResolver.getDependenciesGraph(
               components[index],
-              this.workspace.path,
-              this.workspace.rootComponentsPath,
-              consumerComponent.componentMap.rootDir
+              consumerComponent.componentMap.rootDir,
+              options
             );
-            if (consumerComponent.dependenciesGraph) {
-              for (const node of consumerComponent.dependenciesGraph.nodes) {
-                if (node.pkgId.includes('@pending:')) {
-                  const parsed = dp.parse(node.pkgId);
-                  if (parsed.name && componentIdByPkgName.has(parsed.name)) {
-                    node.attr.component = componentIdByPkgName.get(parsed.name);
-                  }
-                }
-              }
-            }
           }
         })
       );
@@ -998,6 +986,22 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
         throw err;
       }
     }
+  }
+
+  _getComponentIdByPkgNameMap(
+    consumerComponents: ConsumerComponent[],
+    components: Component[]
+  ): Map<string, { scope: string; name: string }> {
+    const componentIdByPkgName = new Map<string, { scope: string; name: string }>();
+    consumerComponents.forEach((consumerComponent, index) => {
+      if (consumerComponent.componentMap?.rootDir) {
+        componentIdByPkgName.set(this.dependencyResolver.getPackageName(components[index]), {
+          scope: consumerComponent.componentMap.id.scope,
+          name: consumerComponent.componentMap.id.fullName,
+        });
+      }
+    });
+    return componentIdByPkgName;
   }
 
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
@@ -1164,8 +1168,8 @@ another option, in case this dependency is not in main yet is to remove all refe
     });
   }
 
-  _getPublishedPackages(components: ConsumerComponent[]): Map<string, string | undefined> {
-    const publishedPackages: Map<string, string | undefined> = new Map();
+  _getPublishedPackages(components: ConsumerComponent[]): PackageIntegritiesByPublishedPackages {
+    const publishedPackages: PackageIntegritiesByPublishedPackages = new Map();
     for (const comp of components) {
       const builderExt = comp.extensions.findCoreExtension(Extensions.builder);
       const pkgData = builderExt?.data?.aspectsData?.find((a) => a.aspectId === Extensions.pkg);

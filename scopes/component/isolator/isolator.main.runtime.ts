@@ -785,7 +785,7 @@ export class IsolatorMain {
       linkedDependencies?: Record<string, Record<string, string>>;
       packageManager?: string;
       nodeLinker?: NodeLinker;
-      dependenciesGraph?: any;
+      dependenciesGraph?: DependenciesGraph;
     }
   ) {
     const installer = this.dependencyResolver.getInstaller({

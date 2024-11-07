@@ -210,10 +210,13 @@ export interface PackageManager {
 
   findUsages?(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string>;
 
-  getDependenciesGraph?(
-    workspaceDir: string,
-    componentRootDir: string,
-    pkgName: string,
-    componentRelativeDir: string
-  ): Promise<DependenciesGraph>;
+  getDependenciesGraph?(options: GetDependenciesGraphOptions): Promise<DependenciesGraph>;
+}
+
+export interface GetDependenciesGraphOptions {
+  workspacePath: string;
+  componentRootDir: string;
+  pkgName: string;
+  componentRelativeDir: string;
+  componentIdByPkgName: Map<string, { scope: string; name: string }>;
 }

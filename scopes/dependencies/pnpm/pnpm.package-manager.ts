@@ -42,6 +42,7 @@ import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
 import { type DependenciesGraph, type DirectDependency } from '@teambit/legacy/dist/scope/models/version';
 import * as dp from '@pnpm/dependency-path';
+import { type GetDependenciesGraphOptions } from '@teambit/dependency-resolver/package-manager';
 
 export type { RebuildFn };
 
@@ -401,13 +402,14 @@ export class PnpmPackageManager implements PackageManager {
     });
   }
 
-  async getDependenciesGraph(
-    workspaceDir: string,
-    componentRootDir: string,
-    pkgName: string,
-    componentRelativeDir: string
-  ): Promise<DependenciesGraph> {
-    const lockfile = await readWantedLockfile(workspaceDir, { ignoreIncompatible: false });
+  async getDependenciesGraph({
+    workspacePath,
+    componentRootDir,
+    componentRelativeDir,
+    pkgName,
+    componentIdByPkgName,
+  }: GetDependenciesGraphOptions): Promise<DependenciesGraph> {
+    const lockfile = await readWantedLockfile(workspacePath, { ignoreIncompatible: false });
     if (!lockfile) {
       throw new BitError('Cannot get the depednency graph without a lockfile. Try running "bit install".');
     }
@@ -445,10 +447,20 @@ export class PnpmPackageManager implements PackageManager {
       }
     }
     partialLockfile = replaceFileVersionsWithPendingVersions(partialLockfile);
+    const { nodes, edges } = convertLockfileToGraph(partialLockfile);
+    for (const node of nodes) {
+      if (node.pkgId.includes('@pending:')) {
+        const parsed = dp.parse(node.pkgId);
+        if (parsed.name && componentIdByPkgName.has(parsed.name)) {
+          node.attr.component = componentIdByPkgName.get(parsed.name);
+        }
+      }
+    }
     return {
-      ...convertLockfileToGraph(partialLockfile),
       directDependencies: replaceFileVersionsWithPendingVersions(directDependencies),
       schemaVersion: '1.0',
+      nodes,
+      edges,
     };
   }
 }

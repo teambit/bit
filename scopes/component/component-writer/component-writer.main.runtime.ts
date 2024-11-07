@@ -1,4 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
+import { ComponentID } from '@teambit/component-id';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { InstallAspect, InstallMain } from '@teambit/install';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -79,7 +80,10 @@ export class ComponentWriterMain {
       );
     }
     if (!opts.skipDependencyInstallation) {
-      installationError = await this.installPackagesGracefully(opts.components, opts.skipWriteConfigFiles);
+      installationError = await this.installPackagesGracefully(
+        opts.components.map(({ id }) => id),
+        opts.skipWriteConfigFiles
+      );
       // no point to compile if the installation is not running. the environment is not ready.
       compilationError = await this.compileGracefully();
     }
@@ -88,7 +92,7 @@ export class ComponentWriterMain {
   }
 
   private async installPackagesGracefully(
-    components: ConsumerComponent[],
+    componentIds: ComponentID[],
     skipWriteConfigFiles = false
   ): Promise<Error | undefined> {
     this.logger.debug('installPackagesGracefully, start installing packages');
@@ -98,9 +102,7 @@ export class ComponentWriterMain {
         updateExisting: false,
         import: false,
         writeConfigFiles: !skipWriteConfigFiles,
-        dependenciesGraph: await this.workspace.scope.legacyScope.getDependenciesGraphByComponentIds(
-          components.map(({ id }) => id)
-        ),
+        dependenciesGraph: await this.workspace.scope.legacyScope.getDependenciesGraphByComponentIds(componentIds),
       };
       await this.installer.install(undefined, installOpts);
       this.logger.debug('installPackagesGracefully, completed installing packages successfully');
