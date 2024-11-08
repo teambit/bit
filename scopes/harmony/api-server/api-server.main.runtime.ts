@@ -180,9 +180,9 @@ export class ApiServerMain {
   }
 
   async getRandomPort() {
-    const startingPort = 3593; // some arbitrary number shy away from the standard 3000
-    // get random number in the range of [startingPort, 55500].
-    const randomNumber = Math.floor(Math.random() * (55500 - startingPort + 1) + startingPort);
+    const startingPort = 4000; // we prefer to have the ports between 4000 and 4999.
+    // get random number in the range of [startingPort, 4999].
+    const randomNumber = Math.floor(Math.random() * (4999 - startingPort + 1) + startingPort);
     const port = await Port.getPort(randomNumber, 65500);
     return port;
   }
