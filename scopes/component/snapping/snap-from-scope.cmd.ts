@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Command, CommandOptions } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
+import { compact } from 'lodash';
 import { Logger } from '@teambit/logger';
 import { SnappingMain } from './snapping.main.runtime';
 import { BasicTagSnapParams } from './tag-model-component';
@@ -27,7 +28,7 @@ export type SnapDataPerCompRaw = {
   version?: string; // relevant when passing "--tag". optionally, specify the semver to tag. default to "patch".
 };
 
-type SnapFromScopeOptions = {
+export type SnapFromScopeOptions = {
   push?: boolean;
   lane?: string;
   ignoreIssues?: string;
@@ -36,11 +37,7 @@ type SnapFromScopeOptions = {
   tag?: boolean;
 } & BasicTagSnapParams;
 
-export class SnapFromScopeCmd implements Command {
-  name = '_snap <data>';
-  description = 'snap components from a bare-scope';
-  extendedDescription = `this command should be running from a new bare scope, it first imports the components it needs and then processes the snap.
-the input data is a stringified JSON of an array of the following object.
+export const inputDataDescription = `the input data is a stringified JSON of an array of the following object.
 {
   componentId: string;     // ids always have scope, so it's safe to parse them from string
   dependencies?: string[]; // dependencies include versions. for components use component-id. e.g. [teambit.compilation/compiler@1.0.0, lodash@4.17.21]
@@ -59,33 +56,43 @@ the input data is a stringified JSON of an array of the following object.
   forkFrom?: string;      // origin id to fork from. the componentId is the new id. (no need to populate isNew prop).
   version?: string; // relevant when passing "--tag". optionally, specify the semver to tag. default to "patch".
 }
-an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "first snap"}]'
+an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "first snap"}]'`;
+
+export const snapFromScopeOptions = [
+  ['', 'push', 'export the updated objects to the original scopes once done'],
+  ['m', 'message <message>', 'log message describing the latest changes'],
+  ['', 'lane <lane-id>', 'fetch the components from the given lane'],
+  ['', 'build', 'run the build pipeline'],
+  ['', 'skip-tests', 'skip running component tests during snap process'],
+  ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
+  ['', 'ignore-build-errors', 'run the snap pipeline although the build pipeline failed'],
+  ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
+  [
+    'i',
+    'ignore-issues [issues]',
+    `ignore component issues (shown in "bit status" as "issues found"), issues to ignore:
+[${Object.keys(IssuesClasses).join(', ')}]
+to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
+  ],
+  ['', 'tag', 'make a tag instead of a snap'],
+  ['', 'stream', 'relevant for --json only. stream loader as json strings'],
+  ['j', 'json', 'output as json format'],
+];
+
+export class SnapFromScopeCmd implements Command {
+  name = '_snap <data>';
+  description = 'snap components from a bare-scope';
+  extendedDescription = `this command should be running from a new bare scope, it first imports the components it needs and then processes the snap.
+${inputDataDescription}
 `;
   alias = '';
   options = [
-    ['', 'push', 'export the updated objects to the original scopes once done'],
-    ['m', 'message <message>', 'log message describing the latest changes'],
-    ['', 'lane <lane-id>', 'fetch the components from the given lane'],
-    ['', 'build', 'run the build pipeline'],
-    ['', 'skip-tests', 'skip running component tests during snap process'],
-    ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
-    ['', 'ignore-build-errors', 'run the snap pipeline although the build pipeline failed'],
-    ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
-    [
-      'i',
-      'ignore-issues [issues]',
-      `ignore component issues (shown in "bit status" as "issues found"), issues to ignore:
-[${Object.keys(IssuesClasses).join(', ')}]
-to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
-    ],
+    ...snapFromScopeOptions,
     [
       '',
       'update-dependents',
       'when snapped on a lane, mark it as update-dependents so it will be skipped from the workspace',
     ],
-    ['', 'tag', 'make a tag instead of a snap'],
-    ['', 'stream', 'relevant for --json only. stream loader as json strings'],
-    ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -136,11 +143,11 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
     const { snappedIds, exportedIds } = results;
 
-    const snappedOutput = `${chalk.bold('snapped components')}\n${snappedIds.join('\n')}`;
+    const snappedOutput = snappedIds.length ? `${chalk.bold('snapped components')}\n${snappedIds.join('\n')}` : '';
     const exportedOutput =
-      exportedIds && exportedIds.length ? `\n\n${chalk.bold('exported components')}\n${exportedIds.join('\n')}` : '';
+      exportedIds && exportedIds.length ? `${chalk.bold('exported components')}\n${exportedIds.join('\n')}` : '';
 
-    return `${snappedOutput}${exportedOutput}`;
+    return compact([snappedOutput, exportedOutput]).join('\n\n');
   }
   async json(
     [data]: [string],

@@ -125,6 +125,7 @@ export type LaneDiffStatus = {
 export type MarkRemoveOnLaneResult = { removedFromWs: ComponentID[]; markedRemoved: ComponentID[] };
 
 export type CreateLaneResult = {
+  lane: Lane;
   laneId: LaneId;
   hash: string;
   alias?: string;
@@ -248,6 +249,11 @@ export class LanesMain {
     await this.importer.importLaneObject(laneId, undefined, true);
   }
 
+  async isLaneExistsOnRemote(laneId: LaneId): Promise<boolean> {
+    const results = await this.scope.legacyScope.scopeImporter.importLanes([laneId]);
+    return results.length > 0;
+  }
+
   getCurrentLaneName(): string | null {
     return this.getCurrentLaneId()?.name || null;
   }
@@ -291,6 +297,7 @@ export class LanesMain {
     if (!this.workspace) {
       const newLane = await createLaneInScope(name, this.scope);
       return {
+        lane: newLane,
         laneId: newLane.toLaneId(),
         hash: newLane.hash().toString(),
       };
@@ -320,6 +327,7 @@ if you wish to keep ${scope} scope, please re-run the command with "--fork-lane-
     await this.workspace.consumer.onDestroy('lane-create');
 
     const results = {
+      lane: laneObj,
       alias,
       laneId: laneObj.toLaneId(),
       hash: laneObj.hash().toString(),

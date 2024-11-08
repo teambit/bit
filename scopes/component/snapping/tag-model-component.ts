@@ -18,7 +18,7 @@ import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
-import { BuilderMain, OnTagOpts } from '@teambit/builder';
+import { OnTagOpts } from '@teambit/builder';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
 import {
   MessagePerComponent,
@@ -173,10 +173,7 @@ function getVersionByEnteredId(
 }
 
 export async function tagModelComponent({
-  workspace,
-  scope,
   snapping,
-  builder,
   consumerComponents,
   ids,
   tagDataPerComp,
@@ -200,15 +197,11 @@ export async function tagModelComponent({
   rebuildDepsGraph,
   incrementBy,
   packageManagerConfigRootDir,
-  dependencyResolver,
   copyLogFromPreviousSnap = false,
   exitOnFirstFailedTask = false,
   updateDependentsOnLane = false, // on lane, adds it into updateDependents prop
 }: {
-  workspace?: Workspace;
-  scope: ScopeMain;
   snapping: SnappingMain;
-  builder: BuilderMain;
   consumerComponents: ConsumerComponent[];
   ids: ComponentIdList;
   tagDataPerComp?: TagDataPerComp[];
@@ -220,7 +213,6 @@ export async function tagModelComponent({
   incrementBy?: number;
   isSnap?: boolean;
   packageManagerConfigRootDir?: string;
-  dependencyResolver: DependencyResolverMain;
   exitOnFirstFailedTask?: boolean;
   updateDependentsOnLane?: boolean;
 } & BasicTagParams): Promise<{
@@ -230,6 +222,11 @@ export async function tagModelComponent({
   stagedConfig?: StagedConfig;
   removedComponents?: ComponentIdList;
 }> {
+  const workspace = snapping.workspace;
+  const scope = snapping.scope;
+  const builder = snapping.builder;
+  const dependencyResolver = snapping.dependencyResolver;
+
   const consumer = workspace?.consumer;
   const legacyScope = scope.legacyScope;
   const consumerComponentsIdsMap = {};
