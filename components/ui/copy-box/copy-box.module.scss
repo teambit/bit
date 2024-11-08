@@ -1,0 +1,39 @@
+.copyBox {
+  border-radius: 6px;
+  font-size: var(--bit-p-xs);
+  background: var(--bit-bg-dent);
+  border: 1px solid var(--bit-border-color-lightest);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 11px;
+  height: 40px;
+  min-width: 80px;
+  line-height: 115%;
+
+  .leftSection {
+    user-select: all;
+    white-space: pre;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: monospace;
+  }
+}
+
+.button {
+  cursor: pointer;
+  box-sizing: border-box;
+  border: none;
+  background-color: var(--bit-bg-color-highlight);
+  color: var(--bit-accent-color);
+  outline: none;
+}
+.rightSection {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.copyIcon {
+  font-size: var(--bit-p-lg);
+}
