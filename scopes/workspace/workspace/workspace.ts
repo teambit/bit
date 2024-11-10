@@ -1761,7 +1761,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   private async resolveComponentIdFromWsComponents(packageName: string): Promise<ComponentID | undefined> {
     const ids = this.consumer.bitMap.getAllIdsAvailableOnLane();
-    const [scope, name] = packageName.split('/');
+    const [, name] = packageName.split('/');
     const foundByName = ids.filter((id) => id.fullName.includes(name));
     const idsToSearch = foundByName;
     if (!idsToSearch.length) {
