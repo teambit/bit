@@ -8,7 +8,7 @@ import { PackageJsonFile } from '@teambit/component.sources';
 import { PathLinux, resolvePackagePath } from '@teambit/legacy.utils';
 import { ResolvedPackageData, resolvePackageData } from '../resolve-pkg-data';
 import { Workspace } from '@teambit/workspace';
-import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
+import { Dependency, Dependencies } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { ComponentMap } from '@teambit/legacy.bit-map';
@@ -84,10 +84,10 @@ export class ApplyOverrides {
   }
 
   private getEnvExtendsDeps() {
-    const envExtendsDeps = this.allDependencies.dependencies.length
-      ? this.allDependencies.dependencies
-      : this.component.componentFromModel?.dependencies.dependencies;
-    return envExtendsDeps;
+    const wsDeps = this.allDependencies.dependencies || [];
+    const modelDeps = this.component.componentFromModel?.dependencies.dependencies || [];
+    const merged = Dependencies.merge([wsDeps, modelDeps]);
+    return merged.get();
   }
 
   private async getOverridesData() {
