@@ -72,7 +72,7 @@ export default class ComponentOverrides {
    */
   static async loadFromConsumer(
     component: ConsumerComponent,
-    envExtendsDeps: Dependency[]
+    envExtendsDeps?: Dependency[]
   ): Promise<ComponentOverrides> {
     const extensionsAddedOverrides = await runOnLoadOverridesEvent(
       this.componentOverridesLoadingRegistry,
@@ -182,7 +182,7 @@ async function runOnLoadOverridesEvent(
   extensions: ExtensionDataList = new ExtensionDataList(),
   id: ComponentID,
   files: SourceFile[],
-  envExtendsDeps: Dependency[]
+  envExtendsDeps?: Dependency[]
 ): Promise<DependenciesOverridesData> {
   const extensionsAddedOverridesP = Object.keys(configsRegistry).map((extId) => {
     // TODO: only running func for relevant extensions
