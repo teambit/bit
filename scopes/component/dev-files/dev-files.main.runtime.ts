@@ -121,11 +121,8 @@ export class DevFilesMain {
     envExtendsDeps?: LegacyDependency[]
   ): Promise<{ [id: string]: string[] }> {
     const envId = (await this.envs.getOrCalculateEnvId(component)).toString();
-    const fromEnvJsonFile = await this.computeDevPatternsFromEnvJsoncFile(
-      envId,
-      component.state.filesystem.files,
-      envExtendsDeps
-    );
+    const fromEnvJsonFile = await this.computeDevPatternsFromEnvJsoncFile(envId, undefined, envExtendsDeps);
+
     let fromEnvFunc;
     if (!fromEnvJsonFile) {
       const envDef = await this.envs.calculateEnv(component, { skipWarnings: !!this.workspace?.inInstallContext });
@@ -157,13 +154,14 @@ export class DevFilesMain {
     envExtendsDeps?: LegacyDependency[]
   ): Promise<string[] | undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
+
     if (isCoreEnv) return undefined;
     let envJsonc;
     if (legacyFiles) {
-      envJsonc = this.envs.calculateEnvManifest(undefined, legacyFiles, envExtendsDeps);
+      envJsonc = await this.envs.calculateEnvManifest(undefined, legacyFiles, envExtendsDeps);
     } else {
       const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
-      envJsonc = this.envs.calculateEnvManifest(envComponent, undefined, envExtendsDeps);
+      envJsonc = await this.envs.calculateEnvManifest(envComponent, undefined, envExtendsDeps);
     }
 
     if (!envJsonc) return undefined;
