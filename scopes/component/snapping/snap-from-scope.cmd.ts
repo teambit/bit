@@ -5,6 +5,7 @@ import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { SnappingMain } from './snapping.main.runtime';
 import { BasicTagSnapParams } from './tag-model-component';
+import { NewDependencies } from './generate-comp-from-scope';
 
 export type FileData = { path: string; content: string; delete?: boolean };
 
@@ -16,12 +17,7 @@ export type SnapDataPerCompRaw = {
   files?: FileData[];
   isNew?: boolean;
   mainFile?: string; // relevant when isNew is true. default to "index.ts".
-  newDependencies?: Array<{
-    id: string; // component-id or package-name. e.g. "teambit.react/react" or "lodash".
-    version?: string; // version of the package. e.g. "2.0.3". for packages, it is mandatory.
-    isComponent?: boolean; // default true. if false, it's a package dependency
-    type?: 'runtime' | 'dev' | 'peer'; // default "runtime".
-  }>;
+  newDependencies?: NewDependencies;
   removeDependencies?: string[];
   forkFrom?: string; // origin id to fork from. the componentId is the new id. (no need to populate isNew prop).
   version?: string; // relevant when passing "--tag". optionally, specify the semver to tag. default to "patch".

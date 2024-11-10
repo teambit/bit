@@ -92,13 +92,15 @@ export default class ComponentOverrides {
   static async loadNewFromScope(
     componentId: ComponentID,
     files: SourceFile[],
-    extensions: ExtensionDataList
+    extensions: ExtensionDataList,
+    envExtendsDeps: Dependency[] = []
   ): Promise<ComponentOverrides> {
     const extensionsAddedOverrides = await runOnLoadOverridesEvent(
       this.componentOverridesLoadingRegistry,
       extensions,
       componentId,
-      files
+      files,
+      envExtendsDeps
     );
     return new ComponentOverrides(extensionsAddedOverrides);
   }
