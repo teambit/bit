@@ -29,6 +29,7 @@ export const COMPONENT_STRATEGY_ARTIFACT_NAME = 'preview-component';
 type ComponentEntry = {
   component: Component;
   entries: object;
+  componentDir: string;
 };
 /**
  * bundles all components in a given env into the same bundle.
@@ -72,14 +73,17 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     const targets = chunks.map((currentChunk) => {
       const entries: BundlerEntryMap = {};
       const components: Component[] = [];
+      const componentDirectoryMap = {};
       currentChunk.forEach((entry) => {
         Object.assign(entries, entry.entries);
         components.push(entry.component);
+        componentDirectoryMap[entry.component.id.toString()] = entry.componentDir;
       });
 
       return {
         entries,
         components,
+        componentDirectoryMap,
         outputPath,
         hostRootDir: context.envRuntime.envAspectDefinition.aspectPath,
         hostDependencies: peers,
@@ -126,6 +130,8 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
   ): Promise<ComponentEntry> {
     const componentPreviewPath = await this.computePaths(previewDefs, context, component);
     const [componentPath] = this.getPaths(context, component, [component.mainFile]);
+    const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
+    const componentDir = capsule?.path || '';
 
     const chunks = {
       componentPreview: this.getComponentChunkId(component.id, 'preview'),
@@ -162,7 +168,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       };
     }
 
-    return { component, entries };
+    return { component, entries, componentDir };
   }
 
   private getComponentChunkId(componentId: ComponentID, type: 'component' | 'preview') {

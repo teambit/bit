@@ -13,6 +13,8 @@ export type SignOptions = {
   rebuild?: boolean;
   originalScope?: boolean;
   saveLocally?: boolean;
+  reuseCapsules?: boolean;
+  tasks?: string;
 };
 export class SignCmd implements Command {
   name = 'sign [component...]';
@@ -33,6 +35,13 @@ export class SignCmd implements Command {
       'sign components from the original scope. works only when all components are from the same scope',
     ],
     ['', 'save-locally', 'save the signed components locally on the bare-scope for debugging purposes'],
+    ['', 'reuse-capsules', 'avoid deleting the capsules root-dir before starting the build'],
+    [
+      '',
+      'tasks <string>',
+      `build the specified task(s) only. for multiple tasks, separate by a comma and wrap with quotes.
+specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)`,
+    ],
   ] as CommandOptions;
 
   constructor(

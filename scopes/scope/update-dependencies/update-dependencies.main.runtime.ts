@@ -316,7 +316,6 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     await this.exporter.exportMany({
       scope: this.scope.legacyScope,
       ids,
-      idsWithFutureScope: ids,
       laneObject: this.laneObj,
       allVersions: false,
       exportOrigin: 'update-dependencies',

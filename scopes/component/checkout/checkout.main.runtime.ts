@@ -570,7 +570,7 @@ export class CheckoutMain {
     LoggerMain,
     ComponentWriterMain,
     ImporterMain,
-    RemoveMain,
+    RemoveMain
   ]) {
     const logger = loggerMain.createLogger(CheckoutAspect.id);
     const checkoutMain = new CheckoutMain(workspace, logger, compWriter, importer, remove);

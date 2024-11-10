@@ -18,7 +18,7 @@ import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
-import { BuilderMain, OnTagOpts } from '@teambit/builder';
+import { OnTagOpts } from '@teambit/builder';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
 import {
   MessagePerComponent,
@@ -28,6 +28,7 @@ import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 
 export type onTagIdTransformer = (id: ComponentID) => ComponentID | null;
@@ -172,10 +173,7 @@ function getVersionByEnteredId(
 }
 
 export async function tagModelComponent({
-  workspace,
-  scope,
   snapping,
-  builder,
   consumerComponents,
   ids,
   tagDataPerComp,
@@ -199,15 +197,11 @@ export async function tagModelComponent({
   rebuildDepsGraph,
   incrementBy,
   packageManagerConfigRootDir,
-  dependencyResolver,
   copyLogFromPreviousSnap = false,
   exitOnFirstFailedTask = false,
   updateDependentsOnLane = false, // on lane, adds it into updateDependents prop
 }: {
-  workspace?: Workspace;
-  scope: ScopeMain;
   snapping: SnappingMain;
-  builder: BuilderMain;
   consumerComponents: ConsumerComponent[];
   ids: ComponentIdList;
   tagDataPerComp?: TagDataPerComp[];
@@ -219,7 +213,6 @@ export async function tagModelComponent({
   incrementBy?: number;
   isSnap?: boolean;
   packageManagerConfigRootDir?: string;
-  dependencyResolver: DependencyResolverMain;
   exitOnFirstFailedTask?: boolean;
   updateDependentsOnLane?: boolean;
 } & BasicTagParams): Promise<{
@@ -229,6 +222,11 @@ export async function tagModelComponent({
   stagedConfig?: StagedConfig;
   removedComponents?: ComponentIdList;
 }> {
+  const workspace = snapping.workspace;
+  const scope = snapping.scope;
+  const builder = snapping.builder;
+  const dependencyResolver = snapping.dependencyResolver;
+
   const consumer = workspace?.consumer;
   const legacyScope = scope.legacyScope;
   const consumerComponentsIdsMap = {};
@@ -371,6 +369,7 @@ export async function tagModelComponent({
       publishedPackages.push(...snapping._getPublishedPackages(componentsToBuild));
       addBuildStatus(componentsToBuild, BuildStatus.Succeed);
       await mapSeries(componentsToBuild, (consumerComponent) => snapping._enrichComp(consumerComponent));
+      if (populateArtifactsFrom) await updateHiddenProp(scope, populateArtifactsFrom);
     }
   }
 
@@ -603,4 +602,25 @@ export async function updateComponentsVersions(
   await workspace.scope.legacyScope.stagedSnaps.write();
 
   return stagedConfig;
+}
+
+/**
+ * relevant for "_tag" (tag-from-scope) command.
+ * the new tag uses the same files/config/build-artifacts as the previous snap.
+ * we want to mark the previous snap as hidden. so then "bit log" and "bit blame" won't show it.
+ */
+async function updateHiddenProp(scope: ScopeMain, ids: ComponentID[]) {
+  const log = await getBasicLog();
+  log.message = 'marked as hidden';
+  await pMapPool(
+    ids,
+    async (id) => {
+      const versionObj = await scope.getBitObjectVersionById(id);
+      if (!versionObj) return;
+      versionObj.hidden = true;
+      versionObj.addModifiedLog(log);
+      scope.legacyScope.objects.add(versionObj);
+    },
+    { concurrency: 50 }
+  );
 }

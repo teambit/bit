@@ -31,6 +31,7 @@ const languageOverrides: Record<string, string> = {
   jsx: 'javascript',
   mdx: 'markdown',
   md: 'markdown',
+  vue: 'html',
 };
 
 export function CodeCompareViewLoader({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {

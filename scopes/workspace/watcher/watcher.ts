@@ -242,7 +242,7 @@ export class Watcher {
     files: PathOsBasedAbsolute[]
   ): Promise<OnComponentEventResult[]> {
     let updatedComponentId: ComponentID | undefined = componentId;
-    if (!(await this.workspace.hasId(componentId))) {
+    if (!this.workspace.hasId(componentId)) {
       // bitmap has changed meanwhile, which triggered `handleBitmapChanges`, which re-loaded consumer and updated versions
       // so the original componentId might not be in the workspace now, and we need to find the updated one
       const ids = this.workspace.listIds();
