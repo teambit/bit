@@ -9,7 +9,6 @@ import {
 } from '../../constants';
 import { SourceFile } from '@teambit/component.sources';
 import { ExtensionDataList } from './extension-data';
-import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
 import ConsumerComponent from '../component';
 import { Dependency } from '../component/dependencies';
 
