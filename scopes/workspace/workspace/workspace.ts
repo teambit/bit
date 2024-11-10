@@ -1749,29 +1749,52 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       throw new Error(`findComponentIdFromPackageName supports only packages that start with @, got ${packageName}`);
     }
     const errMsgPrefix = `unable to resolve a component-id from the package-name ${packageName}, `;
-    const pkgJsonPath = path.join(this.path, 'node_modules', packageName, 'package.json');
-    let pkgJson: Record<string, any> | undefined;
-    try {
-      pkgJson = await fs.readJson(pkgJsonPath);
-    } catch (err) {
-      // never mind the reason. probably it's not there.
-    }
-    if (pkgJson) {
-      const compId = pkgJson.componentId;
-      if (!compId) {
-        throw new BitError(
-          `${errMsgPrefix}the package.json file has no componentId field, it's probably not a component`
-        );
-      }
-      return ComponentID.fromObject(compId);
-    }
 
+    const fromPackageJson = await this.resolveComponentIdFromPackageJsonInNM(packageName, errMsgPrefix);
+    if (fromPackageJson) return fromPackageJson;
+    const fromRegistryManifest = await this.resolveComponentIdFromRegistryManifest(packageName, errMsgPrefix);
+    if (fromRegistryManifest) return fromRegistryManifest;
+    const fromWsComponents = await this.resolveComponentIdFromWsComponents(packageName);
+    if (fromWsComponents) return fromWsComponents;
+    throw new BitError(errMsgPrefix);
+  }
+
+  private async resolveComponentIdFromWsComponents(packageName: string): Promise<ComponentID | undefined> {
+    const ids = this.consumer.bitMap.getAllIdsAvailableOnLane();
+    const [scope, name] = packageName.split('/');
+    const foundByName = ids.filter((id) => id.fullName.includes(name));
+    const idsToSearch = foundByName;
+    if (!idsToSearch.length) {
+      return undefined;
+    }
+    // if (!foundByName.length) {
+    //   const foundByScope = ids.filter(id => id.toString().includes(scope.replace('@', '')));
+    //   idsToSearch = foundByScope;
+    // }
+    const comps = await this.getMany(idsToSearch, {
+      loadExtensions: false,
+      storeInCache: false,
+      loadSeedersAsAspects: false,
+    });
+    const found = comps.find((comp) => {
+      const currPackageName = this.dependencyResolver.getPackageName(comp);
+      return currPackageName === packageName;
+    });
+    if (found) {
+      return found.id;
+    }
+  }
+
+  private async resolveComponentIdFromRegistryManifest(
+    packageName: string,
+    errMsgPrefix: string
+  ): Promise<ComponentID | undefined> {
     const url = `https://node-registry.bit.cloud/${packageName}`;
     const token = await this.globalConfig.get(CFG_USER_TOKEN_KEY);
     const headers = token ? getAuthHeader(token) : {};
     const res = await fetch(url, { headers });
     if (!res.ok) {
-      throw new BitError(`${errMsgPrefix}got ${res.statusText} from the url: ${url}`);
+      return undefined;
     }
     const data = await res.json();
     const latest = data['dist-tags'].latest;
@@ -1784,6 +1807,28 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         `${errMsgPrefix}the package.json of version "${latest}" has no componentId field, it's probably not a component`
       );
     return ComponentID.fromObject(compId).changeVersion(undefined);
+  }
+
+  private async resolveComponentIdFromPackageJsonInNM(
+    packageName: string,
+    errMsgPrefix: string
+  ): Promise<ComponentID | undefined> {
+    const pkgJsonPath = path.join(this.path, 'node_modules', packageName, 'package.json');
+    let pkgJson: Record<string, any> | undefined;
+    try {
+      pkgJson = await fs.readJson(pkgJsonPath);
+      if (!pkgJson) return undefined;
+      const compId = pkgJson.componentId;
+      if (!compId) {
+        throw new BitError(
+          `${errMsgPrefix}the package.json file has no componentId field, it's probably not a component`
+        );
+      }
+      return ComponentID.fromObject(compId);
+    } catch (err) {
+      // never mind the reason. probably it's not there.
+      return undefined;
+    }
   }
 
   /**
@@ -2019,6 +2064,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
         id = foundEnv.id.toString();
       }
     }
+
     const resolvedEnvComponentId = await this.resolveComponentId(id);
 
     // We need to load the env component with the slot and extensions to get the env manifest of the parent
