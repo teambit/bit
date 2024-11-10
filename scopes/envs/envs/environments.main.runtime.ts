@@ -1,12 +1,11 @@
 import { isCoreAspect } from '@teambit/bit';
-import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import pLocate from 'p-locate';
 import { parse } from 'comment-json';
 import { SourceFile } from '@teambit/component.sources';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
-import type { DependencyList, EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import type { EnvJsoncPatterns } from '@teambit/dev-files';

@@ -93,11 +93,7 @@ export class ApplyOverrides {
   private async getOverridesData() {
     if (this.component.overrides) return this.component.overrides;
 
-    const overrides = await ComponentOverrides.loadFromConsumer(
-      this.component,
-      this.getEnvExtendsDeps(),
-      this.workspace!.consumer.config
-    );
+    const overrides = await ComponentOverrides.loadFromConsumer(this.component, this.getEnvExtendsDeps());
 
     return overrides;
   }

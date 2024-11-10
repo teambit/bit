@@ -73,8 +73,7 @@ export default class ComponentOverrides {
    */
   static async loadFromConsumer(
     component: ConsumerComponent,
-    envExtendsDeps: Dependency[],
-    workspaceConfig: ILegacyWorkspaceConfig
+    envExtendsDeps: Dependency[]
   ): Promise<ComponentOverrides> {
     const extensionsAddedOverrides = await runOnLoadOverridesEvent(
       this.componentOverridesLoadingRegistry,

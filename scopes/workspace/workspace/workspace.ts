@@ -1,6 +1,5 @@
 /* eslint-disable max-lines */
 import memoize from 'memoizee';
-import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { parse } from 'comment-json';
 import mapSeries from 'p-map-series';
