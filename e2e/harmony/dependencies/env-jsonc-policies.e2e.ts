@@ -539,9 +539,10 @@ describe('env-jsonc-policies', function () {
                 helper.command.importComponent(envIdLevel2);
               });
               it('should use the old version (and policy) of the env', () => {
-                const envLevel3EnvsDataInWs = helper.command
-                  .showComponentParsed(fullEnvIdLevel3)
-                  .find((ext) => ext.name === 'teambit.envs/envs').data;
+                const envLevel3ShowParsed = helper.command.showComponentParsed(fullEnvIdLevel3);
+                const envLevel3EnvsDataInWs = envLevel3ShowParsed.extensions.find(
+                  (ext) => ext.name === 'teambit.envs/envs'
+                ).data;
                 const resolvedEnvJsonc = envLevel3EnvsDataInWs.resolvedEnvJsonc;
                 const isOddEntry = resolvedEnvJsonc.policy.runtime.find((entry) => entry.name === 'is-odd');
                 expect(isOddEntry.version).to.equal('3.0.0');
