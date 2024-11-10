@@ -165,7 +165,7 @@ function generateEnvJsoncWithExtends(extendsName: string, envJsonc: object) {
   };
 }
 
-describe.only('env-jsonc-policies', function () {
+describe('env-jsonc-policies', function () {
   this.timeout(0);
   let helper: Helper;
   describe('env-jsonc base policies', function () {
