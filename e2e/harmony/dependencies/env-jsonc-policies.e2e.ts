@@ -165,7 +165,7 @@ function generateEnvJsoncWithExtends(extendsName: string, envJsonc: object) {
   };
 }
 
-describe('env-jsonc-policies', function () {
+describe.only('env-jsonc-policies', function () {
   this.timeout(0);
   let helper: Helper;
   describe('env-jsonc base policies', function () {
@@ -539,11 +539,11 @@ describe('env-jsonc-policies', function () {
                 helper.command.importComponent(envIdLevel2);
               });
               it('should use the old version (and policy) of the env', () => {
-                envLevel3EnvsDataInModel = helper.command.getAspectsDataFromId(
-                  fullEnvIdLevel3,
-                  'teambit.envs/envs'
-                ).resolvedEnvJsonc;
-                const isOddEntry = envLevel3EnvsDataInModel.policy.runtime.find((entry) => entry.name === 'is-odd');
+                const envLevel3EnvsDataInWs = helper.command
+                  .showComponentParsed(fullEnvIdLevel3)
+                  .find((ext) => ext.name === 'teambit.envs/envs').data;
+                const resolvedEnvJsonc = envLevel3EnvsDataInWs.resolvedEnvJsonc;
+                const isOddEntry = resolvedEnvJsonc.policy.runtime.find((entry) => entry.name === 'is-odd');
                 expect(isOddEntry.version).to.equal('3.0.0');
               });
             });
