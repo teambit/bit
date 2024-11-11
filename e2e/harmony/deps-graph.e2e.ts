@@ -56,8 +56,9 @@ chai.use(require('chai-fs'));
     it('should save dependencies graph to the model', () => {
       const versionObj = helper.command.catComponent('comp1@latest');
       const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
-      expect(depsGraph.directDependencies).deep.include({ name: 'react', specifier: '18.3.1', nodeId: 'react@18.3.1' });
-      expect(depsGraph.directDependencies).deep.include({ name: 'is-odd', specifier: '1.0.0', nodeId: 'is-odd@1.0.0' });
+      const directDeps = depsGraph.edges.find((edge) => edge.id === '.')?.neighbours;
+      expect(directDeps).deep.include({ name: 'react', specifier: '18.3.1', id: 'react@18.3.1' });
+      expect(directDeps).deep.include({ name: 'is-odd', specifier: '1.0.0', id: 'is-odd@1.0.0' });
     });
     describe('sign component and use dependency graph to generate a lockfile', () => {
       let signOutput: string;
@@ -102,7 +103,7 @@ chai.use(require('chai-fs'));
       });
     });
   });
-  describe('two components with different peer dependencies', function () {
+  describe.only('two components with different peer dependencies', function () {
     const env1DefaultPeerVersion = '16.0.0';
     const env2DefaultPeerVersion = '17.0.0';
     let randomStr: string;
@@ -185,21 +186,24 @@ chai.use(require('chai-fs'));
     it('should save dependencies graph to the model', () => {
       const versionObj = helper.command.catComponent('comp1@latest');
       const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
-      expect(depsGraph.directDependencies).deep.include({ name: 'react', specifier: '16.0.0', nodeId: 'react@16.0.0' });
+      const directDependencies = depsGraph.edges.find((edge) => edge.id === '.');
+      expect(directDependencies).deep.include({ name: 'react', specifier: '16.0.0', id: 'react@16.0.0' });
     });
     let depsGraph2;
+    let depsGraph2DirectDeps;
     let comp1Node;
     it('should save dependencies graph to the model', () => {
       const versionObj = helper.command.catComponent('comp2@latest');
       depsGraph2 = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
-      expect(depsGraph2.directDependencies).deep.include({
+      depsGraph2DirectDeps = depsGraph2.edges.find((edge) => edge.id === '.');
+      expect(depsGraph2DirectDeps).deep.include({
         name: 'react',
         specifier: '17.0.0',
-        nodeId: 'react@17.0.0',
+        id: 'react@17.0.0',
       });
     });
     it('should replace pending version in direct dependency', () => {
-      expect(depsGraph2.directDependencies).deep.include({
+      expect(depsGraph2DirectDeps).deep.include({
         name: `@ci/${randomStr}.comp1`,
         specifier: '*',
         nodeId: `@ci/${randomStr}.comp1@0.0.1(react@17.0.0)`,

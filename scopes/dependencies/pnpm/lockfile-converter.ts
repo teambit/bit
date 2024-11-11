@@ -60,6 +60,7 @@ export function convertGraphToLockfile(graph: DependenciesGraph): LockfileFileV9
   const packages = {};
   const snapshots = {};
   for (const edge of graph.edges) {
+    if (edge.id === '.') continue;
     snapshots[edge.id] = {};
     packages[edge.attr.pkgId] = {};
     const [optionalDeps, prodDeps] = partition(edge.neighbours, (dep) => dep.optional);

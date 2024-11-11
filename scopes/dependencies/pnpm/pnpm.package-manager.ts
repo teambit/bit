@@ -45,7 +45,7 @@ import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-conve
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
-import { type DependenciesGraph, type DirectDependency } from '@teambit/legacy/dist/scope/models/version';
+import { DependencyNeighbour, type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
 import * as dp from '@pnpm/dependency-path';
 
 export type { RebuildFn };
@@ -98,15 +98,18 @@ export class PnpmPackageManager implements PackageManager {
         devDependencies: {},
         optionalDependencies: {},
       };
-      for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
-        for (const [name, specifier] of Object.entries(manifest[depType] ?? {})) {
-          const directDepNodeId = dependenciesGraph.directDependencies.find(
-            (directDep) => directDep.name === name && directDep.specifier === specifier
-          )?.nodeId;
-          if (directDepNodeId) {
-            const parsed = dp.parse(directDepNodeId);
-            const ref = `${parsed.version}${parsed.peersSuffix ?? ''}`;
-            lockfile.importers![projectId][depType][name] = { version: ref, specifier };
+      const directDependencies = dependenciesGraph.edges.find((edge) => edge.id === '.');
+      if (directDependencies) {
+        for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
+          for (const [name, specifier] of Object.entries(manifest[depType] ?? {})) {
+            const edgeId = directDependencies.neighbours.find(
+              (directDep) => directDep.name === name && directDep.specifier === specifier
+            )?.id;
+            if (edgeId) {
+              const parsed = dp.parse(edgeId);
+              const ref = `${parsed.version}${parsed.peersSuffix ?? ''}`;
+              lockfile.importers![projectId][depType][name] = { version: ref, specifier };
+            }
           }
         }
       }
@@ -436,9 +439,9 @@ export class PnpmPackageManager implements PackageManager {
       { forceSharedFormat: true }
     );
     const componentDevImporter = partialLockfile.importers![componentRelativeDir];
-    const directDependencies: DirectDependency[] = [];
+    const directDependencies: DependencyNeighbour[] = [];
     for (const [name, { version, specifier }] of Object.entries(componentDevImporter.devDependencies ?? {}) as any) {
-      directDependencies.push({ name, specifier, nodeId: dp.refToRelative(version, name)! });
+      directDependencies.push({ name, specifier, id: dp.refToRelative(version, name)! });
     }
     const lockedPkg =
       partialLockfile.snapshots![
@@ -449,7 +452,7 @@ export class PnpmPackageManager implements PackageManager {
         directDependencies.push({
           name,
           specifier: componentDevImporter[depType]?.[name]?.specifier ?? '*',
-          nodeId: dp.refToRelative(version, name)!,
+          id: dp.refToRelative(version, name)!,
         });
       }
     }
@@ -463,8 +466,11 @@ export class PnpmPackageManager implements PackageManager {
         }
       }
     }
+    edges.push({
+      id: '.',
+      neighbours: replaceFileVersionsWithPendingVersions(directDependencies),
+    });
     return {
-      directDependencies: replaceFileVersionsWithPendingVersions(directDependencies),
       schemaVersion: '1.0',
       nodes,
       edges,

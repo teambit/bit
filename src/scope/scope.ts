@@ -807,17 +807,23 @@ once done, to continue working, please run "bit cc"`
         if (allGraph == null) {
           allGraph = graph;
         } else {
-          for (const directDep of graph.directDependencies) {
-            const existingDirectDep = allGraph.directDependencies.find(
-              ({ name, specifier }) => name === directDep.name && specifier === directDep.specifier
-            );
-            if (existingDirectDep == null) {
-              allGraph.directDependencies.push(directDep);
-            } else if (
-              existingDirectDep.nodeId !== directDep.nodeId &&
-              nodeIdLessThan(existingDirectDep.nodeId, directDep.nodeId)
-            ) {
-              existingDirectDep.nodeId = directDep.nodeId;
+          const directDependencies = graph.edges.find((edge) => edge.id === '.')?.neighbours;
+          if (directDependencies) {
+            for (const directDep of directDependencies) {
+              const existingDirectDeps = allGraph.edges.find((edge) => edge.id === '.')?.neighbours;
+              if (existingDirectDeps) {
+                const existingDirectDep = existingDirectDeps.find(
+                  ({ name, specifier }) => name === directDep.name && specifier === directDep.specifier
+                );
+                if (existingDirectDep == null) {
+                  existingDirectDeps.push(directDep);
+                } else if (
+                  existingDirectDep.id !== directDep.id &&
+                  nodeIdLessThan(existingDirectDep.id, directDep.id)
+                ) {
+                  existingDirectDep.id = directDep.id;
+                }
+              }
             }
           }
           allGraph.nodes.push(...graph.nodes);

@@ -78,17 +78,12 @@ export type DependencyNeighbour = {
    * This is true when the dependency is from optionalDependencies.
    */
   optional?: boolean;
-};
-
-export type DirectDependency = {
-  name: string;
-  specifier: string;
-  nodeId: string;
+  name?: string;
+  specifier?: string;
 };
 
 export type DependenciesGraph = {
   schemaVersion: string;
-  directDependencies: DirectDependency[];
   nodes: DependencyNode[];
   edges: DependencyEdge[];
 };
