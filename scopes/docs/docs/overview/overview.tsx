@@ -43,7 +43,8 @@ export type OverviewProps = {
 export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyState, TaggedAPI }: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
-  const { current } = useThemePicker();
+  const theme = useThemePicker();
+  const currentTheme = theme?.current;
   const overviewProps = flatten(overviewOptions.values())[0];
   const showHeader = !component.preview?.legacyHeader;
   const EmptyState = getEmptyState && getEmptyState();
@@ -62,7 +63,7 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
 
   const overviewPropsValues = overviewProps && overviewProps();
 
-  const themeParams = current?.themeName ? `theme=${current?.themeName}` : '';
+  const themeParams = currentTheme?.themeName ? `theme=${currentTheme?.themeName}` : '';
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { onLoad, style, ...rest } = previewProps || {};

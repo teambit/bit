@@ -236,6 +236,7 @@ export class ComponentUI {
         componentIdStr={options.componentId}
         useComponentFilters={options.useComponentFilters}
         RightNode={options.RightNode}
+        authToken={options.authToken}
       />
     );
   }

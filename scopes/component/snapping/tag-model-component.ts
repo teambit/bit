@@ -173,10 +173,7 @@ function getVersionByEnteredId(
 }
 
 export async function tagModelComponent({
-  workspace,
-  scope,
   snapping,
-  builder,
   consumerComponents,
   components,
   ids,
@@ -201,15 +198,11 @@ export async function tagModelComponent({
   rebuildDepsGraph,
   incrementBy,
   packageManagerConfigRootDir,
-  dependencyResolver,
   copyLogFromPreviousSnap = false,
   exitOnFirstFailedTask = false,
   updateDependentsOnLane = false, // on lane, adds it into updateDependents prop
 }: {
-  workspace?: Workspace;
-  scope: ScopeMain;
   snapping: SnappingMain;
-  builder: BuilderMain;
   components: Component[];
   consumerComponents: ConsumerComponent[];
   ids: ComponentIdList;
@@ -222,7 +215,6 @@ export async function tagModelComponent({
   incrementBy?: number;
   isSnap?: boolean;
   packageManagerConfigRootDir?: string;
-  dependencyResolver: DependencyResolverMain;
   exitOnFirstFailedTask?: boolean;
   updateDependentsOnLane?: boolean;
 } & BasicTagParams): Promise<{
@@ -232,6 +224,11 @@ export async function tagModelComponent({
   stagedConfig?: StagedConfig;
   removedComponents?: ComponentIdList;
 }> {
+  const workspace = snapping.workspace;
+  const scope = snapping.scope;
+  const builder = snapping.builder;
+  const dependencyResolver = snapping.dependencyResolver;
+
   const consumer = workspace?.consumer;
   const legacyScope = scope.legacyScope;
   const consumerComponentsIdsMap = {};
