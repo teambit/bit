@@ -149,6 +149,7 @@ export class ApplyMain {
     const shouldTag = Boolean(params.tag);
     const results = await tagModelComponent({
       ...params,
+      components,
       consumerComponents,
       tagDataPerComp: snapDataPerComp.map((s) => ({
         componentId: s.componentId,
@@ -337,6 +338,7 @@ export class ApplyMain {
     const shouldTag = Boolean(params.tag);
     const results = await tagModelComponent({
       ...params,
+      components,
       consumerComponents,
       tagDataPerComp: snapDataPerComp.map((s) => ({
         componentId: s.componentId,
