@@ -74,7 +74,10 @@ export type DependencyEdge = {
 
 export type DependencyNeighbour = {
   id: string;
-  type: 'prod' | 'optional';
+  /**
+   * This is true when the dependency is from optionalDependencies.
+   */
+  optional?: boolean;
 };
 
 export type DirectDependency = {
@@ -240,8 +243,8 @@ export default class Version extends BitObject {
     return this._flattenedEdges;
   }
 
-  async getDependenciesGraph(repo: Repository): Promise<any> {
-    const getWithBackwardCompatibility = async (): Promise<any> => {
+  async getDependenciesGraph(repo: Repository): Promise<DependenciesGraph | undefined> {
+    const getWithBackwardCompatibility = async (): Promise<DependenciesGraph | undefined> => {
       if (this.dependenciesGraphRef) {
         // it's possible that there is a ref but the file is not there.
         // it can happen if the remote-scope uses an older version that doesn't know to collect this ref.
@@ -252,7 +255,7 @@ export default class Version extends BitObject {
           return JSON.parse(dependenciesGraphSource.contents.toString());
         }
       }
-      return {};
+      return undefined;
     };
 
     if (!this._dependenciesGraph) {

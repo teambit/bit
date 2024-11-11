@@ -38,7 +38,7 @@ describe('convertLockfileToGraph simple case', () => {
     edges: [
       {
         id: 'foo@1.0.0',
-        neighbours: [{ id: 'bar@1.0.0', type: 'prod' }],
+        neighbours: [{ id: 'bar@1.0.0', optional: false }],
         attr: {
           pkgId: 'foo@1.0.0',
         },

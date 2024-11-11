@@ -13,14 +13,14 @@ export function convertLockfileToGraph(lockfile: LockfileFileV9): Pick<Dependenc
   const edges: DependencyEdge[] = [];
   for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
     const neighbours: DependencyNeighbour[] = [];
-    for (const { depTypeField, depType } of [
-      { depTypeField: 'dependencies', depType: 'prod' },
-      { depTypeField: 'optionalDependencies', depType: 'optional' },
+    for (const { depTypeField, optional } of [
+      { depTypeField: 'dependencies', optional: false },
+      { depTypeField: 'optionalDependencies', optional: true },
     ]) {
       for (const [pkgName, ref] of Object.entries((snapshot[depTypeField] ?? {}) as Record<string, string>)) {
         const subDepPath = dp.refToRelative(ref, pkgName);
         if (subDepPath == null) continue;
-        neighbours.push({ id: subDepPath, type: depType });
+        neighbours.push({ id: subDepPath, optional });
       }
     }
     const pkgId = dp.removeSuffix(depPath);
@@ -62,7 +62,7 @@ export function convertGraphToLockfile(graph: DependenciesGraph): LockfileFileV9
   for (const edge of graph.edges) {
     snapshots[edge.id] = {};
     packages[edge.attr.pkgId] = {};
-    const [prodDeps, optionalDeps] = partition(edge.neighbours, (dep) => dep.type === 'prod');
+    const [optionalDeps, prodDeps] = partition(edge.neighbours, (dep) => dep.optional);
     if (prodDeps.length) {
       snapshots[edge.id].dependencies = Object.fromEntries(
         prodDeps.map(({ id }) => {

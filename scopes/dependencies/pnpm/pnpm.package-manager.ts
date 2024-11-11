@@ -31,7 +31,11 @@ import {
   PackageNode,
 } from '@pnpm/reviewing.dependencies-hierarchy';
 import { renderTree } from '@pnpm/list';
-import { writeLockfileFile, getLockfileImporterId, convertToLockfileFile } from '@pnpm/lockfile.fs';
+import {
+  writeLockfileFile,
+  getLockfileImporterId,
+  convertToLockfileFile as convertLockfileObjectToLockfileFile,
+} from '@pnpm/lockfile.fs';
 import { readWantedLockfile } from '@pnpm/lockfile-file';
 import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
 import { ServerSendOutStream } from '@teambit/legacy/dist/logger/pino-logger';
@@ -419,7 +423,7 @@ export class PnpmPackageManager implements PackageManager {
     if (!lockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
       componentRootDir = componentRootDir.split('@')[0];
     }
-    let partialLockfile = convertToLockfileFile(
+    let partialLockfile = convertLockfileObjectToLockfileFile(
       filterLockfileByImporters(lockfile, [componentRootDir as ProjectId, componentRelativeDir as ProjectId], {
         include: {
           dependencies: true,
