@@ -478,7 +478,7 @@ export default class Version extends BitObject {
     const flattenedEdgesBuffer = Buffer.from(JSON.stringify(flattenedEdgesObj));
     return Source.from(flattenedEdgesBuffer);
   }
-  static dependenciesGraphToSource(dependenciesGraph?: any): Source | undefined {
+  static dependenciesGraphToSource(dependenciesGraph?: DependenciesGraph): Source | undefined {
     if (!dependenciesGraph) return undefined;
     const dependenciesGraphBuffer = Buffer.from(JSON.stringify(dependenciesGraph));
     return Source.from(dependenciesGraphBuffer);
