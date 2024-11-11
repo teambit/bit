@@ -230,7 +230,7 @@
         "@teambit/evangelist.surfaces.dropdown": "1.0.2",
         "@teambit/evangelist.surfaces.tooltip": "1.0.1",
         "@teambit/explorer.plugins.preview-plugin": "^0.0.10",
-        "@teambit/explorer.ui.command-bar": "^2.0.15",
+        "@teambit/explorer.ui.command-bar": "2.0.16",
         "@teambit/explorer.ui.component-card": "^0.0.30",
         "@teambit/explorer.ui.gallery.base-component-card": "0.0.503",
         "@teambit/explorer.ui.gallery.component-card": "^0.0.513",
