@@ -13,6 +13,7 @@ import {
   BIT_CLOUD_REGISTRY,
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
+  type GetDependenciesGraphOptions,
 } from '@teambit/dependency-resolver';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { Logger } from '@teambit/logger';
@@ -46,7 +47,6 @@ import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
 import { type DependenciesGraph, type DirectDependency } from '@teambit/legacy/dist/scope/models/version';
 import * as dp from '@pnpm/dependency-path';
-import { type GetDependenciesGraphOptions } from '@teambit/dependency-resolver/package-manager';
 
 export type { RebuildFn };
 
