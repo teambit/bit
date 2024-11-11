@@ -243,8 +243,8 @@ export default class Version extends BitObject {
     return this._flattenedEdges;
   }
 
-  async getDependenciesGraph(repo: Repository): Promise<DependenciesGraph | undefined> {
-    const getWithBackwardCompatibility = async (): Promise<DependenciesGraph | undefined> => {
+  async loadDependenciesGraph(repo: Repository): Promise<DependenciesGraph | undefined> {
+    if (!this._dependenciesGraph) {
       if (this.dependenciesGraphRef) {
         // it's possible that there is a ref but the file is not there.
         // it can happen if the remote-scope uses an older version that doesn't know to collect this ref.
@@ -252,16 +252,10 @@ export default class Version extends BitObject {
         const throws = false;
         const dependenciesGraphSource = (await repo.load(this.dependenciesGraphRef, throws)) as Source | undefined;
         if (dependenciesGraphSource) {
-          return JSON.parse(dependenciesGraphSource.contents.toString());
+          this._dependenciesGraph = JSON.parse(dependenciesGraphSource.contents.toString());
         }
       }
-      return undefined;
-    };
-
-    if (!this._dependenciesGraph) {
-      this._dependenciesGraph = await getWithBackwardCompatibility();
     }
-
     return this._dependenciesGraph;
   }
 

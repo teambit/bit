@@ -828,14 +828,14 @@ once done, to continue working, please run "bit cc"`
     return allGraph;
   }
 
-  public async getDependenciesGraphByComponentId(id: ComponentID): Promise<any> {
+  public async getDependenciesGraphByComponentId(id: ComponentID): Promise<DependenciesGraph | undefined> {
     let versionObj: Version;
     try {
       versionObj = await this.getVersionInstance(id);
     } catch (err) {
       return undefined;
     }
-    return versionObj.getDependenciesGraph(this.objects);
+    return versionObj.loadDependenciesGraph(this.objects);
   }
 }
 
