@@ -68,6 +68,7 @@ export type DependencyEdge = {
   neighbours: DependencyNeighbour[];
   attr: {
     pkgId: string;
+    transitivePeerDependencies?: string[];
   };
 };
 

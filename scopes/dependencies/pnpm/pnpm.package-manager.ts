@@ -402,7 +402,10 @@ export class PnpmPackageManager implements PackageManager {
     });
   }
 
-  async getDependenciesGraph({
+  /**
+   * Calculating the dependencies graph of a given component using the lockfile.
+   */
+  async calcDependenciesGraph({
     workspacePath,
     componentRootDir,
     componentRelativeDir,

@@ -770,7 +770,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       await Promise.all(
         consumerComponents.map(async (consumerComponent, index) => {
           if (consumerComponent.componentMap?.rootDir) {
-            consumerComponent.dependenciesGraph = await this.dependencyResolver.getDependenciesGraph(
+            consumerComponent.dependenciesGraph = await this.dependencyResolver.calcDependenciesGraph(
               components[index],
               consumerComponent.componentMap.rootDir,
               options

@@ -210,7 +210,7 @@ export interface PackageManager {
 
   findUsages?(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string>;
 
-  getDependenciesGraph?(options: GetDependenciesGraphOptions): Promise<DependenciesGraph>;
+  calcDependenciesGraph?(options: GetDependenciesGraphOptions): Promise<DependenciesGraph>;
 }
 
 export interface GetDependenciesGraphOptions {

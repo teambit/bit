@@ -1,13 +1,18 @@
 import { LockfileFileV9 } from '@pnpm/lockfile.types';
 import * as dp from '@pnpm/dependency-path';
 import { pick, partition } from 'lodash';
-import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
+import {
+  type DependenciesGraph,
+  type DependencyNode,
+  type DependencyEdge,
+  type DependencyNeighbour,
+} from '@teambit/legacy/dist/scope/models/version';
 
 export function convertLockfileToGraph(lockfile: LockfileFileV9): Pick<DependenciesGraph, 'nodes' | 'edges'> {
-  const nodes: any[] = [];
-  const edges: any[] = [];
+  const nodes: DependencyNode[] = [];
+  const edges: DependencyEdge[] = [];
   for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
-    const neighbours: Array<{ id: string; type: string }> = [];
+    const neighbours: DependencyNeighbour[] = [];
     for (const { depTypeField, depType } of [
       { depTypeField: 'dependencies', depType: 'prod' },
       { depTypeField: 'optionalDependencies', depType: 'optional' },
@@ -19,13 +24,13 @@ export function convertLockfileToGraph(lockfile: LockfileFileV9): Pick<Dependenc
       }
     }
     const pkgId = dp.removeSuffix(depPath);
-    const edge = {
+    const edge: DependencyEdge = {
       id: depPath,
       neighbours,
       attr: {
         pkgId,
       },
-    } as any;
+    };
     if (snapshot.transitivePeerDependencies) {
       edge.attr.transitivePeerDependencies = snapshot.transitivePeerDependencies;
     }

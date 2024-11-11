@@ -560,7 +560,7 @@ export class DependencyResolverMain {
     return relativePath;
   }
 
-  async getDependenciesGraph(
+  async calcDependenciesGraph(
     component: Component,
     componentRelativeDir: string,
     options: {
@@ -569,7 +569,7 @@ export class DependencyResolverMain {
       componentIdByPkgName: Map<string, { scope: string; name: string }>;
     }
   ): Promise<DependenciesGraph | undefined> {
-    return this.getPackageManager()?.getDependenciesGraph?.({
+    return this.getPackageManager()?.calcDependenciesGraph?.({
       workspacePath: options.workspacePath,
       componentRootDir: this.getComponentDirInBitRoots(component, options),
       pkgName: this.getPackageName(component),
