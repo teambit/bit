@@ -1850,13 +1850,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-filters/show-main-filter"
     },
-    "ui/component-meta": {
-        "name": "ui/component-meta",
-        "scope": "teambit.component",
-        "version": "0.0.360",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/component-meta"
-    },
     "ui/component-preview": {
         "name": "ui/component-preview",
         "scope": "teambit.preview",
@@ -1870,13 +1863,6 @@
         "version": "0.0.22",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/compositions-app"
-    },
-    "ui/copy-box": {
-        "name": "ui/copy-box",
-        "scope": "teambit.documenter",
-        "version": "4.1.17",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/copy-box"
     },
     "ui/current-user": {
         "name": "ui/current-user",
