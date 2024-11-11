@@ -2060,13 +2060,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/tooltip"
     },
-    "ui/use-box/menu": {
-        "name": "ui/use-box/menu",
-        "scope": "teambit.ui-foundation",
-        "version": "1.0.12",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/use-box/menu"
-    },
     "ui/user-bar": {
         "name": "ui/user-bar",
         "scope": "teambit.cloud",
