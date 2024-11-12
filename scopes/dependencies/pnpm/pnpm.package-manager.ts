@@ -469,6 +469,9 @@ export class PnpmPackageManager implements PackageManager {
     edges.push({
       id: '.',
       neighbours: replaceFileVersionsWithPendingVersions(directDependencies),
+      attr: {
+        pkgId: '.',
+      },
     });
     return {
       schemaVersion: '1.0',

@@ -50,7 +50,7 @@ export function convertLockfileToGraph(lockfile: LockfileFileV9): Pick<Dependenc
         'peerDependenciesMeta',
         'resolution',
         'version',
-      ]),
+      ]) as any,
     });
   }
   return { edges, nodes };

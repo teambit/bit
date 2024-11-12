@@ -103,7 +103,7 @@ chai.use(require('chai-fs'));
       });
     });
   });
-  describe.only('two components with different peer dependencies', function () {
+  describe('two components with different peer dependencies', function () {
     const env1DefaultPeerVersion = '16.0.0';
     const env2DefaultPeerVersion = '17.0.0';
     let randomStr: string;
@@ -186,7 +186,7 @@ chai.use(require('chai-fs'));
     it('should save dependencies graph to the model', () => {
       const versionObj = helper.command.catComponent('comp1@latest');
       const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
-      const directDependencies = depsGraph.edges.find((edge) => edge.id === '.');
+      const directDependencies = depsGraph.edges.find((edge) => edge.id === '.').neighbours;
       expect(directDependencies).deep.include({ name: 'react', specifier: '16.0.0', id: 'react@16.0.0' });
     });
     let depsGraph2;
@@ -195,7 +195,7 @@ chai.use(require('chai-fs'));
     it('should save dependencies graph to the model', () => {
       const versionObj = helper.command.catComponent('comp2@latest');
       depsGraph2 = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
-      depsGraph2DirectDeps = depsGraph2.edges.find((edge) => edge.id === '.');
+      depsGraph2DirectDeps = depsGraph2.edges.find((edge) => edge.id === '.').neighbours;
       expect(depsGraph2DirectDeps).deep.include({
         name: 'react',
         specifier: '17.0.0',
@@ -206,7 +206,7 @@ chai.use(require('chai-fs'));
       expect(depsGraph2DirectDeps).deep.include({
         name: `@ci/${randomStr}.comp1`,
         specifier: '*',
-        nodeId: `@ci/${randomStr}.comp1@0.0.1(react@17.0.0)`,
+        id: `@ci/${randomStr}.comp1@0.0.1(react@17.0.0)`,
       });
     });
     it('should update integrity of dependency component', () => {

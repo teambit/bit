@@ -18,7 +18,7 @@ import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
-import { BuilderMain, OnTagOpts } from '@teambit/builder';
+import { OnTagOpts } from '@teambit/builder';
 import { Log, type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
 import {
   MessagePerComponent,
