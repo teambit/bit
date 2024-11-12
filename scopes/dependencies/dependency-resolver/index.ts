@@ -13,6 +13,7 @@ export type {
   PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
   GetDependenciesGraphOptions,
+  ComponentIdByPkgName,
 } from './package-manager';
 export type { DependencyResolverWorkspaceConfig, NodeLinker } from './dependency-resolver-workspace-config';
 export type {

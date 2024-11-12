@@ -32,11 +32,7 @@ import {
   PackageNode,
 } from '@pnpm/reviewing.dependencies-hierarchy';
 import { renderTree } from '@pnpm/list';
-import {
-  writeLockfileFile,
-  getLockfileImporterId,
-  convertToLockfileFile as convertLockfileObjectToLockfileFile,
-} from '@pnpm/lockfile.fs';
+import { writeLockfileFile, convertToLockfileFile as convertLockfileObjectToLockfileFile } from '@pnpm/lockfile.fs';
 import { readWantedLockfile } from '@pnpm/lockfile-file';
 import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
 import { ServerSendOutStream } from '@teambit/legacy/dist/logger/pino-logger';
@@ -87,33 +83,7 @@ export class PnpmPackageManager implements PackageManager {
     manifests: Record<string, ProjectManifest>,
     rootDir: string
   ) {
-    const lockfile: LockfileFileV9 = {
-      importers: {},
-      ...convertGraphToLockfile(dependenciesGraph),
-    };
-    for (const [projectDir, manifest] of Object.entries(manifests)) {
-      const projectId = getLockfileImporterId(rootDir, projectDir);
-      lockfile.importers![projectId] = {
-        dependencies: {},
-        devDependencies: {},
-        optionalDependencies: {},
-      };
-      const directDependencies = dependenciesGraph.edges.find((edge) => edge.id === '.');
-      if (directDependencies) {
-        for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
-          for (const [name, specifier] of Object.entries(manifest[depType] ?? {})) {
-            const edgeId = directDependencies.neighbours.find(
-              (directDep) => directDep.name === name && directDep.specifier === specifier
-            )?.id;
-            if (edgeId) {
-              const parsed = dp.parse(edgeId);
-              const ref = `${parsed.version}${parsed.peersSuffix ?? ''}`;
-              lockfile.importers![projectId][depType][name] = { version: ref, specifier };
-            }
-          }
-        }
-      }
-    }
+    const lockfile: LockfileFileV9 = convertGraphToLockfile(dependenciesGraph, manifests, rootDir);
     Object.assign(lockfile, {
       bit: {
         restoredFromModel: true,
@@ -412,72 +382,32 @@ export class PnpmPackageManager implements PackageManager {
   /**
    * Calculating the dependencies graph of a given component using the lockfile.
    */
-  async calcDependenciesGraph({
-    workspacePath,
-    componentRootDir,
-    componentRelativeDir,
-    pkgName,
-    componentIdByPkgName,
-  }: GetDependenciesGraphOptions): Promise<DependenciesGraph> {
-    const lockfile = await readWantedLockfile(workspacePath, { ignoreIncompatible: false });
+  async calcDependenciesGraph(opts: GetDependenciesGraphOptions): Promise<DependenciesGraph> {
+    const lockfile = await readWantedLockfile(opts.workspacePath, { ignoreIncompatible: false });
     if (!lockfile) {
       throw new BitError('Cannot get the depednency graph without a lockfile. Try running "bit install".');
     }
-    if (!lockfile.importers[componentRootDir] && componentRootDir.includes('@')) {
-      componentRootDir = componentRootDir.split('@')[0];
+    if (!lockfile.importers[opts.componentRootDir] && opts.componentRootDir.includes('@')) {
+      opts.componentRootDir = opts.componentRootDir.split('@')[0];
     }
     let partialLockfile = convertLockfileObjectToLockfileFile(
-      filterLockfileByImporters(lockfile, [componentRootDir as ProjectId, componentRelativeDir as ProjectId], {
-        include: {
-          dependencies: true,
-          devDependencies: true,
-          optionalDependencies: true,
-        },
-        failOnMissingDependencies: false,
-        skipped: new Set(),
-      }),
+      filterLockfileByImporters(
+        lockfile,
+        [opts.componentRootDir as ProjectId, opts.componentRelativeDir as ProjectId],
+        {
+          include: {
+            dependencies: true,
+            devDependencies: true,
+            optionalDependencies: true,
+          },
+          failOnMissingDependencies: false,
+          skipped: new Set(),
+        }
+      ),
       { forceSharedFormat: true }
     );
-    const componentDevImporter = partialLockfile.importers![componentRelativeDir];
-    const directDependencies: DependencyNeighbour[] = [];
-    for (const [name, { version, specifier }] of Object.entries(componentDevImporter.devDependencies ?? {}) as any) {
-      directDependencies.push({ name, specifier, id: dp.refToRelative(version, name)! });
-    }
-    const lockedPkg =
-      partialLockfile.snapshots![
-        `${pkgName}@${partialLockfile.importers![componentRootDir].dependencies![pkgName].version}`
-      ];
-    for (const depType of ['dependencies' as const, 'optionalDependencies' as const]) {
-      for (const [name, version] of Object.entries(lockedPkg[depType] ?? {})) {
-        directDependencies.push({
-          name,
-          specifier: componentDevImporter[depType]?.[name]?.specifier ?? '*',
-          id: dp.refToRelative(version, name)!,
-        });
-      }
-    }
-    partialLockfile = replaceFileVersionsWithPendingVersions(partialLockfile);
-    const { nodes, edges } = convertLockfileToGraph(partialLockfile);
-    for (const node of nodes) {
-      if (node.pkgId.includes('@pending:')) {
-        const parsed = dp.parse(node.pkgId);
-        if (parsed.name && componentIdByPkgName.has(parsed.name)) {
-          node.attr.component = componentIdByPkgName.get(parsed.name);
-        }
-      }
-    }
-    edges.push({
-      id: '.',
-      neighbours: replaceFileVersionsWithPendingVersions(directDependencies),
-      attr: {
-        pkgId: '.',
-      },
-    });
-    return {
-      schemaVersion: '1.0',
-      nodes,
-      edges,
-    };
+    const graph = convertLockfileToGraph(partialLockfile, opts);
+    return graph;
   }
 }
 
@@ -510,8 +440,4 @@ function tryReadPackageJson(pkgDir: string) {
   } catch (err) {
     return undefined;
   }
-}
-
-function replaceFileVersionsWithPendingVersions<T>(obj: T): T {
-  return JSON.parse(JSON.stringify(obj).replaceAll(/file:[^'"(]+/g, 'pending:'));
 }

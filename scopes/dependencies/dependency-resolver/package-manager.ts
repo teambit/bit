@@ -218,5 +218,7 @@ export interface GetDependenciesGraphOptions {
   componentRootDir: string;
   pkgName: string;
   componentRelativeDir: string;
-  componentIdByPkgName: Map<string, { scope: string; name: string }>;
+  componentIdByPkgName: ComponentIdByPkgName;
 }
+
+export type ComponentIdByPkgName = Map<string, { scope: string; name: string }>;

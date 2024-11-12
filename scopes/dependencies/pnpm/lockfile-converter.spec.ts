@@ -1,9 +1,29 @@
+import path from 'path';
 import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-converter';
 import { expect } from 'chai';
 
 describe('convertLockfileToGraph simple case', () => {
   const lockfile: LockfileFileV9 = {
+    importers: {
+      '.': {},
+      'node_modules/.bit_roots/env': {
+        dependencies: {
+          comp1: {
+            version: 'file:comps/comp1',
+            specifier: '*',
+          },
+        },
+      },
+      'comps/comp1': {
+        dependencies: {
+          foo: {
+            version: '1.0.0',
+            specifier: '^1.0.0',
+          },
+        },
+      },
+    },
     lockfileVersion: '9.0',
     snapshots: {
       'foo@1.0.0': {
@@ -12,8 +32,19 @@ describe('convertLockfileToGraph simple case', () => {
         },
       },
       'bar@1.0.0': {},
+      'comp1@file:comps/comp1': {
+        dependencies: {
+          foo: '1.0.0',
+        },
+      },
     },
     packages: {
+      'comp1@file:comps/comp1': {
+        resolution: {
+          directory: 'comps/comp1',
+          type: 'directory',
+        },
+      },
       'foo@1.0.0': {
         engines: {
           node: '>=8',
@@ -33,8 +64,14 @@ describe('convertLockfileToGraph simple case', () => {
       },
     },
   };
-  const graph = convertLockfileToGraph(lockfile);
+  const graph = convertLockfileToGraph(lockfile, {
+    pkgName: 'comp1',
+    componentRelativeDir: 'comps/comp1',
+    componentRootDir: 'node_modules/.bit_roots/env',
+    componentIdByPkgName: new Map(),
+  });
   const expected = {
+    schemaVersion: '1.0',
     edges: [
       {
         id: 'foo@1.0.0',
@@ -49,6 +86,31 @@ describe('convertLockfileToGraph simple case', () => {
         attr: {
           pkgId: 'bar@1.0.0',
         },
+      },
+      {
+        attr: {
+          pkgId: 'comp1@pending:',
+        },
+        id: 'comp1@pending:',
+        neighbours: [
+          {
+            id: 'foo@1.0.0',
+            optional: false,
+          },
+        ],
+      },
+      {
+        attr: {
+          pkgId: '.',
+        },
+        id: '.',
+        neighbours: [
+          {
+            id: 'foo@1.0.0',
+            name: 'foo',
+            specifier: '^1.0.0',
+          },
+        ],
       },
     ],
     nodes: [
@@ -75,6 +137,15 @@ describe('convertLockfileToGraph simple case', () => {
           },
         },
       },
+      {
+        attr: {
+          resolution: {
+            directory: 'comps/comp1',
+            type: 'directory',
+          },
+        },
+        pkgId: 'comp1@pending:',
+      },
     ],
   };
   it('should convert the lockfile object to the graph object', () => {
@@ -82,11 +153,72 @@ describe('convertLockfileToGraph simple case', () => {
   });
   it('should convert the graph object to the lockfile object', () => {
     expect(
-      convertGraphToLockfile({
-        ...graph,
-        directDependencies: [],
-        schemaVersion: '1.0.0',
-      })
-    ).to.eql(lockfile);
+      convertGraphToLockfile(
+        {
+          ...graph,
+          schemaVersion: '1.0.0',
+        },
+        {
+          [path.resolve('comps/comp1')]: {
+            dependencies: {
+              foo: '^1.0.0',
+            },
+          },
+        },
+        process.cwd()
+      )
+    ).to.eql({
+      importers: {
+        'comps/comp1': {
+          dependencies: {
+            foo: {
+              version: '1.0.0',
+              specifier: '^1.0.0',
+            },
+          },
+          devDependencies: {},
+          optionalDependencies: {},
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'foo@1.0.0': {
+          dependencies: {
+            bar: '1.0.0',
+          },
+        },
+        'bar@1.0.0': {},
+        'comp1@pending:': {
+          dependencies: {
+            foo: '1.0.0',
+          },
+        },
+      },
+      packages: {
+        'comp1@pending:': {
+          resolution: {
+            directory: 'comps/comp1',
+            type: 'directory',
+          },
+        },
+        'foo@1.0.0': {
+          engines: {
+            node: '>=8',
+            npm: '>=6',
+          },
+          hasBin: true,
+          os: ['darwin'],
+          cpu: ['arm64'],
+          resolution: {
+            integrity: 'sha512-000',
+          },
+        },
+        'bar@1.0.0': {
+          resolution: {
+            integrity: 'sha512-111',
+          },
+        },
+      },
+    });
   });
 });
