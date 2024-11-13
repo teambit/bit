@@ -82,11 +82,38 @@ export type DependencyNeighbour = {
   specifier?: string;
 };
 
-export type DependenciesGraph = {
+export class DependenciesGraph {
   schemaVersion: string;
   nodes: DependencyNode[];
   edges: DependencyEdge[];
-};
+
+  constructor({
+    nodes,
+    edges,
+    schemaVersion,
+  }: {
+    nodes: DependencyNode[];
+    edges: DependencyEdge[];
+    schemaVersion?: string;
+  }) {
+    this.nodes = nodes;
+    this.edges = edges;
+    this.schemaVersion = schemaVersion ?? '1.0';
+  }
+
+  serialize(): string {
+    return JSON.stringify({
+      schemaVersion: this.schemaVersion,
+      nodes: this.nodes,
+      edges: this.edges,
+    });
+  }
+
+  static deserialize(data: string): DependenciesGraph {
+    const parsed = JSON.parse(data);
+    return new DependenciesGraph(parsed);
+  }
+}
 
 export type VersionProps = {
   mainFile: PathLinux;
@@ -247,7 +274,7 @@ export default class Version extends BitObject {
         const throws = false;
         const dependenciesGraphSource = (await repo.load(this.dependenciesGraphRef, throws)) as Source | undefined;
         if (dependenciesGraphSource) {
-          this._dependenciesGraph = JSON.parse(dependenciesGraphSource.contents.toString());
+          this._dependenciesGraph = DependenciesGraph.deserialize(dependenciesGraphSource.contents.toString());
         }
       }
     }
@@ -469,7 +496,7 @@ export default class Version extends BitObject {
   }
   static dependenciesGraphToSource(dependenciesGraph?: DependenciesGraph): Source | undefined {
     if (!dependenciesGraph) return undefined;
-    const dependenciesGraphBuffer = Buffer.from(JSON.stringify(dependenciesGraph));
+    const dependenciesGraphBuffer = Buffer.from(dependenciesGraph.serialize());
     return Source.from(dependenciesGraphBuffer);
   }
 

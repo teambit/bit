@@ -3,7 +3,7 @@ import { LockfileFileV9 } from '@pnpm/lockfile.types';
 import * as dp from '@pnpm/dependency-path';
 import { pick, partition } from 'lodash';
 import {
-  type DependenciesGraph,
+  DependenciesGraph,
   type DependencyNode,
   type DependencyEdge,
   type DependencyNeighbour,
@@ -96,11 +96,7 @@ export function convertLockfileToGraph(
       pkgId: '.',
     },
   });
-  return {
-    schemaVersion: '1.0',
-    edges,
-    nodes,
-  };
+  return new DependenciesGraph({ edges, nodes });
 }
 
 function replaceFileVersionsWithPendingVersions<T>(obj: T): T {
