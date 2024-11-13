@@ -669,7 +669,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     const currentLane = await consumer.getCurrentLaneObject();
     const untag = async (): Promise<untagResult[]> => {
       if (!componentPattern) {
-        return removeLocalVersionsForAllComponents(consumer, currentLane, head, this.remove);
+        return removeLocalVersionsForAllComponents(consumer, this.remove, currentLane, head);
       }
       const candidateComponents = await getComponentsWithOptionToUntag(consumer, this.remove);
       const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern, true, { includeDeleted: true });

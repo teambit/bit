@@ -56,9 +56,9 @@ export async function removeLocalVersion(
 
 export async function removeLocalVersionsForAllComponents(
   consumer: Consumer,
+  remove: RemoveMain,
   lane?: Lane,
-  head?: boolean,
-  remove?: RemoveMain
+  head?: boolean
 ): Promise<untagResult[]> {
   const componentsToUntag = await getComponentsWithOptionToUntag(consumer, remove);
   const force = true; // when removing local versions from all components, no need to check if the component is used as a dependency

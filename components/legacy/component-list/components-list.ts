@@ -233,6 +233,11 @@ export class ComponentsList {
     return components;
   }
 
+  /**
+   * @todo: this is not the full list. It's missing the deleted-components.
+   * will be easier to add it here once all legacy are not using this class and then ScopeMain will be in the
+   * constructor.
+   */
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<ComponentIdList> {
     const fromBitMap = this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
     const modelComponents = await this.getModelComponents();
