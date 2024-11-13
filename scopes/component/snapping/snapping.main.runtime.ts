@@ -63,7 +63,7 @@ import {
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
-import RemoveAspect, { RemoveMain } from '@teambit/remove';
+import { RemoveAspect, RemoveMain } from '@teambit/remove';
 
 export type TagDataPerComp = {
   componentId: ComponentID;
