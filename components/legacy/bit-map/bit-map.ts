@@ -326,6 +326,13 @@ export class BitMap {
     });
   }
 
+  addFromComponentJson(id: ComponentID, componentFromJson: Record<string, any>) {
+    componentFromJson.id = id;
+    const componentMap = ComponentMap.fromJson(componentFromJson as any);
+    this.components.push(componentMap);
+    this.markAsChanged();
+  }
+
   loadComponents(componentsJson: Record<string, any>, defaultScope: string) {
     this.throwForDuplicateRootDirs(componentsJson);
     Object.keys(componentsJson).forEach((componentId) => {

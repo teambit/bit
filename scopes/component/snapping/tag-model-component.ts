@@ -12,7 +12,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { Component } from '@teambit/component';
-import { deleteComponentsFiles } from '@teambit/remove';
+import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
@@ -575,6 +575,14 @@ export async function updateComponentsVersions(
 
   const updateVersions = async (modelComponent: ModelComponent) => {
     const id: ComponentID = modelComponent.toBitIdWithLatestVersionAllowNull();
+    const isOnBitmap = consumer.bitMap.getComponentIfExist(id, { ignoreVersion: true });
+    if (!isOnBitmap && !isTag) {
+      // handle the case when a component was deleted, snapped/tagged and is now reset.
+      const stagedData = stagedConfig.getPerId(id);
+      if (stagedData?.config && stagedData.config[RemoveAspect.id]) {
+        consumer.bitMap.addFromComponentJson(stagedData.id, stagedData.componentMapObject);
+      }
+    }
     consumer.bitMap.updateComponentId(id, undefined, undefined, true);
     const availableOnMain = await isAvailableOnMain(modelComponent, id);
     if (!availableOnMain) {
@@ -584,8 +592,9 @@ export async function updateComponentsVersions(
     const compId = await workspace.resolveComponentId(id);
     // it can be either a tag/snap or reset.
     if (isTag) {
+      const compMapObj = componentMap.toPlainObject();
       const config = componentMap.config;
-      stagedConfig.addComponentConfig(compId, config);
+      stagedConfig.addComponentConfig(compId, config, compMapObj);
       consumer.bitMap.removeConfig(id);
       const hash = modelComponent.getRef(id.version as string);
       if (!hash) throw new Error(`updateComponentsVersions: unable to find a hash for ${id.toString()}`);
@@ -595,6 +604,7 @@ export async function updateComponentsVersions(
     }
     componentMap.clearNextVersion();
   };
+  // * the comment below is probably not relevant anymore, but it's good to keep it for future reference. *
   // important! DO NOT use Promise.all here! otherwise, you're gonna enter into a whole world of pain.
   // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is
   // trying to get the dependencies of comp1 using its package.json.
