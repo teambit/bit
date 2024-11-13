@@ -4,6 +4,7 @@ import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
 import { v4 } from 'uuid';
+import semver from 'semver';
 import { BuildStatus, DEFAULT_BUNDLE_FILENAME, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { isSchemaSupport, SchemaFeature, SchemaName } from '../../consumer/component/component-schema';
@@ -24,6 +25,7 @@ import validateVersionInstance from '../version-validator';
 import Source from './source';
 import { BitIdCompIdError } from '../exceptions/bit-id-comp-id-err';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
+import * as dp from '@pnpm/dependency-path';
 
 export type SourceFileModel = {
   name: string;
@@ -113,6 +115,39 @@ export class DependenciesGraph {
     const parsed = JSON.parse(data);
     return new DependenciesGraph(parsed);
   }
+
+  merge(graph: DependenciesGraph): void {
+    const directDependencies = graph.edges.find((edge) => edge.id === '.')?.neighbours;
+    if (directDependencies) {
+      for (const directDep of directDependencies) {
+        const existingDirectDeps = this.edges.find((edge) => edge.id === '.')?.neighbours;
+        if (existingDirectDeps) {
+          const existingDirectDep = existingDirectDeps.find(
+            ({ name, specifier }) => name === directDep.name && specifier === directDep.specifier
+          );
+          if (existingDirectDep == null) {
+            existingDirectDeps.push(directDep);
+          } else if (existingDirectDep.id !== directDep.id && nodeIdLessThan(existingDirectDep.id, directDep.id)) {
+            existingDirectDep.id = directDep.id;
+          }
+        }
+      }
+    }
+    this.nodes.push(...graph.nodes);
+    this.edges.push(...graph.edges);
+  }
+
+  isEmpty(): boolean {
+    return this.nodes.length === 0 && this.edges.length === 0;
+  }
+}
+
+function nodeIdLessThan(nodeId1: string, nodeId2: string): boolean {
+  const parsed1 = dp.parse(nodeId1);
+  if (!parsed1?.version) return false;
+  const parsed2 = dp.parse(nodeId2);
+  if (!parsed2?.version) return false;
+  return semver.lt(parsed1.version, parsed2.version);
 }
 
 export type VersionProps = {

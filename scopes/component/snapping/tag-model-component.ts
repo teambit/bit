@@ -19,7 +19,7 @@ import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { OnTagOpts } from '@teambit/builder';
-import { Log, type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
+import { DependenciesGraph, Log } from '@teambit/legacy/dist/scope/models/version';
 import {
   MessagePerComponent,
   MessagePerComponentFetcher,
@@ -667,12 +667,15 @@ export async function updateComponentsVersions(
   return stagedConfig;
 }
 
-function replacePendingVersions(obj: unknown, resolvedVersions: Array<{ name: string; version: string }>): unknown {
-  let s = JSON.stringify(obj);
+function replacePendingVersions(
+  graph: DependenciesGraph,
+  resolvedVersions: Array<{ name: string; version: string }>
+): DependenciesGraph {
+  let s = graph.serialize();
   for (const { name, version } of resolvedVersions) {
     s = s.replaceAll(`${name}@pending:`, `${name}@${version}`);
   }
-  return JSON.parse(s);
+  return DependenciesGraph.deserialize(s);
 }
 
 /**

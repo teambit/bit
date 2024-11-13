@@ -5,7 +5,6 @@ import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-t
 import R from 'ramda';
 import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
-import * as dp from '@pnpm/dependency-path';
 import semver from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
@@ -803,31 +802,11 @@ once done, to continue working, please run "bit cc"`
     await Promise.all(
       componentIds.map(async (componentId) => {
         const graph = await this.getDependenciesGraphByComponentId(componentId);
-        if (graph == null || Object.keys(graph).length === 0) return;
+        if (graph == null || graph.isEmpty()) return;
         if (allGraph == null) {
           allGraph = graph;
         } else {
-          const directDependencies = graph.edges.find((edge) => edge.id === '.')?.neighbours;
-          if (directDependencies) {
-            for (const directDep of directDependencies) {
-              const existingDirectDeps = allGraph.edges.find((edge) => edge.id === '.')?.neighbours;
-              if (existingDirectDeps) {
-                const existingDirectDep = existingDirectDeps.find(
-                  ({ name, specifier }) => name === directDep.name && specifier === directDep.specifier
-                );
-                if (existingDirectDep == null) {
-                  existingDirectDeps.push(directDep);
-                } else if (
-                  existingDirectDep.id !== directDep.id &&
-                  nodeIdLessThan(existingDirectDep.id, directDep.id)
-                ) {
-                  existingDirectDep.id = directDep.id;
-                }
-              }
-            }
-          }
-          allGraph.nodes.push(...graph.nodes);
-          allGraph.edges.push(...graph.edges);
+          allGraph.merge(graph);
         }
       })
     );
@@ -865,12 +844,4 @@ export function pathHasAll(patterns: string[]): (absPath: string) => boolean {
 
     return state;
   };
-}
-
-function nodeIdLessThan(nodeId1: string, nodeId2: string): boolean {
-  const parsed1 = dp.parse(nodeId1);
-  if (!parsed1?.version) return false;
-  const parsed2 = dp.parse(nodeId2);
-  if (!parsed2?.version) return false;
-  return semver.lt(parsed1.version, parsed2.version);
 }
