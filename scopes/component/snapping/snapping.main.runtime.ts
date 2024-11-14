@@ -64,6 +64,7 @@ import {
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
+import { RemoveAspect, RemoveMain } from '@teambit/remove';
 
 export type PackageIntegritiesByPublishedPackages = Map<string, string | undefined>;
 
@@ -132,7 +133,8 @@ export class SnappingMain {
     readonly builder: BuilderMain,
     private importer: ImporterMain,
     private deps: DependenciesMain,
-    private application: ApplicationMain
+    private application: ApplicationMain,
+    private remove: RemoveMain
   ) {
     this.objectsRepo = this.scope?.legacyScope?.objects;
   }
@@ -674,9 +676,9 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     const currentLane = await consumer.getCurrentLaneObject();
     const untag = async (): Promise<untagResult[]> => {
       if (!componentPattern) {
-        return removeLocalVersionsForAllComponents(consumer, currentLane, head);
+        return removeLocalVersionsForAllComponents(consumer, this.remove, currentLane, head);
       }
-      const candidateComponents = await getComponentsWithOptionToUntag(consumer);
+      const candidateComponents = await getComponentsWithOptionToUntag(consumer, this.remove);
       const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern, true, { includeDeleted: true });
       const idsMatchingPatternBitIds = ComponentIdList.fromArray(idsMatchingPattern);
       const componentsToUntag = candidateComponents.filter((modelComponent) =>
@@ -1350,6 +1352,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     GlobalConfigAspect,
     DependenciesAspect,
     ApplicationAspect,
+    RemoveAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1366,6 +1369,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     globalConfig,
     deps,
     application,
+    remove,
   ]: [
     Workspace,
     CLIMain,
@@ -1380,6 +1384,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     GlobalConfigMain,
     DependenciesMain,
     ApplicationMain,
+    RemoveMain,
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(
@@ -1393,7 +1398,8 @@ another option, in case this dependency is not in main yet is to remove all refe
       builder,
       importer,
       deps,
-      application
+      application,
+      remove
     );
     const snapCmd = new SnapCmd(snapping, logger, globalConfig);
     const tagCmd = new TagCmd(snapping, logger, globalConfig);

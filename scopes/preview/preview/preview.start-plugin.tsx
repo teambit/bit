@@ -3,7 +3,8 @@ import { BundlerMain, ComponentServer } from '@teambit/bundler';
 import { PubsubMain } from '@teambit/pubsub';
 import { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
 import { Workspace } from '@teambit/workspace';
-import { SubscribeToWebpackEvents, CompilationResult } from '@teambit/preview.cli.webpack-events-listener';
+import { SubscribeToEvents } from '@teambit/preview.cli.dev-server-events-listener';
+import { SubscribeToWebpackEvents } from '@teambit/preview.cli.webpack-events-listener';
 import { CompilationInitiator } from '@teambit/compiler';
 import { Logger } from '@teambit/logger';
 import { CheckTypes, WatcherMain } from '@teambit/watcher';
@@ -82,6 +83,16 @@ export class PreviewStartPlugin implements StartPlugin {
   // TODO: this should be a part of the devServer
   private listenToDevServers() {
     // keep state changes immutable!
+    SubscribeToEvents(this.pubsub, {
+      onStart: (id) => {
+        this.handleOnStartCompiling(id);
+      },
+      onDone: (id, results) => {
+        this.handleOnDoneCompiling(id, results);
+      },
+    });
+    // @deprecated
+    // for legacy webpack bit report plugin
     SubscribeToWebpackEvents(this.pubsub, {
       onStart: (id) => {
         this.handleOnStartCompiling(id);
@@ -102,7 +113,7 @@ export class PreviewStartPlugin implements StartPlugin {
     }
   }
 
-  private handleOnDoneCompiling(id: string, results: CompilationResult) {
+  private handleOnDoneCompiling(id: string, results) {
     this.serversState[id] = {
       isCompiling: false,
       isReady: true,

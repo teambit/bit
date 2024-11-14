@@ -56,6 +56,7 @@ export type WatchOptions = {
   preCompile?: boolean; // whether compile all components before start watching
   compile?: boolean; // whether compile modified/added components during watch process
   import?: boolean; // whether import objects when .bitmap got version changes
+  trigger?: ComponentID; // trigger onComponentChange for the specified component-id. helpful when this comp must be a bundle, and needs to be recompile on any dep change.
 };
 
 export type RootDirs = { [dir: PathLinux]: ComponentID };
@@ -290,6 +291,10 @@ export class Watcher {
       removedFiles,
       true
     );
+    if (this.options.trigger && !updatedComponentId.isEqual(this.options.trigger)) {
+      await this.workspace.triggerOnComponentChange(this.options.trigger, [], [], this.options);
+    }
+
     return buildResults;
   }
 

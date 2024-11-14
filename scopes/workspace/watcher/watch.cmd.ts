@@ -4,10 +4,8 @@ import { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { BitBaseEvent, PubsubMain } from '@teambit/pubsub';
 import { OnComponentEventResult, Workspace } from '@teambit/workspace';
-
-// import IDs and events
+import { ComponentID } from '@teambit/component-id';
 import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
-
 import { EventMessages, RootDirs, WatchOptions } from './watcher';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 import { CheckTypes } from './check-types';
@@ -19,6 +17,7 @@ type WatchCmdOpts = {
   checkTypes?: string | boolean;
   import?: boolean;
   skipImport?: boolean;
+  trigger?: string;
 };
 
 export class WatchCommand implements Command {
@@ -43,6 +42,11 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
       'DEPRECATED. it is now the default. helpful when using git. import component objects if .bitmap changed not by bit',
     ],
     ['', 'skip-import', 'do not import component objects if .bitmap changed not by bit'],
+    [
+      '',
+      'trigger <comp-id>',
+      'trigger recompilation of the specified component regardless of what changed. helpful when this comp-id must be a bundle',
+    ],
   ] as CommandOptions;
 
   constructor(
@@ -78,7 +82,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
   };
 
   async report(cliArgs: [], watchCmdOpts: WatchCmdOpts) {
-    const { verbose, checkTypes, import: importIfNeeded, skipImport } = watchCmdOpts;
+    const { verbose, checkTypes, import: importIfNeeded, skipImport, trigger } = watchCmdOpts;
     if (importIfNeeded) {
       this.logger.consoleWarning('the "--import" flag is deprecated and is now the default behavior');
     }
@@ -104,6 +108,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
       spawnTSServer: Boolean(checkTypes), // if check-types is enabled, it must spawn the tsserver.
       checkTypes: getCheckTypesEnum(),
       import: !skipImport,
+      trigger: trigger ? ComponentID.fromString(trigger) : undefined,
     };
     await this.watcher.watch(watchOpts);
     return 'watcher terminated';

@@ -59,7 +59,7 @@ export default class ResetCmd implements Command {
       throw new BitError('please specify either --soft or --head flag, not both');
     }
     const { results, isSoftUntag } = await this.snapping.reset(pattern, head, force, soft);
-    const titleSuffix = isSoftUntag ? 'soft-untagged (are not candidates for tagging any more)' : 'untagged';
+    const titleSuffix = isSoftUntag ? 'soft-untagged (are not candidates for tagging any more)' : 'reset';
     const title = chalk.green(`${results.length} component(s) were ${titleSuffix}:\n`);
     const components = results.map((result) => {
       return `${chalk.cyan(result.id.toStringWithoutVersion())}. version(s): ${result.versions.join(', ')}`;
