@@ -720,7 +720,7 @@ export class PreviewMain {
     return [...linkFiles, previewRuntime];
   }
 
-  async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
+  private async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
     const { rebuild, skipUiBuild } = this.ui.runtimeOptions;
 
     const [name, uiRoot] = this.getUi();

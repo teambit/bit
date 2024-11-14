@@ -1,16 +1,13 @@
-import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
+import { EnvService, ExecutionContext, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import { EnvPreviewConfig, PreviewMain } from './preview.main.runtime';
 import { BitError } from '@teambit/bit-error';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
-import { ComponentBundlingStrategy } from './strategies';
 import { Workspace } from '@teambit/workspace';
-import { ComponentTargets } from './strategies/component-targets';
 import { Bundler, BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
 import { Component } from '@teambit/component';
 import { html } from './bundler/html-template';
 import { join, resolve } from 'path';
-import { generateLinkModulesImport } from './generate-link';
 import { existsSync, outputFileSync } from 'fs-extra';
 
 type PreviewTransformationMap = ServiceTransformationMap & {
@@ -69,8 +66,6 @@ export class PreviewService implements EnvService<any> {
   }
 
   async run(context: ExecutionContext, options: { name: string }): Promise<any> {
-    const compTargets = new ComponentTargets(this.preview, this.dependencyResolver);
-
     const defs = this.preview.getDefs();
     const onlyCompositionDef = defs.filter((def) => def.prefix === 'compositions');
     if (!onlyCompositionDef || onlyCompositionDef.length === 0) {
@@ -79,8 +74,6 @@ export class PreviewService implements EnvService<any> {
     const components = context.components;
     const outputPath = this.workspace.scope.legacyScope.tmp.composePath(`preview/${options.name}`);
     console.log('🚀 ~ file: preview.service.tsx:75 ~ PreviewService ~ run ~ outputPath:', outputPath);
-    // const previewRuntime = await this.preview.writePreviewEntry(context);
-    // console.log('🚀 ~ file: preview.service.tsx:77 ~ PreviewService ~ run ~ previewRuntime:', previewRuntime);
     const linkFiles = await this.preview.updateLinkFiles(onlyCompositionDef, context.components, context);
     const dirPath = join(this.preview.tempFolder, context.id);
     console.log('🚀 ~ file: preview.service.tsx:84 ~ PreviewService ~ run ~ dirPath:', dirPath);
@@ -93,7 +86,7 @@ export class PreviewService implements EnvService<any> {
     const hostRootDir = context.envRuntime.envAspectDefinition?.aspectPath;
     const targets = this.getTargets({ entries, components, outputPath, peers, hostRootDir });
     const url = `/preview/${context.envRuntime.id}`;
-    const htmlConfig = this.generateHtmlConfig(onlyCompositionDef[0]);
+    const htmlConfig = this.generateHtmlConfig();
     console.log('🚀 ~ file: preview.service.tsx:90 ~ PreviewService ~ run ~ htmlConfig:', htmlConfig);
     const bundlerContext: BundlerContext = Object.assign(context, {
       targets,
@@ -116,29 +109,6 @@ export class PreviewService implements EnvService<any> {
     const bundler: Bundler = await context.env.getBundler(bundlerContext);
     const bundlerResults = await bundler.run();
     console.log('🚀 ~ file: preview.service.tsx:103 ~ PreviewService ~ run ~ bundlerResults:', bundlerResults);
-
-    // const results = bundlingStrategy.computeResults(bundlerContext, bundlerResults, this);
-    // // @ts-ignore
-    // context.splitComponentBundle = false;
-    // const targets = await compTargets.computeTargets(
-    //   context,
-    //   components,
-    //   onlyCompositionDef,
-    //   outputPath,
-    //   (component) => this.workspace.getComponentPackagePath(component),
-    //   {
-    //     outputPath,
-    //     aliasHostDependencies: true,
-    //     externalizeHostDependencies: false,
-    //   }
-    // );
-    // console.log('🚀 ~ file: preview.service.tsx:89 ~ PreviewService ~ run ~ targets.ent:', targets[0].entries);
-    // console.log('🚀 ~ file: preview.service.tsx:89 ~ PreviewService ~ run ~ targets:', targets);
-    // const moduleMap = await onlyCompositionDef.getModuleMap(components);
-    // const envRuntime = await this.envs.createEnvironment(components);
-    // this.writeLink(onlyCompositionDef.prefix, withPaths, mainModulesMap, dirPath, isSplitComponentBundle);
-    // console.log("🚀 ~ file: preview.main.runtime.ts:309 ~ PreviewMain ~ generateComponentPreview ~ defs:", moduleMap.toArray())
-    // this.envs.getEnv
   }
 
   generateLocalPreviewRoot(dir: string) {
@@ -172,19 +142,11 @@ mounter.default(composition);
     return previewRootPath;
   }
 
-  generateHtmlConfig(previewDef: PreviewDefinition) {
-    // const chunks = compact([
-    //   previewDef.includePeers && CHUNK_NAMES.peers,
-    //   CHUNK_NAMES.previewRoot,
-    //   ...(previewDef.include || []),
-    //   previewDef.prefix,
-    // ]);
-
+  generateHtmlConfig() {
     const config: BundlerHtmlConfig = {
       title: 'Preview',
       templateContent: html('Preview'),
       minify: false,
-      // chunks,
       filename: 'index.html',
     };
     return config;

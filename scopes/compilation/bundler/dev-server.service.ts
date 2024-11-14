@@ -163,7 +163,6 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     const peers = await this.dependencyResolver.getPreviewHostDependenciesFromEnv(context.envDefinition.env);
     const hostRootDir = context.envRuntime.envAspectDefinition?.aspectPath;
     const entry = await getEntry(context, this.runtimeSlot);
-    console.log('🚀 ~ file: dev-server.service.ts:166 ~ DevServerService ~ entry:', entry);
     const componentDirectoryMap = {};
     context.components.forEach((component) => {
       // @ts-ignore this is usually a workspace component here so it has a workspace
