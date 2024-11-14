@@ -1,3 +1,4 @@
+import filenamify from 'filenamify';
 import { EnvService, ExecutionContext, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import { EnvPreviewConfig, PreviewMain } from './preview.main.runtime';
 import { BitError } from '@teambit/bit-error';
@@ -5,10 +6,10 @@ import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { Bundler, BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
-import { Component } from '@teambit/component';
+import { Component, ComponentID } from '@teambit/component';
 import { html } from './bundler/html-template';
 import { join, resolve } from 'path';
-import { existsSync, outputFileSync } from 'fs-extra';
+import { existsSync, outputFileSync, pathExists, readJsonSync } from 'fs-extra';
 
 type PreviewTransformationMap = ServiceTransformationMap & {
   /**
@@ -72,11 +73,18 @@ export class PreviewService implements EnvService<any> {
       throw new BitError('unable to find composition definition');
     }
     const components = context.components;
-    const outputPath = this.workspace.scope.legacyScope.tmp.composePath(`preview/${options.name}`);
+    console.log('🚀 ~ file: preview.service.tsx:75 ~ PreviewService ~ run ~ context.id:', context.id);
+    const envDirName = this.getEnvDirName(context.id);
+    const outputPath = this.workspace.scope.legacyScope.tmp.composePath(`local-preview/${options.name}/${envDirName}`);
     console.log('🚀 ~ file: preview.service.tsx:75 ~ PreviewService ~ run ~ outputPath:', outputPath);
     const linkFiles = await this.preview.updateLinkFiles(onlyCompositionDef, context.components, context);
     const dirPath = join(this.preview.tempFolder, context.id);
     console.log('🚀 ~ file: preview.service.tsx:84 ~ PreviewService ~ run ~ dirPath:', dirPath);
+    await this.addComponentsToLocalMapping(
+      options.name,
+      envDirName,
+      context.components.map((c) => c.id)
+    );
     const previewRootEntry = this.generateLocalPreviewRoot(dirPath);
 
     const entries = [...linkFiles, previewRootEntry];
@@ -87,7 +95,6 @@ export class PreviewService implements EnvService<any> {
     const targets = this.getTargets({ entries, components, outputPath, peers, hostRootDir });
     const url = `/preview/${context.envRuntime.id}`;
     const htmlConfig = this.generateHtmlConfig();
-    console.log('🚀 ~ file: preview.service.tsx:90 ~ PreviewService ~ run ~ htmlConfig:', htmlConfig);
     const bundlerContext: BundlerContext = Object.assign(context, {
       targets,
       compress: false,
@@ -109,6 +116,31 @@ export class PreviewService implements EnvService<any> {
     const bundler: Bundler = await context.env.getBundler(bundlerContext);
     const bundlerResults = await bundler.run();
     console.log('🚀 ~ file: preview.service.tsx:103 ~ PreviewService ~ run ~ bundlerResults:', bundlerResults);
+  }
+
+  getEnvDirName(envId: string): string {
+    return filenamify(envId, { replacement: '_' });
+  }
+
+  async addComponentsToLocalMapping(name: string, envDirPath: string, compIds: ComponentID[]) {
+    const dirPath = this.workspace.scope.legacyScope.tmp.composePath(`local-preview/${name}`);
+    const filePath = join(dirPath, 'components-preview.json');
+    console.log(
+      '🚀 ~ file: preview.service.tsx:118 ~ PreviewService ~ addComponentsToLocalMapping ~ filePath:',
+      filePath
+    );
+    // const idsString = compIds.map((id) => id.toString());
+    const idsString = compIds.map((id) => id.fullName);
+    const exists = await pathExists(filePath);
+    // let newFile = { [envDirPath]: idsString };
+    let newFile = idsString.reduce((acc, id) => {
+      return { ...acc, [id]: envDirPath };
+    }, {});
+    if (exists) {
+      const existingFile = readJsonSync(filePath);
+      newFile = { ...existingFile, ...newFile };
+    }
+    outputFileSync(filePath, JSON.stringify(newFile, null, 2));
   }
 
   generateLocalPreviewRoot(dir: string) {

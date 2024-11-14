@@ -306,7 +306,9 @@ export class PreviewMain {
   }
 
   async generateComponentPreview(componentPattern: string, name: string): Promise<{ [id: string]: string }> {
-    const componentIds = await this.workspace?.idsByPattern(componentPattern, true);
+    const componentIds = componentPattern
+      ? await this.workspace?.idsByPattern(componentPattern, true)
+      : this.workspace?.listIds();
     if (!componentIds) {
       throw new BitError(`unable to find components by the pattern: ${componentPattern}`);
     }
