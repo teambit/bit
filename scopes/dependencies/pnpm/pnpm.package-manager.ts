@@ -41,8 +41,7 @@ import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-conve
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
-import { DependencyNeighbour, type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
-import * as dp from '@pnpm/dependency-path';
+import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
 
 export type { RebuildFn };
 
@@ -390,7 +389,7 @@ export class PnpmPackageManager implements PackageManager {
     if (!lockfile.importers[opts.componentRootDir] && opts.componentRootDir.includes('@')) {
       opts.componentRootDir = opts.componentRootDir.split('@')[0];
     }
-    let partialLockfile = convertLockfileObjectToLockfileFile(
+    const partialLockfile = convertLockfileObjectToLockfileFile(
       filterLockfileByImporters(
         lockfile,
         [opts.componentRootDir as ProjectId, opts.componentRelativeDir as ProjectId],

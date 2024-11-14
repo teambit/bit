@@ -45,8 +45,8 @@ export function convertLockfileToGraph(
       { depTypeField: 'dependencies', optional: false },
       { depTypeField: 'optionalDependencies', optional: true },
     ]) {
-      for (const [pkgName, ref] of Object.entries((snapshot[depTypeField] ?? {}) as Record<string, string>)) {
-        const subDepPath = dp.refToRelative(ref, pkgName);
+      for (const [depPkgName, ref] of Object.entries((snapshot[depTypeField] ?? {}) as Record<string, string>)) {
+        const subDepPath = dp.refToRelative(ref, depPkgName);
         if (subDepPath == null) continue;
         neighbours.push({ id: subDepPath, optional });
       }
