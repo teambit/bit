@@ -37,6 +37,8 @@ type PreviewTransformationMap = ServiceTransformationMap & {
   getPreviewConfig?: () => EnvPreviewConfig;
 };
 
+const LOCAL_PREVIEW_DIR = 'local-preview';
+
 export class PreviewService implements EnvService<any> {
   name = 'preview';
 
@@ -75,7 +77,7 @@ export class PreviewService implements EnvService<any> {
     const components = context.components;
     console.log('🚀 ~ file: preview.service.tsx:75 ~ PreviewService ~ run ~ context.id:', context.id);
     const envDirName = this.getEnvDirName(context.id);
-    const outputPath = this.workspace.scope.legacyScope.tmp.composePath(`local-preview/${options.name}/${envDirName}`);
+    const outputPath = this.getEnvLocalPreviewDir(options.name, envDirName);
     console.log('🚀 ~ file: preview.service.tsx:75 ~ PreviewService ~ run ~ outputPath:', outputPath);
     const linkFiles = await this.preview.updateLinkFiles(onlyCompositionDef, context.components, context);
     const dirPath = join(this.preview.tempFolder, context.id);
@@ -122,9 +124,29 @@ export class PreviewService implements EnvService<any> {
     return filenamify(envId, { replacement: '_' });
   }
 
-  async addComponentsToLocalMapping(name: string, envDirPath: string, compIds: ComponentID[]) {
-    const dirPath = this.workspace.scope.legacyScope.tmp.composePath(`local-preview/${name}`);
+  getLocalPreviewDir(name: string) {
+    const dirPath = this.workspace.scope.legacyScope.tmp.composePath(`${LOCAL_PREVIEW_DIR}/${name}`);
+    return dirPath;
+  }
+
+  getEnvLocalPreviewDir(name: string, envDirName: string) {
+    const localPreviewDir = this.getLocalPreviewDir(name);
+    return join(localPreviewDir, envDirName);
+  }
+
+  getComponentsPreviewPath(name: string) {
+    const dirPath = this.getLocalPreviewDir(name);
     const filePath = join(dirPath, 'components-preview.json');
+    return filePath;
+  }
+
+  async readComponentsPreview(name: string) {
+    const filePath = this.getComponentsPreviewPath(name);
+    return readJsonSync(filePath);
+  }
+
+  async addComponentsToLocalMapping(name: string, envDirPath: string, compIds: ComponentID[]) {
+    const filePath = this.getComponentsPreviewPath(name);
     console.log(
       '🚀 ~ file: preview.service.tsx:118 ~ PreviewService ~ addComponentsToLocalMapping ~ filePath:',
       filePath

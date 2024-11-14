@@ -51,6 +51,10 @@ export class ExpressMain {
     return app.listen(serverPort);
   }
 
+  static(root: string, opts?: any) {
+    return express.static(root, opts);
+  }
+
   /**
    * register a new express routes.
    * route will be added as `/api/${route}`

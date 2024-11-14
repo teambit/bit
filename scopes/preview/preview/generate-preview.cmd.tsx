@@ -1,8 +1,5 @@
-import { BitError } from '@teambit/bit-error';
 import { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
-import { Logger } from '@teambit/logger';
-import openBrowser from 'react-dev-utils/openBrowser';
 import chalk from 'chalk';
 import type { PreviewMain } from './preview.main.runtime';
 

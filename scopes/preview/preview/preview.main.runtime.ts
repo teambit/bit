@@ -30,6 +30,7 @@ import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { ArtifactFiles } from '@teambit/component.sources';
 import { WatcherAspect, WatcherMain } from '@teambit/watcher';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -69,6 +70,7 @@ import { BUNDLE_DIR, PreBundlePreviewTask } from './pre-bundle.task';
 import { createBundleHash, getBundlePath, readBundleHash } from './pre-bundle-utils';
 import { html } from './bundler/html-template';
 import { GeneratePreviewCmd } from './generate-preview.cmd';
+import { ServePreviewCmd } from './serve-preview.cmd';
 
 const noopResult = {
   results: [],
@@ -207,7 +209,9 @@ export class PreviewMain {
 
     private logger: Logger,
 
-    private dependencyResolver: DependencyResolverMain
+    private dependencyResolver: DependencyResolverMain,
+
+    private express: ExpressMain
   ) {}
 
   private previewService: PreviewService;
@@ -319,6 +323,61 @@ export class PreviewMain {
     const envsRuntime = await this.envs.createEnvironment(components);
     const previewResults = envsRuntime.run(this.previewService, { name });
     return previewResults;
+  }
+
+  async serveLocalPreview({ port }: { port: number }) {
+    const app = this.express.createApp();
+
+    const getDir = async (comp, msg) => {
+      const componentPreviewIndex = await this.previewService.readComponentsPreview(msg);
+      const componentPreviewFolder = componentPreviewIndex[comp];
+      const envPreviewDir = this.previewService.getEnvLocalPreviewDir(msg, componentPreviewFolder);
+      if (!componentPreviewFolder) {
+        return undefined;
+      }
+      const publicDir = join(envPreviewDir, 'public');
+      return publicDir;
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    app.use('/:comp/:message', async (req, res, next) => {
+      // const comp = req.query.comp as string;
+      // const msg = req.query.message as string;
+      const comp = req.params.comp as string;
+      const msg = req.params.message as string;
+
+      console.log('🚀 ~ file: preview.main.runtime.ts:364 ~ PreviewMain ~ app.use ~ comp:', comp);
+
+      // Check if the folderName is provided
+      if (!comp) {
+        console.log('🚀 ~ file: preview.main.runtime.ts:350 ~ PreviewMain ~ app.use ~ comp:', comp);
+        return res.status(400).send('Please specify a comp.');
+      }
+
+      if (!msg) {
+        return res.status(400).send('Please specify a message.');
+      }
+
+      const publicDir = await getDir(comp, msg);
+      if (!publicDir) {
+        return res.status(404).send('Folder not found.');
+      }
+
+      // Serve files from the specified folder
+      this.express.static(publicDir)(req, res, next);
+    });
+
+    const server = await app.listen(port);
+
+    return new Promise((resolve, reject) => {
+      server.on('error', (err) => {
+        reject(err);
+      });
+      server.on('listening', () => {
+        this.logger.consoleSuccess(`Bit preview server is listening on port ${port}`);
+        resolve(port);
+      });
+    });
   }
 
   /**
@@ -962,6 +1021,7 @@ export class PreviewMain {
     WatcherAspect,
     ScopeAspect,
     CLIAspect,
+    ExpressAspect,
   ];
 
   static defaultConfig = {
@@ -988,6 +1048,7 @@ export class PreviewMain {
       watcher,
       scope,
       cli,
+      express,
     ]: [
       BundlerMain,
       BuilderMain,
@@ -1005,6 +1066,7 @@ export class PreviewMain {
       WatcherMain,
       ScopeMain,
       CLIMain,
+      ExpressMain,
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
@@ -1026,10 +1088,11 @@ export class PreviewMain {
       builder,
       workspace,
       logger,
-      dependencyResolver
+      dependencyResolver,
+      express
     );
 
-    cli.register(new GeneratePreviewCmd(preview));
+    cli.register(new GeneratePreviewCmd(preview), new ServePreviewCmd(preview));
 
     if (workspace)
       uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger, watcher));
