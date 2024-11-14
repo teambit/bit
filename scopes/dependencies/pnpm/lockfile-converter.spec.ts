@@ -2,6 +2,7 @@ import path from 'path';
 import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-converter';
 import { expect } from 'chai';
+import { DependenciesGraph } from '../../../dist/scope/models/version';
 
 describe('convertLockfileToGraph simple case', () => {
   const lockfile: LockfileFileV9 = {
@@ -154,10 +155,7 @@ describe('convertLockfileToGraph simple case', () => {
   it('should convert the graph object to the lockfile object', () => {
     expect(
       convertGraphToLockfile(
-        {
-          ...graph,
-          schemaVersion: '1.0.0',
-        },
+        new DependenciesGraph(graph),
         {
           [path.resolve('comps/comp1')]: {
             dependencies: {
