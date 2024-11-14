@@ -386,14 +386,6 @@ export async function tagModelComponent({
             consumerComponent.dependenciesGraph = _addIntegritiesToDependenciesGraph(
               consumerComponent.dependenciesGraph
             );
-
-            // Re-add the component to scope objects to persist the changes
-            await snapping._addCompToObjects({
-              source: consumerComponent,
-              lane,
-              shouldValidateVersion: Boolean(build),
-              updateDependentsOnLane,
-            });
           }
         })
       );

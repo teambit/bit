@@ -1079,7 +1079,12 @@ another option, in case this dependency is not in main yet is to remove all refe
     version.extensions = consumerComponent.extensions;
     version.buildStatus = consumerComponent.buildStatus;
     const artifactObjects = artifacts.map((file) => file.source);
-    return [version, ...artifactObjects];
+    const dependenciesGraph = Version.dependenciesGraphToSource(consumerComponent.dependenciesGraph);
+    version.dependenciesGraphRef = dependenciesGraph ? dependenciesGraph.hash() : undefined;
+
+    const result = [version, ...artifactObjects];
+    if (dependenciesGraph) result.push(dependenciesGraph);
+    return result;
   }
 
   private transformArtifactsFromVinylToSource(artifactsFiles: ArtifactFiles[]): ArtifactSource[] {
