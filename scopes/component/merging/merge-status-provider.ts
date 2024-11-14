@@ -164,6 +164,7 @@ other:   ${otherLaneHead.toString()}`);
     return componentStatus;
   }
 
+  // eslint-disable-next-line complexity
   private async getComponentStatusBeforeMergeAttempt(
     id: ComponentID // the id.version is the version we want to merge to the current component
   ): Promise<ComponentMergeStatusBeforeMergeAttempt> {
@@ -193,7 +194,8 @@ other:   ${otherLaneHead.toString()}`);
     if (componentOnOther.isRemoved()) {
       // if exist in current lane, we want the current lane to get the soft-remove update.
       // or if it was removed with --update-main, we want to merge it so then main will get the update.
-      const shouldMerge = idOnCurrentLane || componentOnOther.shouldRemoveFromMain();
+      // (unless this component does not exist on main, in which case, we don't want to merge it).
+      const shouldMerge = idOnCurrentLane || (componentOnOther.shouldRemoveFromMain() && modelComponent.head);
       if (shouldMerge) {
         // remove the component from the workspace if exist.
         componentStatus.shouldBeRemoved = true;

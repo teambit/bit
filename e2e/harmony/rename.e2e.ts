@@ -278,23 +278,49 @@ describe('bit rename command', function () {
     });
   });
   describe('rename an exported component from a lane', () => {
+    let headOnLane: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.createLane('my-lane');
-      helper.command.snapAllComponents('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
       helper.command.rename('comp1', 'comp11');
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
+      headOnLane = helper.command.getHeadOfLane('my-lane', 'comp1');
       helper.command.export();
-      helper.command.switchLocalLane('main');
+      helper.command.switchLocalLane('main', '-x');
       helper.command.mergeLaneWithoutBuild('my-lane', '-x');
+    });
+    it('should merge the component to main', () => {
+      const catComp1 = helper.command.catComponent('comp1');
+      expect(catComp1.head).to.equal(headOnLane);
     });
     it('should delete the component from main', () => {
       const removeData = helper.command.showAspectConfig('comp1', Extensions.remove);
       expect(removeData.config.removed).to.be.true;
+    });
+  });
+  describe('rename an exported component from a lane that does not exist on main', () => {
+    let headOnLane: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.createLane('my-lane');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.rename('comp1', 'comp11');
+      helper.command.snapAllComponentsWithoutBuild();
+      headOnLane = helper.command.getHeadOfLane('my-lane', 'comp1');
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.mergeLaneWithoutBuild('my-lane', '-x');
+    });
+    it('should not merge the component to main', () => {
+      const catComp1 = helper.command.catComponent('comp1');
+      expect(catComp1.head).to.not.equal(headOnLane);
     });
   });
 });
