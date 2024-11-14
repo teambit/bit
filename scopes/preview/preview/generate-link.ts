@@ -54,7 +54,7 @@ export function generateLink(
   });
 
   const contents = `
-import { linkModules } from '${normalizePath(join(previewDistDir, 'preview.preview.runtime.js'))}';
+${generateLinkModulesImport(['linkModules'])}
 
 ${getModuleImports(moduleLinks, tempPackageDir)}
 
@@ -82,6 +82,11 @@ ${componentLinks
 });
 `;
   return contents;
+}
+
+export function generateLinkModulesImport(vars: string[]): string {
+  const joined = vars.join(', ');
+  return `import { ${joined} } from '${normalizePath(join(previewDistDir, 'preview.preview.runtime.js'))}';`;
 }
 
 function moduleVarName(componentIdx: number, fileIdx: number) {

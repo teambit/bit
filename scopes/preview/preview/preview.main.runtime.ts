@@ -2,7 +2,8 @@ import { ArtifactFactory, BuilderAspect } from '@teambit/builder';
 import type { BuilderMain } from '@teambit/builder';
 import { Asset, BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime, CLIAspect } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
 import {
   Component,
   ComponentAspect,
@@ -66,6 +67,8 @@ import { PreviewService } from './preview.service';
 import { PUBLIC_DIR, RUNTIME_NAME, buildPreBundlePreview, generateBundlePreviewEntry } from './pre-bundle';
 import { BUNDLE_DIR, PreBundlePreviewTask } from './pre-bundle.task';
 import { createBundleHash, getBundlePath, readBundleHash } from './pre-bundle-utils';
+import { html } from './bundler/html-template';
+import { GeneratePreviewCmd } from './generate-preview.cmd';
 
 const noopResult = {
   results: [],
@@ -207,6 +210,8 @@ export class PreviewMain {
     private dependencyResolver: DependencyResolverMain
   ) {}
 
+  private previewService: PreviewService;
+
   get tempFolder(): string {
     return this.workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR;
   }
@@ -298,6 +303,20 @@ export class PreviewMain {
     }
     const envComponent = await this.envs.getEnvComponent(component);
     return this.doesEnvUseNameParam(envComponent);
+  }
+
+  async generateComponentPreview(componentPattern: string, name: string): Promise<{ [id: string]: string }> {
+    const componentIds = await this.workspace?.idsByPattern(componentPattern, true);
+    if (!componentIds) {
+      throw new BitError(`unable to find components by the pattern: ${componentPattern}`);
+    }
+    const components = await this.workspace?.getMany(componentIds);
+    if (!components) {
+      throw new BitError(`unable to find components by the pattern: ${componentPattern}`);
+    }
+    const envsRuntime = await this.envs.createEnvironment(components);
+    const previewResults = envsRuntime.run(this.previewService, { name });
+    return previewResults;
   }
 
   /**
@@ -695,12 +714,13 @@ export class PreviewMain {
     });
 
     const previewRuntime = await this.writePreviewEntry(context);
-    const linkFiles = await this.updateLinkFiles(context.components, context);
+    const previews = this.previewSlot.values();
+    const linkFiles = await this.updateLinkFiles(previews, context.components, context);
 
     return [...linkFiles, previewRuntime];
   }
 
-  private async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
+  async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
     const { rebuild, skipUiBuild } = this.ui.runtimeOptions;
 
     const [name, uiRoot] = this.getUi();
@@ -735,8 +755,7 @@ export class PreviewMain {
     return previewRuntime;
   }
 
-  private updateLinkFiles(components: Component[] = [], context: ExecutionContext) {
-    const previews = this.previewSlot.values();
+  updateLinkFiles(previews: PreviewDefinition[], components: Component[] = [], context: ExecutionContext) {
     const paths = previews.map(async (previewDef) => {
       const defaultTemplatePath = await previewDef.renderTemplatePathByEnv?.(context.env);
       const visitedEnvs = new Set();
@@ -846,7 +865,7 @@ export class PreviewMain {
   private getDefaultStrategies() {
     return [
       new EnvBundlingStrategy(this, this.pkg, this.dependencyResolver),
-      new ComponentBundlingStrategy(this, this.pkg, this.dependencyResolver, this.logger),
+      new ComponentBundlingStrategy(this, this.dependencyResolver, this.logger),
     ];
   }
 
@@ -866,8 +885,8 @@ export class PreviewMain {
 
     // add / remove / etc
     updater(executionRef);
-
-    await this.updateLinkFiles(executionRef.currentComponents, executionRef.executionCtx);
+    const previews = this.previewSlot.values();
+    await this.updateLinkFiles(previews, executionRef.currentComponents, executionRef.executionCtx);
     return noopResult;
   };
 
@@ -940,6 +959,7 @@ export class PreviewMain {
     GraphqlAspect,
     WatcherAspect,
     ScopeAspect,
+    CLIAspect,
   ];
 
   static defaultConfig = {
@@ -965,6 +985,7 @@ export class PreviewMain {
       graphql,
       watcher,
       scope,
+      cli,
     ]: [
       BundlerMain,
       BuilderMain,
@@ -981,6 +1002,7 @@ export class PreviewMain {
       GraphqlMain,
       WatcherMain,
       ScopeMain,
+      CLIMain,
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
@@ -1004,6 +1026,8 @@ export class PreviewMain {
       logger,
       dependencyResolver
     );
+
+    cli.register(new GeneratePreviewCmd(preview));
 
     if (workspace)
       uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger, watcher));
@@ -1044,8 +1068,13 @@ export class PreviewMain {
     if (scope) {
       scope.registerOnCompAspectReCalc((c) => preview.calcPreviewData(c));
     }
+    let previewService;
+    if (workspace) {
+      previewService = new PreviewService(preview, logger, dependencyResolver, workspace);
+    }
 
-    envs.registerService(new PreviewService());
+    envs.registerService(previewService);
+    preview.previewService = previewService;
 
     graphql.register(previewSchema(preview));
 
