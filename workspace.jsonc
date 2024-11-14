@@ -260,6 +260,7 @@
         "@teambit/mdx.ui.mdx-scope-context": "^1.0.5",
         "@teambit/node.utils.esm-loader": "^0.0.7",
         "@teambit/pkg.content.packages-overview": "1.95.9",
+        "@teambit/preview.cli.dev-server-events-listener": "^0.0.1",
         "@teambit/preview.modules.preview-modules": "^1.0.3",
         "@teambit/react.content.react-overview": "1.95.0",
         "@teambit/react.generator.react-native-templates": "^1.0.11",
