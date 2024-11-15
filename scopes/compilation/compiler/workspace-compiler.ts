@@ -1,7 +1,7 @@
 /* eslint-disable max-classes-per-file */
 import mapSeries from 'p-map-series';
 import { Component } from '@teambit/component';
-import { EnvsMain } from '@teambit/envs';
+import { EnvDefinition, EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
 import type { WorkspaceComponentLoadOptions } from '@teambit/workspace';
@@ -23,12 +23,12 @@ import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { UiMain } from '@teambit/ui';
 import { readRootComponentsDir } from '@teambit/workspace.root-components';
-import { groupBy, uniq } from 'lodash';
+import { compact, groupBy, uniq } from 'lodash';
 import type { PreStartOpts } from '@teambit/ui';
 import { MultiCompiler } from '@teambit/multi-compiler';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent } from './events';
-import { Compiler, CompilationInitiator } from './types';
+import { Compiler, CompilationInitiator, TranspileComponentParams, TypeGeneratorCompParams } from './types';
 
 export type BuildResult = {
   component: string;
@@ -49,6 +49,11 @@ export type CompileOptions = {
   // should we create links in node_modules for the compiled components (default = true)
   // this will link the source files, and create the package.json
   linkComponents?: boolean;
+  /**
+   * whether to generate types after the compilation, default = false.
+   * keep in mind that it's a heavy operation, and hurts the performance.
+   */
+  generateTypes?: boolean;
 };
 
 export type CompileError = { path: string; error: Error };
@@ -57,11 +62,11 @@ export class ComponentCompiler {
   constructor(
     private pubsub: PubsubMain,
     private workspace: Workspace,
-    private component: Component,
-    private compilerInstance: Compiler,
+    readonly component: Component,
+    readonly compilerInstance: Compiler,
     private compilerId: string,
     private logger: Logger,
-    private dependencyResolver: DependencyResolverMain,
+    readonly env: EnvDefinition,
     private dists: Dist[] = [],
     private compileErrors: CompileError[] = []
   ) {}
@@ -95,7 +100,7 @@ export class ComponentCompiler {
     }
 
     if (canTranspileComponent) {
-      await this.compileAllFiles(this.component, options.initiator, distDirs);
+      await this.compileAllFiles(options.initiator, distDirs);
     }
 
     if (!canTranspileFile && !canTranspileComponent) {
@@ -115,6 +120,11 @@ export class ComponentCompiler {
     if (this.component.state._consumer.compiler) loader.succeed();
 
     return { component: this.component.id.toString(), buildResults, errors: this.compileErrors };
+  }
+
+  getPackageDir() {
+    const packageName = componentIdToPackageName(this.component.state._consumer);
+    return path.join('node_modules', packageName);
   }
 
   private throwOnCompileErrors(noThrow = true) {
@@ -191,14 +201,10 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 
-  private async compileAllFiles(
-    component: Component,
-    initiator: CompilationInitiator,
-    distDirs: PathOsBasedRelative[]
-  ): Promise<void> {
+  private async compileAllFiles(initiator: CompilationInitiator, distDirs: PathOsBasedRelative[]): Promise<void> {
     const filesToCompile: AbstractVinyl[] = [];
     for (const base of distDirs) {
-      component.filesystem.files.forEach((file: AbstractVinyl) => {
+      this.component.filesystem.files.forEach((file: AbstractVinyl) => {
         const isFileSupported = this.compilerInstance.isFileSupported(file.path);
         if (isFileSupported) {
           filesToCompile.push(file);
@@ -218,9 +224,9 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     if (filesToCompile.length) {
       try {
         await this.compilerInstance.transpileComponent?.({
-          component,
+          component: this.component,
           componentDir: this.componentDir,
-          outputDir: await this.workspace.getComponentPackagePath(component),
+          outputDir: await this.workspace.getComponentPackagePath(this.component),
           initiator,
         });
       } catch (error: any) {
@@ -229,6 +235,8 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 }
+
+type TypeGeneratorParamsPerEnv = { envId: string; compParams: TypeGeneratorCompParams[]; typeCompiler: Compiler };
 
 export class WorkspaceCompiler {
   constructor(
@@ -365,31 +373,84 @@ export class WorkspaceCompiler {
     const componentsCompilers: ComponentCompiler[] = [];
 
     components.forEach((c) => {
-      const environment = this.envs.getEnv(c).env;
+      const env = this.envs.getEnv(c);
+      const environment = env.env;
       const compilerInstance = environment.getCompiler?.();
 
       if (compilerInstance) {
         const compilerName = compilerInstance.constructor.name || 'compiler';
         componentsCompilers.push(
-          new ComponentCompiler(
-            this.pubsub,
-            this.workspace,
-            c,
-            compilerInstance,
-            compilerName,
-            this.logger,
-            this.dependencyResolver
-          )
+          new ComponentCompiler(this.pubsub, this.workspace, c, compilerInstance, compilerName, this.logger, env)
         );
       } else {
         this.logger.warn(`unable to find a compiler instance for ${c.id.toString()}`);
       }
     });
+
+    const typeGeneratorParamsPerEnv = options.generateTypes
+      ? await this.getTypesCompilerPerEnv(componentsCompilers)
+      : undefined;
+
+    if (typeGeneratorParamsPerEnv) {
+      await this.preGenerateTypesOnWorkspace(typeGeneratorParamsPerEnv);
+    }
+
     const resultOnWorkspace = await mapSeries(componentsCompilers, (componentCompiler) =>
       componentCompiler.compile(noThrow, options)
     );
 
+    if (typeGeneratorParamsPerEnv) {
+      await this.generateTypesOnWorkspace(typeGeneratorParamsPerEnv);
+    }
+
     return resultOnWorkspace;
+  }
+
+  private async getTypesCompilerPerEnv(componentsCompilers: ComponentCompiler[]): Promise<TypeGeneratorParamsPerEnv[]> {
+    const envsMap: { [envId: string]: ComponentCompiler[] } = {};
+    componentsCompilers.forEach((componentCompiler) => {
+      const envId = componentCompiler.env.id;
+      if (!envsMap[envId]) envsMap[envId] = [];
+      envsMap[envId].push(componentCompiler);
+    });
+
+    const results = await mapSeries(Object.keys(envsMap), async (envId) => {
+      const componentCompilers = envsMap[envId];
+      const compParams = await Promise.all(
+        componentCompilers.map(async (componentCompiler) => {
+          return {
+            component: componentCompiler.component,
+            packageDir: path.join(this.workspace.path, componentCompiler.getPackageDir()),
+          };
+        })
+      );
+
+      let typeCompiler = componentCompilers[0].compilerInstance;
+      if (!typeCompiler.preGenerateTypesOnWorkspace) {
+        const buildPipe = componentCompilers[0].env.env.getBuildPipe();
+        const compilerTasks = buildPipe.filter((task) => task.aspectId === CompilerAspect.id);
+        const tsTask = compilerTasks.find(
+          (task) => task.compilerInstance && task.compilerInstance.displayName === 'TypeScript'
+        );
+        if (!tsTask) return;
+        typeCompiler = tsTask.compilerInstance;
+        if (!typeCompiler.preGenerateTypesOnWorkspace) return;
+      }
+      return { envId, compParams, typeCompiler };
+    });
+    return compact(results);
+  }
+
+  private async preGenerateTypesOnWorkspace(typesGeneratorParamsPerEnv: TypeGeneratorParamsPerEnv[]) {
+    await mapSeries(typesGeneratorParamsPerEnv, async ({ envId, compParams, typeCompiler }) => {
+      await typeCompiler.preGenerateTypesOnWorkspace!(compParams, envId);
+    });
+  }
+
+  private async generateTypesOnWorkspace(typesGeneratorParamsPerEnv: TypeGeneratorParamsPerEnv[]) {
+    await mapSeries(typesGeneratorParamsPerEnv, async ({ compParams, typeCompiler }) => {
+      await typeCompiler.generateTypesOnWorkspace!(path.join(this.workspace.path, 'node_modules'), compParams);
+    });
   }
 
   /**
