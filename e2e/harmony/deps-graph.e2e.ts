@@ -63,16 +63,17 @@ chai.use(require('chai-fs'));
     describe('sign component and use dependency graph to generate a lockfile', () => {
       let signOutput: string;
       let lockfile: LockfileFileV9;
+      let signRemote;
       before(async () => {
         helper.command.export();
-        helper.scopeHelper.cloneLocalScope();
-        // yes, this is strange, it adds the remote-scope to itself as a remote. we need it because
-        // we run "action" command from the remote to itself to clear the cache. (needed because
-        // normally bit-sign is running from the fs but a different http service is running as well)
-        helper.scopeHelper.addRemoteScope(undefined, helper.scopes.remotePath);
+        signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
         const { head } = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
-        const ids = [`${helper.scopes.remote}/comp1@${head}`];
-        signOutput = helper.command.sign(ids, '--push --original-scope --log', helper.scopes.remotePath);
+        signOutput = helper.command.sign(
+          [`${helper.scopes.remote}/comp1@${head}`],
+          '--push --log',
+          signRemote.scopePath
+        );
       });
       it('should sign successfully', () => {
         expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');

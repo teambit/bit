@@ -110,6 +110,13 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     this.logger.clearStatusLine();
     // it's enough to check the first component whether it's a snap or tag, because it can't be a mix of both
     const shouldRunSnapPipeline = isSnap(components[0].id.version);
+    await Promise.all(
+      components.map(async (component) => {
+        component.state._consumer.dependenciesGraph = await this.scope.legacyScope.getDependenciesGraphByComponentId(
+          component.id
+        );
+      })
+    );
     const { builderDataMap, pipeResults } = await this.builder.tagListener(
       components,
       { throwOnError: false, isSnap: shouldRunSnapPipeline },

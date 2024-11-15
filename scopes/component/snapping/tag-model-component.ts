@@ -380,15 +380,11 @@ export async function tagModelComponent({
         null,
         packageIntegritiesByPublishedPackages
       );
-      await Promise.all(
-        allComponentsToTag.map(async (consumerComponent) => {
-          if (consumerComponent.dependenciesGraph) {
-            consumerComponent.dependenciesGraph = _addIntegritiesToDependenciesGraph(
-              consumerComponent.dependenciesGraph
-            );
-          }
-        })
-      );
+      for (const consumerComponent of allComponentsToTag) {
+        if (consumerComponent.dependenciesGraph) {
+          consumerComponent.dependenciesGraph = _addIntegritiesToDependenciesGraph(consumerComponent.dependenciesGraph);
+        }
+      }
 
       addBuildStatus(componentsToBuild, BuildStatus.Succeed);
       await mapSeries(componentsToBuild, (consumerComponent) => snapping._enrichComp(consumerComponent));
