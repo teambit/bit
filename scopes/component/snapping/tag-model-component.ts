@@ -376,16 +376,7 @@ export async function tagModelComponent({
       const packageIntegritiesByPublishedPackages = snapping._getPublishedPackages(componentsToBuild);
       publishedPackages.push(...Array.from(packageIntegritiesByPublishedPackages.keys()));
 
-      const _addIntegritiesToDependenciesGraph = addIntegritiesToDependenciesGraph.bind(
-        null,
-        packageIntegritiesByPublishedPackages
-      );
-      for (const consumerComponent of allComponentsToTag) {
-        if (consumerComponent.dependenciesGraph) {
-          consumerComponent.dependenciesGraph = _addIntegritiesToDependenciesGraph(consumerComponent.dependenciesGraph);
-        }
-      }
-
+      addIntegritiesToConsumerComponentsGraphs(packageIntegritiesByPublishedPackages, allComponentsToTag);
       addBuildStatus(componentsToBuild, BuildStatus.Succeed);
       await mapSeries(componentsToBuild, (consumerComponent) => snapping._enrichComp(consumerComponent));
       if (populateArtifactsFrom) await updateHiddenProp(scope, populateArtifactsFrom);
@@ -420,6 +411,21 @@ export async function tagModelComponent({
     stagedConfig,
     removedComponents,
   };
+}
+
+function addIntegritiesToConsumerComponentsGraphs(
+  packageIntegritiesByPublishedPackages: PackageIntegritiesByPublishedPackages,
+  consumerComponents: ConsumerComponent[]
+) {
+  const _addIntegritiesToDependenciesGraph = addIntegritiesToDependenciesGraph.bind(
+    null,
+    packageIntegritiesByPublishedPackages
+  );
+  for (const consumerComponent of consumerComponents) {
+    if (consumerComponent.dependenciesGraph) {
+      consumerComponent.dependenciesGraph = _addIntegritiesToDependenciesGraph(consumerComponent.dependenciesGraph);
+    }
+  }
 }
 
 /**
