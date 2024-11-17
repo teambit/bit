@@ -7,6 +7,7 @@ export class ServePreviewCmd implements Command {
   description = 'serve local preview bundle for components';
   group = 'development';
   options = [['p', 'port [port]', 'port to run the server on']] as CommandOptions;
+  private = true;
 
   constructor(
     /**

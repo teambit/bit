@@ -21,6 +21,7 @@ export class GeneratePreviewCmd implements Command {
   ];
   group = 'development';
   options = [['n', 'name <name>', 'name for the preview']] as CommandOptions;
+  private = true;
 
   constructor(
     /**
