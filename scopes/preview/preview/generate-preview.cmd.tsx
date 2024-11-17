@@ -1,7 +1,9 @@
+import padRight from 'pad-right';
 import { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import chalk from 'chalk';
 import type { PreviewMain } from './preview.main.runtime';
+import { EnvsExecutionResult } from '@teambit/envs';
 
 type GeneratePreviewArgs = [userPattern: string];
 type GeneratePreviewFlags = {
@@ -29,6 +31,19 @@ export class GeneratePreviewCmd implements Command {
 
   async report([userPattern]: GeneratePreviewArgs, { name }: GeneratePreviewFlags) {
     const res = await this.preview.generateComponentPreview(userPattern, name);
-    return chalk.green(`preview generated successfully ${res}`);
+    const formattedOutput = this.formatOutput(res);
+    return chalk.green(`previews generated successfully in:\n${formattedOutput}`);
+  }
+
+  formatOutput(res: EnvsExecutionResult<{ [id: string]: string }>) {
+    const merged = res.results.reduce((acc, result) => {
+      acc = { ...acc, ...result.data };
+      return acc;
+    }, {});
+    const rows = Object.entries(merged).map(([id, previewPath]) => {
+      const keyPadded = padRight(id, 20, ' ');
+      return chalk.green(`${keyPadded} - ${previewPath}`);
+    });
+    return rows.join('\n');
   }
 }

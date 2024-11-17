@@ -75,23 +75,15 @@ export class PreviewService implements EnvService<any> {
       throw new BitError('unable to find composition definition');
     }
     const components = context.components;
-    console.log('🚀 ~ file: preview.service.tsx:75 ~ PreviewService ~ run ~ context.id:', context.id);
+    const componentIds = components.map((c) => c.id);
     const envDirName = this.getEnvDirName(context.id);
     const outputPath = this.getEnvLocalPreviewDir(options.name, envDirName);
-    console.log('🚀 ~ file: preview.service.tsx:75 ~ PreviewService ~ run ~ outputPath:', outputPath);
     const linkFiles = await this.preview.updateLinkFiles(onlyCompositionDef, context.components, context);
     const dirPath = join(this.preview.tempFolder, context.id);
-    console.log('🚀 ~ file: preview.service.tsx:84 ~ PreviewService ~ run ~ dirPath:', dirPath);
-    await this.addComponentsToLocalMapping(
-      options.name,
-      envDirName,
-      context.components.map((c) => c.id)
-    );
+    const mappingFile = await this.addComponentsToLocalMapping(options.name, envDirName, componentIds);
     const previewRootEntry = this.generateLocalPreviewRoot(dirPath);
 
     const entries = [...linkFiles, previewRootEntry];
-
-    console.log('🚀 ~ file: preview.service.tsx:79 ~ PreviewService ~ run ~ linkFiles:', linkFiles);
     const peers = await this.dependencyResolver.getPreviewHostDependenciesFromEnv(context.envDefinition.env);
     const hostRootDir = context.envRuntime.envAspectDefinition?.aspectPath;
     const targets = this.getTargets({ entries, components, outputPath, peers, hostRootDir });
@@ -116,8 +108,11 @@ export class PreviewService implements EnvService<any> {
     });
 
     const bundler: Bundler = await context.env.getBundler(bundlerContext);
-    const bundlerResults = await bundler.run();
-    console.log('🚀 ~ file: preview.service.tsx:103 ~ PreviewService ~ run ~ bundlerResults:', bundlerResults);
+    await bundler.run();
+    const res = componentIds.reduce((acc, id) => {
+      return { ...acc, [id.fullName]: outputPath };
+    }, {});
+    return res;
   }
 
   getEnvDirName(envId: string): string {
@@ -147,10 +142,6 @@ export class PreviewService implements EnvService<any> {
 
   async addComponentsToLocalMapping(name: string, envDirPath: string, compIds: ComponentID[]) {
     const filePath = this.getComponentsPreviewPath(name);
-    console.log(
-      '🚀 ~ file: preview.service.tsx:118 ~ PreviewService ~ addComponentsToLocalMapping ~ filePath:',
-      filePath
-    );
     // const idsString = compIds.map((id) => id.toString());
     const idsString = compIds.map((id) => id.fullName);
     const exists = await pathExists(filePath);
@@ -163,13 +154,19 @@ export class PreviewService implements EnvService<any> {
       newFile = { ...existingFile, ...newFile };
     }
     outputFileSync(filePath, JSON.stringify(newFile, null, 2));
+    return newFile;
   }
 
   generateLocalPreviewRoot(dir: string) {
     const contents = `const previewModules = window.__bit_preview_modules;
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
-const comp = urlParams.get('comp');
+const location = window.location.pathname;
+const splitLocation = location.split('/').filter((x) => x);
+// Remove message part
+splitLocation.shift();
+// const comp = urlParams.get('comp');
+const comp = splitLocation.join('/');
 const compositions = previewModules.get("compositions");
 const mounter = compositions.modulesMap.default;
 const componentMap = compositions.componentMap;
@@ -186,7 +183,11 @@ const composition = foundComponent[0][compositionName];
 if (!composition) {
   throw new Error('composition not found');
 }
-mounter.default(composition);
+let func = mounter.default;
+if (typeof func !== 'function') {
+  func = func.default;
+}
+func(composition);
     `;
     const previewRootPath = resolve(join(dir, `preview.entry.js`));
 

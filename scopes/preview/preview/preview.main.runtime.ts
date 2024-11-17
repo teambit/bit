@@ -13,7 +13,7 @@ import {
   ResolveAspectsOptions,
 } from '@teambit/component';
 import { EnvsAspect } from '@teambit/envs';
-import type { EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
+import type { EnvsExecutionResult, EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain, UIRoot } from '@teambit/ui';
 import { CacheAspect, CacheMain } from '@teambit/cache';
@@ -309,7 +309,10 @@ export class PreviewMain {
     return this.doesEnvUseNameParam(envComponent);
   }
 
-  async generateComponentPreview(componentPattern: string, name: string): Promise<{ [id: string]: string }> {
+  async generateComponentPreview(
+    componentPattern: string,
+    name: string
+  ): Promise<EnvsExecutionResult<{ [id: string]: string }>> {
     const componentIds = componentPattern
       ? await this.workspace?.idsByPattern(componentPattern, true)
       : this.workspace?.listIds();
@@ -321,7 +324,7 @@ export class PreviewMain {
       throw new BitError(`unable to find components by the pattern: ${componentPattern}`);
     }
     const envsRuntime = await this.envs.createEnvironment(components);
-    const previewResults = envsRuntime.run(this.previewService, { name });
+    const previewResults = await envsRuntime.run(this.previewService, { name });
     return previewResults;
   }
 
@@ -339,18 +342,18 @@ export class PreviewMain {
       return publicDir;
     };
 
+    // const dynamicRouteRegex = '/?[^/@]+(/[^~]*)?';
+    // readonly route = `/:componentId(${this.dynamicRouteRegex})/~aspect${this.registerRoute.route}`;
+    // app.use(`/:message/:componentId(${dynamicRouteRegex})`, async (req, res, next) => {
+
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    app.use('/:comp/:message', async (req, res, next) => {
+    app.use(`/:message/:componentId(*)`, async (req, res, next) => {
       // const comp = req.query.comp as string;
       // const msg = req.query.message as string;
-      const comp = req.params.comp as string;
+      let comp = req.params.componentId as string;
       const msg = req.params.message as string;
-
-      console.log('🚀 ~ file: preview.main.runtime.ts:364 ~ PreviewMain ~ app.use ~ comp:', comp);
-
       // Check if the folderName is provided
       if (!comp) {
-        console.log('🚀 ~ file: preview.main.runtime.ts:350 ~ PreviewMain ~ app.use ~ comp:', comp);
         return res.status(400).send('Please specify a comp.');
       }
 
@@ -358,9 +361,27 @@ export class PreviewMain {
         return res.status(400).send('Please specify a message.');
       }
 
+      if (comp.endsWith('/')) {
+        comp = comp.slice(0, -1);
+      }
+
+      let filePath: string | undefined;
+
+      if (comp.endsWith('.js') || comp.endsWith('.css') || comp.endsWith('.map')) {
+        const splitted = comp.split('/');
+        filePath = splitted.pop();
+        comp = splitted.join('/');
+      }
       const publicDir = await getDir(comp, msg);
       if (!publicDir) {
         return res.status(404).send('Folder not found.');
+      }
+      if (filePath) {
+        const file = join(publicDir, filePath);
+        if (!existsSync(file)) {
+          return res.status(404).send('File not found.');
+        }
+        return res.sendFile(file);
       }
 
       // Serve files from the specified folder
