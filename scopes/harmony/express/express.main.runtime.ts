@@ -51,7 +51,7 @@ export class ExpressMain {
     return app.listen(serverPort);
   }
 
-  static(root: string, opts?: any) {
+  static(root: string, opts?: any): any {
     return express.static(root, opts);
   }
 
