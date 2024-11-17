@@ -68,7 +68,6 @@ import { PreviewService } from './preview.service';
 import { PUBLIC_DIR, RUNTIME_NAME, buildPreBundlePreview, generateBundlePreviewEntry } from './pre-bundle';
 import { BUNDLE_DIR, PreBundlePreviewTask } from './pre-bundle.task';
 import { createBundleHash, getBundlePath, readBundleHash } from './pre-bundle-utils';
-import { html } from './bundler/html-template';
 import { GeneratePreviewCmd } from './generate-preview.cmd';
 import { ServePreviewCmd } from './serve-preview.cmd';
 
