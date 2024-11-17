@@ -1407,6 +1407,11 @@
         "",
         "skip-import",
         "do not import component objects if .bitmap changed not by bit"
+      ],
+      [
+        "",
+        "trigger <comp-id>",
+        "trigger recompilation of the specified component regardless of what changed. helpful when this comp-id must be a bundle"
       ]
     ],
     "description": "automatically recompile modified components (on save)",

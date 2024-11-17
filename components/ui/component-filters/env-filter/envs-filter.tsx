@@ -37,11 +37,14 @@ export const EnvsFilter: EnvsFilterCriteria = {
   id: 'envs',
   match: ({ component }, filter) => {
     const { envsState } = filter;
+    const areAllEnvsActive = [...envsState.values()].every((envState) => envState.active);
     const activeEnvs = [...envsState.values()].filter((envState) => envState.active).map((envState) => envState.id);
-    // match everything when no envs are set
-    if (activeEnvs.length === 0) return true;
+    // match everything when no envs are set or all envs are set
+    if (activeEnvs.length === 0 || areAllEnvsActive) return true;
+
     const envId =
       component.environment && ComponentID.tryFromString(component.environment.id)?.toStringWithoutVersion();
+
     const matches = !!envId && activeEnvs.indexOf(envId) >= 0;
     return matches;
   },
@@ -98,9 +101,10 @@ const deriveEnvsFilterState = (components: ComponentModel[]) => {
 function envsFilter({ components, className, lanes }: ComponentFilterRenderProps) {
   const [filters = []] = useComponentFilters() || [];
   const filtersExceptEnv = filters.filter((filter) => filter.id !== EnvsFilter.id);
+
   const filteredComponents = useMemo(
     () => runAllFilters(filtersExceptEnv, { components, lanes }),
-    [filtersExceptEnv.length, lanes?.viewedLane?.id.toString()]
+    [JSON.stringify(filtersExceptEnv), lanes?.viewedLane?.id.toString()]
   );
 
   const envsFilterState = deriveEnvsFilterState(filteredComponents);
