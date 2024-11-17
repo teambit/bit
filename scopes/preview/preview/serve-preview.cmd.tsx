@@ -1,5 +1,4 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import chalk from 'chalk';
 import type { PreviewMain } from './preview.main.runtime';
 
 export class ServePreviewCmd implements Command {
@@ -17,7 +16,6 @@ export class ServePreviewCmd implements Command {
   ) {}
 
   async wait(args, options: { port: number }) {
-    const res = await this.preview.serveLocalPreview(options);
-    chalk.green(`preview server is listening on port ${res.port}`);
+    await this.preview.serveLocalPreview(options);
   }
 }

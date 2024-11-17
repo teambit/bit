@@ -328,7 +328,7 @@ export class PreviewMain {
     return previewResults;
   }
 
-  async serveLocalPreview({ port }: { port: number }) {
+  async serveLocalPreview({ port }: { port: number }): Promise<number> {
     const app = this.express.createApp();
 
     const getDir = async (comp, msg) => {

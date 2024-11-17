@@ -9,7 +9,7 @@ import { Bundler, BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bun
 import { Component, ComponentID } from '@teambit/component';
 import { html } from './bundler/html-template';
 import { join, resolve } from 'path';
-import { existsSync, outputFileSync, pathExists, readJsonSync } from 'fs-extra';
+import { outputFileSync, pathExists, readJsonSync } from 'fs-extra';
 
 type PreviewTransformationMap = ServiceTransformationMap & {
   /**
@@ -80,7 +80,7 @@ export class PreviewService implements EnvService<any> {
     const outputPath = this.getEnvLocalPreviewDir(options.name, envDirName);
     const linkFiles = await this.preview.updateLinkFiles(onlyCompositionDef, context.components, context);
     const dirPath = join(this.preview.tempFolder, context.id);
-    const mappingFile = await this.addComponentsToLocalMapping(options.name, envDirName, componentIds);
+    await this.addComponentsToLocalMapping(options.name, envDirName, componentIds);
     const previewRootEntry = this.generateLocalPreviewRoot(dirPath);
 
     const entries = [...linkFiles, previewRootEntry];
@@ -89,6 +89,8 @@ export class PreviewService implements EnvService<any> {
     const targets = this.getTargets({ entries, components, outputPath, peers, hostRootDir });
     const url = `/preview/${context.envRuntime.id}`;
     const htmlConfig = this.generateHtmlConfig();
+    // @ts-ignore we don't really need the full bundler type here, we should
+    // change the original type to only have the relevant fields
     const bundlerContext: BundlerContext = Object.assign(context, {
       targets,
       compress: false,
