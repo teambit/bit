@@ -679,7 +679,12 @@ function replacePendingVersions(
   for (const { name, version } of resolvedVersions) {
     s = s.replaceAll(`${name}@pending:`, `${name}@${version}`);
   }
-  return DependenciesGraph.deserialize(s);
+  const updatedDependenciesGraph = DependenciesGraph.deserialize(s);
+  // This should never happen as we know at this point that the schema version is supported
+  if (updatedDependenciesGraph == null) {
+    throw new BitError('Failed to deserialize dependencies graph in replacePendingVersions()');
+  }
+  return updatedDependenciesGraph;
 }
 
 /**
