@@ -4,12 +4,12 @@ import { EnvPreviewConfig, PreviewMain } from './preview.main.runtime';
 import { BitError } from '@teambit/bit-error';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
-import { Workspace } from '@teambit/workspace';
 import { Bundler, BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
 import { Component, ComponentID } from '@teambit/component';
-import { html } from './bundler/html-template';
 import { join, resolve } from 'path';
 import { outputFileSync, pathExists, readJsonSync } from 'fs-extra';
+import { ScopeMain } from '@teambit/scope';
+import { html } from './bundler/html-template';
 
 type PreviewTransformationMap = ServiceTransformationMap & {
   /**
@@ -46,7 +46,7 @@ export class PreviewService implements EnvService<any> {
     private preview: PreviewMain,
     private logger: Logger,
     private dependencyResolver: DependencyResolverMain,
-    private workspace: Workspace
+    private scope: ScopeMain
   ) {}
 
   transform(env: Env, envContext: EnvContext): PreviewTransformationMap | undefined {
@@ -122,7 +122,7 @@ export class PreviewService implements EnvService<any> {
   }
 
   getLocalPreviewDir(name: string) {
-    const dirPath = this.workspace.scope.legacyScope.tmp.composePath(`${LOCAL_PREVIEW_DIR}/${name}`);
+    const dirPath = this.scope.legacyScope.tmp.composePath(`${LOCAL_PREVIEW_DIR}/${name}`);
     return dirPath;
   }
 

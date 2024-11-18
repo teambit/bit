@@ -1153,10 +1153,7 @@ export class PreviewMain {
     if (scope) {
       scope.registerOnCompAspectReCalc((c) => preview.calcPreviewData(c));
     }
-    let previewService;
-    if (workspace) {
-      previewService = new PreviewService(preview, logger, dependencyResolver, workspace);
-    }
+    const previewService = new PreviewService(preview, logger, dependencyResolver, scope);
 
     envs.registerService(previewService);
     preview.previewService = previewService;
