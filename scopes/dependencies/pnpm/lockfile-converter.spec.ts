@@ -1,8 +1,8 @@
 import path from 'path';
+import { DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
 import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-converter';
 import { expect } from 'chai';
-import { DependenciesGraph } from '../../../dist/scope/models/version';
 
 describe('convertLockfileToGraph simple case', () => {
   const lockfile: LockfileFileV9 = {
