@@ -7,7 +7,6 @@ import { Compiler } from '@teambit/compiler';
 import type { AbstractVinyl } from '@teambit/component.sources';
 import type { Capsule } from '@teambit/isolator';
 import { CAPSULE_ARTIFACTS_DIR, ComponentResult } from '@teambit/builder';
-import type { PkgMain } from '@teambit/pkg';
 import { BitError } from '@teambit/bit-error';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
@@ -39,7 +38,6 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
   constructor(
     private preview: PreviewMain,
-    private pkg: PkgMain,
     private dependencyResolver: DependencyResolverMain,
     private logger: Logger
   ) {}
