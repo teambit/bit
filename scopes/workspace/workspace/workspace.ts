@@ -1721,7 +1721,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     await this.clearCache();
   }
 
-  async getComponentPackagePath(component: Component) {
+  getComponentPackagePath(component: Component) {
     const relativePath = this.dependencyResolver.getRuntimeModulePath(component, {
       workspacePath: this.path,
       rootComponentsPath: this.rootComponentsPath,

@@ -5375,6 +5375,42 @@
     ]
   },
   {
+    "name": "generate-preview [component-pattern]",
+    "alias": "",
+    "options": [
+      [
+        "n",
+        "name <name>",
+        "name for the preview"
+      ]
+    ],
+    "description": "generate preview bundle for components",
+    "extendedDescription": "",
+    "group": "development",
+    "private": true,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
+  },
+  {
+    "name": "serve-preview",
+    "alias": "",
+    "options": [
+      [
+        "p",
+        "port [port]",
+        "port to run the server on"
+      ]
+    ],
+    "description": "serve local preview bundle for components",
+    "extendedDescription": "",
+    "group": "development",
+    "private": true
+  },
+  {
     "name": "format [component-pattern]",
     "alias": "",
     "options": [
