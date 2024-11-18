@@ -84,6 +84,8 @@ export type DependencyNeighbour = {
   specifier?: string;
 };
 
+const DEPENDENCIES_GRAPH_SCHEMA_VERSION = '1.0';
+
 export class DependenciesGraph {
   schemaVersion: string;
   nodes: DependencyNode[];
@@ -100,7 +102,7 @@ export class DependenciesGraph {
   }) {
     this.nodes = nodes;
     this.edges = edges;
-    this.schemaVersion = schemaVersion ?? '1.0';
+    this.schemaVersion = schemaVersion ?? DEPENDENCIES_GRAPH_SCHEMA_VERSION;
   }
 
   serialize(): string {
@@ -111,8 +113,12 @@ export class DependenciesGraph {
     });
   }
 
-  static deserialize(data: string): DependenciesGraph {
+  static deserialize(data: string): DependenciesGraph | undefined {
     const parsed = JSON.parse(data);
+    // If the schema version is not supported, then we just ignore the data
+    if (parsed.schemaVersion !== DEPENDENCIES_GRAPH_SCHEMA_VERSION) {
+      return undefined;
+    }
     return new DependenciesGraph(parsed);
   }
 

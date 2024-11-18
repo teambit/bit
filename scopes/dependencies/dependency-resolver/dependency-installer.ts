@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { MainAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { ComponentMap } from '@teambit/component';
+import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/toolbox.path.path';
 import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
@@ -44,7 +45,7 @@ export type InstallOptions = {
   forceTeambitHarmonyLink?: boolean;
   excludeExtensionsDependencies?: boolean;
   dedupeInjectedDeps?: boolean;
-  dependenciesGraph?: any;
+  dependenciesGraph?: DependenciesGraph;
 };
 
 export type GetComponentManifestsOptions = {

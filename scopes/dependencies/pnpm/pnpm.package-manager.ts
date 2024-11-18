@@ -16,6 +16,7 @@ import {
   type GetDependenciesGraphOptions,
 } from '@teambit/dependency-resolver';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
+import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { Logger } from '@teambit/logger';
 import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import fs from 'fs';
@@ -99,7 +100,7 @@ export class PnpmPackageManager implements PackageManager {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
 
-    if (installOptions.dependenciesGraph) {
+    if (installOptions.dependenciesGraph && isFeatureEnabled(DEPS_GRAPH)) {
       await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, manifests, rootDir);
     }
 

@@ -16,6 +16,7 @@ import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
+import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
 import {
   CodemodResult,
   linkToNodeModulesWithCodemod,
@@ -85,7 +86,7 @@ export type WorkspaceInstallOptions = {
   lockfileOnly?: boolean;
   writeConfigFiles?: boolean;
   skipPrune?: boolean;
-  dependenciesGraph?: any;
+  dependenciesGraph?: DependenciesGraph;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
