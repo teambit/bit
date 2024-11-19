@@ -293,10 +293,6 @@ export async function tagModelComponent({
   logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially persist all components');
   setCurrentSchema(allComponentsToTag);
 
-  if (!soft) {
-    await snapping._addDependenciesGraphToComponents(allComponentsToTag, components);
-  }
-
   // go through all components and find the future versions for them
   isSnap
     ? setHashes(allComponentsToTag)
@@ -327,6 +323,7 @@ export async function tagModelComponent({
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
     await snapping._addFlattenedDependenciesToComponents(allComponentsToTag, rebuildDepsGraph);
+    await snapping._addDependenciesGraphToComponents(allComponentsToTag, components);
     await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
     if (!build) emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
