@@ -4,7 +4,7 @@ import * as dp from '@pnpm/dependency-path';
 import { pick, partition } from 'lodash';
 import {
   DependenciesGraph,
-  type DependencyNode,
+  type PackagesMap,
   type DependencyEdge,
   type DependencyNeighbour,
 } from '@teambit/legacy/dist/scope/models/version';
@@ -37,7 +37,7 @@ export function convertLockfileToGraph(
     }
   }
   lockfile = replaceFileVersionsWithPendingVersions(lockfile);
-  const nodes: DependencyNode[] = [];
+  const packages: PackagesMap = new Map();
   const edges: DependencyEdge[] = [];
   for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
     const neighbours: DependencyNeighbour[] = [];
@@ -63,9 +63,9 @@ export function convertLockfileToGraph(
       edge.attr.transitivePeerDependencies = snapshot.transitivePeerDependencies;
     }
     edges.push(edge);
-    nodes.push({
+    packages.set(
       pkgId,
-      attr: pick(lockfile.packages![pkgId], [
+      pick(lockfile.packages![pkgId], [
         'bundledDependencies',
         'cpu',
         'deprecated',
@@ -78,14 +78,14 @@ export function convertLockfileToGraph(
         'peerDependenciesMeta',
         'resolution',
         'version',
-      ]) as any,
-    });
+      ]) as any
+    );
   }
-  for (const node of nodes) {
-    if (node.pkgId.includes('@pending:')) {
-      const parsed = dp.parse(node.pkgId);
+  for (const [pkgId, pkgAttr] of packages.entries()) {
+    if (pkgId.includes('@pending:')) {
+      const parsed = dp.parse(pkgId);
       if (parsed.name && componentIdByPkgName.has(parsed.name)) {
-        node.attr.component = componentIdByPkgName.get(parsed.name);
+        pkgAttr.component = componentIdByPkgName.get(parsed.name);
       }
     }
   }
@@ -96,7 +96,7 @@ export function convertLockfileToGraph(
       pkgId: '.',
     },
   });
-  return new DependenciesGraph({ edges, nodes });
+  return new DependenciesGraph({ edges, packages });
 }
 
 function replaceFileVersionsWithPendingVersions<T>(obj: T): T {
@@ -131,11 +131,10 @@ export function convertGraphToLockfile(
         })
       );
     }
-    const node = graph.nodes.find(({ pkgId }) => edge.attr.pkgId === pkgId);
-    if (node) {
+    if (graph.packages.has(edge.attr.pkgId)) {
       Object.assign(
         packages[edge.attr.pkgId],
-        pick(node.attr, [
+        pick(graph.packages.get(edge.attr.pkgId), [
           'bundledDependencies',
           'cpu',
           'deprecated',

@@ -114,43 +114,37 @@ describe('convertLockfileToGraph simple case', () => {
         ],
       },
     ],
-    nodes: [
-      {
-        pkgId: 'foo@1.0.0',
-        attr: {
-          engines: {
-            node: '>=8',
-            npm: '>=6',
-          },
-          hasBin: true,
-          os: ['darwin'],
-          cpu: ['arm64'],
-          resolution: {
-            integrity: 'sha512-000',
-          },
+    packages: {
+      'foo@1.0.0': {
+        engines: {
+          node: '>=8',
+          npm: '>=6',
+        },
+        hasBin: true,
+        os: ['darwin'],
+        cpu: ['arm64'],
+        resolution: {
+          integrity: 'sha512-000',
         },
       },
-      {
-        pkgId: 'bar@1.0.0',
-        attr: {
-          resolution: {
-            integrity: 'sha512-111',
-          },
+      'bar@1.0.0': {
+        resolution: {
+          integrity: 'sha512-111',
         },
       },
-      {
-        attr: {
-          resolution: {
-            directory: 'comps/comp1',
-            type: 'directory',
-          },
+      'comp1@pending:': {
+        resolution: {
+          directory: 'comps/comp1',
+          type: 'directory',
         },
-        pkgId: 'comp1@pending:',
       },
-    ],
+    },
   };
   it('should convert the lockfile object to the graph object', () => {
-    expect(graph).to.eql(expected);
+    expect({
+      ...graph,
+      packages: Object.fromEntries(graph.packages.entries()),
+    }).to.eql(expected);
   });
   it('should convert the graph object to the lockfile object', () => {
     expect(

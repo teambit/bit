@@ -55,14 +55,13 @@ type ExternalHead = { head: Ref; laneId: LaneId };
 type SquashData = { previousParents: Ref[]; laneId: LaneId };
 type VersionOrigin = { id: { scope: string; name: string }; lane?: { scope: string; name: string; hash: string } };
 
-export type DependencyNode = {
-  pkgId: string;
-  attr: {
-    component?: {
-      scope: string;
-      name: string;
-    };
-  } & PackageInfo;
+export type PackagesMap = Map<string, PackageAttributes>;
+
+export type PackageAttributes = PackageInfo & {
+  component?: {
+    scope: string;
+    name: string;
+  };
 };
 
 export type DependencyEdge = {
@@ -88,19 +87,19 @@ const DEPENDENCIES_GRAPH_SCHEMA_VERSION = '1.0';
 
 export class DependenciesGraph {
   schemaVersion: string;
-  nodes: DependencyNode[];
+  packages: PackagesMap;
   edges: DependencyEdge[];
 
   constructor({
-    nodes,
+    packages,
     edges,
     schemaVersion,
   }: {
-    nodes: DependencyNode[];
+    packages: PackagesMap;
     edges: DependencyEdge[];
     schemaVersion?: string;
   }) {
-    this.nodes = nodes;
+    this.packages = packages;
     this.edges = edges;
     this.schemaVersion = schemaVersion ?? DEPENDENCIES_GRAPH_SCHEMA_VERSION;
   }
@@ -108,7 +107,7 @@ export class DependenciesGraph {
   serialize(): string {
     return JSON.stringify({
       schemaVersion: this.schemaVersion,
-      nodes: this.nodes,
+      packages: Object.fromEntries(this.packages.entries()),
       edges: this.edges,
     });
   }
@@ -119,7 +118,11 @@ export class DependenciesGraph {
     if (parsed.schemaVersion !== DEPENDENCIES_GRAPH_SCHEMA_VERSION) {
       return undefined;
     }
-    return new DependenciesGraph(parsed);
+    return new DependenciesGraph({
+      schemaVersion: parsed.schemaVersion,
+      edges: parsed.edges,
+      packages: new Map(Object.entries(parsed.packages)),
+    });
   }
 
   merge(graph: DependenciesGraph): void {
@@ -139,12 +142,14 @@ export class DependenciesGraph {
         }
       }
     }
-    this.nodes.push(...graph.nodes);
+    for (const [newPkgId, newPkgAttr] of graph.packages.entries()) {
+      this.packages.set(newPkgId, newPkgAttr);
+    }
     this.edges.push(...graph.edges);
   }
 
   isEmpty(): boolean {
-    return this.nodes.length === 0 && this.edges.length === 0;
+    return this.packages.size === 0 && this.edges.length === 0;
   }
 }
 

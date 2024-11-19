@@ -444,13 +444,9 @@ function addIntegritiesToDependenciesGraph(
     const index = selector.indexOf('@', 1);
     const name = selector.substring(0, index);
     const version = selector.substring(index + 1);
-    const pendingNode = dependenciesGraph.nodes.find(({ pkgId }) => pkgId === `${name}@pending:`);
-    if (pendingNode) {
-      if (!pendingNode.attr) {
-        pendingNode.attr = { resolution: { integrity } };
-      } else {
-        pendingNode.attr.resolution = { integrity };
-      }
+    const pendingPkg = dependenciesGraph.packages.get(`${name}@pending:`);
+    if (pendingPkg) {
+      pendingPkg.resolution = { integrity };
       resolvedVersions.push({ name, version });
     }
   }
