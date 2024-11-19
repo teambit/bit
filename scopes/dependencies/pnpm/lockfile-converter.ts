@@ -5,6 +5,7 @@ import { pick, partition } from 'lodash';
 import {
   DependenciesGraph,
   type PackagesMap,
+  type PackageAttributes,
   type DependencyEdge,
   type DependencyNeighbour,
 } from '@teambit/legacy/dist/scope/models/version';
@@ -62,7 +63,9 @@ export function convertLockfileToGraph(
     if (snapshot.transitivePeerDependencies) {
       edge.attr.transitivePeerDependencies = snapshot.transitivePeerDependencies;
     }
-    edges.push(edge);
+    if (edge.neighbours.length > 0 || edge.id !== edge.attr.pkgId) {
+      edges.push(edge);
+    }
     packages.set(
       pkgId,
       pick(lockfile.packages![pkgId], [
@@ -110,44 +113,23 @@ export function convertGraphToLockfile(
 ): LockfileFileV9 {
   const packages = {};
   const snapshots = {};
+  const allEdgeIds = new Set(graph.edges.map(({ id }) => id));
+
   for (const edge of graph.edges) {
     if (edge.id === '.') continue;
     snapshots[edge.id] = {};
     packages[edge.attr.pkgId] = {};
     const [optionalDeps, prodDeps] = partition(edge.neighbours, (dep) => dep.optional);
     if (prodDeps.length) {
-      snapshots[edge.id].dependencies = Object.fromEntries(
-        prodDeps.map(({ id }) => {
-          const parsed = dp.parse(id);
-          return [parsed.name, `${parsed.version}${parsed.peersSuffix ?? ''}`]; // TODO: support peers
-        })
-      );
+      snapshots[edge.id].dependencies = convertToDeps(prodDeps);
     }
     if (optionalDeps.length) {
-      snapshots[edge.id].optionalDependencies = Object.fromEntries(
-        optionalDeps.map(({ id }) => {
-          const parsed = dp.parse(id);
-          return [parsed.name, `${parsed.version}${parsed.peersSuffix ?? ''}`]; // TODO: support peers
-        })
-      );
+      snapshots[edge.id].optionalDependencies = convertToDeps(optionalDeps);
     }
     if (graph.packages.has(edge.attr.pkgId)) {
       Object.assign(
         packages[edge.attr.pkgId],
-        pick(graph.packages.get(edge.attr.pkgId), [
-          'bundledDependencies',
-          'cpu',
-          'deprecated',
-          'engines',
-          'hasBin',
-          'libc',
-          'name',
-          'os',
-          'peerDependencies',
-          'peerDependenciesMeta',
-          'resolution',
-          'version',
-        ])
+        convertGraphPackageToLockfilePackage(graph.packages.get(edge.attr.pkgId))
       );
     }
   }
@@ -181,4 +163,34 @@ export function convertGraphToLockfile(
     }
   }
   return lockfile;
+
+  function convertToDeps(neighbours: DependencyNeighbour[]) {
+    const deps = {};
+    for (const { id } of neighbours) {
+      const parsed = dp.parse(id);
+      deps[parsed.name!] = `${parsed.version}${parsed.peersSuffix ?? ''}`; // TODO: support peers
+      if (!allEdgeIds.has(id)) {
+        snapshots[id] = {};
+        packages[id] = convertGraphPackageToLockfilePackage(graph.packages.get(id));
+      }
+    }
+    return deps;
+  }
+}
+
+function convertGraphPackageToLockfilePackage(pkgAttr: PackageAttributes) {
+  return pick(pkgAttr, [
+    'bundledDependencies',
+    'cpu',
+    'deprecated',
+    'engines',
+    'hasBin',
+    'libc',
+    'name',
+    'os',
+    'peerDependencies',
+    'peerDependenciesMeta',
+    'resolution',
+    'version',
+  ]);
 }

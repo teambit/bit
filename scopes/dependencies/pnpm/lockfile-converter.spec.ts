@@ -82,13 +82,6 @@ describe('convertLockfileToGraph simple case', () => {
         },
       },
       {
-        id: 'bar@1.0.0',
-        neighbours: [],
-        attr: {
-          pkgId: 'bar@1.0.0',
-        },
-      },
-      {
         attr: {
           pkgId: 'comp1@pending:',
         },
