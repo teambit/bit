@@ -1,5 +1,7 @@
 /* eslint-disable max-classes-per-file */
 import mapSeries from 'p-map-series';
+import globby from 'globby';
+import fs from 'fs-extra';
 import { Component } from '@teambit/component';
 import { EnvDefinition, EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
@@ -164,6 +166,32 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 
   private get componentDir(): PathOsBasedAbsolute {
     return this.workspace.componentDir(this.component.id);
+  }
+
+  async copyTypesToOtherDists() {
+    const distDirs = await this.distDirs();
+    if (distDirs.length <= 1) return;
+    const packageDistDir = distDirs[0];
+    const otherDirs = distDirs.slice(1);
+    const packageDistDirAbs = path.join(this.workspace.path, packageDistDir);
+    const matches = await globby(`**/*.d.ts`, {
+      cwd: packageDistDirAbs,
+      onlyFiles: true,
+      ignore: [`${packageDistDir}/node_modules/`],
+    });
+    if (!matches.length) return;
+    await Promise.all(
+      otherDirs.map(async (distDir) => {
+        const distDirAbs = path.join(this.workspace.path, distDir);
+        await Promise.all(
+          matches.map(async (match) => {
+            const source = path.join(packageDistDirAbs, match);
+            const dest = path.join(distDirAbs, match);
+            await fs.copyFile(source, dest);
+          })
+        );
+      })
+    );
   }
 
   private async compileOneFile(
@@ -400,7 +428,7 @@ export class WorkspaceCompiler {
     );
 
     if (typeGeneratorParamsPerEnv) {
-      await this.generateTypesOnWorkspace(typeGeneratorParamsPerEnv);
+      await this.generateTypesOnWorkspace(typeGeneratorParamsPerEnv, componentsCompilers);
     }
 
     return resultOnWorkspace;
@@ -447,10 +475,14 @@ export class WorkspaceCompiler {
     });
   }
 
-  private async generateTypesOnWorkspace(typesGeneratorParamsPerEnv: TypeGeneratorParamsPerEnv[]) {
+  private async generateTypesOnWorkspace(
+    typesGeneratorParamsPerEnv: TypeGeneratorParamsPerEnv[],
+    componentsCompilers: ComponentCompiler[]
+  ) {
     await mapSeries(typesGeneratorParamsPerEnv, async ({ compParams, typeCompiler }) => {
       await typeCompiler.generateTypesOnWorkspace!(path.join(this.workspace.path, 'node_modules'), compParams);
     });
+    await Promise.all(componentsCompilers.map((componentCompiler) => componentCompiler.copyTypesToOtherDists()));
   }
 
   /**
