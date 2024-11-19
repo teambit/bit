@@ -28,7 +28,7 @@ import type { PreStartOpts } from '@teambit/ui';
 import { MultiCompiler } from '@teambit/multi-compiler';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent } from './events';
-import { Compiler, CompilationInitiator, TranspileComponentParams, TypeGeneratorCompParams } from './types';
+import { Compiler, CompilationInitiator, TypeGeneratorCompParams } from './types';
 
 export type BuildResult = {
   component: string;
