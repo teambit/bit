@@ -56,6 +56,7 @@ export type WatchOptions = {
   preCompile?: boolean; // whether compile all components before start watching
   compile?: boolean; // whether compile modified/added components during watch process
   import?: boolean; // whether import objects when .bitmap got version changes
+  generateTypes?: boolean; // whether generate d.ts files for typescript files during watch process (hurts performance)
   trigger?: ComponentID; // trigger onComponentChange for the specified component-id. helpful when this comp must be a bundle, and needs to be recompile on any dep change.
 };
 
