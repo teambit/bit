@@ -57,8 +57,8 @@ chai.use(require('chai-fs'));
       const versionObj = helper.command.catComponent('comp1@latest');
       const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
       const directDeps = depsGraph.edges.find((edge) => edge.id === '.')?.neighbours;
-      expect(directDeps).deep.include({ name: 'react', specifier: '18.3.1', id: 'react@18.3.1' });
-      expect(directDeps).deep.include({ name: 'is-odd', specifier: '1.0.0', id: 'is-odd@1.0.0' });
+      expect(directDeps).deep.include({ name: 'react', specifier: '18.3.1', id: 'react@18.3.1', lifecycle: 'runtime' });
+      expect(directDeps).deep.include({ name: 'is-odd', specifier: '1.0.0', id: 'is-odd@1.0.0', lifecycle: 'dev' });
     });
     describe('sign component and use dependency graph to generate a lockfile', () => {
       let signOutput: string;
@@ -188,7 +188,12 @@ chai.use(require('chai-fs'));
       const versionObj = helper.command.catComponent('comp1@latest');
       const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
       const directDependencies = depsGraph.edges.find((edge) => edge.id === '.').neighbours;
-      expect(directDependencies).deep.include({ name: 'react', specifier: '16.0.0', id: 'react@16.0.0' });
+      expect(directDependencies).deep.include({
+        name: 'react',
+        specifier: '16.0.0',
+        id: 'react@16.0.0',
+        lifecycle: 'runtime',
+      });
     });
     let depsGraph2;
     let depsGraph2DirectDeps;
@@ -201,6 +206,7 @@ chai.use(require('chai-fs'));
         name: 'react',
         specifier: '17.0.0',
         id: 'react@17.0.0',
+        lifecycle: 'runtime',
       });
     });
     it('should replace pending version in direct dependency', () => {
@@ -208,6 +214,7 @@ chai.use(require('chai-fs'));
         name: `@ci/${randomStr}.comp1`,
         specifier: '*',
         id: `@ci/${randomStr}.comp1@0.0.1(react@17.0.0)`,
+        lifecycle: 'runtime',
       });
     });
     it('should update integrity of dependency component', () => {

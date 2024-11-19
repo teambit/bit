@@ -81,6 +81,7 @@ export type DependencyNeighbour = {
   optional?: boolean;
   name?: string;
   specifier?: string;
+  lifecycle?: 'runtime' | 'dev';
 };
 
 const DEPENDENCIES_GRAPH_SCHEMA_VERSION = '1.0';

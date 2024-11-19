@@ -24,7 +24,7 @@ export function convertLockfileToGraph(
   const componentDevImporter = lockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
   for (const [name, { version, specifier }] of Object.entries(componentDevImporter.devDependencies ?? {}) as any) {
-    directDependencies.push({ name, specifier, id: dp.refToRelative(version, name)! });
+    directDependencies.push({ name, specifier, id: dp.refToRelative(version, name)!, lifecycle: 'dev' });
   }
   const lockedPkg =
     lockfile.snapshots![`${pkgName}@${lockfile.importers![componentRootDir].dependencies![pkgName].version}`];
@@ -34,6 +34,7 @@ export function convertLockfileToGraph(
         name,
         specifier: componentDevImporter[depType]?.[name]?.specifier ?? '*',
         id: dp.refToRelative(version, name)!,
+        lifecycle: 'runtime',
       });
     }
   }
@@ -126,11 +127,9 @@ export function convertGraphToLockfile(
     if (optionalDeps.length) {
       snapshots[edge.id].optionalDependencies = convertToDeps(optionalDeps);
     }
-    if (graph.packages.has(edge.attr.pkgId)) {
-      Object.assign(
-        packages[edge.attr.pkgId],
-        convertGraphPackageToLockfilePackage(graph.packages.get(edge.attr.pkgId))
-      );
+    const graphPkg = graph.packages.get(edge.attr.pkgId);
+    if (graphPkg != null) {
+      Object.assign(packages[edge.attr.pkgId], convertGraphPackageToLockfilePackage(graphPkg));
     }
   }
   const lockfile = {
@@ -171,7 +170,7 @@ export function convertGraphToLockfile(
       deps[parsed.name!] = `${parsed.version}${parsed.peersSuffix ?? ''}`; // TODO: support peers
       if (!allEdgeIds.has(id)) {
         snapshots[id] = {};
-        packages[id] = convertGraphPackageToLockfilePackage(graph.packages.get(id));
+        packages[id] = convertGraphPackageToLockfilePackage(graph.packages.get(id)!);
       }
     }
     return deps;
