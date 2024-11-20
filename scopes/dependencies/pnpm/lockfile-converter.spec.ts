@@ -19,7 +19,7 @@ describe('convertLockfileToGraph simple case', () => {
       'comps/comp1': {
         dependencies: {
           foo: {
-            version: '1.0.0',
+            version: '1.0.0(patch_hash=0000)',
             specifier: '^1.0.0',
           },
         },
@@ -27,7 +27,7 @@ describe('convertLockfileToGraph simple case', () => {
     },
     lockfileVersion: '9.0',
     snapshots: {
-      'foo@1.0.0': {
+      'foo@1.0.0(patch_hash=0000)': {
         dependencies: {
           bar: '1.0.0',
         },
@@ -35,7 +35,7 @@ describe('convertLockfileToGraph simple case', () => {
       'bar@1.0.0': {},
       'comp1@file:comps/comp1': {
         dependencies: {
-          foo: '1.0.0',
+          foo: '1.0.0(patch_hash=0000)',
         },
       },
     },
@@ -75,7 +75,7 @@ describe('convertLockfileToGraph simple case', () => {
     schemaVersion: '1.0',
     edges: [
       {
-        id: 'foo@1.0.0',
+        id: 'foo@1.0.0(patch_hash=0000)',
         neighbours: [{ id: 'bar@1.0.0', optional: false }],
         attr: {
           pkgId: 'foo@1.0.0',
@@ -88,7 +88,7 @@ describe('convertLockfileToGraph simple case', () => {
         id: 'comp1@pending:',
         neighbours: [
           {
-            id: 'foo@1.0.0',
+            id: 'foo@1.0.0(patch_hash=0000)',
             optional: false,
           },
         ],
@@ -100,7 +100,7 @@ describe('convertLockfileToGraph simple case', () => {
         id: '.',
         neighbours: [
           {
-            id: 'foo@1.0.0',
+            id: 'foo@1.0.0(patch_hash=0000)',
             name: 'foo',
             specifier: '^1.0.0',
             lifecycle: 'runtime',
@@ -158,7 +158,7 @@ describe('convertLockfileToGraph simple case', () => {
         'comps/comp1': {
           dependencies: {
             foo: {
-              version: '1.0.0',
+              version: '1.0.0(patch_hash=0000)',
               specifier: '^1.0.0',
             },
           },
@@ -168,7 +168,7 @@ describe('convertLockfileToGraph simple case', () => {
       },
       lockfileVersion: '9.0',
       snapshots: {
-        'foo@1.0.0': {
+        'foo@1.0.0(patch_hash=0000)': {
           dependencies: {
             bar: '1.0.0',
           },
@@ -176,7 +176,7 @@ describe('convertLockfileToGraph simple case', () => {
         'bar@1.0.0': {},
         'comp1@pending:': {
           dependencies: {
-            foo: '1.0.0',
+            foo: '1.0.0(patch_hash=0000)',
           },
         },
       },

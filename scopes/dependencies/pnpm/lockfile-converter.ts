@@ -154,7 +154,7 @@ export function convertGraphToLockfile(
           )?.id;
           if (edgeId) {
             const parsed = dp.parse(edgeId);
-            const ref = `${parsed.version}${parsed.peersSuffix ?? ''}`;
+            const ref = depPathToRef(parsed);
             lockfile.importers![projectId][depType][name] = { version: ref, specifier };
           }
         }
@@ -167,7 +167,7 @@ export function convertGraphToLockfile(
     const deps = {};
     for (const { id } of neighbours) {
       const parsed = dp.parse(id);
-      deps[parsed.name!] = `${parsed.version}${parsed.peersSuffix ?? ''}`; // TODO: support peers
+      deps[parsed.name!] = depPathToRef(parsed);
       if (!allEdgeIds.has(id)) {
         snapshots[id] = {};
         packages[id] = convertGraphPackageToLockfilePackage(graph.packages.get(id)!);
@@ -175,6 +175,10 @@ export function convertGraphToLockfile(
     }
     return deps;
   }
+}
+
+function depPathToRef(depPath: dp.DependencyPath): string {
+  return `${depPath.version}${depPath.patchHash ?? ''}${depPath.peersSuffix ?? ''}`;
 }
 
 function convertGraphPackageToLockfilePackage(pkgAttr: PackageAttributes) {
