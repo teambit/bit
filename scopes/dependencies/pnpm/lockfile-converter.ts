@@ -53,18 +53,21 @@ export function convertLockfileToGraph(
         neighbours.push({ id: subDepPath, optional });
       }
     }
-    const pkgId = dp.removeSuffix(depPath);
     const edge: DependencyEdge = {
       id: depPath,
       neighbours,
-      attr: {
-        pkgId,
-      },
     };
-    if (snapshot.transitivePeerDependencies) {
-      edge.attr.transitivePeerDependencies = snapshot.transitivePeerDependencies;
+    const pkgId = dp.removeSuffix(depPath);
+    if (pkgId !== depPath) {
+      edge.attr = { pkgId };
     }
-    if (edge.neighbours.length > 0 || edge.id !== edge.attr.pkgId) {
+    if (snapshot.transitivePeerDependencies) {
+      edge.attr = {
+        ...edge.attr,
+        transitivePeerDependencies: snapshot.transitivePeerDependencies,
+      };
+    }
+    if (edge.neighbours.length > 0 || edge.id !== pkgId) {
       edges.push(edge);
     }
     packages.set(
@@ -96,9 +99,6 @@ export function convertLockfileToGraph(
   edges.push({
     id: '.',
     neighbours: replaceFileVersionsWithPendingVersions(directDependencies),
-    attr: {
-      pkgId: '.',
-    },
   });
   return new DependenciesGraph({ edges, packages });
 }
@@ -118,8 +118,9 @@ export function convertGraphToLockfile(
 
   for (const edge of graph.edges) {
     if (edge.id === '.') continue;
+    const pkgId = edge.attr?.pkgId ?? edge.id;
     snapshots[edge.id] = {};
-    packages[edge.attr.pkgId] = {};
+    packages[pkgId] = {};
     const [optionalDeps, prodDeps] = partition(edge.neighbours, (dep) => dep.optional);
     if (prodDeps.length) {
       snapshots[edge.id].dependencies = convertToDeps(prodDeps);
@@ -127,9 +128,9 @@ export function convertGraphToLockfile(
     if (optionalDeps.length) {
       snapshots[edge.id].optionalDependencies = convertToDeps(optionalDeps);
     }
-    const graphPkg = graph.packages.get(edge.attr.pkgId);
+    const graphPkg = graph.packages.get(pkgId);
     if (graphPkg != null) {
-      Object.assign(packages[edge.attr.pkgId], convertGraphPackageToLockfilePackage(graphPkg));
+      Object.assign(packages[pkgId], convertGraphPackageToLockfilePackage(graphPkg));
     }
   }
   const lockfile = {
