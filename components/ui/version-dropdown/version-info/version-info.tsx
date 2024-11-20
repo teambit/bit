@@ -9,12 +9,12 @@ import classNames from 'classnames';
 import { DropdownComponentVersion } from '../version-dropdown';
 import styles from './version-info.module.scss';
 
-export type VersionInfoProps = DropdownComponentVersion & {
+export interface VersionInfoProps extends DropdownComponentVersion {
   currentVersion?: string;
   latestVersion?: string;
   overrideVersionHref?: (version: string) => string;
   showDetails?: boolean;
-};
+}
 
 export const VersionInfo = React.memo(React.forwardRef<HTMLDivElement, VersionInfoProps>(_VersionInfo));
 function _VersionInfo(

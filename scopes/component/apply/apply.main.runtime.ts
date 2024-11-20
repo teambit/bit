@@ -137,6 +137,7 @@ export class ApplyMain {
       copyPeerToRuntimeOnRoot: true,
       copyPeerToRuntimeOnComponents: false,
       updateExisting: false,
+      addMissingDeps: true,
     });
     // if we don't clear the cache here, the "build" process during tag doesn't install the necessary packages
     // on the capsules.
@@ -316,6 +317,7 @@ export class ApplyMain {
       copyPeerToRuntimeOnRoot: true,
       copyPeerToRuntimeOnComponents: false,
       updateExisting: false,
+      addMissingDeps: true,
     });
 
     if (!params.snap && !params.tag) {
