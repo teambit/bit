@@ -67,8 +67,8 @@ export type PackageAttributes = PackageInfo & {
 export type DependencyEdge = {
   id: string;
   neighbours: DependencyNeighbour[];
-  attr: {
-    pkgId: string;
+  attr?: {
+    pkgId?: string;
     transitivePeerDependencies?: string[];
   };
 };
@@ -80,7 +80,7 @@ export type DependencyNeighbour = {
    */
   optional?: boolean;
   name?: string;
-  specifier?: string;
+  version?: string;
   lifecycle?: 'runtime' | 'dev';
 };
 
@@ -133,7 +133,7 @@ export class DependenciesGraph {
         const existingDirectDeps = this.edges.find((edge) => edge.id === '.')?.neighbours;
         if (existingDirectDeps) {
           const existingDirectDep = existingDirectDeps.find(
-            ({ name, specifier }) => name === directDep.name && specifier === directDep.specifier
+            ({ name, version }) => name === directDep.name && version === directDep.version
           );
           if (existingDirectDep == null) {
             existingDirectDeps.push(directDep);
