@@ -87,6 +87,8 @@ export type DependencyNeighbour = {
 const DEPENDENCIES_GRAPH_SCHEMA_VERSION = '1.0';
 
 export class DependenciesGraph {
+  static ROOT_EDGE_ID = '.';
+
   schemaVersion: string;
   packages: PackagesMap;
   edges: DependencyEdge[];
@@ -127,10 +129,10 @@ export class DependenciesGraph {
   }
 
   merge(graph: DependenciesGraph): void {
-    const directDependencies = graph.edges.find((edge) => edge.id === '.')?.neighbours;
+    const directDependencies = graph.findRootEdge()?.neighbours;
     if (directDependencies) {
       for (const directDep of directDependencies) {
-        const existingDirectDeps = this.edges.find((edge) => edge.id === '.')?.neighbours;
+        const existingDirectDeps = this.findRootEdge()?.neighbours;
         if (existingDirectDeps) {
           const existingDirectDep = existingDirectDeps.find(
             ({ name, version }) => name === directDep.name && version === directDep.version
@@ -151,6 +153,13 @@ export class DependenciesGraph {
 
   isEmpty(): boolean {
     return this.packages.size === 0 && this.edges.length === 0;
+  }
+
+  /**
+   * Returns the edge related to the root component
+   */
+  findRootEdge(): DependencyEdge | undefined {
+    return this.edges.find(({ id }) => id === DependenciesGraph.ROOT_EDGE_ID);
   }
 }
 

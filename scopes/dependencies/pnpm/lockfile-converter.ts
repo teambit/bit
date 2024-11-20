@@ -100,7 +100,7 @@ export function convertLockfileToGraph(
     }
   }
   edges.push({
-    id: '.',
+    id: DependenciesGraph.ROOT_EDGE_ID,
     neighbours: replaceFileVersionsWithPendingVersions(directDependencies),
   });
   return new DependenciesGraph({ edges, packages });
@@ -120,7 +120,7 @@ export function convertGraphToLockfile(
   const allEdgeIds = new Set(graph.edges.map(({ id }) => id));
 
   for (const edge of graph.edges) {
-    if (edge.id === '.') continue;
+    if (edge.id === DependenciesGraph.ROOT_EDGE_ID) continue;
     const pkgId = edge.attr?.pkgId ?? edge.id;
     snapshots[edge.id] = {};
     packages[pkgId] = {};
@@ -149,11 +149,11 @@ export function convertGraphToLockfile(
       devDependencies: {},
       optionalDependencies: {},
     };
-    const directDependencies = graph.edges.find((edge) => edge.id === '.');
-    if (directDependencies) {
+    const rootEdge = graph.findRootEdge();
+    if (rootEdge) {
       for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
         for (const [name, specifier] of Object.entries(manifest[depType] ?? {})) {
-          const edgeId = directDependencies.neighbours.find(
+          const edgeId = rootEdge.neighbours.find(
             (directDep) => directDep.name === name && semver.satisfies(directDep.version!, specifier as string)
           )?.id;
           if (edgeId) {

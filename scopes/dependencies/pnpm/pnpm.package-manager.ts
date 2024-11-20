@@ -390,6 +390,7 @@ export class PnpmPackageManager implements PackageManager {
     if (!lockfile.importers[opts.componentRootDir] && opts.componentRootDir.includes('@')) {
       opts.componentRootDir = opts.componentRootDir.split('@')[0];
     }
+    // Filters the lockfile so that it only includes packages related to the given component.
     const partialLockfile = convertLockfileObjectToLockfileFile(
       filterLockfileByImporters(
         lockfile,
