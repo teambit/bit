@@ -57,8 +57,8 @@ chai.use(require('chai-fs'));
       const versionObj = helper.command.catComponent('comp1@latest');
       const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
       const directDeps = depsGraph.edges.find((edge) => edge.id === '.')?.neighbours;
-      expect(directDeps).deep.include({ name: 'react', version: '18.3.1', id: 'react@18.3.1', lifecycle: 'runtime' });
-      expect(directDeps).deep.include({ name: 'is-odd', version: '1.0.0', id: 'is-odd@1.0.0', lifecycle: 'dev' });
+      expect(directDeps).deep.include({ name: 'react', specifier: '18.3.1', id: 'react@18.3.1', lifecycle: 'runtime' });
+      expect(directDeps).deep.include({ name: 'is-odd', specifier: '1.0.0', id: 'is-odd@1.0.0', lifecycle: 'dev' });
     });
     describe('sign component and use dependency graph to generate a lockfile', () => {
       let signOutput: string;
@@ -190,7 +190,7 @@ chai.use(require('chai-fs'));
       const directDependencies = depsGraph.edges.find((edge) => edge.id === '.').neighbours;
       expect(directDependencies).deep.include({
         name: 'react',
-        version: '16.0.0',
+        specifier: '16.0.0',
         id: 'react@16.0.0',
         lifecycle: 'runtime',
       });
@@ -204,7 +204,7 @@ chai.use(require('chai-fs'));
       depsGraph2DirectDeps = depsGraph2.edges.find((edge) => edge.id === '.').neighbours;
       expect(depsGraph2DirectDeps).deep.include({
         name: 'react',
-        version: '17.0.0',
+        specifier: '17.0.0',
         id: 'react@17.0.0',
         lifecycle: 'runtime',
       });
@@ -212,7 +212,7 @@ chai.use(require('chai-fs'));
     it('should replace pending version in direct dependency', () => {
       expect(depsGraph2DirectDeps).deep.include({
         name: `@ci/${randomStr}.comp1`,
-        version: '0.0.1',
+        specifier: '*',
         id: `@ci/${randomStr}.comp1@0.0.1(react@17.0.0)`,
         lifecycle: 'runtime',
       });

@@ -439,16 +439,11 @@ function addIntegritiesToDependenciesGraph(
   dependenciesGraph: DependenciesGraph
 ): DependenciesGraph {
   const resolvedVersions: Array<{ name: string; version: string }> = [];
-  const rootEdge = dependenciesGraph.findRootEdge();
   for (const [selector, integrity] of packageIntegritiesByPublishedPackages.entries()) {
     if (integrity == null) continue;
     const index = selector.indexOf('@', 1);
     const name = selector.substring(0, index);
     const version = selector.substring(index + 1);
-    const directDep = rootEdge?.neighbours.find((neighbour) => neighbour.name === name);
-    if (directDep && !directDep.version) {
-      directDep.version = version;
-    }
     const pendingPkg = dependenciesGraph.packages.get(`${name}@pending:`);
     if (pendingPkg) {
       pendingPkg.resolution = { integrity };

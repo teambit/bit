@@ -96,7 +96,7 @@ describe('convertLockfileToGraph simple case', () => {
           {
             id: 'foo@1.0.0(patch_hash=0000)',
             name: 'foo',
-            version: '1.0.0',
+            specifier: '^1.0.0',
             lifecycle: 'runtime',
           },
         ],

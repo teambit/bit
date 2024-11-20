@@ -80,7 +80,7 @@ export type DependencyNeighbour = {
    */
   optional?: boolean;
   name?: string;
-  version?: string;
+  specifier?: string;
   lifecycle?: 'runtime' | 'dev';
 };
 
@@ -135,7 +135,7 @@ export class DependenciesGraph {
         const existingDirectDeps = this.findRootEdge()?.neighbours;
         if (existingDirectDeps) {
           const existingDirectDep = existingDirectDeps.find(
-            ({ name, version }) => name === directDep.name && version === directDep.version
+            ({ name, specifier }) => name === directDep.name && specifier === directDep.specifier
           );
           if (existingDirectDep == null) {
             existingDirectDeps.push(directDep);

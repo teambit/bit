@@ -24,9 +24,9 @@ export function convertLockfileToGraph(
 ): DependenciesGraph {
   const componentDevImporter = lockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
-  for (const [name, { version }] of Object.entries(componentDevImporter.devDependencies ?? {}) as any) {
+  for (const [name, { version, specifier }] of Object.entries(componentDevImporter.devDependencies ?? {}) as any) {
     const id = dp.refToRelative(version, name)!;
-    directDependencies.push({ name, version: dp.parse(id).version, id, lifecycle: 'dev' });
+    directDependencies.push({ name, specifier, id, lifecycle: 'dev' });
   }
   const lockedPkg =
     lockfile.snapshots![`${pkgName}@${lockfile.importers![componentRootDir].dependencies![pkgName].version}`];
@@ -35,7 +35,7 @@ export function convertLockfileToGraph(
       const id = dp.refToRelative(version, name)!;
       directDependencies.push({
         name,
-        version: dp.parse(id).version,
+        specifier: componentDevImporter[depType]?.[name]?.specifier ?? '*',
         id,
         lifecycle: 'runtime',
       });
@@ -154,7 +154,7 @@ export function convertGraphToLockfile(
       for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
         for (const [name, specifier] of Object.entries(manifest[depType] ?? {})) {
           const edgeId = rootEdge.neighbours.find(
-            (directDep) => directDep.name === name && semver.satisfies(directDep.version!, specifier as string)
+            (directDep) => directDep.name === name && directDep.specifier === specifier
           )?.id;
           if (edgeId) {
             const parsed = dp.parse(edgeId);
