@@ -1,3 +1,4 @@
+import semver from 'semver';
 import { type ProjectManifest } from '@pnpm/types';
 import { LockfileFileV9 } from '@pnpm/lockfile.types';
 import * as dp from '@pnpm/dependency-path';
@@ -23,17 +24,19 @@ export function convertLockfileToGraph(
 ): DependenciesGraph {
   const componentDevImporter = lockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
-  for (const [name, { version, specifier }] of Object.entries(componentDevImporter.devDependencies ?? {}) as any) {
-    directDependencies.push({ name, specifier, id: dp.refToRelative(version, name)!, lifecycle: 'dev' });
+  for (const [name, { version }] of Object.entries(componentDevImporter.devDependencies ?? {}) as any) {
+    const id = dp.refToRelative(version, name)!;
+    directDependencies.push({ name, version: dp.parse(id).version, id, lifecycle: 'dev' });
   }
   const lockedPkg =
     lockfile.snapshots![`${pkgName}@${lockfile.importers![componentRootDir].dependencies![pkgName].version}`];
   for (const depType of ['dependencies' as const, 'optionalDependencies' as const]) {
     for (const [name, version] of Object.entries(lockedPkg[depType] ?? {})) {
+      const id = dp.refToRelative(version, name)!;
       directDependencies.push({
         name,
-        specifier: componentDevImporter[depType]?.[name]?.specifier ?? '*',
-        id: dp.refToRelative(version, name)!,
+        version: dp.parse(id).version,
+        id,
         lifecycle: 'runtime',
       });
     }
@@ -151,7 +154,7 @@ export function convertGraphToLockfile(
       for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
         for (const [name, specifier] of Object.entries(manifest[depType] ?? {})) {
           const edgeId = directDependencies.neighbours.find(
-            (directDep) => directDep.name === name && directDep.specifier === specifier
+            (directDep) => directDep.name === name && semver.satisfies(directDep.version!, specifier as string)
           )?.id;
           if (edgeId) {
             const parsed = dp.parse(edgeId);
