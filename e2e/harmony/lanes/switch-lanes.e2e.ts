@@ -404,4 +404,23 @@ describe('bit lane command', function () {
       expect(fileContent).to.include('v2');
     });
   });
+  describe('switch to main when only one component was snapped on a lane', () => {
+    let switchOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.install();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+
+      switchOutput = helper.command.switchLocalLane('main', '--head -x');
+    });
+    it('should switch the component on the lane only', () => {
+      expect(switchOutput).to.have.string('switched 1 components');
+      expect(switchOutput).to.have.string('skipped legitimately for 1 component(s)');
+    });
+  });
 });
