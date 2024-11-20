@@ -43,7 +43,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
       'DEPRECATED. it is now the default. helpful when using git. import component objects if .bitmap changed not by bit',
     ],
     ['', 'skip-import', 'do not import component objects if .bitmap changed not by bit'],
-    ['', 'generate-types', 'generate d.ts files for typescript components (hurts performance)'],
+    ['', 'generate-types', 'EXPERIMENTAL. generate d.ts files for typescript components (hurts performance)'],
     [
       '',
       'trigger <comp-id>',
