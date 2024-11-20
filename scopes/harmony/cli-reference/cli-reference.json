@@ -1687,6 +1687,11 @@
         "d",
         "delete-dist-dir",
         "delete existing dist folder before writing new compiled files"
+      ],
+      [
+        "",
+        "generate-types",
+        "generate d.ts files for typescript components (hurts performance)"
       ]
     ],
     "description": "compile components in the workspace",
