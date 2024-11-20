@@ -344,7 +344,11 @@ export class WorkspaceCompiler {
     }
     const buildResults = await this.compileComponents(
       [component.id.toString()],
-      { initiator: watchOpts.initiator || CompilationInitiator.ComponentChanged, deleteDistDir },
+      {
+        initiator: watchOpts.initiator || CompilationInitiator.ComponentChanged,
+        deleteDistDir,
+        generateTypes: watchOpts.generateTypes,
+      },
       true
     );
     return {
@@ -361,7 +365,7 @@ export class WorkspaceCompiler {
       this.logger.console(`compiling ${componentIds.length} components`);
       await this.compileComponents(
         componentIds.map((id) => id),
-        { initiator: CompilationInitiator.PreWatch }
+        { initiator: CompilationInitiator.PreWatch, generateTypes: watchOpts.generateTypes }
       );
       const end = Date.now() - start;
       this.logger.consoleSuccess(`compiled ${componentIds.length} components successfully (${end / 1000} sec)`);
