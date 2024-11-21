@@ -376,13 +376,13 @@ The following gets removed by this command:
 | -------------------- | :---------------------------------------------------------------------: |
 | `component-names...` | a list of component names or component IDs (defaults to all components) |
 
-| **Option**          | **Option alias** | **Description**                                                   |
-| ------------------- | :--------------: | ----------------------------------------------------------------- |
-| `--changed`         |       `-c`       | compile only new and modified components                          |
-| `--verbose`         |       `-v`       | show more data, such as, dist paths                               |
-| `--json`            |       `-j`       | return the compile results in json format                         |
-| `--delete-dist-dir` |       `-d`       | delete existing dist folder before writing new compiled files     |
-| `--generate-types`  |                  | generate d.ts files for typescript components (hurts performance) |
+| **Option**          | **Option alias** | **Description**                                                                 |
+| ------------------- | :--------------: | ------------------------------------------------------------------------------- |
+| `--changed`         |       `-c`       | compile only new and modified components                                        |
+| `--verbose`         |       `-v`       | show more data, such as, dist paths                                             |
+| `--json`            |       `-j`       | return the compile results in json format                                       |
+| `--delete-dist-dir` |       `-d`       | delete existing dist folder before writing new compiled files                   |
+| `--generate-types`  |                  | EXPERIMENTAL. generate d.ts files for typescript components (hurts performance) |
 
 ---
 
@@ -2340,6 +2340,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
 | `--check-types [string]` |       `-t`       | show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project |
 | `--import`               |       `-i`       | DEPRECATED. it is now the default. helpful when using git. import component objects if .bitmap changed not by bit                   |
 | `--skip-import`          |                  | do not import component objects if .bitmap changed not by bit                                                                       |
+| `--generate-types`       |                  | EXPERIMENTAL. generate d.ts files for typescript components (hurts performance)                                                     |
 | `--trigger <comp-id>`    |                  | trigger recompilation of the specified component regardless of what changed. helpful when this comp-id must be a bundle             |
 
 ---
