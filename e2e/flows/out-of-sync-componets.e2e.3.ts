@@ -194,7 +194,7 @@ describe('components that are not synced between the scope and the consumer', fu
     describe('bit tag', () => {
       it('should stop the tagging process and throw an error suggesting to import the components', () => {
         const err = new ComponentsPendingImport([`${helper.scopes.remote}/bar/foo@0.0.1`]);
-        helper.general.expectToThrow(() => helper.command.tagWithoutBuild('bar/foo'), err);
+        helper.general.expectToThrow(() => helper.command.tagWithoutBuild('bar/foo', '--unmodified'), err);
       });
     });
     describe('bit status', () => {

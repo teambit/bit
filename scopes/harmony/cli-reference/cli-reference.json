@@ -1410,6 +1410,11 @@
       ],
       [
         "",
+        "generate-types",
+        "EXPERIMENTAL. generate d.ts files for typescript components (hurts performance)"
+      ],
+      [
+        "",
         "trigger <comp-id>",
         "trigger recompilation of the specified component regardless of what changed. helpful when this comp-id must be a bundle"
       ]
@@ -1691,7 +1696,7 @@
       [
         "",
         "generate-types",
-        "generate d.ts files for typescript components (hurts performance)"
+        "EXPERIMENTAL. generate d.ts files for typescript components (hurts performance)"
       ]
     ],
     "description": "compile components in the workspace",

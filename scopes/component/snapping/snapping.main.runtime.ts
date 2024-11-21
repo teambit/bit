@@ -1287,6 +1287,11 @@ another option, in case this dependency is not in main yet is to remove all refe
       id.changeVersion(undefined)
     );
 
+    const tagPendingBitIdsIncludeSnapped = ComponentIdList.fromArray([
+      ...tagPendingComponentsIds,
+      ...snappedComponentsIds,
+    ]);
+
     if (snappedComponentsIds.length) {
       const localOnlyIds = this.workspace.filter.byLocalOnly(snappedComponentsIds);
       const localOnlyListIds = ComponentIdList.fromArray(localOnlyIds);
@@ -1303,13 +1308,15 @@ another option, in case this dependency is not in main yet is to remove all refe
         const [idWithoutVer, version] = id.split('@');
         const idIsPattern = this.workspace.isPattern(id);
         if (idIsPattern) {
-          const allIds = await this.workspace.filterIdsFromPoolIdsByPattern(idWithoutVer, tagPendingComponentsIds);
+          const allIds = await this.workspace.filterIdsFromPoolIdsByPattern(
+            idWithoutVer,
+            tagPendingBitIdsIncludeSnapped
+          );
           return allIds.map((componentId) => componentId.changeVersion(version));
         }
         const componentId = await this.workspace.resolveComponentId(idWithoutVer);
         if (!includeUnmodified) {
-          const componentStatus = await this.workspace.getComponentStatusById(componentId);
-          if (componentStatus.modified === false) return null;
+          if (!tagPendingBitIdsIncludeSnapped.hasWithoutVersion(componentId)) return null;
         }
         return componentId.changeVersion(version);
       });
@@ -1324,8 +1331,6 @@ another option, in case this dependency is not in main yet is to remove all refe
     if (unmerged) {
       return { bitIds: componentsList.listDuringMergeStateComponents(), warnings };
     }
-
-    const tagPendingBitIdsIncludeSnapped = [...tagPendingComponentsIds, ...snappedComponentsIds];
 
     if (includeUnmodified && exactVersion) {
       const tagPendingComponentsLatest = await this.workspace.scope.legacyScope.latestVersions(

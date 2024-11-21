@@ -17,6 +17,7 @@ type WatchCmdOpts = {
   checkTypes?: string | boolean;
   import?: boolean;
   skipImport?: boolean;
+  generateTypes?: boolean;
   trigger?: string;
 };
 
@@ -42,6 +43,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
       'DEPRECATED. it is now the default. helpful when using git. import component objects if .bitmap changed not by bit',
     ],
     ['', 'skip-import', 'do not import component objects if .bitmap changed not by bit'],
+    ['', 'generate-types', 'EXPERIMENTAL. generate d.ts files for typescript components (hurts performance)'],
     [
       '',
       'trigger <comp-id>',
@@ -109,6 +111,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
       checkTypes: getCheckTypesEnum(),
       import: !skipImport,
       trigger: trigger ? ComponentID.fromString(trigger) : undefined,
+      generateTypes: watchCmdOpts.generateTypes,
     };
     await this.watcher.watch(watchOpts);
     return 'watcher terminated';
