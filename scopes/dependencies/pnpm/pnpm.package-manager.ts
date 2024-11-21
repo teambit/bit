@@ -14,6 +14,7 @@ import {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
   type GetDependenciesGraphOptions,
+  type GetDependenciesGraphOptionsFromCapsule,
 } from '@teambit/dependency-resolver';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
@@ -38,7 +39,11 @@ import { readWantedLockfile } from '@pnpm/lockfile-file';
 import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
 import { ServerSendOutStream } from '@teambit/legacy/dist/logger/pino-logger';
 import { join } from 'path';
-import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-converter';
+import {
+  convertLockfileToGraph,
+  convertLockfileToGraphFromCapsule,
+  convertGraphToLockfile,
+} from './lockfile-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
@@ -382,10 +387,10 @@ export class PnpmPackageManager implements PackageManager {
   /**
    * Calculating the dependencies graph of a given component using the lockfile.
    */
-  async calcDependenciesGraph(opts: GetDependenciesGraphOptions): Promise<DependenciesGraph> {
+  async calcDependenciesGraph(opts: GetDependenciesGraphOptions): Promise<DependenciesGraph | undefined> {
     const lockfile = await readWantedLockfile(opts.workspacePath, { ignoreIncompatible: false });
     if (!lockfile) {
-      throw new BitError('Cannot get the depednency graph without a lockfile. Try running "bit install".');
+      return undefined;
     }
     if (!lockfile.importers[opts.componentRootDir] && opts.componentRootDir.includes('@')) {
       opts.componentRootDir = opts.componentRootDir.split('@')[0];
@@ -408,6 +413,30 @@ export class PnpmPackageManager implements PackageManager {
       { forceSharedFormat: true }
     );
     const graph = convertLockfileToGraph(partialLockfile, opts);
+    return graph;
+  }
+
+  async calcDependenciesGraphFromCapsule(
+    opts: GetDependenciesGraphOptionsFromCapsule
+  ): Promise<DependenciesGraph | undefined> {
+    const lockfile = await readWantedLockfile(opts.workspacePath, { ignoreIncompatible: false });
+    if (!lockfile) {
+      return undefined;
+    }
+    // Filters the lockfile so that it only includes packages related to the given component.
+    const partialLockfile = convertLockfileObjectToLockfileFile(
+      filterLockfileByImporters(lockfile, [opts.componentRelativeDir as ProjectId], {
+        include: {
+          dependencies: true,
+          devDependencies: true,
+          optionalDependencies: true,
+        },
+        failOnMissingDependencies: false,
+        skipped: new Set(),
+      }),
+      { forceSharedFormat: true }
+    );
+    const graph = convertLockfileToGraphFromCapsule(partialLockfile, opts);
     return graph;
   }
 }

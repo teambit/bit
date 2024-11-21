@@ -578,6 +578,20 @@ export class DependencyResolverMain {
     });
   }
 
+  async calcDependenciesGraphFromCapsule(
+    componentRelativeDir: string,
+    options: {
+      workspacePath: string;
+      componentIdByPkgName: Map<string, { scope: string; name: string }>;
+    }
+  ): Promise<DependenciesGraph | undefined> {
+    return this.getPackageManager()?.calcDependenciesGraphFromCapsule?.({
+      workspacePath: options.workspacePath,
+      componentRelativeDir,
+      componentIdByPkgName: options.componentIdByPkgName,
+    });
+  }
+
   /**
    * get a component dependency installer.
    */
