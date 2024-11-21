@@ -1,4 +1,3 @@
-import semver from 'semver';
 import { type ProjectManifest } from '@pnpm/types';
 import { LockfileFileV9 } from '@pnpm/lockfile.types';
 import * as dp from '@pnpm/dependency-path';
