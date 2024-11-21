@@ -437,4 +437,23 @@ describe('import functionality on Harmony', function () {
       expect(bitMap).to.not.have.property('comp-b');
     });
   });
+  describe('import when component.json has a local env', () => {
+    let envId: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      envId = helper.env.setCustomEnv();
+      helper.fixtures.populateComponents(1);
+      helper.command.setEnv('comp1', 'node-env');
+      helper.command.ejectConf('comp1');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.importComponent('comp1', '-x');
+    });
+    it('should not modified the component.json of the other component to add invalid env info', () => {
+      const fullEnvId = `${helper.scopes.remote}/${envId}`;
+      const componentJson = helper.componentJson.read('comp1');
+      expect(componentJson.extensions).to.have.property(fullEnvId);
+      expect(componentJson.extensions).to.not.have.property(`${fullEnvId}@0.0.1`);
+    });
+  });
 });
