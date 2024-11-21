@@ -461,11 +461,15 @@ export class CheckoutMain {
     if (existingBitMapId && !currentlyUsedVersion) {
       return returnFailure(`component ${id.toStringWithoutVersion()} is new`);
     }
-    if (version && currentlyUsedVersion === version) {
-      // it won't be relevant for 'reset' as it doesn't have a version
-      return returnFailure(`component ${id.toStringWithoutVersion()} is already at version ${version}`, true);
+
+    if ((version && currentlyUsedVersion === version) || (versionPerId && currentlyUsedVersion === newVersion)) {
+      // it won't be relevant for 'reset' as it doesn't have a version/versionPerId
+      return returnFailure(
+        `component ${id.toStringWithoutVersion()} is already at version ${version || newVersion}`,
+        true
+      );
     }
-    if (headVersion && currentlyUsedVersion === newVersion) {
+    if ((headVersion || latestVersion) && currentlyUsedVersion === newVersion) {
       return returnFailure(
         `component ${id.toStringWithoutVersion()} is already at the latest version, which is ${newVersion}`,
         true
@@ -570,7 +574,7 @@ export class CheckoutMain {
     LoggerMain,
     ComponentWriterMain,
     ImporterMain,
-    RemoveMain
+    RemoveMain,
   ]) {
     const logger = loggerMain.createLogger(CheckoutAspect.id);
     const checkoutMain = new CheckoutMain(workspace, logger, compWriter, importer, remove);
