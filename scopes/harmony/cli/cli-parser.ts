@@ -5,7 +5,7 @@ import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { compact } from 'lodash';
 import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
-import loader from '@teambit/legacy/dist/cli/loader';
+import { loader } from '@teambit/legacy.loader';
 import chalk from 'chalk';
 import { getCommandId } from './get-command-id';
 import { formatHelp } from './help';

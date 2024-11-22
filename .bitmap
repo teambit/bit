@@ -870,6 +870,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/lister"
     },
+    "loader": {
+        "name": "loader",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/loader"
+    },
     "logger": {
         "name": "logger",
         "scope": "teambit.harmony",

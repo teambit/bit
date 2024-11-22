@@ -16,7 +16,7 @@ import Consumer from '../consumer';
 import { ComponentFsCache } from './component-fs-cache';
 import { ComponentMap } from '@teambit/legacy.bit-map';
 import { VERSION_ZERO } from '../../scope/models/model-component';
-import loader from '../../cli/loader';
+import { loader } from '@teambit/legacy.loader';
 
 export type ComponentLoadOptions = {
   loadDocs?: boolean;
