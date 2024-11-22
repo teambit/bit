@@ -1172,6 +1172,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/typescript/modules/ts-config-mutator"
     },
+    "modules/workspace-locator": {
+        "name": "modules/workspace-locator",
+        "scope": "teambit.workspace",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/modules/workspace-locator"
+    },
     "mover": {
         "name": "mover",
         "scope": "teambit.component",

@@ -1,5 +1,6 @@
 import { resolve, join } from 'path';
-import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
+import { loadConsumer } from '@teambit/legacy/dist/consumer';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { readdirSync } from 'fs';
 import { Harmony, Aspect } from '@teambit/harmony';
@@ -92,7 +93,7 @@ function getMainFilePath(aspect: any, id: ComponentID) {
 }
 
 export async function getConfig(cwd = process.cwd()) {
-  const consumerInfo = await getConsumerInfo(cwd);
+  const consumerInfo = await getWorkspaceInfo(cwd);
   const scopePath = findScopePath(cwd);
   const globalConfigOpts = {
     name: '.bitrc.jsonc',
