@@ -1,6 +1,5 @@
 import prompt from 'prompt';
-
-import loader from '@teambit/legacy/dist/cli/loader';
+import { loader } from '@teambit/legacy.loader';
 import { PromptCanceled } from './exceptions';
 
 const DEFAULT_PROMPT_MSG = '';

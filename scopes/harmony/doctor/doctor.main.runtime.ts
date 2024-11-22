@@ -10,7 +10,7 @@ import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '@teambit/legacy/dist/constants';
 import { BitMap } from '@teambit/legacy.bit-map';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
-import { ConsumerInfo, getConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
+import { getWorkspaceInfo, WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import Diagnosis, { ExamineResult } from './diagnosis';
 import DoctorRegistrar from './doctor-registrar';
 import registerCoreAndExtensionsDiagnoses from './doctor-registrar-builder';
@@ -177,7 +177,7 @@ export class DoctorMain {
   ): Promise<Stream.Readable> {
     const { archiveWorkspace, includeNodeModules, includePublic, excludeLocalScope } = options;
     const debugLog = await this._getDebugLogAsBuffer();
-    const consumerInfo = await this._getConsumerInfo();
+    const consumerInfo = await this._getWorkspaceInfo();
     let bitmap;
     if (consumerInfo && consumerInfo.path) {
       bitmap = this._getBitMap(consumerInfo.path);
@@ -192,7 +192,7 @@ export class DoctorMain {
       if (!archiveWorkspace && bitmap) {
         pack.entry({ name: '.bitmap' }, bitmap);
       }
-      if (consumerInfo && consumerInfo.hasConsumerConfig) {
+      if (consumerInfo && consumerInfo.hasWorkspaceConfig) {
         // TODO: support new config as well
         const scopePath = findScopePath(consumerInfo.path);
         const config = scopePath ? await WorkspaceConfig.loadIfExist(consumerInfo.path, scopePath) : undefined;
@@ -271,8 +271,8 @@ export class DoctorMain {
     return Buffer.from(logWithoutChalk);
   }
 
-  private async _getConsumerInfo(): Promise<ConsumerInfo | null | undefined> {
-    const consumerInfo = await getConsumerInfo(process.cwd());
+  private async _getWorkspaceInfo(): Promise<WorkspaceInfo | null | undefined> {
+    const consumerInfo = await getWorkspaceInfo(process.cwd());
     return consumerInfo;
   }
 

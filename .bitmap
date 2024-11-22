@@ -884,6 +884,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/lister"
     },
+    "loader": {
+        "name": "loader",
+        "scope": "teambit.legacy",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/loader"
+    },
     "logger": {
         "name": "logger",
         "scope": "teambit.harmony",
@@ -1170,6 +1177,13 @@
         "version": "0.0.83",
         "mainFile": "index.ts",
         "rootDir": "scopes/typescript/modules/ts-config-mutator"
+    },
+    "modules/workspace-locator": {
+        "name": "modules/workspace-locator",
+        "scope": "teambit.workspace",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/modules/workspace-locator"
     },
     "mover": {
         "name": "mover",
