@@ -3,7 +3,7 @@ import * as path from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { createLinkOrSymlink } from '@teambit/toolbox.fs.link-or-symlink';
 
-export default class Symlink {
+export class Symlink {
   src: string; // current existing path
   dest: string; // new symlink path
   componentId: ComponentID | null | undefined;
