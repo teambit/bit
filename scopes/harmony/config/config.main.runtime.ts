@@ -1,4 +1,4 @@
-import { getConsumerInfo } from '@teambit/legacy/dist/consumer';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { ExtensionDataEntry, ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigLoadFunction,
@@ -131,7 +131,7 @@ export class ConfigMain {
 ConfigAspect.addRuntime(ConfigMain);
 
 async function loadWorkspaceConfigIfExist(cwd = process.cwd()): Promise<WorkspaceConfig | undefined> {
-  const consumerInfo = await getConsumerInfo(cwd);
+  const consumerInfo = await getWorkspaceInfo(cwd);
   const configDirPath = consumerInfo?.path || cwd;
   const scopePath = findScopePath(configDirPath);
   const workspaceConfig = await WorkspaceConfig.loadIfExist(configDirPath, scopePath);
