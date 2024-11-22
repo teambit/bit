@@ -1,7 +1,7 @@
 import doctrine from 'doctrine';
 import * as reactDocs from 'react-docgen';
 
-import logger from '../../logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { pathNormalizeToLinux, PathOsBased } from '@teambit/legacy.utils';
 import extractDataRegex from '../extract-data-regex';
 import { Doclet } from '../types';

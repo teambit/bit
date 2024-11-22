@@ -506,6 +506,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/diagnostic"
     },
+    "doc-parser": {
+        "name": "doc-parser",
+        "scope": "teambit.semantics",
+        "version": "0.0.2",
+        "mainFile": "index.ts",
+        "rootDir": "components/semantics/doc-parser"
+    },
     "docs": {
         "name": "docs",
         "scope": "teambit.docs",
