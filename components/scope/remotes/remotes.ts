@@ -4,21 +4,21 @@ import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import pMap from 'p-map';
 import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
-import GlobalRemotes from '../global-config/global-remotes';
-import logger from '../logger/logger';
-import { ScopeNotFound } from '../scope/exceptions';
-import DependencyGraph from '../scope/graph/scope-graph';
-import Scope from '../scope/scope';
+import GlobalRemotes from '@teambit/legacy/dist/global-config/global-remotes';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
+import Scope from '@teambit/legacy/dist/scope/scope';
 import { prependBang } from '@teambit/legacy.utils';
 import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
 import { PrimaryOverloaded } from './exceptions';
-import Remote from './remote';
+import { Remote } from './remote';
 import remoteResolver from './remote-resolver/remote-resolver';
-import { UnexpectedNetworkError } from '../scope/network/exceptions';
-import { ObjectItemsStream } from '../scope/objects/object-list';
+import { UnexpectedNetworkError } from '@teambit/legacy/dist/scope/network/exceptions';
+import { ObjectItemsStream } from '@teambit/legacy/dist/scope/objects/object-list';
 import { ScopeNotFoundOrDenied } from './exceptions/scope-not-found-or-denied';
 
-export default class Remotes extends Map<string, Remote> {
+export class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
     super(remotes);
   }

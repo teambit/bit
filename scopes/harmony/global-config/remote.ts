@@ -1,8 +1,7 @@
 import { BitError } from '@teambit/bit-error';
 import { GlobalRemotes } from '@teambit/legacy/dist/global-config';
-import { Remote } from '@teambit/legacy/dist/remotes';
+import { Remote, getScopeRemotes } from '@teambit/scope.remotes';
 import { loadScope } from '@teambit/legacy/dist/scope';
-import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 
 function buildRemote(url: string): Remote {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

@@ -3,7 +3,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
 import ValidationError from '../../../error/validation-error';
 import Scope from '../../../scope/scope';
-import { fetchRemoteVersions } from '../../../scope/scope-remotes';
+import { fetchRemoteVersions } from '@teambit/scope.remotes';
 import { isValidPath } from '@teambit/legacy.utils';
 import Dependency from './dependency';
 import { validateType } from '../../../scope/validate-type';

@@ -20,9 +20,8 @@ import { ObjectItem, ObjectList } from '@teambit/legacy/dist/scope/objects/objec
 import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
-import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
+import { Remotes, Remote, getScopeRemotes } from '@teambit/scope.remotes';
 import { EjectAspect, EjectMain, EjectResults } from '@teambit/eject';
-import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { ExportOrigin } from '@teambit/legacy/dist/scope/network/http/http';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';

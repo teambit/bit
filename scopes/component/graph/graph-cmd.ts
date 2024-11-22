@@ -9,7 +9,7 @@ import VisualDependencyGraph from '@teambit/legacy/dist/scope/graph/vizgraph';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
-import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
+import { getRemoteByName } from '@teambit/scope.remotes';
 import { ComponentMain } from '@teambit/component';
 
 type GraphOpt = {

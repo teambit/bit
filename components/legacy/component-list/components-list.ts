@@ -8,7 +8,7 @@ import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-div
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import ModelComponent from '@teambit/legacy/dist/scope/models/model-component';
 import Scope from '@teambit/legacy/dist/scope/scope';
-import { fetchRemoteVersions } from '@teambit/legacy/dist/scope/scope-remotes';
+import { fetchRemoteVersions } from '@teambit/scope.remotes';
 import { isBitIdMatchByWildcards } from '@teambit/legacy.utils';
 import { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
 import Component from '@teambit/legacy/dist/consumer/component';

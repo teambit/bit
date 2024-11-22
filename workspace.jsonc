@@ -708,6 +708,9 @@
     "components/typescript-compiler": {
       "teambit.pkg/pkg": {}
     },
+    "components/scope/remotes": {
+      "teambit.pkg/pkg": {}
+    },
     "scopes/component/sources": {
       "teambit.pkg/pkg": {}
     }

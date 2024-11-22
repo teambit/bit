@@ -16,7 +16,7 @@ import { importAllArtifactsFromLane } from '@teambit/component.sources';
 import { InstallAspect, InstallMain } from '@teambit/install';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
-import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
+import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { GraphAspect, GraphMain } from '@teambit/graph';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { BitError } from '@teambit/bit-error';
