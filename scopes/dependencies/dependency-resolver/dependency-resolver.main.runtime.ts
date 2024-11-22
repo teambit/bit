@@ -1,5 +1,6 @@
 import multimatch from 'multimatch';
 import mapSeries from 'p-map-series';
+import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { MainRuntime } from '@teambit/cli';
 import { getAllCoreAspectsIds } from '@teambit/bit';
 import { getRootComponentDir } from '@teambit/workspace.root-components';
@@ -579,13 +580,21 @@ export class DependencyResolverMain {
       componentIdByPkgName: Map<string, ComponentID>;
     }
   ): Promise<DependenciesGraph | undefined> {
-    return this.getPackageManager()?.calcDependenciesGraph?.({
-      rootDir: options.workspacePath,
-      componentRootDir: this.getComponentDirInBitRoots(component, options),
-      pkgName: this.getPackageName(component),
-      componentRelativeDir,
-      componentIdByPkgName: options.componentIdByPkgName,
-    });
+    try {
+      return await this.getPackageManager()?.calcDependenciesGraph?.({
+        rootDir: options.workspacePath,
+        componentRootDir: this.getComponentDirInBitRoots(component, options),
+        pkgName: this.getPackageName(component),
+        componentRelativeDir,
+        componentIdByPkgName: options.componentIdByPkgName,
+      });
+    } catch (err) {
+      // If the dependencies graph feature is disabled, we ignore the error
+      if (isFeatureEnabled(DEPS_GRAPH)) {
+        throw err;
+      }
+      return undefined;
+    }
   }
 
   async calcDependenciesGraphFromCapsule(
@@ -595,11 +604,19 @@ export class DependencyResolverMain {
       componentIdByPkgName: Map<string, ComponentID>;
     }
   ): Promise<DependenciesGraph | undefined> {
-    return this.getPackageManager()?.calcDependenciesGraphFromCapsule?.({
-      rootDir: options.capsulesDir,
-      componentRelativeDir,
-      componentIdByPkgName: options.componentIdByPkgName,
-    });
+    try {
+      return await this.getPackageManager()?.calcDependenciesGraphFromCapsule?.({
+        rootDir: options.capsulesDir,
+        componentRelativeDir,
+        componentIdByPkgName: options.componentIdByPkgName,
+      });
+    } catch (err) {
+      // If the dependencies graph feature is disabled, we ignore the error
+      if (isFeatureEnabled(DEPS_GRAPH)) {
+        throw err;
+      }
+      return undefined;
+    }
   }
 
   /**

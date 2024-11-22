@@ -1,5 +1,4 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import fs from 'fs-extra';
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
@@ -756,36 +755,26 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     this.logger.profile('snap._addFlattenedDependenciesToComponents');
   }
 
-  async _addDependenciesGraphToComponents(
-    consumerComponents: ConsumerComponent[],
-    components: Component[]
-  ): Promise<void> {
-    try {
-      this.logger.profile('snap._addDependenciesGraphToComponents');
-      const componentIdByPkgName = this.dependencyResolver.getComponentIdByPkgNameMap(components);
-      const options = {
-        workspacePath: this.workspace.path,
-        rootComponentsPath: this.workspace.rootComponentsPath,
-        componentIdByPkgName,
-      };
-      await Promise.all(
-        consumerComponents.map(async (consumerComponent, index) => {
-          if (consumerComponent.componentMap?.rootDir) {
-            consumerComponent.dependenciesGraph = await this.dependencyResolver.calcDependenciesGraph(
-              components[index],
-              consumerComponent.componentMap.rootDir,
-              options
-            );
-          }
-        })
-      );
-      this.logger.profile('snap._addDependenciesGraphToComponents');
-    } catch (err) {
-      // If the dependencies graph feature is disabled, we ignore the error
-      if (isFeatureEnabled(DEPS_GRAPH)) {
-        throw err;
-      }
-    }
+  async _addDependenciesGraphToComponents(components: Component[]): Promise<void> {
+    this.logger.profile('snap._addDependenciesGraphToComponents');
+    const componentIdByPkgName = this.dependencyResolver.getComponentIdByPkgNameMap(components);
+    const options = {
+      workspacePath: this.workspace.path,
+      rootComponentsPath: this.workspace.rootComponentsPath,
+      componentIdByPkgName,
+    };
+    await Promise.all(
+      components.map(async (component) => {
+        if (component.state._consumer.componentMap?.rootDir) {
+          component.state._consumer.dependenciesGraph = await this.dependencyResolver.calcDependenciesGraph(
+            component,
+            component.state._consumer.componentMap.rootDir,
+            options
+          );
+        }
+      })
+    );
+    this.logger.profile('snap._addDependenciesGraphToComponents');
   }
 
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
