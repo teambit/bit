@@ -872,9 +872,8 @@
     },
     "loader": {
         "name": "loader",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.legacy",
+        "scope": "teambit.legacy",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "components/legacy/loader"
     },
