@@ -69,7 +69,16 @@ function _convertLockfileToGraph(
   }
 ): DependenciesGraph {
   lockfile = replaceFileVersionsWithPendingVersions(lockfile);
-  const packages: PackagesMap = new Map();
+  return new DependenciesGraph({
+    edges: buildEdges(lockfile, { directDependencies }),
+    packages: buildPackages(lockfile, { componentIdByPkgName }),
+  });
+}
+
+function buildEdges(
+  lockfile: LockfileFileV9,
+  { directDependencies }: { directDependencies: DependencyNeighbour[] }
+): DependencyEdge[] {
   const edges: DependencyEdge[] = [];
   for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
     const neighbours: DependencyNeighbour[] = [];
@@ -100,37 +109,43 @@ function _convertLockfileToGraph(
     if (edge.neighbours.length > 0 || edge.id !== pkgId) {
       edges.push(edge);
     }
-    packages.set(
-      pkgId,
-      pick(lockfile.packages![pkgId], [
-        'bundledDependencies',
-        'cpu',
-        'deprecated',
-        'engines',
-        'hasBin',
-        'libc',
-        'name',
-        'os',
-        'peerDependencies',
-        'peerDependenciesMeta',
-        'resolution',
-        'version',
-      ]) as any
-    );
-  }
-  for (const [pkgId, pkgAttr] of packages.entries()) {
-    if (pkgId.includes('@pending:')) {
-      const parsed = dp.parse(pkgId);
-      if (parsed.name && componentIdByPkgName.has(parsed.name)) {
-        pkgAttr.component = componentIdByPkgName.get(parsed.name);
-      }
-    }
   }
   edges.push({
     id: DependenciesGraph.ROOT_EDGE_ID,
     neighbours: replaceFileVersionsWithPendingVersions(directDependencies),
   });
-  return new DependenciesGraph({ edges, packages });
+  return edges;
+}
+
+function buildPackages(
+  lockfile: LockfileFileV9,
+  { componentIdByPkgName }: { componentIdByPkgName: ComponentIdByPkgName }
+): PackagesMap {
+  const packages: PackagesMap = new Map();
+  for (const [pkgId, pkg] of Object.entries(lockfile.packages ?? {})) {
+    const graphPkg = pick(pkg, [
+      'bundledDependencies',
+      'cpu',
+      'deprecated',
+      'engines',
+      'hasBin',
+      'libc',
+      'name',
+      'os',
+      'peerDependencies',
+      'peerDependenciesMeta',
+      'resolution',
+      'version',
+    ]) as any;
+    if (pkgId.includes('@pending:')) {
+      const parsed = dp.parse(pkgId);
+      if (parsed.name && componentIdByPkgName.has(parsed.name)) {
+        graphPkg.component = componentIdByPkgName.get(parsed.name);
+      }
+    }
+    packages.set(pkgId, graphPkg);
+  }
+  return packages;
 }
 
 function replaceFileVersionsWithPendingVersions<T>(obj: T): T {
