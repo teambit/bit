@@ -4,7 +4,7 @@ import * as path from 'path';
 
 import parser from './';
 
-const fixtures = path.join(__dirname, '../../..', 'fixtures', 'jsdoc');
+const fixtures = path.join(__dirname, '..', 'fixtures', 'jsdoc');
 
 function parseFile(filePath: string) {
   return parser(fs.readFileSync(filePath).toString(), 'my-file.js');
@@ -55,7 +55,7 @@ describe('React docs Parser', () => {
     describe('elevation', () => {
       let doclet;
       before(async () => {
-        const file = path.join(fixtures, 'react/elevation.tsx');
+        const file = path.join(fixtures, 'react/elevation.tsxx');
         const doclets = await parseFile(file);
         // @ts-ignore
         doclet = doclets[0];

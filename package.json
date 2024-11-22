@@ -123,7 +123,7 @@
     "@teambit/legacy.component-list": "~0.0.2",
     "@teambit/workspace.modules.workspace-locator": "~0.0.1",
     "@teambit/workspace.modules.fs-cache": "~0.0.1",
-    "teambit/semantics.doc-parser": "~0.0.1",
+    "teambit/semantics.doc-parser": "~0.0.2",
     "@teambit/component.sources": "~0.0.1",
     "@teambit/bit.get-bit-version": "~0.0.1",
     "@teambit/legacy.utils": "~0.0.2",

@@ -1,8 +1,6 @@
 // @bit-no-check
+
 import React from 'react';
-import classNames from 'classnames';
-import styles from './card.module.scss';
-import elevations from './elevations.module.scss';
 
 export type CardProps = {
   /**
@@ -15,8 +13,8 @@ export type CardProps = {
 /**
  * A wrapper resembling a physical card, grouping elements and improve readability.
  */
-export function Card({ className, elevation, ...rest }: CardProps) {
-  return <div className={classNames(styles.card, elevations[elevation], className)} {...rest} />;
+export function Card({ className, elevation }: CardProps) {
+  return <div />;
 }
 
 Card.defaultProps = {

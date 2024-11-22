@@ -509,7 +509,7 @@
     "doc-parser": {
         "name": "doc-parser",
         "scope": "teambit.semantics",
-        "version": "0ed2d4aef3f6de6774ffd95f407be0d3990e5498",
+        "version": "0.0.2",
         "mainFile": "index.ts",
         "rootDir": "components/semantics/doc-parser"
     },

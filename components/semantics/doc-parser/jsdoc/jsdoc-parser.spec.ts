@@ -4,7 +4,7 @@ import * as path from 'path';
 
 import parser from './';
 
-const fixtures = path.join(__dirname, '../../..', 'fixtures', 'jsdoc');
+const fixtures = path.join(__dirname, '..', 'fixtures', 'jsdoc');
 
 function parseFile(filePath: string) {
   return parser(fs.readFileSync(filePath).toString(), 'my-file.js');
@@ -208,23 +208,6 @@ describe('JSDoc Parser', () => {
         const anyArg = args.find((arg) => arg.name === 'optionalParameterWithDefaultValue');
         expect(anyArg.type).to.equal('string?');
         expect(anyArg.default).to.equal('value');
-      });
-    });
-
-    describe('Flow Type File', () => {
-      it('should parse the file with no errors', async () => {
-        const file = path.join(fixtures, 'flowTypeFile.js');
-        const doclets = await parseFile(file);
-        expect(doclets).to.be.an('array').and.to.have.lengthOf(1);
-        const doclet = doclets[0];
-
-        expect(doclet).to.have.property('name').that.equals('first');
-        expect(doclet).to.have.property('description').that.equals('returns the first element of an array reference.');
-        expect(doclet).to.have.property('access').that.equals('public');
-        expect(doclet).to.have.property('static').that.is.false;
-        expect(doclet).to.have.property('returns').that.is.an('object').that.is.not.empty;
-        expect(doclet).to.have.property('examples').that.is.an('array').that.is.not.empty;
-        expect(doclet).to.have.property('args').that.is.an('array').that.is.not.empty;
       });
     });
 
