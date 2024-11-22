@@ -762,7 +762,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
   ): Promise<void> {
     try {
       this.logger.profile('snap._addDependenciesGraphToComponents');
-      const componentIdByPkgName = this._getComponentIdByPkgNameMap(consumerComponents, components);
+      const componentIdByPkgName = this.dependencyResolver.getComponentIdByPkgNameMap(components);
       const options = {
         workspacePath: this.workspace.path,
         rootComponentsPath: this.workspace.rootComponentsPath,
@@ -786,22 +786,6 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
         throw err;
       }
     }
-  }
-
-  _getComponentIdByPkgNameMap(
-    consumerComponents: ConsumerComponent[],
-    components: Component[]
-  ): Map<string, { scope: string; name: string }> {
-    const componentIdByPkgName = new Map<string, { scope: string; name: string }>();
-    consumerComponents.forEach((consumerComponent, index) => {
-      if (consumerComponent.componentMap?.rootDir) {
-        componentIdByPkgName.set(this.dependencyResolver.getPackageName(components[index]), {
-          scope: consumerComponent.componentMap.id.scope,
-          name: consumerComponent.componentMap.id.fullName,
-        });
-      }
-    });
-    return componentIdByPkgName;
   }
 
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {

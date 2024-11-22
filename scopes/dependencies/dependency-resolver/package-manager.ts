@@ -1,6 +1,6 @@
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
-import { ComponentMap } from '@teambit/component';
+import { ComponentID, ComponentMap } from '@teambit/component';
 import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
 import { Registries } from './registry';
 import { DepsFilterFn } from './manifest';
@@ -228,4 +228,4 @@ export interface GetDependenciesGraphOptions extends GetDependenciesGraphOptions
   pkgName: string;
 }
 
-export type ComponentIdByPkgName = Map<string, { scope: string; name: string }>;
+export type ComponentIdByPkgName = Map<string, ComponentID>;

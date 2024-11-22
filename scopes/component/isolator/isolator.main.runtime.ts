@@ -716,7 +716,7 @@ export class IsolatorMain {
         });
         if (allGraph == null) {
           const components = capsuleList.map(({ component }) => component);
-          const componentIdByPkgName = this.getComponentIdByPkgNameMap(components);
+          const componentIdByPkgName = this.dependencyResolver.getComponentIdByPkgNameMap(components);
           await Promise.all(
             capsuleList.map(async (capsule) => {
               capsule.component.state._consumer.dependenciesGraph =
@@ -1340,19 +1340,6 @@ export class IsolatorMain {
       artifactsVinylFlattened.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
     }
     return artifactsVinylFlattened;
-  }
-
-  getComponentIdByPkgNameMap(components: Component[]): Map<string, { scope: string; name: string }> {
-    const componentIdByPkgName = new Map<string, { scope: string; name: string }>();
-    for (const component of components) {
-      if (component.state._consumer.componentMap?.rootDir) {
-        componentIdByPkgName.set(this.dependencyResolver.getPackageName(component), {
-          scope: component.state._consumer.componentMap.id.scope,
-          name: component.state._consumer.componentMap.id.fullName,
-        });
-      }
-    }
-    return componentIdByPkgName;
   }
 }
 

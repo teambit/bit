@@ -9,7 +9,7 @@ import {
   type DependencyEdge,
   type DependencyNeighbour,
 } from '@teambit/legacy/dist/scope/models/version';
-import { type GetDependenciesGraphOptions } from '@teambit/dependency-resolver';
+import { type GetDependenciesGraphOptions, type ComponentIdByPkgName } from '@teambit/dependency-resolver';
 import { getLockfileImporterId } from '@pnpm/lockfile.fs';
 
 export function convertLockfileToGraphFromCapsule(
@@ -29,69 +29,7 @@ export function convertLockfileToGraphFromCapsule(
       directDependencies.push({ name, specifier, id, lifecycle, optional });
     }
   }
-  lockfile = replaceFileVersionsWithPendingVersions(lockfile);
-  const packages: PackagesMap = new Map();
-  const edges: DependencyEdge[] = [];
-  for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
-    const neighbours: DependencyNeighbour[] = [];
-    for (const { depTypeField, optional } of [
-      { depTypeField: 'dependencies', optional: false },
-      { depTypeField: 'optionalDependencies', optional: true },
-    ]) {
-      for (const [depPkgName, ref] of Object.entries((snapshot[depTypeField] ?? {}) as Record<string, string>)) {
-        const subDepPath = dp.refToRelative(ref, depPkgName);
-        if (subDepPath == null) continue;
-        neighbours.push({ id: subDepPath, optional });
-      }
-    }
-    const edge: DependencyEdge = {
-      id: depPath,
-      neighbours,
-    };
-    const pkgId = dp.removeSuffix(depPath);
-    if (pkgId !== depPath) {
-      edge.attr = { pkgId };
-    }
-    if (snapshot.transitivePeerDependencies) {
-      edge.attr = {
-        ...edge.attr,
-        transitivePeerDependencies: snapshot.transitivePeerDependencies,
-      };
-    }
-    if (edge.neighbours.length > 0 || edge.id !== pkgId) {
-      edges.push(edge);
-    }
-    packages.set(
-      pkgId,
-      pick(lockfile.packages![pkgId], [
-        'bundledDependencies',
-        'cpu',
-        'deprecated',
-        'engines',
-        'hasBin',
-        'libc',
-        'name',
-        'os',
-        'peerDependencies',
-        'peerDependenciesMeta',
-        'resolution',
-        'version',
-      ]) as any
-    );
-  }
-  for (const [pkgId, pkgAttr] of packages.entries()) {
-    if (pkgId.includes('@pending:')) {
-      const parsed = dp.parse(pkgId);
-      if (parsed.name && componentIdByPkgName.has(parsed.name)) {
-        pkgAttr.component = componentIdByPkgName.get(parsed.name);
-      }
-    }
-  }
-  edges.push({
-    id: DependenciesGraph.ROOT_EDGE_ID,
-    neighbours: replaceFileVersionsWithPendingVersions(directDependencies),
-  });
-  return new DependenciesGraph({ edges, packages });
+  return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
 }
 
 export function convertLockfileToGraph(
@@ -122,6 +60,19 @@ export function convertLockfileToGraph(
       });
     }
   }
+  return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
+}
+
+function _convertLockfileToGraph(
+  lockfile: LockfileFileV9,
+  {
+    componentIdByPkgName,
+    directDependencies,
+  }: {
+    componentIdByPkgName: ComponentIdByPkgName;
+    directDependencies: DependencyNeighbour[];
+  }
+): DependenciesGraph {
   lockfile = replaceFileVersionsWithPendingVersions(lockfile);
   const packages: PackagesMap = new Map();
   const edges: DependencyEdge[] = [];

@@ -495,6 +495,16 @@ export class DependencyResolverMain {
     return this.getDepResolverData(component)?.packageName ?? this.calcPackageName(component);
   }
 
+  getComponentIdByPkgNameMap(components: Component[]): Map<string, ComponentID> {
+    const componentIdByPkgName = new Map<string, ComponentID>();
+    for (const component of components) {
+      if (component.state._consumer.componentMap?.id) {
+        componentIdByPkgName.set(this.getPackageName(component), component.state._consumer.componentMap.id);
+      }
+    }
+    return componentIdByPkgName;
+  }
+
   getDepResolverData(component: Component): DependencyResolverComponentData | undefined {
     return component.state.aspects.get(DependencyResolverAspect.id)?.data as DependencyResolverComponentData;
   }
@@ -566,7 +576,7 @@ export class DependencyResolverMain {
     options: {
       workspacePath: string;
       rootComponentsPath: string;
-      componentIdByPkgName: Map<string, { scope: string; name: string }>;
+      componentIdByPkgName: Map<string, ComponentID>;
     }
   ): Promise<DependenciesGraph | undefined> {
     return this.getPackageManager()?.calcDependenciesGraph?.({
@@ -582,7 +592,7 @@ export class DependencyResolverMain {
     componentRelativeDir: string,
     options: {
       workspacePath: string;
-      componentIdByPkgName: Map<string, { scope: string; name: string }>;
+      componentIdByPkgName: Map<string, ComponentID>;
     }
   ): Promise<DependenciesGraph | undefined> {
     return this.getPackageManager()?.calcDependenciesGraphFromCapsule?.({
