@@ -1,3 +1,4 @@
+// @bit-no-check
 import React from 'react';
 import classNames from 'classnames';
 import styles from './card.module.scss';

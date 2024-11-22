@@ -1,3 +1,4 @@
+// @bit-no-check
 /**
  * returns the first element of an array reference.
  * @name first
