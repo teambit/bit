@@ -1159,17 +1159,10 @@
     },
     "modules/workspace-locator": {
         "name": "modules/workspace-locator",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.workspace",
+        "scope": "teambit.workspace",
+        "version": "0.0.1",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/modules/workspace-locator",
-        "config": {
-            "teambit.harmony/node": {},
-            "teambit.envs/envs": {
-                "env": "teambit.harmony/node"
-            }
-        }
+        "rootDir": "scopes/workspace/modules/workspace-locator"
     },
     "mover": {
         "name": "mover",
