@@ -756,6 +756,9 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
   }
 
   async _addDependenciesGraphToComponents(components: Component[]): Promise<void> {
+    if (this.workspace == null) {
+      return;
+    }
     this.logger.profile('snap._addDependenciesGraphToComponents');
     const componentIdByPkgName = this.dependencyResolver.getComponentIdByPkgNameMap(components);
     const options = {
