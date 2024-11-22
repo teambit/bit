@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import { ComponentFsCache } from '../consumer/component/component-fs-cache';
+import { ComponentFsCache } from '@teambit/legacy/dist/consumer/component/component-fs-cache';
 import { SourceFile } from '@teambit/component.sources';
 import { PathOsBased } from '@teambit/toolbox.path.path';
 import jsDocParse from './jsdoc';
