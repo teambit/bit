@@ -700,21 +700,20 @@ export class IsolatorMain {
           })
         );
       } else {
-        let allGraph: DependenciesGraph | undefined;
-        if (legacyScope) {
-          const componentIds = capsuleList.map((capsule) => capsule.component.id);
-          allGraph = await legacyScope.getDependenciesGraphByComponentIds(componentIds);
-        }
-
+        const dependenciesGraph = await legacyScope?.getDependenciesGraphByComponentIds(
+          capsuleList.getAllComponentIDs()
+        );
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
           cachePackagesOnCapsulesRoot,
           linkedDependencies,
           packageManager: opts.packageManager,
-          dependenciesGraph: allGraph,
+          dependenciesGraph,
         });
-        if (allGraph == null) {
+        if (dependenciesGraph == null) {
+          // If the graph was not present in the model, we use the just created lockfile inside the capsules
+          // to populate the graph.
           await this.calcDependenciesGraph(capsuleList, components, capsulesDir);
         }
       }

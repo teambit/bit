@@ -1,5 +1,4 @@
 import { CloudMain } from '@teambit/cloud';
-import { BitError } from '@teambit/bit-error';
 import {
   DependencyResolverMain,
   extendWithComponentsFromDir,
