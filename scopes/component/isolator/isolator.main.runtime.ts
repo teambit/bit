@@ -715,20 +715,7 @@ export class IsolatorMain {
           dependenciesGraph: allGraph,
         });
         if (allGraph == null) {
-          const components = capsuleList.map(({ component }) => component);
-          const componentIdByPkgName = this.dependencyResolver.getComponentIdByPkgNameMap(components);
-          await Promise.all(
-            capsuleList.map(async (capsule) => {
-              capsule.component.state._consumer.dependenciesGraph =
-                await this.dependencyResolver.calcDependenciesGraphFromCapsule(
-                  path.relative(capsulesDir, capsule.path),
-                  {
-                    componentIdByPkgName,
-                    capsulesDir,
-                  }
-                );
-            })
-          );
+          await this.calcDependenciesGraph(capsuleList, components, capsulesDir);
         }
       }
       if (installLongProcessLogger) {
@@ -759,6 +746,27 @@ export class IsolatorMain {
     }
 
     return allCapsuleList;
+  }
+
+  private async calcDependenciesGraph(
+    capsuleList: CapsuleList,
+    components: Component[],
+    capsulesDir: string
+  ): Promise<void> {
+    const componentIdByPkgName = this.dependencyResolver.getComponentIdByPkgNameMap(components);
+    const opts = {
+      componentIdByPkgName,
+      capsulesDir,
+    };
+    await Promise.all(
+      capsuleList.map(async (capsule) => {
+        capsule.component.state._consumer.dependenciesGraph =
+          await this.dependencyResolver.calcDependenciesGraphFromCapsule(
+            path.relative(capsulesDir, capsule.path),
+            opts
+          );
+      })
+    );
   }
 
   private async markCapsulesAsReady(capsuleList: CapsuleList): Promise<void> {
