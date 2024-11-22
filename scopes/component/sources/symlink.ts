@@ -11,7 +11,7 @@ export class Symlink {
     src: string,
     dest: string,
     componentId?: ComponentID,
-    private avoidHardLink = false
+    readonly avoidHardLink = false
   ) {
     this.src = src;
     this.dest = dest;
