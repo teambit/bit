@@ -508,17 +508,10 @@
     },
     "doc-parser": {
         "name": "doc-parser",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.semantics",
+        "scope": "teambit.semantics",
+        "version": "0.0.1",
         "mainFile": "index.ts",
-        "rootDir": "components/semantics/doc-parser",
-        "config": {
-            "teambit.node/envs/node-babel-mocha@0.0.10": {},
-            "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            }
-        }
+        "rootDir": "components/semantics/doc-parser"
     },
     "docs": {
         "name": "docs",
