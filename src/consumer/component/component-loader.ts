@@ -13,7 +13,7 @@ import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency'
 import ComponentsPendingImport from '../exceptions/components-pending-import';
 import Component, { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
-import { ComponentFsCache } from './component-fs-cache';
+import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { ComponentMap } from '@teambit/legacy.bit-map';
 import { VERSION_ZERO } from '../../scope/models/model-component';
 import { loader } from '@teambit/legacy.loader';
@@ -52,11 +52,11 @@ export default class ComponentLoader {
   consumer: Consumer;
   cacheResolvedDependencies: Record<string, any>;
   cacheProjectAst: Record<string, any> | undefined; // specific platforms may need to parse the entire project. (was used for Angular, currently not in use)
-  componentFsCache: ComponentFsCache;
+  componentFsCache: FsCache;
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.cacheResolvedDependencies = {};
-    this.componentFsCache = new ComponentFsCache(consumer.scope.getPath());
+    this.componentFsCache = new FsCache(consumer.scope.getPath());
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
   }
 
