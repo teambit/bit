@@ -1,5 +1,5 @@
 import Spinnies from 'dreidels';
-import loader from '@teambit/legacy/dist/cli/loader';
+import { loader } from '@teambit/legacy.loader';
 import logger, { IBitLogger } from '@teambit/legacy/dist/logger/logger';
 import chalk from 'chalk';
 import { platform } from 'os';
