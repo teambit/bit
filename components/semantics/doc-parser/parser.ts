@@ -1,12 +1,12 @@
 import fs from 'fs-extra';
-import { ComponentFsCache } from '@teambit/legacy/dist/consumer/component/component-fs-cache';
+import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { SourceFile } from '@teambit/component.sources';
 import { PathOsBased } from '@teambit/toolbox.path.path';
 import jsDocParse from './jsdoc';
 import reactParse from './react';
 import { Doclet } from './types';
 
-export default async function parse(file: SourceFile, componentFsCache: ComponentFsCache): Promise<Doclet[]> {
+export default async function parse(file: SourceFile, componentFsCache: FsCache): Promise<Doclet[]> {
   const docsFromCache = await componentFsCache.getDocsFromCache(file.path);
   if (docsFromCache && docsFromCache.timestamp) {
     const stat = await fs.stat(file.path);
