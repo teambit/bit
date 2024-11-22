@@ -98,6 +98,7 @@ describe('convertLockfileToGraph simple case', () => {
             name: 'foo',
             specifier: '^1.0.0',
             lifecycle: 'runtime',
+            optional: false,
           },
         ],
       },

@@ -1,5 +1,5 @@
 import { type ProjectManifest } from '@pnpm/types';
-import { LockfileFileV9 } from '@pnpm/lockfile.types';
+import { type LockfileFileV9, type InlineSpecifiersResolvedDependencies } from '@pnpm/lockfile.types';
 import * as dp from '@pnpm/dependency-path';
 import { pick, partition } from 'lodash';
 import {
@@ -22,14 +22,26 @@ export function convertLockfileToGraphFromCapsule(
   const componentImporter = lockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
   for (const depType of ['dependencies' as const, 'optionalDependencies' as const, 'devDependencies' as const]) {
-    const lifecycle = depType === 'devDependencies' ? 'dev' : 'runtime';
-    const optional = depType === 'optionalDependencies';
-    for (const [name, { version, specifier }] of Object.entries(componentImporter[depType] ?? {}) as any) {
-      const id = dp.refToRelative(version, name)!;
-      directDependencies.push({ name, specifier, id, lifecycle, optional });
+    if (componentImporter[depType] != null) {
+      const lifecycle = depType === 'devDependencies' ? 'dev' : 'runtime';
+      const optional = depType === 'optionalDependencies';
+      directDependencies.push(...importerDepsToNeighbours(componentImporter[depType]!, lifecycle, optional));
     }
   }
   return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
+}
+
+function importerDepsToNeighbours(
+  importerDependencies: InlineSpecifiersResolvedDependencies,
+  lifecycle: 'dev' | 'runtime',
+  optional: boolean
+): DependencyNeighbour[] {
+  const neighbours: DependencyNeighbour[] = [];
+  for (const [name, { version, specifier }] of Object.entries(importerDependencies) as any) {
+    const id = dp.refToRelative(version, name)!;
+    neighbours.push({ name, specifier, id, lifecycle, optional });
+  }
+  return neighbours;
 }
 
 export function convertLockfileToGraph(
@@ -38,13 +50,13 @@ export function convertLockfileToGraph(
 ): DependenciesGraph {
   const componentDevImporter = lockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
-  for (const [name, { version, specifier }] of Object.entries(componentDevImporter.devDependencies ?? {}) as any) {
-    const id = dp.refToRelative(version, name)!;
-    directDependencies.push({ name, specifier, id, lifecycle: 'dev' });
+  if (componentDevImporter.devDependencies != null) {
+    directDependencies.push(...importerDepsToNeighbours(componentDevImporter.devDependencies, 'dev', false));
   }
   const lockedPkg =
     lockfile.snapshots![`${pkgName}@${lockfile.importers![componentRootDir].dependencies![pkgName].version}`];
   for (const depType of ['dependencies' as const, 'optionalDependencies' as const]) {
+    const optional = depType === 'optionalDependencies';
     for (const [name, version] of Object.entries(lockedPkg[depType] ?? {})) {
       const id = dp.refToRelative(version, name)!;
       directDependencies.push({
@@ -52,6 +64,7 @@ export function convertLockfileToGraph(
         specifier: componentDevImporter[depType]?.[name]?.specifier ?? '*',
         id,
         lifecycle: 'runtime',
+        optional,
       });
     }
   }
@@ -81,17 +94,7 @@ function buildEdges(
 ): DependencyEdge[] {
   const edges: DependencyEdge[] = [];
   for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
-    const neighbours: DependencyNeighbour[] = [];
-    for (const { depTypeField, optional } of [
-      { depTypeField: 'dependencies', optional: false },
-      { depTypeField: 'optionalDependencies', optional: true },
-    ]) {
-      for (const [depPkgName, ref] of Object.entries((snapshot[depTypeField] ?? {}) as Record<string, string>)) {
-        const subDepPath = dp.refToRelative(ref, depPkgName);
-        if (subDepPath == null) continue;
-        neighbours.push({ id: subDepPath, optional });
-      }
-    }
+    const neighbours = extractDependenciesFromSnapshot(snapshot);
     const edge: DependencyEdge = {
       id: depPath,
       neighbours,
@@ -115,6 +118,24 @@ function buildEdges(
     neighbours: replaceFileVersionsWithPendingVersions(directDependencies),
   });
   return edges;
+}
+
+function extractDependenciesFromSnapshot(snapshot: any): DependencyNeighbour[] {
+  const dependencies: DependencyNeighbour[] = [];
+
+  for (const { depTypeField, optional } of [
+    { depTypeField: 'dependencies', optional: false },
+    { depTypeField: 'optionalDependencies', optional: true },
+  ]) {
+    for (const [name, ref] of Object.entries((snapshot[depTypeField] ?? {}) as Record<string, string>)) {
+      const subDepPath = dp.refToRelative(ref, name);
+      if (subDepPath != null) {
+        dependencies.push({ id: subDepPath, optional });
+      }
+    }
+  }
+
+  return dependencies;
 }
 
 function buildPackages(
