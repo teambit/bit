@@ -463,6 +463,7 @@ export class InstallMain {
    * @returns
    */
   private async reloadMovedEnvs() {
+    this.logger.debug('reloadMovedEnvs');
     const allEnvs = this.envs.getAllRegisteredEnvs();
     const movedEnvs = await pFilter(allEnvs, async (env) => {
       if (!env.__path) return false;
@@ -1277,13 +1278,6 @@ export class InstallMain {
     harmony: Harmony
   ) {
     const logger = loggerExt.createLogger(InstallAspect.id);
-    ipcEvents.registerGotEventSlot(async (eventName) => {
-      if (eventName !== 'onPostInstall') return;
-      logger.debug('got onPostInstall event, clear workspace and all components cache');
-      await workspace.clearCache();
-      workspace.clearAllComponentsCache();
-      await pMapSeries(postInstallSlot.values(), (fn) => fn());
-    });
     const installExt = new InstallMain(
       dependencyResolver,
       logger,
@@ -1301,6 +1295,13 @@ export class InstallMain {
       ipcEvents,
       harmony
     );
+    ipcEvents.registerGotEventSlot(async (eventName) => {
+      if (eventName !== 'onPostInstall') return;
+      logger.debug('got onPostInstall event, clear workspace and all components cache');
+      await workspace.clearCache();
+      await pMapSeries(postInstallSlot.values(), (fn) => fn());
+      await installExt.reloadMovedEnvs();
+    });
     if (issues) {
       issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));
     }

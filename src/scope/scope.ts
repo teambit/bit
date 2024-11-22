@@ -145,6 +145,10 @@ export default class Scope {
     this.lanes = new Lanes(this.objects, this.scopeJson);
     this.isBare = scopeProps.isBare ?? false;
     this.scopeImporter = ScopeComponentsImporter.getInstance(this);
+    this.setStagedSnaps();
+  }
+
+  setStagedSnaps() {
     this.stagedSnaps = StagedSnaps.load(this.path);
   }
 
