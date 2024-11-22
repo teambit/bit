@@ -9,7 +9,7 @@ import {
   type DependencyEdge,
   type DependencyNeighbour,
 } from '@teambit/legacy/dist/scope/models/version';
-import { type GetDependenciesGraphOptions, type ComponentIdByPkgName } from '@teambit/dependency-resolver';
+import { type CalcDepsGraphOptions, type ComponentIdByPkgName } from '@teambit/dependency-resolver';
 import { getLockfileImporterId } from '@pnpm/lockfile.fs';
 
 export function convertLockfileToGraphFromCapsule(
@@ -17,7 +17,7 @@ export function convertLockfileToGraphFromCapsule(
   {
     componentRelativeDir,
     componentIdByPkgName,
-  }: Pick<GetDependenciesGraphOptions, 'componentRelativeDir' | 'componentIdByPkgName'>
+  }: Pick<CalcDepsGraphOptions, 'componentRelativeDir' | 'componentIdByPkgName'>
 ): DependenciesGraph {
   const componentImporter = lockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
@@ -34,12 +34,7 @@ export function convertLockfileToGraphFromCapsule(
 
 export function convertLockfileToGraph(
   lockfile: LockfileFileV9,
-  {
-    pkgName,
-    componentRootDir,
-    componentRelativeDir,
-    componentIdByPkgName,
-  }: Omit<GetDependenciesGraphOptions, 'workspacePath'>
+  { pkgName, componentRootDir, componentRelativeDir, componentIdByPkgName }: Omit<CalcDepsGraphOptions, 'rootDir'>
 ): DependenciesGraph {
   const componentDevImporter = lockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];

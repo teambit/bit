@@ -210,20 +210,18 @@ export interface PackageManager {
 
   findUsages?(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string>;
 
-  calcDependenciesGraph?(options: GetDependenciesGraphOptions): Promise<DependenciesGraph | undefined>;
+  calcDependenciesGraph?(options: CalcDepsGraphOptions): Promise<DependenciesGraph | undefined>;
 
-  calcDependenciesGraphFromCapsule?(
-    options: GetDependenciesGraphOptionsFromCapsule
-  ): Promise<DependenciesGraph | undefined>;
+  calcDependenciesGraphFromCapsule?(options: CalcDepsGraphFromCapsuleOptions): Promise<DependenciesGraph | undefined>;
 }
 
-export interface GetDependenciesGraphOptionsFromCapsule {
+export interface CalcDepsGraphFromCapsuleOptions {
   componentRelativeDir: string;
   componentIdByPkgName: ComponentIdByPkgName;
-  workspacePath: string;
+  rootDir: string;
 }
 
-export interface GetDependenciesGraphOptions extends GetDependenciesGraphOptionsFromCapsule {
+export interface CalcDepsGraphOptions extends CalcDepsGraphFromCapsuleOptions {
   componentRootDir: string;
   pkgName: string;
 }

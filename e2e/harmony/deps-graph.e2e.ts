@@ -62,7 +62,6 @@ chai.use(require('chai-fs'));
     });
     describe('sign component and use dependency graph to generate a lockfile', () => {
       let signOutput: string;
-      let lockfile: LockfileFileV9;
       let signRemote;
       before(async () => {
         helper.command.export();
@@ -90,18 +89,6 @@ chai.use(require('chai-fs'));
         });
         expect(directDeps).deep.include({ name: 'is-odd', specifier: '1.0.0', id: 'is-odd@1.0.0', lifecycle: 'dev' });
       });
-      // it('should generate a lockfile', () => {
-      // const capsulesDir = signOutput.match(/running installation in root dir (\/[^\s]+)/)?.[1];
-      // expect(capsulesDir).to.be.a('string');
-      // lockfile = yaml.load(fs.readFileSync(path.join(stripAnsi(capsulesDir!), 'pnpm-lock.yaml'), 'utf8'));
-      // expect(lockfile['bit'].restoredFromModel).to.eq(true); // eslint-disable-line
-      // });
-      // it('should not update dependencies in the lockfile', () => {
-      // expect(lockfile.packages).to.have.property('@pnpm.e2e/pkg-with-1-dep@100.0.0');
-      // expect(lockfile.packages).to.have.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.0.0');
-      // expect(lockfile.packages).to.not.have.property('@pnpm.e2e/pkg-with-1-dep@100.1.0');
-      // expect(lockfile.packages).to.not.have.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.1.0');
-      // });
     });
     describe('imported component uses dependency graph to generate a lockfile', () => {
       before(async () => {

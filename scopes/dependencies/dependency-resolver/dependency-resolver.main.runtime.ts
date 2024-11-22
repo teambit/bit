@@ -580,7 +580,7 @@ export class DependencyResolverMain {
     }
   ): Promise<DependenciesGraph | undefined> {
     return this.getPackageManager()?.calcDependenciesGraph?.({
-      workspacePath: options.workspacePath,
+      rootDir: options.workspacePath,
       componentRootDir: this.getComponentDirInBitRoots(component, options),
       pkgName: this.getPackageName(component),
       componentRelativeDir,
@@ -591,12 +591,12 @@ export class DependencyResolverMain {
   async calcDependenciesGraphFromCapsule(
     componentRelativeDir: string,
     options: {
-      workspacePath: string;
+      capsulesDir: string;
       componentIdByPkgName: Map<string, ComponentID>;
     }
   ): Promise<DependenciesGraph | undefined> {
     return this.getPackageManager()?.calcDependenciesGraphFromCapsule?.({
-      workspacePath: options.workspacePath,
+      rootDir: options.capsulesDir,
       componentRelativeDir,
       componentIdByPkgName: options.componentIdByPkgName,
     });

@@ -13,8 +13,8 @@ import {
   BIT_CLOUD_REGISTRY,
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
-  type GetDependenciesGraphOptions,
-  type GetDependenciesGraphOptionsFromCapsule,
+  type CalcDepsGraphOptions,
+  type CalcDepsGraphFromCapsuleOptions,
 } from '@teambit/dependency-resolver';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
@@ -387,8 +387,8 @@ export class PnpmPackageManager implements PackageManager {
   /**
    * Calculating the dependencies graph of a given component using the lockfile.
    */
-  async calcDependenciesGraph(opts: GetDependenciesGraphOptions): Promise<DependenciesGraph | undefined> {
-    const lockfile = await readWantedLockfile(opts.workspacePath, { ignoreIncompatible: false });
+  async calcDependenciesGraph(opts: CalcDepsGraphOptions): Promise<DependenciesGraph | undefined> {
+    const lockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: false });
     if (!lockfile) {
       return undefined;
     }
@@ -417,9 +417,9 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async calcDependenciesGraphFromCapsule(
-    opts: GetDependenciesGraphOptionsFromCapsule
+    opts: CalcDepsGraphFromCapsuleOptions
   ): Promise<DependenciesGraph | undefined> {
-    const lockfile = await readWantedLockfile(opts.workspacePath, { ignoreIncompatible: false });
+    const lockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: false });
     if (!lockfile) {
       return undefined;
     }

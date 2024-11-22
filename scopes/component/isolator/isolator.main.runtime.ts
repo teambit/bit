@@ -721,10 +721,10 @@ export class IsolatorMain {
             capsuleList.map(async (capsule) => {
               capsule.component.state._consumer.dependenciesGraph =
                 await this.dependencyResolver.calcDependenciesGraphFromCapsule(
-                  path.relative(capsulesDir, capsule.wrkDir),
+                  path.relative(capsulesDir, capsule.path),
                   {
                     componentIdByPkgName,
-                    workspacePath: capsulesDir,
+                    capsulesDir,
                   }
                 );
             })

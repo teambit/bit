@@ -12,8 +12,8 @@ export type {
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
-  GetDependenciesGraphOptions,
-  GetDependenciesGraphOptionsFromCapsule,
+  CalcDepsGraphOptions,
+  CalcDepsGraphFromCapsuleOptions,
   ComponentIdByPkgName,
 } from './package-manager';
 export type { DependencyResolverWorkspaceConfig, NodeLinker } from './dependency-resolver-workspace-config';
