@@ -1,16 +1,18 @@
-/**
- * @flow
- * @deprecated
- * @TODO deprecated and should be removed from here and use fs-propogate-until instead...
- */
 import fs from 'fs-extra';
 import * as pathlib from 'path';
 
-import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, DOT_GIT_DIR, OLD_BIT_MAP, WORKSPACE_JSONC } from '../constants';
+import {
+  BIT_GIT_DIR,
+  BIT_HIDDEN_DIR,
+  BIT_MAP,
+  DOT_GIT_DIR,
+  OLD_BIT_MAP,
+  WORKSPACE_JSONC,
+} from '@teambit/legacy/dist/constants';
 
-export type ConsumerInfo = {
+export type WorkspaceInfo = {
   path: string;
-  hasConsumerConfig: boolean;
+  hasWorkspaceConfig: boolean;
   hasBitMap: boolean;
   hasScope: boolean;
 };
@@ -33,7 +35,7 @@ export function pathHasLocalScope(path: string) {
 /**
  * propagate from the given directory up to the root to find the consumer
  */
-export async function getConsumerInfo(absPath: string): Promise<ConsumerInfo | undefined> {
+export async function getWorkspaceInfo(absPath: string): Promise<WorkspaceInfo | undefined> {
   const searchPaths = buildPropagationPaths();
   searchPaths.unshift(absPath);
   for (let i = 0; i < searchPaths.length; i += 1) {
@@ -46,7 +48,7 @@ export async function getConsumerInfo(absPath: string): Promise<ConsumerInfo | u
       return {
         path,
         hasScope,
-        hasConsumerConfig,
+        hasWorkspaceConfig: hasConsumerConfig,
         hasBitMap,
       };
     }
