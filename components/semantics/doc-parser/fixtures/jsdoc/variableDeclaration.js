@@ -1,3 +1,4 @@
+// @bit-no-check
 /**
  * Adds two numbers.
  *

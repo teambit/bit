@@ -1,3 +1,4 @@
+// @bit-no-check
 /**
  * @namespace
  * @property {object}  defaults               - The default values for parties.

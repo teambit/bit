@@ -11,7 +11,7 @@ import { Dependencies, Dependency } from '../../consumer/component/dependencies'
 import { getRefsFromExtensions, SourceFile } from '@teambit/component.sources';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/extension-data';
-import { Doclet } from '../../jsdoc/types';
+import type { Doclet } from '@teambit/semantics.doc-parser';
 import logger from '../../logger/logger';
 import { getStringifyArgs, PathLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';

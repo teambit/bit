@@ -1,3 +1,4 @@
+// @bit-no-check
 /* Class representing a point. */
 class Point {
   /**

@@ -713,6 +713,9 @@
     },
     "scopes/component/sources": {
       "teambit.pkg/pkg": {}
+    },
+    "components/semantics/doc-parser": {
+      "teambit.pkg/pkg": {}
     }
   }
 }

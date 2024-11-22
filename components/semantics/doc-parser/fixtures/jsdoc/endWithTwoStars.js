@@ -1,3 +1,4 @@
+// @bit-no-check
 /**
  * Basic accordion component
  * @render react

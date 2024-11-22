@@ -1,3 +1,4 @@
+// @bit-no-check
 /**
  * @name invalidDescription
  * Adds two numbers.
