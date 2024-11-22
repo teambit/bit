@@ -27,7 +27,6 @@ import { ContentTransformer, onPersist, onRead } from './repository-hooks';
 import { getMaxSizeForObjects, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { Types } from '../object-registrar';
 import { Lane, ModelComponent } from '../models';
-import { ComponentFsCache } from '../../consumer/component/component-fs-cache';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
@@ -45,14 +44,12 @@ export default class Repository {
   remoteLanes!: RemoteLanes;
   unmergedComponents!: UnmergedComponents;
   persistMutex = new Mutex();
-  componentFsCache: ComponentFsCache;
   constructor(scopePath: string, scopeJson: ScopeJson) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
     this.onRead = onRead(scopePath, scopeJson);
     this.onPersist = onPersist(scopePath, scopeJson);
     this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects() });
-    this.componentFsCache = new ComponentFsCache(scopePath);
   }
 
   static async load({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {

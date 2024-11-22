@@ -23,7 +23,7 @@ import ComponentOverrides from '../config/component-overrides';
 import { ExtensionDataList } from '../config/extension-data';
 import Consumer from '../consumer';
 import ComponentOutOfSync from '../exceptions/component-out-of-sync';
-import { ComponentFsCache } from './component-fs-cache';
+import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
@@ -606,6 +606,6 @@ async function getLoadedFiles(
   return sourceFiles;
 }
 
-function _getDocsForFiles(files: SourceFile[], componentFsCache: ComponentFsCache): Array<Promise<Doclet[]>> {
+function _getDocsForFiles(files: SourceFile[], componentFsCache: FsCache): Array<Promise<Doclet[]>> {
   return files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file, componentFsCache)));
 }

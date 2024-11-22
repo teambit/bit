@@ -1031,6 +1031,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/html/modules/fetch-html-from-url"
     },
+    "modules/fs-cache": {
+        "name": "modules/fs-cache",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/modules/fs-cache"
+    },
     "modules/generate-expose-loaders": {
         "name": "modules/generate-expose-loaders",
         "scope": "teambit.webpack",

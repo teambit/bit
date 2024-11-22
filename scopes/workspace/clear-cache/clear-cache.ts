@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 // it's a hack, but I didn't find a better way to access the getCacheDir() function
 import { __TEST__ as v8CompileCache } from 'v8-compile-cache';
 import { Consumer, getConsumerInfo, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
-import { ComponentFsCache } from '@teambit/legacy/dist/consumer/component/component-fs-cache';
+import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import ScopeIndex from '@teambit/legacy/dist/scope/objects/scope-index';
 
@@ -52,7 +52,7 @@ class CacheClearer {
     }
     const scopePath = findScopePath(consumerInfo.path);
     if (!scopePath) return null;
-    const componentFsCache = new ComponentFsCache(scopePath);
+    const componentFsCache = new FsCache(scopePath);
     return componentFsCache.basePath;
   }
 
