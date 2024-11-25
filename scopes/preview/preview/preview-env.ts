@@ -1,5 +1,6 @@
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { AsyncEnvHandler, EnvHandler } from '@teambit/envs';
+import { EnvPreviewConfig } from './preview.main.runtime';
 
 /**
  * interface for implementing component previews
@@ -43,4 +44,9 @@ export type Preview = {
    * for dev server these dependencies will be aliased
    */
   getHostDependencies: () => string[];
+
+  /**
+   * Returns preview config like the strategy name to use when bundling the components for the preview
+   */
+  getPreviewConfig: () => EnvPreviewConfig;
 };
