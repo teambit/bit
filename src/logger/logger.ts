@@ -13,13 +13,14 @@ import { Logger as PinoLogger, Level } from 'pino';
 import yn from 'yn';
 import pMapSeries from 'p-map-series';
 
-import { Analytics } from '../analytics/analytics';
+import { Analytics } from '@teambit/legacy.analytics';
 import { getSync } from '../api/consumer/lib/global-config';
 import defaultHandleError from '../cli/default-error-handler';
 import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS } from '../constants';
 import { getWinstonLogger } from './winston-logger';
 import { getPinoLogger } from './pino-logger';
 import { Profiler } from './profiler';
+import { loader } from '@teambit/legacy.loader';
 
 export { Level as LoggerLevel };
 
@@ -32,12 +33,14 @@ export const shouldDisableConsole =
 
 const LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
 
+const DEFAULT_LEVEL = 'debug';
+
 const logLevel = getLogLevel();
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { winstonLogger, createExtensionLogger } = getWinstonLogger(logLevel, jsonFormat);
 
-const { pinoLogger, pinoLoggerConsole } = getPinoLogger(logLevel, jsonFormat);
+const { pinoLogger, pinoLoggerConsole, pinoSSELogger } = getPinoLogger(logLevel, jsonFormat);
 
 export interface IBitLogger {
   trace(message: string, ...meta: any[]): void;
@@ -152,7 +155,7 @@ class BitLogger implements IBitLogger {
         this.trace('a wrong color provided to logger.console method');
       }
     }
-    pinoLoggerConsole[level](messageStr);
+    loader.stopAndPersist({ text: messageStr });
   }
 
   /**
@@ -270,7 +273,17 @@ class BitLogger implements IBitLogger {
 
   switchToConsoleLogger(level?: Level) {
     this.logger = pinoLoggerConsole;
-    this.logger.level = level || 'debug';
+    this.logger.level = level || DEFAULT_LEVEL;
+  }
+
+  switchToSSELogger(level?: Level) {
+    this.logger = pinoSSELogger;
+    this.logger.level = level || DEFAULT_LEVEL;
+  }
+
+  switchToLogger(logger: PinoLogger, level?: Level) {
+    this.logger = logger;
+    this.logger.level = level || DEFAULT_LEVEL;
   }
 }
 
@@ -305,24 +318,34 @@ function determineWritingLogToScreen() {
     return;
   }
 
-  // more common scenario is when the user enters `--log` flag. It can be just "--log", which defaults to info.
-  // or it can have a level: `--log=error` or `--log error`: both syntaxes are supported
-  if (process.argv.includes('--log')) {
-    const level = process.argv.find((arg) => LEVELS.includes(arg)) as Level | undefined;
-    logger.switchToConsoleLogger(level as Level);
-    return;
-  }
-  LEVELS.forEach((level) => {
-    if (process.argv.includes(`--log=${level}`)) {
-      logger.switchToConsoleLogger(level as Level);
-    }
-  });
   if (process.argv.includes(`--log=profile`)) {
     logger.shouldConsoleProfiler = true;
+  }
+  const level = getLevelFromArgv(process.argv);
+  if (level) {
+    logger.switchToConsoleLogger(level);
   }
 }
 
 determineWritingLogToScreen();
+
+/**
+ * more common scenario is when the user enters `--log` flag. It can be just "--log", which defaults to info.
+ * or it can have a level: `--log=error` or `--log error`: both syntaxes are supported
+ */
+export function getLevelFromArgv(argv: string[]): Level | undefined {
+  let foundLevel: Level | undefined;
+  if (argv.includes('--log')) {
+    const found = process.argv.find((arg) => LEVELS.includes(arg)) as Level | undefined;
+    return found || DEFAULT_LEVEL;
+  }
+  LEVELS.forEach((level) => {
+    if (argv.includes(`--log=${level}`)) {
+      foundLevel = level as Level;
+    }
+  });
+  return foundLevel;
+}
 
 function getLogLevel(): Level {
   const defaultLevel = 'debug';

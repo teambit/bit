@@ -1,7 +1,9 @@
 import { ComponentMap } from '@teambit/component';
 import { ExecutionContext } from '@teambit/envs';
 
-export type FixType = 'problem' | 'suggestion' | 'layout';
+export type EslintFixType = 'problem' | 'suggestion' | 'layout';
+export type OxlintFixType = 'all' | 'suggestions' | 'dangerously';
+export type FixType = EslintFixType | OxlintFixType | string;
 export type FixTypes = Array<FixType>;
 
 export interface LinterOptions {

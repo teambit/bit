@@ -8,7 +8,11 @@ import { EjectAspect } from './eject.aspect';
 import { ComponentsEjector, EjectOptions, EjectResults } from './components-ejector';
 
 export class EjectMain {
-  constructor(private workspace: Workspace, private install: InstallMain, private logger: Logger) {}
+  constructor(
+    private workspace: Workspace,
+    private install: InstallMain,
+    private logger: Logger
+  ) {}
   async eject(componentIds: ComponentID[], ejectOptions: EjectOptions = {}): Promise<EjectResults> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const componentEjector = new ComponentsEjector(

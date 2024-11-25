@@ -1,10 +1,10 @@
 const configs = require('eslint-plugin-mdx/lib/configs');
 
 module.exports = {
-  extends: ['plugin:jest/recommended', 'plugin:import/recommended'],
+  extends: ['plugin:jest/recommended', 'plugin:import/recommended', 'plugin:react-hooks/recommended'],
   plugins: ['jest', 'import'],
   settings: {
-    'mdx/code-blocks': true,
+    'mdx/code-blocks': false,
     jest: {
       version: 27,
     },

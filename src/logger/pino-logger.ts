@@ -2,12 +2,16 @@ import prettifier from 'pino-pretty';
 import type { PrettyOptions } from 'pino-pretty';
 import pino, { Logger as PinoLogger, LoggerOptions } from 'pino';
 import { DEBUG_LOG } from '../constants';
+import { Writable } from 'stream';
+import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 
-export function getPinoLogger(
-  logLevel: string,
-  jsonFormat: string,
-  useWorkers = false
-): { pinoLogger: PinoLogger; pinoLoggerConsole: PinoLogger } {
+export type PinoLoggerResult = {
+  pinoLogger: PinoLogger;
+  pinoLoggerConsole: PinoLogger;
+  pinoSSELogger: PinoLogger;
+};
+
+export function getPinoLogger(logLevel: string, jsonFormat: string, useWorkers = false): PinoLoggerResult {
   // https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity
   const PinoLevelToSeverityLookup = {
     trace: 'DEBUG',
@@ -58,7 +62,7 @@ export function getPinoLogger(
 
   const prettyPrintConsole = {
     colorize: true,
-    ignore: 'hostname,pid,time,level,severity',
+    ignore: 'hostname,pid,level,severity',
   };
 
   if (useWorkers) {
@@ -72,7 +76,7 @@ export function getPinoLoggerWithWorkers(
   loggerOptions: LoggerOptions,
   prettyOptions: PrettyOptions,
   prettyOptionsConsole: PrettyOptions
-): { pinoLogger: PinoLogger; pinoLoggerConsole: PinoLogger } {
+): PinoLoggerResult {
   const transportFile = {
     target: jsonFormat ? 'pino/file' : 'pino-pretty',
     options: { ...(!jsonFormat ? prettyOptions : {}), destination: DEBUG_LOG, sync: true, mkdir: true }, // use 2 for stderr
@@ -100,8 +104,16 @@ export function getPinoLoggerWithWorkers(
 
   const pinoLogger = pino(pinoFileOpts);
   const pinoLoggerConsole = pino(pinoConsoleOpts);
+  const pinoSSELogger = pino(pinoConsoleOpts);
 
-  return { pinoLogger, pinoLoggerConsole };
+  return { pinoLogger, pinoLoggerConsole, pinoSSELogger };
+}
+
+export class ServerSendOutStream extends Writable {
+  _write(chunk, enc, next) {
+    sendEventsToClients('onLogWritten', { message: chunk.toString() });
+    next();
+  }
 }
 
 export function getPinoLoggerWithoutWorkers(
@@ -109,7 +121,7 @@ export function getPinoLoggerWithoutWorkers(
   loggerOptions: LoggerOptions,
   prettyOptions: PrettyOptions,
   prettyOptionsConsole: PrettyOptions
-): { pinoLogger: PinoLogger; pinoLoggerConsole: PinoLogger } {
+): PinoLoggerResult {
   const dest = pino.destination({
     dest: DEBUG_LOG, // omit for stdout
     sync: true, // no choice here :( otherwise, it looses data especially when an error is thrown (although pino.final is used to flush)
@@ -129,7 +141,14 @@ export function getPinoLoggerWithoutWorkers(
 
   const prettyConsoleStream = prettifier({
     ...prettyOptionsConsole,
-    destination: 1,
+    // it's important to use process.stdout here (and not "1"), otherwise, for cli-server when monkey patching the stdout it won't work
+    destination: process.stdout,
+    sync: true,
+  });
+
+  const prettySSEStream = prettifier({
+    ...prettyOptionsConsole,
+    destination: new ServerSendOutStream(),
     sync: true,
   });
 
@@ -139,5 +158,7 @@ export function getPinoLoggerWithoutWorkers(
 
   const pinoLoggerConsole = pino(loggerOptions, consoleStream);
 
-  return { pinoLogger, pinoLoggerConsole };
+  const prettySSELogger = pino(loggerOptions, prettySSEStream);
+
+  return { pinoLogger, pinoLoggerConsole, pinoSSELogger: prettySSELogger };
 }

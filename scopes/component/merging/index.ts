@@ -11,6 +11,15 @@ export {
   getWorkspaceConfigUpdateOutput,
 } from './merge-cmd';
 export { compIsAlreadyMergedMsg } from './merge-status-provider';
+export {
+  threeWayMerge,
+  getMergeStrategyInteractive,
+  MergeStrategy,
+  FileStatus,
+  MergeOptions,
+  MergeResultsThreeWay,
+} from './merge-version';
+export { MergeFileResult, MergeFileParams, mergeFiles } from './merge-files';
 export type {
   MergingMain,
   ComponentMergeStatus,

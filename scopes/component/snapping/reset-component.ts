@@ -2,9 +2,10 @@ import { BitError } from '@teambit/bit-error';
 import { ComponentID } from '@teambit/component-id';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import { ComponentsList } from '@teambit/legacy.component-list';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { RemoveMain } from '@teambit/remove';
 
 export type untagResult = { id: ComponentID; versions: string[]; component?: ModelComponent };
 
@@ -55,10 +56,11 @@ export async function removeLocalVersion(
 
 export async function removeLocalVersionsForAllComponents(
   consumer: Consumer,
+  remove: RemoveMain,
   lane?: Lane,
   head?: boolean
 ): Promise<untagResult[]> {
-  const componentsToUntag = await getComponentsWithOptionToUntag(consumer);
+  const componentsToUntag = await getComponentsWithOptionToUntag(consumer, remove);
   const force = true; // when removing local versions from all components, no need to check if the component is used as a dependency
   return removeLocalVersionsForMultipleComponents(componentsToUntag, lane, head, force, consumer.scope);
 }
@@ -105,10 +107,22 @@ export async function removeLocalVersionsForMultipleComponents(
   );
 }
 
-export async function getComponentsWithOptionToUntag(consumer: Consumer): Promise<ModelComponent[]> {
+export async function getComponentsWithOptionToUntag(
+  consumer: Consumer,
+  remove: RemoveMain
+): Promise<ModelComponent[]> {
   const componentList = new ComponentsList(consumer);
   const laneObj = await consumer.getCurrentLaneObject();
   const components: ModelComponent[] = await componentList.listExportPendingComponents(laneObj);
+  const removedStagedIds = await remove.getRemovedStaged();
+  if (!removedStagedIds.length) return components;
+  const removedStagedBitIds = removedStagedIds.map((id) => id);
+  const nonExistsInStaged = removedStagedBitIds.filter(
+    (id) => !components.find((c) => c.toComponentId().isEqualWithoutVersion(id))
+  );
+  if (!nonExistsInStaged.length) return components;
+  const modelComps = await Promise.all(nonExistsInStaged.map((id) => consumer.scope.getModelComponent(id)));
+  components.push(...modelComps);
 
   return components;
 }

@@ -353,6 +353,50 @@ export const BasicIdInput = () => {
       expect(devFiles.data.devPatterns).to.not.be.undefined;
     });
   });
+  describe('snap a new component in a new lane and existing dependency', () => {
+    let catLane;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      const bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+
+      const data = [
+        {
+          componentId: `${helper.scopes.remote}/foo`,
+          files: [
+            {
+              path: 'index.ts',
+              content: '',
+            },
+          ],
+          isNew: true,
+          aspects: {
+            'teambit.react/react': {},
+            'teambit.envs/envs': {
+              env: 'teambit.react/react',
+            },
+          },
+          newDependencies: [
+            {
+              id: `${helper.scopes.remote}/comp1`,
+              isComponent: true,
+              type: 'runtime',
+            },
+          ],
+        },
+      ];
+      // console.log('data', JSON.stringify(data));
+      helper.command.snapFromScope(bareTag.scopePath, data, `--lane ${helper.scopes.remote}/dev`);
+      catLane = helper.command.catLane('dev', bareTag.scopePath);
+    });
+    it('should create the lane and snap the new component into the new lane', () => {
+      expect(catLane.components).to.have.lengthOf(1);
+    });
+  });
   describe('adding dependents to the lane with --update-dependents flag', () => {
     let comp3HeadOnLane: string;
     let comp2HeadOnMain: string;
@@ -509,6 +553,34 @@ export const BasicIdInput = () => {
       it('should not throw an error saying it cannot find the version of the dependency', () => {
         expect(updateDepsOutput).to.not.include('unable to find a version');
         expect(updateDepsOutput).to.include('comp3 is not in the npm registry'); // not a mandatory test
+      });
+    });
+    describe('updating the dependent of the dependent', () => {
+      before(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteScope);
+        const bareTag = helper.scopeHelper.getNewBareScope('-bare-merge');
+        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+        const data = [
+          {
+            componentId: `${helper.scopes.remote}/comp1`,
+            message: 'msg',
+          },
+        ];
+        const flags = `--lane ${helper.scopes.remote}/dev --update-dependents --push`;
+        // console.log('data', JSON.stringify(data), 'flags', flags);
+        snapResult = helper.command.snapFromScopeParsed(bareTag.scopePath, data, flags);
+      });
+      it('should update successfully with dependencies from update-dependents and export it correctly', () => {
+        const lane = helper.command.catLane('dev', helper.scopes.remotePath);
+        expect(lane).to.have.property('updateDependents');
+        expect(lane.updateDependents).to.have.lengthOf(2);
+
+        const comp1Str = lane.updateDependents.find((c) => c.includes('comp1'));
+        const comp2Str = lane.updateDependents.find((c) => c.includes('comp2'));
+        const comp2Ver = comp2Str.split('@')[1];
+        const comp1 = helper.command.catComponent(comp1Str, helper.scopes.remotePath);
+        expect(comp1.dependencies[0].id.name).to.equal('comp2');
+        expect(comp1.dependencies[0].id.version).to.equal(comp2Ver);
       });
     });
   });

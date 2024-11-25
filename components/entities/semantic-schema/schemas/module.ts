@@ -5,11 +5,15 @@ import { ExportSchema } from './export';
 
 export class ModuleSchema extends SchemaNode {
   // exports could either be re exports (export declarations) or nodes with export modifier
-  exports: (ExportSchema | SchemaNode)[];
+  exports: SchemaNode[];
   internals: SchemaNode[];
   namespace?: string;
 
-  constructor(readonly location: SchemaLocation, exports: (ExportSchema | SchemaNode)[], internals: SchemaNode[]) {
+  constructor(
+    readonly location: SchemaLocation,
+    exports: SchemaNode[],
+    internals: SchemaNode[]
+  ) {
     super();
     this.exports = exports;
     this.internals = internals;
@@ -20,23 +24,46 @@ export class ModuleSchema extends SchemaNode {
   }
 
   flatExportsRecursively() {
-    this.exports = this.exports.reduce((acc, exp) => {
-      if (exp instanceof ModuleSchema) {
-        exp.flatExportsRecursively();
-        if (exp.namespace) return [...acc, exp];
-        return [...acc, ...exp.exports];
-      }
-      return [...acc, exp];
-    }, [] as (ExportSchema | SchemaNode)[]);
+    this.exports = this.exports.reduce(
+      (acc, exp) => {
+        if (exp instanceof ModuleSchema) {
+          exp.flatExportsRecursively();
+          if (exp.namespace) return [...acc, exp];
+          return [...acc, ...exp.exports];
+        }
+        return [...acc, exp];
+      },
+      [] as (ExportSchema | SchemaNode)[]
+    );
   }
 
-  toString() {
+  toString(options?: { color?: boolean }) {
     if (!this.namespace)
       throw new Error(
         'toString() should not be called on a module without namespace, make sure this.flatExportsRecursively() is called'
       );
-    const exportsStr = this.exports.map((m) => `* ${m.toString()}`).join('\n');
-    return `${chalk.bold.underline(this.namespace)}\n${exportsStr}`;
+    const boldUnderline = options?.color ? chalk.bold.underline : (str: string) => str;
+
+    const exportsStr = this.exports.map((m) => `* ${m.toString(options)}`).join('\n');
+    return `${boldUnderline(this.namespace)}\n${exportsStr}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    if (!this.namespace)
+      throw new Error(
+        'toFullSignature() should not be called on a module without namespace; make sure this.flatExportsRecursively() is called'
+      );
+
+    const exportsSignatures = this.exports.map((m) => m.toFullSignature(options)).join('\n');
+
+    let signature = `${this.namespace}\n${exportsSignatures}`;
+
+    if (options?.showDocs && this.doc) {
+      const docString = this.doc.toFullSignature();
+      signature = `${docString}\n${signature}`;
+    }
+
+    return signature;
   }
 
   toObject() {

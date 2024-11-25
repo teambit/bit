@@ -15,6 +15,7 @@ import { DuplicateCommandError } from './duplicate-command-error';
 import { KeyEvent } from './model/key-event';
 import { MousetrapStub } from './mousetrap-stub';
 import { openCommandBarKeybinding } from './keybinding';
+import { CommandBarButton } from './command-bar.button';
 import styles from './command-bar.module.scss';
 
 const RESULT_LIMIT = 5;
@@ -166,7 +167,13 @@ export class CommandBarUI {
     );
   };
 
-  constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot, private config: CommandBarConfig) {}
+  CommandBarButton = () => <CommandBarButton onClick={() => this.setVisibility?.(true)} />;
+
+  constructor(
+    private searcherSlot: SearcherSlot,
+    private commandSlot: CommandSlot,
+    private config: CommandBarConfig
+  ) {}
 
   static dependencies = [UIAspect, PubsubAspect, ReactRouterAspect];
   static slots = [Slot.withType<SearchProvider>(), Slot.withType<CommandEntry[]>()];

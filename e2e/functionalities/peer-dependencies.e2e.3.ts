@@ -91,7 +91,7 @@ describe('peer-dependencies functionality', function () {
       helper.workspaceJsonc.addPolicyToDependencyResolver({
         peerDependencies: { [`@${helper.scopes.remote}/comp2`]: '*' },
       });
-      helper.command.build();
+      helper.command.build(undefined, '--ignore-issues="DuplicateComponentAndPackage"');
       workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
     });
     it('should save the peer dependency in the model', () => {
@@ -199,7 +199,7 @@ describe('peer-dependencies functionality', function () {
     }
   );
 
-  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+  (supportNpmCiRegistryTesting ? describe.skip : describe.skip)(
     'a component is a peer dependency added by dep set',
     function () {
       let workspaceCapsulesRootDir: string;

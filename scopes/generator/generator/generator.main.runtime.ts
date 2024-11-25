@@ -16,14 +16,15 @@ import { BitError } from '@teambit/bit-error';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { TrackerAspect, TrackerMain } from '@teambit/tracker';
 import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-component-helper';
-import { compact } from 'lodash';
+import { compact, uniq } from 'lodash';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
 import { generatorSchema } from './generator.graphql';
-import { ComponentGenerator, GenerateResult, OnComponentCreateFn } from './component-generator';
+import { ComponentGenerator, GenerateResult, InstallOptions, OnComponentCreateFn } from './component-generator';
 import { WorkspaceGenerator } from './workspace-generator';
 import { WorkspaceTemplate } from './workspace-template';
 import { NewCmd, NewOptions } from './new.cmd';
@@ -90,7 +91,8 @@ export class GeneratorMain {
     private tracker: TrackerMain,
     private logger: Logger,
     private git: GitMain,
-    private wsConfigFiles: WorkspaceConfigFilesMain
+    private wsConfigFiles: WorkspaceConfigFilesMain,
+    private deprecation: DeprecationMain
   ) {}
 
   /**
@@ -297,7 +299,8 @@ export class GeneratorMain {
   async generateComponentTemplate(
     componentNames: string[],
     templateName: string,
-    options: Partial<CreateOptions>
+    options: Partial<CreateOptions>,
+    installOptions?: InstallOptions
   ): Promise<GenerateResult[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     await this.loadAspects();
@@ -338,7 +341,8 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       this.logger,
       this.onComponentCreateSlot,
       templateWithId.id,
-      envId
+      envId,
+      installOptions
     );
     return componentGenerator.generate(options.force);
   }
@@ -380,8 +384,18 @@ the reason is that after refactoring, the code will have this invalid class: "cl
 
     if (!workspaceTemplate) throw new BitError(`template "${templateName}" was not found`);
     const workspaceGenerator = new WorkspaceGenerator(workspaceName, workspacePath, options, workspaceTemplate, aspect);
+    await this.warnAboutDeprecation(aspect);
     await workspaceGenerator.generate();
     return { workspacePath, appName: workspaceTemplate.appName };
+  }
+
+  private async warnAboutDeprecation(aspect?: Component) {
+    if (!aspect) return;
+    const deprecationInfo = await this.deprecation.getDeprecationInfo(aspect);
+    if (deprecationInfo.isDeprecate) {
+      const newStarterMsg = deprecationInfo.newId ? `, use "${deprecationInfo.newId.toString()}" instead` : '';
+      this.logger.consoleWarning(`the starter "${aspect?.id.toString()}" is deprecated${newStarterMsg}`);
+    }
   }
 
   private async getAllComponentTemplatesDescriptorsFlattened(aspectId?: string): Promise<Array<TemplateDescriptor>> {
@@ -479,7 +493,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       remoteEnvsAspect = globals.remoteEnvsAspect;
       fullAspectId = globals.fullAspectId;
     }
-    const allIds = configEnvs?.concat(ids).concat([aspectId, fullAspectId]).filter(Boolean);
+    const allIds = uniq(configEnvs?.concat(ids).concat([aspectId, fullAspectId]).filter(Boolean));
     const envs = await this.loadEnvs(allIds, remoteEnvsAspect);
     const templates = envs.flatMap((env) => {
       if (!env.env.getGeneratorTemplates) return [];
@@ -541,6 +555,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     LoggerAspect,
     GitAspect,
     WorkspaceConfigFilesAspect,
+    DeprecationAspect,
   ];
 
   static runtime = MainRuntime;
@@ -558,6 +573,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       loggerMain,
       git,
       wsConfigFiles,
+      deprecation,
     ]: [
       Workspace,
       CLIMain,
@@ -569,13 +585,14 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       TrackerMain,
       LoggerMain,
       GitMain,
-      WorkspaceConfigFilesMain
+      WorkspaceConfigFilesMain,
+      DeprecationMain,
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot, onComponentCreateSlot]: [
       ComponentTemplateSlot,
       WorkspaceTemplateSlot,
-      OnComponentCreateSlot
+      OnComponentCreateSlot,
     ]
   ) {
     const logger = loggerMain.createLogger(GeneratorAspect.id);
@@ -592,7 +609,8 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       tracker,
       logger,
       git,
-      wsConfigFiles
+      wsConfigFiles,
+      deprecation
     );
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);

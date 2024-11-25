@@ -6,10 +6,10 @@ import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import groupArray from 'group-array';
 import R from 'ramda';
+import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { compact, flatten, partition, uniq } from 'lodash';
 import { Scope } from '..';
 import ConsumerComponent from '../../consumer/component';
-import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import ComponentVersion from '../component-version';
@@ -22,14 +22,13 @@ import { getScopeRemotes } from '../scope-remotes';
 import VersionDependencies from '../version-dependencies';
 import { BitObjectList } from '../objects/bit-object-list';
 import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
-import { concurrentComponentsLimit } from '../../utils/concurrency';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { BuildStatus } from '../../constants';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
 import { getAllVersionHashes } from './traverse-versions';
-import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
-import { pMapPool } from '../../utils/promise-with-concurrent';
-import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
+import { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 
 type HashesPerRemote = { [remoteName: string]: string[] };
 
@@ -107,6 +106,7 @@ export default class ScopeComponentsImporter {
     ignoreMissingHead = false,
     preferDependencyGraph = true,
     includeUnexported = false,
+    includeUpdateDependents = false,
     reason,
   }: {
     ids: ComponentIdList;
@@ -118,6 +118,7 @@ export default class ScopeComponentsImporter {
     ignoreMissingHead?: boolean; // needed when fetching "main" objects when on a lane
     preferDependencyGraph?: boolean; // if an external is missing and the remote has it with the dependency graph, don't fetch all its dependencies
     includeUnexported?: boolean; // whether filter out new component-ids that were not exported yet (default), or not (for cases we want to fix out-of-sync scenarios)
+    includeUpdateDependents?: boolean; // whether to include the updateDependents components on a lane
     reason?: string; // reason why this import is needed
   }): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
@@ -166,16 +167,15 @@ export default class ScopeComponentsImporter {
     logger.debug('importMany', `total missing externals: ${uniqExternals.length}`);
     const remotes = await getScopeRemotes(this.scope);
     // we don't care about the VersionDeps returned here as it may belong to the dependencies
-    await this.getExternalMany(
-      uniqExternals,
-      remotes,
+    await this.getExternalMany(uniqExternals, remotes, {
       throwForDependencyNotFound,
       lane,
-      throwForSeederNotFound,
+      throwOnUnavailableScope: throwForSeederNotFound,
       preferDependencyGraph,
       includeUnexported,
-      reason
-    );
+      includeUpdateDependents,
+      reason,
+    });
 
     if (shouldRefetchIncompleteHistory) {
       await this.warnForIncompleteVersionHistory(incompleteVersionHistory);
@@ -728,8 +728,8 @@ export default class ScopeComponentsImporter {
       reasonForImport,
     }: {
       lane?: Lane;
-      onlyIfBuilt?: Boolean;
-      skipComponentsWithDepsGraph?: Boolean;
+      onlyIfBuilt?: boolean;
+      skipComponentsWithDepsGraph?: boolean;
       reasonForImport?: string;
     } = {}
   ): Promise<VersionDependencies[]> {
@@ -804,12 +804,23 @@ export default class ScopeComponentsImporter {
   private async getExternalMany(
     ids: ComponentID[],
     remotes: Remotes,
-    throwForDependencyNotFound = false,
-    lane?: Lane,
-    throwOnUnavailableScope = true,
-    preferDependencyGraph = false,
-    includeUnexported = false,
-    reason?: string
+    {
+      throwForDependencyNotFound = false,
+      lane,
+      throwOnUnavailableScope = true,
+      preferDependencyGraph = false,
+      includeUnexported = false,
+      includeUpdateDependents = false,
+      reason,
+    }: {
+      throwForDependencyNotFound?: boolean;
+      lane?: Lane;
+      throwOnUnavailableScope?: boolean;
+      preferDependencyGraph?: boolean;
+      includeUnexported?: boolean;
+      includeUpdateDependents?: boolean;
+      reason?: string;
+    } = {}
   ): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
     lane = await this.getLaneForFetcher(lane);
@@ -821,7 +832,6 @@ export default class ScopeComponentsImporter {
       if (this.isIdLocal(id, includeUnexported))
         throw new Error(`getExternalMany expects to get external ids only, got ${id.toString()}`);
     });
-    enrichContextFromGlobal(Object.assign({}, { requestedBitIds: ids.map((id) => id.toString()) }));
     // avoid re-fetching the components with all deps if they're still un-built
     const onlyIfBuilt = ids.every((id) => this.sources.isUnBuiltInCache(id));
     await new ObjectFetcher(
@@ -832,6 +842,7 @@ export default class ScopeComponentsImporter {
         withoutDependencies: false, // backward compatibility. not needed for remotes > 0.0.900
         includeDependencies: true,
         includeVersionHistory: true,
+        includeUpdateDependents,
         onlyIfBuilt,
         preferDependencyGraph,
         laneId: lane?.id(),
@@ -909,7 +920,6 @@ export default class ScopeComponentsImporter {
     logger.debug(`getExternalManyWithoutDeps, ${left.length} left. Fetching them from a remote. ids: ${leftIdsStr}`);
     const context = { requestedBitIds: leftIds.map((id) => id.toString()) };
     lane = await this.getLaneForFetcher(lane);
-    enrichContextFromGlobal(context);
     const isUsingImporter = isFeatureEnabled(CLOUD_IMPORTER) || isFeatureEnabled(CLOUD_IMPORTER_V2);
     await new ObjectFetcher(
       this.repo,
@@ -935,7 +945,9 @@ export default class ScopeComponentsImporter {
   }
 
   private async getLaneForFetcher(lane?: Lane): Promise<Lane | undefined> {
-    if (lane && !lane.isNew) return lane;
+    if (lane) {
+      return lane.isNew ? undefined : lane;
+    }
     if (!this.shouldOnlyFetchFromCurrentLane) return undefined;
     const currentLane = await this.scope.getCurrentLaneObject();
     return currentLane && !currentLane.isNew ? currentLane : undefined;

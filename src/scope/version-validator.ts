@@ -1,21 +1,20 @@
+/* eslint-disable complexity */
 import { PackageJsonValidator as PJV } from '@teambit/pkg.package-json.validator';
 import R from 'ramda';
 import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { isSnap } from '@teambit/component-version';
+import { isSnap, isTag } from '@teambit/component-version';
 import { DEPENDENCIES_FIELDS } from '../constants';
 import { SchemaName } from '../consumer/component/component-schema';
 import { Dependencies } from '../consumer/component/dependencies';
 import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
-import PackageJsonFile from '../consumer/component/package-json-file';
-import { getArtifactsFiles } from '../consumer/component/sources/artifact-files';
+import { getArtifactsFiles, PackageJsonFile } from '@teambit/component.sources';
 import { componentOverridesForbiddenFields, nonPackageJsonFields } from '../consumer/config/component-overrides';
 import { ExtensionDataEntry, ExtensionDataList } from '../consumer/config/extension-data';
-import { isValidPath } from '../utils';
-import { PathLinux } from '../utils/path';
-import validateType from '../utils/validate-type';
+import { PathLinux, isValidPath } from '@teambit/legacy.utils';
+import { validateType } from './validate-type';
 import VersionInvalid from './exceptions/version-invalid';
 import Version from './models/version';
 
@@ -318,6 +317,11 @@ ${duplicationStr}`);
       });
     });
   }
+  const ver = version.componentId?.version;
+  if (ver && !isSnap(ver) && !isTag(ver)) {
+    throw new VersionInvalid(`${message}, the version "${ver}" is invalid. it's not a hash (snap) nor a tag`);
+  }
+
   if (version.isLegacy) {
     // mainly to make sure that all Harmony components are saved with schema
     // if they don't have schema, they'll fail on this test

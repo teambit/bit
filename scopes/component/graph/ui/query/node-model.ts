@@ -1,16 +1,18 @@
-import { ComponentModel } from '@teambit/component';
+import { ComponentID, ComponentModel } from '@teambit/component';
 import { RawNode } from './get-graph.query';
 
 export class NodeModel {
   id: string;
-  component: ComponentModel;
+  component?: ComponentModel;
+  componentId: ComponentID;
 
   static from(rawNode: RawNode) {
     const node = new NodeModel();
     node.id = rawNode.id;
     // @TODO - component model should not expect all fields to have values
     // @ts-ignore
-    node.component = ComponentModel.from(rawNode.component);
+    node.component = rawNode.component ? ComponentModel.from(rawNode.component) : undefined;
+    node.componentId = node.component ? node.component.id : ComponentID.fromString(rawNode.id);
     return node;
   }
 }

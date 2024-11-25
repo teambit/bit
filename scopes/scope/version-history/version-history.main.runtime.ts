@@ -15,17 +15,21 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { ModelComponent, VersionHistory } from '@teambit/legacy/dist/scope/models';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
+import { ExternalActions } from '@teambit/legacy.scope-api';
 import { BuildVersionHistoryAction } from './build-version-history-action';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { compact } from 'lodash';
 import { VersionHistoryGraph } from '@teambit/legacy/dist/scope/models/version-history';
+import { CatVersionHistoryCmd } from './cat-version-history-cmd';
 
 type BuildResult = { err?: Error; added?: string[] };
 type ShowResult = { node: string; pointers: string[]; edges: Array<{ hash: string; type: string }> };
 
 export class VersionHistoryMain {
-  constructor(private scope: ScopeMain, private logger: Logger) {}
+  constructor(
+    private scope: ScopeMain,
+    private logger: Logger
+  ) {}
 
   async build(id: ComponentID, options: BuildOptions = {}): Promise<BuildResult> {
     const { fromSnap } = options;
@@ -166,7 +170,7 @@ export class VersionHistoryMain {
       new VersionHistoryShowCmd(versionHistory),
       new VersionHistoryBuildCmd(versionHistory),
     ];
-    cli.register(versionHistoryCmd);
+    cli.register(versionHistoryCmd, new CatVersionHistoryCmd());
     ExternalActions.externalActions.push(new BuildVersionHistoryAction(versionHistory));
     return versionHistory;
   }

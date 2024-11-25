@@ -1,13 +1,20 @@
 import { SchemaLocation, SchemaNode } from '../schema-node';
 
 export class LiteralValueSchema extends SchemaNode {
-  constructor(readonly location: SchemaLocation, readonly value: string) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly value: string
+  ) {
     super();
     this.value = this.value.replace(/^['"]|['"]$/g, '');
   }
 
   toString() {
     return this.value;
+  }
+
+  toFullSignature(): string {
+    return this.toString();
   }
 
   toObject() {

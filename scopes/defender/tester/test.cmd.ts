@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { Logger } from '@teambit/logger';
 import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { Timer } from '@teambit/legacy/dist/toolbox/timer';
+import { Timer } from '@teambit/toolbox.time.timer';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import type { TesterMain } from './tester.main.runtime';
 
@@ -15,6 +15,7 @@ type TestFlags = {
   scope?: string;
   junit?: string;
   coverage?: boolean;
+  updateSnapshot: boolean;
 };
 
 export class TestCmd implements Command {
@@ -37,6 +38,7 @@ export class TestCmd implements Command {
     ['', 'junit <filepath>', 'write tests results as JUnit XML format into the specified file path'],
     ['', 'coverage', 'show code coverage data'],
     ['e', 'env <id>', 'test only components assigned the given env'],
+    ['', 'update-snapshot', 'if supported by the tester, re-record every snapshot that fails during the test run'],
     [
       's',
       'scope <scope-name>',
@@ -45,11 +47,25 @@ export class TestCmd implements Command {
     // TODO: we need to reduce this redundant casting every time.
   ] as CommandOptions;
 
-  constructor(private tester: TesterMain, private workspace: Workspace, private logger: Logger) {}
+  constructor(
+    private tester: TesterMain,
+    private workspace: Workspace,
+    private logger: Logger
+  ) {}
 
   async report(
     [userPattern]: [string],
-    { watch = false, debug = false, all = false, env, scope, junit, coverage = false, unmodified = false }: TestFlags
+    {
+      watch = false,
+      debug = false,
+      all = false,
+      env,
+      scope,
+      junit,
+      coverage = false,
+      unmodified = false,
+      updateSnapshot = false,
+    }: TestFlags
   ) {
     const timer = Timer.create();
     const scopeName = typeof scope === 'string' ? scope : undefined;
@@ -97,6 +113,7 @@ otherwise, only new and modified components will be tested`);
         debug,
         env,
         coverage,
+        updateSnapshot,
       });
     } else {
       const tests = await this.tester.test(components, {
@@ -105,8 +122,13 @@ otherwise, only new and modified components will be tested`);
         env,
         junit,
         coverage,
+        updateSnapshot,
       });
       if (tests.hasErrors()) code = 1;
+      if (process.exitCode && process.exitCode !== 0 && typeof process.exitCode === 'number') {
+        // this is needed for testers such as "vitest", where it sets the exitCode to non zero when the coverage is not met.
+        code = process.exitCode;
+      }
     }
     const { seconds } = timer.stop();
 

@@ -2,7 +2,7 @@ import { clone, equals, forEachObjIndexed } from 'ramda';
 import { forEach, isEmpty, pickBy, mapValues } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
-import { versionParser, isHash, isTag } from '@teambit/component-version';
+import { versionParser, isHash, isTag, isSnap, LATEST_VERSION } from '@teambit/component-version';
 import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -12,11 +12,12 @@ import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { BitId } from '@teambit/legacy-bit-id';
 import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
-import { License, SourceFile } from '../../consumer/component/sources';
+import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
-import { getStringifyArgs } from '../../utils';
+import { getStringifyArgs } from '@teambit/legacy.utils';
+import { getLatestVersion, validateVersion } from '@teambit/pkg.modules.semver-helper';
 import ComponentObjects from '../component-objects';
 import { SnapsDistance } from '../component-ops/snaps-distance';
 import { getDivergeData } from '../component-ops/get-diverge-data';
@@ -40,9 +41,7 @@ import ScopeMeta from './scopeMeta';
 import Source from './source';
 import Version from './version';
 import VersionHistory, { VersionParents } from './version-history';
-import { getLatestVersion } from '../../utils/semver-helper';
 import { ObjectItem } from '../objects/object-list';
-import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
 import { SchemaName } from '../../consumer/component/component-schema';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { errorIsTypeOfMissingObject } from '../component-ops/scope-components-importer';
@@ -554,6 +553,7 @@ export default class Component extends BitObject {
         onLane: versionInfo.onLane,
         deleted: versionInfo.tag && removeRange && semver.satisfies(versionInfo.tag, removeRange),
         deprecated: versionInfo.tag && deprecationRange && semver.satisfies(versionInfo.tag, deprecationRange),
+        hidden: versionInfo.version?.hidden,
       };
     });
     // sort from earliest to latest
@@ -603,7 +603,9 @@ export default class Component extends BitObject {
     if (exactVersion && this.versions[exactVersion]) {
       throw new VersionAlreadyExists(exactVersion, this.id());
     }
-    return exactVersion || this.version(releaseType, incrementBy, preReleaseId);
+    const version = exactVersion || this.version(releaseType, incrementBy, preReleaseId);
+    validateVersion(version);
+    return version;
   }
 
   isEqual(component: Component, considerOrphanedVersions = true): boolean {
@@ -789,15 +791,10 @@ export default class Component extends BitObject {
     return componentObject;
   }
 
-  async loadVersion(
-    versionStr: string,
-    repository: Repository,
-    throws = true,
-    preferInMemoryObjects = false
-  ): Promise<Version> {
+  async loadVersion(versionStr: string, repository: Repository, throws = true): Promise<Version> {
     const versionRef = this.getRef(versionStr);
     if (!versionRef) throw new VersionNotFound(versionStr, this.id());
-    const version = await repository.load(versionRef, false, preferInMemoryObjects);
+    const version = await repository.load(versionRef, false);
     if (!version && throws) throw new VersionNotFoundOnFS(versionStr, this.id());
     return version as Version;
   }
@@ -831,8 +828,8 @@ export default class Component extends BitObject {
       const refs = versionObject.refsWithOptions(false, false);
       refsWithoutArtifacts.push(...refs);
       const refsFromExtensions = getRefsFromExtensions(versionObject.extensions);
-      locallyChangedHashes.includes(versionObject.hash().toString())
-        ? artifactsRefs.push(...refsFromExtensions)
+      locallyChangedHashes.includes(versionObject.hash().toString()) // @ts-ignore todo: remove after deleting teambit.legacy
+        ? artifactsRefs.push(...refsFromExtensions) // @ts-ignore todo: remove after deleting teambit.legacy
         : artifactsRefsFromExportedVersions.push(...refsFromExtensions);
     });
     const loadedRefs: ObjectItem[] = [];
@@ -1004,8 +1001,17 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
    */
   async toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
     logger.trace(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
-    const componentVersion = this.toComponentVersion(versionStr);
+    let componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
+    // in case the the version is a short-hash, it should be converted to a full hash.
+    if (
+      versionStr !== LATEST_VERSION &&
+      !isTag(versionStr) &&
+      !isSnap(versionStr) &&
+      version.hash().toString() !== versionStr
+    ) {
+      componentVersion = new ComponentVersion(this, version.hash().toString());
+    }
     const loadFileInstance = (ClassName) => async (file) => {
       const loadP = file.file.load(repository);
       const content: Source = await loadP;

@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
-import { FileStatus } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
+import { FileStatus } from '@teambit/merging';
 import type { ImporterMain } from './importer.main.runtime';
 import { ImportDetails, ImportStatus } from './import-components';
 

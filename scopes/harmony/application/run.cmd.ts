@@ -9,6 +9,7 @@ type RunOptions = {
   watch: boolean;
   ssr: boolean;
   port: string;
+  args: string;
 };
 
 export class RunCmd implements Command {
@@ -30,6 +31,11 @@ export class RunCmd implements Command {
     ['v', 'verbose', 'show verbose output for inspection and print stack trace'],
     // ['', 'skip-watch', 'avoid running the watch process that compiles components in the background'],
     ['w', 'watch', 'watch and compile your components upon changes'],
+    [
+      'a',
+      'args <argv>',
+      'the arguments passing to the app. for example, --args="--a=1 --b". don\'t forget to use quotes to wrap the value to escape special characters.',
+    ],
   ] as CommandOptions;
 
   constructor(
@@ -41,7 +47,8 @@ export class RunCmd implements Command {
     private logger: Logger
   ) {}
 
-  async wait([appName]: [string], { dev, watch, ssr, port: exactPort }: RunOptions) {
+  async wait([appName]: [string], { dev, watch, ssr, port: exactPort, args }: RunOptions) {
+    await this.application.loadAllAppsAsAspects();
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
     this.logger.off();
     const { port, errors, isOldApi } = await this.application.runApp(appName, {
@@ -49,6 +56,7 @@ export class RunCmd implements Command {
       watch,
       ssr,
       port: +exactPort,
+      args,
     });
 
     if (errors) {
@@ -61,5 +69,22 @@ export class RunCmd implements Command {
     if (isOldApi) {
       this.logger.console(`${appName} app is running on http://localhost:${port}`);
     }
+
+    /**
+     * normally, when running "bit run <app-name>", the app is running in the background, which keeps the event loop busy.
+     * when the even loop is busy, the process doesn't exit, which is what we're looking for.
+     *
+     * however, if the app is not running in the background, the event loop is free, and the process exits. this is
+     * very confusing to the end user, because there is no error and no message indicating what's happening.
+     *
+     * this "beforeExit" event is a good place to catch this case and print a message to the user.
+     * it's better than using "exit" event, which can caused by the app itself running "process.exit".
+     * "beforeExit" is called when the event loop is empty and the process is about to exit.
+     */
+    process.on('beforeExit', (code) => {
+      if (code === 0) {
+        this.logger.console('no app is running in the background, please check your app');
+      }
+    });
   }
 }

@@ -9,7 +9,10 @@ import { ReadmeEnv } from './readme.env';
 export class ReadmeMain {
   static runtime = MainRuntime;
   static dependencies = [EnvsAspect, MDXAspect, DocsAspect];
-  constructor(protected env: ReadmeEnv & MdxEnv, private docs: DocsMain) {}
+  constructor(
+    protected env: ReadmeEnv & MdxEnv,
+    private docs: DocsMain
+  ) {}
   icon() {
     return 'https://static.bit.dev/bit-icons/file-text.svg';
   }

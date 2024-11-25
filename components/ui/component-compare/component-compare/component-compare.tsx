@@ -104,7 +104,7 @@ function CompareMenuNav({ tabs, state, hooks, changes: changed }: ComponentCompa
           {
             ...tab,
             props: {
-              ...(tab.props || {}),
+              ...tab.props,
               key,
               displayName: (!loading && tab.displayName) || undefined,
               active: isActive,
@@ -279,6 +279,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   } = props;
 
   const baseVersion = useCompareQueryParam('baseVersion');
+
   const component = useContext(ComponentContext);
   const componentDescriptor = useContext(ComponentDescriptorContext);
   const location = useLocation();

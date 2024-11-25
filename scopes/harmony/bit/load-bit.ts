@@ -3,8 +3,11 @@
 process.on('uncaughtException', (err) => {
   // eslint-disable-next-line no-console
   console.error('uncaughtException', err);
+
   process.exit(1);
 });
+
+process.env.BROWSERSLIST_IGNORE_OLD_DATA = 'true';
 
 import './hook-require';
 
@@ -16,29 +19,31 @@ import {
   getCoreAspectName,
 } from '@teambit/aspect-loader';
 import json from 'comment-json';
+import userHome from 'user-home';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import { Harmony, RuntimeDefinition, Extension } from '@teambit/harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
-import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
+import { Config } from '@teambit/harmony/dist/harmony-config';
+import { readConfigFile } from '@teambit/harmony/dist/harmony-config/config-reader';
 import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
-import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
-import { ConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
-import BitMap from '@teambit/legacy/dist/consumer/bit-map';
+import { loadConsumer } from '@teambit/legacy/dist/consumer';
+import { getWorkspaceInfo, WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
+import { BitMap } from '@teambit/legacy.bit-map';
 import { BitError } from '@teambit/bit-error';
 import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { satisfies } from 'semver';
-import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { ClearCacheAspect } from '@teambit/clear-cache';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { ExternalActions } from '@teambit/legacy/dist/api/scope/lib/action';
+import { ExternalActions } from '@teambit/legacy.scope-api';
 import { readdir, readFile } from 'fs-extra';
 import { resolve, join } from 'path';
 import { manifestsMap } from './manifests';
@@ -52,34 +57,53 @@ async function loadLegacyConfig(config: any) {
 }
 
 async function getConfig(cwd = process.cwd()) {
-  const consumerInfo = await getConsumerInfo(cwd);
+  const consumerInfo = await getWorkspaceInfo(cwd);
   const scopePath = findScopePath(cwd);
-  const globalConfigOpts = {
-    name: '.bitrc.jsonc',
-  };
-  const configOpts: ConfigOptions = {
-    global: globalConfigOpts,
-    shouldThrow: false,
-    cwd: consumerInfo?.path || scopePath,
-  };
 
+  let wsConfig;
   if (consumerInfo) {
-    const config = await getWsConfig(consumerInfo.path, configOpts);
-    return attachVersionsFromBitmap(config, consumerInfo);
+    wsConfig = await getWsConfig(consumerInfo.path);
+    attachVersionsFromBitmap(wsConfig, consumerInfo);
   }
 
+  let scopeConfig;
   if (scopePath && !consumerInfo) {
-    return Config.load('scope.jsonc', configOpts);
+    const scopeConfigPath = join(scopePath, 'scope.jsonc');
+    scopeConfig = await readConfigFile(scopeConfigPath, false);
   }
 
-  return Config.loadGlobal(globalConfigOpts);
+  const globalConfigPath = join(userHome, '.bitrc.jsonc');
+  const globalConfig = await readConfigFile(globalConfigPath, false);
+  // We don't use the harmonyConfig.loadGlobal as we want to manually merge it in a better way
+  // harmony merge will prioritize the global config over the workspace config
+  // and won't know to handle the dependency resolver config merge
+  const mergedConfig = mergeConfigs(globalConfig, wsConfig, scopeConfig);
+
+  return new Config(mergedConfig);
 }
 
-async function getWsConfig(consumerPath: string, configOpts: ConfigOptions) {
+function mergeConfigs(
+  globalConfig: Record<string, any> = {},
+  workspaceConfig?: Record<string, any>,
+  scopeConfig?: Record<string, any>
+) {
+  const hostConfig = workspaceConfig || scopeConfig || {};
+  // merge the dependency resolver from the global config with the workspace/scope config
+  const depsResolver = json.assign(
+    globalConfig['teambit.dependencies/dependency-resolver'] || {},
+    hostConfig['teambit.dependencies/dependency-resolver'] || {}
+  );
+  const mergedConfig = json.assign(globalConfig, workspaceConfig);
+  json.assign(mergedConfig, { 'teambit.dependencies/dependency-resolver': depsResolver });
+  return mergedConfig;
+}
+
+async function getWsConfig(consumerPath: string) {
   try {
-    return Config.load('workspace.jsonc', configOpts);
+    const config = await readConfigFile(join(consumerPath, 'workspace.jsonc'), false);
+    return config;
   } catch (err: any) {
-    // file is there. otherwise, Config.load wouldn't throw.
+    // file is there. otherwise, readConfigFile wouldn't throw.
     const wsPath = join(consumerPath, 'workspace.jsonc');
     const fileContent = await readFile(wsPath, 'utf-8');
     // if it has conflicts markers, ask the user to fix them
@@ -101,11 +125,10 @@ async function getWsConfig(consumerPath: string, configOpts: ConfigOptions) {
  * but you don't want to change your workspace.jsonc version after each tag of the aspect
  * @param config
  */
-function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): Config {
-  if (!consumerInfo || !consumerInfo.hasBitMap || !consumerInfo.hasConsumerConfig) {
-    return config;
+function attachVersionsFromBitmap(rawConfig: Record<string, any>, consumerInfo: WorkspaceInfo): Record<string, any> {
+  if (!consumerInfo || !consumerInfo.hasBitMap || !consumerInfo.hasWorkspaceConfig) {
+    return rawConfig;
   }
-  const rawConfig = config.toObject();
   const rawBitmap = BitMap.loadRawSync(consumerInfo.path);
   let parsedBitMap = {};
   try {
@@ -143,7 +166,7 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
     acc[newAspectEntry] = aspectConfig;
     return acc;
   }, {});
-  return new Config(result);
+  return result;
 }
 
 function getVersionFromBitMapIds(allBitmapIds: ComponentIdList, aspectId: string): string | undefined {
@@ -208,28 +231,20 @@ function getMainAspect() {
  */
 function shouldLoadInSafeMode() {
   const currentCommand = process.argv[2];
-  const commandsToAlwaysRunInSafeMode = [
-    'init',
-    'cat-scope',
-    'cat-object',
-    'cat-component',
-    'cmp',
-    'cat-lane',
-    'config',
-    'remote',
-  ];
-  // only legacy commands can ignore all aspects and load only the CLI aspect.
   // harmony commands need the aspects to be loaded and register to the CLI aspect in order to work properly.
   const commandsThatCanRunInSafeMode = [
-    ...commandsToAlwaysRunInSafeMode,
     'dependents',
+    'remote',
     'doctor',
     'cat-version-history',
+    'cat-component',
+    'cat-scope',
+    'cat-object',
+    'config',
     'run-action',
   ];
   const hasSafeModeFlag = process.argv.includes('--safe-mode');
-  const isSafeModeCommand = commandsToAlwaysRunInSafeMode.includes(currentCommand) || isClearCacheCommand();
-  return isSafeModeCommand || (hasSafeModeFlag && commandsThatCanRunInSafeMode.includes(currentCommand));
+  return isClearCacheCommand() || (hasSafeModeFlag && commandsThatCanRunInSafeMode.includes(currentCommand));
 }
 
 function isClearCacheCommand() {
@@ -274,11 +289,12 @@ function verifyEngine(bitConfig: BitConfig) {
   if (!bitConfig.engine) {
     return;
   }
-  const bitVersion = getHarmonyVersion(true);
+  const bitVersion = getBitVersion();
   if (satisfies(bitVersion, bitConfig.engine)) {
     return;
   }
-  const msg = `your bit version "${bitVersion}" doesn't satisfies the required "${bitConfig.engine}" version`;
+  const msg = `your bit version "${bitVersion}" doesn't satisfies the required "${bitConfig.engine}" version
+please run "bvm install ${bitConfig.engine}" to install and use a specific version of Bit.`;
   if (bitConfig.engineStrict) {
     throw new Error(`error: ${msg}`);
   }
@@ -349,12 +365,6 @@ export function takeLegacyGlobalsSnapshot(): LegacyGlobal[] {
       methodName: 'toModelObjectsHook',
       value: ExtensionDataList.toModelObjectsHook,
       empty: [],
-    },
-    {
-      classInstance: WorkspaceConfig,
-      methodName: 'workspaceConfigEnsuringRegistry',
-      value: WorkspaceConfig.workspaceConfigEnsuringRegistry,
-      empty: undefined,
     },
     {
       classInstance: WorkspaceConfig,

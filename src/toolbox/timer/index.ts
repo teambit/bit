@@ -1,2 +1,1 @@
-export { Timer } from './timer';
-export { TimerResponse } from './response';
+export { Timer } from '@teambit/toolbox.time.timer';

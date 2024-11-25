@@ -2,10 +2,10 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { isBinaryFile } from 'isbinaryfile';
 import camelCase from 'camelcase';
 import { compact } from 'lodash';
-import replacePackageName from '@teambit/legacy/dist/utils/string/replace-package-name';
+import { replacePackageName } from '@teambit/legacy.utils';
 import { ComponentAspect, Component, ComponentID, ComponentMain } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import {
@@ -27,7 +27,11 @@ import { DependencyNameRefactorCmd, RefactorCmd } from './refactor.cmd';
 export type MultipleStringsReplacement = Array<{ oldStr: string; newStr: string }>;
 
 export class RefactoringMain {
-  constructor(private componentMain: ComponentMain, private pkg: PkgMain, private envs: EnvsMain) {}
+  constructor(
+    private componentMain: ComponentMain,
+    private pkg: PkgMain,
+    private envs: EnvsMain
+  ) {}
 
   /**
    * refactor the dependency name of a component.

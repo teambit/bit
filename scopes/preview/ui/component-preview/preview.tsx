@@ -112,7 +112,7 @@ export function ComponentPreview({
 
   useEffect(() => {
     const handleLoad = (event) => {
-      if (event.data && event.data.event === LOAD_EVENT) {
+      if (event.data && (event.data.event === LOAD_EVENT || event.data.event === 'webpackInvalid')) {
         onLoad && onLoad(event);
       }
     };
@@ -129,7 +129,10 @@ export function ComponentPreview({
       methods: {
         pub: (event, message) => {
           if (message.type === 'preview-size') {
+            // disable this for now until we figure out how to correctly calculate the height
+            // const previewHeight = component.preview?.onlyOverview ? message.data.height - 150 : message.data.height;
             setWidth(message.data.width);
+            // setHeight(previewHeight);
             setHeight(message.data.height);
           }
           onLoad && event && onLoad(event, { height: message.data.height, width: message.data.width });

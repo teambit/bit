@@ -2,7 +2,10 @@ import { BitError } from '@teambit/bit-error';
 
 export default class ServerIsBusy extends BitError {
   code: number;
-  constructor(public queueSize: number, public currentExportId: string) {
+  constructor(
+    public queueSize: number,
+    public currentExportId: string
+  ) {
     super(
       `fatal: the server is busy by other exports. total exports (including yours) in the queue: ${queueSize},
 the current export-id in queue is "${currentExportId}".

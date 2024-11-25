@@ -26,6 +26,8 @@ export type TranspileComponentParams = {
   initiator: CompilationInitiator; // origin of the compilation's request
 };
 
+export type TypeGeneratorCompParams = { component: Component; packageDir: string };
+
 export type TranspileFileOutputOneFile = {
   outputText: string;
   outputPath: string;
@@ -94,6 +96,10 @@ export interface Compiler extends CompilerOptions, ServiceHandler {
    * transpile all the files of a component, use this when you can't use `transpileFile`
    */
   transpileComponent?: (params: TranspileComponentParams) => Promise<void>;
+
+  preGenerateTypesOnWorkspace?: (params: TypeGeneratorCompParams[], envId: string) => Promise<void>;
+
+  generateTypesOnWorkspace?: (rootDir: string, params: TypeGeneratorCompParams[]) => Promise<void>;
 
   /**
    * compile components inside isolated capsules. this being used during tag for the release.

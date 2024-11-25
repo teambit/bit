@@ -102,6 +102,9 @@ import { GitAspect } from '@teambit/git';
 import { IpcEventsAspect } from '@teambit/ipc-events';
 import { ConfigMergerAspect } from '@teambit/config-merger';
 import { VersionHistoryAspect } from '@teambit/version-history';
+import { HostInitializerAspect } from '@teambit/host-initializer';
+import { DoctorAspect } from '@teambit/doctor';
+import { ApplyAspect } from '@teambit/apply';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -208,6 +211,9 @@ export const manifestsMap = {
   [IpcEventsAspect.id]: IpcEventsAspect,
   [ConfigMergerAspect.id]: ConfigMergerAspect,
   [VersionHistoryAspect.id]: VersionHistoryAspect,
+  [HostInitializerAspect.id]: HostInitializerAspect,
+  [DoctorAspect.id]: DoctorAspect,
+  [ApplyAspect.id]: ApplyAspect,
 };
 
 export function isCoreAspect(id: string) {

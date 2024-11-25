@@ -3,7 +3,6 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { IssuesList } from '@teambit/component-issues';
-import { getInvalidComponentLabel } from '@teambit/legacy/dist/cli/templates/component-issues-template';
 import {
   IMPORT_PENDING_MSG,
   statusFailureMsg,
@@ -51,6 +50,7 @@ type StatusJsonResults = {
   componentsDuringMergeState: string[];
   softTaggedComponents: string[];
   snappedComponents: string[];
+  localOnly: string[];
   pendingUpdatesFromMain: Array<{
     id: string;
     divergeData: any;
@@ -104,6 +104,7 @@ export class StatusCmd implements Command {
       currentLaneId,
       forkedLaneId,
       workspaceIssues,
+      localOnly,
     }: StatusResult = await this.status.status({ lanes, ignoreCircularDependencies });
     return {
       newComponents: newComponents.map((c) => c.toStringWithoutVersion()),
@@ -124,6 +125,7 @@ export class StatusCmd implements Command {
       componentsDuringMergeState: componentsDuringMergeState.map((id) => id.toStringWithoutVersion()),
       softTaggedComponents: softTaggedComponents.map((s) => s.toStringWithoutVersion()),
       snappedComponents: snappedComponents.map((s) => s.toStringWithoutVersion()),
+      localOnly: localOnly.map((id) => id.toStringWithoutVersion()),
       pendingUpdatesFromMain: pendingUpdatesFromMain.map((p) => ({
         id: p.id.toStringWithoutVersion(),
         divergeData: p.divergeData,
@@ -156,6 +158,7 @@ export class StatusCmd implements Command {
       softTaggedComponents,
       snappedComponents,
       pendingUpdatesFromMain,
+      localOnly,
       updatesFromForked,
       unavailableOnMain,
       currentLaneId,
@@ -317,6 +320,10 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
     const stagedComps = stagedComponents.map((c) => format(c.id, false, undefined, c.versions));
     const stagedComponentsOutput = formatCategory('staged components', stagedDesc, stagedComps);
 
+    const localOnlyDesc = '(these components are excluded from tag/snap/export commands)';
+    const localOnlyComps = localOnly.map((c) => format(c)).sort();
+    const localOnlyComponentsOutput = formatCategory('local-only components', localOnlyDesc, localOnlyComps);
+
     const softTaggedDesc = '(use "bit tag --persist" to complete the tag)';
     const softTaggedComps = softTaggedComponents.map((id) => format(id, false, undefined, undefined, false));
     const softTaggedComponentsOutput = formatCategory('soft-tagged components', softTaggedDesc, softTaggedComps);
@@ -396,6 +403,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
         updatesFromMainOutput,
         updatesFromForkedOutput,
         compDuringMergeStr,
+        localOnlyComponentsOutput,
         newComponentsOutput,
         modifiedComponentOutput,
         snappedComponentsOutput,
@@ -424,4 +432,26 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
 
 export function formatIssues(issues: IssuesList) {
   return `       ${issues?.outputForCLI()}\n`;
+}
+
+function getInvalidComponentLabel(error: Error) {
+  switch (error.name) {
+    case 'MainFileRemoved':
+      return 'main-file was removed (use "bit add" with "--main" and "--id" flags to add a main file)';
+    case 'ComponentNotFoundInPath':
+      return 'component files were deleted (use "bit remove [component_id]") or moved (use "bit move <old-dir> <new-dir>"). to restore use "bit checkout reset [component_id]"';
+    case 'ExtensionFileNotFound':
+      // @ts-ignore error.path is set for ExtensionFileNotFound
+      return `extension file is missing at ${chalk.bold(error.path)}`;
+    case 'ComponentsPendingImport':
+      return 'component objects are missing from the scope (use "bit import [component_id] --objects" to get them back)';
+    case 'NoComponentDir':
+      return `component files were added individually without root directory (invalid on Harmony. re-add as a directory or use "bit move --component" to help with the move)`;
+    case 'IgnoredDirectory':
+      return `component files or directory were ignored (probably by .gitignore)`;
+    case 'NoCommonSnap':
+      return `component history is unrelated to main (merge main with --resolve-unrelated flag)`;
+    default:
+      return error.name;
+  }
 }

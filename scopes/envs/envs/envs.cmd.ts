@@ -13,10 +13,13 @@ export class ListEnvsCmd implements Command {
   options = [];
   group = 'development';
 
-  constructor(private envs: EnvsMain, private componentAspect: ComponentMain) {}
+  constructor(
+    private envs: EnvsMain,
+    private componentAspect: ComponentMain
+  ) {}
 
   async report() {
-    const allEnvs = this.envs.getAllRegisteredEnvs().join('\n');
+    const allEnvs = this.envs.getAllRegisteredEnvsIds().join('\n');
     const title = chalk.green('the following envs are available in the workspace:');
     return `${title}\n${allEnvs}`;
   }
@@ -45,7 +48,10 @@ export class GetEnvCmd implements Command {
   ] as CommandOptions;
   group = 'development';
 
-  constructor(private envs: EnvsMain, private componentAspect: ComponentMain) {}
+  constructor(
+    private envs: EnvsMain,
+    private componentAspect: ComponentMain
+  ) {}
 
   async showEnv(id: string, host: ComponentFactory, servicesArr: string[] | undefined) {
     const component = await host.get(await host.resolveComponentId(id));
@@ -88,7 +94,10 @@ export class EnvsCmd implements Command {
   // private showNonLoadedEnvsWarning = false;
   private nonLoadedEnvs = new Set<string>();
 
-  constructor(private envs: EnvsMain, private componentAspect: ComponentMain) {}
+  constructor(
+    private envs: EnvsMain,
+    private componentAspect: ComponentMain
+  ) {}
 
   async report(): Promise<string> {
     const host = this.componentAspect.getHost();

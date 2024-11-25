@@ -12,14 +12,12 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import defaultErrorHandler from '@teambit/legacy/dist/cli/default-error-handler';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
-import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
-import * as packageJsonUtils from '@teambit/legacy/dist/consumer/component/package-json-utils';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
+import { DataToPersist, RemovePath } from '@teambit/component.sources';
 import { Logger } from '@teambit/logger';
 import { InstallMain } from '@teambit/install';
+import { removeComponentsFromNodeModules } from '@teambit/remove';
 
 export type EjectResults = {
   ejectedComponents: ComponentIdList;
@@ -46,8 +44,6 @@ export class ComponentsEjector {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   notEjectedDependents: Array<{ dependent: Component; ejectedDependencies: Component[] }>;
   failedComponents: FailedComponents;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  packageJsonFilesBeforeChanges: PackageJsonFile[]; // for rollback in case of errors
   constructor(
     private workspace: Workspace,
     private install: InstallMain,
@@ -127,7 +123,7 @@ export class ComponentsEjector {
     const action = 'Eject: removing the existing components from node_modules';
     this.logger.setStatusLine(action);
     this.logger.debug(action);
-    await packageJsonUtils.removeComponentsFromNodeModules(this.consumer, this.componentsToEject);
+    await removeComponentsFromNodeModules(this.consumer, this.componentsToEject);
     this.logger.consoleSuccess(action);
   }
 

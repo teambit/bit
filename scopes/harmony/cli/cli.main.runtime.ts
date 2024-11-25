@@ -1,15 +1,15 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { buildRegistry } from '@teambit/legacy/dist/cli';
 import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { CLIArgs, Flags, Command } from '@teambit/legacy/dist/cli/command';
 import pMapSeries from 'p-map-series';
 import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
+import { HostInitializerMain } from '@teambit/host-initializer';
 import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { getCommandId } from './get-command-id';
-import { LegacyCommandAdapter } from './legacy-command-adapter';
 import { CLIParser, findCommandByArgv } from './cli-parser';
 import { CompletionCmd } from './completion.cmd';
 import { CliCmd, CliGenerateCmd } from './cli.cmd';
@@ -75,6 +75,12 @@ export class CLIMain {
     return this.commands.find((command) => getCommandId(command.name) === name);
   }
 
+  getCommandByNameOrAlias(name: string): Command | undefined {
+    const command = this.getCommand(name);
+    if (command) return command;
+    return this.commands.find((cmd) => cmd.alias === name);
+  }
+
   /**
    * when running `bit help`, commands are grouped by categories.
    * this method helps registering a new group by providing its name and a description.
@@ -133,7 +139,8 @@ export class CLIMain {
   async run(hasWorkspace: boolean) {
     await this.invokeOnStart(hasWorkspace);
     const CliParser = new CLIParser(this.commands, this.groups, this.onCommandStartSlot);
-    await CliParser.parse();
+    const commandRunner = await CliParser.parse();
+    await commandRunner.runCommand();
   }
 
   private async invokeOnStart(hasWorkspace: boolean) {
@@ -179,20 +186,17 @@ export class CLIMain {
       CommandsSlot,
       OnStartSlot,
       OnCommandStartSlot,
-      OnBeforeExitSlot
+      OnBeforeExitSlot,
     ]
   ) {
     const logger = loggerMain.createLogger(CLIAspect.id);
     const cliMain = new CLIMain(commandsSlot, onStartSlot, onCommandStartSlot, onBeforeExitSlot, logger);
-    const legacyRegistry = buildRegistry();
     await ensureWorkspaceAndScope();
-    const legacyCommands = legacyRegistry.commands;
-    const legacyCommandsAdapters = legacyCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
     const cliGenerateCmd = new CliGenerateCmd(cliMain);
     const cliCmd = new CliCmd(cliMain);
     const helpCmd = new HelpCmd(cliMain);
     cliCmd.commands.push(cliGenerateCmd);
-    cliMain.register(...legacyCommandsAdapters, new CompletionCmd(), cliCmd, helpCmd, new VersionCmd());
+    cliMain.register(new CompletionCmd(), cliCmd, helpCmd, new VersionCmd());
     return cliMain;
   }
 }
@@ -209,6 +213,11 @@ async function ensureWorkspaceAndScope() {
   try {
     await loadConsumerIfExist();
   } catch (err) {
+    const potentialWsPath = process.cwd();
+    const consumerInfo = await getWorkspaceInfo(potentialWsPath);
+    if (consumerInfo && !consumerInfo.hasScope && consumerInfo.hasBitMap && consumerInfo.hasWorkspaceConfig) {
+      await HostInitializerMain.init(potentialWsPath);
+    }
     // do nothing. it could fail for example with ScopeNotFound error, which is taken care of in "bit init".
   }
 }

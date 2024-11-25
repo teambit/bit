@@ -8,9 +8,9 @@ import * as path from 'path';
 import tar from 'tar';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { NOTHING_TO_TAG_MSG } from '@teambit/snapping';
-import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
+import { ENV_VAR_FEATURE_TOGGLE } from '@teambit/harmony.modules.feature-toggle';
 import { Extensions, NOTHING_TO_SNAP_MSG } from '../constants';
-import { removeChalkCharacters } from '../utils';
+import { removeChalkCharacters } from '@teambit/legacy.utils';
 import ScopesData from './e2e-scopes';
 
 // The default value of maxBuffer is 1024*1024, which is not enough for some of the tests.
@@ -230,9 +230,6 @@ export default class CommandHelper {
             .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
-  addLaneReadme(id: string, laneName = '') {
-    return this.runCmd(`bit lane add-readme ${id} ${laneName}`);
-  }
   removeLaneReadme(laneName = '') {
     return this.runCmd(`bit lane remove-readme ${laneName}`);
   }
@@ -266,6 +263,15 @@ export default class CommandHelper {
   }
   renameScopeOwner(oldScope: string, newScope: string, flags = '') {
     return this.runCmd(`bit scope rename-owner ${oldScope} ${newScope} ${flags}`);
+  }
+  setLocalOnly(pattern: string) {
+    return this.runCmd(`bit local-only set ${pattern}`);
+  }
+  unsetLocalOnly(pattern: string) {
+    return this.runCmd(`bit local-only unset ${pattern}`);
+  }
+  listLocalOnly() {
+    return this.runCmd(`bit local-only list`);
   }
   envs() {
     return this.runCmd(`bit envs`);
@@ -482,6 +488,11 @@ export default class CommandHelper {
     if (!artifacts) throw new Error(`unable to find artifacts data for ${id}`);
     return artifacts;
   }
+  getAspectsData(versionObject: Record<string, any>, aspectId: string) {
+    const builder = versionObject.extensions.find((e) => e.name === Extensions.builder);
+    if (!builder) throw new Error(`getAspectsData: unable to find builder data`);
+    return builder.data.aspectsData.find((a) => a.aspectId === aspectId);
+  }
   reset(id: string, head = false, flag = '') {
     return this.runCmd(`bit reset ${id} ${head ? '--head' : ''} ${flag}`);
   }
@@ -626,8 +637,12 @@ export default class CommandHelper {
     return this.runCmd(`bit revert ${pattern} ${to} ${flags}`);
   }
 
-  stash() {
-    return this.runCmd('bit stash save');
+  stash(flags = '') {
+    return this.runCmd(`bit stash save ${flags}`);
+  }
+
+  stashList(flags = '') {
+    return this.runCmd(`bit stash list ${flags}`);
   }
 
   stashLoad(flags = '') {
@@ -813,6 +828,17 @@ export default class CommandHelper {
     const output = this.snapFromScope(cwd, data, `${options} --json`);
     return JSON.parse(output);
   }
+  apply(data: Record<string, any>, options = '') {
+    data.forEach((dataItem) => {
+      if (!dataItem.files) return;
+      dataItem.files.forEach((file) => {
+        if (file.content) {
+          file.content = Buffer.from(file.content).toString('base64');
+        }
+      });
+    });
+    return this.runCmd(`bit apply '${JSON.stringify(data)}' ${options}`);
+  }
   diff(id = '') {
     const output = this.runCmd(`bit diff ${id}`);
     return removeChalkCharacters(output);
@@ -823,6 +849,9 @@ export default class CommandHelper {
   logParsed(id: string, flags = '') {
     const log = this.runCmd(`bit log ${id} ${flags} --json`);
     return JSON.parse(log);
+  }
+  blame(filePath: string, flags = '') {
+    return this.runCmd(`bit blame ${filePath} ${flags}`);
   }
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);

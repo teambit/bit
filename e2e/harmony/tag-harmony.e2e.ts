@@ -232,9 +232,9 @@ describe('tag components on Harmony', function () {
       beforeTagScope = helper.scopeHelper.cloneLocalScope();
     });
     it('should fail without --skip-tests', () => {
-      expect(() => helper.command.tagAllComponents()).to.throw(
-        'Failed task 1: "teambit.defender/tester:TestComponents" of env "teambit.harmony/node"'
-      );
+      const cmd = () => helper.command.tagAllComponents();
+      const error = new Error('Failed task 1: "teambit.defender/tester:JestTest" of env "teambit.harmony/node"');
+      helper.general.expectToThrow(cmd, error);
       const stagedConfigPath = helper.general.getStagedConfigPath();
       expect(stagedConfigPath).to.not.be.a.path();
     });
@@ -242,9 +242,9 @@ describe('tag components on Harmony', function () {
       helper.scopeHelper.getClonedLocalScope(beforeTagScope);
       expect(() => helper.command.tagAllComponents('--skip-tests')).to.not.throw();
     });
-    it('should succeed with --force-deploy', () => {
+    it('should succeed with --ignore-build-errors', () => {
       helper.scopeHelper.getClonedLocalScope(beforeTagScope);
-      expect(() => helper.command.tagAllComponents('--force-deploy')).to.not.throw();
+      expect(() => helper.command.tagAllComponents('--ignore-build-errors')).to.not.throw();
     });
   });
   describe('modified one component, the rest are auto-tag pending', () => {
@@ -361,6 +361,23 @@ describe('tag components on Harmony', function () {
       expect(tagOutput).to.have.string('comp1@0.0.2-dev.0');
     });
   });
+  describe('invalid pre-release after normal tag', () => {
+    let result: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      result = helper.general.runWithTryCatch(`bit tag --unmodified --pre-release "h?h"`);
+    });
+    it('should throw an error', () => {
+      expect(result).to.have.string('is not a valid semantic version');
+    });
+    it('should not create a new version', () => {
+      const comp = helper.command.catComponent('comp1');
+      const ver1Hash = comp.versions['0.0.1'];
+      expect(comp.head).to.equal(ver1Hash);
+    });
+  });
   describe('soft-tag pre-release', () => {
     let tagOutput: string;
     before(() => {
@@ -441,6 +458,18 @@ describe('tag components on Harmony', function () {
       );
       expect(pkgJson.version).to.equal('0.0.1');
       expect(pkgJson.componentId.version).to.equal('0.0.1');
+    });
+  });
+  describe('tagging a snapped component by specifying the id', () => {
+    let tagOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponentsWithoutBuild();
+      tagOutput = helper.command.tagWithoutBuild('comp1');
+    });
+    it('should tag successfully without needing to add --unmodified', () => {
+      expect(tagOutput).to.have.string('comp1@0.0.1');
     });
   });
 });

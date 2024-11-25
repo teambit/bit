@@ -34,6 +34,7 @@ export class AppBuildContext extends AppContext implements BuildContext {
       appContext.execContext,
       appContext.hostRootDir,
       appContext.port,
+      appContext.args,
       appContext.workspaceComponentPath,
       appContext.envVariables
     );

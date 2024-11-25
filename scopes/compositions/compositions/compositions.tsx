@@ -22,6 +22,7 @@ import { AlertCard } from '@teambit/design.ui.alert-card';
 import { Link as BaseLink, useNavigate, useLocation } from '@teambit/base-react.navigation.link';
 import { OptionButton } from '@teambit/design.ui.input.option-button';
 import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 import { EmptyStateSlot } from './compositions.ui.runtime';
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
@@ -86,9 +87,11 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
       <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
         <Pane className={styles.left}>
           <CompositionsMenuBar menuBarWidgets={menuBarWidgets} className={styles.menuBar}>
-            <Link external href={currentCompositionFullUrl} className={styles.openInNewTab}>
-              <OptionButton icon="open-tab" />
-            </Link>
+            <Tooltip content={'Open in new tab'} placement="right">
+              <Link external href={currentCompositionFullUrl} className={styles.openInNewTab}>
+                <OptionButton icon="open-tab" />
+              </Link>
+            </Tooltip>
           </CompositionsMenuBar>
           <CompositionContent
             className={styles.compositionPanel}
@@ -132,7 +135,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
                       pathSegments[pathSegments.length - 1] = composition.identifier.toLowerCase();
                     }
 
-                    const urlParams = new URLSearchParams();
+                    const urlParams = new URLSearchParams(searchParams);
                     if (versionFromQueryParams) {
                       urlParams.set('version', versionFromQueryParams);
                     }

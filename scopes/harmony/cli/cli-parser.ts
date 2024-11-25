@@ -5,23 +5,26 @@ import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { compact } from 'lodash';
 import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
-import loader from '@teambit/legacy/dist/cli/loader';
+import { loader } from '@teambit/legacy.loader';
 import chalk from 'chalk';
 import { getCommandId } from './get-command-id';
 import { formatHelp } from './help';
 import { GLOBAL_GROUP, STANDARD_GROUP, YargsAdapter } from './yargs-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
 import { OnCommandStartSlot } from './cli.main.runtime';
+import { CommandRunner } from './command-runner';
+import { YargsExitWorkaround } from './exceptions/yargs-exit-workaround';
 
 export class CLIParser {
   public parser = yargs;
+  private yargsCommands: YargsAdapter[] = [];
   constructor(
     private commands: Command[],
     private groups: GroupsType,
     private onCommandStartSlot: OnCommandStartSlot
   ) {}
 
-  async parse(args = process.argv.slice(2)) {
+  async parse(args = process.argv.slice(2)): Promise<CommandRunner> {
     this.throwForNonExistsCommand(args[0]);
     logger.debug(`[+] CLI-INPUT: ${args.join(' ')}`);
     logger.writeCommandHistoryStart();
@@ -33,13 +36,14 @@ export class CLIParser {
         this.parseCommandWithSubCommands(command);
       } else {
         const yargsCommand = this.getYargsCommand(command);
-        yargs.command(yargsCommand);
+        this.addYargsCommand(yargsCommand);
       }
     });
     this.configureGlobalFlags();
     this.setHelpMiddleware();
     this.handleCommandFailure();
     this.configureCompletion();
+    // yargs.showHelpOnFail(false); // doesn't help. it still shows the help on failure.
     yargs.strict(); // don't allow non-exist flags and non-exist commands
 
     yargs
@@ -47,6 +51,20 @@ export class CLIParser {
       .wrap(null);
 
     await yargs.parse();
+
+    const currentYargsCommand = this.yargsCommands.find((y) => y.commandRunner);
+    if (!currentYargsCommand) {
+      // this happens when the args/flags are wrong. in this case, it prints the help of the command and in most cases
+      // exits the process before reaching this line. however, in case logger.isDaemon is true, which is for bit-cli-server,
+      // it doesn't exits the process, so we need to return undefined here.
+      throw new Error(`yargs failed to parse the command "${args.join(' ')}" and also failed to catch it properly`);
+    }
+    return currentYargsCommand.commandRunner as CommandRunner;
+  }
+
+  private addYargsCommand(yargsCommand: YargsAdapter) {
+    this.yargsCommands.push(yargsCommand);
+    yargs.command(yargsCommand);
   }
 
   private setHelpMiddleware() {
@@ -61,7 +79,7 @@ export class CLIParser {
         loader.off(); // stop the "loading bit..." before showing help if needed
         // this is a command help page
         yargs.showHelp(this.logCommandHelp.bind(this));
-        if (!logger.isDaemon) process.exit(0);
+        process.exit(0);
       }
     }, true);
   }
@@ -72,16 +90,27 @@ export class CLIParser {
       if (err) {
         throw err;
       }
-      yargs.showHelp(this.logCommandHelp.bind(this));
       const args = process.argv.slice(2);
       const isHelpFlagEntered = args.includes('--help') || args.includes('-h');
+      let msgForDaemon = '';
+      try {
+        yargs.showHelp(this.logCommandHelp.bind(this));
+      } catch (error: any) {
+        if (error instanceof YargsExitWorkaround) {
+          msgForDaemon = error.helpMsg;
+        } else {
+          throw error;
+        }
+      }
       const isMsgAboutMissingArgs = msg.startsWith('Not enough non-option arguments');
       // avoid showing the "Not enough non-option arguments" message when the user is trying to get the command help
       if (!isMsgAboutMissingArgs || !isHelpFlagEntered) {
         // eslint-disable-next-line no-console
         console.log(`\n${chalk.yellow(msg)}`);
+        msgForDaemon += `\n${chalk.yellow(msg)}`;
       }
-      if (!logger.isDaemon) process.exit(1);
+      if (logger.isDaemon) throw new YargsExitWorkaround(1, msgForDaemon);
+      process.exit(1);
     });
   }
 
@@ -114,8 +143,8 @@ export class CLIParser {
 
   private printHelp(shouldShowInternalCommands = false) {
     const help = formatHelp(this.commands, this.groups, shouldShowInternalCommands);
-    // eslint-disable-next-line no-console
-    console.log(help);
+    if (logger.isDaemon) throw new YargsExitWorkaround(0, help);
+    else console.log(help); // eslint-disable-line no-console
   }
 
   private configureParser() {
@@ -132,22 +161,22 @@ export class CLIParser {
     const builderFunc = () => {
       command.commands?.forEach((cmd) => {
         const subCommand = this.getYargsCommand(cmd);
-        yargs.command(subCommand);
+        this.addYargsCommand(subCommand);
       });
       // since the "builder" method is overridden, the global flags of the main command are gone, this fixes it.
       yargs.options(YargsAdapter.getGlobalOptions(command));
       return yargs;
     };
     yarnCommand.builder = builderFunc;
-    yargs.command(yarnCommand);
+    this.addYargsCommand(yarnCommand);
   }
 
   private getYargsCommand(command: Command): YargsAdapter {
-    const yarnCommand = new YargsAdapter(command, this.onCommandStartSlot);
-    yarnCommand.builder = yarnCommand.builder.bind(yarnCommand);
-    yarnCommand.handler = yarnCommand.handler.bind(yarnCommand);
+    const yargsCommand = new YargsAdapter(command, this.onCommandStartSlot);
+    yargsCommand.builder = yargsCommand.builder.bind(yargsCommand);
+    yargsCommand.handler = yargsCommand.handler.bind(yargsCommand);
 
-    return yarnCommand;
+    return yargsCommand;
   }
 
   private configureGlobalFlags() {
@@ -202,7 +231,6 @@ export class CLIParser {
   private logCommandHelp(help: string) {
     const command = findCommandByArgv(this.commands);
 
-    const replacer = (_, p1, p2) => `${p1}${chalk.green(p2)}`;
     const lines = help.split('\n');
     const linesWithoutEmpty = compact(lines);
     const cmdLine = linesWithoutEmpty[0];
@@ -246,7 +274,21 @@ export class CLIParser {
     }
 
     // show the flags in green
-    const optionsColored = options.map((opt) => opt.replace(/(--)([\w-]+)/, replacer).replace(/(-)([\w-]+)/, replacer));
+    const optionsColored = options.map((optLine) => {
+      const match = optLine.match(/^(\s*)(.+?)(\s{2,}.*)/);
+      if (match) {
+        const leadingSpaces = match[1];
+        const optionPart = match[2];
+        const rest = match[3];
+        const coloredOptionPart = optionPart.replace(
+          /(^|[^a-zA-Z0-9])(--?[a-zA-Z][a-zA-Z-]*)/g,
+          (m, p1, p2) => p1 + chalk.green(p2)
+        );
+        return leadingSpaces + coloredOptionPart + rest;
+      } else {
+        return optLine;
+      }
+    });
     const argsColored = args.map((arg) => arg.replace(/^ {2}\S+/, (argName) => chalk.green(argName))); // regex: two spaces then the first word until a white space
     const optionsStr = options.length ? `\n${STANDARD_GROUP}\n${optionsColored.join('\n')}\n` : '';
     const argumentsStr = args.length ? `\nArguments:\n${argsColored.join('\n')}\n` : '';
@@ -270,8 +312,8 @@ ${argumentsStr}${subCommandsStr}${optionsStr}${examplesStr}
 ${GLOBAL_GROUP}
 ${globalOptionsStr}`;
 
-    // eslint-disable-next-line no-console
-    console.log(finalOutput);
+    if (logger.isDaemon) throw new YargsExitWorkaround(0, finalOutput);
+    else console.log(finalOutput); // eslint-disable-line no-console
   }
 }
 

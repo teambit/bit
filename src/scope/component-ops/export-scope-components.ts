@@ -11,13 +11,13 @@ import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import { ObjectList } from '../objects/object-list';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
-import loader from '../../cli/loader';
+import { loader } from '@teambit/legacy.loader';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { MergeResult } from '../repositories/sources';
 import { Ref } from '../objects';
 import { BitObjectList } from '../objects/bit-object-list';
-import { pMapPool } from '../../utils/promise-with-concurrent';
-import { concurrentComponentsLimit } from '../../utils/concurrency';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 
 /**
  * ** Legacy and "bit sign" Only **

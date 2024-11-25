@@ -4,13 +4,21 @@ import { SchemaLocation, SchemaNode } from '../../schema-node';
  * e.g. `@deprecated please use something else`
  */
 export class TagSchema extends SchemaNode {
-  constructor(readonly location: SchemaLocation, readonly tagName: TagName | string, readonly comment?: string) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly tagName: TagName | string,
+    readonly comment?: string
+  ) {
     super();
   }
 
   toString() {
     const comment = this.comment ? ` ${this.comment}` : '';
     return `@${this.tagName}${comment}`;
+  }
+
+  toFullSignature(): string {
+    return this.toString();
   }
 
   static fromObject(obj: Record<string, any>): TagSchema {
@@ -54,4 +62,5 @@ export enum TagName {
   return = 'return',
   deprecated = 'deprecated',
   exports = 'exports',
+  link = 'link',
 }

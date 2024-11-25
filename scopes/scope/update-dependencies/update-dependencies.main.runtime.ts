@@ -11,7 +11,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
 import { ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
-import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
+import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { LanesAspect, Lane, LanesMain } from '@teambit/lanes';
@@ -316,7 +316,6 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     await this.exporter.exportMany({
       scope: this.scope.legacyScope,
       ids,
-      idsWithFutureScope: ids,
       laneObject: this.laneObj,
       allVersions: false,
       exportOrigin: 'update-dependencies',
@@ -347,7 +346,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       DependencyResolverMain,
       SnappingMain,
       LanesMain,
-      ExportMain
+      ExportMain,
     ],
     _,
     [onPostUpdateDependenciesSlot]: [OnPostUpdateDependenciesSlot]

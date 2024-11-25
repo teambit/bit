@@ -3,7 +3,7 @@ import { DocsRootProps } from '@teambit/docs';
 import DocsRoot from '@teambit/react.ui.docs-app';
 import { htmlToReact } from './html-to-react';
 
-const htmlDocsRoot = function ({ compositions, ...rest }: DocsRootProps) {
+const htmlDocsRoot = function ({ compositions = {}, ...rest }: DocsRootProps) {
   // should be mapObject<Record<string, any>, Record<string, () => any>>
   // @ts-ignore TODO fix
   const reactCompositions = mapObject(compositions, (key, value) => [key, htmlToReact(value as HTMLElement)]);

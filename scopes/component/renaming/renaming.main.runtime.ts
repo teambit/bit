@@ -112,7 +112,7 @@ make sure this argument is the name only, without the scope-name. to change the 
         await this.newComponentHelper.writeAndAddNewComp(sourceComp, targetId, options, config);
         options.deprecate
           ? await this.deprecation.deprecate(sourceId, targetId)
-          : await this.remove.deleteComps(sourceId.toString());
+          : await this.remove.deleteComps(sourceId.toString(), { updateMain: true });
       } else {
         this.workspace.bitMap.renameNewComponent(sourceId, targetId);
         await this.deleteLinkFromNodeModules(sourcePkg);
@@ -340,7 +340,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     CompilerMain,
     LoggerMain,
     EnvsMain,
-    RemoveMain
+    RemoveMain,
   ]) {
     const logger = loggerMain.createLogger(RenamingAspect.id);
     const renaming = new RenamingMain(

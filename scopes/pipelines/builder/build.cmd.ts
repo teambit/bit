@@ -5,6 +5,7 @@ import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import chalk from 'chalk';
 import { BuilderMain } from './builder.main.runtime';
+import { IssuesClasses } from '@teambit/component-issues';
 
 type BuildOpts = {
   unmodified?: boolean;
@@ -18,9 +19,11 @@ type BuildOpts = {
   tasks: string;
   listTasks?: string;
   skipTests?: boolean;
+  skipTasks?: string;
   failFast?: boolean;
   includeSnap?: boolean;
   includeTag?: boolean;
+  ignoreIssues?: string;
 };
 
 export class BuilderCmd implements Command {
@@ -68,22 +71,31 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
     ['', 'skip-tests', 'skip running component tests during build process'],
     [
       '',
+      'skip-tasks <string>',
+      `skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes.
+  specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)`,
+    ],
+    [
+      '',
       'fail-fast',
       'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
+    ['', 'include-snap', 'include snap pipeline tasks. Warning: this may deploy/publish if you have such tasks'],
+    ['', 'include-tag', 'include tag pipeline tasks. Warning: this may deploy/publish if you have such tasks'],
     [
-      '',
-      'include-snap',
-      'EXPERIMENTAL. include snap pipeline tasks. Warning: this may deploy/publish if you have such tasks',
-    ],
-    [
-      '',
-      'include-tag',
-      'EXPERIMENTAL. include tag pipeline tasks. Warning: this may deploy/publish if you have such tasks',
+      'i',
+      'ignore-issues <issues>',
+      `ignore component issues (shown in "bit status" as "issues found"), issues to ignore:
+[${Object.keys(IssuesClasses).join(', ')}]
+to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
     ],
   ] as CommandOptions;
 
-  constructor(private builder: BuilderMain, private workspace: Workspace, private logger: Logger) {}
+  constructor(
+    private builder: BuilderMain,
+    private workspace: Workspace,
+    private logger: Logger
+  ) {}
 
   async report(
     [pattern]: [string],
@@ -98,9 +110,11 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       tasks,
       listTasks,
       skipTests,
+      skipTasks,
       failFast,
       includeSnap,
       includeTag,
+      ignoreIssues,
     }: BuildOpts
   ): Promise<string> {
     if (rewrite && !reuseCapsules) throw new Error('cannot use --rewrite without --reuse-capsules');
@@ -119,6 +133,8 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       );
     }
 
+    const skipTasksParsed = skipTasks ? skipTasks.split(',').map((t) => t.trim()) : undefined;
+
     const envsExecutionResults = await this.builder.build(
       components,
       {
@@ -136,11 +152,13 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
         dev,
         tasks: tasks ? tasks.split(',').map((task) => task.trim()) : [],
         skipTests,
+        skipTasks: skipTasksParsed,
         exitOnFirstFailedTask: failFast,
       },
       {
         includeSnap,
         includeTag,
+        ignoreIssues,
       }
     );
     this.logger.console(`build output can be found in path: ${envsExecutionResults.capsuleRootDir}`);

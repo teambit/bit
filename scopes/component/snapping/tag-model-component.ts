@@ -11,14 +11,14 @@ import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-m
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
-import { getBasicLog } from '@teambit/legacy/dist/utils/bit/basic-log';
 import { Component } from '@teambit/component';
-import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
+import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { sha1 } from '@teambit/legacy/dist/utils';
+import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
+import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
-import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
-import { BuilderMain, OnTagOpts } from '@teambit/builder';
+import { OnTagOpts } from '@teambit/builder';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
 import {
   MessagePerComponent,
@@ -28,6 +28,7 @@ import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 
 export type onTagIdTransformer = (id: ComponentID) => ComponentID | null;
@@ -172,14 +173,12 @@ function getVersionByEnteredId(
 }
 
 export async function tagModelComponent({
-  workspace,
-  scope,
   snapping,
-  builder,
   consumerComponents,
   ids,
   tagDataPerComp,
   populateArtifactsFrom,
+  populateArtifactsIgnorePkgJson,
   message,
   editor,
   exactVersion,
@@ -198,26 +197,22 @@ export async function tagModelComponent({
   rebuildDepsGraph,
   incrementBy,
   packageManagerConfigRootDir,
-  dependencyResolver,
   copyLogFromPreviousSnap = false,
   exitOnFirstFailedTask = false,
   updateDependentsOnLane = false, // on lane, adds it into updateDependents prop
 }: {
-  workspace?: Workspace;
-  scope: ScopeMain;
   snapping: SnappingMain;
-  builder: BuilderMain;
   consumerComponents: ConsumerComponent[];
   ids: ComponentIdList;
   tagDataPerComp?: TagDataPerComp[];
   populateArtifactsFrom?: ComponentID[];
+  populateArtifactsIgnorePkgJson?: boolean;
   copyLogFromPreviousSnap?: boolean;
   exactVersion?: string | null | undefined;
   releaseType?: ReleaseType;
   incrementBy?: number;
   isSnap?: boolean;
   packageManagerConfigRootDir?: string;
-  dependencyResolver: DependencyResolverMain;
   exitOnFirstFailedTask?: boolean;
   updateDependentsOnLane?: boolean;
 } & BasicTagParams): Promise<{
@@ -227,6 +222,11 @@ export async function tagModelComponent({
   stagedConfig?: StagedConfig;
   removedComponents?: ComponentIdList;
 }> {
+  const workspace = snapping.workspace;
+  const scope = snapping.scope;
+  const builder = snapping.builder;
+  const dependencyResolver = snapping.dependencyResolver;
+
   const consumer = workspace?.consumer;
   const legacyScope = scope.legacyScope;
   const consumerComponentsIdsMap = {};
@@ -242,8 +242,12 @@ export async function tagModelComponent({
   // ids without versions are new. it's impossible that tagged (and not-modified) components has
   // them as dependencies.
   const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
-  const autoTagData =
+  const autoTagDataWithLocalOnly =
     skipAutoTag || !consumer ? [] : await getAutoTagInfo(consumer, ComponentIdList.fromArray(idsToTriggerAutoTag));
+  const localOnly = workspace?.listLocalOnly();
+  const autoTagData = localOnly
+    ? autoTagDataWithLocalOnly.filter((autoTagItem) => !localOnly.hasWithoutVersion(autoTagItem.component.id))
+    : autoTagDataWithLocalOnly;
   const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
   const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
   const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
@@ -351,7 +355,7 @@ export async function tagModelComponent({
     };
     const skipTasksParsed = skipTasks ? skipTasks.split(',').map((t) => t.trim()) : undefined;
     const seedersOnly = !workspace; // if tag from scope, build only the given components
-    const isolateOptions = { packageManagerConfigRootDir, seedersOnly };
+    const isolateOptions = { packageManagerConfigRootDir, seedersOnly, populateArtifactsIgnorePkgJson };
     const builderOptions = { exitOnFirstFailedTask, skipTests, skipTasks: skipTasksParsed };
 
     const componentsToBuild = allComponentsToTag.filter((c) => !c.isRemoved());
@@ -365,6 +369,7 @@ export async function tagModelComponent({
       publishedPackages.push(...snapping._getPublishedPackages(componentsToBuild));
       addBuildStatus(componentsToBuild, BuildStatus.Succeed);
       await mapSeries(componentsToBuild, (consumerComponent) => snapping._enrichComp(consumerComponent));
+      if (populateArtifactsFrom) await updateHiddenProp(scope, populateArtifactsFrom);
     }
   }
 
@@ -570,6 +575,14 @@ export async function updateComponentsVersions(
 
   const updateVersions = async (modelComponent: ModelComponent) => {
     const id: ComponentID = modelComponent.toBitIdWithLatestVersionAllowNull();
+    const isOnBitmap = consumer.bitMap.getComponentIfExist(id, { ignoreVersion: true });
+    if (!isOnBitmap && !isTag) {
+      // handle the case when a component was deleted, snapped/tagged and is now reset.
+      const stagedData = stagedConfig.getPerId(id);
+      if (stagedData?.config && stagedData.config[RemoveAspect.id]) {
+        consumer.bitMap.addFromComponentJson(stagedData.id, stagedData.componentMapObject);
+      }
+    }
     consumer.bitMap.updateComponentId(id, undefined, undefined, true);
     const availableOnMain = await isAvailableOnMain(modelComponent, id);
     if (!availableOnMain) {
@@ -579,8 +592,9 @@ export async function updateComponentsVersions(
     const compId = await workspace.resolveComponentId(id);
     // it can be either a tag/snap or reset.
     if (isTag) {
+      const compMapObj = componentMap.toPlainObject();
       const config = componentMap.config;
-      stagedConfig.addComponentConfig(compId, config);
+      stagedConfig.addComponentConfig(compId, config, compMapObj);
       consumer.bitMap.removeConfig(id);
       const hash = modelComponent.getRef(id.version as string);
       if (!hash) throw new Error(`updateComponentsVersions: unable to find a hash for ${id.toString()}`);
@@ -590,6 +604,7 @@ export async function updateComponentsVersions(
     }
     componentMap.clearNextVersion();
   };
+  // * the comment below is probably not relevant anymore, but it's good to keep it for future reference. *
   // important! DO NOT use Promise.all here! otherwise, you're gonna enter into a whole world of pain.
   // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is
   // trying to get the dependencies of comp1 using its package.json.
@@ -597,4 +612,25 @@ export async function updateComponentsVersions(
   await workspace.scope.legacyScope.stagedSnaps.write();
 
   return stagedConfig;
+}
+
+/**
+ * relevant for "_tag" (tag-from-scope) command.
+ * the new tag uses the same files/config/build-artifacts as the previous snap.
+ * we want to mark the previous snap as hidden. so then "bit log" and "bit blame" won't show it.
+ */
+async function updateHiddenProp(scope: ScopeMain, ids: ComponentID[]) {
+  const log = await getBasicLog();
+  log.message = 'marked as hidden';
+  await pMapPool(
+    ids,
+    async (id) => {
+      const versionObj = await scope.getBitObjectVersionById(id);
+      if (!versionObj) return;
+      versionObj.hidden = true;
+      versionObj.addModifiedLog(log);
+      scope.legacyScope.objects.add(versionObj);
+    },
+    { concurrency: 50 }
+  );
 }

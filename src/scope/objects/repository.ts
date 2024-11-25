@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import uidNumber from 'uid-number';
 import { Mutex } from 'async-mutex';
 import { compact, uniqBy, differenceWith, isEqual } from 'lodash';
 import { BitError } from '@teambit/bit-error';
@@ -6,12 +7,12 @@ import { ComponentID } from '@teambit/component-id';
 import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
 import pMap from 'p-map';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { OBJECTS_DIR } from '../../constants';
 import logger from '../../logger/logger';
-import { glob, resolveGroupId, writeFile } from '../../utils';
-import removeEmptyDir from '../../utils/fs/remove-empty-dir';
-import { ChownOptions } from '../../utils/fs-write-file';
-import { PathOsBasedAbsolute } from '../../utils/path';
+import { glob, writeFile, ChownOptions, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { removeEmptyDir } from '@teambit/toolbox.fs.remove-empty-dir';
+import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import { HashNotFound, OutdatedIndexJson } from '../exceptions';
 import RemoteLanes from '../lanes/remote-lanes';
 import UnmergedComponents from '../lanes/unmerged-components';
@@ -23,13 +24,9 @@ import { ObjectItem, ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
 import { ContentTransformer, onPersist, onRead } from './repository-hooks';
-import { concurrentIOLimit } from '../../utils/concurrency';
-import { createInMemoryCache } from '../../cache/cache-factory';
-import { getMaxSizeForObjects, InMemoryCache } from '../../cache/in-memory-cache';
+import { getMaxSizeForObjects, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { Types } from '../object-registrar';
 import { Lane, ModelComponent } from '../models';
-import { ComponentFsCache } from '../../consumer/component/component-fs-cache';
-import { pMapPool } from '../../utils/promise-with-concurrent';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
@@ -47,14 +44,12 @@ export default class Repository {
   remoteLanes!: RemoteLanes;
   unmergedComponents!: UnmergedComponents;
   persistMutex = new Mutex();
-  componentFsCache: ComponentFsCache;
   constructor(scopePath: string, scopeJson: ScopeJson) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
     this.onRead = onRead(scopePath, scopeJson);
     this.onPersist = onPersist(scopePath, scopeJson);
     this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects() });
-    this.componentFsCache = new ComponentFsCache(scopePath);
   }
 
   static async load({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
@@ -167,14 +162,12 @@ export default class Repository {
     return compact(existingRefs);
   }
 
-  async load(ref: Ref, throws = false, preferInMemoryObjects = false): Promise<BitObject> {
-    if (preferInMemoryObjects) {
-      // during tag, the updated objects are in `this.objects`.
-      // `this.cache` is less reliable, because if it reaches its max, then it loads from the filesystem, which may not
-      // be there yet (in case of "version" object), or may be out-of-date (in case of "component" object).
-      const inMemoryObjects = this.objects[ref.hash.toString()];
-      if (inMemoryObjects) return inMemoryObjects;
-    }
+  async load(ref: Ref, throws = false): Promise<BitObject> {
+    // during tag, the updated objects are in `this.objects`.
+    // `this.cache` is less reliable, because if it reaches its max, then it loads from the filesystem, which may not
+    // be there yet (in case of "version" object), or may be out-of-date (in case of "component" object).
+    const inMemoryObjects = this.objects[ref.hash.toString()];
+    if (inMemoryObjects) return inMemoryObjects;
     if (ref.hash.length < HASH_SIZE) {
       ref = await this.getFullRefFromShortHash(ref);
     }
@@ -326,12 +319,6 @@ export default class Repository {
         const bitObject = await this.load(new Ref(hash));
         if (!bitObject) {
           const indexJsonPath = this.scopeIndex.getPath();
-          if (this.scopeIndex.isFileOnBitHub()) {
-            logger.error(
-              `repository._getBitObjectsByHashes, indexJson at "${indexJsonPath}" is outdated and needs to be deleted`
-            );
-            return null;
-          }
           const indexItem = this.scopeIndex.find(hash);
           if (!indexItem) throw new Error(`_getBitObjectsByHashes failed finding ${hash}`);
           await this.scopeIndex.deleteFile();
@@ -573,14 +560,22 @@ export default class Repository {
     if (removed) await this.scopeIndex.write();
   }
 
-  async moveObjectsToTrash(refs: Ref[]): Promise<void> {
+  async moveObjectsToDir(refs: Ref[], dir: string): Promise<void> {
     if (!refs.length) return;
     const uniqRefs = uniqBy(refs, 'hash');
-    logger.debug(`Repository.moveObjectsToTrash: ${uniqRefs.length} objects`);
+    logger.debug(`Repository.moveObjectsToDir: ${uniqRefs.length} objects`);
     const concurrency = concurrentIOLimit();
-    await pMap(uniqRefs, (ref) => this.moveOneObjectToTrash(ref), { concurrency });
+    await pMap(uniqRefs, (ref) => this.moveOneObjectToDir(ref, dir), { concurrency });
     const removed = this.scopeIndex.removeMany(uniqRefs);
     if (removed) await this.scopeIndex.write();
+  }
+
+  async moveObjectsToTrash(refs: Ref[]): Promise<void> {
+    await this.moveObjectsToDir(refs, TRASH_DIR);
+  }
+
+  async listTrash(): Promise<Ref[]> {
+    return this.listRefs(this.getTrashDir());
   }
 
   async getFromTrash(refs: Ref[]): Promise<BitObject[]> {
@@ -608,11 +603,20 @@ export default class Repository {
     await this.writeObjectsToTheFS(objectsFromTrash);
   }
 
-  private async moveOneObjectToTrash(ref: Ref) {
+  async restoreFromDir(dir: string, overwrite = false) {
+    await fs.copy(path.join(this.scopePath, dir), this.getPath(), { overwrite });
+  }
+
+  private async moveOneObjectToDir(ref: Ref, dir: string) {
     const currentPath = this.objectPath(ref);
-    const trashObjPath = path.join(this.getTrashDir(), this.hashPath(ref));
-    await fs.move(currentPath, trashObjPath, { overwrite: true });
+    const absDir = path.join(this.scopePath, dir);
+    const fullPath = path.join(absDir, this.hashPath(ref));
+    await fs.move(currentPath, fullPath, { overwrite: true });
     this.removeFromCache(ref);
+  }
+
+  private async moveOneObjectToTrash(ref: Ref) {
+    await this.moveOneObjectToDir(ref, TRASH_DIR);
   }
 
   async deleteRecordsFromUnmergedComponents(compIds: ComponentID[]) {
@@ -709,4 +713,27 @@ async function removeFile(filePath: string, propagateDirs = false): Promise<bool
   const { dir } = path.parse(filePath);
   await removeEmptyDir(dir);
   return true;
+}
+
+function resolveGroupId(groupName: string): Promise<number | null | undefined> {
+  return new Promise((resolve, reject) => {
+    uidNumber(null, groupName, (err, uid, gid) => {
+      if (err) {
+        logger.error('resolveGroupId', err);
+        if (err.message.includes('EPERM')) {
+          return reject(
+            new BitError(
+              `unable to resolve group id of "${groupName}", current user does not have sufficient permissions`
+            )
+          );
+        }
+        if (err.message.includes('group id does not exist')) {
+          return reject(new BitError(`unable to resolve group id of "${groupName}", the group does not exist`));
+        }
+        return reject(new BitError(`unable to resolve group id of "${groupName}", got an error ${err.message}`));
+      }
+      // on Windows it'll always be null
+      return resolve(gid);
+    });
+  });
 }

@@ -6,6 +6,7 @@ import { getInitials } from '@teambit/toolbox.string.get-initials';
 import { letterBgColors } from '@teambit/design.ui.styles.colors-by-letter';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tooltip } from '@teambit/design.ui.tooltip';
+import type { Placement as TooltipPlacement } from '@teambit/design.ui.tooltip';
 import { AccountObj } from './avatar';
 import styles from './styles.module.scss';
 
@@ -19,6 +20,7 @@ export type UserAvatarProps = {
    * showing or not a tooltip when hover on the avatar, this value is false by default
    */
   showTooltip?: boolean;
+  tooltipPlacement?: TooltipPlacement;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function UserAvatar({
@@ -29,6 +31,7 @@ export function UserAvatar({
   className,
   imgClassName,
   showTooltip = false,
+  tooltipPlacement = 'bottom',
   children,
   ...rest
 }: UserAvatarProps) {
@@ -69,7 +72,7 @@ export function UserAvatar({
 
   return showTooltip ? (
     <Tooltip
-      placement="bottom"
+      placement={tooltipPlacement}
       content={
         <div className={ellipsis}>
           {displayName ? (

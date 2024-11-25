@@ -1,5 +1,6 @@
 import { resolve, join } from 'path';
-import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
+import { loadConsumer } from '@teambit/legacy/dist/consumer';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { readdirSync } from 'fs';
 import { Harmony, Aspect } from '@teambit/harmony';
@@ -92,7 +93,7 @@ function getMainFilePath(aspect: any, id: ComponentID) {
 }
 
 export async function getConfig(cwd = process.cwd()) {
-  const consumerInfo = await getConsumerInfo(cwd);
+  const consumerInfo = await getWorkspaceInfo(cwd);
   const scopePath = findScopePath(cwd);
   const globalConfigOpts = {
     name: '.bitrc.jsonc',
@@ -129,8 +130,6 @@ function clearGlobalsIfNeeded() {
   // don't clear this one. it's a static list of core-ids. if you delete it, you'll have to call
   // registerCoreExtensions() from @teambit/bit, which as far as I remember should not be a dependency of this aspect.
   // ExtensionDataList.coreExtensionsNames = new Map();
-  // @ts-ignore
-  WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;
   // @ts-ignore
   WorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
 }

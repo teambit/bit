@@ -6,12 +6,10 @@ import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/work
 import { LanesAspect, LanesMain } from '@teambit/lanes';
 import { ComponentID } from '@teambit/component-id';
 import { Component, InvalidComponent } from '@teambit/component';
-import loader from '@teambit/legacy/dist/cli/loader';
-import { BEFORE_STATUS } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import ComponentsPendingImport from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-import';
-import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
+import { ComponentsList } from '@teambit/legacy.component-list';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
@@ -19,8 +17,10 @@ import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
 import { MiniStatusCmd, MiniStatusOpts } from './mini-status-cmd';
+import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 
 type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
+const BEFORE_STATUS = 'fetching status';
 
 export type StatusResult = {
   newComponents: ComponentID[];
@@ -43,6 +43,7 @@ export type StatusResult = {
   currentLaneId: LaneId;
   forkedLaneId?: LaneId;
   workspaceIssues: string[];
+  localOnly: ComponentID[];
 };
 
 export type MiniStatusResults = {
@@ -57,7 +58,8 @@ export class StatusMain {
     private issues: IssuesMain,
     private insights: InsightsMain,
     private remove: RemoveMain,
-    private lanes: LanesMain
+    private lanes: LanesMain,
+    private logger: Logger
   ) {}
 
   async status({
@@ -68,14 +70,13 @@ export class StatusMain {
     ignoreCircularDependencies?: boolean;
   }): Promise<StatusResult> {
     if (!this.workspace) throw new OutsideWorkspaceError();
-    loader.start(BEFORE_STATUS);
+    this.logger.setStatusLine(BEFORE_STATUS);
     const loadOpts = {
       loadDocs: false,
       loadCompositions: false,
     };
-    const { components: allComps, invalidComponents: allInvalidComponents } = await this.workspace.listWithInvalid(
-      loadOpts
-    );
+    const { components: allComps, invalidComponents: allInvalidComponents } =
+      await this.workspace.listWithInvalid(loadOpts);
     const consumer = this.workspace.consumer;
     const laneObj = await consumer.getCurrentLaneObject();
     const componentsList = new ComponentsList(consumer);
@@ -123,6 +124,7 @@ export class StatusMain {
     const currentLane = await consumer.getCurrentLaneObject();
     const forkedLaneId = currentLane?.forkedFrom;
     const workspaceIssues = this.workspace.getWorkspaceIssues();
+    const localOnly = this.workspace.listLocalOnly();
 
     const sortObjectsWithId = <T>(objectsWithId: Array<T & { id: ComponentID }>): Array<T & { id: ComponentID }> => {
       return objectsWithId.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
@@ -158,6 +160,7 @@ export class StatusMain {
       currentLaneId,
       forkedLaneId,
       workspaceIssues: workspaceIssues.map((err) => err.message),
+      localOnly,
     };
   }
 
@@ -217,17 +220,27 @@ export class StatusMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect, WorkspaceAspect, InsightsAspect, IssuesAspect, RemoveAspect, LanesAspect];
+  static dependencies = [
+    CLIAspect,
+    WorkspaceAspect,
+    InsightsAspect,
+    IssuesAspect,
+    RemoveAspect,
+    LanesAspect,
+    LoggerAspect,
+  ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, insights, issues, remove, lanes]: [
+  static async provider([cli, workspace, insights, issues, remove, lanes, loggerMain]: [
     CLIMain,
     Workspace,
     InsightsMain,
     IssuesMain,
     RemoveMain,
-    LanesMain
+    LanesMain,
+    LoggerMain,
   ]) {
-    const statusMain = new StatusMain(workspace, issues, insights, remove, lanes);
+    const logger = loggerMain.createLogger(StatusAspect.id);
+    const statusMain = new StatusMain(workspace, issues, insights, remove, lanes, logger);
     cli.register(new StatusCmd(statusMain), new MiniStatusCmd(statusMain));
     return statusMain;
   }

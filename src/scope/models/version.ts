@@ -8,22 +8,21 @@ import { BuildStatus, DEFAULT_BUNDLE_FILENAME, Extensions } from '../../constant
 import ConsumerComponent from '../../consumer/component';
 import { isSchemaSupport, SchemaFeature, SchemaName } from '../../consumer/component/component-schema';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
-import { SourceFile } from '../../consumer/component/sources';
-import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
+import { getRefsFromExtensions, SourceFile } from '@teambit/component.sources';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/extension-data';
-import { Doclet } from '../../jsdoc/types';
+import type { Doclet } from '@teambit/semantics.doc-parser';
 import logger from '../../logger/logger';
-import { getStringifyArgs, sha1 } from '../../utils';
-import { PathLinux, pathNormalizeToLinux } from '../../utils/path';
+import { getStringifyArgs, PathLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import VersionInvalid from '../exceptions/version-invalid';
 import { BitObject, Ref } from '../objects';
 import { ObjectItem } from '../objects/object-list';
 import Repository from '../objects/repository';
 import validateVersionInstance from '../version-validator';
 import Source from './source';
-import { getHarmonyVersion } from '../../bootstrap';
 import { BitIdCompIdError } from '../exceptions/bit-id-comp-id-err';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 
 export type SourceFileModel = {
   name: string;
@@ -85,6 +84,7 @@ export type VersionProps = {
   bitVersion?: string;
   modified?: Log[];
   origin?: VersionOrigin;
+  hidden?: boolean;
 };
 
 /**
@@ -133,6 +133,7 @@ export default class Version extends BitObject {
   bitVersion?: string;
   modified: Log[] = []; // currently mutation could happen as a result of either "squash" or "sign".
   origin?: VersionOrigin; // for debugging purposes
+  hidden?: boolean; // whether the version is hidden from commands such as "bit log", "bit blame". (needed for un-meaningful snaps, such as merged-lane snap prior to the tag)
 
   constructor(props: VersionProps) {
     super();
@@ -164,6 +165,7 @@ export default class Version extends BitObject {
     this.bitVersion = props.bitVersion;
     this.modified = props.modified || [];
     this.origin = props.origin;
+    this.hidden = props.hidden;
     this.validateVersion();
   }
 
@@ -353,6 +355,7 @@ export default class Version extends BitObject {
     }
     if (includeArtifacts) {
       const artifacts = getRefsFromExtensions(this.extensions);
+      // @ts-ignore todo: remove after deleting teambit.legacy
       allRefs.push(...artifacts);
     }
     if (this.flattenedEdgesRef) allRefs.push(this.flattenedEdgesRef);
@@ -456,6 +459,7 @@ export default class Version extends BitObject {
         bitVersion: this.bitVersion,
         modified: this.modified,
         origin: this.origin,
+        hidden: this.hidden,
       },
       (val) => !!val
     );
@@ -505,6 +509,7 @@ export default class Version extends BitObject {
       bitVersion,
       modified,
       origin,
+      hidden,
     } = contentParsed;
 
     const _getDependencies = (deps = []): Dependency[] => {
@@ -613,6 +618,7 @@ export default class Version extends BitObject {
       bitVersion,
       modified,
       origin,
+      hidden,
     });
   }
 
@@ -669,7 +675,7 @@ export default class Version extends BitObject {
       extensions: component.extensions,
       buildStatus: component.buildStatus,
       componentId: component.id,
-      bitVersion: getHarmonyVersion(true),
+      bitVersion: getBitVersion(),
     });
     if (isSnap(component.version)) {
       version._hash = component.version as string;
@@ -690,6 +696,15 @@ export default class Version extends BitObject {
 
   get isLegacy(): boolean {
     return !this.schema || this.schema === SchemaName.Legacy;
+  }
+
+  get originLaneId(): LaneId | undefined {
+    return this.origin?.lane ? new LaneId({ name: this.origin.lane.name, scope: this.origin.lane.scope }) : undefined;
+  }
+  get originId(): ComponentID | undefined {
+    return this.origin?.id
+      ? ComponentID.fromObject({ scope: this.origin.id.scope, name: this.origin.id.name })
+      : undefined;
   }
 
   setDist(dist: Source | undefined) {
@@ -750,6 +765,7 @@ export default class Version extends BitObject {
   }
 
   modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {
+    // @ts-ignore todo: remove after deleting teambit.legacy
     return Promise.all(this.files.map((file) => SourceFile.loadFromSourceFileModel(file, repository)));
   }
 

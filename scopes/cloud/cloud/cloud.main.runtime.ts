@@ -18,11 +18,14 @@ import {
   SYMPHONY_GRAPHQL,
   getLoginUrl,
   DEFAULT_ANALYTICS_DOMAIN,
-  DEFAULT_REGISTRY_URL,
+  getRegistryUrl,
+  clearCachedUrls,
   CENTRAL_BIT_HUB_URL,
   CENTRAL_BIT_HUB_NAME,
   CFG_USER_TOKEN_KEY,
   CFG_USER_NAME_KEY,
+  DEFAULT_CLOUD_DOMAIN,
+  CFG_CLOUD_DOMAIN_KEY,
 } from '@teambit/legacy/dist/constants';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import globalFlags from '@teambit/legacy/dist/cli/global-flags';
@@ -72,14 +75,18 @@ type CloudOrganizationAPIResponse = {
   };
 };
 
+const HTTPS: string = 'https://';
+
 export type OnSuccessLogin = ({
   username,
   token,
   npmrcUpdateResult,
+  updatedConfigs,
 }: {
   username?: string;
   token?: string;
   npmrcUpdateResult?: NpmConfigUpdateResult;
+  updatedConfigs?: Record<string, string | undefined>;
 }) => void;
 export type OnSuccessLoginSlot = SlotRegistry<OnSuccessLogin>;
 export type NpmConfigUpdateResult = {
@@ -210,10 +217,12 @@ export class CloudMain {
     port: portFromParams,
     clientId = v4(),
     skipConfigUpdate,
+    cloudDomain,
   }: {
     port?: number;
     clientId?: string;
     skipConfigUpdate?: boolean;
+    cloudDomain?: string;
   } = {}): Promise<CloudAuthListener | null> {
     return new Promise((resolve, reject) => {
       const port = portFromParams || this.getLoginPort();
@@ -292,12 +301,13 @@ export class CloudMain {
           });
 
           const onLoggedInFns = this.onSuccessLoginSlot.values();
+          const updatedConfigs = this.updateGlobalConfigOnLogin(cloudDomain);
 
           if (!skipConfigUpdate) {
             this.updateNpmConfig({ authToken: token as string, username: username as string })
               .then((configUpdates) => {
                 onLoggedInFns.forEach((fn) =>
-                  fn({ username, token: token as string, npmrcUpdateResult: configUpdates })
+                  fn({ username, token: token as string, npmrcUpdateResult: configUpdates, updatedConfigs })
                 );
               })
               .catch((error) => {
@@ -305,6 +315,7 @@ export class CloudMain {
                   fn({
                     username,
                     token: token as string,
+                    updatedConfigs,
                     npmrcUpdateResult: {
                       error: new Error(`failed to update npmrc. error ${error?.toString}`),
                     },
@@ -395,13 +406,28 @@ export class CloudMain {
     return this.globalConfig.getSync(CFG_USER_NAME_KEY);
   }
 
+  private ensureHttps(url: string): string {
+    if (!url.startsWith('http')) {
+      return `${HTTPS}${url}`;
+    }
+    return url;
+  }
+
+  private calculateLoginDomain(cloudDomain: string) {
+    let finalCloudDomain = this.ensureHttps(cloudDomain);
+    if (!finalCloudDomain.endsWith('/bit-login')) {
+      finalCloudDomain = `${finalCloudDomain}/bit-login`;
+    }
+    return finalCloudDomain;
+  }
+
   async getLoginUrl({
     redirectUrl,
     machineName,
     cloudDomain,
     port: portFromParams,
   }: { redirectUrl?: string; machineName?: string; cloudDomain?: string; port?: string } = {}): Promise<string | null> {
-    const loginUrl = cloudDomain || this.getLoginDomain();
+    const loginUrl = cloudDomain ? this.calculateLoginDomain(cloudDomain) : this.getLoginDomain();
     const port = Number(portFromParams) || this.getLoginPort();
     if (redirectUrl) {
       this.REDIRECT_URL = redirectUrl;
@@ -428,6 +454,10 @@ export class CloudMain {
     this.globalConfig.delSync(CFG_USER_NAME_KEY);
   }
 
+  setRedirectUrl(redirectUrl: string) {
+    this.REDIRECT_URL = redirectUrl;
+  }
+
   async whoami(): Promise<string | undefined> {
     const currentUser = await this.getCurrentUser();
     if (!currentUser?.username) {
@@ -436,19 +466,55 @@ export class CloudMain {
     return currentUser.username;
   }
 
+  private globalConfigsToUpdateOnLogin(domain?: string): Record<string, string | undefined> {
+    const currentCloudDomain = this.globalConfig.getSync(CFG_CLOUD_DOMAIN_KEY);
+    const res = {};
+    if (!domain || domain === DEFAULT_CLOUD_DOMAIN) {
+      if (currentCloudDomain && currentCloudDomain !== DEFAULT_CLOUD_DOMAIN) {
+        res[CFG_CLOUD_DOMAIN_KEY] = '';
+      }
+      return res;
+    }
+    if (currentCloudDomain !== domain) {
+      res[CFG_CLOUD_DOMAIN_KEY] = domain;
+    }
+    return res;
+  }
+
+  private updateGlobalConfigOnLogin(domain?: string) {
+    const configsToUpdate = this.globalConfigsToUpdateOnLogin(domain);
+
+    Object.entries(configsToUpdate).forEach(([key, value]) => {
+      if (value) {
+        this.globalConfig.setSync(key, value);
+      } else {
+        this.globalConfig.delSync(key);
+      }
+    });
+    // Refresh the config after updating
+    clearCachedUrls();
+    this.config = CloudMain.calculateConfig();
+    return configsToUpdate;
+  }
+
   async login(
     port?: string,
     suppressBrowserLaunch?: boolean,
     machineName?: string,
     cloudDomain?: string,
     redirectUrl?: string,
-    skipConfigUpdate?: boolean
+    skipConfigUpdate?: boolean,
+    defaultCloudDomain?: boolean
   ): Promise<{
     isAlreadyLoggedIn?: boolean;
     username?: string;
     token?: string;
     npmrcUpdateResult?: NpmConfigUpdateResult;
+    globalConfigUpdates?: Record<string, string | undefined>;
   } | null> {
+    if (defaultCloudDomain) {
+      cloudDomain = DEFAULT_CLOUD_DOMAIN;
+    }
     return new Promise((resolve, reject) => {
       if (this.isLoggedIn()) {
         resolve({
@@ -466,6 +532,7 @@ export class CloudMain {
             username: loggedInParams.username,
             token: loggedInParams.token,
             npmrcUpdateResult: loggedInParams.npmrcUpdateResult,
+            globalConfigUpdates: loggedInParams.updatedConfigs,
           });
         });
 
@@ -492,6 +559,7 @@ export class CloudMain {
         this.setupAuthListener({
           port: Number(port),
           skipConfigUpdate,
+          cloudDomain,
         })
           .then(promptLogin)
           .catch((e) => reject(e));
@@ -528,7 +596,7 @@ export class CloudMain {
       getUserOrganizations {
         id
         name
-      }    
+      }
     }
   `;
 
@@ -600,6 +668,20 @@ export class CloudMain {
       return null;
     }
   }
+  static calculateConfig(): CloudWorkspaceConfig {
+    return {
+      cloudDomain: getCloudDomain(),
+      cloudHubDomain: DEFAULT_HUB_DOMAIN,
+      cloudApi: getSymphonyUrl(),
+      cloudGraphQL: SYMPHONY_GRAPHQL,
+      loginDomain: getLoginUrl(),
+      analyticsDomain: DEFAULT_ANALYTICS_DOMAIN,
+      registryUrl: getRegistryUrl(),
+      cloudExporterUrl: CENTRAL_BIT_HUB_URL,
+      cloudHubName: CENTRAL_BIT_HUB_NAME,
+      loginPort: CloudMain.DEFAULT_PORT,
+    };
+  }
 
   static slots = [Slot.withType<OnSuccessLogin>()];
   static dependencies = [
@@ -613,18 +695,8 @@ export class CloudMain {
     UIAspect,
   ];
   static runtime = MainRuntime;
-  static defaultConfig: CloudWorkspaceConfig = {
-    cloudDomain: getCloudDomain(),
-    cloudHubDomain: DEFAULT_HUB_DOMAIN,
-    cloudApi: getSymphonyUrl(),
-    cloudGraphQL: SYMPHONY_GRAPHQL,
-    loginDomain: getLoginUrl(),
-    analyticsDomain: DEFAULT_ANALYTICS_DOMAIN,
-    registryUrl: DEFAULT_REGISTRY_URL,
-    cloudExporterUrl: CENTRAL_BIT_HUB_URL,
-    cloudHubName: CENTRAL_BIT_HUB_NAME,
-    loginPort: CloudMain.DEFAULT_PORT,
-  };
+  static defaultConfig: CloudWorkspaceConfig = CloudMain.calculateConfig();
+
   static async provider(
     [loggerMain, graphql, express, workspace, scope, globalConfig, cli, ui]: [
       LoggerMain,
@@ -634,7 +706,7 @@ export class CloudMain {
       ScopeMain,
       GlobalConfigMain,
       CLIMain,
-      UiMain
+      UiMain,
     ],
     config: CloudWorkspaceConfig,
     [onSuccessLoginSlot]: [OnSuccessLoginSlot]

@@ -25,6 +25,10 @@ export class IgnoredSchema extends SchemaNode {
     return '';
   }
 
+  toFullSignature(): string {
+    return '';
+  }
+
   toObject() {
     return {
       ...super.toObject(),

@@ -4,7 +4,7 @@ import { ApiServerMain } from './api-server.main.runtime';
 
 export class ServerCmd implements Command {
   name = 'server';
-  description = 'EXPERIMENTAL. communicate with bit cli program via http requests';
+  description = 'communicate with bit cli program via http requests';
   alias = '';
   commands: Command[] = [];
   group = 'general';

@@ -4,7 +4,10 @@ import { SchemaRegistry } from '../schema-registry';
 export class TypeIntersectionSchema extends SchemaNode {
   readonly types: SchemaNode[];
 
-  constructor(readonly location: SchemaLocation, types: SchemaNode[]) {
+  constructor(
+    readonly location: SchemaLocation,
+    types: SchemaNode[]
+  ) {
     super();
     this.types = types;
   }
@@ -13,8 +16,12 @@ export class TypeIntersectionSchema extends SchemaNode {
     return this.types;
   }
 
-  toString() {
-    return `${this.types.map((type) => type.toString()).join(' & ')}`;
+  toString(options?: { color?: boolean }) {
+    return `${this.types.map((type) => type.toString(options)).join(' & ')}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    return this.types.map((type) => type.toFullSignature(options)).join(' & ');
   }
 
   toObject() {

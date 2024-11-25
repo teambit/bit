@@ -340,7 +340,7 @@ export class TypescriptMain {
       EnvsMain,
       WatcherMain,
       ScopeMain,
-      BuilderMain
+      BuilderMain,
     ],
     config,
     [schemaTransformerSlot, apiTransformerSlot]: [SchemaTransformerSlot, APITransformerSlot]

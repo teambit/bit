@@ -29,7 +29,10 @@ export class EjectCmd implements Command {
   loader = true;
   group = 'development';
 
-  constructor(private ejectMain: EjectMain, private workspace: Workspace) {}
+  constructor(
+    private ejectMain: EjectMain,
+    private workspace: Workspace
+  ) {}
 
   async report(
     [pattern]: [string],

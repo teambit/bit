@@ -13,10 +13,12 @@ import {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
+import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { Logger } from '@teambit/logger';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
+import { Config } from '@pnpm/config';
 import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
 import {
   buildDependenciesHierarchy,
@@ -26,19 +28,31 @@ import {
 } from '@pnpm/reviewing.dependencies-hierarchy';
 import { renderTree } from '@pnpm/list';
 import { readWantedLockfile } from '@pnpm/lockfile-file';
-import { ProjectManifest } from '@pnpm/types';
+import { type ProjectManifest, type DepPath } from '@pnpm/types';
+import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
+import { ServerSendOutStream } from '@teambit/legacy/dist/logger/pino-logger';
 import { join } from 'path';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
-import { getVirtualStoreDirMaxLength } from './get-virtual-store-dir-max-length';
+
+export type { RebuildFn };
+
+export interface InstallResult {
+  dependenciesChanged: boolean;
+  rebuild: RebuildFn;
+  storeDir: string;
+  depsRequiringBuild?: DepPath[];
+}
+
+type ReadConfigResult = Promise<{ config: Config; warnings: string[] }>;
 
 export class PnpmPackageManager implements PackageManager {
   readonly name = 'pnpm';
   readonly modulesManifestCache: Map<string, Modules> = new Map();
   private username: string;
 
-  private _readConfig = async (dir?: string) => {
+  private _readConfig = async (dir?: string): ReadConfigResult => {
     const { config, warnings } = await readConfig(dir);
     if (config?.fetchRetries && config?.fetchRetries < 5) {
       config.fetchRetries = 5;
@@ -48,14 +62,18 @@ export class PnpmPackageManager implements PackageManager {
     return { config, warnings };
   };
 
-  public readConfig = memoize(this._readConfig);
+  public readConfig: (dir?: string) => ReadConfigResult = memoize(this._readConfig);
 
-  constructor(private depResolver: DependencyResolverMain, private logger: Logger, private cloud: CloudMain) {}
+  constructor(
+    private depResolver: DependencyResolverMain,
+    private logger: Logger,
+    private cloud: CloudMain
+  ) {}
 
   async install(
     { rootDir, manifests }: InstallationContext,
     installOptions: PackageManagerInstallOptions = {}
-  ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string }> {
+  ): Promise<InstallResult> {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
@@ -86,7 +104,7 @@ export class PnpmPackageManager implements PackageManager {
       });
     }
     this.modulesManifestCache.delete(rootDir);
-    const { dependenciesChanged, rebuild, storeDir } = await install(
+    const { dependenciesChanged, rebuild, storeDir, depsRequiringBuild } = await install(
       rootDir,
       manifests,
       config.storeDir,
@@ -95,7 +113,8 @@ export class PnpmPackageManager implements PackageManager {
       proxyConfig,
       networkConfig,
       {
-        autoInstallPeers: installOptions.autoInstallPeers ?? false,
+        autoInstallPeers: installOptions.autoInstallPeers ?? true,
+        enableModulesDir: installOptions.enableModulesDir,
         engineStrict: installOptions.engineStrict ?? config.engineStrict,
         excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
         lockfileOnly: installOptions.lockfileOnly,
@@ -124,11 +143,13 @@ export class PnpmPackageManager implements PackageManager {
         hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
         reportOptions: {
           appendOnly: installOptions.optimizeReportForNonTerminal,
+          process: process.env.BIT_CLI_SERVER_NO_TTY ? { ...process, stdout: new ServerSendOutStream() } : undefined,
           throttleProgress: installOptions.throttleProgress,
           hideProgressPrefix: installOptions.hideProgressPrefix,
           hideLifecycleOutput: installOptions.hideLifecycleOutput,
           peerDependencyRules: installOptions.peerDependencyRules,
         },
+        returnListOfDepsRequiringBuild: installOptions.returnListOfDepsRequiringBuild,
       },
       this.logger
     );
@@ -138,7 +159,7 @@ export class PnpmPackageManager implements PackageManager {
       // this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
       // this.logger.consoleSuccess('installing dependencies using pnpm');
     }
-    return { dependenciesChanged, rebuild, storeDir };
+    return { dependenciesChanged, rebuild, storeDir, depsRequiringBuild };
   }
 
   async getPeerDependencyIssues(
@@ -293,7 +314,7 @@ export class PnpmPackageManager implements PackageManager {
     const search = createPackagesSearcher([depName]);
     const lockfile = await readWantedLockfile(opts.lockfileDir, { ignoreIncompatible: false });
     const projectPaths = Object.keys(lockfile?.importers ?? {})
-      .filter((id) => !id.startsWith('node_modules/.bit_roots'))
+      .filter((id) => !id.includes(`${BIT_ROOTS_DIR}/`))
       .map((id) => join(opts.lockfileDir, id));
     const cache = new Map();
     const modulesManifest = await this._readModulesManifest(opts.lockfileDir);
@@ -314,7 +335,7 @@ export class PnpmPackageManager implements PackageManager {
           default: 'https://registry.npmjs.org',
         },
         search,
-        virtualStoreDirMaxLength: getVirtualStoreDirMaxLength(),
+        virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
       })
     ).map(([projectPath, builtDependenciesHierarchy]) => {
       pkgNamesToComponentIds(builtDependenciesHierarchy, { cache, getPkgLocation });

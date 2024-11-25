@@ -61,6 +61,7 @@ export type LoadExtByManifestContext = {
 export type LoadExtByManifestOptions = {
   throwOnError?: boolean;
   hideMissingModuleError?: boolean;
+  ignoreErrorFunc?: (err: Error) => boolean;
   ignoreErrors?: boolean;
   /**
    * If this is enabled then we will show loading error only once for a given extension
@@ -69,7 +70,7 @@ export type LoadExtByManifestOptions = {
   unifyErrorsByExtId?: boolean;
 };
 
-type OnAspectLoadError = (err: Error, id: ComponentID) => Promise<boolean>;
+type OnAspectLoadError = (err: Error, component: Component) => Promise<boolean>;
 export type OnAspectLoadErrorSlot = SlotRegistry<OnAspectLoadError>;
 
 export type OnAspectLoadErrorHandler = (err: Error, component: Component) => Promise<boolean>;
@@ -161,7 +162,7 @@ export class AspectLoaderMain {
     const entries = this.onAspectLoadErrorSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onAspectLoadError] ] ]
     let isFixed = false;
     await mapSeries(entries, async ([, onAspectFailFunc]) => {
-      const result = await onAspectFailFunc(err, component.id);
+      const result = await onAspectFailFunc(err, component);
       if (result) isFixed = true;
     });
 
@@ -260,7 +261,7 @@ export class AspectLoaderMain {
   }
 
   /**
-   * get all the configured aspects in the config file (workspace.jsonc / bit.jsonc)
+   * get all the configured aspects in the config file (workspace.jsonc / scope.jsonc)
    */
   getConfiguredAspects(): string[] {
     const configuredAspects = Array.from(this.harmony.config.raw.keys());
@@ -538,7 +539,7 @@ export class AspectLoaderMain {
     return !isEmpty(files);
   }
 
-  private searchDistFile(rootDir: string, relativePath: string) {
+  private searchDistFile(rootDir: string, relativePath: string, replaceNotFound = false) {
     const defaultDistDir = join(rootDir, 'dist');
     const fileExtension = extname(relativePath);
     const fileNames = ['ts', 'js', 'tsx', 'jsx'].map((ext) =>
@@ -546,15 +547,21 @@ export class AspectLoaderMain {
     );
     const defaultDistPath = fileNames.map((fileName) => join(defaultDistDir, fileName));
     const found = defaultDistPath.find((distPath) => existsSync(distPath));
-    return found;
+    if (found) return found;
+    if (!replaceNotFound) return null;
+    const jsFileName = relativePath.replace(new RegExp(`${fileExtension}$`), `.js`);
+    const finalPath = join(defaultDistDir, jsFileName);
+    return finalPath;
   }
 
   pluginFileResolver(component: Component, rootDir: string) {
     return (relativePath: string) => {
+      const replaceNotFound = relativePath.endsWith('.ts') || relativePath.endsWith('.tsx');
+
       try {
         const compiler = this.getCompiler(component);
         if (!compiler) {
-          const distFile = this.searchDistFile(rootDir, relativePath);
+          const distFile = this.searchDistFile(rootDir, relativePath, replaceNotFound);
           return distFile || join(rootDir, relativePath);
         }
 
@@ -565,7 +572,7 @@ export class AspectLoaderMain {
         this.logger.info(
           `pluginFileResolver: got an error during get compiler for component ${component.id.toString()}, probably the env is not loaded yet ${err}`
         );
-        const distFile = this.searchDistFile(rootDir, relativePath);
+        const distFile = this.searchDistFile(rootDir, relativePath, replaceNotFound);
         return distFile || join(rootDir, relativePath);
       }
     };
@@ -760,12 +767,6 @@ export class AspectLoaderMain {
       await this.harmony.load(relevantManifests);
     } catch (e: any) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
-      // TODO: improve texts
-      const errorMsg = e.message.split('\n')[0];
-      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids, errorMsg, neededFor);
-      this.logger.error(warning, e);
-      if (mergedOptions.ignoreErrors) return;
-      if (e.code === 'MODULE_NOT_FOUND' && mergedOptions.hideMissingModuleError) return;
       if (mergedOptions.unifyErrorsByExtId) {
         const needToPrint = some(ids, (id) => !this.failedToLoadExt.has(id));
         if (!needToPrint) return;
@@ -779,6 +780,15 @@ export class AspectLoaderMain {
           }
         });
       }
+      if (mergedOptions.ignoreErrors) return;
+      if ((e.code === 'MODULE_NOT_FOUND' || e.code === 'ERR_MODULE_NOT_FOUND') && mergedOptions.hideMissingModuleError)
+        return;
+
+      if (mergedOptions.ignoreErrorFunc && mergedOptions.ignoreErrorFunc(e)) return;
+      // TODO: improve texts
+      const errorMsg = e.message.split('\n')[0];
+      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids, errorMsg, neededFor);
+      this.logger.error(warning, e);
       if (this.logger.isLoaderStarted) {
         if (mergedOptions.throwOnError) throw new BitError(warning);
         this.logger.consoleFailure(warning);
@@ -806,28 +816,34 @@ export class AspectLoaderMain {
     return graph;
   }
 
-  public async loadAspectFromPath(localAspects: string[]) {
+  public async loadAspectFromPath(localAspects: string[]): Promise<Record<string, string>> {
+    const res = {};
     const dirPaths = this.parseLocalAspect(localAspects);
-    const manifests = dirPaths.map((dirPath) => {
+    const manifests = dirPaths.map(([dirPath, localAspect]) => {
       const scopeRuntime = this.findRuntime(dirPath, 'scope');
       if (scopeRuntime) {
         // eslint-disable-next-line global-require, import/no-dynamic-require
         const module = require(join(dirPath, 'dist', scopeRuntime));
-        return module.default || module;
+        const manifest = module.default || module;
+        res[manifest.id] = localAspect;
+        return manifest;
       }
       // eslint-disable-next-line global-require, import/no-dynamic-require
       const module = require(dirPath);
-      return module.default || module;
+      const manifest = module.default || module;
+      res[manifest.id] = localAspect;
+      return manifest;
     });
 
     await this.loadExtensionsByManifests(manifests, undefined, { throwOnError: true });
+    return res;
   }
 
   private parseLocalAspect(localAspects: string[]) {
-    const dirPaths = localAspects.map((localAspect) => resolve(localAspect.replace('file://', '')));
-    const nonExistsDirPaths = dirPaths.filter((path) => !existsSync(path));
+    const dirPaths = localAspects.map((localAspect) => [resolve(localAspect.replace('file://', '')), localAspect]);
+    const nonExistsDirPaths = dirPaths.filter(([path]) => !existsSync(path));
     nonExistsDirPaths.forEach((path) => this.logger.warn(`no such file or directory: ${path}`));
-    const existsDirPaths = dirPaths.filter((path) => existsSync(path));
+    const existsDirPaths = dirPaths.filter(([path]) => existsSync(path));
     return existsDirPaths;
   }
 
@@ -837,8 +853,7 @@ export class AspectLoaderMain {
   }
 
   public async resolveLocalAspects(ids: string[], runtime?: string): Promise<AspectDefinition[]> {
-    const dirs = this.parseLocalAspect(ids);
-
+    const dirs = this.parseLocalAspect(ids).map(([dir]) => dir);
     return dirs.map((dir) => {
       const srcRuntimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
       const srcAspectFilePath = runtime ? this.findAspectFile(dir) : undefined;
@@ -869,7 +884,7 @@ export class AspectLoaderMain {
     [onAspectLoadErrorSlot, onLoadRequireableExtensionSlot, pluginSlot]: [
       OnAspectLoadErrorSlot,
       OnLoadRequireableExtensionSlot,
-      PluginDefinitionSlot
+      PluginDefinitionSlot,
     ],
     harmony: Harmony
   ) {

@@ -1,5 +1,5 @@
-import { concurrentComponentsLimit } from '../../utils/concurrency';
-import { pMapPool } from '../../utils/promise-with-concurrent';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { ModelComponent } from '../models';
 import { SourceRepository } from '../repositories';
 import { ModelComponentMerger } from './model-components-merger';
@@ -10,7 +10,10 @@ type ComponentsPerId = { [id: string]: ModelComponentPerRemote };
 
 export class MultipleComponentMerger {
   private compsPerIds: ComponentsPerId;
-  constructor(private componentsPerRemote: ComponentsPerRemote, private sources: SourceRepository) {
+  constructor(
+    private componentsPerRemote: ComponentsPerRemote,
+    private sources: SourceRepository
+  ) {
     this.compsPerIds = this.convertToCompsPerIds();
   }
 

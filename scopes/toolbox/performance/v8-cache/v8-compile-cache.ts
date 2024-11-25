@@ -189,8 +189,8 @@ function getCacheDir(): string {
     typeof process.versions.v8 === 'string'
       ? process.versions.v8
       : typeof (process.versions as any).chakracore === 'string'
-      ? `chakracore-${(process.versions as any).chakracore}`
-      : `node-${process.version}`;
+        ? `chakracore-${(process.versions as any).chakracore}`
+        : `node-${process.version}`;
   return path.join(os.tmpdir(), dirname, version);
 }
 

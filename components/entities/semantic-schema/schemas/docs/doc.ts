@@ -5,7 +5,12 @@ import { TagName, TagSchema } from './tag';
 export class DocSchema extends SchemaNode {
   readonly tags?: TagSchema[];
 
-  constructor(readonly location: SchemaLocation, readonly raw: string, readonly comment?: string, tags?: TagSchema[]) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly raw: string,
+    readonly comment?: string,
+    tags?: TagSchema[]
+  ) {
     super();
     this.tags = tags;
   }
@@ -14,6 +19,26 @@ export class DocSchema extends SchemaNode {
     const comment = this.comment ? `${this.comment}\n` : '';
     const tags = this.tags ? this.tags.map((tag) => tag.toString()).join('\n') : '';
     return `${comment}${tags}`;
+  }
+
+  toFullSignature(): string {
+    const lines: string[] = [];
+
+    if (this.comment) {
+      lines.push(...this.comment.split('\n').map((line) => ` * ${line.trim()}`));
+    }
+
+    if (this.tags && this.tags.length > 0) {
+      for (const tag of this.tags) {
+        lines.push(` * ${tag.toString().trim()}`);
+      }
+    }
+
+    if (lines.length === 0) {
+      return '';
+    }
+
+    return `/**\n${lines.join('\n')}\n */`;
   }
 
   hasTag(tagName: TagName) {

@@ -5,11 +5,13 @@ import { compact, isEmpty } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
-import { Analytics } from '../analytics/analytics';
+import { BitError } from '@teambit/bit-error';
+import { Analytics } from '@teambit/legacy.analytics';
 import {
   BIT_GIT_DIR,
   BIT_HIDDEN_DIR,
   BIT_WORKSPACE_TMP_DIRNAME,
+  DEFAULT_COMPONENTS_DIR_PATH,
   DEPENDENCIES_FIELDS,
   DOT_GIT_DIR,
   LATEST,
@@ -17,11 +19,11 @@ import {
 import logger from '../logger/logger';
 import { Scope } from '../scope';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
-import { ComponentNotFound } from '../scope/exceptions';
+import { ComponentNotFound, ScopeNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
-import { generateRandomStr } from '@teambit/toolbox.string.random';
+// import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
-import { composeComponentPath } from '../utils/bit/compose-component-path';
+import format from 'string-format';
 import {
   PathAbsolute,
   PathLinuxRelative,
@@ -29,16 +31,16 @@ import {
   PathOsBasedAbsolute,
   PathOsBasedRelative,
   PathRelative,
-} from '../utils/path';
-import BitMap from './bit-map/bit-map';
-import { NextVersion } from './bit-map/component-map';
+  parseScope,
+} from '@teambit/legacy.utils';
+import { BitMap, NextVersion } from '@teambit/legacy.bit-map';
 import Component from './component';
 import ComponentLoader, { ComponentLoadOptions, LoadManyResult } from './component/component-loader';
 import { Dependencies } from './component/dependencies';
-import PackageJsonFile from './component/package-json-file';
+import { PackageJsonFile } from '@teambit/component.sources';
 import { ILegacyWorkspaceConfig } from './config';
-import WorkspaceConfig, { WorkspaceConfigProps } from './config/workspace-config';
-import { getConsumerInfo } from './consumer-locator';
+import WorkspaceConfig from './config/workspace-config';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound } from './exceptions';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
@@ -96,6 +98,7 @@ export default class Consumer {
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
   async setBitMap() {
+    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = await BitMap.load(this);
   }
 
@@ -427,15 +430,6 @@ export default class Consumer {
     return path.join(...addToPath);
   }
 
-  static create(
-    projectPath: PathOsBasedAbsolute,
-    noGit = false,
-    noPackageJson = false,
-    workspaceConfigProps?: WorkspaceConfigProps
-  ): Promise<Consumer> {
-    return this.ensure(projectPath, noGit, noPackageJson, workspaceConfigProps);
-  }
-
   static _getScopePath(projectPath: PathOsBasedAbsolute, noGit: boolean): PathOsBasedAbsolute {
     const gitDirPath = path.join(projectPath, DOT_GIT_DIR);
     let resolvedScopePath = path.join(projectPath, BIT_HIDDEN_DIR);
@@ -445,34 +439,7 @@ export default class Consumer {
     return resolvedScopePath;
   }
 
-  static async ensure(
-    projectPath: PathOsBasedAbsolute,
-    standAlone = false,
-    noPackageJson = false,
-    workspaceConfigProps?: WorkspaceConfigProps
-  ): Promise<Consumer> {
-    const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
-    let existingGitHooks;
-    // avoid using the default scope-name `path.basename(process.cwd())` when generated from the workspace.
-    // otherwise, components with the same scope-name will get ComponentNotFound on import
-    const scopeName = `${path.basename(process.cwd())}-local-${generateRandomStr()}`;
-    const scope = await Scope.ensure(resolvedScopePath, scopeName);
-    const config = await WorkspaceConfig.ensure(projectPath, scope.path, standAlone, workspaceConfigProps);
-    const consumer = new Consumer({
-      projectPath,
-      created: true,
-      scope,
-      config,
-      existingGitHooks,
-    });
-    await consumer.setBitMap();
-    if (!noPackageJson) {
-      consumer.setPackageJsonWithTypeModule();
-    }
-    return consumer;
-  }
-
-  private setPackageJsonWithTypeModule() {
+  setPackageJsonWithTypeModule() {
     const exists = this.packageJson && this.packageJson.fileExist;
     if (exists) {
       const content = this.packageJson.packageJsonObject;
@@ -502,19 +469,6 @@ export default class Consumer {
     fs.writeJSONSync(packageJsonPath, jsonContent, { spaces: 2 });
   }
 
-  /**
-   * if resetHard, delete consumer-files: bitMap and workspace.jsonc and also the local scope (.bit dir).
-   * otherwise, delete the consumer-files only when they are corrupted
-   */
-  static async reset(projectPath: PathOsBasedAbsolute, resetHard: boolean, noGit = false): Promise<void> {
-    const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
-    BitMap.reset(projectPath, resetHard);
-    const scopeP = Scope.reset(resolvedScopePath, resetHard);
-    const configP = WorkspaceConfig.reset(projectPath, resolvedScopePath, resetHard);
-    const packageJsonP = PackageJsonFile.reset(projectPath);
-    await Promise.all([scopeP, configP, packageJsonP]);
-  }
-
   async resetNew() {
     this.bitMap.resetToNewComponents();
     await Scope.reset(this.scope.path, true);
@@ -527,25 +481,23 @@ export default class Consumer {
   }
 
   static async load(currentPath: PathOsBasedAbsolute): Promise<Consumer> {
-    const consumerInfo = await getConsumerInfo(currentPath);
+    const consumerInfo = await getWorkspaceInfo(currentPath);
     if (!consumerInfo) {
       return Promise.reject(new ConsumerNotFound());
     }
-    if (!consumerInfo.hasBitMap && !consumerInfo.hasScope && consumerInfo.hasConsumerConfig) {
-      throw new Error(
-        `fatal: unable to load the workspace. workspace.jsonc exists, but the .bitmap and local-scope are missing. run "bit init" to generate the missing files`
+    if (!consumerInfo.hasBitMap || !consumerInfo.hasScope || !consumerInfo.hasWorkspaceConfig) {
+      throw new BitError(
+        `fatal: unable to load the workspace. workspace.jsonc or .bitmap or local-scope are missing. run "bit init" to generate the missing files`
       );
     }
-    let consumer: Consumer | undefined;
-
-    if ((!consumerInfo.hasConsumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
-      consumer = await Consumer.create(consumerInfo.path);
-      await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
-    }
-    const scope = consumer?.scope || (await Scope.load(consumerInfo.path));
-    const config =
-      consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path, scope.path);
-    consumer = new Consumer({
+    const scope = await Scope.load(consumerInfo.path).catch((err) => {
+      if (err instanceof ScopeNotFound) {
+        throw new BitError(`${err.message}\nplease run "bit init" to re-initialize the local-scope`);
+      }
+      throw err;
+    });
+    const config = await WorkspaceConfig.loadIfExist(consumerInfo.path, scope.path);
+    const consumer = new Consumer({
       projectPath: consumerInfo.path,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config,
@@ -590,29 +542,6 @@ export default class Consumer {
     this.bitMap.removeComponents(componentsToRemoveFromFs);
   }
 
-  async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
-    logger.debug(`addRemoteAndLocalVersionsToDependencies for ${component.id.toString()}`);
-    Analytics.addBreadCrumb(
-      'addRemoteAndLocalVersionsToDependencies',
-      `addRemoteAndLocalVersionsToDependencies for ${Analytics.hashData(component.id.toString())}`
-    );
-    let modelDependencies = new Dependencies([]);
-    let modelDevDependencies = new Dependencies([]);
-    if (loadedFromFileSystem) {
-      // when loaded from file-system, the dependencies versions are fetched from bit.map.
-      // find the model version of the component and get the stored versions of the dependencies
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const mainComponentFromModel: Component = component.componentFromModel;
-      if (mainComponentFromModel) {
-        // otherwise, the component is probably on the file-system only and not on the model.
-        modelDependencies = mainComponentFromModel.dependencies;
-        modelDevDependencies = mainComponentFromModel.devDependencies;
-      }
-    }
-    await component.dependencies.addRemoteAndLocalVersions(this.scope, modelDependencies);
-    await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
-  }
-
   async getIdsOfDefaultLane(): Promise<ComponentIdList> {
     const ids = this.bitMap.getAllBitIds();
     const componentIds = await Promise.all(
@@ -620,7 +549,8 @@ export default class Consumer {
         if (!id.hasVersion()) return id;
         const modelComponent = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
         if (!modelComponent) {
-          throw new Error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing, please run bit-import`);
+          logger.error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing`);
+          throw new BitError(`${id.toStringWithoutVersion()} is missing, please run "bit import"`);
         }
         const head = modelComponent.getHeadAsTagIfExist();
         if (head) {
@@ -705,4 +635,34 @@ export async function getParsedHistoryMetadata(metadataPath: string): Promise<{ 
     metadata[fileId] = reason.join(' ');
   });
   return metadata;
+}
+
+/**
+ * the following place-holders are permitted:
+ * name - component name includes namespace, e.g. 'ui/button'.
+ * scopeId - full scope-id includes the owner, e.g. 'teambit.compilation'.
+ * scope - scope name only, e.g. 'compilation'.
+ * owner - owner name in bit.dev, e.g. 'teambit'.
+ */
+function composeComponentPath(
+  bitId: ComponentID,
+  componentsDefaultDirectory: string = DEFAULT_COMPONENTS_DIR_PATH
+): PathLinuxRelative {
+  let defaultDir = componentsDefaultDirectory;
+  const { scope, owner } = parseScope(bitId.scope);
+  // Prevent case where for example {scope}/{name} becomes /my-comp (in case the scope is empty)
+  if (componentsDefaultDirectory.includes('{scope}/') && !bitId.scope) {
+    defaultDir = componentsDefaultDirectory.replace('{scope}/', '');
+  }
+  if (componentsDefaultDirectory.includes('{scopeId}/') && !bitId.scope) {
+    defaultDir = componentsDefaultDirectory.replace('{scopeId}/', '');
+  }
+  if (componentsDefaultDirectory.includes('{owner}.') && !owner) {
+    defaultDir = componentsDefaultDirectory.replace('{owner}.', '');
+  }
+  if (componentsDefaultDirectory.includes('{owner}/') && !owner) {
+    defaultDir = componentsDefaultDirectory.replace('{owner}/', '');
+  }
+  const result = format(defaultDir, { name: bitId.fullName, scope, owner, scopeId: bitId.scope });
+  return result;
 }

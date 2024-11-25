@@ -38,7 +38,7 @@ describe('preview feature (during build)', function () {
       );
       helper.fs.outputFile('index.js', `export { Button } from './button';`);
       helper.command.addComponent('button');
-      helper.command.install();
+      helper.command.install('--add-missing-deps');
       helper.command.compile();
     });
     it('bit build should run successfully without preview errors', () => {

@@ -3,7 +3,10 @@ import { ReactPreview, ReactAspect } from '@teambit/react';
 import { ReactNativeAspect } from './react-native.aspect';
 
 export class ReactNativePreview {
-  constructor(private reactPreview: ReactPreview, private preview: PreviewPreview) {}
+  constructor(
+    private reactPreview: ReactPreview,
+    private preview: PreviewPreview
+  ) {}
 
   registerProvider = this.reactPreview.registerProvider.bind(this.reactPreview);
 

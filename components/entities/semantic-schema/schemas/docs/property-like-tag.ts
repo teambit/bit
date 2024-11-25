@@ -7,7 +7,12 @@ import { TagName, TagSchema } from './tag';
  */
 export class PropertyLikeTagSchema extends TagSchema {
   readonly type?: SchemaNode;
-  constructor(readonly location: SchemaLocation, readonly name: string, readonly comment?: string, type?: SchemaNode) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly name: string,
+    readonly comment?: string,
+    type?: SchemaNode
+  ) {
     super(location, TagName.parameter, comment);
     this.type = type;
   }
@@ -16,6 +21,12 @@ export class PropertyLikeTagSchema extends TagSchema {
     const comment = this.comment ? ` ${this.comment}` : '';
     const type = this.type ? ` {${this.type.toString()}} ` : '';
     return `@${this.tagName} ${this.name}${type} ${comment}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const typeStr = this.type ? ` {${this.type.toFullSignature(options)}} ` : '';
+    const comment = this.comment ? ` ${this.comment}` : '';
+    return `@${this.tagName} ${this.name}${typeStr}${comment}`;
   }
 
   toObject() {

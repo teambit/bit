@@ -1,20 +1,21 @@
+import pFilter from 'p-filter';
 import fs, { pathExists } from 'fs-extra';
 import path from 'path';
-import { getRootComponentDir, getBitRootsDir, linkPkgsToBitRoots } from '@teambit/bit-roots';
+import { getRootComponentDir, linkPkgsToRootComponents } from '@teambit/workspace.root-components';
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
-import { compact, mapValues, omit, uniq, intersection } from 'lodash';
+import { compact, mapValues, omit, uniq, intersection, groupBy } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import { GenerateResult, GeneratorAspect, GeneratorMain } from '@teambit/generator';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
 import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import {
   CodemodResult,
   linkToNodeModulesWithCodemod,
@@ -44,6 +45,7 @@ import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/w
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { snapToSemver } from '@teambit/component-package-version';
+import { AspectDefinition, AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import hash from 'object-hash';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
@@ -101,8 +103,11 @@ type GetComponentsAndManifestsOptions = Omit<
 > &
   Pick<PackageManagerInstallOptions, 'nodeLinker'>;
 
+type ReloadAspectGroup = { comps: boolean; workspace: boolean; envOfAspect?: boolean; aspects: AspectDefinition[] };
 export class InstallMain {
   private visitedAspects: Set<string> = new Set();
+
+  private oldNonLoadedEnvs: string[] = [];
 
   constructor(
     private dependencyResolver: DependencyResolverMain,
@@ -119,6 +124,8 @@ export class InstallMain {
 
     private wsConfigFiles: WorkspaceConfigFilesMain,
 
+    private aspectLoader: AspectLoaderMain,
+
     private app: ApplicationMain,
 
     private generator: GeneratorMain,
@@ -129,7 +136,9 @@ export class InstallMain {
 
     private postInstallSlot: PostInstallSlot,
 
-    private ipcEvents: IpcEventsMain
+    private ipcEvents: IpcEventsMain,
+
+    private harmony: Harmony
   ) {}
   /**
    * Install dependencies for all components in the workspace
@@ -190,7 +199,7 @@ export class InstallMain {
     this.postInstallSlot.register(fn);
   }
 
-  async onComponentCreate(generateResults: GenerateResult[]) {
+  async onComponentCreate(generateResults: GenerateResult[], installOptions?: Partial<WorkspaceInstallOptions>) {
     this.workspace.inInstallContext = true;
     let runInstall = false;
     let packages: string[] = [];
@@ -234,6 +243,7 @@ export class InstallMain {
     // `the following environments are not installed yet: ${nonLoadedEnvs.join(', ')}. installing them now...`
     // );
     await this.install(packages, {
+      ...installOptions,
       addMissingDeps: installMissing,
       skipIfExisting: true,
       writeConfigFiles: false,
@@ -358,32 +368,45 @@ export class InstallMain {
       );
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
+      const oldNonLoadedEnvs = this.setOldNonLoadedEnvs();
+      await this.reloadMovedEnvs();
+      await this.reloadNonLoadedEnvs();
+
+      const shouldClearCacheOnInstall = this.shouldClearCacheOnInstall();
       if (options?.compile ?? true) {
         const compileStartTime = process.hrtime();
         const compileOutputMessage = `compiling components`;
         this.logger.setStatusLine(compileOutputMessage);
-        // We need to clear cache before compiling the components or it might compile them with the default env
-        // incorrectly in case the env was not loaded correctly before the install
-        this.workspace.consumer.componentLoader.clearComponentsCache();
-        // We don't want to clear the failed to load envs because we want to show the warning at the end
-        await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
-        cacheCleared = true;
+        if (shouldClearCacheOnInstall) {
+          // We need to clear cache before compiling the components or it might compile them with the default env
+          // incorrectly in case the env was not loaded correctly before the installation.
+          // We don't want to clear the failed to load envs because we want to show the warning at the end
+          // await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
+          await this.workspace.clearCache();
+          cacheCleared = true;
+        }
         await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
+
+        // Right now we don't need to load extensions/execute load slot at this point
+        // await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install }, undefined, {
+        //   executeLoadSlot: true,
+        //   loadExtensions: true,
+        // });
         this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
       }
       if (options?.writeConfigFiles ?? true) {
-        await this.tryWriteConfigFiles(!cacheCleared);
+        await this.tryWriteConfigFiles(!cacheCleared && shouldClearCacheOnInstall);
       }
       if (!dependenciesChanged) break;
       if (!options?.recurringInstall) break;
-      const oldNonLoadedEnvs = this.getOldNonLoadedEnvs();
+
       if (!oldNonLoadedEnvs.length) break;
       prevManifests.add(manifestsHash(current.manifests));
       // If we run compile we do the clear cache before the compilation so no need to clean it again (it's an expensive
       // operation)
-      if (!cacheCleared) {
+      if (!cacheCleared && shouldClearCacheOnInstall) {
         // We need to clear cache before creating the new component manifests.
-        this.workspace.consumer.componentLoader.clearComponentsCache();
+        // this.workspace.consumer.componentLoader.clearComponentsCache();
         // We don't want to clear the failed to load envs because we want to show the warning at the end
         await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
       }
@@ -395,9 +418,195 @@ export class InstallMain {
       // Otherwise, we might load an env from a location that we later remove.
       await installer.pruneModules(this.workspace.path);
     }
-    await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
+    // this is now commented out because we assume we don't need it anymore.
+    // even when the env was not loaded before and it is loaded now, it should be fine because the dependencies-data
+    // is only about the auto-detect-deps. there are two more steps: version-resolution and apply-overrides that
+    // disregard the dependencies-cache.
+    // await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
+  }
+
+  private shouldClearCacheOnInstall(): boolean {
+    const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
+    return nonLoadedEnvs.length > 0;
+  }
+
+  /**
+   * This function is very important to fix some issues that might happen during the installation process.
+   * The case is the following:
+   * during/before the installation process we load some envs from their bit.env files
+   * this contains code like:
+   * protected tsconfigPath = require.resolve('./config/tsconfig.json');
+   * protected eslintConfigPath = require.resolve('./config/eslintrc.cjs');
+   * When we load that file, we calculated the resolved path, and it's stored in the env
+   * object instance.
+   * then later on during the install we move the env to another location (like bit roots)
+   * which points to a .pnpm folder with some peers, that changed during the install
+   * then when we take this env object and call write ws config for example
+   * or compile
+   * we use that resolved path to calculate the final tsconfig
+   * however that file is no longer exists which result in an error
+   * This function will check if an env folder doesn't exist anymore, and will re-load it
+   * from its new location.
+   * This usually happen when we have install running in the middle of the process followed
+   * by other bit ops.
+   * examples:
+   * bit new - which might run few installs then other ops.
+   * bit switch - which might run few installs then other ops, and potentially change the
+   * peer deps during the install.
+   * bit server (vscode plugin) - which keep the process always live, so any install ops
+   * that change the location, will cause the vscode plugin/bit server to crash later.
+   * @returns
+   */
+  private async reloadMovedEnvs() {
+    this.logger.debug('reloadMovedEnvs');
+    const allEnvs = this.envs.getAllRegisteredEnvs();
+    const movedEnvs = await pFilter(allEnvs, async (env) => {
+      if (!env.__path) return false;
+      const regularPathExists = await pathExists(env.__path);
+      const resolvedPathExists = await pathExists(env.__resolvedPath);
+      return !regularPathExists || !resolvedPathExists;
+    });
+    const idsToLoad = movedEnvs.map((env) => env.id);
+    const componentIdsToLoad = idsToLoad.map((id) => ComponentID.fromString(id));
+    await this.reloadEnvs(componentIdsToLoad);
+  }
+
+  private async reloadNonLoadedEnvs() {
+    const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
+    const componentIdsToLoad = nonLoadedEnvs.map((id) => ComponentID.fromString(id));
+    await this.reloadEnvs(componentIdsToLoad);
+  }
+
+  private async reloadEnvs(componentIdsToLoad: ComponentID[]) {
+    if (componentIdsToLoad.length && this.workspace) {
+      const aspects = await this.workspace.resolveAspects(undefined, componentIdsToLoad, {
+        requestedOnly: true,
+        excludeCore: true,
+        throwOnError: false,
+        // Theoretically we should use skipDeps here, but according to implementation at the moment
+        // it will lead to plugins not load, and we need them to be loaded.
+        // This is a bug in the flow and should be fixed.
+        // skipDeps: true,
+      });
+
+      await Promise.all(
+        aspects.map(async (aspectDef) => {
+          const id = aspectDef.component?.id;
+          if (!id) return;
+          await this.workspace.clearComponentCache(id);
+        })
+      );
+      await this.reloadAspects(aspects || []);
+
+      // Keeping this here for now, it was removed as part of #9138 as now that we load envs of envs
+      // correctly first it seems to be not needed anymore.
+      // But there might be cases where it will be needed. So keeping it here for now.
+
+      // This is a very special case which we need to compile our envs before loading them correctly.
+      //   const grouped = groupBy(aspects, (aspectDef) => {
+      //     return aspectDef.component?.id.toStringWithoutVersion() === 'bitdev.general/envs/bit-env';
+      //   });
+      //   await this.reloadAspects(grouped.true || []);
+      //   const otherEnvs = grouped.false || [];
+      //   await Promise.all(
+      //     otherEnvs.map(async (aspectDef) => {
+      //       const id = aspectDef.component?.id;
+      //       if (!id) return;
+      //       await this.workspace.clearComponentCache(id);
+      //     })
+      //   );
+      //   await this.reloadAspects(grouped.false || []);
+    }
+  }
+
+  private async reloadAspects(aspects: AspectDefinition[]) {
+    const groups = await this.groupAspectsToLoad(aspects);
+    // We need to make sure we load group by group and not in parallel
+    await pMapSeries(groups, async (group) => {
+      await this.reloadOneAspectsGroup(group);
+    });
+  }
+
+  private async reloadOneAspectsGroup(group: ReloadAspectGroup) {
+    const aspects = group.aspects || [];
+    if (group.workspace && !group.envOfAspect) {
+      aspects.forEach((aspectDef) => {
+        if (aspectDef.component?.id) {
+          this.workspace.clearComponentCache(aspectDef.component.id);
+        }
+      });
+    }
+    const loadedPlugins = compact(
+      await Promise.all(
+        aspects.map((aspectDef) => {
+          const localPath = aspectDef.aspectPath;
+          const component = aspectDef.component;
+          if (!component) return undefined;
+          const plugins = this.aspectLoader.getPlugins(component, localPath);
+          if (plugins.has()) {
+            return plugins.load(MainRuntime.name);
+          }
+        })
+      )
+    );
+    await Promise.all(
+      loadedPlugins.map((plugin) => {
+        const runtime = plugin.getRuntime(MainRuntime);
+        return runtime?.provider(undefined, undefined, undefined, this.harmony);
+      })
+    );
+  }
+
+  /**
+   * This function groups the components to aspects to load into groups.
+   * The order of the groups is important, the first group should be loaded first.
+   * The order inside the group is not important.
+   * The groups are:
+   * 1. aspects definitions without components (this should be an empty group, if it's not, we should check why).
+   * 2. aspects which are not in the workspace but in the scope / node modules.
+   * 3. envs of aspects (which are also aspects)
+   * 4. other aspects (the rest)
+   * @param aspects
+   * @returns
+   */
+  private async groupAspectsToLoad(aspects: AspectDefinition[]): Promise<Array<ReloadAspectGroup>> {
+    const groups = groupBy(aspects, (aspectDef) => {
+      if (!aspectDef.component) return 'no-comp';
+      if (!this.workspace.hasId(aspectDef.component.id)) return 'scope';
+      return 'workspace';
+    });
+    const workspaceSubGroups = await this.regroupEnvsIdsFromTheList(groups.workspace || []);
+    return [
+      { comps: false, workspace: false, aspects: groups.noComp || [] },
+      { comps: true, workspace: false, aspects: groups.scope || [] },
+      { comps: true, workspace: true, envOfAspect: true, aspects: workspaceSubGroups.envOfAspect },
+      { comps: true, workspace: true, aspects: workspaceSubGroups.otherAspects },
+    ];
+  }
+
+  private async regroupEnvsIdsFromTheList(aspects: AspectDefinition[]): Promise<Record<string, AspectDefinition[]>> {
+    const envsOfAspects = new Set<string>();
+    await Promise.all(
+      aspects.map(async (aspectDef) => {
+        if (!aspectDef.component) return;
+        const envId = aspectDef.component ? await this.envs.calculateEnvId(aspectDef.component) : undefined;
+        if (envId) {
+          envsOfAspects.add(envId.toString());
+        }
+      })
+    );
+    const groups = groupBy(aspects, (aspectDef) => {
+      const id = aspectDef.component?.id.toString();
+      const idWithoutVersion = aspectDef.component?.id.toStringWithoutVersion();
+      if ((id && envsOfAspects.has(id)) || (idWithoutVersion && envsOfAspects.has(idWithoutVersion))) {
+        return 'envOfAspect';
+      }
+      return 'otherAspects';
+    });
+
+    return groups;
   }
 
   private async _getComponentsManifestsAndRootPolicy(
@@ -430,6 +639,7 @@ export class InstallMain {
       return { componentsAndManifests, mergedRootPolicy };
     }
     const mergedRootPolicyWithMissingDeps = await this.addConfiguredAspectsToWorkspacePolicy();
+    await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicyWithMissingDeps);
     return {
       mergedRootPolicy: mergedRootPolicyWithMissingDeps,
       componentsAndManifests: await this._getComponentsManifests(installer, mergedRootPolicyWithMissingDeps, options),
@@ -455,6 +665,7 @@ export class InstallMain {
       dedupe: true,
       throw: false,
     });
+
     if (err) {
       this.logger.consoleFailure(
         `failed generating workspace config files, please run "bit ws-config write" manually. error: ${err.message}`
@@ -581,6 +792,14 @@ export class InstallMain {
     };
   }
 
+  public setOldNonLoadedEnvs() {
+    const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
+    const envsWithoutManifest = Array.from(this.dependencyResolver.envsWithoutManifest);
+    const oldNonLoadedEnvs = intersection(nonLoadedEnvs, envsWithoutManifest);
+    this.oldNonLoadedEnvs = oldNonLoadedEnvs;
+    return oldNonLoadedEnvs;
+  }
+
   /**
    * This function returns a list of old non-loaded environments names.
    * @returns an array of strings called `oldNonLoadedEnvs`. This array contains the names of environment variables that
@@ -589,19 +808,15 @@ export class InstallMain {
    * correctly
    */
   public getOldNonLoadedEnvs() {
-    const nonLoadedEnvs = this.envs.getFailedToLoadEnvs();
-    const envsWithoutManifest = Array.from(this.dependencyResolver.envsWithoutManifest);
-    const oldNonLoadedEnvs = intersection(nonLoadedEnvs, envsWithoutManifest);
-    return oldNonLoadedEnvs;
+    return this.oldNonLoadedEnvs;
   }
 
   private async _updateRootDirs(rootDirs: string[]) {
     try {
-      const bitRootCompsDir = getBitRootsDir(this.workspace.path);
-      const existingDirs = await fs.readdir(bitRootCompsDir);
+      const existingDirs = await fs.readdir(this.workspace.rootComponentsPath);
       await Promise.all(
         existingDirs.map(async (dirName) => {
-          const dirPath = path.join(bitRootCompsDir, dirName);
+          const dirPath = path.join(this.workspace.rootComponentsPath, dirName);
           if (!rootDirs.includes(dirPath)) {
             await fs.remove(dirPath);
           }
@@ -639,7 +854,7 @@ export class InstallMain {
       await Promise.all(
         envs.map(async (envId) => {
           return [
-            await this.getRootComponentDirByRootId(this.workspace.path, envId),
+            await this.getRootComponentDirByRootId(this.workspace.rootComponentsPath, envId),
             {
               dependencies: {
                 ...(await this._getEnvDependencies(envId)),
@@ -693,15 +908,13 @@ export class InstallMain {
     return Object.fromEntries(
       compact(
         await Promise.all(
-          (
-            await this.app.listAppsComponents()
-          ).map(async (app) => {
+          (await this.app.listAppsComponents()).map(async (app) => {
             const appPkgName = this.dependencyResolver.getPackageName(app);
             const appManifest = Object.values(manifests).find(({ name }) => name === appPkgName);
             if (!appManifest) return null;
             const envId = await this.envs.calculateEnvId(app);
             return [
-              await this.getRootComponentDirByRootId(this.workspace.path, app.id),
+              await this.getRootComponentDirByRootId(this.workspace.rootComponentsPath, app.id),
               {
                 ...omit(appManifest, ['name', 'version']),
                 dependencies: {
@@ -910,23 +1123,26 @@ export class InstallMain {
     const apps = (await this.app.listAppsComponents()).map((component) => component.id);
     await Promise.all(
       [...envs, ...apps].map(async (id) => {
-        const dir = await this.getRootComponentDirByRootId(this.workspace.path, id);
+        const dir = await this.getRootComponentDirByRootId(this.workspace.rootComponentsPath, id);
         await fs.mkdirp(dir);
       })
     );
-    await linkPkgsToBitRoots(
-      this.workspace.path,
+    await linkPkgsToRootComponents(
+      {
+        rootComponentsPath: this.workspace.rootComponentsPath,
+        workspacePath: this.workspace.path,
+      },
       compDirMap.components.map((component) => this.dependencyResolver.getPackageName(component))
     );
   }
 
-  private async getRootComponentDirByRootId(workspacePath: string, rootComponentId: ComponentID): Promise<string> {
+  private async getRootComponentDirByRootId(rootComponentsPath: string, rootComponentId: ComponentID): Promise<string> {
     // Root directories for local envs and apps are created without their version number.
     // This is done in order to avoid changes to the lockfile after such components are tagged.
-    const id = (await this.workspace.hasId(rootComponentId))
+    const id = this.workspace.hasId(rootComponentId)
       ? rootComponentId.toStringWithoutVersion()
       : rootComponentId.toString();
-    return getRootComponentDir(workspacePath, id);
+    return getRootComponentDir(rootComponentsPath, id);
   }
 
   /**
@@ -998,6 +1214,13 @@ export class InstallMain {
     }
   }
 
+  async onComponentChange(component: Component) {
+    const isEnv = this.envs.isEnv(component);
+    if (isEnv) {
+      await this.reloadEnvs([component.id]);
+    }
+  }
+
   static slots = [Slot.withType<PreLinkSlot>(), Slot.withType<PreInstallSlot>(), Slot.withType<PostInstallSlot>()];
   static dependencies = [
     DependencyResolverAspect,
@@ -1012,6 +1235,7 @@ export class InstallMain {
     IpcEventsAspect,
     GeneratorAspect,
     WorkspaceConfigFilesAspect,
+    AspectLoaderAspect,
   ];
 
   static runtime = MainRuntime;
@@ -1030,6 +1254,7 @@ export class InstallMain {
       ipcEvents,
       generator,
       wsConfigFiles,
+      aspectLoader,
     ]: [
       DependencyResolverMain,
       Workspace,
@@ -1042,19 +1267,14 @@ export class InstallMain {
       ApplicationMain,
       IpcEventsMain,
       GeneratorMain,
-      WorkspaceConfigFilesMain
+      WorkspaceConfigFilesMain,
+      AspectLoaderMain,
     ],
     _,
-    [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot]
+    [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot],
+    harmony: Harmony
   ) {
     const logger = loggerExt.createLogger(InstallAspect.id);
-    ipcEvents.registerGotEventSlot(async (eventName) => {
-      if (eventName !== 'onPostInstall') return;
-      logger.debug('got onPostInstall event, clear workspace and all components cache');
-      await workspace.clearCache();
-      workspace.clearAllComponentsCache();
-      await pMapSeries(postInstallSlot.values(), (fn) => fn());
-    });
     const installExt = new InstallMain(
       dependencyResolver,
       logger,
@@ -1063,13 +1283,22 @@ export class InstallMain {
       compiler,
       envs,
       wsConfigFiles,
+      aspectLoader,
       app,
       generator,
       preLinkSlot,
       preInstallSlot,
       postInstallSlot,
-      ipcEvents
+      ipcEvents,
+      harmony
     );
+    ipcEvents.registerGotEventSlot(async (eventName) => {
+      if (eventName !== 'onPostInstall') return;
+      logger.debug('got onPostInstall event, clear workspace and all components cache');
+      await workspace.clearCache();
+      await pMapSeries(postInstallSlot.values(), (fn) => fn());
+      await installExt.reloadMovedEnvs();
+    });
     if (issues) {
       issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));
     }
@@ -1084,6 +1313,7 @@ export class InstallMain {
     // workspace.registerOnAspectsResolve(installExt.onAspectsResolveSubscriber.bind(installExt));
     if (workspace) {
       workspace.registerOnRootAspectAdded(installExt.onRootAspectAddedSubscriber.bind(installExt));
+      workspace.registerOnComponentChange(installExt.onComponentChange.bind(installExt));
     }
     cli.register(...commands);
     return installExt;

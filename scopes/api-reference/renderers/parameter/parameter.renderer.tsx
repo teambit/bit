@@ -1,6 +1,6 @@
 import React from 'react';
 import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
-import { InferenceTypeSchema, ParameterSchema } from '@teambit/semantics.entities.semantic-schema';
+import { InferenceTypeSchema, ParameterSchema, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import { TableRow } from '@teambit/documenter.ui.table-row';
 import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
 
@@ -38,8 +38,18 @@ function ParameterComponent(props: APINodeRenderProps) {
       <React.Fragment key={`${name}-param-object-binding-wrapper`}>
         {!skipHeadings && <HeadingRow className={styles.paramHeading} headings={headings} colNumber={4} />}
         {objectBindingNodes.map((_bindingNode) => {
-          const typeRefCorrespondingNode = typeRef?.api.findNode((node) => node.name === _bindingNode.name);
-          const bindingNode = typeRefCorrespondingNode || _bindingNode;
+          const typeRefCorrespondingNode = typeRef?.api.findNode((node) => {
+            const matchesName = node.name === _bindingNode.name;
+            const matchesAlias = (_bindingNode as any).alias && node.name === (_bindingNode as any).alias;
+            return matchesName || matchesAlias;
+          });
+          const isTypeRefCorrespondingNodeReference =
+            (typeRefCorrespondingNode as any)?.type?.__schema === TypeRefSchema.name;
+
+          const bindingNode = isTypeRefCorrespondingNodeReference
+            ? (typeRefCorrespondingNode as any).type
+            : _bindingNode;
+
           const bindingNodeRenderer = renderers.find((renderer) => renderer.predicate(bindingNode));
 
           const customBindingNodeTypeRow = (bindingNodeRenderer && (
@@ -65,7 +75,7 @@ function ParameterComponent(props: APINodeRenderProps) {
               className={styles.paramRow}
               row={{
                 name: bindingNode.name || '',
-                description: bindingNode.doc?.comment || '',
+                description: bindingNode.doc?.comment || bindingNode.doc?.tags?.join() || '',
                 required:
                   (typeRefCorrespondingNode as any)?.isOptional !== undefined &&
                   !(typeRefCorrespondingNode as any)?.isOptional,
@@ -119,7 +129,7 @@ function ParameterComponent(props: APINodeRenderProps) {
           }}
           row={{
             name: paramNode.name || '',
-            description: paramNode.doc?.comment || '',
+            description: paramNode.doc?.comment || paramNode.doc?.tags?.join() || '',
             required: paramNode.isOptional !== undefined && !paramNode.isOptional,
             type: '',
             default: {

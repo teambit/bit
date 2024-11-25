@@ -2,7 +2,7 @@ import stripAnsi from 'strip-ansi';
 import { gql } from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
-import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { Component } from './component';
 import { ComponentFactory } from './component-factory';
@@ -219,7 +219,7 @@ export function componentSchema(componentExtension: ComponentMain) {
           if (!head && filter?.takeHeadFromComponent) {
             head = component.id.version;
           }
-          const finalFilter = { ...filter, ...{ head } };
+          const finalFilter = { ...filter, head };
           return (await component.getLogs(finalFilter)).map((log) => ({ ...log, id: log.hash }));
         },
       },

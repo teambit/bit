@@ -20,7 +20,10 @@ export type ComponentWithCollectOptions = {
 export class ObjectsReadableGenerator {
   public readable: Readable;
   private pushed: string[] = [];
-  constructor(private repo: Repository, private callbackOnceDone: Function) {
+  constructor(
+    private repo: Repository,
+    private callbackOnceDone: Function
+  ) {
     this.readable = new Readable({ objectMode: true, read() {} });
   }
   async pushObjectsToReadable(componentsWithOptions: ComponentWithCollectOptions[]) {

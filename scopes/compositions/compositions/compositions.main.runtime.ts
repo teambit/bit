@@ -5,7 +5,7 @@ import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import { SchemaAspect, SchemaMain } from '@teambit/schema';
 import { matchPatterns, splitPatterns } from '@teambit/toolbox.path.match-patterns';
@@ -180,7 +180,7 @@ export class CompositionsMain {
       SchemaMain,
       DevFilesMain,
       EnvsMain,
-      ScopeMain
+      ScopeMain,
     ],
     config: CompositionsConfig
   ) {

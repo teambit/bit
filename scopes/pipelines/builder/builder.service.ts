@@ -124,7 +124,7 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
       );
       const capsuleNetwork = await this.isolator.isolateComponents(componentIds, isolateOptions);
       capsuleNetwork._originalSeeders = originalSeedersOfThisEnv;
-      const msg = `building ${originalSeedersOfThisEnv.length} components of env "${executionContext.id}"`;
+      const msg = `building ${chalk.cyan(originalSeedersOfThisEnv.length.toString())} components of env ${chalk.cyan(executionContext.id)}`;
       const extraDetails = `original seeders of this env: ${originalSeedersOfThisEnv.length}, graph of this env: ${capsuleNetwork.seedersCapsules.length}, graph total (include other envs): ${capsuleNetwork.graphCapsules.length}`;
       this.logger.console(`${msg}. ${chalk.dim(extraDetails)}`);
       const buildContext = Object.assign(executionContext, {

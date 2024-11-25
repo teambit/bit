@@ -7,29 +7,26 @@ import { IssuesList } from '@teambit/component-issues';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import { getCloudDomain, BIT_WORKSPACE_TMP_DIRNAME, BuildStatus, DEFAULT_LANGUAGE, Extensions } from '../../constants';
-import docsParser from '../../jsdoc/parser';
-import { Doclet } from '../../jsdoc/types';
+import { Doclet, parser as docsParser } from '@teambit/semantics.doc-parser';
 import logger from '../../logger/logger';
 import { ScopeListItem } from '../../scope/models/model-component';
 import Version, { DepEdge, Log } from '../../scope/models/version';
-import { pathNormalizeToLinux, sha1 } from '../../utils';
-import { PathLinux, PathOsBased, PathOsBasedRelative } from '../../utils/path';
-import ComponentMap from '../bit-map/component-map';
-import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
-import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
-import { Dist, License, SourceFile } from '../component/sources';
+import { pathNormalizeToLinux, PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
+import { ComponentMap } from '@teambit/legacy.bit-map';
+import { IgnoredDirectory } from './exceptions/ignored-directory';
+import ComponentsPendingImport from '../exceptions/components-pending-import';
+import { Dist, License, SourceFile, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
 import ComponentConfig, { ComponentConfigLoadOptions, ILegacyWorkspaceConfig } from '../config';
 import ComponentOverrides from '../config/component-overrides';
 import { ExtensionDataList } from '../config/extension-data';
 import Consumer from '../consumer';
 import ComponentOutOfSync from '../exceptions/component-out-of-sync';
-import { ComponentFsCache } from './component-fs-cache';
+import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import MainFileRemoved from './exceptions/main-file-removed';
-import PackageJsonFile from './package-json-file';
-import DataToPersist from './sources/data-to-persist';
 import { ModelComponent } from '../../scope/models';
 import { ComponentLoadOptions } from './component-loader';
 import { getBindingPrefixByDefaultScope } from '../config/component-config';
@@ -283,7 +280,7 @@ export default class Component {
   /**
    * whether the component is deleted (soft removed)
    */
-  isRemoved(): Boolean {
+  isRemoved(): boolean {
     return Boolean(this.extensions.findCoreExtension(Extensions.remove)?.config?.removed || this.removed);
   }
 
@@ -592,6 +589,7 @@ async function getLoadedFiles(
     logger.error(`rethrowing an error of ${componentMap.noFilesError.message}`);
     throw componentMap.noFilesError;
   }
+  // @ts-ignore todo: remove after deleting teambit.legacy
   await componentMap.trackDirectoryChangesHarmony(consumer);
   const sourceFiles = componentMap.files.map((file) => {
     const filePath = path.join(bitDir, file.relativePath);
@@ -607,6 +605,6 @@ async function getLoadedFiles(
   return sourceFiles;
 }
 
-function _getDocsForFiles(files: SourceFile[], componentFsCache: ComponentFsCache): Array<Promise<Doclet[]>> {
+function _getDocsForFiles(files: SourceFile[], componentFsCache: FsCache): Array<Promise<Doclet[]>> {
   return files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file, componentFsCache)));
 }

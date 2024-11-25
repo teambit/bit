@@ -52,25 +52,42 @@ export class TypeRefSchema extends SchemaNode {
     return this;
   }
 
-  toString() {
-    const name = this.nameToString();
+  toString(options?: { color?: boolean }) {
+    const name = this.nameToString(options);
     if (!this.typeArgs) {
       return name;
     }
-    const args = this.typeArgs.map((arg) => arg.toString()).join(', ');
+    const args = this.typeArgs.map((arg) => arg.toString(options)).join(', ');
     return `${name}<${args}>`;
   }
 
-  private nameToString() {
+  private nameToString(options?: { color?: boolean }) {
+    const dim = options?.color ? chalk.dim : (str: string) => str;
     if (this.componentId) {
-      const compStr = chalk.dim(`(component: ${this.componentId.toStringWithoutVersion()})`);
+      const compStr = dim(`(component: ${this.componentId.toStringWithoutVersion()})`);
       return `${compStr} ${this.name}`;
     }
     if (this.packageName) {
-      const pkgStr = chalk.dim(`(package: ${this.packageName})`);
+      const pkgStr = dim(`(package: ${this.packageName})`);
       return `${pkgStr} ${this.name}`;
     }
     return this.name;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    let signature = this.name;
+
+    if (this.typeArgs && this.typeArgs.length > 0) {
+      const argsSignatures = this.typeArgs.map((arg) => arg.toFullSignature(options)).join(', ');
+      signature += `<${argsSignatures}>`;
+    }
+
+    if (options?.showDocs && this.doc) {
+      const docString = this.doc.toFullSignature();
+      signature = `${docString}\n${signature}`;
+    }
+
+    return signature;
   }
 
   /**

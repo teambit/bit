@@ -1,4 +1,4 @@
-import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { MainRuntime } from '@teambit/cli';
@@ -38,7 +38,7 @@ export class DiagnosticMain {
   }
 
   static getBitVersion() {
-    const version = getHarmonyVersion(true);
+    const version = getBitVersion();
     return { version };
   }
 

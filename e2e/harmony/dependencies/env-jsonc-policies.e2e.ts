@@ -158,7 +158,7 @@ const ENV_JSONC_LEVEL3 = {
   },
 };
 
-function generateEnvJsoncWithExtends(extendsName: string, envJsonc: Object) {
+function generateEnvJsoncWithExtends(extendsName: string, envJsonc: object) {
   return {
     extends: extendsName,
     ...envJsonc,

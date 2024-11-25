@@ -4,6 +4,7 @@ import { CheckboxLabel } from '@teambit/evangelist.input.checkbox.label';
 
 type GraphFiltersType = {
   isFiltered: boolean;
+  showMetadata?: boolean;
   onChangeFilter: (isFiltered: boolean) => void;
   disable?: boolean;
 } & CardProps;

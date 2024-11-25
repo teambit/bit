@@ -5,7 +5,7 @@ import { isCoreAspect } from '@teambit/bit';
 import { existsSync, readFileSync } from 'fs-extra';
 import pLocate from 'p-locate';
 import { parse } from 'comment-json';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
 import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
@@ -496,14 +496,15 @@ export class EnvsMain {
     const envDef = this.getEnvFromComponent(envComponent);
     if (!envDef) return undefined;
 
-    const services = this.getServices(envDef);
+    const rawServices = this.getServices(envDef);
+    const services = rawServices.toObject();
     // const selfDescriptor = (await this.getEnvDescriptorFromEnvDef(envDef)) || {};
     const selfDescriptor = await this.getEnvDescriptorFromEnvDef(envDef);
 
     if (!selfDescriptor) return undefined;
     return {
       ...selfDescriptor,
-      services: services.toObject(),
+      services,
     };
   }
 
@@ -677,8 +678,12 @@ export class EnvsMain {
     return Boolean(this.getAllEnvsConfiguredOnComponent(component).length);
   }
 
-  getAllRegisteredEnvs(): string[] {
+  getAllRegisteredEnvsIds(): string[] {
     return this.envSlot.toArray().map((envData) => envData[0]);
+  }
+
+  getAllRegisteredEnvs(): Environment[] {
+    return this.envSlot.toArray().map((envData) => envData[1]);
   }
 
   getAllRegisteredEnvJsoncCustomizers(): EnvJsoncMergeCustomizer[] {
@@ -1105,13 +1110,13 @@ export class EnvsMain {
       ComponentMain,
       CLIMain,
       WorkerMain,
-      IssuesMain
+      IssuesMain,
     ],
     config: EnvsConfig,
     [envSlot, servicesRegistry, envJsoncMergeCustomizerSlot]: [
       EnvsRegistry,
       ServicesRegistry,
-      EnvJsoncMergeCustomizerRegistry
+      EnvJsoncMergeCustomizerRegistry,
     ],
     context: Harmony
   ) {

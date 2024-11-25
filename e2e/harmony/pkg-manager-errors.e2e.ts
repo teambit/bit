@@ -37,6 +37,7 @@ describe('bit checkout command', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(afterExport);
         helper.command.createLane();
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
       });
       it('should not throw', () => {
         const output = helper.command.switchLocalLane('main');

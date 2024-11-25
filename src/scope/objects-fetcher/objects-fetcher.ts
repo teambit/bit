@@ -4,8 +4,8 @@ import { omit, uniq } from 'lodash';
 // @ts-ignore
 import { pipeline } from 'stream/promises';
 import { Scope } from '..';
-import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
-import loader from '../../cli/loader';
+import { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
+import { loader } from '@teambit/legacy.loader';
 import logger from '../../logger/logger';
 import { Remote, Remotes } from '../../remotes';
 import { ScopeNotFound } from '../exceptions';
@@ -16,11 +16,11 @@ import { ObjectItemsStream } from '../objects/object-list';
 import { ObjectsWritable } from './objects-writable-stream';
 import { WriteObjectsQueue } from './write-objects-queue';
 import { groupByScopeName } from '../component-ops/scope-components-importer';
-import { concurrentFetchLimit } from '../../utils/concurrency';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
 import { ScopeNotFoundOrDenied } from '../../remotes/exceptions/scope-not-found-or-denied';
 import { Lane } from '../models';
 import { ComponentsPerRemote, MultipleComponentMerger } from '../component-ops/multiple-component-merger';
-import { pMapPool } from '../../utils/promise-with-concurrent';
 
 /**
  * due to the use of streams, this is memory efficient and can handle easily GBs of objects.

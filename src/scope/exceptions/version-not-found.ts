@@ -6,7 +6,10 @@ import chalk from 'chalk';
  * @see VersionNotFoundOnFS for cases when the Version object is missing from the filesystem.
  */
 export default class VersionNotFound extends BitError {
-  constructor(readonly version: string, componentId: string) {
+  constructor(
+    readonly version: string,
+    componentId: string
+  ) {
     super(`error: version "${chalk.bold(version)}" of component ${chalk.bold(componentId)} was not found.`);
   }
 }

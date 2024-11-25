@@ -60,13 +60,22 @@ export class DependencyList {
     return this.dependencies.find((dep) => removeVersion(dep.id) === componentIdStrWithoutVersion);
   }
 
-  findByPkgNameOrCompId(id: string, version?: string): Dependency | undefined {
+  findByPkgNameOrCompId(
+    id: string,
+    version?: string,
+    lifecycle: DependencyLifecycleType = 'runtime'
+  ): Dependency | undefined {
     const findByVariousStrategies = () => {
       // try by full-id or package-name
-      const found = this.dependencies.find(
+      const found = this.dependencies.filter(
         (dep) => dep.id === id || dep.getPackageName?.() === id || dep.id.startsWith(`${id}@`)
       );
-      if (found) return found;
+      if (found.length) {
+        if (found.length === 1) return found[0];
+        const foundByLifecycle = found.find((dep) => dep.lifecycle === lifecycle);
+        if (foundByLifecycle) return foundByLifecycle;
+        return found[0];
+      }
       const compDeps = this.toTypeArray<ComponentDependency>('component');
 
       // try by component-name

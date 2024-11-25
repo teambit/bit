@@ -1,6 +1,6 @@
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { ExecutionContext } from '@teambit/envs';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 import { TestsResult } from '@teambit/tests-results';
 
 export class Tests {
@@ -106,6 +106,11 @@ export interface TesterContext extends ExecutionContext {
    * whether the tester should show code coverage
    */
   coverage?: boolean;
+
+  /**
+   * re-record every snapshot that fails during the test run
+   */
+  updateSnapshot?: boolean;
 
   /**
    * array of patterns to test.

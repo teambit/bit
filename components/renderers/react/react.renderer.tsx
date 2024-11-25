@@ -162,7 +162,7 @@ function ReactOverviewComponent(props: APINodeRenderProps) {
   const icon = reactRenderer.icon;
   const description =
     api.doc?.comment ??
-    api?.doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n` ?? ''), '');
+    api?.doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n`), '');
 
   return (
     <div className={styles.reactOverview}>

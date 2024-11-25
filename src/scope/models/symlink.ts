@@ -1,6 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import { BitId } from '@teambit/legacy-bit-id';
-import { getStringifyArgs } from '../../utils';
+import { getStringifyArgs } from '@teambit/legacy.utils';
 import BitObject from '../objects/object';
 
 export type SymlinkProp = {

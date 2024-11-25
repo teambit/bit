@@ -11,5 +11,6 @@ export type {
   TranspileFileParams,
   TranspileComponentParams,
   TranspileFileOutputOneFile,
+  TypeGeneratorCompParams,
 } from './types';
 export * from './events';

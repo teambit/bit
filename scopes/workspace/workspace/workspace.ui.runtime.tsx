@@ -200,7 +200,7 @@ export class WorkspaceUI {
       SidebarUI,
       ComponentTreeUI,
       CommandBarUI,
-      GraphUI
+      GraphUI,
     ],
     config,
     [
@@ -220,7 +220,7 @@ export class WorkspaceUI {
       SidebarItemSlot,
       DrawerWidgetSlot,
       ComponentFiltersSlot,
-      MenuWidgetSlot
+      MenuWidgetSlot,
     ]
   ) {
     componentTree.registerTreeNode(new ComponentTreeWidget());
@@ -276,6 +276,8 @@ export class WorkspaceUI {
         element: workspaceUI.componentUi.getComponentUI(WorkspaceAspect.id),
       },
     ]);
+
+    workspaceUI.registerMenuWidget([commandBarUI.CommandBarButton]);
 
     return workspaceUI;
   }

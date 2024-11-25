@@ -13,7 +13,10 @@ export class DependencyNameRefactorCmd implements Command {
   // extendedDescription = `${PATTERN_HELP('refactor dependency-name')}`;
   extendedDescription = `the \`<old-id>\` and \`<new-id>\` arguments can be either a component-id or a package-name.`;
 
-  constructor(private refactoringMain: RefactoringMain, private componentMain: ComponentMain) {}
+  constructor(
+    private refactoringMain: RefactoringMain,
+    private componentMain: ComponentMain
+  ) {}
 
   async report([oldId, newId]: [string, string]) {
     const host = this.componentMain.getHost();

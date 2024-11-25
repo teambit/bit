@@ -1,11 +1,11 @@
-import { TimerResponse, Timer } from '@teambit/legacy/dist/toolbox/timer';
+import { TimerResponse, Timer } from '@teambit/toolbox.time.timer';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentFactory, ComponentID } from '@teambit/component';
 import chalk from 'chalk';
 import { EnvsExecutionResult } from '@teambit/envs';
 import { Workspace } from '@teambit/workspace';
-import { compact, flatten, omit } from 'lodash';
+import { compact, flatten, groupBy, omit } from 'lodash';
 import { LinterMain } from './linter.main.runtime';
 import { ComponentLintResult, LintResults } from './linter';
 import { FixTypes, LinterOptions } from './linter-context';
@@ -52,7 +52,11 @@ export class LintCmd implements Command {
     ['j', 'json', 'return the lint results in json format'],
   ] as CommandOptions;
 
-  constructor(private linter: LinterMain, private componentHost: ComponentFactory, private workspace: Workspace) {}
+  constructor(
+    private linter: LinterMain,
+    private componentHost: ComponentFactory,
+    private workspace: Workspace
+  ) {}
 
   async report([pattern]: [string], linterOptions: LintCmdOptions) {
     const { code, data } = await this.json([pattern], linterOptions);
@@ -63,7 +67,16 @@ export class LintCmd implements Command {
       )}'`
     );
 
-    const componentsOutputs = lintResults.results
+    const groupedByIsClean = groupBy(lintResults.results, (res) => {
+      if (res.isClean !== undefined) {
+        return res.isClean;
+      }
+      // The is clean field was added in a later version of the linter, so if it's not there, we will calculate it
+      // based on the errors/warnings count
+      return res.totalErrorCount + (res.totalFatalErrorCount || 0) + res.totalWarningCount === 0;
+    });
+
+    const dirtyComponentsOutputs = (groupedByIsClean.false || [])
       .map((lintRes) => {
         const compTitle = chalk.bold.cyan(lintRes.componentId.toString({ ignoreVersion: true }));
         const compOutput = lintRes.output;
@@ -71,8 +84,14 @@ export class LintCmd implements Command {
       })
       .join('\n');
 
+    const cleanComponentsCount = groupedByIsClean.true?.length || 0;
+    const cleanComponentsOutput = cleanComponentsCount
+      ? `total of ${chalk.green(cleanComponentsCount.toString())} component(s) has no linting issues`
+      : '';
+
     const summary = this.getSummarySection(data);
-    return { code, data: `${title}\n\n${componentsOutputs}\n\n${summary}` };
+    const finalOutput = compact([title, dirtyComponentsOutputs, cleanComponentsOutput, summary]).join('\n\n');
+    return { code, data: finalOutput };
   }
 
   private getSummarySection(data: JsonLintResultsData) {
@@ -202,6 +221,12 @@ function toJsonLintResults(results: EnvsExecutionResult<LintResults>): JsonLintD
 
     return compact(resultsWithoutComponent);
   });
+
+  const isClean =
+    totalComponentsWithErrorCount === 0 &&
+    totalComponentsWithWarningCount === 0 &&
+    totalComponentsWithFatalErrorCount === 0;
+
   return {
     results: compact(flatten(newResults)),
     totalErrorCount,
@@ -214,6 +239,7 @@ function toJsonLintResults(results: EnvsExecutionResult<LintResults>): JsonLintD
     totalComponentsWithFixableErrorCount,
     totalComponentsWithFixableWarningCount,
     totalComponentsWithWarningCount,
+    isClean,
     errors: results?.errors,
   };
 }

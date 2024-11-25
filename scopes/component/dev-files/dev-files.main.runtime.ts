@@ -1,4 +1,4 @@
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import { MainRuntime } from '@teambit/cli';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { flatten, isFunction } from 'lodash';
@@ -140,7 +140,7 @@ export class DevFilesMain {
 
   mergeEnvManifestPatterns(parent: EnvJsonc, child: EnvJsonc): Partial<EnvJsonc> {
     const merged: Partial<EnvJsonc> = {
-      patterns: { ...(parent.patterns || {}), ...(child.patterns || {}) },
+      patterns: { ...parent.patterns, ...child.patterns },
     };
     return merged;
   }
