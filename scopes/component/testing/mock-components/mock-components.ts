@@ -35,7 +35,7 @@ export async function mockComponents(
   });
   await workspace.bitMap.write();
   const install = harmony.get<InstallMain>(InstallAspect.id);
-  await install.link({ rewire: true });
+  await install.link([], { rewire: true });
 
   const compiler = harmony.get<CompilerMain>(CompilerAspect.id);
   await compiler.compileOnWorkspace();
