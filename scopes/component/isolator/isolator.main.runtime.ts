@@ -1046,11 +1046,13 @@ export class IsolatorMain {
 
   private writeRootPackageJson(capsulesDir: string, hashDir: string): void {
     const rootPackageJson = path.join(capsulesDir, 'package.json');
-    const packageJson = {
-      name: `capsules-${hashDir}`,
-      'bit-capsule': true,
-    };
-    fs.outputJsonSync(rootPackageJson, packageJson);
+    if (!fs.existsSync(rootPackageJson)) {
+      const packageJson = {
+        name: `capsules-${hashDir}`,
+        'bit-capsule': true,
+      };
+      fs.outputJsonSync(rootPackageJson, packageJson);
+    }
   }
 
   private async createCapsulesFromComponents(
