@@ -7,7 +7,7 @@ import { Analytics } from '@teambit/legacy.analytics';
 import { handleUnhandledRejection } from '@teambit/cli';
 import { BIT_VERSION, GLOBAL_CONFIG, GLOBAL_LOGS } from '@teambit/legacy/dist/constants';
 import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambit/legacy/dist/logger/logger';
-import loader from '@teambit/legacy/dist/cli/loader';
+import { loader } from '@teambit/legacy.loader';
 
 const RECOMMENDED_NODE_VERSIONS = '>=20.0.0 <21.0.0';
 const SUPPORTED_NODE_VERSIONS = '>=16.0.0 <21.0.0';

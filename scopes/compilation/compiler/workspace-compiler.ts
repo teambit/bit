@@ -12,7 +12,6 @@ import path from 'path';
 import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
-import loader from '@teambit/legacy/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
 import { AbstractVinyl, Dist, DataToPersist, RemovePath } from '@teambit/component.sources';
 import {
@@ -119,7 +118,7 @@ export class ComponentCompiler {
     dataToPersist.addBasePath(this.workspace.path);
     await dataToPersist.persistAllToFS();
     const buildResults = this.dists.map((distFile) => distFile.path);
-    if (this.component.state._consumer.compiler) loader.succeed();
+    if (this.component.state._consumer.compiler) this.logger.consoleSuccess();
 
     return { component: this.component.id.toString(), buildResults, errors: this.compileErrors };
   }

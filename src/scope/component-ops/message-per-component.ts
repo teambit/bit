@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { spawn } from 'child_process';
 import { Tmp } from '../repositories';
-import loader from '../../cli/loader';
+import { loader } from '@teambit/legacy.loader';
 
 const DEFAULT_MESSAGE = 'DEFAULT:';
 const DEFAULT_AUTO_TAG_MESSAGE = 'DEFAULT-AUTO-TAG:';

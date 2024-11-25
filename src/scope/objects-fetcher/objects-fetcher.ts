@@ -5,7 +5,7 @@ import { omit, uniq } from 'lodash';
 import { pipeline } from 'stream/promises';
 import { Scope } from '..';
 import { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
-import loader from '../../cli/loader';
+import { loader } from '@teambit/legacy.loader';
 import logger from '../../logger/logger';
 import { Remote, Remotes } from '../../remotes';
 import { ScopeNotFound } from '../exceptions';

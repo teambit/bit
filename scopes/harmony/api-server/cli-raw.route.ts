@@ -5,7 +5,7 @@ import { Route, Request, Response } from '@teambit/express';
 import { Logger } from '@teambit/logger';
 import legacyLogger, { getLevelFromArgv } from '@teambit/legacy/dist/logger/logger';
 import { reloadFeatureToggle } from '@teambit/harmony.modules.feature-toggle';
-import loader from '@teambit/legacy/dist/cli/loader';
+import { loader } from '@teambit/legacy.loader';
 import { APIForIDE } from './api-for-ide';
 
 /**

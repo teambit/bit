@@ -11,7 +11,6 @@ import { Extensions, LATEST, BuildStatus } from '@teambit/legacy/dist/constants'
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import pMapSeries from 'p-map-series';
-import loader from '@teambit/legacy/dist/cli/loader';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
@@ -193,7 +192,7 @@ export class SnappingMain {
     const validExactVersion = validateVersion(exactVersion);
     const consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
-    loader.start('determine components to tag...');
+    this.logger.setStatusLine('determine components to tag...');
     const newComponents = await componentsList.listNewComponents();
     const { bitIds, warnings } = await this.getComponentsToTag(
       unmodified,
@@ -726,7 +725,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
   }
 
   async _addFlattenedDependenciesToComponents(components: ConsumerComponent[], rebuildDepsGraph = false) {
-    loader.start('importing missing dependencies...');
+    this.logger.setStatusLine('importing missing dependencies...');
     this.logger.profile('snap._addFlattenedDependenciesToComponents');
     const getLane = async () => {
       const lane = await this.scope.legacyScope.getCurrentLaneObject();
@@ -741,7 +740,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     if (rebuildDepsGraph) {
       const flattenedDependenciesGetter = new FlattenedDependenciesGetter(this.scope.legacyScope, components, lane);
       await flattenedDependenciesGetter.populateFlattenedDependencies();
-      loader.stop();
+      this.logger.clearStatusLine();
       await this._addFlattenedDepsGraphToComponents(components);
       return;
     }
