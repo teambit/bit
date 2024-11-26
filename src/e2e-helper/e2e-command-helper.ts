@@ -837,6 +837,7 @@ export default class CommandHelper {
         }
       });
     });
+    // console.log('apply command', `bit apply '${JSON.stringify(data)}' ${options}`);
     return this.runCmd(`bit apply '${JSON.stringify(data)}' ${options}`);
   }
   diff(id = '') {
