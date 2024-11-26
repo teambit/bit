@@ -759,13 +759,9 @@ export class IsolatorMain {
       rootDir: capsulesDir,
     };
     await Promise.all(
-      capsuleList.map(async (capsule) => {
-        capsule.component.state._consumer.dependenciesGraph = await this.dependencyResolver.calcDependenciesGraph(
-          capsule.component,
-          path.relative(capsulesDir, capsule.path),
-          opts
-        );
-      })
+      capsuleList.map((capsule) =>
+        this.dependencyResolver.addDependenciesGraph(capsule.component, path.relative(capsulesDir, capsule.path), opts)
+      )
     );
   }
 

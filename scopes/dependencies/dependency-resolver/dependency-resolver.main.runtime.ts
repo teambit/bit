@@ -569,7 +569,7 @@ export class DependencyResolverMain {
     return relativePath;
   }
 
-  async calcDependenciesGraph(
+  async addDependenciesGraph(
     component: Component,
     componentRelativeDir: string,
     options: {
@@ -577,9 +577,9 @@ export class DependencyResolverMain {
       rootComponentsPath?: string;
       componentIdByPkgName: Map<string, ComponentID>;
     }
-  ): Promise<DependenciesGraph | undefined> {
+  ): Promise<void> {
     try {
-      return await this.getPackageManager()?.calcDependenciesGraph?.({
+      component.state._consumer.dependenciesGraph = await this.getPackageManager()?.calcDependenciesGraph?.({
         rootDir: options.rootDir,
         componentRootDir: options.rootComponentsPath
           ? this.getComponentDirInBitRoots(component, {
@@ -596,7 +596,6 @@ export class DependencyResolverMain {
       if (isFeatureEnabled(DEPS_GRAPH)) {
         throw err;
       }
-      return undefined;
     }
   }
 
