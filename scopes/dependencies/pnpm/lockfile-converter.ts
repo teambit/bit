@@ -12,7 +12,7 @@ import {
 import { type CalcDepsGraphOptions, type ComponentIdByPkgName } from '@teambit/dependency-resolver';
 import { getLockfileImporterId } from '@pnpm/lockfile.fs';
 
-export function convertLockfileToGraphFromCapsule(
+function convertLockfileToGraphFromCapsule(
   lockfile: LockfileFileV9,
   {
     componentRelativeDir,
@@ -48,6 +48,9 @@ export function convertLockfileToGraph(
   lockfile: LockfileFileV9,
   { pkgName, componentRootDir, componentRelativeDir, componentIdByPkgName }: Omit<CalcDepsGraphOptions, 'rootDir'>
 ): DependenciesGraph {
+  if (componentRootDir == null || pkgName == null) {
+    return convertLockfileToGraphFromCapsule(lockfile, { componentRelativeDir, componentIdByPkgName });
+  }
   const componentDevImporter = lockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
   if (componentDevImporter.devDependencies != null) {

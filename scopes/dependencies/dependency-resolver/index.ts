@@ -13,7 +13,6 @@ export type {
   PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
   CalcDepsGraphOptions,
-  CalcDepsGraphFromCapsuleOptions,
   ComponentIdByPkgName,
 } from './package-manager';
 export type { DependencyResolverWorkspaceConfig, NodeLinker } from './dependency-resolver-workspace-config';

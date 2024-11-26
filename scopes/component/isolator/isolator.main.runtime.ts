@@ -715,7 +715,7 @@ export class IsolatorMain {
         if (dependenciesGraph == null) {
           // If the graph was not present in the model, we use the just created lockfile inside the capsules
           // to populate the graph.
-          await this.calcDependenciesGraph(capsuleList, components, capsulesDir);
+          await this.addDependenciesGraphToComponents(capsuleList, components, capsulesDir);
         }
       }
       if (installLongProcessLogger) {
@@ -748,23 +748,23 @@ export class IsolatorMain {
     return allCapsuleList;
   }
 
-  private async calcDependenciesGraph(
+  private async addDependenciesGraphToComponents(
     capsuleList: CapsuleList,
     components: Component[],
     capsulesDir: string
   ): Promise<void> {
-    const componentIdByPkgName = this.dependencyResolver.getComponentIdByPkgNameMap(components);
+    const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(components);
     const opts = {
       componentIdByPkgName,
-      capsulesDir,
+      rootDir: capsulesDir,
     };
     await Promise.all(
       capsuleList.map(async (capsule) => {
-        capsule.component.state._consumer.dependenciesGraph =
-          await this.dependencyResolver.calcDependenciesGraphFromCapsule(
-            path.relative(capsulesDir, capsule.path),
-            opts
-          );
+        capsule.component.state._consumer.dependenciesGraph = await this.dependencyResolver.calcDependenciesGraph(
+          capsule.component,
+          path.relative(capsulesDir, capsule.path),
+          opts
+        );
       })
     );
   }

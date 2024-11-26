@@ -13,7 +13,6 @@ import {
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
   type CalcDepsGraphOptions,
-  type CalcDepsGraphFromCapsuleOptions,
 } from '@teambit/dependency-resolver';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
@@ -38,11 +37,7 @@ import { readWantedLockfile } from '@pnpm/lockfile-file';
 import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
 import { ServerSendOutStream } from '@teambit/legacy/dist/logger/pino-logger';
 import { join } from 'path';
-import {
-  convertLockfileToGraph,
-  convertLockfileToGraphFromCapsule,
-  convertGraphToLockfile,
-} from './lockfile-converter';
+import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
@@ -391,40 +386,16 @@ export class PnpmPackageManager implements PackageManager {
     if (!lockfile) {
       return undefined;
     }
-    if (!lockfile.importers[opts.componentRootDir] && opts.componentRootDir.includes('@')) {
+    if (opts.componentRootDir && !lockfile.importers[opts.componentRootDir] && opts.componentRootDir.includes('@')) {
       opts.componentRootDir = opts.componentRootDir.split('@')[0];
     }
-    // Filters the lockfile so that it only includes packages related to the given component.
-    const partialLockfile = convertLockfileObjectToLockfileFile(
-      filterLockfileByImporters(
-        lockfile,
-        [opts.componentRootDir as ProjectId, opts.componentRelativeDir as ProjectId],
-        {
-          include: {
-            dependencies: true,
-            devDependencies: true,
-            optionalDependencies: true,
-          },
-          failOnMissingDependencies: false,
-          skipped: new Set(),
-        }
-      ),
-      { forceSharedFormat: true }
-    );
-    const graph = convertLockfileToGraph(partialLockfile, opts);
-    return graph;
-  }
-
-  async calcDependenciesGraphFromCapsule(
-    opts: CalcDepsGraphFromCapsuleOptions
-  ): Promise<DependenciesGraph | undefined> {
-    const lockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: false });
-    if (!lockfile) {
-      return undefined;
+    const filterByImporterIds = [opts.componentRelativeDir as ProjectId];
+    if (opts.componentRootDir != null) {
+      filterByImporterIds.push(opts.componentRootDir as ProjectId);
     }
     // Filters the lockfile so that it only includes packages related to the given component.
     const partialLockfile = convertLockfileObjectToLockfileFile(
-      filterLockfileByImporters(lockfile, [opts.componentRelativeDir as ProjectId], {
+      filterLockfileByImporters(lockfile, filterByImporterIds, {
         include: {
           dependencies: true,
           devDependencies: true,
@@ -435,7 +406,7 @@ export class PnpmPackageManager implements PackageManager {
       }),
       { forceSharedFormat: true }
     );
-    const graph = convertLockfileToGraphFromCapsule(partialLockfile, opts);
+    const graph = convertLockfileToGraph(partialLockfile, opts);
     return graph;
   }
 }

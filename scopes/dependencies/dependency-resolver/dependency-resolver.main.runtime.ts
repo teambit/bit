@@ -496,12 +496,10 @@ export class DependencyResolverMain {
     return this.getDepResolverData(component)?.packageName ?? this.calcPackageName(component);
   }
 
-  getComponentIdByPkgNameMap(components: Component[]): Map<string, ComponentID> {
+  createComponentIdByPkgNameMap(components: Component[]): Map<string, ComponentID> {
     const componentIdByPkgName = new Map<string, ComponentID>();
     for (const component of components) {
-      if (component.state._consumer.componentMap?.id) {
-        componentIdByPkgName.set(this.getPackageName(component), component.state._consumer.componentMap.id);
-      }
+      componentIdByPkgName.set(this.getPackageName(component), component.id);
     }
     return componentIdByPkgName;
   }
@@ -575,38 +573,21 @@ export class DependencyResolverMain {
     component: Component,
     componentRelativeDir: string,
     options: {
-      workspacePath: string;
-      rootComponentsPath: string;
+      rootDir: string;
+      rootComponentsPath?: string;
       componentIdByPkgName: Map<string, ComponentID>;
     }
   ): Promise<DependenciesGraph | undefined> {
     try {
       return await this.getPackageManager()?.calcDependenciesGraph?.({
-        rootDir: options.workspacePath,
-        componentRootDir: this.getComponentDirInBitRoots(component, options),
+        rootDir: options.rootDir,
+        componentRootDir: options.rootComponentsPath
+          ? this.getComponentDirInBitRoots(component, {
+              workspacePath: options.rootDir,
+              rootComponentsPath: options.rootComponentsPath,
+            })
+          : undefined,
         pkgName: this.getPackageName(component),
-        componentRelativeDir,
-        componentIdByPkgName: options.componentIdByPkgName,
-      });
-    } catch (err) {
-      // If the dependencies graph feature is disabled, we ignore the error
-      if (isFeatureEnabled(DEPS_GRAPH)) {
-        throw err;
-      }
-      return undefined;
-    }
-  }
-
-  async calcDependenciesGraphFromCapsule(
-    componentRelativeDir: string,
-    options: {
-      capsulesDir: string;
-      componentIdByPkgName: Map<string, ComponentID>;
-    }
-  ): Promise<DependenciesGraph | undefined> {
-    try {
-      return await this.getPackageManager()?.calcDependenciesGraphFromCapsule?.({
-        rootDir: options.capsulesDir,
         componentRelativeDir,
         componentIdByPkgName: options.componentIdByPkgName,
       });

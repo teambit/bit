@@ -211,19 +211,14 @@ export interface PackageManager {
   findUsages?(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string>;
 
   calcDependenciesGraph?(options: CalcDepsGraphOptions): Promise<DependenciesGraph | undefined>;
-
-  calcDependenciesGraphFromCapsule?(options: CalcDepsGraphFromCapsuleOptions): Promise<DependenciesGraph | undefined>;
 }
 
-export interface CalcDepsGraphFromCapsuleOptions {
+export interface CalcDepsGraphOptions {
   componentRelativeDir: string;
   componentIdByPkgName: ComponentIdByPkgName;
   rootDir: string;
-}
-
-export interface CalcDepsGraphOptions extends CalcDepsGraphFromCapsuleOptions {
-  componentRootDir: string;
-  pkgName: string;
+  componentRootDir?: string;
+  pkgName?: string;
 }
 
 export type ComponentIdByPkgName = Map<string, ComponentID>;
