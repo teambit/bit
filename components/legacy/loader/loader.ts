@@ -7,7 +7,7 @@ const SPINNER_TYPE = cliSpinners.dots;
 
 export class Loader {
   shouldSendServerEvents = false;
-  private spinner: Ora | null;
+  private spinner?: Ora | null;
 
   get isStarted() {
     return !!this.spinner;
@@ -56,7 +56,7 @@ export class Loader {
     return this;
   }
 
-  get(): Ora | null {
+  get(): Ora | null | undefined {
     return this.spinner;
   }
 
