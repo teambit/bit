@@ -22,11 +22,7 @@ export const ENV_STRATEGY_ARTIFACT_NAME = 'preview';
 export class EnvBundlingStrategy implements BundlingStrategy {
   name = 'env';
 
-  constructor(
-    private preview: PreviewMain,
-    private pkg: PkgMain,
-    private dependencyResolver: DependencyResolverMain
-  ) {}
+  constructor(private preview: PreviewMain, private pkg: PkgMain, private dependencyResolver: DependencyResolverMain) {}
 
   async computeTargets(context: ComputeTargetsContext, previewDefs: PreviewDefinition[]) {
     const outputPath = this.getOutputPath(context);
