@@ -826,6 +826,10 @@ once done, to continue working, please run "bit cc"`
     }
     return versionObj.loadDependenciesGraph(this.objects);
   }
+
+  public async loadDependenciesGraphForComponent(component: Component): Promise<void> {
+    component.dependenciesGraph = await this.getDependenciesGraphByComponentId(component.id);
+  }
 }
 
 function composePath(patternPath: string, patterns: string[]): string[] {

@@ -97,9 +97,7 @@ export class UpdateDependenciesMain {
     // if (!updateDepsOptions.simulation) {
     await this.snapping._addFlattenedDependenciesToComponents(this.legacyComponents);
     await Promise.all(
-      this.legacyComponents.map(async (component) => {
-        component.dependenciesGraph = await this.scope.legacyScope.getDependenciesGraphByComponentId(component.id);
-      })
+      this.legacyComponents.map((component) => this.scope.legacyScope.loadDependenciesGraphForComponent(component))
     );
     // }
     this.addBuildStatus();

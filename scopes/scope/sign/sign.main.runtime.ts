@@ -111,11 +111,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     // it's enough to check the first component whether it's a snap or tag, because it can't be a mix of both
     const shouldRunSnapPipeline = isSnap(components[0].id.version);
     await Promise.all(
-      components.map(async (component) => {
-        component.state._consumer.dependenciesGraph = await this.scope.legacyScope.getDependenciesGraphByComponentId(
-          component.id
-        );
-      })
+      components.map((component) => this.scope.legacyScope.loadDependenciesGraphForComponent(component.state._consumer))
     );
     const { builderDataMap, pipeResults } = await this.builder.tagListener(
       components,
