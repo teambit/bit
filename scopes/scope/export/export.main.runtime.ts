@@ -4,7 +4,7 @@ import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { BitError } from '@teambit/bit-error';
 import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL } from '@teambit/legacy/dist/constants';
+import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, getCloudDomain } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { ComponentsList } from '@teambit/legacy.component-list';
@@ -77,6 +77,7 @@ export interface ExportResult {
   componentsIds: ComponentID[];
   exportedLanes: Lane[];
   rippleJobs: string[];
+  rippleJobUrls: string[];
   ejectResults: EjectResults | undefined;
 }
 
@@ -95,7 +96,7 @@ export class ExportMain {
     let ejectResults: EjectResults | undefined;
     await this.workspace.clearCache(); // needed when one process executes multiple commands, such as in "bit test" or "bit cli"
     if (params.eject) ejectResults = await this.ejectExportedComponents(exported);
-    const exportResults = {
+    const exportResults: ExportResult = {
       componentsIds: exported,
       newIdsOnRemote,
       nonExistOnBitMap,
@@ -104,13 +105,26 @@ export class ExportMain {
       ejectResults,
       exportedLanes,
       rippleJobs,
+      rippleJobUrls: this.getRippleJobUrls(exportedLanes, rippleJobs),
     };
     if (Scope.onPostExport) {
       await Scope.onPostExport(exported, exportedLanes).catch((err) => {
         this.logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
       });
     }
+
     return exportResults;
+  }
+
+  private getRippleJobUrls(exportedLanes: Lane[], rippleJobs: string[]): string[] {
+    const lane = exportedLanes.length ? exportedLanes?.[0] : undefined;
+    const rippleJobUrls = lane
+      ? rippleJobs.map(
+          (job) =>
+            `https://${getCloudDomain()}/${lane.scope.replace('.', '/')}/~lane/${lane.name}/~ripple-ci/job/${job}`
+        )
+      : rippleJobs.map((job) => `https://${getCloudDomain()}/ripple-ci/job/${job}`);
+    return rippleJobUrls;
   }
 
   private async exportComponents({
