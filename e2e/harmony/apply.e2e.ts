@@ -59,4 +59,39 @@ describe('apply command', function () {
       });
     });
   });
+  describe('apply component changes on existing workspace', () => {
+    let output: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      const data = [
+        {
+          componentId: `${helper.scopes.remote}/comp1`,
+          message: `msg for first comp`,
+          files: [
+            {
+              path: 'index.js',
+              content: "require('test-dummy-package')",
+            },
+          ],
+        },
+      ];
+      // console.log('command', `bit apply '${JSON.stringify(data)}'`);
+      output = helper.command.apply(data);
+    });
+    it('should modify the component correctly', () => {
+      const indexFile = helper.fs.readFile('comp1/index.js');
+      expect(indexFile).to.have.string("require('test-dummy-package')");
+    });
+    it('should leave the component as modified in bit-status', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(1);
+    });
+    it('should install the new packages according to the added import statement', () => {
+      expect(output).to.have.string('+ test-dummy-package');
+    });
+  });
 });

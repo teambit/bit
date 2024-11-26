@@ -271,7 +271,7 @@ export class ApplyMain {
     const newIds: ComponentID[] = [];
     const updatedIds: ComponentID[] = [];
     await pMapSeries(snapDataPerComp, async (snapData) => {
-      const existing = this.workspace.bitMap.getBitmapEntryIfExist(snapData.componentId);
+      const existing = this.workspace.bitMap.getBitmapEntryIfExist(snapData.componentId, { ignoreVersion: true });
       if (existing && snapData.isNew) {
         throw new Error(
           `component "${snapData.componentId.toString()}" already exists in the workspace. please remove the "isNew" prop`
@@ -309,6 +309,9 @@ export class ApplyMain {
         newIds.push(snapData.componentId);
       }
     });
+
+    // without this, when adding new import statements to a component, the installation doesn't pick them up
+    await this.workspace.clearCache();
 
     await this.install.install(undefined, {
       dedupe: true,
