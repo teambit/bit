@@ -594,6 +594,7 @@ export class IsolatorMain {
    * @param opts
    * @param legacyScope
    */
+  /* eslint-disable complexity */
   private async createCapsules(
     components: Component[],
     capsulesDir: string,
@@ -747,6 +748,7 @@ export class IsolatorMain {
 
     return allCapsuleList;
   }
+  /* eslint-enable complexity */
 
   private async addDependenciesGraphToComponents(
     capsuleList: CapsuleList,
