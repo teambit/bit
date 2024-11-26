@@ -21,6 +21,39 @@ require('regenerator-runtime/runtime');
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 process.on('unhandledRejection', async (err: any) => handleUnhandledRejection(err));
 
+const originalEmit = process.emit;
+// @ts-expect-error - TS complains about the return type of originalEmit.apply
+process.emit = function (name, data) {
+  // --------------------------------------------
+  // this fix is based on yarn fix for the similar issue, see code here:
+  // https://github.com/yarnpkg/berry/blob/2cf0a8fe3e4d4bd7d4d344245d24a85a45d4c5c9/packages/yarnpkg-pnp/sources/loader/applyPatch.ts#L414-L435
+  // ignore punycode deprecation warning
+  // ignoring this warning for now, as the main issue is that
+  // this package https://www.npmjs.com/package/uri-js?activeTab=readme is using it and it's deprecated
+  // the package have the correct punycode version as a dependency from the user land
+  // but it uses it incorrectly, it should use it with a trailing slash
+  // the require in their code is require('punycode') and not require('punycode/') (with trailing slash)
+  // As this package is not maintained anymore, we can't fix it from our side
+  // see more at:
+  // https://github.com/garycourt/uri-js/issues/97
+  // https://github.com/garycourt/uri-js/pull/95
+  // on the bit repo we overriding the uri-js package with a fixed version (see overrides in workspace.jsonc)
+  // "uri-js": "npm:uri-js-replace"
+  // but we don't want to override it automatically for all the users
+  // there are many other packages (like webpack, eslint, etc) that are using this uri-js package
+  // so if we won't ignore it, all users will get this warning
+  if (
+    name === `warning` &&
+    typeof data === `object` &&
+    ((data.name === `DeprecationWarning` && data.message.includes(`punycode`)) || data.code === `DEP0040`)
+  )
+    return false;
+  // --------------------------------------------
+
+  // eslint-disable-next-line prefer-rest-params
+  return originalEmit.apply(process, arguments as unknown as Parameters<typeof process.emit>);
+};
+
 // by default Bluebird enables the longStackTraces when env is `development`, or when
 // BLUEBIRD_DEBUG is set.
 // the drawback of enabling it all the time is a performance hit. (see http://bluebirdjs.com/docs/api/promise.longstacktraces.html)
