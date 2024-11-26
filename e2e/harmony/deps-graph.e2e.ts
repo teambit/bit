@@ -279,7 +279,7 @@ chai.use(require('chai-fs'));
       helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
     });
-    it('should save dependencies graph to the model', () => {
+    it('should save dependencies graph to the model of comp1', () => {
       const versionObj = helper.command.catComponent('comp1@latest');
       const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
       const directDependencies = depsGraph.edges.find((edge) => edge.id === '.').neighbours;
@@ -294,7 +294,7 @@ chai.use(require('chai-fs'));
     let depsGraph2;
     let depsGraph2DirectDeps;
     let comp1Package;
-    it('should save dependencies graph to the model', () => {
+    it('should save dependencies graph to the model comp2', () => {
       const versionObj = helper.command.catComponent('comp2@latest');
       depsGraph2 = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
       depsGraph2DirectDeps = depsGraph2.edges.find((edge) => edge.id === '.').neighbours;
