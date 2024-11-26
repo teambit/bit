@@ -161,7 +161,11 @@ function buildPackages(
     if (pkgId.includes('@pending:')) {
       const parsed = dp.parse(pkgId);
       if (parsed.name && componentIdByPkgName.has(parsed.name)) {
-        graphPkg.component = componentIdByPkgName.get(parsed.name);
+        const compId = componentIdByPkgName.get(parsed.name)!;
+        graphPkg.component = {
+          name: compId.fullName,
+          scope: compId.scope,
+        };
       }
     }
     packages.set(pkgId, graphPkg);

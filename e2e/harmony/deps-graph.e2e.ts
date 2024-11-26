@@ -57,8 +57,20 @@ chai.use(require('chai-fs'));
       const versionObj = helper.command.catComponent('comp1@latest');
       const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
       const directDeps = depsGraph.edges.find((edge) => edge.id === '.')?.neighbours;
-      expect(directDeps).deep.include({ name: 'react', specifier: '18.3.1', id: 'react@18.3.1', lifecycle: 'runtime' });
-      expect(directDeps).deep.include({ name: 'is-odd', specifier: '1.0.0', id: 'is-odd@1.0.0', lifecycle: 'dev' });
+      expect(directDeps).deep.include({
+        name: 'react',
+        specifier: '18.3.1',
+        id: 'react@18.3.1',
+        lifecycle: 'runtime',
+        optional: false,
+      });
+      expect(directDeps).deep.include({
+        name: 'is-odd',
+        specifier: '1.0.0',
+        id: 'is-odd@1.0.0',
+        lifecycle: 'dev',
+        optional: false,
+      });
     });
     describe('sign component and use dependency graph to generate a lockfile', () => {
       let signOutput: string;
@@ -86,8 +98,15 @@ chai.use(require('chai-fs'));
           specifier: '18.3.1',
           id: 'react@18.3.1',
           lifecycle: 'runtime',
+          optional: false,
         });
-        expect(directDeps).deep.include({ name: 'is-odd', specifier: '1.0.0', id: 'is-odd@1.0.0', lifecycle: 'dev' });
+        expect(directDeps).deep.include({
+          name: 'is-odd',
+          specifier: '1.0.0',
+          id: 'is-odd@1.0.0',
+          lifecycle: 'dev',
+          optional: false,
+        });
       });
     });
     describe('imported component uses dependency graph to generate a lockfile', () => {
@@ -103,7 +122,7 @@ chai.use(require('chai-fs'));
       });
     });
   });
-  describe.only('single component and sign writes the dependency graph', () => {
+  describe('single component and sign writes the dependency graph', () => {
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -161,12 +180,6 @@ chai.use(require('chai-fs'));
         lockfile = yaml.load(fs.readFileSync(path.join(stripAnsi(capsulesDir!), 'pnpm-lock.yaml'), 'utf8'));
         expect(lockfile['bit']).to.be.undefined; // eslint-disable-line
       });
-      // it('should not update dependencies in the lockfile', () => {
-      // expect(lockfile.packages).to.have.property('@pnpm.e2e/pkg-with-1-dep@100.0.0');
-      // expect(lockfile.packages).to.have.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.0.0');
-      // expect(lockfile.packages).to.not.have.property('@pnpm.e2e/pkg-with-1-dep@100.1.0');
-      // expect(lockfile.packages).to.not.have.property('@pnpm.e2e/dep-of-pkg-with-1-dep@100.1.0');
-      // });
     });
     describe('imported component uses dependency graph to generate a lockfile', () => {
       before(async () => {
@@ -275,6 +288,7 @@ chai.use(require('chai-fs'));
         specifier: '16.0.0',
         id: 'react@16.0.0',
         lifecycle: 'runtime',
+        optional: false,
       });
     });
     let depsGraph2;
@@ -289,6 +303,7 @@ chai.use(require('chai-fs'));
         specifier: '17.0.0',
         id: 'react@17.0.0',
         lifecycle: 'runtime',
+        optional: false,
       });
     });
     it('should replace pending version in direct dependency', () => {
@@ -297,6 +312,7 @@ chai.use(require('chai-fs'));
         specifier: '*',
         id: `@ci/${randomStr}.comp1@0.0.1(react@17.0.0)`,
         lifecycle: 'runtime',
+        optional: false,
       });
     });
     it('should update integrity of dependency component', () => {
