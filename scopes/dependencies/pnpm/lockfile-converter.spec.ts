@@ -1,5 +1,5 @@
 import path from 'path';
-import { DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
+import { DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
 import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-converter';
 import { expect } from 'chai';

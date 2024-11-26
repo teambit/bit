@@ -19,7 +19,8 @@ import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { OnTagOpts } from '@teambit/builder';
-import { DependenciesGraph, Log } from '@teambit/legacy/dist/scope/models/version';
+import { DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
+import { Log } from '@teambit/legacy/dist/scope/models/version';
 import {
   MessagePerComponent,
   MessagePerComponentFetcher,

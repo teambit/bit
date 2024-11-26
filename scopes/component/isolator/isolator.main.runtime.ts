@@ -50,7 +50,7 @@ import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { Scope } from '@teambit/legacy/dist/scope';
-import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
+import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
 import path, { basename } from 'path';

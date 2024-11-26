@@ -50,7 +50,7 @@ import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package
 import { getDivergeData } from './component-ops/get-diverge-data';
 import { StagedSnaps } from './staged-snaps';
 import { collectGarbage } from './garbage-collector';
-import { type DependenciesGraph } from './models/version';
+import { type DependenciesGraph } from './models/dependencies-graph';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);

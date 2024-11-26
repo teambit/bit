@@ -41,7 +41,7 @@ import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-conve
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
-import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/version';
+import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
 
 export type { RebuildFn };
 
