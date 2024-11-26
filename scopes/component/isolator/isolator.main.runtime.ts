@@ -627,6 +627,7 @@ export class IsolatorMain {
       await fs.emptyDir(capsulesDir);
     }
     let capsules = await this.createCapsulesFromComponents(components, capsulesDir, config);
+    this.writeRootPackageJson(capsulesDir, this.getCapsuleDirHash(opts.baseDir || ''));
     const allCapsuleList = CapsuleList.fromArray(capsules);
     let capsuleList = allCapsuleList;
     if (opts.getExistingAsIs) {
@@ -1021,6 +1022,10 @@ export class IsolatorMain {
     };
   }
 
+  private getCapsuleDirHash(baseDir: string): string {
+    return hash(baseDir).substring(0, CAPSULE_DIR_LENGTH);
+  }
+
   /** @deprecated use the new function signature with an object parameter instead */
   getCapsulesRootDir(baseDir: string, rootBaseDir?: string, useHash?: boolean): PathOsBasedAbsolute;
   getCapsulesRootDir(getCapsuleDirOpts: GetCapsuleDirOpts): PathOsBasedAbsolute;
@@ -1061,7 +1066,7 @@ export class IsolatorMain {
       return path.join(capsulesRootBaseDir, datedBaseDir, dateDir, hashDir);
     }
     const dir = getCapsuleDirOptsWithDefaults.useHash
-      ? hash(getCapsuleDirOptsWithDefaults.baseDir).substring(0, CAPSULE_DIR_LENGTH)
+      ? this.getCapsuleDirHash(getCapsuleDirOptsWithDefaults.baseDir)
       : getCapsuleDirOptsWithDefaults.baseDir;
     return path.join(capsulesRootBaseDir, dir);
   }
@@ -1070,6 +1075,17 @@ export class IsolatorMain {
     const dirToDelete = rootDir || this.getRootDirOfAllCapsules();
     await fs.remove(dirToDelete);
     return dirToDelete;
+  }
+
+  private writeRootPackageJson(capsulesDir: string, hashDir: string): void {
+    const rootPackageJson = path.join(capsulesDir, 'package.json');
+    if (!fs.existsSync(rootPackageJson)) {
+      const packageJson = {
+        name: `capsules-${hashDir}`,
+        'bit-capsule': true,
+      };
+      fs.outputJsonSync(rootPackageJson, packageJson);
+    }
   }
 
   private async createCapsulesFromComponents(
