@@ -52,7 +52,7 @@ import { remoteErrorHandler } from '../remote-error-handler';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
 import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
-import loader from '../../../cli/loader';
+import { loader } from '@teambit/legacy.loader';
 import { UnexpectedNetworkError } from '../exceptions';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 

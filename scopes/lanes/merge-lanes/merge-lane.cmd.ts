@@ -72,7 +72,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       'ignore-config-changes',
       'allow merging when components are modified due to config changes (such as dependencies) only and not files',
     ],
-    ['', 'verbose', 'show details of components that were not merged successfully'],
+    ['', 'verbose', 'display detailed information about components that were legitimately unmerged'],
     ['x', 'skip-dependency-installation', 'do not install dependencies of the imported components'],
     ['', 'skip-fetch', 'use the local state of target-lane if exits locally, without updating it from the remote'],
     [

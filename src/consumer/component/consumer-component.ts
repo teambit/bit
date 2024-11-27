@@ -7,8 +7,7 @@ import { IssuesList } from '@teambit/component-issues';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import { getCloudDomain, BIT_WORKSPACE_TMP_DIRNAME, BuildStatus, DEFAULT_LANGUAGE, Extensions } from '../../constants';
-import docsParser from '../../jsdoc/parser';
-import { Doclet } from '../../jsdoc/types';
+import { Doclet, parser as docsParser } from '@teambit/semantics.doc-parser';
 import logger from '../../logger/logger';
 import { ScopeListItem } from '../../scope/models/model-component';
 import Version, { DepEdge, Log } from '../../scope/models/version';
@@ -23,7 +22,7 @@ import ComponentOverrides from '../config/component-overrides';
 import { ExtensionDataList } from '../config/extension-data';
 import Consumer from '../consumer';
 import ComponentOutOfSync from '../exceptions/component-out-of-sync';
-import { ComponentFsCache } from './component-fs-cache';
+import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
@@ -606,6 +605,6 @@ async function getLoadedFiles(
   return sourceFiles;
 }
 
-function _getDocsForFiles(files: SourceFile[], componentFsCache: ComponentFsCache): Array<Promise<Doclet[]>> {
+function _getDocsForFiles(files: SourceFile[], componentFsCache: FsCache): Array<Promise<Doclet[]>> {
   return files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file, componentFsCache)));
 }

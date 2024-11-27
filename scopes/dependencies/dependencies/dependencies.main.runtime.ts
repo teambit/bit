@@ -7,7 +7,7 @@ import {
   KEY_NAME_BY_LIFECYCLE_TYPE,
 } from '@teambit/dependency-resolver';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { cloneDeep, compact, set } from 'lodash';
+import { cloneDeep, compact, set, uniq } from 'lodash';
 import pMapSeries from 'p-map-series';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import ComponentLoader, { DependencyLoaderOpts } from '@teambit/legacy/dist/consumer/component/component-loader';
@@ -156,6 +156,12 @@ export class DependenciesMain {
     const compIds = await this.workspace.idsByPattern(componentPattern);
     const results = await pMapSeries(compIds, async (compId) => {
       const component = await this.workspace.get(compId);
+      const missingPackages = uniq(
+        component.state.issues
+          .getIssueByName('MissingPackagesDependenciesOnFs')
+          ?.data.map((d) => d.missingPackages)
+          .flat() || []
+      );
       const depList = this.dependencyResolver.getDependencies(component);
       const getCurrentConfig = async () => {
         const currentConfigFromWorkspace = await this.workspace.getSpecificComponentConfig(
@@ -168,12 +174,18 @@ export class DependenciesMain {
       };
       const currentDepResolverConfig = await getCurrentConfig();
       const newDepResolverConfig = cloneDeep(currentDepResolverConfig || {});
+      const depField = KEY_NAME_BY_LIFECYCLE_TYPE[getLifeCycle()];
       const removedPackagesWithNulls = await pMapSeries(packages, async (pkg) => {
         const [name, version] = this.splitPkgToNameAndVer(pkg);
         const dependency = depList.findByPkgNameOrCompId(name, version, getLifeCycle());
-        if (!dependency) return null;
+        if (!dependency) {
+          if (!missingPackages.includes(name)) return null;
+          if (removeOnlyIfExists) return null;
+          set(newDepResolverConfig, ['policy', depField, name], '-');
+          return `${name}@${version || 'latest'}`;
+        }
         const depName = dependency.getPackageName?.() || dependency.id;
-        const depField = KEY_NAME_BY_LIFECYCLE_TYPE[getLifeCycle()];
+
         const existsInSpecificConfig = newDepResolverConfig.policy?.[depField]?.[depName];
         if (existsInSpecificConfig) {
           if (existsInSpecificConfig === '-') return null;
@@ -402,7 +414,7 @@ export class DependenciesMain {
     AspectLoaderMain,
     ScopeMain,
     GraphMain,
-    LoggerMain,
+    LoggerMain
   ]) {
     const logger = loggerMain.createLogger(DependenciesAspect.id);
     const depsMain = new DependenciesMain(workspace, scope, depsResolver, devFiles, aspectLoader, graph, logger);

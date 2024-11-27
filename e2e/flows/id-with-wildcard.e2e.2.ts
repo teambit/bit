@@ -203,7 +203,7 @@ describe('component id with wildcard', function () {
           output = helper.command.reset('"*/is/*"');
         });
         it('should indicate the untagged components', () => {
-          expect(output).to.have.string('2 component(s) were untagged');
+          expect(output).to.have.string('2 component(s) were reset');
           expect(output).to.have.string('utils/is/string');
           expect(output).to.have.string('utils/is/type');
         });

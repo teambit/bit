@@ -32,6 +32,7 @@ import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { DEFAULT_AUTH_TYPE, Http } from '@teambit/legacy/dist/scope/network/http/http';
+import { getSymphonyUrl } from '@teambit/legacy/dist/constants';
 
 export class ApiServerMain {
   constructor(
@@ -115,11 +116,12 @@ export class ApiServerMain {
       origin: '',
       'user-agent': 'bit-vscode-proxy',
     };
+    const symphonyUrl = getSymphonyUrl();
     app.use(
       '/api/cloud-graphql',
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       createProxyMiddleware({
-        target: 'https://api.v2.bit.cloud/graphql',
+        target: `https://${symphonyUrl}/graphql`,
         changeOrigin: true,
         headers: proxyHeaders,
         on: {
@@ -140,7 +142,7 @@ export class ApiServerMain {
       '/api/cloud-rest',
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       createProxyMiddleware({
-        target: 'https://api.v2.bit.cloud',
+        target: `https://${symphonyUrl}`,
         changeOrigin: true,
         headers: proxyHeaders,
         on: {
@@ -180,9 +182,9 @@ export class ApiServerMain {
   }
 
   async getRandomPort() {
-    const startingPort = 3593; // some arbitrary number shy away from the standard 3000
-    // get random number in the range of [startingPort, 55500].
-    const randomNumber = Math.floor(Math.random() * (55500 - startingPort + 1) + startingPort);
+    const startingPort = 4000; // we prefer to have the ports between 4000 and 4999.
+    // get random number in the range of [startingPort, 4999].
+    const randomNumber = Math.floor(Math.random() * (4999 - startingPort + 1) + startingPort);
     const port = await Port.getPort(randomNumber, 65500);
     return port;
   }

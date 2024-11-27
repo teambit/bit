@@ -96,6 +96,7 @@ export type ApplyVersionResults = {
   failedComponents?: FailedComponents[];
   removedComponents?: ComponentID[];
   addedComponents?: ComponentID[]; // relevant when restoreMissingComponents is true (e.g. bit lane merge-abort)
+  newComponents?: ComponentID[]; // relevant for "bit stash load". (stashedBitmapEntries is populated)
   resolvedComponents?: ConsumerComponent[]; // relevant for bit merge --resolve
   abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
   mergeSnapResults?: MergeSnapResults;
@@ -268,8 +269,9 @@ export class MergingMain {
 
     let workspaceConfigConflictWriteError: Error | undefined;
     if (workspaceDepsConflicts) {
-      workspaceConfigConflictWriteError =
-        await this.configMerger.writeWorkspaceJsoncWithConflictsGracefully(workspaceDepsConflicts);
+      workspaceConfigConflictWriteError = await this.configMerger.writeWorkspaceJsoncWithConflictsGracefully(
+        workspaceDepsConflicts
+      );
     }
     if (this.workspace) await this.configMerger.generateConfigMergeConflictFileForAll(allConfigMerge);
 
@@ -719,7 +721,7 @@ export class MergingMain {
     RemoveMain,
     GlobalConfigMain,
     ConfigMergerMain,
-    DependencyResolverMain,
+    DependencyResolverMain
   ]) {
     const logger = loggerMain.createLogger(MergingAspect.id);
     const merging = new MergingMain(

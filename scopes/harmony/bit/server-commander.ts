@@ -50,7 +50,7 @@ import { join } from 'path';
 import EventSource from 'eventsource';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import chalk from 'chalk';
-import loader from '@teambit/legacy/dist/cli/loader';
+import { loader } from '@teambit/legacy.loader';
 import { printBitVersionIfAsked } from './bootstrap';
 import { getSocketPort } from './server-forever';
 

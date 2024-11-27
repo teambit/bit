@@ -1,6 +1,6 @@
 import 'reset-css';
 import pluralize from 'pluralize';
-import React, { useReducer, useMemo } from 'react';
+import React, { useReducer, useMemo, useEffect } from 'react';
 import { Route } from 'react-router-dom';
 import type { ComponentModel } from '@teambit/component';
 import type { ComponentID } from '@teambit/component-id';
@@ -35,11 +35,19 @@ export type WorkspaceProps = {
 export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebarTogglerChange }: WorkspaceProps) {
   const reactions = useComponentNotifications();
   const { workspace } = useWorkspace(reactions);
-  const { current } = useThemePicker();
+  const theme = useThemePicker();
+  const currentTheme = theme?.current;
   const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
-  const themeName = current?.themeName || 'light';
+  const themeName = currentTheme?.themeName || 'light';
   onSidebarTogglerChange(handleSidebarToggle);
+
+  useEffect(() => {
+    if (!window) return;
+    if (window.innerWidth <= 1024) {
+      handleSidebarToggle();
+    }
+  }, []);
 
   if (!workspace) {
     return <div className={styles.emptyContainer}></div>;

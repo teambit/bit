@@ -40,7 +40,7 @@ import { Dependencies } from './component/dependencies';
 import { PackageJsonFile } from '@teambit/component.sources';
 import { ILegacyWorkspaceConfig } from './config';
 import WorkspaceConfig from './config/workspace-config';
-import { getConsumerInfo } from './consumer-locator';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound } from './exceptions';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
@@ -481,11 +481,11 @@ export default class Consumer {
   }
 
   static async load(currentPath: PathOsBasedAbsolute): Promise<Consumer> {
-    const consumerInfo = await getConsumerInfo(currentPath);
+    const consumerInfo = await getWorkspaceInfo(currentPath);
     if (!consumerInfo) {
       return Promise.reject(new ConsumerNotFound());
     }
-    if (!consumerInfo.hasBitMap || !consumerInfo.hasScope || !consumerInfo.hasConsumerConfig) {
+    if (!consumerInfo.hasBitMap || !consumerInfo.hasScope || !consumerInfo.hasWorkspaceConfig) {
       throw new BitError(
         `fatal: unable to load the workspace. workspace.jsonc or .bitmap or local-scope are missing. run "bit init" to generate the missing files`
       );
@@ -549,7 +549,8 @@ export default class Consumer {
         if (!id.hasVersion()) return id;
         const modelComponent = await this.scope.getModelComponentIfExist(id.changeVersion(undefined));
         if (!modelComponent) {
-          throw new Error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing, please run bit-import`);
+          logger.error(`getIdsOfDefaultLane: model-component of ${id.toString()} is missing`);
+          throw new BitError(`${id.toStringWithoutVersion()} is missing, please run "bit import"`);
         }
         const head = modelComponent.getHeadAsTagIfExist();
         if (head) {

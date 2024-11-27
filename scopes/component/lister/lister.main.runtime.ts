@@ -1,7 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { BEFORE_LOCAL_LIST, BEFORE_REMOTE_LIST } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { ComponentID } from '@teambit/component-id';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { Remote } from '@teambit/legacy/dist/remotes';
@@ -11,6 +10,9 @@ import { BitError } from '@teambit/bit-error';
 import { ListCmd } from './list.cmd';
 import { ListerAspect } from './lister.aspect';
 import { NoIdMatchWildcard } from './no-id-match-wildcard';
+
+const BEFORE_REMOTE_LIST = 'listing remote components';
+const BEFORE_LOCAL_LIST = 'listing components';
 
 export type ListScopeResult = {
   id: ComponentID;

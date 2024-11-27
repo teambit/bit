@@ -60,7 +60,7 @@ describe('tag components on Harmony', function () {
             message: `msg for third comp`,
           },
         ];
-        // console.log('data', JSON.stringify(data));
+        // console.log('data', `bit _tag '${JSON.stringify(data)}'`);
         helper.command.tagFromScope(bareTag.scopePath, data);
       });
       it('should tag the components in the same version described in the json', () => {
@@ -314,6 +314,44 @@ describe('tag components on Harmony', function () {
       const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@1.0.0`, bareTag.scopePath);
       expect(comp1.dependencies[0].id.version).to.equal('0.0.2');
       expect(comp1.dependencies[0].id.version).to.not.equal('1.0.0');
+    });
+  });
+
+  describe('hidden snaps', () => {
+    let bareTag;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.snapAllComponents('-m "message from the snap command"');
+      helper.command.export();
+
+      bareTag = helper.scopeHelper.getNewBareScope('-bare-tag');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareTag.scopePath);
+      const data = [
+        {
+          componentId: `${helper.scopes.remote}/comp1`,
+          versionToTag: `1.0.0`,
+          message: `message from _tag command`,
+        },
+      ];
+      // console.log('data', `bit _tag '${JSON.stringify(data)}' --push`);
+      helper.command.tagFromScope(bareTag.scopePath, data, '--push');
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp1', '-x');
+    });
+    it('bit log should not show the hidden snaps', () => {
+      const log = helper.command.logParsed('comp1');
+      expect(log).to.have.lengthOf(1);
+      expect(log[0]).to.have.property('tag');
+      expect(log[0].tag).to.equal('1.0.0');
+    });
+    it('bit blame should not point to the hidden snaps', () => {
+      const blame = helper.command.blame(path.join(helper.scopes.remote, 'comp1/index.js'), '-m');
+      expect(blame).to.have.string('1.0.0');
+      expect(blame).to.have.string('message from _tag command');
+      expect(blame).to.not.have.string('message from the snap command');
     });
   });
 });

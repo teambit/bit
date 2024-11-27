@@ -406,7 +406,6 @@ export class MergeLanesMain {
       const { exported } = await this.exporter.exportMany({
         scope: this.scope.legacyScope,
         ids: compIdsList,
-        idsWithFutureScope: compIdsList,
         laneObject: laneToExport,
         allVersions: false,
         // no need to export anything else other than the head. the normal calculation of what to export won't apply here

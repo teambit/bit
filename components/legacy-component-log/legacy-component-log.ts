@@ -11,4 +11,5 @@ export type LegacyComponentLog = {
   onLane?: boolean;
   deleted?: boolean;
   deprecated?: boolean;
+  hidden?: boolean;
 };

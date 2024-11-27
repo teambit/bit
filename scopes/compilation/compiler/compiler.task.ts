@@ -28,7 +28,7 @@ export class CompilerTask implements BuildTask {
   constructor(
     readonly aspectId: string,
     readonly name: string,
-    private compilerInstance: Compiler,
+    readonly compilerInstance: Compiler,
     private dependencyResolver: DependencyResolverMain
   ) {
     if (compilerInstance.artifactName) {

@@ -29,6 +29,7 @@ export type ConsumePluginProps = {
   // @deprecated - pass id, packageName and latest instead via props
   componentModel?: ComponentModel;
   options?: ConsumePluginOptions;
+  authToken?: string;
 };
 
 export type ConsumePlugin = (props: ConsumePluginProps) => ConsumeMethod | undefined;

@@ -9,12 +9,14 @@
 
 import net from 'net';
 import crypto from 'crypto';
-import { spawn } from 'node-pty';
+import { execSync } from 'child_process';
+import { spawn } from '@lydell/node-pty';
 
 export function spawnPTY() {
   // Create a PTY (terminal emulation) running the 'bit server' process
   // this way, we can catch terminal sequences like arrows, ctrl+c, etc.
-  const ptyProcess = spawn('bit', ['server', '--pty'], {
+  const flags = process.argv.slice(2).filter((arg) => arg.startsWith('-'));
+  const ptyProcess = spawn('bit', ['server', ...flags], {
     name: 'xterm-color',
     cols: 80,
     rows: 30,
@@ -22,51 +24,55 @@ export function spawnPTY() {
     env: process.env,
   });
 
+  // Keep track of connected clients
+  const clients: net.Socket[] = [];
+
+  let didGetClient = false;
+  let outputNotForClients = false;
+
+  // @ts-ignore
+  ptyProcess.on('data', (data) => {
+    if (!clients.length) outputNotForClients = data.toString();
+    // Forward data from the ptyProcess to connected clients
+    // console.log('ptyProcess data:', data.toString());
+    clients.forEach((socket) => {
+      socket.write(data);
+    });
+  });
+
   // Create a TCP server
   const server = net.createServer((socket) => {
     console.log('Client connected.');
+    didGetClient = true;
+    clients.push(socket);
 
     // Forward data from the client to the ptyProcess
     socket.on('data', (data: any) => {
       // console.log('Server received data from client:', data.toString());
       if (data.toString('hex') === '03') {
-        // User hit ctrl+c
+        // User hit Ctrl+C
         ptyProcess.kill();
       } else {
         ptyProcess.write(data);
       }
     });
 
-    // Forward data from the ptyProcess to the client
-    // @ts-ignore
-    ptyProcess.on('data', (data) => {
-      // console.log('ptyProcess data:', data.toString());
-      socket.write(data);
-    });
-
     // Handle client disconnect
-    socket.on('end', (item) => {
-      console.log('Client disconnected.', item);
+    socket.on('end', () => {
+      console.log('Client disconnected.');
+      const index = clients.indexOf(socket);
+      if (index !== -1) {
+        clients.splice(index, 1);
+      }
     });
 
-    // Handle errors
+    // Handle socket errors
     socket.on('error', (err) => {
       console.error('Socket error:', err);
-    });
-
-    // @ts-ignore
-    ptyProcess.on('exit', (code, signal) => {
-      console.log(`PTY exited with code ${code} and signal ${signal}`);
-      server.close();
-      setTimeout(() => {
-        console.log('restarting the server');
-        spawnPTY();
-      }, 500);
-    });
-
-    // @ts-ignore
-    ptyProcess.on('error', (err) => {
-      console.error('PTY process error:', err);
+      const index = clients.indexOf(socket);
+      if (index !== -1) {
+        clients.splice(index, 1);
+      }
     });
   });
 
@@ -74,15 +80,18 @@ export function spawnPTY() {
 
   server.on('error', (err: any) => {
     if (err.code === 'EADDRINUSE') {
-      console.error(`Error: Port ${PORT} is already in use.`);
-      console.error(`This port is assigned based on the workspace path: '${process.cwd()}'`);
-      console.error(`This means another instance may already be running in this workspace.`);
-      console.error(`\nTo resolve this issue:`);
-      console.error(`- If another instance is running, please stop it before starting a new one.`);
-      console.error(`- If no other instance is running, the port may be occupied by another application.`);
-      console.error(
-        `  You can override the default port by setting the 'BIT_CLI_SERVER_SOCKET_PORT' environment variable.`
-      );
+      const pid = getPidByPort(PORT);
+      const usedByPid = pid ? ` (used by PID ${pid})` : '';
+      const killCmd = pid ? `\nAlternatively, you can kill the process by running "kill ${pid}".` : '';
+      console.error(`Error: Port ${PORT} is already in use${usedByPid}.
+This port is assigned based on the workspace path: '${process.cwd()}'
+This means another instance may already be running in this workspace.
+\nTo resolve this issue:
+- If another instance is running, please stop it before starting a new one.
+  If a vscode is open on this workspace, it might be running the server. Close it.${killCmd}
+- If no other instance is running, the port may be occupied by another application.
+  You can override the default port by setting the 'BIT_CLI_SERVER_SOCKET_PORT' environment variable.
+`);
       process.exit(1); // Exit the process with an error code
     } else {
       console.error('Server encountered an error:', err);
@@ -91,7 +100,21 @@ export function spawnPTY() {
   });
 
   server.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+    console.log(`Socket listening on port ${PORT}`);
+  });
+
+  // @ts-ignore
+  ptyProcess.on('exit', (code, signal) => {
+    server.close();
+    if (didGetClient) {
+      console.log(`PTY exited with code ${code} and signal ${signal}`);
+      setTimeout(() => {
+        console.log('Restarting the PTY process...');
+        spawnPTY(); // Restart the PTY process
+      }, 100);
+    } else {
+      console.error(`Failed to start the PTY Process. Error: ${outputNotForClients}`);
+    }
   });
 }
 
@@ -120,4 +143,45 @@ export function getPortFromPath(path: string): number {
   const port = (hashInt % portRange) + minPort;
 
   return port;
+}
+
+function getPidByPort(port: number): string | null {
+  const platform = process.platform;
+  try {
+    if (platform === 'darwin' || platform === 'linux') {
+      // For macOS and Linux
+      const cmd = `lsof -iTCP:${port} -sTCP:LISTEN -n -P`;
+      const stdout = execSync(cmd).toString();
+      const lines = stdout.trim().split('\n');
+
+      if (lines.length > 1) {
+        // Skip the header line and parse the first result
+        const columns = lines[1].split(/\s+/);
+        const pid = columns[1];
+        return pid;
+      }
+    } else if (platform === 'win32') {
+      // For Windows
+      const cmd = `netstat -ano -p tcp`;
+      const stdout = execSync(cmd).toString();
+      const lines = stdout.trim().split('\n');
+
+      for (const line of lines) {
+        if (line.trim().startsWith('TCP')) {
+          const columns = line.trim().split(/\s+/);
+          const localAddress = columns[1];
+          const pid = columns[4];
+
+          if (localAddress.endsWith(`:${port}`)) {
+            return pid;
+          }
+        }
+      }
+    } else {
+      console.error('Unsupported platform:', platform);
+    }
+  } catch (error: any) {
+    console.error('Error executing command:', error.message);
+  }
+  return null;
 }

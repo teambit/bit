@@ -113,9 +113,12 @@ export class WorkspaceComponentLoader {
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<GetManyRes> {
+    const idsWithoutEmpty = compact(ids);
+    if (!idsWithoutEmpty.length) {
+      return { components: [], invalidComponents: [] };
+    }
     const callId = Math.floor(Math.random() * 1000); // generate a random callId to be able to identify the call from the logs
     this.logger.profile(`getMany-${callId}`);
-    const idsWithoutEmpty = compact(ids);
     this.logger.setStatusLine(`loading ${ids.length} component(s)`);
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
       // We don't want to load extension or execute the load slot at this step
@@ -162,6 +165,7 @@ export class WorkspaceComponentLoader {
         idsWithEmptyStrs.includes(comp.id.toString()) || idsWithEmptyStrs.includes(comp.id.toStringWithoutVersion())
     );
     this.logger.profile(`getMany-${callId}`);
+    this.logger.clearStatusLine();
     return { components: requestedComponents, invalidComponents };
   }
 

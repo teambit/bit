@@ -11,7 +11,7 @@ import { Dependencies, Dependency } from '../../consumer/component/dependencies'
 import { getRefsFromExtensions, SourceFile } from '@teambit/component.sources';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/extension-data';
-import { Doclet } from '../../jsdoc/types';
+import type { Doclet } from '@teambit/semantics.doc-parser';
 import logger from '../../logger/logger';
 import { getStringifyArgs, PathLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
@@ -84,6 +84,7 @@ export type VersionProps = {
   bitVersion?: string;
   modified?: Log[];
   origin?: VersionOrigin;
+  hidden?: boolean;
 };
 
 /**
@@ -132,6 +133,7 @@ export default class Version extends BitObject {
   bitVersion?: string;
   modified: Log[] = []; // currently mutation could happen as a result of either "squash" or "sign".
   origin?: VersionOrigin; // for debugging purposes
+  hidden?: boolean; // whether the version is hidden from commands such as "bit log", "bit blame". (needed for un-meaningful snaps, such as merged-lane snap prior to the tag)
 
   constructor(props: VersionProps) {
     super();
@@ -163,6 +165,7 @@ export default class Version extends BitObject {
     this.bitVersion = props.bitVersion;
     this.modified = props.modified || [];
     this.origin = props.origin;
+    this.hidden = props.hidden;
     this.validateVersion();
   }
 
@@ -456,6 +459,7 @@ export default class Version extends BitObject {
         bitVersion: this.bitVersion,
         modified: this.modified,
         origin: this.origin,
+        hidden: this.hidden,
       },
       (val) => !!val
     );
@@ -505,6 +509,7 @@ export default class Version extends BitObject {
       bitVersion,
       modified,
       origin,
+      hidden,
     } = contentParsed;
 
     const _getDependencies = (deps = []): Dependency[] => {
@@ -613,6 +618,7 @@ export default class Version extends BitObject {
       bitVersion,
       modified,
       origin,
+      hidden,
     });
   }
 

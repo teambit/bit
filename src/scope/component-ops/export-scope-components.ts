@@ -11,7 +11,7 @@ import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import { ObjectList } from '../objects/object-list';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
-import loader from '../../cli/loader';
+import { loader } from '@teambit/legacy.loader';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { MergeResult } from '../repositories/sources';
 import { Ref } from '../objects';

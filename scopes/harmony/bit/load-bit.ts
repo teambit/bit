@@ -27,8 +27,8 @@ import { Harmony, RuntimeDefinition, Extension } from '@teambit/harmony';
 import { Config } from '@teambit/harmony/dist/harmony-config';
 import { readConfigFile } from '@teambit/harmony/dist/harmony-config/config-reader';
 import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
-import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
-import { ConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
+import { loadConsumer } from '@teambit/legacy/dist/consumer';
+import { getWorkspaceInfo, WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { BitError } from '@teambit/bit-error';
 import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
@@ -57,7 +57,7 @@ async function loadLegacyConfig(config: any) {
 }
 
 async function getConfig(cwd = process.cwd()) {
-  const consumerInfo = await getConsumerInfo(cwd);
+  const consumerInfo = await getWorkspaceInfo(cwd);
   const scopePath = findScopePath(cwd);
 
   let wsConfig;
@@ -125,8 +125,8 @@ async function getWsConfig(consumerPath: string) {
  * but you don't want to change your workspace.jsonc version after each tag of the aspect
  * @param config
  */
-function attachVersionsFromBitmap(rawConfig: Record<string, any>, consumerInfo: ConsumerInfo): Record<string, any> {
-  if (!consumerInfo || !consumerInfo.hasBitMap || !consumerInfo.hasConsumerConfig) {
+function attachVersionsFromBitmap(rawConfig: Record<string, any>, consumerInfo: WorkspaceInfo): Record<string, any> {
+  if (!consumerInfo || !consumerInfo.hasBitMap || !consumerInfo.hasWorkspaceConfig) {
     return rawConfig;
   }
   const rawBitmap = BitMap.loadRawSync(consumerInfo.path);

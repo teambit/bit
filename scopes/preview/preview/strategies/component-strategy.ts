@@ -7,7 +7,6 @@ import { Compiler } from '@teambit/compiler';
 import type { AbstractVinyl } from '@teambit/component.sources';
 import type { Capsule } from '@teambit/isolator';
 import { CAPSULE_ARTIFACTS_DIR, ComponentResult } from '@teambit/builder';
-import type { PkgMain } from '@teambit/pkg';
 import { BitError } from '@teambit/bit-error';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
@@ -29,6 +28,7 @@ export const COMPONENT_STRATEGY_ARTIFACT_NAME = 'preview-component';
 type ComponentEntry = {
   component: Component;
   entries: object;
+  componentDir: string;
 };
 /**
  * bundles all components in a given env into the same bundle.
@@ -38,7 +38,6 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
   constructor(
     private preview: PreviewMain,
-    private pkg: PkgMain,
     private dependencyResolver: DependencyResolverMain,
     private logger: Logger
   ) {}
@@ -72,14 +71,17 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     const targets = chunks.map((currentChunk) => {
       const entries: BundlerEntryMap = {};
       const components: Component[] = [];
+      const componentDirectoryMap = {};
       currentChunk.forEach((entry) => {
         Object.assign(entries, entry.entries);
         components.push(entry.component);
+        componentDirectoryMap[entry.component.id.toString()] = entry.componentDir;
       });
 
       return {
         entries,
         components,
+        componentDirectoryMap,
         outputPath,
         hostRootDir: context.envRuntime.envAspectDefinition.aspectPath,
         hostDependencies: peers,
@@ -126,6 +128,8 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
   ): Promise<ComponentEntry> {
     const componentPreviewPath = await this.computePaths(previewDefs, context, component);
     const [componentPath] = this.getPaths(context, component, [component.mainFile]);
+    const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
+    const componentDir = capsule?.path || '';
 
     const chunks = {
       componentPreview: this.getComponentChunkId(component.id, 'preview'),
@@ -162,7 +166,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       };
     }
 
-    return { component, entries };
+    return { component, entries, componentDir };
   }
 
   private getComponentChunkId(componentId: ComponentID, type: 'component' | 'preview') {
