@@ -149,7 +149,7 @@ export class PnpmPackageManager implements PackageManager {
         includeOptionalDeps: installOptions.includeOptionalDeps,
         ignorePackageManifest: installOptions.ignorePackageManifest,
         dedupeInjectedDeps: installOptions.dedupeInjectedDeps ?? false,
-        dryRun: installOptions.dryRun,
+        dryRun: installOptions.dependenciesGraph == null && installOptions.dryRun,
         overrides: installOptions.overrides,
         hoistPattern: installOptions.hoistPatterns ?? config.hoistPattern,
         publicHoistPattern: config.shamefullyHoist
