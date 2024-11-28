@@ -8,6 +8,7 @@ import { ComponentModel } from '../component-model';
 export type NavPluginProps = {
   displayName?: string;
   ignoreQueryParams?: boolean;
+  hideInMinimalMode?: boolean;
 } & LinkProps;
 
 export type NavPlugin = {

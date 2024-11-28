@@ -9,4 +9,5 @@ export interface Section {
    */
   displayName?: string;
   order?: number;
+  hideInMinimalMode?: boolean;
 }
