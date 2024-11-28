@@ -2102,13 +2102,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/tooltip"
     },
-    "ui/top-bar": {
-        "name": "ui/top-bar",
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.514",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/top-bar"
-    },
     "ui/use-workspace-mode": {
         "name": "ui/use-workspace-mode",
         "scope": "",
