@@ -345,7 +345,7 @@
         "@types/mime": "2.0.3",
         "@types/mini-css-extract-plugin": "2.2.0",
         "@types/mousetrap": "1.6.5",
-        "@types/node": "14.14.31",
+        "@types/node": "22.10.1",
         "@types/pluralize": "0.0.29",
         "@types/react": "^17.0.67",
         "@types/react-dev-utils": "9.0.10",
