@@ -64,6 +64,8 @@ import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 
+export type PackageIntegritiesByPublishedPackages = Map<string, string | undefined>;
+
 export type TagDataPerComp = {
   componentId: ComponentID;
   dependencies: ComponentID[];
@@ -212,6 +214,7 @@ export class SnappingMain {
     const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig, removedComponents } =
       await tagModelComponent({
         snapping: this,
+        components,
         consumerComponents,
         ids: compIds,
         message,
@@ -336,6 +339,7 @@ if you're willing to lose the history from the head to the specified version, us
     });
     const results = await tagModelComponent({
       ...params,
+      components,
       consumerComponents,
       tagDataPerComp,
       populateArtifactsFrom: shouldUsePopulateArtifactsFrom ? components.map((c) => c.id) : undefined,
@@ -500,6 +504,7 @@ if you're willing to lose the history from the head to the specified version, us
     const shouldTag = Boolean(params.tag);
     const results = await tagModelComponent({
       ...params,
+      components,
       consumerComponents,
       tagDataPerComp: snapDataPerComp.map((s) => ({
         componentId: s.componentId,
@@ -588,6 +593,7 @@ if you're willing to lose the history from the head to the specified version, us
     const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await tagModelComponent({
       snapping: this,
       editor,
+      components,
       consumerComponents,
       ids,
       ignoreNewestVersion: false,
@@ -746,6 +752,31 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       flattenedEdgesGetter.populateFlattenedAndEdgesForComp(component);
     });
     this.logger.profile('snap._addFlattenedDependenciesToComponents');
+  }
+
+  async _addDependenciesGraphToComponents(components: Component[]): Promise<void> {
+    if (this.workspace == null) {
+      return;
+    }
+    this.logger.profile('snap._addDependenciesGraphToComponents');
+    const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(components);
+    const options = {
+      rootDir: this.workspace.path,
+      rootComponentsPath: this.workspace.rootComponentsPath,
+      componentIdByPkgName,
+    };
+    await Promise.all(
+      components.map(async (component) => {
+        if (component.state._consumer.componentMap?.rootDir) {
+          await this.dependencyResolver.addDependenciesGraph(
+            component,
+            component.state._consumer.componentMap.rootDir,
+            options
+          );
+        }
+      })
+    );
+    this.logger.profile('snap._addDependenciesGraphToComponents');
   }
 
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
@@ -912,13 +943,16 @@ another option, in case this dependency is not in main yet is to remove all refe
     });
   }
 
-  _getPublishedPackages(components: ConsumerComponent[]): string[] {
-    const publishedPackages = components.map((comp) => {
+  _getPublishedPackages(components: ConsumerComponent[]): PackageIntegritiesByPublishedPackages {
+    const publishedPackages: PackageIntegritiesByPublishedPackages = new Map();
+    for (const comp of components) {
       const builderExt = comp.extensions.findCoreExtension(Extensions.builder);
       const pkgData = builderExt?.data?.aspectsData?.find((a) => a.aspectId === Extensions.pkg);
-      return pkgData?.data?.publishedPackage;
-    });
-    return compact(publishedPackages);
+      if (pkgData?.data?.publishedPackage != null) {
+        publishedPackages.set(pkgData.data.publishedPackage, pkgData.data.integrity);
+      }
+    }
+    return publishedPackages;
   }
 
   async _addCompToObjects({
@@ -985,13 +1019,15 @@ another option, in case this dependency is not in main yet is to remove all refe
     const component = await this.scope.legacyScope.sources.findOrAddComponent(source as any);
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
-    const { version, files, flattenedEdges } = await this.scope.legacyScope.sources.consumerComponentToVersion(source);
+    const { version, files, flattenedEdges, dependenciesGraph } =
+      await this.scope.legacyScope.sources.consumerComponentToVersion(source);
     version.origin = {
       id: { scope: source.scope || (source.defaultScope as string), name: source.name },
       lane: lane ? { scope: lane.scope, name: lane.name, hash: lane.hash().toString() } : undefined,
     };
     objectRepo.add(version);
     if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
+    if (dependenciesGraph) this.objectsRepo.add(dependenciesGraph);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
     component.addVersion(version, source.version, lane, source.previouslyUsedVersion, updateDependentsOnLane);
     objectRepo.add(component);
@@ -1018,7 +1054,12 @@ another option, in case this dependency is not in main yet is to remove all refe
     version.extensions = consumerComponent.extensions;
     version.buildStatus = consumerComponent.buildStatus;
     const artifactObjects = artifacts.map((file) => file.source);
-    return [version, ...artifactObjects];
+    const dependenciesGraph = Version.dependenciesGraphToSource(consumerComponent.dependenciesGraph);
+    version.dependenciesGraphRef = dependenciesGraph ? dependenciesGraph.hash() : undefined;
+
+    const result = [version, ...artifactObjects];
+    if (dependenciesGraph) result.push(dependenciesGraph);
+    return result;
   }
 
   private transformArtifactsFromVinylToSource(artifactsFiles: ArtifactFiles[]): ArtifactSource[] {

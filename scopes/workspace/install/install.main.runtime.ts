@@ -16,6 +16,7 @@ import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
+import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
 import {
   CodemodResult,
   linkToNodeModulesWithCodemod,
@@ -85,6 +86,7 @@ export type WorkspaceInstallOptions = {
   lockfileOnly?: boolean;
   writeConfigFiles?: boolean;
   skipPrune?: boolean;
+  dependenciesGraph?: DependenciesGraph;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -326,6 +328,7 @@ export class InstallMain {
     const pmInstallOptions: PackageManagerInstallOptions = {
       ...calcManifestsOpts,
       autoInstallPeers: this.dependencyResolver.config.autoInstallPeers,
+      dependenciesGraph: options?.dependenciesGraph,
       includeOptionalDeps: options?.includeOptionalDeps,
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
       overrides: this.dependencyResolver.config.overrides,

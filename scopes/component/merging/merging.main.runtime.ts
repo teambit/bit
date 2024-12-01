@@ -269,9 +269,8 @@ export class MergingMain {
 
     let workspaceConfigConflictWriteError: Error | undefined;
     if (workspaceDepsConflicts) {
-      workspaceConfigConflictWriteError = await this.configMerger.writeWorkspaceJsoncWithConflictsGracefully(
-        workspaceDepsConflicts
-      );
+      workspaceConfigConflictWriteError =
+        await this.configMerger.writeWorkspaceJsoncWithConflictsGracefully(workspaceDepsConflicts);
     }
     if (this.workspace) await this.configMerger.generateConfigMergeConflictFileForAll(allConfigMerge);
 
@@ -721,7 +720,7 @@ export class MergingMain {
     RemoveMain,
     GlobalConfigMain,
     ConfigMergerMain,
-    DependencyResolverMain
+    DependencyResolverMain,
   ]) {
     const logger = loggerMain.createLogger(MergingAspect.id);
     const merging = new MergingMain(

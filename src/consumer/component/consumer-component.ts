@@ -10,6 +10,7 @@ import { getCloudDomain, BIT_WORKSPACE_TMP_DIRNAME, BuildStatus, DEFAULT_LANGUAG
 import { Doclet, parser as docsParser } from '@teambit/semantics.doc-parser';
 import logger from '../../logger/logger';
 import { ScopeListItem } from '../../scope/models/model-component';
+import { type DependenciesGraph } from '../../scope/models/dependencies-graph';
 import Version, { DepEdge, Log } from '../../scope/models/version';
 import { pathNormalizeToLinux, PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
@@ -99,6 +100,7 @@ export default class Component {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
   peerDependencies: Dependencies;
+  dependenciesGraph?: DependenciesGraph;
   flattenedDependencies: ComponentIdList;
   flattenedEdges: DepEdge[];
   packageDependencies: Record<string, string>;
