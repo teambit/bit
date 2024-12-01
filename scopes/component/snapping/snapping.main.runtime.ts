@@ -11,7 +11,6 @@ import { Extensions, LATEST, BuildStatus } from '@teambit/legacy/dist/constants'
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import pMapSeries from 'p-map-series';
-import loader from '@teambit/legacy/dist/cli/loader';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
@@ -63,6 +62,7 @@ import {
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
+import { RemoveAspect, RemoveMain } from '@teambit/remove';
 
 export type TagDataPerComp = {
   componentId: ComponentID;
@@ -129,7 +129,8 @@ export class SnappingMain {
     readonly builder: BuilderMain,
     private importer: ImporterMain,
     private deps: DependenciesMain,
-    private application: ApplicationMain
+    private application: ApplicationMain,
+    private remove: RemoveMain
   ) {
     this.objectsRepo = this.scope?.legacyScope?.objects;
   }
@@ -189,7 +190,7 @@ export class SnappingMain {
     const validExactVersion = validateVersion(exactVersion);
     const consumer = this.workspace.consumer;
     const componentsList = new ComponentsList(consumer);
-    loader.start('determine components to tag...');
+    this.logger.setStatusLine('determine components to tag...');
     const newComponents = await componentsList.listNewComponents();
     const { bitIds, warnings } = await this.getComponentsToTag(
       unmodified,
@@ -667,9 +668,9 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     const currentLane = await consumer.getCurrentLaneObject();
     const untag = async (): Promise<untagResult[]> => {
       if (!componentPattern) {
-        return removeLocalVersionsForAllComponents(consumer, currentLane, head);
+        return removeLocalVersionsForAllComponents(consumer, this.remove, currentLane, head);
       }
-      const candidateComponents = await getComponentsWithOptionToUntag(consumer);
+      const candidateComponents = await getComponentsWithOptionToUntag(consumer, this.remove);
       const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern, true, { includeDeleted: true });
       const idsMatchingPatternBitIds = ComponentIdList.fromArray(idsMatchingPattern);
       const componentsToUntag = candidateComponents.filter((modelComponent) =>
@@ -718,7 +719,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
   }
 
   async _addFlattenedDependenciesToComponents(components: ConsumerComponent[], rebuildDepsGraph = false) {
-    loader.start('importing missing dependencies...');
+    this.logger.setStatusLine('importing missing dependencies...');
     this.logger.profile('snap._addFlattenedDependenciesToComponents');
     const getLane = async () => {
       const lane = await this.scope.legacyScope.getCurrentLaneObject();
@@ -733,7 +734,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     if (rebuildDepsGraph) {
       const flattenedDependenciesGetter = new FlattenedDependenciesGetter(this.scope.legacyScope, components, lane);
       await flattenedDependenciesGetter.populateFlattenedDependencies();
-      loader.stop();
+      this.logger.clearStatusLine();
       await this._addFlattenedDepsGraphToComponents(components);
       return;
     }
@@ -1220,6 +1221,11 @@ another option, in case this dependency is not in main yet is to remove all refe
       id.changeVersion(undefined)
     );
 
+    const tagPendingBitIdsIncludeSnapped = ComponentIdList.fromArray([
+      ...tagPendingComponentsIds,
+      ...snappedComponentsIds,
+    ]);
+
     if (snappedComponentsIds.length) {
       const localOnlyIds = this.workspace.filter.byLocalOnly(snappedComponentsIds);
       const localOnlyListIds = ComponentIdList.fromArray(localOnlyIds);
@@ -1236,13 +1242,15 @@ another option, in case this dependency is not in main yet is to remove all refe
         const [idWithoutVer, version] = id.split('@');
         const idIsPattern = this.workspace.isPattern(id);
         if (idIsPattern) {
-          const allIds = await this.workspace.filterIdsFromPoolIdsByPattern(idWithoutVer, tagPendingComponentsIds);
+          const allIds = await this.workspace.filterIdsFromPoolIdsByPattern(
+            idWithoutVer,
+            tagPendingBitIdsIncludeSnapped
+          );
           return allIds.map((componentId) => componentId.changeVersion(version));
         }
         const componentId = await this.workspace.resolveComponentId(idWithoutVer);
         if (!includeUnmodified) {
-          const componentStatus = await this.workspace.getComponentStatusById(componentId);
-          if (componentStatus.modified === false) return null;
+          if (!tagPendingBitIdsIncludeSnapped.hasWithoutVersion(componentId)) return null;
         }
         return componentId.changeVersion(version);
       });
@@ -1257,8 +1265,6 @@ another option, in case this dependency is not in main yet is to remove all refe
     if (unmerged) {
       return { bitIds: componentsList.listDuringMergeStateComponents(), warnings };
     }
-
-    const tagPendingBitIdsIncludeSnapped = [...tagPendingComponentsIds, ...snappedComponentsIds];
 
     if (includeUnmodified && exactVersion) {
       const tagPendingComponentsLatest = await this.workspace.scope.legacyScope.latestVersions(
@@ -1290,6 +1296,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     GlobalConfigAspect,
     DependenciesAspect,
     ApplicationAspect,
+    RemoveAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -1306,6 +1313,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     globalConfig,
     deps,
     application,
+    remove,
   ]: [
     Workspace,
     CLIMain,
@@ -1320,6 +1328,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     GlobalConfigMain,
     DependenciesMain,
     ApplicationMain,
+    RemoveMain,
   ]) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(
@@ -1333,7 +1342,8 @@ another option, in case this dependency is not in main yet is to remove all refe
       builder,
       importer,
       deps,
-      application
+      application,
+      remove
     );
     const snapCmd = new SnapCmd(snapping, logger, globalConfig);
     const tagCmd = new TagCmd(snapping, logger, globalConfig);

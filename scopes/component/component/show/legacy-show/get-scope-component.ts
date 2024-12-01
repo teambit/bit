@@ -1,5 +1,5 @@
 import { ComponentID } from '@teambit/component-id';
-import loader from '@teambit/legacy/dist/cli/loader';
+import { loader } from '@teambit/legacy.loader';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import Component from '@teambit/legacy/dist/consumer/component';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';

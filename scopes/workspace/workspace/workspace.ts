@@ -63,7 +63,6 @@ import { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { SourceFile, DataToPersist, JsonVinyl } from '@teambit/component.sources';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
-import loader from '@teambit/legacy/dist/cli/loader';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
@@ -939,7 +938,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
           throw err; // we know the lane is not new, so the error is legit
         }
         // the lane could be a local lane so no need to throw an error in such case
-        loader.stop();
+        this.logger.clearStatusLine();
         this.logger.warn(`unable to get lane's data from a remote due to an error:\n${err.message}`);
         return null;
       }
@@ -1723,7 +1722,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     await this.clearCache();
   }
 
-  async getComponentPackagePath(component: Component) {
+  getComponentPackagePath(component: Component) {
     const relativePath = this.dependencyResolver.getRuntimeModulePath(component, {
       workspacePath: this.path,
       rootComponentsPath: this.rootComponentsPath,

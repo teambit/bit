@@ -4,13 +4,7 @@ import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { BitError } from '@teambit/bit-error';
 import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import loader from '@teambit/legacy/dist/cli/loader';
-import {
-  BEFORE_EXPORT,
-  BEFORE_EXPORTS,
-  BEFORE_LOADING_COMPONENTS,
-} from '@teambit/legacy/dist/cli/loader/loader-messages';
-import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL } from '@teambit/legacy/dist/constants';
+import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, getCloudDomain } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { ComponentsList } from '@teambit/legacy.component-list';
@@ -46,6 +40,10 @@ import { ResumeExportCmd } from './resume-export-cmd';
 
 export type OnExportIdTransformer = (id: ComponentID) => ComponentID;
 
+const BEFORE_EXPORT = 'exporting component';
+const BEFORE_EXPORTS = 'exporting components';
+const BEFORE_LOADING_COMPONENTS = 'loading components';
+
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 type ObjectListPerName = { [name: string]: ObjectList };
 type ObjectsPerRemote = {
@@ -79,6 +77,7 @@ export interface ExportResult {
   componentsIds: ComponentID[];
   exportedLanes: Lane[];
   rippleJobs: string[];
+  rippleJobUrls: string[];
   ejectResults: EjectResults | undefined;
 }
 
@@ -97,7 +96,7 @@ export class ExportMain {
     let ejectResults: EjectResults | undefined;
     await this.workspace.clearCache(); // needed when one process executes multiple commands, such as in "bit test" or "bit cli"
     if (params.eject) ejectResults = await this.ejectExportedComponents(exported);
-    const exportResults = {
+    const exportResults: ExportResult = {
       componentsIds: exported,
       newIdsOnRemote,
       nonExistOnBitMap,
@@ -106,13 +105,26 @@ export class ExportMain {
       ejectResults,
       exportedLanes,
       rippleJobs,
+      rippleJobUrls: this.getRippleJobUrls(exportedLanes, rippleJobs),
     };
     if (Scope.onPostExport) {
       await Scope.onPostExport(exported, exportedLanes).catch((err) => {
         this.logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
       });
     }
+
     return exportResults;
+  }
+
+  private getRippleJobUrls(exportedLanes: Lane[], rippleJobs: string[]): string[] {
+    const lane = exportedLanes.length ? exportedLanes?.[0] : undefined;
+    const rippleJobUrls = lane
+      ? rippleJobs.map(
+          (job) =>
+            `https://${getCloudDomain()}/${lane.scope.replace('.', '/')}/~lane/${lane.name}/~ripple-ci/job/${job}`
+        )
+      : rippleJobs.map((job) => `https://${getCloudDomain()}/ripple-ci/job/${job}`);
+    return rippleJobUrls;
   }
 
   private async exportComponents({
@@ -542,7 +554,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       await this.pushToRemotesCarefully(manyObjectsPerRemote, resumeExportId);
     }
 
-    loader.start('updating data locally...');
+    this.logger.setStatusLine('updating data locally...');
     const results = await updateLocalObjects(laneObject);
     process.removeListener('SIGINT', warnCancelExport);
     return {
@@ -601,7 +613,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const pushedRemotes: Remote[] = [];
     await mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemote) => {
       const { remote, objectList } = objectsPerRemote;
-      loader.start(`transferring ${objectList.count()} objects to the remote "${remote.name}"...`);
+      this.logger.setStatusLine(`transferring ${objectList.count()} objects to the remote "${remote.name}"...`);
       try {
         await remote.pushMany(objectList, pushOptions, {});
         this.logger.debug(
@@ -697,12 +709,12 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
       }
       const { componentsToExport, laneObject } = await this.getLaneCompIdsToExport(consumer, includeNonStaged);
       const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
-      loader.start(loaderMsg);
+      this.logger.setStatusLine(loaderMsg);
       const filtered = await throwForLocalOnlyIfNeeded(componentsToExport);
       return { ...filtered, laneObject };
     }
     if (!ids.length || idsHaveWildcard) {
-      loader.start(BEFORE_LOADING_COMPONENTS);
+      this.logger.setStatusLine(BEFORE_LOADING_COMPONENTS);
       const exportPendingComponents: ComponentIdList = includeNonStaged
         ? await componentsList.listNonNewComponentsIds()
         : await componentsList.listExportPendingComponentsIds();
@@ -710,10 +722,10 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
         ? ComponentsList.filterComponentsByWildcard(exportPendingComponents, ids)
         : exportPendingComponents;
       const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
-      loader.start(loaderMsg);
+      this.logger.setStatusLine(loaderMsg);
       return throwForLocalOnlyIfNeeded(componentsToExport);
     }
-    loader.start(BEFORE_EXPORT); // show single export
+    this.logger.setStatusLine(BEFORE_EXPORT); // show single export
     const parsedIds = await Promise.all(ids.map((id) => getParsedId(consumer, id)));
     // load the components for fixing any out-of-sync issues.
     await consumer.loadComponents(ComponentIdList.fromArray(parsedIds));
@@ -730,7 +742,7 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
     if (!laneObject) {
       throw new Error(`fatal: unable to load the current lane object (${currentLaneId.toString()})`);
     }
-    loader.start(BEFORE_LOADING_COMPONENTS);
+    this.logger.setStatusLine(BEFORE_LOADING_COMPONENTS);
     const componentsList = new ComponentsList(consumer);
     const componentsToExportWithoutRemoved = includeNonStaged
       ? await componentsList.listNonNewComponentsIds()

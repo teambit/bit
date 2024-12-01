@@ -376,12 +376,13 @@ The following gets removed by this command:
 | -------------------- | :---------------------------------------------------------------------: |
 | `component-names...` | a list of component names or component IDs (defaults to all components) |
 
-| **Option**          | **Option alias** | **Description**                                               |
-| ------------------- | :--------------: | ------------------------------------------------------------- |
-| `--changed`         |       `-c`       | compile only new and modified components                      |
-| `--verbose`         |       `-v`       | show more data, such as, dist paths                           |
-| `--json`            |       `-j`       | return the compile results in json format                     |
-| `--delete-dist-dir` |       `-d`       | delete existing dist folder before writing new compiled files |
+| **Option**          | **Option alias** | **Description**                                                                 |
+| ------------------- | :--------------: | ------------------------------------------------------------------------------- |
+| `--changed`         |       `-c`       | compile only new and modified components                                        |
+| `--verbose`         |       `-v`       | show more data, such as, dist paths                                             |
+| `--json`            |       `-j`       | return the compile results in json format                                       |
+| `--delete-dist-dir` |       `-d`       | delete existing dist folder before writing new compiled files                   |
+| `--generate-types`  |                  | EXPERIMENTAL. generate d.ts files for typescript components (hurts performance) |
 
 ---
 
@@ -1065,6 +1066,7 @@ when no package is specified, all workspace dependencies are installed and all w
 | `--skip-dependency-installation`        |       `-x`       | do not install dependencies of the imported components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `--pattern <component-pattern>`         |       `-p`       | switch only the lane components matching the specified component-pattern. only works when the workspace is empty component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 | `--alias <string>`                      |       `-n`       | relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `--verbose`                             |                  | display detailed information about components that legitimately were not switched                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `--json`                                |       `-j`       | return the output as JSON                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ### lane show
@@ -1320,7 +1322,7 @@ this flag keeps the history of one end and saves a reference to the other end. t
 | `--no-squash`                           |                  | relevant for merging lanes into main, which by default squashes all lane snaps                                                                              |
 | `--squash`                              |                  | relevant for merging a lane into another non-main lane, which by default does not squash                                                                    |
 | `--ignore-config-changes`               |                  | allow merging when components are modified due to config changes (such as dependencies) only and not files                                                  |
-| `--verbose`                             |                  | show details of components that were not merged successfully                                                                                                |
+| `--verbose`                             |                  | display detailed information about components that were legitimately unmerged                                                                               |
 | `--skip-dependency-installation`        |       `-x`       | do not install dependencies of the imported components                                                                                                      |
 | `--skip-fetch`                          |                  | use the local state of target-lane if exits locally, without updating it from the remote                                                                    |
 | `--include-deps`                        |                  | relevant for "pattern" and "--workspace". merge also dependencies of the specified components                                                               |
@@ -2339,6 +2341,8 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
 | `--check-types [string]` |       `-t`       | show errors/warnings for types. options are [file, project] to investigate only changed file or entire project. defaults to project |
 | `--import`               |       `-i`       | DEPRECATED. it is now the default. helpful when using git. import component objects if .bitmap changed not by bit                   |
 | `--skip-import`          |                  | do not import component objects if .bitmap changed not by bit                                                                       |
+| `--generate-types`       |                  | EXPERIMENTAL. generate d.ts files for typescript components (hurts performance)                                                     |
+| `--trigger <comp-id>`    |                  | trigger recompilation of the specified component regardless of what changed. helpful when this comp-id must be a bundle             |
 
 ---
 

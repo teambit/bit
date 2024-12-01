@@ -20,7 +20,7 @@ import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS } from '../constant
 import { getWinstonLogger } from './winston-logger';
 import { getPinoLogger } from './pino-logger';
 import { Profiler } from './profiler';
-import loader from '../cli/loader';
+import { loader } from '@teambit/legacy.loader';
 
 export { Level as LoggerLevel };
 

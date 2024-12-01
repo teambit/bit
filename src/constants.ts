@@ -261,14 +261,12 @@ export const MergeConfigFilename = 'merge-conflict';
  * if you want to ignore only from component's root-dir, use `IGNORE_ROOT_ONLY_LIST` constant.
  */
 export const IGNORE_LIST = [
+  '**/.DS_Store',
   '**/.env',
   '**/.env.local',
   '**/.env.**.local',
-  '**/.bit.map.json',
   '**/.bitmap',
-  '**/bit.json',
   '**/component.json',
-  '**/bitBindings.js',
   '**/node_modules/**',
   '**/package-lock.json',
   '**/yarn.lock',

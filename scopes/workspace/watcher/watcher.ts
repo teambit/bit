@@ -3,7 +3,6 @@ import fs from 'fs-extra';
 import { dirname, basename } from 'path';
 import { compact, difference, partition } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import loader from '@teambit/legacy/dist/cli/loader';
 import { BIT_MAP, CFG_WATCH_USE_POLLING, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
@@ -26,6 +25,7 @@ import {
 import { CheckTypes } from './check-types';
 import { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';
+import { Logger } from '@teambit/logger';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: ComponentID; componentIds: ComponentID[] };
 
@@ -56,6 +56,8 @@ export type WatchOptions = {
   preCompile?: boolean; // whether compile all components before start watching
   compile?: boolean; // whether compile modified/added components during watch process
   import?: boolean; // whether import objects when .bitmap got version changes
+  generateTypes?: boolean; // whether generate d.ts files for typescript files during watch process (hurts performance)
+  trigger?: ComponentID; // trigger onComponentChange for the specified component-id. helpful when this comp must be a bundle, and needs to be recompile on any dep change.
 };
 
 export type RootDirs = { [dir: PathLinux]: ComponentID };
@@ -72,6 +74,7 @@ export class Watcher {
   private rootDirs: RootDirs = {};
   private verbose = false;
   private multipleWatchers: WatcherProcessData[] = [];
+  private logger: Logger;
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
@@ -80,6 +83,7 @@ export class Watcher {
   ) {
     this.ipcEventsDir = this.watcherMain.ipcEvents.eventsDir;
     this.verbose = this.options.verbose || false;
+    this.logger = this.watcherMain.logger;
   }
 
   get consumer(): Consumer {
@@ -113,7 +117,7 @@ export class Watcher {
           logger.console(`\nTotal files being watched: ${chalk.bold(totalWatched.toString())}`);
         }
 
-        loader.stop();
+        this.logger.clearStatusLine();
       });
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('all', async (event, filePath) => {
@@ -180,7 +184,7 @@ export class Watcher {
         this.bitMapChangesInProgress = true;
         const buildResults = await this.watchQueue.add(() => this.handleBitmapChanges());
         this.bitMapChangesInProgress = false;
-        loader.stop();
+        this.logger.clearStatusLine();
         return { results: buildResults, files: [filePath] };
       }
       if (this.bitMapChangesInProgress) {
@@ -204,13 +208,13 @@ export class Watcher {
       }
       const componentId = this.getComponentIdByPath(filePath);
       if (!componentId) {
-        loader.stop();
+        this.logger.clearStatusLine();
         return { results: [], files: [], irrelevant: true };
       }
       const compIdStr = componentId.toString();
       if (this.changedFilesPerComponent[compIdStr]) {
         this.changedFilesPerComponent[compIdStr].push(filePath);
-        loader.stop();
+        this.logger.clearStatusLine();
         return { results: [], files: [], debounced: true };
       }
       this.changedFilesPerComponent[compIdStr] = [filePath];
@@ -222,13 +226,13 @@ export class Watcher {
       const failureMsg = buildResults.length
         ? undefined
         : `files ${files.join(', ')} are inside the component ${compIdStr} but configured to be ignored`;
-      loader.stop();
+      this.logger.clearStatusLine();
       return { results: buildResults, files, failureMsg };
     } catch (err: any) {
       const msg = `watcher found an error while handling ${filePath}`;
       logger.error(msg, err);
       logger.console(`${msg}, ${err.message}`);
-      loader.stop();
+      this.logger.clearStatusLine();
       return { results: [], files: [filePath], failureMsg: err.message };
     }
   }
@@ -290,6 +294,10 @@ export class Watcher {
       removedFiles,
       true
     );
+    if (this.options.trigger && !updatedComponentId.isEqual(this.options.trigger)) {
+      await this.workspace.triggerOnComponentChange(this.options.trigger, [], [], this.options);
+    }
+
     return buildResults;
   }
 

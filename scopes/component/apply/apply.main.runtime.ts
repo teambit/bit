@@ -137,6 +137,7 @@ export class ApplyMain {
       copyPeerToRuntimeOnRoot: true,
       copyPeerToRuntimeOnComponents: false,
       updateExisting: false,
+      addMissingDeps: true,
     });
     // if we don't clear the cache here, the "build" process during tag doesn't install the necessary packages
     // on the capsules.
@@ -270,7 +271,7 @@ export class ApplyMain {
     const newIds: ComponentID[] = [];
     const updatedIds: ComponentID[] = [];
     await pMapSeries(snapDataPerComp, async (snapData) => {
-      const existing = this.workspace.bitMap.getBitmapEntryIfExist(snapData.componentId);
+      const existing = this.workspace.bitMap.getBitmapEntryIfExist(snapData.componentId, { ignoreVersion: true });
       if (existing && snapData.isNew) {
         throw new Error(
           `component "${snapData.componentId.toString()}" already exists in the workspace. please remove the "isNew" prop`
@@ -309,12 +310,16 @@ export class ApplyMain {
       }
     });
 
+    // without this, when adding new import statements to a component, the installation doesn't pick them up
+    await this.workspace.clearCache();
+
     await this.install.install(undefined, {
       dedupe: true,
       import: false,
       copyPeerToRuntimeOnRoot: true,
       copyPeerToRuntimeOnComponents: false,
       updateExisting: false,
+      addMissingDeps: true,
     });
 
     if (!params.snap && !params.tag) {

@@ -1407,6 +1407,16 @@
         "",
         "skip-import",
         "do not import component objects if .bitmap changed not by bit"
+      ],
+      [
+        "",
+        "generate-types",
+        "EXPERIMENTAL. generate d.ts files for typescript components (hurts performance)"
+      ],
+      [
+        "",
+        "trigger <comp-id>",
+        "trigger recompilation of the specified component regardless of what changed. helpful when this comp-id must be a bundle"
       ]
     ],
     "description": "automatically recompile modified components (on save)",
@@ -1682,6 +1692,11 @@
         "d",
         "delete-dist-dir",
         "delete existing dist folder before writing new compiled files"
+      ],
+      [
+        "",
+        "generate-types",
+        "EXPERIMENTAL. generate d.ts files for typescript components (hurts performance)"
       ]
     ],
     "description": "compile components in the workspace",
@@ -3673,6 +3688,11 @@
             "relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote"
           ],
           [
+            "",
+            "verbose",
+            "display detailed information about components that legitimately were not switched"
+          ],
+          [
             "j",
             "json",
             "return the output as JSON"
@@ -4090,7 +4110,7 @@
           [
             "",
             "verbose",
-            "show details of components that were not merged successfully"
+            "display detailed information about components that were legitimately unmerged"
           ],
           [
             "x",
@@ -4227,6 +4247,11 @@
         "n",
         "alias <string>",
         "relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote"
+      ],
+      [
+        "",
+        "verbose",
+        "display detailed information about components that legitimately were not switched"
       ],
       [
         "j",
@@ -5368,6 +5393,42 @@
         ]
       }
     ]
+  },
+  {
+    "name": "generate-preview [component-pattern]",
+    "alias": "",
+    "options": [
+      [
+        "n",
+        "name <name>",
+        "name for the preview"
+      ]
+    ],
+    "description": "generate preview bundle for components",
+    "extendedDescription": "",
+    "group": "development",
+    "private": true,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
+  },
+  {
+    "name": "serve-preview",
+    "alias": "",
+    "options": [
+      [
+        "p",
+        "port [port]",
+        "port to run the server on"
+      ]
+    ],
+    "description": "serve local preview bundle for components",
+    "extendedDescription": "",
+    "group": "development",
+    "private": true
   },
   {
     "name": "format [component-pattern]",

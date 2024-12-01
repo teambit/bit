@@ -14,7 +14,6 @@ import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import { importAllArtifactsFromLane } from '@teambit/component.sources';
 import { InstallAspect, InstallMain } from '@teambit/install';
-import loader from '@teambit/legacy/dist/cli/loader';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
@@ -151,7 +150,7 @@ export class ImporterMain {
         `please provide the type of objects you would like to pull, the options are --components and --lanes`
       );
     }
-    loader.start('fetching objects...');
+    this.logger.setStatusLine('fetching objects...');
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
 
@@ -203,7 +202,7 @@ export class ImporterMain {
           err instanceof InvalidScopeNameFromRemote
         ) {
           // the lane could be a local lane so no need to throw an error in such case
-          loader.stop();
+          logger.clearStatusLine();
           logger.console(`unable to get lane's data from a remote due to an error:\n${err.message}`, 'warn', 'yellow');
         } else {
           throw err;

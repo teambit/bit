@@ -3,7 +3,6 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
-import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import {
   ApplyVersionResults,
@@ -275,7 +274,7 @@ export class CheckoutMain {
 
   async checkoutByCLIValues(componentPattern: string, checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
     const { revert, head } = checkoutProps;
-    this.logger.setStatusLine(revert ? 'reverting components...' : BEFORE_CHECKOUT);
+    this.logger.setStatusLine(revert ? 'reverting components...' : 'switching component version...');
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     await this.importer.importCurrentObjects(); // important. among others, it fetches the remote lane object and its new components.
@@ -461,11 +460,15 @@ export class CheckoutMain {
     if (existingBitMapId && !currentlyUsedVersion) {
       return returnFailure(`component ${id.toStringWithoutVersion()} is new`);
     }
-    if (version && currentlyUsedVersion === version) {
-      // it won't be relevant for 'reset' as it doesn't have a version
-      return returnFailure(`component ${id.toStringWithoutVersion()} is already at version ${version}`, true);
+
+    if ((version && currentlyUsedVersion === version) || (versionPerId && currentlyUsedVersion === newVersion)) {
+      // it won't be relevant for 'reset' as it doesn't have a version/versionPerId
+      return returnFailure(
+        `component ${id.toStringWithoutVersion()} is already at version ${version || newVersion}`,
+        true
+      );
     }
-    if (headVersion && currentlyUsedVersion === newVersion) {
+    if ((headVersion || latestVersion) && currentlyUsedVersion === newVersion) {
       return returnFailure(
         `component ${id.toStringWithoutVersion()} is already at the latest version, which is ${newVersion}`,
         true
@@ -570,7 +573,7 @@ export class CheckoutMain {
     LoggerMain,
     ComponentWriterMain,
     ImporterMain,
-    RemoveMain
+    RemoveMain,
   ]) {
     const logger = loggerMain.createLogger(CheckoutAspect.id);
     const checkoutMain = new CheckoutMain(workspace, logger, compWriter, importer, remove);

@@ -526,7 +526,7 @@ describe('bit lane command', function () {
       output = helper.command.resetAll();
     });
     it('should untag successfully', () => {
-      expect(output).to.have.string('1 component(s) were untagged');
+      expect(output).to.have.string('1 component(s) were reset');
     });
     it('should change the component to be new', () => {
       const status = helper.command.statusJson();
