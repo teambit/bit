@@ -19,6 +19,7 @@ import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { OnTagOpts } from '@teambit/builder';
+import { DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
 import {
   MessagePerComponent,
@@ -29,7 +30,7 @@ import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
-import { SnappingMain, TagDataPerComp } from './snapping.main.runtime';
+import { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 
 export type onTagIdTransformer = (id: ComponentID) => ComponentID | null;
 
@@ -175,6 +176,7 @@ function getVersionByEnteredId(
 export async function tagModelComponent({
   snapping,
   consumerComponents,
+  components,
   ids,
   tagDataPerComp,
   populateArtifactsFrom,
@@ -202,6 +204,7 @@ export async function tagModelComponent({
   updateDependentsOnLane = false, // on lane, adds it into updateDependents prop
 }: {
   snapping: SnappingMain;
+  components: Component[];
   consumerComponents: ConsumerComponent[];
   ids: ComponentIdList;
   tagDataPerComp?: TagDataPerComp[];
@@ -290,6 +293,7 @@ export async function tagModelComponent({
 
   logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially persist all components');
   setCurrentSchema(allComponentsToTag);
+
   // go through all components and find the future versions for them
   isSnap
     ? setHashes(allComponentsToTag)
@@ -320,6 +324,7 @@ export async function tagModelComponent({
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
   } else {
     await snapping._addFlattenedDependenciesToComponents(allComponentsToTag, rebuildDepsGraph);
+    await snapping._addDependenciesGraphToComponents(components);
     await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
     if (!build) emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
@@ -366,7 +371,10 @@ export async function tagModelComponent({
       const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
 
       snapping._updateComponentsByTagResult(componentsToBuild, buildResult);
-      publishedPackages.push(...snapping._getPublishedPackages(componentsToBuild));
+      const packageIntegritiesByPublishedPackages = snapping._getPublishedPackages(componentsToBuild);
+      publishedPackages.push(...Array.from(packageIntegritiesByPublishedPackages.keys()));
+
+      addIntegritiesToConsumerComponentsGraphs(packageIntegritiesByPublishedPackages, allComponentsToTag);
       addBuildStatus(componentsToBuild, BuildStatus.Succeed);
       await mapSeries(componentsToBuild, (consumerComponent) => snapping._enrichComp(consumerComponent));
       if (populateArtifactsFrom) await updateHiddenProp(scope, populateArtifactsFrom);
@@ -401,6 +409,49 @@ export async function tagModelComponent({
     stagedConfig,
     removedComponents,
   };
+}
+
+function addIntegritiesToConsumerComponentsGraphs(
+  packageIntegritiesByPublishedPackages: PackageIntegritiesByPublishedPackages,
+  consumerComponents: ConsumerComponent[]
+) {
+  const _addIntegritiesToDependenciesGraph = addIntegritiesToDependenciesGraph.bind(
+    null,
+    packageIntegritiesByPublishedPackages
+  );
+  for (const consumerComponent of consumerComponents) {
+    if (consumerComponent.dependenciesGraph) {
+      consumerComponent.dependenciesGraph = _addIntegritiesToDependenciesGraph(consumerComponent.dependenciesGraph);
+    }
+  }
+}
+
+/**
+ * Updates the dependencies graph by replacing all "pending" version numbers of component dependencies
+ * with the actual version numbers of the recently published packages. It also attaches the integrity
+ * checksums of these components to ensure data integrity for each resolved dependency.
+ *
+ * @param packageIntegritiesByPublishedPackages - A map of package names and versions to their integrity checksums.
+ * @param dependenciesGraph - The current dependencies graph, containing nodes with potentially "pending" versions.
+ * @returns A new DependenciesGraph with updated versions and integrity checksums for all previously pending dependencies.
+ */
+function addIntegritiesToDependenciesGraph(
+  packageIntegritiesByPublishedPackages: PackageIntegritiesByPublishedPackages,
+  dependenciesGraph: DependenciesGraph
+): DependenciesGraph {
+  const resolvedVersions: Array<{ name: string; version: string }> = [];
+  for (const [selector, integrity] of packageIntegritiesByPublishedPackages.entries()) {
+    if (integrity == null) continue;
+    const index = selector.indexOf('@', 1);
+    const name = selector.substring(0, index);
+    const version = selector.substring(index + 1);
+    const pendingPkg = dependenciesGraph.packages.get(`${name}@pending:`);
+    if (pendingPkg) {
+      pendingPkg.resolution = { integrity };
+      resolvedVersions.push({ name, version });
+    }
+  }
+  return replacePendingVersions(dependenciesGraph, resolvedVersions) as DependenciesGraph;
 }
 
 async function removeDeletedComponentsFromBitmap(
@@ -612,6 +663,22 @@ export async function updateComponentsVersions(
   await workspace.scope.legacyScope.stagedSnaps.write();
 
   return stagedConfig;
+}
+
+function replacePendingVersions(
+  graph: DependenciesGraph,
+  resolvedVersions: Array<{ name: string; version: string }>
+): DependenciesGraph {
+  let s = graph.serialize();
+  for (const { name, version } of resolvedVersions) {
+    s = s.replaceAll(`${name}@pending:`, `${name}@${version}`);
+  }
+  const updatedDependenciesGraph = DependenciesGraph.deserialize(s);
+  // This should never happen as we know at this point that the schema version is supported
+  if (updatedDependenciesGraph == null) {
+    throw new BitError('Failed to deserialize dependencies graph in replacePendingVersions()');
+  }
+  return updatedDependenciesGraph;
 }
 
 /**

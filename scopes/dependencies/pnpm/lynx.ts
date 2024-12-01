@@ -364,7 +364,7 @@ function initReporter(opts?: ReportOptions) {
         ...opts?.peerDependencyRules,
       },
     },
-    streamParser,
+    streamParser: streamParser as any, // eslint-disable-line
     // Linked in core aspects are excluded from the output to reduce noise.
     // Other @teambit/ dependencies will be shown.
     // Only those that are symlinked from outside the workspace will be hidden.

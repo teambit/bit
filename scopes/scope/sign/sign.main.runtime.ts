@@ -110,6 +110,9 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     this.logger.clearStatusLine();
     // it's enough to check the first component whether it's a snap or tag, because it can't be a mix of both
     const shouldRunSnapPipeline = isSnap(components[0].id.version);
+    await Promise.all(
+      components.map((component) => this.scope.legacyScope.loadDependenciesGraphForComponent(component.state._consumer))
+    );
     const { builderDataMap, pipeResults } = await this.builder.tagListener(
       components,
       { throwOnError: false, isSnap: shouldRunSnapPipeline },
@@ -126,7 +129,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const legacyBuildResults = this.scope.builderDataMapToLegacyOnTagResults(builderDataMap);
     const legacyComponents = components.map((c) => c.state._consumer);
     this.snapping._updateComponentsByTagResult(legacyComponents, legacyBuildResults);
-    const publishedPackages = this.snapping._getPublishedPackages(legacyComponents);
+    const publishedPackages = Array.from(this.snapping._getPublishedPackages(legacyComponents).keys());
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     if (push) {

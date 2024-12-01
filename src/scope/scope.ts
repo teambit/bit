@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import * as pathLib from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import R from 'ramda';
 import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
@@ -49,6 +50,7 @@ import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package
 import { getDivergeData } from './component-ops/get-diverge-data';
 import { StagedSnaps } from './staged-snaps';
 import { collectGarbage } from './garbage-collector';
+import { type DependenciesGraph } from './models/dependencies-graph';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -796,6 +798,37 @@ once done, to continue working, please run "bit cc"`
     const scope = new Scope({ path: scopePath, scopeJson, objects, isBare });
     Scope.scopeCache[scopePath] = scope;
     return scope;
+  }
+
+  public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {
+    let allGraph: DependenciesGraph | undefined;
+    if (!isFeatureEnabled(DEPS_GRAPH)) return undefined;
+    await Promise.all(
+      componentIds.map(async (componentId) => {
+        const graph = await this.getDependenciesGraphByComponentId(componentId);
+        if (graph == null || graph.isEmpty()) return;
+        if (allGraph == null) {
+          allGraph = graph;
+        } else {
+          allGraph.merge(graph);
+        }
+      })
+    );
+    return allGraph;
+  }
+
+  public async getDependenciesGraphByComponentId(id: ComponentID): Promise<DependenciesGraph | undefined> {
+    let versionObj: Version;
+    try {
+      versionObj = await this.getVersionInstance(id);
+    } catch (err) {
+      return undefined;
+    }
+    return versionObj.loadDependenciesGraph(this.objects);
+  }
+
+  public async loadDependenciesGraphForComponent(component: Component): Promise<void> {
+    component.dependenciesGraph = await this.getDependenciesGraphByComponentId(component.id);
   }
 }
 

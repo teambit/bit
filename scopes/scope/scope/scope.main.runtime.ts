@@ -47,6 +47,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { compact, slice, difference, partition } from 'lodash';
+import { DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
 import { DepEdge } from '@teambit/legacy/dist/scope/models/version';
 import { getGlobalConfigPath } from '@teambit/legacy/dist/global-config/config';
 import { invalidateCache } from '@teambit/legacy/dist/api/consumer/lib/global-config';
@@ -1347,6 +1348,10 @@ export class ScopeMain implements ComponentFactory {
     componentExt.registerHost(scope);
 
     return scope;
+  }
+
+  public getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {
+    return this.legacyScope.getDependenciesGraphByComponentIds(componentIds);
   }
 }
 
