@@ -19,66 +19,30 @@
     "api-reference": {
         "name": "api-reference",
         "scope": "teambit.api-reference",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/api-reference",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/api-reference/api-reference"
     },
     "api-server": {
         "name": "api-server",
         "scope": "teambit.harmony",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/api-server",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/api-server"
     },
     "application": {
         "name": "application",
         "scope": "teambit.harmony",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/application",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/application"
     },
     "apply": {
         "name": "apply",
         "scope": "teambit.component",
-        "version": "0.0.27",
+        "version": "0.0.28",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/apply",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/apply"
     },
     "array/duplications-finder": {
         "name": "array/duplications-finder",
@@ -90,18 +54,9 @@
     "aspect": {
         "name": "aspect",
         "scope": "teambit.harmony",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/aspect",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/aspect"
     },
     "aspect-docs/babel": {
         "name": "aspect-docs/babel",
@@ -253,34 +208,16 @@
     "aspect-loader": {
         "name": "aspect-loader",
         "scope": "teambit.harmony",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/aspect-loader",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/aspect-loader"
     },
     "babel": {
         "name": "babel",
         "scope": "teambit.compilation",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilation/babel",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/compilation/babel"
     },
     "babel/bit-react-transformer": {
         "name": "babel/bit-react-transformer",
@@ -292,47 +229,23 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "1.8.132",
+        "version": "1.9.0",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/bit",
-        "nextVersion": {
-            "version": "minor",
-            "message": "bump minor version - update node to v22 and store dependencies graph in components",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/bit"
     },
     "bit-map": {
         "name": "bit-map",
         "scope": "teambit.legacy",
-        "version": "0.0.54",
+        "version": "0.0.55",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/bit-map",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "components/legacy/bit-map"
     },
     "builder": {
         "name": "builder",
         "scope": "teambit.pipelines",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/pipelines/builder",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/pipelines/builder"
     },
     "builder-data": {
         "name": "builder-data",
@@ -344,98 +257,44 @@
     "bundler": {
         "name": "bundler",
         "scope": "teambit.compilation",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilation/bundler",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/compilation/bundler"
     },
     "cache": {
         "name": "cache",
         "scope": "teambit.harmony",
-        "version": "0.0.1151",
+        "version": "0.0.1152",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/cache",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/cache"
     },
     "changelog": {
         "name": "changelog",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/changelog",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/changelog"
     },
     "checkout": {
         "name": "checkout",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/checkout",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/checkout"
     },
     "clear-cache": {
         "name": "clear-cache",
         "scope": "teambit.workspace",
-        "version": "0.0.416",
+        "version": "0.0.417",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/clear-cache",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/workspace/clear-cache"
     },
     "cli": {
         "name": "cli",
         "scope": "teambit.harmony",
-        "version": "0.0.1058",
+        "version": "0.0.1059",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/cli",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/cli"
     },
     "cli-table": {
         "name": "cli-table",
@@ -461,143 +320,65 @@
     "cloud": {
         "name": "cloud",
         "scope": "teambit.cloud",
-        "version": "0.0.757",
+        "version": "0.0.758",
         "mainFile": "index.ts",
-        "rootDir": "scopes/cloud/cloud",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/cloud/cloud"
     },
     "code": {
         "name": "code",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/code",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/code"
     },
     "command-bar": {
         "name": "command-bar",
         "scope": "teambit.explorer",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/explorer/command-bar",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/explorer/command-bar"
     },
     "community": {
         "name": "community",
         "scope": "teambit.community",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/community/community",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/community/community"
     },
     "compiler": {
         "name": "compiler",
         "scope": "teambit.compilation",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilation/compiler",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/compilation/compiler"
     },
     "component": {
         "name": "component",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/component"
     },
     "component-compare": {
         "name": "component-compare",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-compare",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/component-compare"
     },
     "component-descriptor": {
         "name": "component-descriptor",
         "scope": "teambit.component",
-        "version": "0.0.427",
+        "version": "0.0.428",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-descriptor",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/component-descriptor"
     },
     "component-diff": {
         "name": "component-diff",
         "scope": "teambit.legacy",
-        "version": "0.0.50",
+        "version": "0.0.51",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/component-diff",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "components/legacy/component-diff"
     },
     "component-issues": {
         "name": "component-issues",
@@ -609,31 +390,16 @@
     "component-list": {
         "name": "component-list",
         "scope": "teambit.legacy",
-        "version": "0.0.51",
+        "version": "0.0.52",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/component-list",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "components/legacy/component-list"
     },
     "component-log": {
         "name": "component-log",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-log",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/component-log"
     },
     "component-package-version": {
         "name": "component-package-version",
@@ -645,50 +411,23 @@
     "component-sizer": {
         "name": "component-sizer",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-sizer",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/component-sizer"
     },
     "component-tree": {
         "name": "component-tree",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-tree",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/component-tree"
     },
     "component-writer": {
         "name": "component-writer",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/component-writer",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/component-writer"
     },
     "composition-card": {
         "name": "composition-card",
@@ -700,63 +439,30 @@
     "compositions": {
         "name": "compositions",
         "scope": "teambit.compositions",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compositions/compositions",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/compositions/compositions"
     },
     "config": {
         "name": "config",
         "scope": "teambit.harmony",
-        "version": "0.0.1232",
+        "version": "0.0.1233",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/config",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/config"
     },
     "config-merger": {
         "name": "config-merger",
         "scope": "teambit.workspace",
-        "version": "0.0.348",
+        "version": "0.0.349",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/config-merger",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/workspace/config-merger"
     },
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.485",
+        "version": "2.0.486",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/cli-reference",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/cli-reference"
     },
     "crypto/sha1": {
         "name": "crypto/sha1",
@@ -768,140 +474,65 @@
     "dependencies": {
         "name": "dependencies",
         "scope": "teambit.dependencies",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/dependencies",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/dependencies/dependencies"
     },
     "dependency-resolver": {
         "name": "dependency-resolver",
         "scope": "teambit.dependencies",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/dependency-resolver",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env-jest@0.0.40": {}
-        }
+        "rootDir": "scopes/dependencies/dependency-resolver"
     },
     "deprecation": {
         "name": "deprecation",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/deprecation",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/deprecation"
     },
     "dev-files": {
         "name": "dev-files",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/dev-files",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/dev-files"
     },
     "diagnostic": {
         "name": "diagnostic",
         "scope": "teambit.harmony",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/diagnostic",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/diagnostic"
     },
     "doc-parser": {
         "name": "doc-parser",
         "scope": "teambit.semantics",
-        "version": "0.0.5",
+        "version": "0.0.6",
         "mainFile": "index.ts",
-        "rootDir": "components/semantics/doc-parser",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "components/semantics/doc-parser"
     },
     "docs": {
         "name": "docs",
         "scope": "teambit.docs",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/docs/docs",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/docs/docs"
     },
     "doctor": {
         "name": "doctor",
         "scope": "teambit.harmony",
-        "version": "0.0.164",
+        "version": "0.0.165",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/doctor",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/doctor"
     },
     "eject": {
         "name": "eject",
         "scope": "teambit.workspace",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/eject",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/workspace/eject"
     },
     "entities/lane-diff": {
         "name": "entities/lane-diff",
@@ -920,50 +551,23 @@
     "env": {
         "name": "env",
         "scope": "teambit.envs",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/envs/env",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/envs/env"
     },
     "envs": {
         "name": "envs",
         "scope": "teambit.envs",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/envs/envs",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/envs/envs"
     },
     "eslint": {
         "name": "eslint",
         "scope": "teambit.defender",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/eslint",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/defender/eslint"
     },
     "eslint-config-bit-react": {
         "name": "eslint-config-bit-react",
@@ -975,15 +579,9 @@
     "eslint/config-mutator": {
         "name": "eslint/config-mutator",
         "scope": "teambit.defender",
-        "version": "0.0.104",
+        "version": "0.0.105",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/eslint-config-mutator",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/defender/eslint-config-mutator"
     },
     "explorer/api-reference-explorer": {
         "name": "explorer/api-reference-explorer",
@@ -995,66 +593,30 @@
     "export": {
         "name": "export",
         "scope": "teambit.scope",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/export",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/scope/export"
     },
     "express": {
         "name": "express",
         "scope": "teambit.harmony",
-        "version": "0.0.1157",
+        "version": "0.0.1158",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/express",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/express"
     },
     "forking": {
         "name": "forking",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/forking",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/forking"
     },
     "formatter": {
         "name": "formatter",
         "scope": "teambit.defender",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/formatter",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/defender/formatter"
     },
     "fs/extension-getter": {
         "name": "fs/extension-getter",
@@ -1108,18 +670,9 @@
     "generator": {
         "name": "generator",
         "scope": "teambit.generator",
-        "version": "1.0.482",
+        "version": "1.0.483",
         "mainFile": "index.ts",
-        "rootDir": "scopes/generator/generator",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/generator/generator"
     },
     "get-bit-version": {
         "name": "get-bit-version",
@@ -1131,82 +684,37 @@
     "git": {
         "name": "git",
         "scope": "teambit.git",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/git/git",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/git/git"
     },
     "global-config": {
         "name": "global-config",
         "scope": "teambit.harmony",
-        "version": "0.0.1061",
+        "version": "0.0.1062",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/global-config",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/global-config"
     },
     "graph": {
         "name": "graph",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/graph",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/graph"
     },
     "graphql": {
         "name": "graphql",
         "scope": "teambit.harmony",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/graphql",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/graphql"
     },
     "harmony-ui-app": {
         "name": "harmony-ui-app",
         "scope": "teambit.ui-foundation",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/harmony-ui-app/harmony-ui-app",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/ui-foundation/harmony-ui-app/harmony-ui-app"
     },
     "hooks/use-api": {
         "name": "hooks/use-api",
@@ -1246,15 +754,9 @@
     "hooks/use-lane-components": {
         "name": "hooks/use-lane-components",
         "scope": "teambit.lanes",
-        "version": "0.0.270",
+        "version": "0.0.271",
         "mainFile": "index.ts",
-        "rootDir": "components/hooks/use-lane-components",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "components/hooks/use-lane-components"
     },
     "hooks/use-lanes": {
         "name": "hooks/use-lanes",
@@ -1287,156 +789,72 @@
     "host-initializer": {
         "name": "host-initializer",
         "scope": "teambit.harmony",
-        "version": "0.0.194",
+        "version": "0.0.195",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/host-initializer",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/host-initializer"
     },
     "html": {
         "name": "html",
         "scope": "teambit.html",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/html/html",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/html/html"
     },
     "importer": {
         "name": "importer",
         "scope": "teambit.scope",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/importer",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/scope/importer"
     },
     "insights": {
         "name": "insights",
         "scope": "teambit.explorer",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/explorer/insights",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/explorer/insights"
     },
     "install": {
         "name": "install",
         "scope": "teambit.workspace",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/install",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/workspace/install"
     },
     "ipc-events": {
         "name": "ipc-events",
         "scope": "teambit.harmony",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/ipc-events",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/ipc-events"
     },
     "isolator": {
         "name": "isolator",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/isolator",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/isolator"
     },
     "issues": {
         "name": "issues",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/issues",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/issues"
     },
     "jest": {
         "name": "jest",
         "scope": "teambit.defender",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/jest",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/defender/jest"
     },
     "lanes": {
         "name": "lanes",
         "scope": "teambit.lanes",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/lanes",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/lanes/lanes"
     },
     "legacy-component-log": {
         "name": "legacy-component-log",
@@ -1448,34 +866,16 @@
     "linter": {
         "name": "linter",
         "scope": "teambit.defender",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/linter",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/defender/linter"
     },
     "lister": {
         "name": "lister",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/lister",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/lister"
     },
     "loader": {
         "name": "loader",
@@ -1487,79 +887,37 @@
     "logger": {
         "name": "logger",
         "scope": "teambit.harmony",
-        "version": "0.0.1151",
+        "version": "0.0.1152",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/logger",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/logger"
     },
     "mdx": {
         "name": "mdx",
         "scope": "teambit.mdx",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/mdx",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/mdx/mdx"
     },
     "merge-lanes": {
         "name": "merge-lanes",
         "scope": "teambit.lanes",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/merge-lanes",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/lanes/merge-lanes"
     },
     "merging": {
         "name": "merging",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/merging",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/merging"
     },
     "mocha": {
         "name": "mocha",
         "scope": "teambit.defender",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/mocha",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/defender/mocha"
     },
     "model/composition-id": {
         "name": "model/composition-id",
@@ -1606,15 +964,9 @@
     "models/scope-model": {
         "name": "models/scope-model",
         "scope": "teambit.scope",
-        "version": "0.0.516",
+        "version": "0.0.517",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/models/scope-model",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/scope/models/scope-model"
     },
     "modules/babel-compiler": {
         "name": "modules/babel-compiler",
@@ -1626,15 +978,9 @@
     "modules/component-package-name": {
         "name": "modules/component-package-name",
         "scope": "teambit.pkg",
-        "version": "0.0.5",
+        "version": "0.0.6",
         "mainFile": "index.ts",
-        "rootDir": "components/modules/component-package-name",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "components/modules/component-package-name"
     },
     "modules/component-url": {
         "name": "modules/component-url",
@@ -1667,41 +1013,23 @@
     "modules/create-lane": {
         "name": "modules/create-lane",
         "scope": "teambit.lanes",
-        "version": "0.0.31",
+        "version": "0.0.32",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/modules/create-lane",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/lanes/modules/create-lane"
     },
     "modules/diff": {
         "name": "modules/diff",
         "scope": "teambit.lanes",
-        "version": "0.0.494",
+        "version": "0.0.495",
         "mainFile": "index.ts",
-        "rootDir": "scopes/lanes/diff",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/lanes/diff"
     },
     "modules/feature-toggle": {
         "name": "modules/feature-toggle",
         "scope": "teambit.harmony",
-        "version": "0.0.6",
+        "version": "0.0.7",
         "mainFile": "feature-toggle.ts",
-        "rootDir": "scopes/harmony/modules/feature-toggle",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/modules/feature-toggle"
     },
     "modules/fetch-html-from-url": {
         "name": "modules/fetch-html-from-url",
@@ -1713,15 +1041,9 @@
     "modules/fs-cache": {
         "name": "modules/fs-cache",
         "scope": "teambit.workspace",
-        "version": "0.0.1",
+        "version": "0.0.2",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/modules/fs-cache",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/workspace/modules/fs-cache"
     },
     "modules/generate-expose-loaders": {
         "name": "modules/generate-expose-loaders",
@@ -1810,15 +1132,9 @@
     "modules/node-modules-linker": {
         "name": "modules/node-modules-linker",
         "scope": "teambit.workspace",
-        "version": "0.0.225",
+        "version": "0.0.226",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/modules/node-modules-linker",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/workspace/modules/node-modules-linker"
     },
     "modules/requireable-component": {
         "name": "modules/requireable-component",
@@ -1872,50 +1188,23 @@
     "mover": {
         "name": "mover",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/mover",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/mover"
     },
     "multi-compiler": {
         "name": "multi-compiler",
         "scope": "teambit.compilation",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilation/multi-compiler",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/compilation/multi-compiler"
     },
     "multi-tester": {
         "name": "multi-tester",
         "scope": "teambit.defender",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/multi-tester",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/defender/multi-tester"
     },
     "network/get-port": {
         "name": "network/get-port",
@@ -1927,47 +1216,23 @@
     "new-component-helper": {
         "name": "new-component-helper",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/new-component-helper",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/new-component-helper"
     },
     "node": {
         "name": "node",
         "scope": "teambit.harmony",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/node",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/node"
     },
     "notifications": {
         "name": "notifications",
         "scope": "teambit.ui-foundation",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/notifications/aspect",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/ui-foundation/notifications/aspect"
     },
     "overview/api-reference-table-of-contents": {
         "name": "overview/api-reference-table-of-contents",
@@ -1986,18 +1251,9 @@
     "panels": {
         "name": "panels",
         "scope": "teambit.ui-foundation",
-        "version": "0.0.1060",
+        "version": "0.0.1061",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/panels",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/ui-foundation/panels"
     },
     "panels/composition-gallery": {
         "name": "panels/composition-gallery",
@@ -2044,18 +1300,9 @@
     "pkg": {
         "name": "pkg",
         "scope": "teambit.pkg",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/pkg/pkg",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/pkg/pkg"
     },
     "plugins/inject-head-webpack-plugin": {
         "name": "plugins/inject-head-webpack-plugin",
@@ -2067,34 +1314,16 @@
     "pnpm": {
         "name": "pnpm",
         "scope": "teambit.dependencies",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/pnpm",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/dependencies/pnpm"
     },
     "prettier": {
         "name": "prettier",
         "scope": "teambit.defender",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/prettier",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/defender/prettier"
     },
     "prettier/config-mutator": {
         "name": "prettier/config-mutator",
@@ -2106,18 +1335,9 @@
     "preview": {
         "name": "preview",
         "scope": "teambit.preview",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/preview/preview",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/preview/preview"
     },
     "promise/map-pool": {
         "name": "promise/map-pool",
@@ -2129,124 +1349,58 @@
     "pubsub": {
         "name": "pubsub",
         "scope": "teambit.harmony",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/pubsub",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/pubsub"
     },
     "react": {
         "name": "react",
         "scope": "teambit.react",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/react",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/react/react"
     },
     "react-native": {
         "name": "react-native",
         "scope": "teambit.react",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/react-native",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/react/react-native"
     },
     "react-router": {
         "name": "react-router",
         "scope": "teambit.ui-foundation",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/react-router/react-router",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/ui-foundation/react-router/react-router"
     },
     "readme": {
         "name": "readme",
         "scope": "teambit.mdx",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/readme",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/mdx/readme"
     },
     "refactoring": {
         "name": "refactoring",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/refactoring",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/refactoring"
     },
     "remove": {
         "name": "remove",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/remove",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/remove"
     },
     "renaming": {
         "name": "renaming",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/renaming",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/renaming"
     },
     "renderers/api-node-details": {
         "name": "renderers/api-node-details",
@@ -2398,34 +1552,16 @@
     "schema": {
         "name": "schema",
         "scope": "teambit.semantics",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/semantics/schema",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/semantics/schema"
     },
     "scope": {
         "name": "scope",
         "scope": "teambit.scope",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/scope",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/scope/scope"
     },
     "scope-api": {
         "name": "scope-api",
@@ -2451,95 +1587,44 @@
     "sidebar": {
         "name": "sidebar",
         "scope": "teambit.ui-foundation",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/sidebar",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/ui-foundation/sidebar"
     },
     "sign": {
         "name": "sign",
         "scope": "teambit.scope",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/sign",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/scope/sign"
     },
     "snapping": {
         "name": "snapping",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/snapping",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/snapping"
     },
     "sources": {
         "name": "sources",
         "scope": "teambit.component",
-        "version": "0.0.49",
+        "version": "0.0.50",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/sources",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/sources"
     },
     "stash": {
         "name": "stash",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/stash",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/stash"
     },
     "status": {
         "name": "status",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/status",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/status"
     },
     "string/capitalize": {
         "name": "string/capitalize",
@@ -2593,44 +1678,23 @@
     "tester": {
         "name": "tester",
         "scope": "teambit.defender",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/tester",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/defender/tester"
     },
     "testing/load-aspect": {
         "name": "testing/load-aspect",
         "scope": "teambit.harmony",
-        "version": "0.0.251",
+        "version": "0.0.252",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/testing/load-aspect",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/testing/load-aspect"
     },
     "testing/mock-components": {
         "name": "testing/mock-components",
         "scope": "teambit.component",
-        "version": "0.0.256",
+        "version": "0.0.257",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/testing/mock-components",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/component/testing/mock-components"
     },
     "testing/mock-workspace": {
         "name": "testing/mock-workspace",
@@ -2656,18 +1720,9 @@
     "tracker": {
         "name": "tracker",
         "scope": "teambit.component",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/component/tracker",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/component/tracker"
     },
     "ts-server": {
         "name": "ts-server",
@@ -2686,34 +1741,16 @@
     "typescript": {
         "name": "typescript",
         "scope": "teambit.typescript",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/typescript/typescript",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/typescript/typescript"
     },
     "ui": {
         "name": "ui",
         "scope": "teambit.ui-foundation",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/ui",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/ui-foundation/ui"
     },
     "ui/aspect-box": {
         "name": "ui/aspect-box",
@@ -2809,15 +1846,9 @@
     "ui/component-drawer": {
         "name": "ui/component-drawer",
         "scope": "teambit.component",
-        "version": "0.0.419",
+        "version": "0.0.420",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/component-drawer",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "components/ui/component-drawer"
     },
     "ui/component-filters/component-filter-context": {
         "name": "ui/component-filters/component-filter-context",
@@ -2934,15 +1965,9 @@
     "ui/hooks/scope-context": {
         "name": "ui/hooks/scope-context",
         "scope": "teambit.scope",
-        "version": "0.0.510",
+        "version": "0.0.511",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/hooks/scope-context",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "components/ui/hooks/scope-context"
     },
     "ui/hooks/use-core-aspects": {
         "name": "ui/hooks/use-core-aspects",
@@ -2961,15 +1986,9 @@
     "ui/lane-overview": {
         "name": "ui/lane-overview",
         "scope": "teambit.lanes",
-        "version": "0.0.247",
+        "version": "0.0.248",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/lane-overview",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "components/ui/lane-overview"
     },
     "ui/loader-fallback": {
         "name": "ui/loader-fallback",
@@ -3009,15 +2028,9 @@
     "ui/preview-placeholder": {
         "name": "ui/preview-placeholder",
         "scope": "teambit.preview",
-        "version": "0.0.527",
+        "version": "0.0.528",
         "mainFile": "index.ts",
-        "rootDir": "scopes/preview/ui/preview-placeholder",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/preview/ui/preview-placeholder"
     },
     "ui/queries/get-docs": {
         "name": "ui/queries/get-docs",
@@ -3099,31 +2112,16 @@
     "ui/workspace-component-card": {
         "name": "ui/workspace-component-card",
         "scope": "teambit.workspace",
-        "version": "0.0.534",
+        "version": "0.0.535",
         "mainFile": "index.ts",
-        "rootDir": "components/ui/workspace-component-card",
-        "nextVersion": {
-            "version": "patch",
-            "message": "bump dependencies versions",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "components/ui/workspace-component-card"
     },
     "update-dependencies": {
         "name": "update-dependencies",
         "scope": "teambit.scope",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/update-dependencies",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/scope/update-dependencies"
     },
     "url/add-avatar-query-params": {
         "name": "url/add-avatar-query-params",
@@ -3142,31 +2140,16 @@
     "user-agent": {
         "name": "user-agent",
         "scope": "teambit.ui-foundation",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/user-agent",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/ui-foundation/user-agent"
     },
     "utils": {
         "name": "utils",
         "scope": "teambit.legacy",
-        "version": "0.0.6",
+        "version": "0.0.7",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/utils",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "components/legacy/utils"
     },
     "utils/code-editor-options": {
         "name": "utils/code-editor-options",
@@ -3213,130 +2196,58 @@
     "variants": {
         "name": "variants",
         "scope": "teambit.workspace",
-        "version": "0.0.1325",
+        "version": "0.0.1326",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/variants",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/workspace/variants"
     },
     "version-history": {
         "name": "version-history",
         "scope": "teambit.scope",
-        "version": "0.0.273",
+        "version": "0.0.274",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/version-history",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/scope/version-history"
     },
     "watcher": {
         "name": "watcher",
         "scope": "teambit.workspace",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/watcher",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/workspace/watcher"
     },
     "webpack": {
         "name": "webpack",
         "scope": "teambit.webpack",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/webpack/webpack",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/webpack/webpack"
     },
     "worker": {
         "name": "worker",
         "scope": "teambit.harmony",
-        "version": "0.0.1362",
+        "version": "0.0.1363",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/worker",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/harmony/worker"
     },
     "workspace": {
         "name": "workspace",
         "scope": "teambit.workspace",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/workspace",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/workspace/workspace"
     },
     "workspace-config-files": {
         "name": "workspace-config-files",
         "scope": "teambit.workspace",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/workspace-config-files",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/workspace/workspace-config-files"
     },
     "yarn": {
         "name": "yarn",
         "scope": "teambit.dependencies",
-        "version": "1.0.481",
+        "version": "1.0.482",
         "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/yarn",
-        "nextVersion": {
-            "version": "patch",
-            "message": "",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        },
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.63": {}
-        }
+        "rootDir": "scopes/dependencies/yarn"
     },
     "$schema-version": "17.0.0"
 }
