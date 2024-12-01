@@ -32,8 +32,11 @@ import {
   PackageNode,
 } from '@pnpm/reviewing.dependencies-hierarchy';
 import { renderTree } from '@pnpm/list';
-import { writeLockfileFile, convertToLockfileFile as convertLockfileObjectToLockfileFile } from '@pnpm/lockfile.fs';
-import { readWantedLockfile } from '@pnpm/lockfile-file';
+import {
+  readWantedLockfile,
+  writeLockfileFile,
+  convertToLockfileFile as convertLockfileObjectToLockfileFile,
+} from '@pnpm/lockfile.fs';
 import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
 import { ServerSendOutStream } from '@teambit/legacy/dist/logger/pino-logger';
 import { join } from 'path';
