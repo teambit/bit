@@ -14,6 +14,7 @@ import { useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 import { useComponent as useComponentQuery, UseComponentType, Filters } from '../use-component';
 import { CollapsibleMenuNav } from './menu-nav';
 import { OrderedNavigationSlot, ConsumeMethodSlot, ConsumePluginProps } from './nav-plugin';
@@ -96,6 +97,7 @@ export function ComponentMenu({
   useComponentFilters,
   authToken,
 }: MenuProps) {
+  const { isMinimal } = useWorkspaceMode();
   const idFromLocation = useIdFromLocation();
   const componentIdStrWithScopeFromLocation = useIdFromLocation(undefined, true);
   const _componentIdStr = getComponentIdStr(componentIdStr);
@@ -125,7 +127,7 @@ export function ComponentMenu({
             // loading={loading}
           />
           {rightSideItems.map(({ item }) => item)}
-          <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
+          {!isMinimal && <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />}
         </>
       )}
     </div>

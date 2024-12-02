@@ -2025,6 +2025,20 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/pages/static-error"
     },
+    "ui/preserve-workspace-mode": {
+        "name": "ui/preserve-workspace-mode",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/preserve-workspace-mode",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "ui/preview-placeholder": {
         "name": "ui/preview-placeholder",
         "scope": "teambit.preview",
@@ -2087,6 +2101,20 @@
         "version": "0.0.371",
         "mainFile": "index.ts",
         "rootDir": "components/ui/tooltip"
+    },
+    "ui/use-workspace-mode": {
+        "name": "ui/use-workspace-mode",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/use-workspace-mode",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
     },
     "ui/user-bar": {
         "name": "ui/user-bar",
