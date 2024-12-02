@@ -13,7 +13,9 @@ import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.sp
 import { useThemePicker } from '@teambit/base-react.themes.theme-switcher';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { TopBar } from '@teambit/ui-foundation.ui.top-bar';
+import { PreserveWorkspaceMode } from '@teambit/workspace.ui.preserve-workspace-mode';
 import classNames from 'classnames';
+import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 
 import { useWorkspace } from './use-workspace';
 import { WorkspaceOverview } from './workspace-overview';
@@ -33,6 +35,7 @@ export type WorkspaceProps = {
  * main workspace component.
  */
 export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebarTogglerChange }: WorkspaceProps) {
+  const { isMinimal } = useWorkspaceMode();
   const reactions = useComponentNotifications();
   const { workspace } = useWorkspace(reactions);
   const theme = useThemePicker();
@@ -57,38 +60,41 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
 
   return (
     <WorkspaceProvider workspace={workspace}>
-      <div className={styles.workspaceWrapper}>
-        <TopBar
-          className={classNames(styles.topbar, styles[themeName])}
-          Corner={() => (
-            <Corner
-              className={classNames(styles.corner, styles[themeName])}
-              name={workspace.name}
-              icon={workspace.icon}
+      <PreserveWorkspaceMode>
+        <div className={styles.workspaceWrapper}>
+          {
+            <TopBar
+              className={classNames(styles.topbar, styles[themeName])}
+              Corner={() => (
+                <Corner
+                  className={classNames((isMinimal && styles.minimalCorner) || styles.corner, styles[themeName])}
+                  name={workspace.name}
+                  icon={workspace.icon}
+                />
+              )}
+              menu={menuSlot}
             />
-          )}
-          menu={menuSlot}
-        />
-
-        <SplitPane className={styles.main} size={246} layout={sidebarOpenness}>
-          <Pane className={classNames(styles.sidebar, styles[themeName], !isSidebarOpen && styles.closed)}>
-            {sidebar}
-          </Pane>
-          <HoverSplitter className={styles.splitter}>
-            <Collapser
-              isOpen={isSidebarOpen}
-              onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
-              onClick={handleSidebarToggle}
-              tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side panel`}
-            />
-          </HoverSplitter>
-          <Pane>
-            <SlotRouter slot={routeSlot}>
-              <Route index element={<WorkspaceOverview />} />
-            </SlotRouter>
-          </Pane>
-        </SplitPane>
-      </div>
+          }
+          <SplitPane className={styles.main} size={246} layout={sidebarOpenness}>
+            <Pane className={classNames(styles.sidebar, styles[themeName], !isSidebarOpen && styles.closed)}>
+              {sidebar}
+            </Pane>
+            <HoverSplitter className={styles.splitter}>
+              <Collapser
+                isOpen={isSidebarOpen}
+                onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
+                onClick={handleSidebarToggle}
+                tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side panel`}
+              />
+            </HoverSplitter>
+            <Pane>
+              <SlotRouter slot={routeSlot}>
+                <Route index element={<WorkspaceOverview />} />
+              </SlotRouter>
+            </Pane>
+          </SplitPane>
+        </div>
+      </PreserveWorkspaceMode>
     </WorkspaceProvider>
   );
 }
