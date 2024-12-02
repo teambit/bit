@@ -1,5 +1,6 @@
 import multimatch from 'multimatch';
 import mapSeries from 'p-map-series';
+import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { MainRuntime } from '@teambit/cli';
 import { getAllCoreAspectsIds } from '@teambit/bit';
 import { getRootComponentDir } from '@teambit/workspace.root-components';
@@ -494,6 +495,14 @@ export class DependencyResolverMain {
     return this.getDepResolverData(component)?.packageName ?? this.calcPackageName(component);
   }
 
+  createComponentIdByPkgNameMap(components: Component[]): Map<string, ComponentID> {
+    const componentIdByPkgName = new Map<string, ComponentID>();
+    for (const component of components) {
+      componentIdByPkgName.set(this.getPackageName(component), component.id);
+    }
+    return componentIdByPkgName;
+  }
+
   getDepResolverData(component: Component): DependencyResolverComponentData | undefined {
     return component.state.aspects.get(DependencyResolverAspect.id)?.data as DependencyResolverComponentData;
   }
@@ -532,10 +541,21 @@ export class DependencyResolverMain {
       // in that case we return the dir from the root node_modules
       return this.getModulePath(component);
     }
-    const envId = this.envs.getEnvId(component);
-    const dirInEnvRoot = join(getRelativeRootComponentDir(envId), 'node_modules', pkgName);
+    const dirInEnvRoot = join(this.getComponentDirInBitRoots(component, options), 'node_modules', pkgName);
     if (fs.pathExistsSync(dirInEnvRoot)) return dirInEnvRoot;
     return this.getModulePath(component);
+  }
+
+  getComponentDirInBitRoots(
+    component: Component,
+    options: {
+      workspacePath: string;
+      rootComponentsPath: string;
+    }
+  ) {
+    const envId = this.envs.getEnvId(component);
+    const rootComponentsRelativePath = relative(options.workspacePath, options.rootComponentsPath);
+    return getRootComponentDir(rootComponentsRelativePath ?? '', envId);
   }
 
   /**
@@ -546,6 +566,36 @@ export class DependencyResolverMain {
     const pkgName = this.getPackageName(component);
     const relativePath = join('node_modules', pkgName);
     return relativePath;
+  }
+
+  async addDependenciesGraph(
+    component: Component,
+    componentRelativeDir: string,
+    options: {
+      rootDir: string;
+      rootComponentsPath?: string;
+      componentIdByPkgName: Map<string, ComponentID>;
+    }
+  ): Promise<void> {
+    try {
+      component.state._consumer.dependenciesGraph = await this.getPackageManager()?.calcDependenciesGraph?.({
+        rootDir: options.rootDir,
+        componentRootDir: options.rootComponentsPath
+          ? this.getComponentDirInBitRoots(component, {
+              workspacePath: options.rootDir,
+              rootComponentsPath: options.rootComponentsPath,
+            })
+          : undefined,
+        pkgName: this.getPackageName(component),
+        componentRelativeDir,
+        componentIdByPkgName: options.componentIdByPkgName,
+      });
+    } catch (err) {
+      // If the dependencies graph feature is disabled, we ignore the error
+      if (isFeatureEnabled(DEPS_GRAPH)) {
+        throw err;
+      }
+    }
   }
 
   /**

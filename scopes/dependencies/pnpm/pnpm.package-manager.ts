@@ -12,13 +12,18 @@ import {
   BIT_CLOUD_REGISTRY,
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
+  type CalcDepsGraphOptions,
 } from '@teambit/dependency-resolver';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
+import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { Logger } from '@teambit/logger';
+import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
+import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
 import { Config } from '@pnpm/config';
+import { type ProjectId, type ProjectManifest, type DepPath } from '@pnpm/types';
 import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
 import {
   buildDependenciesHierarchy,
@@ -27,14 +32,19 @@ import {
   PackageNode,
 } from '@pnpm/reviewing.dependencies-hierarchy';
 import { renderTree } from '@pnpm/list';
-import { readWantedLockfile } from '@pnpm/lockfile-file';
-import { type ProjectManifest, type DepPath } from '@pnpm/types';
+import {
+  readWantedLockfile,
+  writeLockfileFile,
+  convertToLockfileFile as convertLockfileObjectToLockfileFile,
+} from '@pnpm/lockfile.fs';
 import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
 import { ServerSendOutStream } from '@teambit/legacy/dist/logger/pino-logger';
 import { join } from 'path';
+import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
+import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
 
 export type { RebuildFn };
 
@@ -70,6 +80,20 @@ export class PnpmPackageManager implements PackageManager {
     private cloud: CloudMain
   ) {}
 
+  async dependenciesGraphToLockfile(
+    dependenciesGraph: DependenciesGraph,
+    manifests: Record<string, ProjectManifest>,
+    rootDir: string
+  ) {
+    const lockfile: LockfileFileV9 = convertGraphToLockfile(dependenciesGraph, manifests, rootDir);
+    Object.assign(lockfile, {
+      bit: {
+        restoredFromModel: true,
+      },
+    });
+    await writeLockfileFile(join(rootDir, 'pnpm-lock.yaml'), lockfile);
+  }
+
   async install(
     { rootDir, manifests }: InstallationContext,
     installOptions: PackageManagerInstallOptions = {}
@@ -77,6 +101,10 @@ export class PnpmPackageManager implements PackageManager {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
+
+    if (installOptions.dependenciesGraph && isFeatureEnabled(DEPS_GRAPH)) {
+      await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, manifests, rootDir);
+    }
 
     this.logger.debug(`running installation in root dir ${rootDir}`);
     this.logger.debug('components manifests for installation', manifests);
@@ -124,7 +152,7 @@ export class PnpmPackageManager implements PackageManager {
         includeOptionalDeps: installOptions.includeOptionalDeps,
         ignorePackageManifest: installOptions.ignorePackageManifest,
         dedupeInjectedDeps: installOptions.dedupeInjectedDeps ?? false,
-        dryRun: installOptions.dryRun,
+        dryRun: installOptions.dependenciesGraph == null && installOptions.dryRun,
         overrides: installOptions.overrides,
         hoistPattern: installOptions.hoistPatterns ?? config.hoistPattern,
         publicHoistPattern: config.shamefullyHoist
@@ -351,6 +379,38 @@ export class PnpmPackageManager implements PackageManager {
       long: false,
       showExtraneous: false,
     });
+  }
+
+  /**
+   * Calculating the dependencies graph of a given component using the lockfile.
+   */
+  async calcDependenciesGraph(opts: CalcDepsGraphOptions): Promise<DependenciesGraph | undefined> {
+    const lockfile = await readWantedLockfile(opts.rootDir, { ignoreIncompatible: false });
+    if (!lockfile) {
+      return undefined;
+    }
+    if (opts.componentRootDir && !lockfile.importers[opts.componentRootDir] && opts.componentRootDir.includes('@')) {
+      opts.componentRootDir = opts.componentRootDir.split('@')[0];
+    }
+    const filterByImporterIds = [opts.componentRelativeDir as ProjectId];
+    if (opts.componentRootDir != null) {
+      filterByImporterIds.push(opts.componentRootDir as ProjectId);
+    }
+    // Filters the lockfile so that it only includes packages related to the given component.
+    const partialLockfile = convertLockfileObjectToLockfileFile(
+      filterLockfileByImporters(lockfile, filterByImporterIds, {
+        include: {
+          dependencies: true,
+          devDependencies: true,
+          optionalDependencies: true,
+        },
+        failOnMissingDependencies: false,
+        skipped: new Set(),
+      }),
+      { forceSharedFormat: true }
+    );
+    const graph = convertLockfileToGraph(partialLockfile, opts);
+    return graph;
   }
 }
 

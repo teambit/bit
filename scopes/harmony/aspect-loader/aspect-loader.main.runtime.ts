@@ -884,7 +884,7 @@ export class AspectLoaderMain {
     [onAspectLoadErrorSlot, onLoadRequireableExtensionSlot, pluginSlot]: [
       OnAspectLoadErrorSlot,
       OnLoadRequireableExtensionSlot,
-      PluginDefinitionSlot
+      PluginDefinitionSlot,
     ],
     harmony: Harmony
   ) {

@@ -50,6 +50,7 @@ import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { Scope } from '@teambit/legacy/dist/scope';
+import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
 import path, { basename } from 'path';
@@ -593,6 +594,7 @@ export class IsolatorMain {
    * @param opts
    * @param legacyScope
    */
+  /* eslint-disable complexity */
   private async createCapsules(
     components: Component[],
     capsulesDir: string,
@@ -700,13 +702,22 @@ export class IsolatorMain {
           })
         );
       } else {
+        const dependenciesGraph = await legacyScope?.getDependenciesGraphByComponentIds(
+          capsuleList.getAllComponentIDs()
+        );
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
           cachePackagesOnCapsulesRoot,
           linkedDependencies,
           packageManager: opts.packageManager,
+          dependenciesGraph,
         });
+        if (dependenciesGraph == null) {
+          // If the graph was not present in the model, we use the just created lockfile inside the capsules
+          // to populate the graph.
+          await this.addDependenciesGraphToComponents(capsuleList, components, capsulesDir);
+        }
       }
       if (installLongProcessLogger) {
         installLongProcessLogger.end('success');
@@ -736,6 +747,24 @@ export class IsolatorMain {
     }
 
     return allCapsuleList;
+  }
+  /* eslint-enable complexity */
+
+  private async addDependenciesGraphToComponents(
+    capsuleList: CapsuleList,
+    components: Component[],
+    capsulesDir: string
+  ): Promise<void> {
+    const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(components);
+    const opts = {
+      componentIdByPkgName,
+      rootDir: capsulesDir,
+    };
+    await Promise.all(
+      capsuleList.map((capsule) =>
+        this.dependencyResolver.addDependenciesGraph(capsule.component, path.relative(capsulesDir, capsule.path), opts)
+      )
+    );
   }
 
   private async markCapsulesAsReady(capsuleList: CapsuleList): Promise<void> {
@@ -778,6 +807,7 @@ export class IsolatorMain {
       linkedDependencies?: Record<string, Record<string, string>>;
       packageManager?: string;
       nodeLinker?: NodeLinker;
+      dependenciesGraph?: DependenciesGraph;
     }
   ) {
     const installer = this.dependencyResolver.getInstaller({
@@ -799,6 +829,7 @@ export class IsolatorMain {
       forceTeambitHarmonyLink: !this.dependencyResolver.hasHarmonyInRootPolicy(),
       excludeExtensionsDependencies: true,
       dedupeInjectedDeps: true,
+      dependenciesGraph: opts.dependenciesGraph,
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {
