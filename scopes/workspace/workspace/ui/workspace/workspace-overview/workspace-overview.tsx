@@ -56,6 +56,7 @@ export function WorkspaceOverview() {
               component={component}
               plugins={plugins}
               scope={scope}
+              shouldShowPreviewState={isMinimal}
             />
           );
         })}
