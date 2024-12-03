@@ -314,7 +314,7 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
   const getVersionsOutput = () => {
     if (!importDetails.versions.length) return '';
     if (importDetails.latestVersion) {
-      if (importDetails.latestVersion === bitId.version) {
+      if (importDetails.latestVersion === bitId.version && status === 'added') {
         usingLatest = ' (latest)';
         return '';
       }
