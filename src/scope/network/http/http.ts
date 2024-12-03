@@ -13,7 +13,7 @@ import { getAgent, AgentOptions } from '@teambit/toolbox.network.agent';
 import { ListScopeResult } from '@teambit/legacy.component-list';
 import { Network } from '../network';
 import Component from '../../../consumer/component';
-import DependencyGraph from '../../graph/scope-graph';
+import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLog } from '../../models/model-component';
 import { ScopeDescriptor } from '../../scope';
@@ -526,7 +526,7 @@ export class Http implements Network {
         includeDeleted,
       });
     } catch (err: any) {
-      if (err.message.includes('Unknown argument' && err.message.includes('includeDeleted'))) {
+      if (err.message.includes('Unknown argument') && err.message.includes('includeDeleted')) {
         loader.stop();
         logger.console(
           `error: the remote does not support the include-deleted flag yet, falling back to listing without deleted components`,

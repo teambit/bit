@@ -1,16 +1,16 @@
 import GraphLib, { Graph } from 'graphlib';
 import pMapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { VERSION_DELIMITER } from '../../constants';
+import { VERSION_DELIMITER } from '@teambit/legacy/dist/constants';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import Component from '../../consumer/component/consumer-component';
-import { DEPENDENCIES_TYPES_UI_MAP } from '../../consumer/component/dependencies/dependencies';
-import Consumer from '../../consumer/consumer';
+import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { DEPENDENCIES_TYPES_UI_MAP } from '@teambit/legacy/dist/consumer/component/dependencies/dependencies';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
-import { getAllVersionsInfo } from '../component-ops/traverse-versions';
-import { IdNotFoundInGraph } from '../exceptions/id-not-found-in-graph';
-import { ModelComponent, Version } from '../models';
-import Scope from '../scope';
+import { getAllVersionsInfo } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
+import { IdNotFoundInGraph } from '@teambit/legacy/dist/scope/exceptions/id-not-found-in-graph';
+import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
+import Scope from '@teambit/legacy/dist/scope/scope';
 
 export type DependenciesInfo = {
   id: ComponentID;
@@ -19,7 +19,7 @@ export type DependenciesInfo = {
   dependencyType: string;
 };
 
-export default class DependencyGraph {
+export class DependencyGraph {
   graph: Graph;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   scopeName: string;
@@ -97,7 +97,7 @@ export default class DependencyGraph {
   static async buildIdsGraphWithAllVersions(scope: Scope): Promise<Graph> {
     const modelComponents = await scope.list();
     const graph = new Graph();
-    await pMapSeries(modelComponents, async (modelComp) => {
+    await pMapSeries(modelComponents, async (modelComp: ModelComponent) => {
       const versionsInfo = await getAllVersionsInfo({
         modelComponent: modelComp,
         repo: scope.objects,
@@ -132,6 +132,27 @@ export default class DependencyGraph {
     await Promise.all(buildGraphP);
     return graph;
   }
+
+  // originated from legacy graph.ts used only by scopes/dependencies/dependencies/dependents.ts
+  // leaving here for now until we make sure it's the same `buildGraphFromScope` of this class
+
+  // static async buildGraphFromScope(scope: Scope): Promise<Graph> {
+  //   const graph = new Graph();
+  //   const allModelComponents: ModelComponent[] = await scope.list();
+  //   await Promise.all(
+  //     allModelComponents.map(async (modelComponent) => {
+  //       const buildVersionP = modelComponent.listVersionsIncludeOrphaned().map(async (versionNum) => {
+  //         const id = modelComponent.toComponentId().changeVersion(versionNum);
+  //         const componentVersion = await scope.getConsumerComponentIfExist(id);
+  //         if (componentVersion) {
+  //           // a component might be in the scope with only the latest version (happens when it's a nested dep)
+  //           graph.setNode(componentVersion.id.toString(), componentVersion);
+  //         }
+  //       });
+  //       await Promise.all(buildVersionP);
+  //     })
+  //   );
+  // }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest = false, reverse = false): Promise<Graph> {
@@ -188,7 +209,8 @@ export default class DependencyGraph {
     const idStr = id.toString();
     // save the full ComponentID of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(idStr)) graph.setNode(idStr, id);
-    Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
+    // @ts-ignore
+    Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]: [string, ComponentIdList]) => {
       depIds.forEach((dependencyId) => {
         const depIdStr = dependencyId.toString();
         if (!graph.hasNode(depIdStr)) graph.setNode(depIdStr, dependencyId);

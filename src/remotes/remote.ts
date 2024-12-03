@@ -1,11 +1,11 @@
 import { ComponentID } from '@teambit/component-id';
 import { PushOptions, CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import { ListScopeResult } from '@teambit/legacy.component-list';
+import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import Component from '../consumer/component/consumer-component';
 import logger from '../logger/logger';
 import type { Scope } from '../scope';
 import ComponentObjects from '../scope/component-objects';
-import DependencyGraph from '../scope/graph/scope-graph';
 import { LaneData } from '../scope/lanes/lanes';
 import { ComponentLog } from '../scope/models/model-component';
 import { connect } from '../scope/network';

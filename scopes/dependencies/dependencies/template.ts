@@ -1,7 +1,7 @@
 import c from 'chalk';
 import { table } from 'table';
 import { ComponentID } from '@teambit/component-id';
-import { DependenciesInfo } from '@teambit/legacy/dist/scope/graph/scope-graph';
+import { DependenciesInfo } from '@teambit/legacy.dependency-graph';
 
 function getAllDependenciesRows(dependenciesInfoArray: DependenciesInfo[], id: ComponentID): Array<string[]> {
   return dependenciesInfoArray.map((dependency: DependenciesInfo) => {

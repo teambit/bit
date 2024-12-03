@@ -8,7 +8,7 @@ import { instance } from '@viz-js/viz';
 import { Graph as ClearGraph } from '@teambit/graph.cleargraph';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import * as path from 'path';
-import logger from '../../logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 
 export type GraphConfig = {
   layout?: string; // dot Layout to use in the graph
@@ -20,7 +20,7 @@ const defaultConfig: GraphConfig = {
   layout: 'dot',
 };
 
-export default class VisualDependencyGraph {
+export class VisualDependencyGraph {
   graphlib: Graph;
   graph: Digraph;
   config: GraphConfig;

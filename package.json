@@ -123,6 +123,7 @@
     "@teambit/defender.fs.global-bit-temp-dir": "0.0.1",
     "@teambit/legacy.analytics": "~0.0.1",
     "@teambit/legacy.component-list": "~0.0.2",
+    "@teambit/legacy.dependency-graph": "~0.0.1",
     "@teambit/workspace.modules.workspace-locator": "~0.0.1",
     "@teambit/workspace.modules.fs-cache": "~0.0.1",
     "@teambit/semantics.doc-parser": "~0.0.2",
