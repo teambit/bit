@@ -478,6 +478,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/dependencies"
     },
+    "dependency-graph": {
+        "name": "dependency-graph",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/dependency-graph"
+    },
     "dependency-resolver": {
         "name": "dependency-resolver",
         "scope": "teambit.dependencies",
