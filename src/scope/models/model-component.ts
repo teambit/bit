@@ -685,13 +685,13 @@ export default class Component extends BitObject {
       head.toString() !== versionToAdd &&
       !this.hasTag(versionToAdd) // happens with auto-snap
     ) {
-      // happens with auto-tag
       // if this is a tag and this tag exists, the same version was added before with a different hash.
       // adding the current head into the parent will result in a non-exist hash in the parent.
       // if this is a hash and it's the same hash as the current head, adding it as a parent
       // results in a parent and a version has the same hash.
       // @todo: fix it in a more elegant way
-      version.addAsOnlyParent(head);
+      const parent = previouslyUsedVersion ? this.getRef(previouslyUsedVersion) : null;
+      version.addAsOnlyParent(parent || head);
     }
     this.setHead(version.hash());
     if (isTag(versionToAdd)) {

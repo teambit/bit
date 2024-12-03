@@ -55,7 +55,7 @@ import { FlattenedEdgesGetter } from './flattened-edges';
 import { SnapDistanceCmd } from './snap-distance-cmd';
 import {
   removeLocalVersionsForAllComponents,
-  untagResult,
+  ResetResult,
   getComponentsWithOptionToUntag,
   removeLocalVersionsForMultipleComponents,
 } from './reset-component';
@@ -668,11 +668,11 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     head?: boolean,
     force = false,
     soft = false
-  ): Promise<{ results: untagResult[]; isSoftUntag: boolean }> {
+  ): Promise<{ results: ResetResult[]; isSoftUntag: boolean }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     const currentLane = await consumer.getCurrentLaneObject();
-    const untag = async (): Promise<untagResult[]> => {
+    const untag = async (): Promise<ResetResult[]> => {
       if (!componentPattern) {
         return removeLocalVersionsForAllComponents(consumer, this.remove, currentLane, head);
       }
@@ -699,7 +699,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
         })
       );
     };
-    let results: untagResult[];
+    let results: ResetResult[];
     const isRealUntag = !soft;
     if (isRealUntag) {
       results = await untag();

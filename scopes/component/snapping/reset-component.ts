@@ -7,7 +7,7 @@ import logger from '@teambit/legacy/dist/logger/logger';
 import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { RemoveMain } from '@teambit/remove';
 
-export type untagResult = { id: ComponentID; versions: string[]; component?: ModelComponent };
+export type ResetResult = { id: ComponentID; versions: string[]; component?: ModelComponent };
 
 /**
  * If head is false, remove all local versions.
@@ -18,7 +18,7 @@ export async function removeLocalVersion(
   lane?: Lane,
   head?: boolean,
   force = false
-): Promise<untagResult> {
+): Promise<ResetResult> {
   const component: ModelComponent = await scope.getModelComponent(id);
   const idStr = id.toString();
   const localVersions = await component.getLocalHashes(scope.objects);
@@ -59,7 +59,7 @@ export async function removeLocalVersionsForAllComponents(
   remove: RemoveMain,
   lane?: Lane,
   head?: boolean
-): Promise<untagResult[]> {
+): Promise<ResetResult[]> {
   const componentsToUntag = await getComponentsWithOptionToUntag(consumer, remove);
   const force = true; // when removing local versions from all components, no need to check if the component is used as a dependency
   return removeLocalVersionsForMultipleComponents(componentsToUntag, lane, head, force, consumer.scope);
