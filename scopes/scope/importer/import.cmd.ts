@@ -310,9 +310,14 @@ function formatPlainComponentItem({ scope, name, version, deprecated }: any) {
 function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails: ImportDetails) {
   const status: ImportStatus = importDetails.status;
   const id = bitId.toStringWithoutVersion();
+  let usingLatest = '';
   const getVersionsOutput = () => {
     if (!importDetails.versions.length) return '';
     if (importDetails.latestVersion) {
+      if (importDetails.latestVersion === bitId.version) {
+        usingLatest = ' (latest)';
+        return '';
+      }
       return `${importDetails.versions.length} new version(s) available, latest ${importDetails.latestVersion}`;
     }
     return importDetails.versions.length > 5
@@ -320,7 +325,7 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
       : `new versions: ${importDetails.versions.join(', ')}`;
   };
   const versions = getVersionsOutput();
-  const usedVersion = status === 'added' ? `, currently used version ${bitId.version}` : '';
+  const usedVersion = status === 'added' ? `currently used version ${bitId.version}${usingLatest}` : '';
   const getConflictMessage = () => {
     if (!importDetails.filesStatus) return '';
     const conflictedFiles = Object.keys(importDetails.filesStatus)
@@ -340,9 +345,11 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
   if (status === 'up to date' && !missingDeps && !deprecated && !conflictMessage && !removed) {
     return undefined;
   }
-  return chalk.dim(
-    `- ${chalk.green(status)} ${chalk.cyan(
-      id
-    )} ${versions}${usedVersion} ${conflictMessage}${deprecated}${removed} ${missingDeps}`
-  );
+
+  const statusOutput = `- ${chalk.green(status)}`;
+  const idOutput = chalk.cyan(id);
+  const versionOutput = compact([versions, usedVersion]).join(', ');
+  const stateOutput = `${conflictMessage}${deprecated}${removed}`;
+  const output = compact([statusOutput, idOutput, versionOutput, stateOutput, missingDeps]).join(' ');
+  return chalk.dim(output);
 }
