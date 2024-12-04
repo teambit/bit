@@ -305,4 +305,27 @@ describe('bit reset command', function () {
       expect(stagedConfig).to.have.lengthOf(0);
     });
   });
+  describe('when checked out to a non-head version', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagWithoutBuild();
+      helper.fixtures.populateComponents(1, false, 'version2');
+      helper.command.tagWithoutBuild();
+      helper.fixtures.populateComponents(1, false, 'version3');
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+      helper.command.checkoutVersion('0.0.2', 'comp1', '-x');
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.resetAll();
+    });
+    it('expect .bitmap to point to the same version as it was before the reset, and not the latest', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.2');
+    });
+    it('should not show the component as modified', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(0);
+    });
+  });
 });

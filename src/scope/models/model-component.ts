@@ -60,6 +60,18 @@ type State = {
   };
 };
 
+export type AddVersionOpts = {
+  addToUpdateDependentsInLane?: boolean;
+
+  /**
+   * kind of rebase.
+   * if true, set the head as the parent of the new version.
+   * by default, the parent is the currently used version in .bitmap.
+   * (this prop takes affect only when the component is checked out to an older version)
+   */
+  setHeadAsParent?: boolean;
+};
+
 type Versions = { [version: string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
@@ -642,7 +654,7 @@ export default class Component extends BitObject {
     versionToAdd: string,
     lane?: Lane,
     previouslyUsedVersion?: string,
-    addToUpdateDependentsInLane = false
+    { addToUpdateDependentsInLane, setHeadAsParent }: AddVersionOpts = {}
   ): string {
     if (lane) {
       if (isTag(versionToAdd)) {
@@ -685,13 +697,14 @@ export default class Component extends BitObject {
       head.toString() !== versionToAdd &&
       !this.hasTag(versionToAdd) // happens with auto-snap
     ) {
-      // happens with auto-tag
       // if this is a tag and this tag exists, the same version was added before with a different hash.
       // adding the current head into the parent will result in a non-exist hash in the parent.
       // if this is a hash and it's the same hash as the current head, adding it as a parent
       // results in a parent and a version has the same hash.
       // @todo: fix it in a more elegant way
-      version.addAsOnlyParent(head);
+      const parent = previouslyUsedVersion ? this.getRef(previouslyUsedVersion) : null;
+      const parentToSet = setHeadAsParent ? head : parent;
+      version.addAsOnlyParent(parentToSet || head);
     }
     this.setHead(version.hash());
     if (isTag(versionToAdd)) {

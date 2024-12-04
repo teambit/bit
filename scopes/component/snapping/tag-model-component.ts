@@ -31,6 +31,7 @@ import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
+import { AddVersionOpts } from '@teambit/legacy/dist/scope/models/model-component';
 
 export type onTagIdTransformer = (id: ComponentID) => ComponentID | null;
 
@@ -202,6 +203,7 @@ export async function tagModelComponent({
   copyLogFromPreviousSnap = false,
   exitOnFirstFailedTask = false,
   updateDependentsOnLane = false, // on lane, adds it into updateDependents prop
+  setHeadAsParent, // kind of rebase. in case component is checked out to older version, ignore that version, use head
 }: {
   snapping: SnappingMain;
   components: Component[];
@@ -218,6 +220,7 @@ export async function tagModelComponent({
   packageManagerConfigRootDir?: string;
   exitOnFirstFailedTask?: boolean;
   updateDependentsOnLane?: boolean;
+  setHeadAsParent?: boolean;
 } & BasicTagParams): Promise<{
   taggedComponents: ConsumerComponent[];
   autoTaggedResults: AutoTagResult[];
@@ -328,15 +331,10 @@ export async function tagModelComponent({
     await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
     if (!build) emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
-    await addComponentsToScope(
-      snapping,
-      allComponentsToTag,
-      lane,
-      Boolean(build),
-      consumer,
-      tagDataPerComp,
-      updateDependentsOnLane
-    );
+    await addComponentsToScope(snapping, allComponentsToTag, lane, Boolean(build), consumer, tagDataPerComp, {
+      addToUpdateDependentsInLane: updateDependentsOnLane,
+      setHeadAsParent,
+    });
 
     if (workspace) {
       const modelComponents = await Promise.all(
@@ -503,14 +501,14 @@ async function addComponentsToScope(
   shouldValidateVersion: boolean,
   consumer?: Consumer,
   tagDataPerComp?: TagDataPerComp[],
-  updateDependentsOnLane?: boolean
+  addVersionOpts?: AddVersionOpts
 ) {
   await mapSeries(components, async (component) => {
     const results = await snapping._addCompToObjects({
       source: component,
       lane,
       shouldValidateVersion,
-      updateDependentsOnLane,
+      addVersionOpts,
     });
     if (!consumer) {
       const tagData = tagDataPerComp?.find((t) => t.componentId.isEqualWithoutVersion(component.id));
