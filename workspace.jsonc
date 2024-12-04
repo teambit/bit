@@ -448,6 +448,7 @@
         "p-limit": "3.1.0",
         "p-locate": "5.0.0",
         "parse-package-name": "0.1.0",
+        "path-browserify": "^1.0.1",
         "path-to-regexp": "6.2.0",
         "penpal": "6.2.2",
         "pino-pretty": "9.1.1",

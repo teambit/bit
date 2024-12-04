@@ -15,6 +15,7 @@ import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
+import path from 'path-browserify';
 import { TreeNode } from '@teambit/design.ui.tree';
 import {
   useComponentArtifactFileContent,
@@ -35,6 +36,75 @@ export type CodePageProps = {
   codeViewClassName?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
+const extractNameAndExtension = (filename: string) => {
+  const match = filename.match(/^(.*?)(\.[^.]+)?$/);
+  return [match?.[1] || '', match?.[2] || ''];
+};
+
+const resolveFilePath = (
+  urlParams: { file?: string },
+  fileTree: string[],
+  mainFile: string,
+  fileParam: { current?: string; prev?: string },
+  loadingCode: boolean
+) => {
+  if (loadingCode) return undefined;
+  if (!urlParams.file) return mainFile;
+  if (fileTree.includes(urlParams.file)) return urlParams.file;
+
+  const [currentBase] = extractNameAndExtension(fileParam.current || '');
+  const mainFileExt = extractNameAndExtension(mainFile)[1];
+  const [, prevExt] = fileParam.prev ? extractNameAndExtension(fileParam.prev) : [null, null];
+
+  const matchingFiles = fileTree.filter((file) => {
+    const [fileBase] = extractNameAndExtension(file);
+    return fileBase === currentBase || fileBase === fileParam.current;
+  });
+
+  if (matchingFiles.length) return matchingFiles[0];
+
+  const preferredExt = prevExt || mainFileExt;
+  if (preferredExt) {
+    const exactExtensionMatch = matchingFiles.find((file) => {
+      const [, fileExt] = extractNameAndExtension(file);
+      return fileExt === preferredExt;
+    });
+    if (exactExtensionMatch) return exactExtensionMatch;
+  }
+
+  const indexFiles = fileTree.filter((file) => {
+    const normalizedPath = path.normalize(urlParams.file || '');
+    return file.startsWith(`${normalizedPath}/index.`);
+  });
+
+  if (indexFiles.length > 0) {
+    if (preferredExt) {
+      const indexWithPreferredExt = indexFiles.find((file) => {
+        const [, fileExt] = extractNameAndExtension(file);
+        return fileExt === preferredExt;
+      });
+      if (indexWithPreferredExt) return indexWithPreferredExt;
+    }
+    return indexFiles[0];
+  }
+
+  if (urlParams.file && (urlParams.file.startsWith('./') || urlParams.file.startsWith('../'))) {
+    const current = fileTree.find((file) => file.endsWith(urlParams.file || ''));
+    if (current) return current;
+
+    const matchWithExt = fileTree.find(
+      (file) =>
+        file.endsWith(`${urlParams.file}.ts`) ||
+        file.endsWith(`${urlParams.file}.js`) ||
+        file.endsWith(`${urlParams.file}/index.ts`) ||
+        file.endsWith(`${urlParams.file}/index.js`)
+    );
+    if (matchWithExt) return matchWithExt;
+  }
+
+  return mainFile;
+};
+
 export function CodePage({ className, fileIconSlot, host, codeViewClassName }: CodePageProps) {
   const urlParams = useCodeParams();
   const [searchParams] = useSearchParams();
@@ -53,43 +123,8 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
 
   const { mainFile, fileTree = [], dependencies, devFiles, loading: loadingCode } = useCode(component.id);
   const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString());
-  const currentFile = loadingCode
-    ? undefined
-    : (() => {
-        if (urlParams.file && fileTree.includes(urlParams.file)) {
-          return urlParams.file;
-        }
-        if (!urlParams.file) return mainFile;
 
-        const extractNameAndExtension = (filename) => {
-          const match = filename.match(/^(.*?)(\.[^.]+)?$/);
-          return [match[1], match[2]];
-        };
-
-        const [currentBase] = extractNameAndExtension(fileParam.current || '');
-        const mainFileExt = extractNameAndExtension(mainFile)[1];
-        const [, prevExt] = fileParam.prev ? extractNameAndExtension(fileParam.prev) : [null, null];
-
-        const matchingFiles = fileTree.filter((file) => {
-          const [fileBase] = extractNameAndExtension(file);
-          return fileBase === currentBase || fileBase === fileParam.current;
-        });
-
-        if (matchingFiles.length === 1) {
-          return matchingFiles[0];
-        }
-
-        const preferredExt = prevExt || mainFileExt;
-        if (preferredExt) {
-          const exactExtensionMatch = matchingFiles.find((file) => {
-            const [, fileExt] = extractNameAndExtension(file);
-            return fileExt === preferredExt;
-          });
-          if (exactExtensionMatch) return exactExtensionMatch;
-        }
-
-        return matchingFiles[0] || mainFile;
-      })();
+  const currentFile = resolveFilePath(urlParams, fileTree, mainFile, fileParam, loadingCode);
 
   const currentArtifact = getArtifactFileDetailsFromUrl(artifacts, currentFile);
   const currentArtifactFile = currentArtifact?.artifactFile;
@@ -131,7 +166,7 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
   );
 
   const sortedDeps = useMemo(() => {
-    // need to create a new instance of dependecies because we cant mutate the original array
+    // need to create a new instance of dependencies because we cant mutate the original array
     return [...(dependencies ?? [])].sort((a, b) => {
       return (a.packageName || a.id).localeCompare(b.packageName || b.id);
     });
