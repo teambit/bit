@@ -1,7 +1,7 @@
 import { Graph } from '@teambit/graph.cleargraph';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentID } from '@teambit/component-id';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { CompIdGraph } from '@teambit/graph';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import type { AspectDefinition } from '@teambit/aspect-loader';

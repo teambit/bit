@@ -12,9 +12,8 @@ import { fetchRemoteVersions } from '@teambit/legacy/dist/scope/scope-remotes';
 import { isBitIdMatchByWildcards } from '@teambit/legacy.utils';
 import { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
 import Component from '@teambit/legacy/dist/consumer/component';
-import { InvalidComponent } from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { InvalidComponent, ComponentLoadOptions } from '@teambit/legacy.consumer-component';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 
 export type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
 export type ListScopeResult = {

@@ -457,6 +457,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/config-merger"
     },
+    "consumer-component": {
+        "name": "consumer-component",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/consumer-component",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.33": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
+    },
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",

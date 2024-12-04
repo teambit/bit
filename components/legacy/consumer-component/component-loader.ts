@@ -3,19 +3,19 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import * as path from 'path';
 import { ComponentIssue } from '@teambit/component-issues';
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import { BIT_MAP } from '../../constants';
-import logger from '../../logger/logger';
-import { ModelComponent } from '../../scope/models';
+import { BIT_MAP } from '@teambit/legacy/dist/constants';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { getLastModifiedPathsTimestampMs } from '@teambit/toolbox.fs.last-modified';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import ComponentsPendingImport from '../exceptions/components-pending-import';
-import Component, { InvalidComponent } from '../component/consumer-component';
-import Consumer from '../consumer';
+import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
+import { Component, InvalidComponent } from './consumer-component';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { ComponentMap } from '@teambit/legacy.bit-map';
-import { VERSION_ZERO } from '../../scope/models/model-component';
+import { VERSION_ZERO } from '@teambit/legacy/dist/scope/models/model-component';
 import { loader } from '@teambit/legacy.loader';
 
 export type ComponentLoadOptions = {
@@ -46,7 +46,7 @@ export type DependencyLoaderOpts = {
 
 type LoadDepsFunc = (component: Component, opts: DependencyLoaderOpts) => Promise<any>;
 
-export default class ComponentLoader {
+export class ComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
   _shouldCheckForClearingDependenciesCache = true;
   consumer: Consumer;

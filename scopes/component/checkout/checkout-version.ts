@@ -4,7 +4,7 @@ import { ComponentID } from '@teambit/component-id';
 import Version from '@teambit/legacy/dist/scope/models/version';
 import { SourceFile, RemovePath, DataToPersist } from '@teambit/component.sources';
 import { pathNormalizeToLinux, PathOsBased } from '@teambit/legacy.utils';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
 import {

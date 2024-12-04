@@ -3,7 +3,7 @@ import { ComponentID } from '@teambit/component-id';
 import { isHash } from '@teambit/component-version';
 import pMap from 'p-map';
 import { BuildStatus } from '../../constants';
-import ConsumerComponent from '../../consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import logger from '../../logger/logger';
 import ComponentObjects from '../component-objects';
 import {
@@ -247,6 +247,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   async findOrAddComponent(consumerComponent: ConsumerComponent): Promise<ModelComponent> {
+    // @ts-ignore todo: remove after deleting teambit.legacy
     if (consumerComponent.modelComponent) return consumerComponent.modelComponent;
     const propsFromComp = this.getPropsFromConsumerComp(consumerComponent);
     const comp = ModelComponent.from(propsFromComp);

@@ -17,10 +17,13 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import type { ComponentMain, Component } from '@teambit/component';
 import type { VariantsMain } from '@teambit/variants';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentConfigLoadOptions } from '@teambit/legacy/dist/consumer/config';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import LegacyComponentLoader, { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
+import {
+  ComponentLoadOptions,
+  ComponentLoader as LegacyComponentLoader,
+  ConsumerComponent,
+} from '@teambit/legacy.consumer-component';
 import { ComponentID } from '@teambit/component-id';
 import { EXT_NAME } from './constants';
 import { OnComponentAdd, OnComponentChange, OnComponentRemove, OnComponentLoad } from './on-component-events';

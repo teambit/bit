@@ -9,7 +9,7 @@ import R from 'ramda';
 import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { compact, flatten, partition, uniq } from 'lodash';
 import { Scope } from '..';
-import ConsumerComponent from '../../consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import ComponentVersion from '../component-version';

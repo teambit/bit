@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ArtifactVinyl, ArtifactFiles, ArtifactObject } from '@teambit/component.sources';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';

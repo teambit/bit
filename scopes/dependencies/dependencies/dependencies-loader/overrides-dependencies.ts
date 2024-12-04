@@ -4,7 +4,7 @@ import {
   MANUALLY_REMOVE_DEPENDENCY,
 } from '@teambit/legacy/dist/constants';
 import logger from '@teambit/legacy/dist/logger/logger';
-import Component, { ManuallyChangedDependencies } from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent as Component, ManuallyChangedDependencies } from '@teambit/legacy.consumer-component';
 import { FileType } from './auto-detect-deps';
 
 export default class OverridesDependencies {

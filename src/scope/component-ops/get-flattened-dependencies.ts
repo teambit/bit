@@ -5,11 +5,10 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
 import R from 'ramda';
 import { Scope } from '..';
-import Component from '../../consumer/component/consumer-component';
+import { ConsumerComponent as Component, Dependencies } from '@teambit/legacy.consumer-component';
 import logger from '../../logger/logger';
 import VersionDependencies from '../version-dependencies';
 import { Lane } from '../models';
-import { Dependencies } from '../../consumer/component/dependencies';
 
 export class FlattenedDependenciesGetter {
   private dependenciesGraph: GraphLib;

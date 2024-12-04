@@ -1,12 +1,10 @@
 import { ComponentID } from '@teambit/component-id';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
+import { Dependency, ConsumerComponent, CURRENT_SCHEMA } from '@teambit/legacy.consumer-component';
 import { SourceFile } from '@teambit/component.sources';
 import { ScopeMain } from '@teambit/scope';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { Component } from '@teambit/component';
-import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/component-schema';
 import { DependenciesMain } from '@teambit/dependencies';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { FileData } from './snap-from-scope.cmd';

@@ -6,7 +6,7 @@ import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { BuilderAspect } from '@teambit/builder';
 import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import {
   DependencyResolverAspect,
   DependencyList,

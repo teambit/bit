@@ -31,7 +31,7 @@ import { loadConsumer } from '@teambit/legacy/dist/consumer';
 import { getWorkspaceInfo, WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { BitError } from '@teambit/bit-error';
-import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
+import { ComponentLoader } from '@teambit/legacy.consumer-component';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';

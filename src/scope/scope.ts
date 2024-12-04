@@ -24,7 +24,7 @@ import {
   SCOPE_JSON,
   PENDING_OBJECTS_DIR,
 } from '../constants';
-import Component from '../consumer/component/consumer-component';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { ExtensionDataEntry } from '../consumer/config';
 import Consumer from '../consumer/consumer';
 import logger from '../logger/logger';

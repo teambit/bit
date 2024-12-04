@@ -33,7 +33,7 @@ import {
   PACKAGE_JSON,
   CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR,
 } from '@teambit/legacy/dist/constants';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import {
   PackageJsonFile,
   ArtifactFiles,

@@ -35,8 +35,12 @@ import {
 } from '@teambit/legacy.utils';
 import { BitMap, NextVersion } from '@teambit/legacy.bit-map';
 import Component from './component';
-import ComponentLoader, { ComponentLoadOptions, LoadManyResult } from './component/component-loader';
-import { Dependencies } from './component/dependencies';
+import {
+  Dependencies,
+  ComponentLoader,
+  ComponentLoadOptions,
+  LoadManyResult,
+} from '@teambit/legacy.consumer-component';
 import { PackageJsonFile } from '@teambit/component.sources';
 import { ILegacyWorkspaceConfig } from './config';
 import WorkspaceConfig from './config/workspace-config';
@@ -94,6 +98,7 @@ export default class Consumer {
     this.scope = scope;
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
+    // @ts-ignore todo: remove after deleting teambit.legacy
     this.componentLoader = ComponentLoader.getInstance(this);
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }

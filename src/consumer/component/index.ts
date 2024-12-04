@@ -1,3 +1,3 @@
-import ConsumerComponent from './consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 
 export default ConsumerComponent;

@@ -7,7 +7,7 @@ import { ScopeAspect, ScopeMain, ComponentNotFound } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Component, ComponentID } from '@teambit/component';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
 import { ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';

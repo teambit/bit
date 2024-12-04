@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import path from 'path';
 import { uniq } from 'lodash';
 import { Extensions } from '../../src/constants';
-import { SchemaName } from '../../src/consumer/component/component-schema';
+import { SchemaName } from '@teambit/legacy.consumer-component';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));

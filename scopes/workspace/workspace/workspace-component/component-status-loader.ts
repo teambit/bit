@@ -7,7 +7,7 @@ import { LATEST } from '@teambit/legacy/dist/constants';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
-import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
+import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 import ComponentOutOfSync from '@teambit/legacy/dist/consumer/exceptions/component-out-of-sync';
 import { Workspace } from '..';
 

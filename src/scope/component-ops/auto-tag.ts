@@ -3,8 +3,7 @@ import semver from 'semver';
 import { ComponentIdList } from '@teambit/component-id';
 import { isTag } from '@teambit/component-version';
 import { Consumer } from '../../consumer';
-import Component from '../../consumer/component/consumer-component';
-import { Dependency } from '../../consumer/component/dependencies';
+import { Dependency, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 
 export async function getAutoTagPending(consumer: Consumer, changedComponents: ComponentIdList): Promise<Component[]> {
   const autoTagInfo = await getAutoTagInfo(consumer, changedComponents);

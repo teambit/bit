@@ -5,7 +5,7 @@ import { linkPkgsToRootComponents } from '@teambit/workspace.root-components';
 import { ComponentID } from '@teambit/component-id';
 import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy/dist/constants';
 import { BitMap } from '@teambit/legacy.bit-map';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile, DataToPersist, RemovePath, Symlink } from '@teambit/component.sources';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import logger from '@teambit/legacy/dist/logger/logger';

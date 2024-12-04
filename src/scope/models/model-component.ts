@@ -11,7 +11,7 @@ import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { BitId } from '@teambit/legacy-bit-id';
 import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '../../constants';
-import ConsumerComponent from '../../consumer/component';
+import { ConsumerComponent, SchemaName, Dependencies, Dependency } from '@teambit/legacy.consumer-component';
 import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import ValidationError from '../../error/validation-error';
@@ -42,11 +42,9 @@ import Source from './source';
 import Version from './version';
 import VersionHistory, { VersionParents } from './version-history';
 import { ObjectItem } from '../objects/object-list';
-import { SchemaName } from '../../consumer/component/component-schema';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { errorIsTypeOfMissingObject } from '../component-ops/scope-components-importer';
 import type Scope from '../scope';
-import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import { BitIdCompIdError } from '../exceptions/bit-id-comp-id-err';
 import { ExtensionDataList } from '../../consumer/config';
 import { getBindingPrefixByDefaultScope } from '../../consumer/config/component-config';
@@ -1065,6 +1063,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       // @ts-ignore
       license: scopeMeta ? License.deserialize(scopeMeta.license) : undefined, // todo: make sure we have license in case of local scope
       log,
+      // @ts-ignore todo: remove after deleting teambit.legacy
       overrides: ComponentOverrides.loadFromScope(version.overrides),
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,

@@ -17,7 +17,7 @@ import { RemoveAspect, RemoveMain, deleteComponentsFiles } from '@teambit/remove
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';

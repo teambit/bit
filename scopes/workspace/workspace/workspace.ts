@@ -56,7 +56,7 @@ import {
   CFG_USER_TOKEN_KEY,
 } from '@teambit/legacy/dist/constants';
 import path from 'path';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { SourceFile, DataToPersist, JsonVinyl } from '@teambit/component.sources';

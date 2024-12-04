@@ -8,7 +8,7 @@ import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy/dist/constant
 import logger from '@teambit/legacy/dist/logger/logger';
 import { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { JsonVinyl } from './json-vinyl';
 import { cloneDeep, isEmpty } from 'lodash';
 

@@ -3,7 +3,7 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { flatten, partition } from 'lodash';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Component, ComponentID } from '@teambit/component';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ComponentIdList } from '@teambit/component-id';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';

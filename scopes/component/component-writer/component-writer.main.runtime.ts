@@ -10,7 +10,7 @@ import { uniq } from 'lodash';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 import { MoverAspect, MoverMain } from '@teambit/mover';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import {
   isDir,
   isDirEmptySync,

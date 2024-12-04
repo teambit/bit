@@ -13,7 +13,7 @@ import fs from 'fs-extra';
 import { MainRuntime } from '@teambit/cli';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
 import { ConfigAspect, ConfigMain } from '@teambit/config';

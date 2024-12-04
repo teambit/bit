@@ -2,7 +2,7 @@ import { Component, ComponentFS, ComponentID, Config, Snap, State, Tag, TagMap }
 import pMapSeries from 'p-map-series';
 import { Logger } from '@teambit/logger';
 import { SemVer } from 'semver';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { VERSION_ZERO } from '@teambit/legacy/dist/scope/models/model-component';
@@ -197,9 +197,9 @@ export class ScopeComponentLoader {
   private async createStateFromVersion(
     id: ComponentID,
     version: Version,
-    consumerComponent?: ConsumerComponent
+    consumerComponentOptional?: ConsumerComponent
   ): Promise<State> {
-    consumerComponent = consumerComponent || (await this.scope.legacyScope.getConsumerComponent(id));
+    const consumerComponent = consumerComponentOptional || (await this.scope.legacyScope.getConsumerComponent(id));
     const state = new State(
       // We use here the consumerComponent.extensions instead of version.extensions
       // because as part of the conversion to consumer component the artifacts are initialized as Artifact instances

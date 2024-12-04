@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { ComponentMain } from '@teambit/component';
 import { compact } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
-import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
+import { Dependency, Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
@@ -46,13 +46,13 @@ export class ComponentDependencyFactory implements DependencyFactory {
   }
 
   async fromLegacyComponent(legacyComponent: LegacyComponent): Promise<DependencyList> {
-    const runtimeDeps = await mapSeries(legacyComponent.dependencies.get(), (dep) =>
+    const runtimeDeps = await mapSeries(legacyComponent.dependencies.get(), (dep: Dependency) =>
       this.transformLegacyComponentDepToSerializedDependency(dep, 'runtime')
     );
-    const devDeps = await mapSeries(legacyComponent.devDependencies.get(), (dep) =>
+    const devDeps = await mapSeries(legacyComponent.devDependencies.get(), (dep: Dependency) =>
       this.transformLegacyComponentDepToSerializedDependency(dep, 'dev')
     );
-    const peerDeps = await mapSeries(legacyComponent.peerDependencies.get(), (dep) =>
+    const peerDeps = await mapSeries(legacyComponent.peerDependencies.get(), (dep: Dependency) =>
       this.transformLegacyComponentDepToSerializedDependency(dep, 'peer')
     );
     const extensionDeps = await mapSeries(legacyComponent.extensions, (extension) =>

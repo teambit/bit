@@ -4,7 +4,7 @@ import ComponentVersion from './component-version';
 import { DependenciesNotFound } from './exceptions/dependencies-not-found';
 import { Version } from './models';
 import Repository from './objects/repository';
-import ConsumerComponent from '../consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 
 export default class VersionDependencies {
   constructor(

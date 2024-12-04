@@ -2,7 +2,7 @@ import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import { Component, ComponentID } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { compact } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Ref } from '@teambit/legacy/dist/scope/objects';

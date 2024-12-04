@@ -6,31 +6,40 @@ import R from 'ramda';
 import { IssuesList } from '@teambit/component-issues';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
-import { getCloudDomain, BIT_WORKSPACE_TMP_DIRNAME, BuildStatus, DEFAULT_LANGUAGE, Extensions } from '../../constants';
+import {
+  getCloudDomain,
+  BIT_WORKSPACE_TMP_DIRNAME,
+  BuildStatus,
+  DEFAULT_LANGUAGE,
+  Extensions,
+} from '@teambit/legacy/dist/constants';
 import { Doclet, parser as docsParser } from '@teambit/semantics.doc-parser';
-import logger from '../../logger/logger';
-import { ScopeListItem } from '../../scope/models/model-component';
-import { type DependenciesGraph } from '../../scope/models/dependencies-graph';
-import Version, { DepEdge, Log } from '../../scope/models/version';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { ScopeListItem } from '@teambit/legacy/dist/scope/models/model-component';
+import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
+import Version, { DepEdge, Log } from '@teambit/legacy/dist/scope/models/version';
 import { pathNormalizeToLinux, PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { ComponentMap } from '@teambit/legacy.bit-map';
 import { IgnoredDirectory } from './exceptions/ignored-directory';
-import ComponentsPendingImport from '../exceptions/components-pending-import';
+import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
 import { Dist, License, SourceFile, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
-import ComponentConfig, { ComponentConfigLoadOptions, ILegacyWorkspaceConfig } from '../config';
-import ComponentOverrides from '../config/component-overrides';
-import { ExtensionDataList } from '../config/extension-data';
-import Consumer from '../consumer';
-import ComponentOutOfSync from '../exceptions/component-out-of-sync';
+import ComponentConfig, {
+  ComponentConfigLoadOptions,
+  ILegacyWorkspaceConfig,
+} from '@teambit/legacy/dist/consumer/config';
+import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import ComponentOutOfSync from '@teambit/legacy/dist/consumer/exceptions/component-out-of-sync';
 import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';
-import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
+import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 import MainFileRemoved from './exceptions/main-file-removed';
-import { ModelComponent } from '../../scope/models';
+import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { ComponentLoadOptions } from './component-loader';
-import { getBindingPrefixByDefaultScope } from '../config/component-config';
+import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 
@@ -78,7 +87,7 @@ export type ComponentProps = {
   buildStatus?: BuildStatus;
 };
 
-export default class Component {
+export class Component {
   static registerOnComponentConfigLoading(extId, func: (id, loadOpts: ComponentConfigLoadOptions) => any) {
     ComponentConfig.registerOnComponentConfigLoading(extId, func);
   }

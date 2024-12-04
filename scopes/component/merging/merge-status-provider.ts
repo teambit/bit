@@ -6,7 +6,7 @@ import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-div
 import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ImporterMain } from '@teambit/importer';
 import { Logger } from '@teambit/logger';
 import { compact } from 'lodash';

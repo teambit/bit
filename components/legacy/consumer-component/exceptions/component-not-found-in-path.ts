@@ -1,7 +1,7 @@
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
 
-export default class ComponentNotFoundInPath extends BitError {
+export class ComponentNotFoundInPath extends BitError {
   path: string;
   code: number;
 

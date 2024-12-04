@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Command, CommandOptions } from '@teambit/cli';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import {
   DEFAULT_BIT_RELEASE_TYPE,
   COMPONENT_PATTERN_HELP,

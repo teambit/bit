@@ -1,5 +1,5 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import ConsumerComponent from '../consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import ModelComponent from './models/model-component';
 import Version from './models/version';
 import Repository from './objects/repository';

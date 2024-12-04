@@ -9,7 +9,7 @@ import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
 import { ComponentID } from '@teambit/component';
 import { CLIAspect } from '@teambit/cli';
 import { NodeAspect } from '@teambit/node';
-import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
+import { ComponentLoader } from '@teambit/legacy.consumer-component';
 import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';

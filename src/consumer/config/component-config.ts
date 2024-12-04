@@ -3,11 +3,10 @@ import { pickBy } from 'lodash';
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
 import logger from '../../logger/logger';
-import Component from '../component/consumer-component';
+import { ConsumerComponent as Component, ComponentLoadOptions } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile } from '@teambit/component.sources';
 import AbstractConfig from './abstract-config';
 import { ExtensionDataList } from './extension-data';
-import { ComponentLoadOptions } from '../component/component-loader';
 
 export type ComponentConfigLoadOptions = Pick<ComponentLoadOptions, 'loadExtensions' | 'originatedFromHarmony'>;
 

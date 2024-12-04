@@ -1,7 +1,7 @@
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { DepEdgeType } from '@teambit/graph';
 import { ScopeMain } from '@teambit/scope';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DepEdge } from '@teambit/legacy/dist/scope/models/version';

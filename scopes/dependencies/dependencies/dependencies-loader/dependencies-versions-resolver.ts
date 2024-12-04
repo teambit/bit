@@ -3,12 +3,10 @@ import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { Workspace } from '@teambit/workspace';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { isEmpty } from 'lodash';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { Dependency, Dependencies, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import Dependencies from '@teambit/legacy/dist/consumer/component/dependencies/dependencies';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
-import Dependency from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
 import OverridesDependencies from './overrides-dependencies';
 import { DebugComponentsDependency, getValidVersion } from './auto-detect-deps';
 

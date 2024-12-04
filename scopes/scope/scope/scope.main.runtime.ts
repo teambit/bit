@@ -40,7 +40,7 @@ import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-di
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
 import { remove, FETCH_OPTIONS, ExternalActions } from '@teambit/legacy.scope-api';
 import { BitError } from '@teambit/bit-error';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
 import { BitId } from '@teambit/legacy-bit-id';

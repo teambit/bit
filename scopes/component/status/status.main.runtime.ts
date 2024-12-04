@@ -7,7 +7,7 @@ import { LanesAspect, LanesMain } from '@teambit/lanes';
 import { ComponentID } from '@teambit/component-id';
 import { Component, InvalidComponent } from '@teambit/component';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
