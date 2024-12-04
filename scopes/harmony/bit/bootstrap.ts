@@ -25,6 +25,9 @@ const originalEmit = process.emit;
 // @ts-expect-error - TS complains about the return type of originalEmit.apply
 process.emit = function (name, data) {
   // --------------------------------------------
+
+  // 1. avoid punycode deprecation warning
+  //
   // this fix is based on yarn fix for the similar issue, see code here:
   // https://github.com/yarnpkg/berry/blob/2cf0a8fe3e4d4bd7d4d344245d24a85a45d4c5c9/packages/yarnpkg-pnp/sources/loader/applyPatch.ts#L414-L435
   // ignore punycode deprecation warning
@@ -42,12 +45,21 @@ process.emit = function (name, data) {
   // but we don't want to override it automatically for all the users
   // there are many other packages (like webpack, eslint, etc) that are using this uri-js package
   // so if we won't ignore it, all users will get this warning
+  //
+  // 2. ignore util._extend deprecation warning
+  //
+  // this warning is coming from the http-proxy package
+  // see: https://github.com/http-party/node-http-proxy/pull/1666
   if (
-    name === `warning` &&
-    typeof data === `object` &&
-    ((data.name === `DeprecationWarning` && data.message.includes(`punycode`)) || data.code === `DEP0040`)
+    // filter out the warning
+    (name === `warning` &&
+      typeof data === `object` &&
+      ((data.name === `DeprecationWarning` && data.message.includes(`punycode`)) || data.code === `DEP0040`)) ||
+    (data.name === `DeprecationWarning` && data.message.includes(`util._extend`)) ||
+    data.code === `DEP0060`
   )
     return false;
+
   // --------------------------------------------
 
   // eslint-disable-next-line prefer-rest-params
