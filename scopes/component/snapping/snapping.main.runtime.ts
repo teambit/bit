@@ -63,6 +63,7 @@ import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
+import { AddVersionOpts } from '@teambit/legacy/dist/scope/models/model-component';
 
 export type PackageIntegritiesByPublishedPackages = Map<string, string | undefined>;
 
@@ -350,6 +351,7 @@ if you're willing to lose the history from the head to the specified version, us
       persist: true,
       ids: componentIds,
       message: params.message as string,
+      setHeadAsParent: params.ignoreNewestVersion,
     });
 
     const { taggedComponents, publishedPackages } = results;
@@ -959,17 +961,17 @@ another option, in case this dependency is not in main yet is to remove all refe
     source,
     lane,
     shouldValidateVersion = false,
-    updateDependentsOnLane = false,
+    addVersionOpts,
   }: {
     source: ConsumerComponent;
     lane?: Lane;
     shouldValidateVersion?: boolean;
-    updateDependentsOnLane?: boolean;
+    addVersionOpts?: AddVersionOpts;
   }): Promise<{
     component: ModelComponent;
     version: Version;
   }> {
-    const { component, version } = await this._addCompFromScopeToObjects(source, lane, updateDependentsOnLane);
+    const { component, version } = await this._addCompFromScopeToObjects(source, lane, addVersionOpts);
     const unmergedComponent = this.scope.legacyScope.objects.unmergedComponents.getEntry(component.toComponentId());
     if (unmergedComponent) {
       if (unmergedComponent.unrelated) {
@@ -1008,7 +1010,7 @@ another option, in case this dependency is not in main yet is to remove all refe
   async _addCompFromScopeToObjects(
     source: ConsumerComponent,
     lane?: Lane,
-    updateDependentsOnLane = false
+    addVersionOpts?: AddVersionOpts
   ): Promise<{
     component: ModelComponent;
     version: Version;
@@ -1029,7 +1031,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
     if (dependenciesGraph) this.objectsRepo.add(dependenciesGraph);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, lane, source.previouslyUsedVersion, updateDependentsOnLane);
+    component.addVersion(version, source.version, lane, source.previouslyUsedVersion, addVersionOpts);
     objectRepo.add(component);
     if (lane) objectRepo.add(lane);
     files.forEach((file) => objectRepo.add(file.file));
