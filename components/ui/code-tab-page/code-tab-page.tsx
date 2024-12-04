@@ -66,16 +66,6 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
   const [searchParams] = useSearchParams();
   const scopeFromQueryParams = searchParams.get('scope');
   const component = useContext(ComponentContext);
-  // const [fileParam, setFileParam] = useState<{
-  //   current?: string;
-  //   prev?: string;
-  // }>({ current: urlParams.file });
-
-  // React.useEffect(() => {
-  //   if (urlParams.file !== fileParam.current) {
-  //     setFileParam((prev) => ({ current: urlParams.file, prev: prev.current }));
-  //   }
-  // }, [urlParams.file, fileParam.current]);
 
   const { mainFile, fileTree = [], dependencies, devFiles, loading: loadingCode } = useCode(component.id);
   const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString());
