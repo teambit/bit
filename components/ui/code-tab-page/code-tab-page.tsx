@@ -15,6 +15,7 @@ import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
+import path from 'path-browserify';
 import { TreeNode } from '@teambit/design.ui.tree';
 import {
   useComponentArtifactFileContent,
@@ -35,61 +36,41 @@ export type CodePageProps = {
   codeViewClassName?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
+const resolveFilePath = (
+  requestedPath: string | undefined,
+  fileTree: string[],
+  mainFile: string,
+  loadingCode: boolean
+) => {
+  if (loadingCode) return undefined;
+  if (!requestedPath) return mainFile;
+
+  const normalized = path.normalize(requestedPath);
+
+  if (fileTree.includes(normalized)) return normalized;
+
+  const possiblePaths = [
+    normalized,
+    `${normalized}.ts`,
+    `${normalized}.js`,
+    path.join(normalized, 'index.ts'),
+    path.join(normalized, 'index.js'),
+  ];
+
+  const match = fileTree.find((file) => possiblePaths.includes(file));
+  return match || mainFile;
+};
+
 export function CodePage({ className, fileIconSlot, host, codeViewClassName }: CodePageProps) {
   const urlParams = useCodeParams();
   const [searchParams] = useSearchParams();
   const scopeFromQueryParams = searchParams.get('scope');
   const component = useContext(ComponentContext);
-  const [fileParam, setFileParam] = useState<{
-    current?: string;
-    prev?: string;
-  }>({ current: urlParams.file });
-
-  React.useEffect(() => {
-    if (urlParams.file !== fileParam.current) {
-      setFileParam((prev) => ({ current: urlParams.file, prev: prev.current }));
-    }
-  }, [urlParams.file, fileParam.current]);
 
   const { mainFile, fileTree = [], dependencies, devFiles, loading: loadingCode } = useCode(component.id);
   const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString());
-  const currentFile = loadingCode
-    ? undefined
-    : (() => {
-        if (urlParams.file && fileTree.includes(urlParams.file)) {
-          return urlParams.file;
-        }
-        if (!urlParams.file) return mainFile;
 
-        const extractNameAndExtension = (filename) => {
-          const match = filename.match(/^(.*?)(\.[^.]+)?$/);
-          return [match[1], match[2]];
-        };
-
-        const [currentBase] = extractNameAndExtension(fileParam.current || '');
-        const mainFileExt = extractNameAndExtension(mainFile)[1];
-        const [, prevExt] = fileParam.prev ? extractNameAndExtension(fileParam.prev) : [null, null];
-
-        const matchingFiles = fileTree.filter((file) => {
-          const [fileBase] = extractNameAndExtension(file);
-          return fileBase === currentBase || fileBase === fileParam.current;
-        });
-
-        if (matchingFiles.length === 1) {
-          return matchingFiles[0];
-        }
-
-        const preferredExt = prevExt || mainFileExt;
-        if (preferredExt) {
-          const exactExtensionMatch = matchingFiles.find((file) => {
-            const [, fileExt] = extractNameAndExtension(file);
-            return fileExt === preferredExt;
-          });
-          if (exactExtensionMatch) return exactExtensionMatch;
-        }
-
-        return matchingFiles[0] || mainFile;
-      })();
+  const currentFile = resolveFilePath(urlParams.file, fileTree, mainFile, loadingCode);
 
   const currentArtifact = getArtifactFileDetailsFromUrl(artifacts, currentFile);
   const currentArtifactFile = currentArtifact?.artifactFile;
@@ -131,7 +112,7 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
   );
 
   const sortedDeps = useMemo(() => {
-    // need to create a new instance of dependecies because we cant mutate the original array
+    // need to create a new instance of dependencies because we cant mutate the original array
     return [...(dependencies ?? [])].sort((a, b) => {
       return (a.packageName || a.id).localeCompare(b.packageName || b.id);
     });
