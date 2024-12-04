@@ -2,7 +2,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { PushOptions, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import Component from '../../consumer/component';
 import { ListScopeResult } from '@teambit/legacy.component-list';
-import DependencyGraph from '../graph/scope-graph';
+import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import { LaneData } from '../lanes/lanes';
 import { ComponentLog } from '../models/model-component';
 import { ObjectItemsStream, ObjectList } from '../objects/object-list';

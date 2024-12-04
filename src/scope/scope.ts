@@ -33,7 +33,7 @@ import RemoveModelComponents from './component-ops/remove-model-components';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
 import ComponentVersion from './component-version';
 import { ComponentNotFound, ScopeNotFound } from './exceptions';
-import DependencyGraph from './graph/scope-graph';
+import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import Lanes from './lanes/lanes';
 import { ModelComponent, Symlink, Version } from './models';
 import Lane from './models/lane';
@@ -117,8 +117,6 @@ export default class Scope {
   scopeImporter: ScopeComponentsImporter;
   sources: SourcesRepository;
   objects: Repository;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  _dependencyGraph: DependencyGraph; // cache DependencyGraph instance
   lanes: Lanes;
   /**
    * important! never use this function directly, even inside this class. Only use getCurrentLaneId().
@@ -171,13 +169,6 @@ export default class Scope {
   isExported(id: ComponentID): boolean {
     if (!this.notExportedIdsFunc) return true; // there is no workspace, it must be exported
     return id.hasScope() && !this.notExportedIds.hasWithoutVersion(id);
-  }
-
-  async getDependencyGraph(): Promise<DependencyGraph> {
-    if (!this._dependencyGraph) {
-      this._dependencyGraph = await DependencyGraph.loadAllVersions(this);
-    }
-    return this._dependencyGraph;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -496,6 +487,7 @@ once done, to continue working, please run "bit cc"`
     returnResultsWithVersion = false
   ): Promise<{ [key: string]: ComponentIdList }> {
     logger.debug(`scope.getDependentsBitIds, bitIds: ${bitIds.toString()}`);
+    // @ts-ignore todo: fix after deleting teambit.legacy
     const idsGraph = await DependencyGraph.buildIdsGraphWithAllVersions(this);
     logger.debug(`scope.getDependentsBitIds, idsGraph the graph was built successfully`);
     const dependencyGraph = new DependencyGraph(idsGraph);

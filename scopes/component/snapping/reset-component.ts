@@ -6,6 +6,7 @@ import { ComponentsList } from '@teambit/legacy.component-list';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { RemoveMain } from '@teambit/remove';
+import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 
 export type ResetResult = { id: ComponentID; versions: string[]; component?: ModelComponent };
 
@@ -34,7 +35,7 @@ export async function removeLocalVersion(
   const versionsToRemoveStr = component.switchHashesWithTagsIfExist(versionsToRemove);
 
   if (!force) {
-    const dependencyGraph = await scope.getDependencyGraph();
+    const dependencyGraph = await DependencyGraph.loadAllVersions(scope);
 
     versionsToRemoveStr.forEach((versionToRemove) => {
       const idWithVersion = component.toComponentId().changeVersion(versionToRemove);
@@ -78,7 +79,7 @@ export async function removeLocalVersionsForMultipleComponents(
   }
   // if only head is removed, there is risk of deleting dependencies version without their dependents.
   if (!force && head) {
-    const dependencyGraph = await scope.getDependencyGraph();
+    const dependencyGraph = await DependencyGraph.loadAllVersions(scope);
     const candidateComponentsIds = componentsToUntag.map((component) => {
       const bitId = component.toComponentId();
       const headRef = component.getHeadRegardlessOfLane();

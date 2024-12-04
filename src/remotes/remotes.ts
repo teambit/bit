@@ -7,7 +7,7 @@ import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import GlobalRemotes from '../global-config/global-remotes';
 import logger from '../logger/logger';
 import { ScopeNotFound } from '../scope/exceptions';
-import DependencyGraph from '../scope/graph/scope-graph';
+import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import Scope from '../scope/scope';
 import { prependBang } from '@teambit/legacy.utils';
 import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';

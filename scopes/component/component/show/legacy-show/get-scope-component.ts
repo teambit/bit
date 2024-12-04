@@ -4,7 +4,7 @@ import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import Component from '@teambit/legacy/dist/consumer/component';
 import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
 import { loadScope, Scope } from '@teambit/legacy/dist/scope';
-import { DependenciesInfo } from '@teambit/legacy/dist/scope/graph/scope-graph';
+import { DependenciesInfo } from '@teambit/legacy.dependency-graph';
 
 export async function getScopeComponent({
   id,
