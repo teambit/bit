@@ -36,73 +36,29 @@ export type CodePageProps = {
   codeViewClassName?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-const extractNameAndExtension = (filename: string) => {
-  const match = filename.match(/^(.*?)(\.[^.]+)?$/);
-  return [match?.[1] || '', match?.[2] || ''];
-};
-
 const resolveFilePath = (
-  urlParams: { file?: string },
+  requestedPath: string | undefined,
   fileTree: string[],
   mainFile: string,
-  fileParam: { current?: string; prev?: string },
   loadingCode: boolean
 ) => {
   if (loadingCode) return undefined;
-  if (!urlParams.file) return mainFile;
-  if (fileTree.includes(urlParams.file)) return urlParams.file;
+  if (!requestedPath) return mainFile;
 
-  const [currentBase] = extractNameAndExtension(fileParam.current || '');
-  const mainFileExt = extractNameAndExtension(mainFile)[1];
-  const [, prevExt] = fileParam.prev ? extractNameAndExtension(fileParam.prev) : [null, null];
+  const normalized = path.normalize(requestedPath);
 
-  const matchingFiles = fileTree.filter((file) => {
-    const [fileBase] = extractNameAndExtension(file);
-    return fileBase === currentBase || fileBase === fileParam.current;
-  });
+  if (fileTree.includes(normalized)) return normalized;
 
-  if (matchingFiles.length) return matchingFiles[0];
+  const possiblePaths = [
+    normalized,
+    `${normalized}.ts`,
+    `${normalized}.js`,
+    path.join(normalized, 'index.ts'),
+    path.join(normalized, 'index.js'),
+  ];
 
-  const preferredExt = prevExt || mainFileExt;
-  if (preferredExt) {
-    const exactExtensionMatch = matchingFiles.find((file) => {
-      const [, fileExt] = extractNameAndExtension(file);
-      return fileExt === preferredExt;
-    });
-    if (exactExtensionMatch) return exactExtensionMatch;
-  }
-
-  const indexFiles = fileTree.filter((file) => {
-    const normalizedPath = path.normalize(urlParams.file || '');
-    return file.startsWith(`${normalizedPath}/index.`);
-  });
-
-  if (indexFiles.length > 0) {
-    if (preferredExt) {
-      const indexWithPreferredExt = indexFiles.find((file) => {
-        const [, fileExt] = extractNameAndExtension(file);
-        return fileExt === preferredExt;
-      });
-      if (indexWithPreferredExt) return indexWithPreferredExt;
-    }
-    return indexFiles[0];
-  }
-
-  if (urlParams.file && (urlParams.file.startsWith('./') || urlParams.file.startsWith('../'))) {
-    const current = fileTree.find((file) => file.endsWith(urlParams.file || ''));
-    if (current) return current;
-
-    const matchWithExt = fileTree.find(
-      (file) =>
-        file.endsWith(`${urlParams.file}.ts`) ||
-        file.endsWith(`${urlParams.file}.js`) ||
-        file.endsWith(`${urlParams.file}/index.ts`) ||
-        file.endsWith(`${urlParams.file}/index.js`)
-    );
-    if (matchWithExt) return matchWithExt;
-  }
-
-  return mainFile;
+  const match = fileTree.find((file) => possiblePaths.includes(file));
+  return match || mainFile;
 };
 
 export function CodePage({ className, fileIconSlot, host, codeViewClassName }: CodePageProps) {
@@ -110,21 +66,21 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
   const [searchParams] = useSearchParams();
   const scopeFromQueryParams = searchParams.get('scope');
   const component = useContext(ComponentContext);
-  const [fileParam, setFileParam] = useState<{
-    current?: string;
-    prev?: string;
-  }>({ current: urlParams.file });
+  // const [fileParam, setFileParam] = useState<{
+  //   current?: string;
+  //   prev?: string;
+  // }>({ current: urlParams.file });
 
-  React.useEffect(() => {
-    if (urlParams.file !== fileParam.current) {
-      setFileParam((prev) => ({ current: urlParams.file, prev: prev.current }));
-    }
-  }, [urlParams.file, fileParam.current]);
+  // React.useEffect(() => {
+  //   if (urlParams.file !== fileParam.current) {
+  //     setFileParam((prev) => ({ current: urlParams.file, prev: prev.current }));
+  //   }
+  // }, [urlParams.file, fileParam.current]);
 
   const { mainFile, fileTree = [], dependencies, devFiles, loading: loadingCode } = useCode(component.id);
   const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString());
 
-  const currentFile = resolveFilePath(urlParams, fileTree, mainFile, fileParam, loadingCode);
+  const currentFile = resolveFilePath(urlParams.file, fileTree, mainFile, loadingCode);
 
   const currentArtifact = getArtifactFileDetailsFromUrl(artifacts, currentFile);
   const currentArtifactFile = currentArtifact?.artifactFile;
