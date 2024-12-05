@@ -786,13 +786,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/hooks/use-logout"
     },
-    "hooks/use-schema": {
-        "name": "hooks/use-schema",
-        "scope": "teambit.api-reference",
-        "version": "0.0.35",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/hooks/use-schema"
-    },
     "hooks/use-viewed-lane-from-url": {
         "name": "hooks/use-viewed-lane-from-url",
         "scope": "teambit.lanes",
