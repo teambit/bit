@@ -613,17 +613,10 @@
     },
     "extension-data": {
         "name": "extension-data",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.legacy",
+        "scope": "teambit.legacy",
+        "version": "0.0.1",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/extension-data",
-        "config": {
-            "teambit.node/envs/node-babel-mocha@0.0.10": {},
-            "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            }
-        }
+        "rootDir": "components/legacy/extension-data"
     },
     "forking": {
         "name": "forking",
