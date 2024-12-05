@@ -801,7 +801,7 @@ export class PreviewMain {
     return [...linkFiles, previewRuntime];
   }
 
-  private async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
+  async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
     const { rebuild, skipUiBuild } = this.ui.runtimeOptions;
 
     const [name, uiRoot] = this.getUi();
@@ -884,12 +884,12 @@ export class PreviewMain {
     return Promise.all(paths);
   }
 
+  /**
+   * @deprecated
+   * use `writePreviewEntry` instead
+   */
   async writePreviewRuntime(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
-    const [name, uiRoot] = this.getUi();
-    const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
-    const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
-    const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id);
-    return filePath;
+    return this.writePreviewEntry(context, aspectsIdsToNotFilterOut);
   }
 
   async resolveAspects(

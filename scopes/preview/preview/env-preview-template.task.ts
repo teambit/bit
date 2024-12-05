@@ -143,7 +143,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
     if (!capsule) throw new Error('no capsule found');
     // Passing here the env itself to make sure it's preview runtime will be part of the preview root file
     // that's needed to make sure the providers register there are running correctly
-    const previewRoot = await this.preview.writePreviewRuntime(context, [envComponent.id.toString()]);
+    const previewRoot = await this.preview.writePreviewEntry(context, [envComponent.id.toString()]);
     const entries = await this.generateEntries({
       envDef,
       splitComponentBundle: envPreviewConfig.splitComponentBundle ?? false,
