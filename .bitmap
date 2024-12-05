@@ -459,17 +459,10 @@
     },
     "consumer-component": {
         "name": "consumer-component",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.legacy",
+        "scope": "teambit.legacy",
+        "version": "0.0.1",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/consumer-component",
-        "config": {
-            "teambit.node/envs/node-babel-mocha@0.0.33": {},
-            "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            }
-        }
+        "rootDir": "components/legacy/consumer-component"
     },
     "content/cli-reference": {
         "name": "content/cli-reference",

@@ -1,10 +1,28 @@
 import { expect } from 'chai';
 import { ComponentID } from '@teambit/component-id';
 import R from 'ramda';
-
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import dependenciesFixture from '../../../../fixtures/dependencies-fixture.json';
 import { Dependencies } from './';
+
+const dependenciesFixture = [
+  {
+    id: '81j4te29-remote/utils/is-string@0.0.1',
+    relativePaths: [
+      {
+        sourceRelativePath: 'src/utils/index.js',
+        destinationRelativePath: 'src/utils/is-string.js',
+        importSpecifiers: [
+          {
+            mainFile: {
+              isDefault: false,
+              name: 'isString',
+            },
+          },
+        ],
+        importSource: 'utils',
+      },
+    ],
+  },
+];
 
 describe('Dependencies', () => {
   describe('validate()', () => {

@@ -35,7 +35,7 @@ import ComponentOutOfSync from '@teambit/legacy/dist/consumer/exceptions/compone
 import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';
-import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
+import { ComponentNotFoundInPath } from './exceptions/component-not-found-in-path';
 import MainFileRemoved from './exceptions/main-file-removed';
 import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { ComponentLoadOptions } from './component-loader';
@@ -130,7 +130,7 @@ export class Component {
   modelComponent?: ModelComponent; // populated when loadedFromFileSystem is true and it exists in the model
   issues: IssuesList;
   deprecated: boolean;
-  private removed?: boolean; // was it soft-removed. to get this data please use isRemoved() method.
+  protected removed?: boolean; // was it soft-removed. to get this data please use isRemoved() method.
   defaultScope: string | null;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _isModified: boolean;
@@ -510,7 +510,7 @@ export class Component {
   }): Promise<Component> {
     const workspaceConfig: ILegacyWorkspaceConfig = consumer.config;
     const modelComponent = await consumer.scope.getModelComponentIfExist(id);
-    const componentFromModel = await consumer.loadComponentFromModelIfExist(id);
+    const componentFromModel = (await consumer.loadComponentFromModelIfExist(id)) as Component | undefined;
     if (!componentFromModel && id._legacy.hasScope()) {
       const inScopeWithAnyVersion = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
       // if it's in scope with another version, the component will be synced in _handleOutOfSyncScenarios()
@@ -533,6 +533,7 @@ export class Component {
     // by default, imported components are not written with bit.json file.
     // use the component from the model to get their bit.json values
     if (componentFromModel) {
+      // @ts-ignore todo: remove after deleting teambit.legacy
       componentConfig.mergeWithComponentData(componentFromModel);
     }
 
@@ -552,6 +553,7 @@ export class Component {
     );
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
+    // @ts-ignore todo: remove after deleting teambit.legacy
     const docsP = _getDocsForFiles(files, consumer.componentFsCache);
     const docs = await Promise.all(docsP);
     const flattenedDocs = docs ? R.flatten(docs) : [];

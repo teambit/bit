@@ -129,6 +129,7 @@
     "@teambit/semantics.doc-parser": "~0.0.2",
     "@teambit/component.sources": "~0.0.1",
     "@teambit/bit.get-bit-version": "~0.0.1",
+    "@teambit/legacy.consumer-component": "~0.0.1",
     "@teambit/legacy.utils": "~0.0.2",
     "@teambit/legacy.bit-map": "~0.0.4",
     "@teambit/legacy.loader": "~0.0.1",
