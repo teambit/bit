@@ -16,7 +16,6 @@ import logger from '@teambit/legacy/dist/logger/logger';
 import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
-import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { OnTagOpts } from '@teambit/builder';
 import { DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
 import { Log } from '@teambit/legacy/dist/scope/models/version';
@@ -27,7 +26,7 @@ import {
 import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
-import { Workspace } from '@teambit/workspace';
+import { Workspace, AutoTagResult } from '@teambit/workspace';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 import { AddVersionOpts } from '@teambit/legacy/dist/scope/models/model-component';
@@ -248,7 +247,7 @@ export async function tagModelComponent({
   // them as dependencies.
   const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
   const autoTagDataWithLocalOnly =
-    skipAutoTag || !consumer ? [] : await getAutoTagInfo(consumer, ComponentIdList.fromArray(idsToTriggerAutoTag));
+    skipAutoTag || !consumer ? [] : await workspace.getAutoTagInfo(ComponentIdList.fromArray(idsToTriggerAutoTag));
   const localOnly = workspace?.listLocalOnly();
   const autoTagData = localOnly
     ? autoTagDataWithLocalOnly.filter((autoTagItem) => !localOnly.hasWithoutVersion(autoTagItem.component.id))

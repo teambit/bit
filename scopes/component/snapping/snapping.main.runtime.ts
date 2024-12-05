@@ -3,7 +3,7 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import fs from 'fs-extra';
 import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace, AutoTagResult } from '@teambit/workspace';
 import semver, { ReleaseType } from 'semver';
 import { compact, difference, uniq } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -40,7 +40,6 @@ import {
   HeadNotFound,
   ParentNotFound,
 } from '@teambit/legacy/dist/scope/exceptions';
-import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { DependenciesAspect, DependenciesMain } from '@teambit/dependencies';
 import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';
 import { SnapCmd } from './snap-cmd';

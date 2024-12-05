@@ -114,6 +114,7 @@ import {
   ComponentStatusLoader,
   ComponentStatusResult,
 } from './workspace-component/component-status-loader';
+import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
 
 export type EjectConfResult = {
   configPath: string;
@@ -359,14 +360,16 @@ export class Workspace implements ComponentFactory {
     return this.config.icon;
   }
 
+  async getAutoTagInfo(changedComponents: ComponentIdList) {
+    return getAutoTagInfo(this.consumer, changedComponents);
+  }
+
   async listAutoTagPendingComponentIds(): Promise<ComponentID[]> {
     const componentsList = new ComponentsList(this.consumer);
     const modifiedComponents = (await this.modified()).map((c) => c.id);
     const newComponents = (await componentsList.listNewComponents()) as ComponentIdList;
     if (!modifiedComponents || !modifiedComponents.length) return [];
-    const autoTagPending = await this.consumer.listComponentsForAutoTagging(
-      ComponentIdList.fromArray(modifiedComponents)
-    );
+    const autoTagPending = await getAutoTagPending(this.consumer, ComponentIdList.fromArray(modifiedComponents));
     const localOnly = this.listLocalOnly();
     const comps = autoTagPending
       .filter((autoTagComp) => !newComponents.has(autoTagComp.componentId))

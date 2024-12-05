@@ -18,7 +18,6 @@ import {
 } from '../constants';
 import logger from '../logger/logger';
 import { Scope } from '../scope';
-import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound, ScopeNotFound } from '../scope/exceptions';
 import { Lane, ModelComponent, Version } from '../scope/models';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
@@ -304,10 +303,6 @@ export default class Consumer {
     loadOpts?: ComponentLoadOptions
   ): Promise<LoadManyResult> {
     return this.componentLoader.loadMany(ids, throwOnFailure, loadOpts);
-  }
-
-  async listComponentsForAutoTagging(modifiedComponents: ComponentIdList): Promise<Component[]> {
-    return getAutoTagPending(this, modifiedComponents);
   }
 
   /**
