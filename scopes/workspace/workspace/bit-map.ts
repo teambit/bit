@@ -2,7 +2,7 @@ import { isEqual, merge } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import { BitMap as LegacyBitMap, ComponentMap, GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
 import { Consumer } from '@teambit/legacy/dist/consumer';
-import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
+import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import { EnvsAspect } from '@teambit/envs';

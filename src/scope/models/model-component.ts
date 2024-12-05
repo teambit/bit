@@ -48,7 +48,7 @@ import { errorIsTypeOfMissingObject } from '../component-ops/scope-components-im
 import type Scope from '../scope';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import { BitIdCompIdError } from '../exceptions/bit-id-comp-id-err';
-import { ExtensionDataList } from '../../consumer/config';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { getBindingPrefixByDefaultScope } from '../../consumer/config/component-config';
 
 type State = {

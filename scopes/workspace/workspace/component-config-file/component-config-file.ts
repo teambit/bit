@@ -1,13 +1,16 @@
 import { ComponentID, AspectList, AspectEntry, ResolveComponentIdFunc } from '@teambit/component';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
-import { ExtensionDataList, configEntryToDataEntry } from '@teambit/legacy.extension-data';
+import {
+  ExtensionDataList,
+  configEntryToDataEntry,
+  REMOVE_EXTENSION_SPECIAL_SIGN,
+} from '@teambit/legacy.extension-data';
 import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { JsonVinyl } from '@teambit/component.sources';
 import detectIndent from 'detect-indent';
 import detectNewline from 'detect-newline';
 import fs from 'fs-extra';
 import path from 'path';
-import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { merge } from 'lodash';
 import { AlreadyExistsError } from './exceptions';
 

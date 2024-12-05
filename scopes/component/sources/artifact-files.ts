@@ -8,7 +8,7 @@ import { Scope } from '@teambit/legacy/dist/scope';
 import { Lane, Source } from '@teambit/legacy/dist/scope/models';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { ArtifactVinyl } from './artifact';
 import { MissingObjects } from '@teambit/legacy/dist/scope/exceptions/missing-objects';
