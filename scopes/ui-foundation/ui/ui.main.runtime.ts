@@ -119,6 +119,11 @@ export type RuntimeOptions = {
    * skip build the UI before start
    */
   skipUiBuild?: boolean;
+
+  /**
+   * Show the internal urls of the dev servers
+   */
+  showInternalUrls?: boolean;
 };
 
 export class UiMain {
@@ -264,7 +269,7 @@ export class UiMain {
    */
   async createRuntime(runtimeOptions: RuntimeOptions) {
     this.runtimeOptions = runtimeOptions;
-    const { uiRootName, pattern, dev, port, rebuild, verbose, skipUiBuild } = this.runtimeOptions;
+    const { uiRootName, pattern, dev, port, rebuild, verbose, skipUiBuild, showInternalUrls } = this.runtimeOptions;
     // uiRootName to be deprecated
     const uiRootAspectIdOrName = uiRootName || runtimeOptions.uiRootAspectIdOrName;
     const maybeUiRoot = this.getUi(uiRootAspectIdOrName);
@@ -275,6 +280,7 @@ export class UiMain {
     const plugins = await this.initiatePlugins({
       verbose,
       pattern,
+      showInternalUrls,
     });
 
     if (this.componentExtension.isHost(uiRootAspectId)) this.componentExtension.setHostPriority(uiRootAspectId);
