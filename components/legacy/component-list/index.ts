@@ -1,1 +1,1 @@
-export { ComponentsList, DivergeDataPerId, ListScopeResult } from './components-list';
+export { ComponentsList, ListScopeResult } from './components-list';
