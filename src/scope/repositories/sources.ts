@@ -27,7 +27,7 @@ import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import { getDivergeData } from '../component-ops/get-diverge-data';
+import { getDivergeData } from '@teambit/component.snap-distance';
 
 export type ComponentTree = {
   component: ModelComponent;

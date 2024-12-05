@@ -47,7 +47,7 @@ import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-
 import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
 import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
-import { getDivergeData } from './component-ops/get-diverge-data';
+import { getDivergeData } from '@teambit/component.snap-distance';
 import { StagedSnaps } from './staged-snaps';
 import { collectGarbage } from './garbage-collector';
 import { type DependenciesGraph } from './models/dependencies-graph';

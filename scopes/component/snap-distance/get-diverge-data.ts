@@ -1,13 +1,13 @@
 import { difference } from 'lodash';
 import { Graph } from '@teambit/graph.cleargraph';
-import { VersionNotFoundOnFS } from '../exceptions';
-import { NoCommonSnap } from '../exceptions/no-common-snap';
-import { ModelComponent } from '../models';
-import { VersionParents, versionParentsToGraph } from '../models/version-history';
-import { Ref, Repository } from '../objects';
+import { VersionNotFoundOnFS } from '@teambit/legacy/dist/scope/exceptions';
+import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
+import { ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { VersionParents, versionParentsToGraph } from '@teambit/legacy/dist/scope/models/version-history';
+import { Ref, Repository } from '@teambit/legacy/dist/scope/objects';
 import { SnapsDistance } from './snaps-distance';
-import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
-import { UnmergedComponent } from '../lanes/unmerged-components';
+import { getAllVersionHashes, getAllVersionParents } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
+import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 
 /**
  * *** NEW WAY ***

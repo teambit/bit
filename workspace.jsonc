@@ -719,6 +719,9 @@
     "scopes/component/sources": {
       "teambit.pkg/pkg": {}
     },
+    "scopes/component/snap-distance": {
+      "teambit.pkg/pkg": {}
+    },
     "components/semantics/doc-parser": {
       "teambit.pkg/pkg": {}
     }

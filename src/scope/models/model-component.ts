@@ -19,8 +19,7 @@ import logger from '../../logger/logger';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import { getLatestVersion, validateVersion } from '@teambit/pkg.modules.semver-helper';
 import ComponentObjects from '../component-objects';
-import { SnapsDistance } from '../component-ops/snaps-distance';
-import { getDivergeData } from '../component-ops/get-diverge-data';
+import { SnapsDistance, getDivergeData } from '@teambit/component.snap-distance';
 import {
   getAllVersionParents,
   getAllVersionsInfo,

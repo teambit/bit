@@ -1628,6 +1628,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/sign"
     },
+    "snap-distance": {
+        "name": "snap-distance",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/snap-distance",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.33": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
+    },
     "snapping": {
         "name": "snapping",
         "scope": "teambit.component",
