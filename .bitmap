@@ -611,6 +611,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/express"
     },
+    "extension-data": {
+        "name": "extension-data",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/extension-data",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.10": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
+    },
     "forking": {
         "name": "forking",
         "scope": "teambit.component",

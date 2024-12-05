@@ -12,7 +12,7 @@ import { Dependencies } from '../consumer/component/dependencies';
 import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
 import { getArtifactsFiles, PackageJsonFile } from '@teambit/component.sources';
 import { componentOverridesForbiddenFields, nonPackageJsonFields } from '../consumer/config/component-overrides';
-import { ExtensionDataEntry, ExtensionDataList } from '../consumer/config/extension-data';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { PathLinux, isValidPath } from '@teambit/legacy.utils';
 import { validateType } from './validate-type';
 import VersionInvalid from './exceptions/version-invalid';

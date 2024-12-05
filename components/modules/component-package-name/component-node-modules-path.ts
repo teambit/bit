@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { ComponentID } from '@teambit/component-id';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from './component-id-to-package-name';
 

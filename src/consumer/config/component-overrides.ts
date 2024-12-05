@@ -9,7 +9,7 @@ import {
 } from '../../constants';
 import { SourceFile } from '@teambit/component.sources';
 import ComponentConfig from './component-config';
-import { ExtensionDataList } from './extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
 
 export type ConsumerOverridesOfComponent = ComponentOverridesData & {

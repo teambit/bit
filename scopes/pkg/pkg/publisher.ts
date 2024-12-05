@@ -4,7 +4,7 @@ import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { ComponentIdList } from '@teambit/component-id';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import { Scope } from '@teambit/legacy/dist/scope';
 import fsx from 'fs-extra';

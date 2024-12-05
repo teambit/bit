@@ -20,7 +20,7 @@ import ComponentsPendingImport from '../exceptions/components-pending-import';
 import { Dist, License, SourceFile, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
 import ComponentConfig, { ComponentConfigLoadOptions, ILegacyWorkspaceConfig } from '../config';
 import ComponentOverrides from '../config/component-overrides';
-import { ExtensionDataList } from '../config/extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import Consumer from '../consumer';
 import ComponentOutOfSync from '../exceptions/component-out-of-sync';
 import { FsCache } from '@teambit/workspace.modules.fs-cache';
