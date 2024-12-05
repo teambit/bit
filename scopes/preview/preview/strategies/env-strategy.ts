@@ -120,7 +120,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     defs: PreviewDefinition[],
     context: ComputeTargetsContext
   ): Promise<string[]> {
-    const previewMain = await this.preview.writePreviewRuntime(context);
+    const previewMain = await this.preview.writePreviewEntry(context);
     const moduleMapsPromise = defs.map(async (previewDef) => {
       const moduleMap = await previewDef.getModuleMap(context.components);
 
