@@ -611,6 +611,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/express"
     },
+    "extension-data": {
+        "name": "extension-data",
+        "scope": "teambit.legacy",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/extension-data"
+    },
     "forking": {
         "name": "forking",
         "scope": "teambit.component",

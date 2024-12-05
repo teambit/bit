@@ -1,4 +1,4 @@
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { PathLinuxRelative, PathOsBasedRelative } from '@teambit/legacy.utils';
 
 /**

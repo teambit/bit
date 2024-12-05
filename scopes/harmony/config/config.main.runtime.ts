@@ -1,5 +1,6 @@
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
-import { ExtensionDataEntry, ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
+import { ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigLoadFunction,
 } from '@teambit/legacy/dist/consumer/config/workspace-config';

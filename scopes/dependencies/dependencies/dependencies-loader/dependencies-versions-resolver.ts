@@ -4,7 +4,7 @@ import { Workspace } from '@teambit/workspace';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { isEmpty } from 'lodash';
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
-import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import Dependencies from '@teambit/legacy/dist/consumer/component/dependencies/dependencies';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';

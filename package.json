@@ -132,6 +132,7 @@
     "@teambit/legacy.utils": "~0.0.2",
     "@teambit/legacy.bit-map": "~0.0.4",
     "@teambit/legacy.loader": "~0.0.1",
+    "@teambit/legacy.extension-data": "~0.0.1",
     "@teambit/toolbox.path.path": "~0.0.1",
     "@teambit/pkg.modules.semver-helper": "~0.0.1",
     "@teambit/harmony.modules.concurrency": "~0.0.1",
