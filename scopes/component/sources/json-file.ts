@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 
-import ValidationError from '@teambit/legacy/dist/error/validation-error';
+import { ValidationError } from '@teambit/legacy.cli.error';
 import logger from '@teambit/legacy/dist/logger/logger';
 import AbstractVinyl from './abstract-vinyl';
 

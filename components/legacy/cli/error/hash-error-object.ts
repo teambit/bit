@@ -1,12 +1,11 @@
 import hash from 'object-hash';
 import yn from 'yn';
-
-import { getSync } from '../api/consumer/lib/global-config';
-import { CFG_ANALYTICS_ANONYMOUS_KEY } from '../constants';
-import logger from '../logger/logger';
+import { getSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import { CFG_ANALYTICS_ANONYMOUS_KEY } from '@teambit/legacy/dist/constants';
+import logger from '@teambit/legacy/dist/logger/logger';
 import cloneErrorObject, { systemFields } from './clone-error-object';
 
-export default function hashErrorIfNeeded(error: Error) {
+export function hashErrorIfNeeded(error: Error) {
   let clonedError = error;
   try {
     clonedError = cloneErrorObject(error);

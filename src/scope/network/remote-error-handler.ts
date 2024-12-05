@@ -1,5 +1,5 @@
 import { LaneNotFound } from '@teambit/legacy.scope-api';
-import CustomError from '../../error/custom-error';
+import { CustomError } from '@teambit/legacy.cli.error';
 import { ComponentNotFound, MergeConflictOnRemote } from '../exceptions';
 import ActionNotFound from '../exceptions/action-not-found';
 import ClientIdInUse from '../exceptions/client-id-in-use';

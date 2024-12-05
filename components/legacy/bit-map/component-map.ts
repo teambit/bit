@@ -4,7 +4,7 @@ import ignore from 'ignore';
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
 import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '@teambit/legacy/dist/constants';
-import ValidationError from '@teambit/legacy/dist/error/validation-error';
+import { ValidationError } from '@teambit/legacy.cli.error';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { isValidPath } from '@teambit/legacy.utils';
 import {

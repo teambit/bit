@@ -14,7 +14,7 @@ import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extens
 import { ConsumerComponent, SchemaName, Dependencies, Dependency } from '@teambit/legacy.consumer-component';
 import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
 import ComponentOverrides from '../../consumer/config/component-overrides';
-import ValidationError from '../../error/validation-error';
+import { ValidationError } from '@teambit/legacy.cli.error';
 import logger from '../../logger/logger';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import { getLatestVersion, validateVersion } from '@teambit/pkg.modules.semver-helper';

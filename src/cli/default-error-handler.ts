@@ -3,7 +3,7 @@
 import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
 import { Analytics, LEVEL } from '@teambit/legacy.analytics';
-import hashErrorIfNeeded from '../error/hash-error-object';
+import { hashErrorIfNeeded } from '@teambit/legacy.cli.error';
 
 /**
  * if err.userError is set, it inherits from AbstractError, which are user errors not Bit errors

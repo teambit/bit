@@ -303,6 +303,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/tables/cli-table"
     },
+    "cli/error": {
+        "name": "cli/error",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/cli/error"
+    },
     "cli/prompts": {
         "name": "cli/prompts",
         "scope": "teambit.legacy",
