@@ -290,7 +290,7 @@
         "@teambit/ui-foundation.ui.get-icon-from-file-name": "^0.0.500",
         "@teambit/ui-foundation.ui.global-loader": "^0.0.502",
         "@teambit/ui-foundation.ui.hooks.use-bind-key": "^0.0.500",
-        "@teambit/ui-foundation.ui.hooks.use-data-query": "^0.0.505",
+        "@teambit/ui-foundation.ui.hooks.use-data-query": "^0.0.506",
         "@teambit/ui-foundation.ui.hooks.use-in-out-transition": "^0.0.500",
         "@teambit/ui-foundation.ui.hooks.use-is-mobile": "^0.0.198",
         "@teambit/ui-foundation.ui.hooks.use-user-agent": "^0.0.197",
