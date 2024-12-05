@@ -192,10 +192,10 @@ export class Watcher {
       }
       if (dirname(filePath) === this.ipcEventsDir) {
         const eventName = basename(filePath);
-        if (eventName !== 'onPostInstall') {
+        if (eventName !== 'onPostInstall' && eventName !== 'onPostObjectsPersist') {
           this.watcherMain.logger.warn(`eventName ${eventName} is not recognized, please handle it`);
         }
-        await this.watcherMain.ipcEvents.triggerGotEvent(eventName as 'onPostInstall');
+        await this.watcherMain.ipcEvents.triggerGotEvent(eventName as any);
         return { results: [], files: [filePath] };
       }
       if (filePath.endsWith(WORKSPACE_JSONC)) {

@@ -22,7 +22,7 @@ import {
   pathNormalizeToLinux,
   pathRelativeLinux,
 } from '@teambit/toolbox.path.path';
-import { removeInternalConfigFields } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { removeInternalConfigFields } from '@teambit/legacy.extension-data';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
 import { IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';

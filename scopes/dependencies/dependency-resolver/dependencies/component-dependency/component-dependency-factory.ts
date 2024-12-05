@@ -4,7 +4,7 @@ import { compact } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import { Dependency, Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
-import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import type { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { ComponentDependency, SerializedComponentDependency, TYPE } from './component-dependency';
 import { DependencyLifecycleType } from '../dependency';
@@ -55,7 +55,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
     const peerDeps = await mapSeries(legacyComponent.peerDependencies.get(), (dep: Dependency) =>
       this.transformLegacyComponentDepToSerializedDependency(dep, 'peer')
     );
-    const extensionDeps = await mapSeries(legacyComponent.extensions, (extension) =>
+    const extensionDeps = await mapSeries(legacyComponent.extensions, (extension: ExtensionDataEntry) =>
       this.transformLegacyComponentExtensionToSerializedDependency(extension, 'dev')
     );
     const filteredExtensionDeps: SerializedComponentDependency[] = compact(extensionDeps);

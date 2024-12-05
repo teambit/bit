@@ -18,7 +18,7 @@ import type { ComponentMain, Component } from '@teambit/component';
 import type { VariantsMain } from '@teambit/variants';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import type { ComponentConfigLoadOptions } from '@teambit/legacy/dist/consumer/config';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import {
   ComponentLoadOptions,
   ComponentLoader as LegacyComponentLoader,

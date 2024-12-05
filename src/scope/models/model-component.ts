@@ -45,7 +45,7 @@ import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { errorIsTypeOfMissingObject } from '../component-ops/scope-components-importer';
 import type Scope from '../scope';
 import { BitIdCompIdError } from '../exceptions/bit-id-comp-id-err';
-import { ExtensionDataList } from '../../consumer/config';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { getBindingPrefixByDefaultScope } from '../../consumer/config/component-config';
 
 type State = {

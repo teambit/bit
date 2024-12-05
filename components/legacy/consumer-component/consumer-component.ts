@@ -29,7 +29,7 @@ import ComponentConfig, {
   ILegacyWorkspaceConfig,
 } from '@teambit/legacy/dist/consumer/config';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import ComponentOutOfSync from '@teambit/legacy/dist/consumer/exceptions/component-out-of-sync';
 import { FsCache } from '@teambit/workspace.modules.fs-cache';

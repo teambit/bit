@@ -6,7 +6,7 @@ import logger from '../../logger/logger';
 import { ConsumerComponent as Component, ComponentLoadOptions } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile } from '@teambit/component.sources';
 import AbstractConfig from './abstract-config';
-import { ExtensionDataList } from './extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 
 export type ComponentConfigLoadOptions = Pick<ComponentLoadOptions, 'loadExtensions' | 'originatedFromHarmony'>;
 

@@ -38,7 +38,7 @@ import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-
 import { satisfies } from 'semver';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { ClearCacheAspect } from '@teambit/clear-cache';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';

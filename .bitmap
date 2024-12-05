@@ -626,6 +626,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/express"
     },
+    "extension-data": {
+        "name": "extension-data",
+        "scope": "teambit.legacy",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/extension-data"
+    },
     "forking": {
         "name": "forking",
         "scope": "teambit.component",
@@ -793,13 +800,6 @@
         "version": "0.0.3",
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/hooks/use-logout"
-    },
-    "hooks/use-schema": {
-        "name": "hooks/use-schema",
-        "scope": "teambit.api-reference",
-        "version": "0.0.35",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/api-reference/hooks/use-schema"
     },
     "hooks/use-viewed-lane-from-url": {
         "name": "hooks/use-viewed-lane-from-url",

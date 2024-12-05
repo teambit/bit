@@ -3,7 +3,7 @@ import { Dependency, ConsumerComponent, CURRENT_SCHEMA } from '@teambit/legacy.c
 import { SourceFile } from '@teambit/component.sources';
 import { ScopeMain } from '@teambit/scope';
 import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { Component } from '@teambit/component';
 import { DependenciesMain } from '@teambit/dependencies';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';

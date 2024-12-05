@@ -15,7 +15,7 @@ import {
 } from '@teambit/legacy.consumer-component';
 import { getRefsFromExtensions, SourceFile } from '@teambit/component.sources';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
-import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/extension-data';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { Doclet } from '@teambit/semantics.doc-parser';
 import logger from '../../logger/logger';
 import { getStringifyArgs, PathLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';

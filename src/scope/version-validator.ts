@@ -10,7 +10,7 @@ import { DEPENDENCIES_FIELDS } from '../constants';
 import { SchemaName, Dependencies, DEPENDENCIES_TYPES } from '@teambit/legacy.consumer-component';
 import { getArtifactsFiles, PackageJsonFile } from '@teambit/component.sources';
 import { componentOverridesForbiddenFields, nonPackageJsonFields } from '../consumer/config/component-overrides';
-import { ExtensionDataEntry, ExtensionDataList } from '../consumer/config/extension-data';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { PathLinux, isValidPath } from '@teambit/legacy.utils';
 import { validateType } from './validate-type';
 import VersionInvalid from './exceptions/version-invalid';

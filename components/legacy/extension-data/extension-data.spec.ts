@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { ComponentID } from '@teambit/component-id';
-import { ExtensionDataEntry, ExtensionDataList } from './extension-data';
+import { ExtensionDataEntry } from './extension-data';
+import { ExtensionDataList } from './extension-data-list';
 
 describe('ExtensionDataList', () => {
   describe('merge lists', () => {

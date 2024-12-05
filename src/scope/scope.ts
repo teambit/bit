@@ -25,7 +25,7 @@ import {
   PENDING_OBJECTS_DIR,
 } from '../constants';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
-import { ExtensionDataEntry } from '../consumer/config';
+import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import Consumer from '../consumer/consumer';
 import logger from '../logger/logger';
 import { PathOsBasedAbsolute } from '@teambit/legacy.utils';

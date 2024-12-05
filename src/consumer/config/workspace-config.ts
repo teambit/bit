@@ -5,7 +5,7 @@ import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import AbstractConfig from './abstract-config';
 import { InvalidPackageJson } from './exceptions';
 import InvalidPackageManager from './exceptions/invalid-package-manager';
-import { ExtensionDataList } from './extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ILegacyWorkspaceConfig, PackageManagerClients } from './legacy-workspace-config-interface';
 
 const DEFAULT_USE_WORKSPACES = false;

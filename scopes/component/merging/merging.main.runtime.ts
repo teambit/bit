@@ -58,6 +58,8 @@ type ResolveUnrelatedData = {
   unrelatedLaneId: LaneId;
 };
 
+export type DivergedComponent = { id: ComponentID; diverge: SnapsDistance };
+
 export type ComponentMergeStatus = ComponentStatusBase & {
   mergeResults?: MergeResultsThreeWay | null;
   divergeData?: SnapsDistance;
@@ -143,7 +145,7 @@ export class MergingMain {
     } else if (abort) {
       mergeResults = await this.abortMerge(pattern);
     } else {
-      const bitIds = await this.getComponentsToMerge(consumer, pattern);
+      const bitIds = await this.getComponentsToMerge(pattern);
       mergeResults = await this.mergeComponentsFromRemote(
         consumer,
         bitIds,
@@ -663,13 +665,30 @@ export class MergingMain {
     return unresolvedComponents.map((u) => ComponentID.fromObject(u.id));
   }
 
-  private async getComponentsToMerge(consumer: Consumer, pattern?: string): Promise<ComponentID[]> {
+  private async getComponentsToMerge(pattern?: string): Promise<ComponentID[]> {
     if (pattern) {
       return this.workspace.idsByPattern(pattern);
     }
-    const componentsList = new ComponentsList(consumer);
-    const mergePending = await componentsList.listMergePendingComponents();
+    const mergePending = await this.listMergePendingComponents();
     return mergePending.map((c) => c.id);
+  }
+
+  async listMergePendingComponents(componentsList?: ComponentsList): Promise<DivergedComponent[]> {
+    const consumer = this.workspace.consumer;
+    componentsList = componentsList || new ComponentsList(consumer);
+    const allIds = consumer.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
+    const componentsFromModel = await componentsList.getModelComponents();
+    const duringMergeComps = componentsList.listDuringMergeStateComponents();
+    const mergePendingComponents = await Promise.all(
+      allIds.map(async (componentId: ComponentID) => {
+        const modelComponent = componentsFromModel.find((c) => c.toComponentId().isEqualWithoutVersion(componentId));
+        if (!modelComponent || duringMergeComps.hasWithoutVersion(componentId)) return null;
+        const divergedData = await modelComponent.getDivergeDataForMergePending(consumer.scope.objects);
+        if (!divergedData.isDiverged()) return null;
+        return { id: modelComponent.toComponentId(), diverge: divergedData };
+      })
+    );
+    return compact(mergePendingComponents);
   }
 
   static slots = [];

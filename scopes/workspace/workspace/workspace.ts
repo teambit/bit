@@ -16,7 +16,6 @@ import {
   AspectList,
 } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
-import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { ComponentScopeDirMap, ConfigMain, WorkspaceConfig } from '@teambit/config';
 import {
   DependencyResolverMain,
@@ -38,7 +37,7 @@ import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions, MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList, ExtensionDataEntry, REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy.extension-data';
 import {
   PathOsBased,
   PathOsBasedRelative,
