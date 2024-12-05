@@ -1,12 +1,16 @@
 import retry from 'async-retry';
 import { GraphQLClient, gql } from 'graphql-request';
 import { InvalidScopeName, isValidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
-import { getSync } from '../../api/consumer/lib/global-config';
-import { CFG_HUB_DOMAIN_KEY, DEFAULT_HUB_DOMAIN, CFG_USER_TOKEN_KEY, getSymphonyUrl } from '../../constants';
-
-import Scope from '../../scope/scope';
-import { getAuthHeader, getFetcherWithAgent } from '../../scope/network/http/http';
-import logger from '../../logger/logger';
+import { getSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import {
+  CFG_HUB_DOMAIN_KEY,
+  DEFAULT_HUB_DOMAIN,
+  CFG_USER_TOKEN_KEY,
+  getSymphonyUrl,
+} from '@teambit/legacy/dist/constants';
+import Scope from '@teambit/legacy/dist/scope/scope';
+import { getAuthHeader, getFetcherWithAgent } from '@teambit/legacy/dist/scope/network/http/http';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { ScopeNotFoundOrDenied } from '../exceptions/scope-not-found-or-denied';
 
 const hubDomain = getSync(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;

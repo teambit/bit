@@ -11,7 +11,7 @@ import { Workspace } from '@teambit/workspace';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import defaultErrorHandler from '@teambit/legacy/dist/cli/default-error-handler';
-import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
+import { getScopeRemotes } from '@teambit/scope.remotes';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DataToPersist, RemovePath } from '@teambit/component.sources';

@@ -8,7 +8,7 @@ import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import { DependencyGraph, VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
-import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
+import { getRemoteByName } from '@teambit/scope.remotes';
 import { ComponentMain } from '@teambit/component';
 
 type GraphOpt = {

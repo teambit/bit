@@ -1402,6 +1402,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/refactoring"
     },
+    "remotes": {
+        "name": "remotes",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.scope",
+        "mainFile": "index.ts",
+        "rootDir": "components/scope/remotes"
+    },
     "remove": {
         "name": "remove",
         "scope": "teambit.component",

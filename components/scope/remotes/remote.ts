@@ -1,17 +1,17 @@
 import { ComponentID } from '@teambit/component-id';
 import { PushOptions, CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import { ListScopeResult } from '@teambit/legacy.component-list';
-import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
-import logger from '../logger/logger';
-import type { Scope } from '../scope';
-import ComponentObjects from '../scope/component-objects';
-import { LaneData } from '../scope/lanes/lanes';
-import { ComponentLog } from '../scope/models/model-component';
-import { connect } from '../scope/network';
-import { Network } from '../scope/network/network';
-import { ObjectItemsStream, ObjectList } from '../scope/objects/object-list';
-import RemovedObjects from '../scope/removed-components';
+import logger from '@teambit/legacy/dist/logger/logger';
+import type { Scope } from '@teambit/legacy/dist/scope';
+import ComponentObjects from '@teambit/legacy/dist/scope/component-objects';
+import { DependencyGraph } from '@teambit/legacy.dependency-graph';
+import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
+import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import { connect } from '@teambit/legacy/dist/scope/network';
+import { Network } from '@teambit/legacy/dist/scope/network/network';
+import { ObjectItemsStream, ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
+import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 import { isBitUrl } from '@teambit/legacy.utils';
 import { InvalidRemote } from './exceptions';
 
@@ -22,7 +22,7 @@ function isPrimary(alias: string): boolean {
   return alias.includes('!');
 }
 
-export default class Remote {
+export class Remote {
   primary = false;
   host: string;
   name: string;

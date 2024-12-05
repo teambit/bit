@@ -12,7 +12,7 @@ import { pathNormalizeToLinux, PathOsBased, PathOsBasedAbsolute } from '@teambit
 import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { getFilesDiff } from '@teambit/legacy.component-diff';
 import chalk from 'chalk';
-import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
+import { getRemoteByName } from '@teambit/scope.remotes';
 import { diffLines } from 'diff';
 import { ComponentLogAspect } from './component-log.aspect';
 import LogCmd from './log-cmd';

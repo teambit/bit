@@ -7,7 +7,6 @@ import { Scope } from '..';
 import { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import { loader } from '@teambit/legacy.loader';
 import logger from '../../logger/logger';
-import { Remote, Remotes } from '../../remotes';
 import { ScopeNotFound } from '../exceptions';
 import { ErrorFromRemote } from '../exceptions/error-from-remote';
 import { UnexpectedNetworkError } from '../network/exceptions';
@@ -18,7 +17,7 @@ import { WriteObjectsQueue } from './write-objects-queue';
 import { groupByScopeName } from '../component-ops/scope-components-importer';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
-import { ScopeNotFoundOrDenied } from '../../remotes/exceptions/scope-not-found-or-denied';
+import { Remotes, Remote, ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { Lane } from '../models';
 import { ComponentsPerRemote, MultipleComponentMerger } from '../component-ops/multiple-component-merger';
 
