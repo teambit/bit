@@ -315,6 +315,8 @@ export class WorkspaceMain {
     envsCommand?.commands?.push(new EnvsReplaceCmd(workspace)); // bit envs replace
     envsCommand?.commands?.push(new EnvsUpdateCmd(workspace)); // bit envs replace
 
+    envs.registerEnvJsoncResolver(workspace.resolveEnvManifest.bind(workspace));
+
     // add sub-command "set" to scope command.
     const scopeCommand = cli.getCommand('scope');
     scopeCommand?.commands?.push(new ScopeSetCmd(workspace));

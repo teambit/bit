@@ -150,7 +150,13 @@ export class AutoDetectDeps {
     // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
     // they are referred as "untracked components" and the user should add them later on in order to tag
     this.setTree(dependenciesTree.tree);
-    const devFiles = await this.devFiles.getDevFilesForConsumerComp(this.component);
+    if (dependenciesTree.tree['env.jsonc']?.components.length > 0) {
+      await this.populateDependencies(['env.jsonc'], []);
+    }
+    const envExtendsDeps = this.allDependencies.dependencies.length
+      ? this.allDependencies.dependencies
+      : this.component.componentFromModel?.dependencies.dependencies;
+    const devFiles = await this.devFiles.getDevFilesForConsumerComp(this.component, envExtendsDeps);
     await this.populateDependencies(allFiles, devFiles);
     return {
       dependenciesData: new DependenciesData(
@@ -387,6 +393,9 @@ export class AutoDetectDeps {
         componentIdResolvedFrom: 'DependencyPkgJson',
         packageName: compDep.name,
       };
+      if (originFile === 'env.jsonc') {
+        depDebug.importSource = 'env.jsonc';
+      }
       const getVersionFromPkgJson = (): string | null => {
         const versionFromDependencyPkgJson = getValidVersion(compDep.concreteVersion);
         if (versionFromDependencyPkgJson) {
