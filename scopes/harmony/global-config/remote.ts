@@ -1,6 +1,5 @@
 import { BitError } from '@teambit/bit-error';
-import { GlobalRemotes } from '@teambit/legacy/dist/global-config';
-import { Remote, getScopeRemotes } from '@teambit/scope.remotes';
+import { Remote, getScopeRemotes, GlobalRemotes } from '@teambit/scope.remotes';
 import { loadScope } from '@teambit/legacy/dist/scope';
 
 function buildRemote(url: string): Remote {

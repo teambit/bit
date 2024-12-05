@@ -1,11 +1,10 @@
 import fs from 'fs-extra';
 import * as path from 'path';
-
-import { GLOBAL_CONFIG, GLOBAL_REMOTES } from '../constants';
+import { GLOBAL_CONFIG, GLOBAL_REMOTES } from '@teambit/legacy/dist/constants';
 import { Remote } from '@teambit/scope.remotes';
 import { writeFile } from '@teambit/legacy.utils';
 
-export default class GlobalRemotes {
+export class GlobalRemotes {
   remotes: { [key: string]: string };
 
   constructor(remotes: { [key: string]: string }) {

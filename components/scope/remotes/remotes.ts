@@ -4,7 +4,7 @@ import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import pMap from 'p-map';
 import { CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
-import GlobalRemotes from '@teambit/legacy/dist/global-config/global-remotes';
+import { GlobalRemotes } from '@teambit/scope.remotes';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
