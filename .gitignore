@@ -64,7 +64,6 @@ types/*
 #distrubution
 distribution/
 
-artifacts/
 bit-*.tar.gz
 tmp/
 bin/node
