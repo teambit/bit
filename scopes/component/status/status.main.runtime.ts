@@ -18,7 +18,7 @@ import { StatusCmd } from './status-cmd';
 import { StatusAspect } from './status.aspect';
 import { MiniStatusCmd, MiniStatusOpts } from './mini-status-cmd';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
-import MergingAspect, { MergingMain } from '@teambit/merging';
+import { MergingAspect, MergingMain } from '@teambit/merging';
 
 type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
 const BEFORE_STATUS = 'fetching status';
