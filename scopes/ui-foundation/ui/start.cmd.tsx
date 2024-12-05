@@ -12,6 +12,7 @@ type StartFlags = {
   port: string;
   rebuild: boolean;
   verbose: boolean;
+  showInternalUrls: boolean;
   noBrowser: boolean;
   skipCompilation: boolean;
   skipUiBuild: boolean;
@@ -40,6 +41,7 @@ export class StartCmd implements Command {
     ['', 'skip-ui-build', 'skip building UI'],
     ['v', 'verbose', 'show verbose output for inspection and prints stack trace'],
     ['n', 'no-browser', 'do not automatically open browser when ready'],
+    ['', 'show-internal-urls', 'show urls for all internal dev servers'],
     ['', 'skip-compilation', 'skip the auto-compilation before starting the web-server'],
     [
       'u',
@@ -67,6 +69,7 @@ export class StartCmd implements Command {
       noBrowser,
       skipCompilation,
       skipUiBuild,
+      showInternalUrls,
       uiRootName: uiRootAspectIdOrName,
     }: StartFlags
   ) {
@@ -90,6 +93,7 @@ export class StartCmd implements Command {
       port: +port,
       rebuild,
       verbose,
+      showInternalUrls,
     });
 
     uiServer
