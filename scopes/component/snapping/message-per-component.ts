@@ -2,7 +2,7 @@ import openEditor from 'open-editor';
 import fs from 'fs-extra';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { spawn } from 'child_process';
-import { Tmp } from '../repositories';
+import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { loader } from '@teambit/legacy.loader';
 
 const DEFAULT_MESSAGE = 'DEFAULT:';

@@ -45,7 +45,7 @@ import ScopeMeta from './scopeMeta';
 import Source from './source';
 import Version from './version';
 import VersionHistory, { VersionParents } from './version-history';
-import { ObjectItem } from '@teambit/scope.objects';
+import { ObjectItem } from '../objects/object-list';
 import { NoHeadNoVersion } from '@teambit/legacy/dist/scope/exceptions/no-head-no-version';
 import { errorIsTypeOfMissingObject } from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
 import type Scope from '@teambit/legacy/dist/scope/scope';

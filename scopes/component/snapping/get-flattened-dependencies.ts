@@ -4,11 +4,11 @@ import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
 import R from 'ramda';
-import { Scope } from '..';
+import { Scope } from '@teambit/legacy/dist/scope';
 import { ConsumerComponent as Component, Dependencies } from '@teambit/legacy.consumer-component';
-import logger from '../../logger/logger';
-import VersionDependencies from '../version-dependencies';
-import { Lane } from '../models';
+import logger from '@teambit/legacy/dist/logger/logger';
+import VersionDependencies from '@teambit/legacy/dist/scope/version-dependencies';
+import { Lane } from '@teambit/legacy/dist/scope/models';
 
 export class FlattenedDependenciesGetter {
   private dependenciesGraph: GraphLib;

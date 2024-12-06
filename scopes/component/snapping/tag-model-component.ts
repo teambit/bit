@@ -19,10 +19,7 @@ import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { OnTagOpts } from '@teambit/builder';
 import { DependenciesGraph } from '@teambit/scope.objects';
 import { Log } from '@teambit/scope.objects';
-import {
-  MessagePerComponent,
-  MessagePerComponentFetcher,
-} from '@teambit/legacy/dist/scope/component-ops/message-per-component';
+import { MessagePerComponent, MessagePerComponentFetcher } from './message-per-component';
 import { Lane, ModelComponent } from '@teambit/scope.objects';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
