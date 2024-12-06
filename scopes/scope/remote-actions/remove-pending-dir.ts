@@ -1,4 +1,4 @@
-import { Scope } from '..';
+import { Scope } from '@teambit/legacy/dist/scope';
 import { Action } from './action';
 
 type Options = { clientId: string };

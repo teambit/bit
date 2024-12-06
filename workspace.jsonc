@@ -728,6 +728,9 @@
     "scopes/scope/network": {
       "teambit.pkg/pkg": {}
     },
+    "scopes/scope/remote-actions": {
+      "teambit.pkg/pkg": {}
+    },
     "components/semantics/doc-parser": {
       "teambit.pkg/pkg": {}
     }

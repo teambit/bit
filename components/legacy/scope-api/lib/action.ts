@@ -7,7 +7,7 @@ import {
   FetchMissingDeps,
   PostSign,
   FetchMissingHistory,
-} from '@teambit/legacy/dist/scope/actions';
+} from '@teambit/scope.remote-actions';
 import ActionNotFound from '@teambit/legacy/dist/scope/exceptions/action-not-found';
 import { AuthData } from '@teambit/scope.network';
 

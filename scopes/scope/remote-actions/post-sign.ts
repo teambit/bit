@@ -1,7 +1,7 @@
-import { Scope } from '..';
-import logger from '../../logger/logger';
-import { Lane } from '../models';
-import { AuthData } from '../network/http/http';
+import { Scope } from '@teambit/legacy/dist/scope';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { Lane } from '@teambit/legacy/dist/scope/models';
+import { AuthData } from '@teambit/legacy/dist/scope/network/http/http';
 import { Action } from './action';
 
 type Options = { ids: string[] };

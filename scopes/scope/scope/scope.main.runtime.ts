@@ -24,7 +24,7 @@ import { Ref, Repository } from '@teambit/scope.objects';
 import LegacyScope, { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
 import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
-import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
+import { ExportPersist, PostSign } from '@teambit/scope.remote-actions';
 import { DependencyResolverAspect, DependencyResolverMain, NodeLinker } from '@teambit/dependency-resolver';
 import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';

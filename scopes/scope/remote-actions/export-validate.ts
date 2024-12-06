@@ -1,13 +1,13 @@
 import path from 'path';
 import glob from 'glob';
-import { Scope } from '..';
-import { PENDING_OBJECTS_DIR } from '../../constants';
-import { mergeObjects } from '../component-ops/export-scope-components';
+import { Scope } from '@teambit/legacy/dist/scope';
+import { PENDING_OBJECTS_DIR } from '@teambit/legacy/dist/constants';
+import { mergeObjects } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { Action } from './action';
-import logger from '../../logger/logger';
-import ServerIsBusy from '../exceptions/server-is-busy';
+import logger from '@teambit/legacy/dist/logger/logger';
+import ServerIsBusy from '@teambit/legacy/dist/scope/exceptions/server-is-busy';
 import { BitObjectList } from '@teambit/scope.objects';
-import { getAllVersionHashes } from '../component-ops/traverse-versions';
+import { getAllVersionHashes } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
 
 type Options = { clientId: string; isResumingExport: boolean };
 const NUM_OF_RETRIES = 60;

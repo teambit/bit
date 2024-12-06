@@ -1,4 +1,4 @@
-import type { Scope } from '..';
+import type { Scope } from '@teambit/legacy/dist/scope';
 import { AuthData } from '../network/http/http';
 
 export interface Action<Options = undefined, Result = void> {
