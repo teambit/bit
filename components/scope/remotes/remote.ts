@@ -4,14 +4,10 @@ import { ListScopeResult } from '@teambit/legacy.component-list';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
 import type { Scope } from '@teambit/legacy.scope';
-import ComponentObjects from '@teambit/legacy.scope';
+import { RemovedObjects, LaneData, ComponentObjects } from '@teambit/legacy.scope';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import { LaneData } from '@teambit/legacy.scope';
-import { ComponentLog } from '@teambit/scope.objects';
-import { connect } from '@teambit/scope.network';
-import { Network } from '@teambit/scope.network';
-import { ObjectItemsStream, ObjectList } from '@teambit/scope.objects';
-import { RemovedObjects } from '@teambit/legacy.scope';
+import { Network, connect } from '@teambit/scope.network';
+import { ComponentLog, ObjectItemsStream, ObjectList } from '@teambit/scope.objects';
 import { isBitUrl } from '@teambit/legacy.utils';
 import { InvalidRemote } from './exceptions';
 

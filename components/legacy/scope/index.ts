@@ -37,6 +37,7 @@ export { validateType } from './validate-type';
 export { RemovedObjects, RemovedObjectSerialized } from './removed-components';
 export { ComponentObjects } from './component-objects';
 export { LaneData } from './lanes/lanes';
+export { UnmergedComponents } from './lanes/unmerged-components';
 export { Tmp } from './repositories';
 export { UnmergedComponent, UNMERGED_FILENAME } from './lanes/unmerged-components';
 export { TrackLane, ScopeJson } from './scope-json';

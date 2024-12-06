@@ -14,7 +14,7 @@ import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension
 import { PathLinux, isValidPath } from '@teambit/legacy.utils';
 import { validateType } from './validate-type';
 import VersionInvalid from './exceptions/version-invalid';
-import Version from './models/version';
+import { Version } from '@teambit/scope.objects';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.

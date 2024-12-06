@@ -4,10 +4,9 @@ import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
 import R from 'ramda';
-import { Scope } from '@teambit/legacy.scope';
+import { VersionDependencies, Scope } from '@teambit/legacy.scope';
 import { ConsumerComponent as Component, Dependencies } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
-import VersionDependencies from '@teambit/legacy.scope';
 import { Lane } from '@teambit/scope.objects';
 
 export class FlattenedDependenciesGetter {

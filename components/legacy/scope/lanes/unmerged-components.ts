@@ -54,7 +54,7 @@ export type UnmergedComponent = {
 
 export const UNMERGED_FILENAME = 'unmerged.json';
 
-export default class UnmergedComponents {
+export class UnmergedComponents {
   filePath: string;
   unmerged: UnmergedComponent[];
   hasChanged = false;
