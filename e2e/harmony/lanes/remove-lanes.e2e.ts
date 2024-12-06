@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai';
 import { DEFAULT_LANE } from '@teambit/lane-id';
-import { IS_WINDOWS } from '../../../src/constants';
+import { IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 

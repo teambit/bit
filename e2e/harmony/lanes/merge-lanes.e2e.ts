@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import { uniq } from 'lodash';
 import { DEFAULT_LANE } from '@teambit/lane-id';
-import { Extensions, statusWorkspaceIsCleanMsg } from '../../../src/constants';
+import { Extensions, statusWorkspaceIsCleanMsg } from '@teambit/legacy.constants';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));

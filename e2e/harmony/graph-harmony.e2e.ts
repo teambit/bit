@@ -3,7 +3,7 @@ import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { objectListToGraph, IdGraph } from '@teambit/graph';
 import { loadBit } from '@teambit/bit';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import { ModelComponent, Version } from '../../src/scope/models';
+import { ModelComponent, Version } from '@teambit/scope.objects';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));

@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 
 import { Helper } from '@teambit/legacy.e2e-helper';
-import OutdatedIndexJson from '../../src/scope/exceptions/outdated-index-json';
+import { OutdatedIndexJson } from '@teambit/legacy.scope';
 
 chai.use(require('chai-fs'));
 

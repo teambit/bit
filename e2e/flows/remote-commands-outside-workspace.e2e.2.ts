@@ -1,7 +1,7 @@
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import { expect } from 'chai';
 
-import { ConsumerNotFound } from '../../src/consumer/exceptions';
+import { ConsumerNotFound } from '@teambit/legacy.consumer';
 import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('bit remote command', function () {

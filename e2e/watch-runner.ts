@@ -5,7 +5,7 @@ import childProcess, { ChildProcess } from 'child_process';
 import rightpad from 'pad-right';
 
 // @todo: move this file to the watch extension and then move the following constants to the extension
-import { STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '../src/constants';
+import { STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
 
 const WATCH_TIMEOUT_FOR_MSG = 60000; // 1 min

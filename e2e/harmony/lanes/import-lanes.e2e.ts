@@ -1,7 +1,7 @@
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import chai, { expect } from 'chai';
 import path from 'path';
-import { statusWorkspaceIsCleanMsg } from '../../../src/constants';
+import { statusWorkspaceIsCleanMsg } from '@teambit/legacy.constants';
 import { LANE_KEY } from '@teambit/legacy.bit-map';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
 

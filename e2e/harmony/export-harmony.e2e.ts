@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import { ExportMissingVersions } from '../../src/scope/exceptions/export-missing-versions';
-import ServerIsBusy from '../../src/scope/exceptions/server-is-busy';
+import { ExportMissingVersions, ServerIsBusy } from '@teambit/legacy.scope';
 
 chai.use(require('chai-fs'));
 

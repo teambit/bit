@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import { Extensions } from '../../../src/constants';
+import { Extensions } from '@teambit/legacy.constants';
 
 chai.use(require('chai-fs'));
 
