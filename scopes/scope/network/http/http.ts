@@ -45,7 +45,7 @@ import {
   CENTRAL_BIT_HUB_URL_IMPORTER,
   CENTRAL_BIT_HUB_URL_IMPORTER_V2,
 } from '@teambit/legacy/dist/constants';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { ObjectItemsStream, ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
 import { remoteErrorHandler } from '../remote-error-handler';

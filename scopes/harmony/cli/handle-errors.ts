@@ -1,4 +1,4 @@
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import defaultHandleError from './default-error-handler';
 import { loader } from '@teambit/legacy.loader';
 

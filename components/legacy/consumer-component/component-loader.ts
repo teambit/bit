@@ -4,7 +4,7 @@ import * as path from 'path';
 import { ComponentIssue } from '@teambit/component-issues';
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { BIT_MAP } from '@teambit/legacy/dist/constants';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { ModelComponent, VERSION_ZERO } from '@teambit/scope.objects';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';

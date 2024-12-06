@@ -5,7 +5,7 @@ import { Readable, PassThrough, pipeline } from 'stream';
 import { BitObject } from '.';
 import { BitObjectList } from './bit-object-list';
 import Ref from './ref';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import { ExportMetadata } from '../models';
 import { UnknownObjectType } from '@teambit/legacy/dist/scope/exceptions/unknown-object-type';

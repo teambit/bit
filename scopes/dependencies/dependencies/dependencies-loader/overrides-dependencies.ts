@@ -3,7 +3,7 @@ import {
   MANUALLY_ADD_DEPENDENCY,
   MANUALLY_REMOVE_DEPENDENCY,
 } from '@teambit/legacy/dist/constants';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { ConsumerComponent as Component, ManuallyChangedDependencies } from '@teambit/legacy.consumer-component';
 import { FileType } from './auto-detect-deps';
 

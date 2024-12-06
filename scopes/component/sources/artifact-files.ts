@@ -3,7 +3,7 @@ import { filter } from 'bluebird';
 import path from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Lane, Source } from '@teambit/scope.objects';
 import { Ref } from '@teambit/scope.objects';

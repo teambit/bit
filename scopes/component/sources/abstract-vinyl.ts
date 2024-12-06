@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import Vinyl from 'vinyl';
 
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import Source from '@teambit/scope.objects';
 import { PathOsBased } from '@teambit/toolbox.path.path';
 import * as eol from '@teambit/toolbox.string.eol';

@@ -4,7 +4,7 @@ import { ComponentID } from '@teambit/component-id';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { Scope } from '..';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import {
   LaneComponent,
   Log,

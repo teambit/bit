@@ -1,5 +1,5 @@
 import { Scope } from '@teambit/legacy/dist/scope';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { AuthData } from '@teambit/legacy/dist/scope/network/http/http';
 import { Action } from './action';

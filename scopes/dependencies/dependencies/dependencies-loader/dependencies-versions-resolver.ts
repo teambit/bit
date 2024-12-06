@@ -1,7 +1,7 @@
 import { ComponentID } from '@teambit/component-id';
 import { Consumer } from '@teambit/legacy.consumer';
 import { Workspace } from '@teambit/workspace';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { isEmpty } from 'lodash';
 import { Dependency, Dependencies, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';

@@ -8,7 +8,7 @@ import { BitMap } from '@teambit/legacy.bit-map';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile, DataToPersist, RemovePath, Symlink } from '@teambit/component.sources';
 import { Consumer } from '@teambit/legacy.consumer';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName, getNodeModulesPathOfComponent } from '@teambit/pkg.modules.component-package-name';
 import { Workspace } from '@teambit/workspace';

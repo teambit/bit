@@ -17,7 +17,7 @@ import { getRefsFromExtensions, SourceFile } from '@teambit/component.sources';
 import { ComponentOverridesData } from '@teambit/legacy.consumer-config';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { Doclet } from '@teambit/semantics.doc-parser';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { getStringifyArgs, PathLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import VersionInvalid from '@teambit/legacy/dist/scope/exceptions/version-invalid';

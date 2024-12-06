@@ -1,6 +1,6 @@
 import { ComponentIdList } from '@teambit/component-id';
 import { Scope } from '@teambit/legacy/dist/scope';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { Action } from './action';
 
 type Options = { ids: string[] };

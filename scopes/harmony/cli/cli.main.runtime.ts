@@ -1,5 +1,5 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import legacyLogger from '@teambit/legacy/dist/logger/logger';
+import { logger as legacyLogger } from '@teambit/legacy.logger';
 import { CLIArgs, Flags, Command } from './command';
 import pMapSeries from 'p-map-series';
 import { groups, GroupsType } from './command-groups';

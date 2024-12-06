@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { pickBy } from 'lodash';
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { ConsumerComponent as Component, ComponentLoadOptions } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile } from '@teambit/component.sources';
 import AbstractConfig from './abstract-config';

@@ -10,7 +10,7 @@ import { glob } from '@teambit/legacy.utils';
 import { Lane, ModelComponent } from '../models';
 import { LaneComponent } from '../models/lane';
 import { Ref } from '../objects';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 
 type Lanes = { [laneName: string]: LaneComponent[] };
 

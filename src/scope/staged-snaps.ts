@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 
 const STAGED_SNAPS = 'staged-snaps';
 

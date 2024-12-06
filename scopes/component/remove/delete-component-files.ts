@@ -1,5 +1,5 @@
 import { ComponentIdList } from '@teambit/component-id';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { DataToPersist, RemovePath } from '@teambit/component.sources';
 import { Consumer } from '@teambit/legacy.consumer';
 

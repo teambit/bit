@@ -18,7 +18,7 @@ import {
   VERSION_DELIMITER,
   BITMAP_PREFIX_MESSAGE,
 } from '@teambit/legacy/dist/constants';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import {
   pathJoinLinux,
   pathNormalizeToLinux,

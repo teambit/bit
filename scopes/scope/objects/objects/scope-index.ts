@@ -4,7 +4,7 @@ import { Mutex } from 'async-mutex';
 import * as path from 'path';
 import R from 'ramda';
 import { LaneId } from '@teambit/lane-id';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import InvalidIndexJson from '@teambit/legacy/dist/scope/exceptions/invalid-index-json';
 import { ModelComponent, Symlink } from '../models';
 import Lane from '../models/lane';

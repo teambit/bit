@@ -927,13 +927,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/loader"
     },
-    "logger": {
-        "name": "logger",
-        "scope": "teambit.harmony",
-        "version": "0.0.1154",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/logger"
-    },
     "mdx": {
         "name": "mdx",
         "scope": "teambit.mdx",
@@ -1783,6 +1776,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/global-config"
     },
+    "teambit.harmony/logger": {
+        "name": "logger",
+        "scope": "teambit.harmony",
+        "version": "0.0.1154",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/logger"
+    },
     "teambit.legacy/global-config": {
         "name": "global-config",
         "scope": "",
@@ -1790,6 +1790,20 @@
         "defaultScope": "teambit.legacy",
         "mainFile": "index.ts",
         "rootDir": "components/legacy/global-config"
+    },
+    "teambit.legacy/logger": {
+        "name": "logger",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/logger",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.33": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
     },
     "tester": {
         "name": "tester",

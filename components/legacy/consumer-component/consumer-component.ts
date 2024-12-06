@@ -14,7 +14,7 @@ import {
   Extensions,
 } from '@teambit/legacy/dist/constants';
 import { Doclet, parser as docsParser } from '@teambit/semantics.doc-parser';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { Version, DepEdge, Log, ScopeListItem, DependenciesGraph, ModelComponent } from '@teambit/scope.objects';
 import { pathNormalizeToLinux, PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';

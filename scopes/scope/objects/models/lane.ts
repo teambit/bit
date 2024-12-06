@@ -8,7 +8,7 @@ import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, PREVIOUS_DEFAULT_LANE } from '@teambit/legacy/dist/constants';
 import { ValidationError } from '@teambit/legacy.cli.error';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { hasVersionByRef } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';

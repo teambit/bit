@@ -16,7 +16,7 @@ import {
   DOT_GIT_DIR,
   LATEST,
 } from '@teambit/legacy/dist/constants';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';

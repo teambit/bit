@@ -2,7 +2,7 @@ import hash from 'object-hash';
 import yn from 'yn';
 import { getSync } from '@teambit/legacy.global-config';
 import { CFG_ANALYTICS_ANONYMOUS_KEY } from '@teambit/legacy/dist/constants';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import cloneErrorObject, { systemFields } from './clone-error-object';
 
 export function hashErrorIfNeeded(error: Error) {

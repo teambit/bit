@@ -25,7 +25,7 @@ import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 import { Consumer } from '@teambit/legacy.consumer';
 import { BitError } from '@teambit/bit-error';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { glob, isDir, pathNormalizeToLinux, PathLinux, PathLinuxRelative, PathOsBased } from '@teambit/legacy.utils';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { Workspace } from '@teambit/workspace';

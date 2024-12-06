@@ -4,7 +4,7 @@ import { Scope } from '@teambit/legacy/dist/scope';
 import { PENDING_OBJECTS_DIR } from '@teambit/legacy/dist/constants';
 import { mergeObjects } from '@teambit/export';
 import { Action } from './action';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import ServerIsBusy from '@teambit/legacy/dist/scope/exceptions/server-is-busy';
 import { BitObjectList } from '@teambit/scope.objects';
 import { getAllVersionHashes } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';

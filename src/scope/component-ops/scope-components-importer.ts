@@ -10,7 +10,7 @@ import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/ha
 import { compact, flatten, partition, uniq } from 'lodash';
 import { Scope } from '..';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import ComponentVersion from '../component-version';
 import { ComponentNotFound, HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import { Lane, ModelComponent, Version, VersionHistory } from '../models';

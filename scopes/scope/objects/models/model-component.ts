@@ -20,7 +20,7 @@ import { ConsumerComponent, SchemaName, Dependencies, Dependency } from '@teambi
 import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
 import ComponentOverrides from '@teambit/legacy.consumer-config';
 import { ValidationError } from '@teambit/legacy.cli.error';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import { getLatestVersion, validateVersion } from '@teambit/pkg.modules.semver-helper';
 import ComponentObjects from '@teambit/legacy/dist/scope/component-objects';

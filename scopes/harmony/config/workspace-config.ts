@@ -4,7 +4,7 @@ import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
 import { ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import LegacyWorkspaceConfig from '@teambit/legacy.consumer-config';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { currentDateAndTimeToFileName } from '@teambit/legacy.consumer';
 import { assign, parse, stringify, CommentJSONValue } from 'comment-json';

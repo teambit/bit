@@ -3,7 +3,7 @@ import * as path from 'path';
 import { v4 } from 'uuid';
 
 import { BIT_TMP_DIRNAME } from '@teambit/legacy/dist/constants';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { PathOsBased } from '@teambit/toolbox.path.path';
 import Repository from '../repository';
 

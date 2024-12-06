@@ -6,7 +6,7 @@ import { ComponentIdList } from '@teambit/component-id';
 import { compact, isEmpty } from 'lodash';
 import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
 import { BitError } from '@teambit/bit-error';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { Http } from '@teambit/scope.network';
 import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
 import { deleteComponentsFiles } from './delete-component-files';

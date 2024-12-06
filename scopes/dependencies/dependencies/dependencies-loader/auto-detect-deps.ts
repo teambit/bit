@@ -13,7 +13,7 @@ import {
 } from '@teambit/legacy.consumer-component';
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy.consumer';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { getExt } from '@teambit/toolbox.fs.extension-getter';
 import {
   pathNormalizeToLinux,

@@ -4,7 +4,7 @@ import { ComponentIdList } from '@teambit/component-id';
 import semver from 'semver';
 import { LaneId } from '@teambit/lane-id';
 import { LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { loadScope, Scope } from '@teambit/legacy/dist/scope';
 import { Lane, LaneHistory, Ref, ComponentWithCollectOptions, ObjectsReadableGenerator } from '@teambit/scope.objects';
 import { LaneNotFound } from './exceptions/lane-not-found';

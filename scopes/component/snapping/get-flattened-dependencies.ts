@@ -6,7 +6,7 @@ import { BitIdStr } from '@teambit/legacy-bit-id';
 import R from 'ramda';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { ConsumerComponent as Component, Dependencies } from '@teambit/legacy.consumer-component';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import VersionDependencies from '@teambit/legacy/dist/scope/version-dependencies';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 

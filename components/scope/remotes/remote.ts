@@ -2,7 +2,7 @@ import { ComponentID } from '@teambit/component-id';
 import { PushOptions, CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import { ListScopeResult } from '@teambit/legacy.component-list';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import type { Scope } from '@teambit/legacy/dist/scope';
 import ComponentObjects from '@teambit/legacy/dist/scope/component-objects';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';

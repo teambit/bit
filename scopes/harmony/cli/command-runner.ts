@@ -1,4 +1,4 @@
-import logger, { shouldDisableLoader } from '@teambit/legacy/dist/logger/logger';
+import { logger, shouldDisableLoader } from '@teambit/legacy.logger';
 import { CLIArgs, Command, Flags } from './command';
 import { loader } from '@teambit/legacy.loader';
 import { handleErrorAndExit } from './handle-errors';

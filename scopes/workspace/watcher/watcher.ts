@@ -5,7 +5,7 @@ import { compact, difference, partition } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BIT_MAP, CFG_WATCH_USE_POLLING, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
 import { Consumer } from '@teambit/legacy.consumer';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import mapSeries from 'p-map-series';
 import chalk from 'chalk';

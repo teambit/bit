@@ -12,7 +12,7 @@ import { Consumer } from '@teambit/legacy.consumer';
 import { NewerVersionFound } from '@teambit/legacy.consumer';
 import { Component } from '@teambit/component';
 import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
