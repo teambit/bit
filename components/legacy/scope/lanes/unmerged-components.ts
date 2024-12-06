@@ -4,7 +4,7 @@ import { compact } from 'lodash';
 import path from 'path';
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
-import { Ref } from '../objects';
+import { Ref } from '@teambit/scope.objects';
 
 export type UnmergedComponent = {
   id: {

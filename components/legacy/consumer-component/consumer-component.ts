@@ -20,7 +20,6 @@ import { pathNormalizeToLinux, PathLinux, PathOsBased, PathOsBasedRelative } fro
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { ComponentMap } from '@teambit/legacy.bit-map';
 import { IgnoredDirectory } from './exceptions/ignored-directory';
-import ComponentsPendingImport from '@teambit/legacy.consumer';
 import { Dist, License, SourceFile, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
 import {
   ComponentConfig,
@@ -30,8 +29,7 @@ import {
   getBindingPrefixByDefaultScope,
 } from '@teambit/legacy.consumer-config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { Consumer } from '@teambit/legacy.consumer';
-import ComponentOutOfSync from '@teambit/legacy.consumer';
+import { ComponentOutOfSync, ComponentsPendingImport, Consumer } from '@teambit/legacy.consumer';
 import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';

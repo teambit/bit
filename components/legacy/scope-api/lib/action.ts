@@ -1,4 +1,4 @@
-import { loadScope, Scope } from '@teambit/legacy.scope';
+import { ActionNotFound, loadScope, Scope } from '@teambit/legacy.scope';
 import {
   Action,
   ExportValidate,
@@ -8,7 +8,6 @@ import {
   PostSign,
   FetchMissingHistory,
 } from '@teambit/scope.remote-actions';
-import ActionNotFound from '@teambit/legacy.scope';
 import { AuthData } from '@teambit/scope.network';
 
 type ActionClassesList = new () => Action<any, any>;

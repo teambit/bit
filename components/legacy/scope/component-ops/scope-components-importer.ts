@@ -11,15 +11,22 @@ import { compact, flatten, partition, uniq } from 'lodash';
 import { Scope } from '..';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
-import ComponentVersion from '../component-version';
+import { ComponentVersion } from '../component-version';
 import { ComponentNotFound, HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
-import { Lane, ModelComponent, Version, VersionHistory } from '../models';
-import { Ref, Repository } from '../objects';
-import { ObjectItemsStream, ObjectList } from '../objects/object-list';
+import {
+  Lane,
+  ModelComponent,
+  Version,
+  VersionHistory,
+  BitObjectList,
+  ObjectItemsStream,
+  ObjectList,
+  Ref,
+  Repository,
+} from '@teambit/scope.objects';
 import SourcesRepository, { ComponentDef } from '../repositories/sources';
 import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
-import VersionDependencies from '../version-dependencies';
-import { BitObjectList } from '@teambit/scope.objects';
+import { VersionDependencies } from '../version-dependencies';
 import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';

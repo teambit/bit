@@ -4,9 +4,8 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LATEST_BIT_VERSION } from '@teambit/legacy.constants';
 import Consumer from '../../consumer/consumer';
 import { logger } from '@teambit/legacy.logger';
-import { Lane } from '../models';
-import { Ref } from '../objects';
-import RemovedObjects from '../removed-components';
+import { Ref, Lane } from '@teambit/scope.objects';
+import { RemovedObjects } from '../removed-components';
 import Scope from '../scope';
 
 /**

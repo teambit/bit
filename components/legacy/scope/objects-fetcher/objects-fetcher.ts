@@ -9,16 +9,14 @@ import { loader } from '@teambit/legacy.loader';
 import { logger } from '@teambit/legacy.logger';
 import { ScopeNotFound } from '../exceptions';
 import { ErrorFromRemote } from '../exceptions/error-from-remote';
-import { UnexpectedNetworkError } from '../network/exceptions';
-import { Repository } from '../objects';
-import { ObjectItemsStream } from '../objects/object-list';
+import { UnexpectedNetworkError } from '@teambit/scope.network';
+import { Repository, ObjectItemsStream, Lane } from '@teambit/scope.objects';
 import { ObjectsWritable } from './objects-writable-stream';
 import { WriteObjectsQueue } from './write-objects-queue';
 import { groupByScopeName } from '../component-ops/scope-components-importer';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
 import { Remotes, Remote, ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
-import { Lane } from '../models';
 import { ComponentsPerRemote, MultipleComponentMerger } from '../component-ops/multiple-component-merger';
 
 /**

@@ -1,11 +1,19 @@
 import pMap from 'p-map';
 import { logger } from '@teambit/legacy.logger';
-import { Lane, LaneHistory, ModelComponent, ScopeMeta, Source, Version, VersionHistory } from './models';
+import {
+  Ref,
+  Lane,
+  LaneHistory,
+  ModelComponent,
+  ScopeMeta,
+  Source,
+  Version,
+  VersionHistory,
+} from '@teambit/scope.objects';
 import Scope, { GarbageCollectorOpts } from './scope';
 import { getAllVersionsInfo } from '@teambit/component.snap-distance';
 import pMapSeries from 'p-map-series';
 import { compact, uniq } from 'lodash';
-import { Ref } from '@teambit/scope.objects';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import chalk from 'chalk';
 import { VersionNotFound } from './exceptions';

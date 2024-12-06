@@ -1,7 +1,7 @@
 import { logger } from '@teambit/legacy.logger';
 import { MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import { ModelComponent } from '../models';
+import { ModelComponent } from '@teambit/scope.objects';
 
 /**
  * the base component to save is the existingComponent because it might contain local data that

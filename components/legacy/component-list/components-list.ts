@@ -2,14 +2,16 @@ import pFilter from 'p-filter';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import R from 'ramda';
 import { LATEST } from '@teambit/legacy.constants';
-import { Lane } from '@teambit/scope.objects';
-import ModelComponent from '@teambit/scope.objects';
+import { ModelComponent, Lane } from '@teambit/scope.objects';
 import { Scope } from '@teambit/legacy.scope';
 import { fetchRemoteVersions } from '@teambit/scope.remotes';
 import { isBitIdMatchByWildcards } from '@teambit/legacy.utils';
 import { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
-import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
-import { InvalidComponent, ComponentLoadOptions } from '@teambit/legacy.consumer-component';
+import {
+  ConsumerComponent as Component,
+  InvalidComponent,
+  ComponentLoadOptions,
+} from '@teambit/legacy.consumer-component';
 import { Consumer } from '@teambit/legacy.consumer';
 
 export type ListScopeResult = {

@@ -51,7 +51,7 @@ import {
   ObjectList,
   DependenciesGraph,
 } from '@teambit/scope.objects';
-import RemovedObjects from './removed-components';
+import { RemovedObjects } from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
 import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-json';

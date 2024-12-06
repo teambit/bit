@@ -8,7 +8,7 @@ import {
   DEPENDENCIES_FIELDS,
 } from '@teambit/legacy.constants';
 import { SourceFile } from '@teambit/component.sources';
-import ComponentConfig from './component-config';
+import { ComponentConfig } from './component-config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
 

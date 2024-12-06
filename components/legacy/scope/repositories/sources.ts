@@ -5,7 +5,7 @@ import pMap from 'p-map';
 import { BuildStatus } from '@teambit/legacy.constants';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
-import ComponentObjects from '../component-objects';
+import { ComponentObjects } from '../component-objects';
 import {
   getAllVersionHashes,
   getAllVersionsInfo,
@@ -16,11 +16,18 @@ import {
 } from '@teambit/component.snap-distance';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import { ModelComponent, Source, Symlink, Version } from '../models';
-import Lane, { LaneComponent } from '../models/lane';
-import { ComponentProps } from '../models/model-component';
-import { BitObject, Ref } from '../objects';
-import { Repository } from '@teambit/scope.objects';
+import {
+  ModelComponent,
+  Source,
+  Symlink,
+  Version,
+  Repository,
+  BitObject,
+  ComponentProps,
+  Ref,
+  Lane,
+  LaneComponent,
+} from '@teambit/scope.objects';
 import Scope from '../scope';
 import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';

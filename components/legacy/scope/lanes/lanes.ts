@@ -7,7 +7,7 @@ import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { logger } from '@teambit/legacy.logger';
 import {
   LaneComponent,
-  Log,
+  LaneLog,
   IndexType,
   LaneItem,
   BitObject,
@@ -286,7 +286,7 @@ export type LaneData = {
   components: Array<{ id: ComponentID; head: string }>;
   isMerged: boolean | null;
   readmeComponent?: { id: ComponentID; head?: string };
-  log?: Log;
+  log?: LaneLog;
   hash: string;
 };
 

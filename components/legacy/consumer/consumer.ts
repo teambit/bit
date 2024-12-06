@@ -17,8 +17,7 @@ import {
   LATEST,
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { Scope } from '@teambit/legacy.scope';
-import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
+import { NoHeadNoVersion, Scope, ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
 import { Lane, ModelComponent, Version } from '@teambit/scope.objects';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
@@ -41,13 +40,11 @@ import {
   LoadManyResult,
 } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile } from '@teambit/component.sources';
-import { ILegacyWorkspaceConfig } from './config';
-import WorkspaceConfig from './config/workspace-config';
+import { LegacyWorkspaceConfig, ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound } from './exceptions';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
-import { NoHeadNoVersion } from '@teambit/legacy.scope';
 
 type ConsumerProps = {
   projectPath: string;
@@ -496,7 +493,7 @@ export default class Consumer {
       }
       throw err;
     });
-    const config = await WorkspaceConfig.loadIfExist(consumerInfo.path, scope.path);
+    const config = await LegacyWorkspaceConfig.loadIfExist(consumerInfo.path, scope.path);
     const consumer = new Consumer({
       projectPath: consumerInfo.path,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

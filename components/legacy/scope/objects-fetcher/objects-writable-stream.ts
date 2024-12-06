@@ -1,8 +1,15 @@
 import { Writable } from 'stream';
-import { BitObject, Repository } from '../objects';
 import { logger } from '@teambit/legacy.logger';
-import { Lane, LaneHistory, ModelComponent, Version, VersionHistory } from '../models';
-import { ObjectItem } from '../objects/object-list';
+import {
+  ObjectItem,
+  BitObject,
+  Repository,
+  Lane,
+  LaneHistory,
+  ModelComponent,
+  Version,
+  VersionHistory,
+} from '@teambit/scope.objects';
 import { WriteObjectsQueue } from './write-objects-queue';
 import { ComponentsPerRemote } from '../component-ops/multiple-component-merger';
 
