@@ -18,22 +18,22 @@ import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import { getLatestVersion, validateVersion } from '@teambit/pkg.modules.semver-helper';
-import ComponentObjects from '@teambit/legacy/dist/scope/component-objects';
+import ComponentObjects from '@teambit/legacy.scope';
 import { SnapsDistance, getDivergeData } from '@teambit/component.snap-distance';
 import {
   getAllVersionParents,
   getAllVersionsInfo,
   getVersionParentsFromVersion,
 } from '@teambit/component.snap-distance';
-import ComponentVersion from '@teambit/legacy/dist/scope/component-version';
+import ComponentVersion from '@teambit/legacy.scope';
 import {
   HeadNotFound,
   ParentNotFound,
   VersionAlreadyExists,
   VersionNotFound,
   VersionNotFoundOnFS,
-} from '@teambit/legacy/dist/scope/exceptions';
-import { BitObject, Ref } from '@teambit/legacy/dist/scope/objects';
+} from '@teambit/legacy.scope';
+import { BitObject, Ref } from '@teambit/scope.objects';
 import { Repository } from '@teambit/scope.objects';
 import { Lane } from '.';
 import ScopeMeta from './scopeMeta';
@@ -41,10 +41,10 @@ import Source from './source';
 import Version from './version';
 import VersionHistory, { VersionParents } from './version-history';
 import { ObjectItem } from '../objects/object-list';
-import { NoHeadNoVersion } from '@teambit/legacy/dist/scope/exceptions/no-head-no-version';
-import { errorIsTypeOfMissingObject } from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
-import type Scope from '@teambit/legacy/dist/scope/scope';
-import { BitIdCompIdError } from '@teambit/legacy/dist/scope/exceptions/bit-id-comp-id-err';
+import { NoHeadNoVersion } from '@teambit/legacy.scope';
+import { errorIsTypeOfMissingObject } from '@teambit/legacy.scope';
+import type Scope from '@teambit/legacy.scope';
+import { BitIdCompIdError } from '@teambit/legacy.scope';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
 

@@ -1,4 +1,4 @@
-import { loadScope, Scope } from '@teambit/legacy/dist/scope';
+import { loadScope, Scope } from '@teambit/legacy.scope';
 import { VersionHistory } from '@teambit/scope.objects';
 
 export async function catVersionHistory(id: string) {

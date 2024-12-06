@@ -4,14 +4,14 @@ import path from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { logger } from '@teambit/legacy.logger';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Scope } from '@teambit/legacy.scope';
 import { Lane, Source } from '@teambit/scope.objects';
 import { Ref } from '@teambit/scope.objects';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { ArtifactVinyl } from './artifact';
-import { MissingObjects } from '@teambit/legacy/dist/scope/exceptions/missing-objects';
+import { MissingObjects } from '@teambit/legacy.scope';
 
 export type ArtifactRef = { relativePath: string; ref: Ref; url?: string };
 export type ArtifactModel = { relativePath: string; file: string; url?: string };

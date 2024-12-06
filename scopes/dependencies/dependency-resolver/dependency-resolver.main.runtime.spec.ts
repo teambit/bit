@@ -1,5 +1,5 @@
 // @ts-ignore
-jest.mock('@teambit/legacy/dist/scope/network/http', () => ({
+jest.mock('@teambit/scope.network', () => ({
   Http: {
     // @ts-ignore
     getNetworkConfig: jest.fn(),

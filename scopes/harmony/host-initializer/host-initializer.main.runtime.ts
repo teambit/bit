@@ -3,7 +3,7 @@ import * as path from 'path';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { Consumer } from '@teambit/legacy.consumer';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Scope } from '@teambit/legacy.scope';
 import { Repository } from '@teambit/scope.objects';
 import { isDirEmpty } from '@teambit/toolbox.fs.is-dir-empty';
 import { WorkspaceExtensionProps } from '@teambit/config';

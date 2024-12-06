@@ -2,7 +2,7 @@ import { toBase64ArrayBuffer } from '@teambit/legacy.utils';
 import ModelComponent from './models/model-component';
 import BitObject from './objects/object';
 
-export default class ComponentObjects {
+export class ComponentObjects {
   component: Buffer;
   objects: Buffer[];
 

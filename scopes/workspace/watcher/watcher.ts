@@ -10,7 +10,7 @@ import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils
 import mapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
-import { UNMERGED_FILENAME } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
+import { UNMERGED_FILENAME } from '@teambit/legacy.scope';
 import chokidar, { FSWatcher } from 'chokidar';
 import { ComponentMap } from '@teambit/legacy.bit-map';
 import { CompilationInitiator } from '@teambit/compiler';

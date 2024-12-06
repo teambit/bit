@@ -8,7 +8,7 @@ import Ref from './ref';
 import { logger } from '@teambit/legacy.logger';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import { ExportMetadata } from '../models';
-import { UnknownObjectType } from '@teambit/legacy/dist/scope/exceptions/unknown-object-type';
+import { UnknownObjectType } from '@teambit/legacy.scope';
 
 /**
  * when error occurred during streaming between HTTP server and client, there is no good way to

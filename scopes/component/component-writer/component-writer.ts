@@ -1,5 +1,5 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Scope } from '@teambit/legacy.scope';
 import { PathLinuxRelative, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';

@@ -38,7 +38,7 @@ const TIMEOUT_FOR_MUTEX = 5 * 60 * 1000; // 5 minutes
  * this class is singleton because it uses Mutex to ensure that the same objects are not fetched and written at the same time.
  * (if this won't be a singleton, then the mutex will be created for each instance, hence, one instance won't lock the other one).
  */
-export default class ScopeComponentsImporter {
+export class ScopeComponentsImporter {
   private static instancePerScope: { [scopeName: string]: ScopeComponentsImporter } = {};
   private sources: SourcesRepository;
   private repo: Repository;

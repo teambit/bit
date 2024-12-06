@@ -4,7 +4,7 @@ import R from 'ramda';
 import { LATEST } from '@teambit/legacy.constants';
 import { Lane } from '@teambit/scope.objects';
 import ModelComponent from '@teambit/scope.objects';
-import Scope from '@teambit/legacy/dist/scope/scope';
+import { Scope } from '@teambit/legacy.scope';
 import { fetchRemoteVersions } from '@teambit/scope.remotes';
 import { isBitIdMatchByWildcards } from '@teambit/legacy.utils';
 import { BitMap, ComponentMap } from '@teambit/legacy.bit-map';

@@ -7,7 +7,7 @@ import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
-import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
+import { UnmergedComponent } from '@teambit/legacy.scope';
 import { Lane, ModelComponent } from '@teambit/scope.objects';
 import { Ref } from '@teambit/scope.objects';
 import chalk from 'chalk';

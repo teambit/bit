@@ -3,15 +3,15 @@ import { PushOptions, CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '@teambit/legac
 import { ListScopeResult } from '@teambit/legacy.component-list';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
-import type { Scope } from '@teambit/legacy/dist/scope';
-import ComponentObjects from '@teambit/legacy/dist/scope/component-objects';
+import type { Scope } from '@teambit/legacy.scope';
+import ComponentObjects from '@teambit/legacy.scope';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
+import { LaneData } from '@teambit/legacy.scope';
 import { ComponentLog } from '@teambit/scope.objects';
 import { connect } from '@teambit/scope.network';
 import { Network } from '@teambit/scope.network';
 import { ObjectItemsStream, ObjectList } from '@teambit/scope.objects';
-import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
+import { RemovedObjects } from '@teambit/legacy.scope';
 import { isBitUrl } from '@teambit/legacy.utils';
 import { InvalidRemote } from './exceptions';
 

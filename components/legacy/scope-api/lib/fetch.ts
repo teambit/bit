@@ -5,7 +5,7 @@ import semver from 'semver';
 import { LaneId } from '@teambit/lane-id';
 import { LATEST_BIT_VERSION } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { loadScope, Scope } from '@teambit/legacy/dist/scope';
+import { loadScope, Scope } from '@teambit/legacy.scope';
 import { Lane, LaneHistory, Ref, ComponentWithCollectOptions, ObjectsReadableGenerator } from '@teambit/scope.objects';
 import { LaneNotFound } from './exceptions/lane-not-found';
 

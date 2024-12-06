@@ -3,7 +3,7 @@ import { isEmpty } from 'lodash';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 import { BitError } from '@teambit/bit-error';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Scope } from '@teambit/legacy.scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BuildStatus, Extensions } from '@teambit/legacy.constants';
 import { ConsumerComponent, CURRENT_SCHEMA } from '@teambit/legacy.consumer-component';

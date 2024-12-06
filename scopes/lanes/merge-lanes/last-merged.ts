@@ -7,7 +7,7 @@ import { BitMap } from '@teambit/legacy.bit-map';
 import { PromptCanceled } from '@teambit/legacy.cli.prompts';
 import { ScopeMain } from '@teambit/scope';
 import { Lane } from '@teambit/scope.objects';
-import { StagedSnaps } from '@teambit/legacy/dist/scope/staged-snaps';
+import { StagedSnaps } from '@teambit/legacy.scope';
 import { Consumer } from '@teambit/legacy.consumer';
 import { BitError } from '@teambit/bit-error';
 import { BitObject } from '@teambit/scope.objects';

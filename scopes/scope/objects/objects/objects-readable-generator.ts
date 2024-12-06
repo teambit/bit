@@ -2,7 +2,7 @@ import pMapSeries from 'p-map-series';
 import { BitError } from '@teambit/bit-error';
 import { Readable } from 'stream';
 import { BitObject, Ref, Repository } from '.';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Scope } from '@teambit/legacy.scope';
 import { logger } from '@teambit/legacy.logger';
 import { getAllVersionHashesMemoized } from '@teambit/component.snap-distance';
 import { Lane, LaneHistory, ModelComponent, Version } from '../models';

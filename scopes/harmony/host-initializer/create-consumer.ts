@@ -1,7 +1,7 @@
 import path from 'path';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { Consumer } from '@teambit/legacy.consumer';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Scope } from '@teambit/legacy.scope';
 import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { ConfigMain, WorkspaceConfig, WorkspaceExtensionProps, WorkspaceConfigFileProps } from '@teambit/config';

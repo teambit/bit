@@ -13,7 +13,7 @@ import {
 } from '@teambit/legacy.consumer-component';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { IssuesClasses } from '@teambit/component-issues';
-import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import { ComponentNotFound } from '@teambit/legacy.scope';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';

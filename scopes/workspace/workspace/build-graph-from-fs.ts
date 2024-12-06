@@ -6,7 +6,7 @@ import { Component, ComponentID } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ComponentIdList } from '@teambit/component-id';
 import { Lane } from '@teambit/scope.objects';
-import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
 import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
 import compact from 'lodash.compact';
 import { Logger } from '@teambit/logger';

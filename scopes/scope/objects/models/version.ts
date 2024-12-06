@@ -20,12 +20,12 @@ import type { Doclet } from '@teambit/semantics.doc-parser';
 import { logger } from '@teambit/legacy.logger';
 import { getStringifyArgs, PathLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
-import VersionInvalid from '@teambit/legacy/dist/scope/exceptions/version-invalid';
-import { BitObject, Ref } from '@teambit/legacy/dist/scope/objects';
+import VersionInvalid from '@teambit/legacy.scope';
+import { BitObject, Ref } from '@teambit/scope.objects';
 import { ObjectItem, Repository } from '@teambit/scope.objects';
-import validateVersionInstance from '@teambit/legacy/dist/scope/version-validator';
+import validateVersionInstance from '@teambit/legacy.scope';
 import Source from './source';
-import { BitIdCompIdError } from '@teambit/legacy/dist/scope/exceptions/bit-id-comp-id-err';
+import { BitIdCompIdError } from '@teambit/legacy.scope';
 import { DependenciesGraph } from './dependencies-graph';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 

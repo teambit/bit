@@ -1644,13 +1644,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/semantics/schema"
     },
-    "scope": {
-        "name": "scope",
-        "scope": "teambit.scope",
-        "version": "1.0.484",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/scope/scope"
-    },
     "scope-api": {
         "name": "scope-api",
         "scope": "teambit.legacy",
@@ -1812,6 +1805,27 @@
                 "env": "teambit.node/envs/node-babel-mocha"
             }
         }
+    },
+    "teambit.legacy/scope": {
+        "name": "scope",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/scope",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.33": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
+    },
+    "teambit.scope/scope": {
+        "name": "scope",
+        "scope": "teambit.scope",
+        "version": "1.0.484",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/scope/scope"
     },
     "tester": {
         "name": "tester",

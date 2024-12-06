@@ -17,7 +17,7 @@ import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Log } from '@teambit/scope.objects';
 import pMapSeries from 'p-map-series';
-import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
+import { Scope as LegacyScope } from '@teambit/legacy.scope';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { ConfigMergeResult } from '@teambit/config-merger';

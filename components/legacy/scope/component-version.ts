@@ -4,7 +4,7 @@ import ModelComponent from './models/model-component';
 import Version from './models/version';
 import Repository from './objects/repository';
 
-export default class ComponentVersion {
+export class ComponentVersion {
   readonly component: ModelComponent;
   readonly version: string;
 

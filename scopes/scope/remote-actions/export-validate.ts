@@ -1,11 +1,11 @@
 import path from 'path';
 import glob from 'glob';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Scope } from '@teambit/legacy.scope';
 import { PENDING_OBJECTS_DIR } from '@teambit/legacy.constants';
 import { mergeObjects } from '@teambit/export';
 import { Action } from './action';
 import { logger } from '@teambit/legacy.logger';
-import ServerIsBusy from '@teambit/legacy/dist/scope/exceptions/server-is-busy';
+import ServerIsBusy from '@teambit/legacy.scope';
 import { BitObjectList } from '@teambit/scope.objects';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
 

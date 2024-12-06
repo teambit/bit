@@ -4,9 +4,9 @@ import R from 'ramda';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { logger } from '@teambit/legacy.logger';
 import { Remotes, Remote, getScopeRemotes } from '@teambit/scope.remotes';
-import { ComponentNotFound, MergeConflict, MergeConflictOnRemote } from '@teambit/legacy/dist/scope/exceptions';
-import ComponentNeedsUpdate from '@teambit/legacy/dist/scope/exceptions/component-needs-update';
-import Scope from '@teambit/legacy/dist/scope/scope';
+import { ComponentNotFound, MergeConflict, MergeConflictOnRemote } from '@teambit/legacy.scope';
+import ComponentNeedsUpdate from '@teambit/legacy.scope';
+import { Scope } from '@teambit/legacy.scope';
 import {
   Lane,
   Version,
@@ -17,10 +17,10 @@ import {
   BitObjectList,
   ObjectList,
 } from '@teambit/scope.objects';
-import { ExportPersist, ExportValidate, RemovePendingDir } from '@teambit/legacy/dist/scope/actions';
+import { ExportPersist, ExportValidate, RemovePendingDir } from '@teambit/scope.remote-actions';
 import { loader } from '@teambit/legacy.loader';
-import { PersistFailed } from '@teambit/legacy/dist/scope/exceptions/persist-failed';
-import { MergeResult } from '@teambit/legacy/dist/scope/repositories/sources';
+import { PersistFailed } from '@teambit/legacy.scope';
+import { MergeResult } from '@teambit/legacy.scope';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 

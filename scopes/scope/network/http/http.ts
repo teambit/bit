@@ -14,9 +14,9 @@ import { ListScopeResult } from '@teambit/legacy.component-list';
 import { Network } from '../network';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
+import { LaneData } from '@teambit/legacy.scope';
 import { ComponentLog } from '@teambit/scope.objects';
-import { ScopeDescriptor } from '@teambit/legacy/dist/scope/scope';
+import { ScopeDescriptor } from '@teambit/legacy.scope';
 import { globalFlags } from '@teambit/cli';
 import { getSync, list } from '@teambit/legacy.global-config';
 import {
@@ -46,11 +46,11 @@ import {
   CENTRAL_BIT_HUB_URL_IMPORTER_V2,
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { ObjectItemsStream, ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
+import { ObjectItemsStream, ObjectList } from '@teambit/scope.objects';
 import { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
 import { remoteErrorHandler } from '../remote-error-handler';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
-import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
+import { RemovedObjects } from '@teambit/legacy.scope';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
 import { loader } from '@teambit/legacy.loader';
 import { UnexpectedNetworkError } from '../exceptions';

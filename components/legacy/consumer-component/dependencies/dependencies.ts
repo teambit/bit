@@ -2,11 +2,11 @@ import R from 'ramda';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
 import { ValidationError } from '@teambit/legacy.cli.error';
-import Scope from '@teambit/legacy/dist/scope/scope';
+import { Scope } from '@teambit/legacy.scope';
 import { fetchRemoteVersions } from '@teambit/scope.remotes';
 import { isValidPath } from '@teambit/legacy.utils';
 import Dependency from './dependency';
-import { validateType } from '@teambit/legacy/dist/scope/validate-type';
+import { validateType } from '@teambit/legacy.scope';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
 export const DEPENDENCIES_TYPES_UI_MAP = {

@@ -1,9 +1,9 @@
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { CustomError } from '@teambit/legacy.cli.error';
-import { ComponentNotFound, MergeConflictOnRemote } from '@teambit/legacy/dist/scope/exceptions';
-import ActionNotFound from '@teambit/legacy/dist/scope/exceptions/action-not-found';
-import ClientIdInUse from '@teambit/legacy/dist/scope/exceptions/client-id-in-use';
-import ServerIsBusy from '@teambit/legacy/dist/scope/exceptions/server-is-busy';
+import { ComponentNotFound, MergeConflictOnRemote } from '@teambit/legacy.scope';
+import ActionNotFound from '@teambit/legacy.scope';
+import ClientIdInUse from '@teambit/legacy.scope';
+import ServerIsBusy from '@teambit/legacy.scope';
 import { OldClientVersion, PermissionDenied, RemoteScopeNotFound, UnexpectedNetworkError } from './exceptions';
 // eslint-disable-next-line complexity
 export function remoteErrorHandler(code: number, parsedError: Record<string, any>, remotePath: string, err) {

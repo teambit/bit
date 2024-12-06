@@ -11,7 +11,7 @@ import { ComponentsList } from '@teambit/legacy.component-list';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { Lane, ModelComponent } from '@teambit/scope.objects';
 import { hasWildcard } from '@teambit/legacy.utils';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Scope } from '@teambit/legacy.scope';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { LaneReadmeComponent } from '@teambit/scope.objects';
@@ -27,7 +27,7 @@ import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { persistRemotes, validateRemotes, removePendingDirs } from '@teambit/export';
 import { BitObject, Ref } from '@teambit/scope.objects';
-import { PersistFailed } from '@teambit/legacy/dist/scope/exceptions/persist-failed';
+import { PersistFailed } from '@teambit/legacy.scope';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
 import { ExportAspect } from './export.aspect';
 import { ExportCmd } from './export-cmd';

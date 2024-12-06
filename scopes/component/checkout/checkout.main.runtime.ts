@@ -17,7 +17,7 @@ import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-w
 import mapSeries from 'p-map-series';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Version, ModelComponent, Lane } from '@teambit/scope.objects';
-import { Tmp } from '@teambit/legacy/dist/scope/repositories';
+import { Tmp } from '@teambit/legacy.scope';
 import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';

@@ -5,7 +5,7 @@ import esmLoader from '@teambit/node.utils.esm-loader';
 import { readdirSync, existsSync } from 'fs-extra';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { ComponentID } from '@teambit/component-id';
-import LegacyScope from '@teambit/legacy/dist/scope/scope';
+import { Scope as LegacyScope } from '@teambit/legacy.scope';
 import { GLOBAL_SCOPE, DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
 import { MainRuntime } from '@teambit/cli';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';

@@ -59,7 +59,7 @@ import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog } from '@teambit/scope.objects';
 import { SourceFile, DataToPersist, JsonVinyl } from '@teambit/component.sources';
-import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
+import { ScopeComponentsImporter } from '@teambit/legacy.scope';
 import { Lane } from '@teambit/scope.objects';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';

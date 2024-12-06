@@ -19,7 +19,7 @@ import Version from './models/version';
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.
  */
-export default function validateVersionInstance(version: Version): void {
+export function validateVersionInstance(version: Version): void {
   const message = `unable to save Version object${
     version.componentId ? ` of "${version.componentId.toString()}"` : ` hash ${version.hash().toString()}`
   }`;

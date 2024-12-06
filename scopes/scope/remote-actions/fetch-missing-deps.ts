@@ -1,5 +1,5 @@
 import { ComponentIdList } from '@teambit/component-id';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Scope } from '@teambit/legacy.scope';
 import { logger } from '@teambit/legacy.logger';
 import { Action } from './action';
 

@@ -17,9 +17,9 @@ import {
   LATEST,
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { Scope } from '@teambit/legacy/dist/scope';
-import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
-import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
+import { Scope } from '@teambit/legacy.scope';
+import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
+import { Lane, ModelComponent, Version } from '@teambit/scope.objects';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import format from 'string-format';
@@ -47,7 +47,7 @@ import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound } from './exceptions';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
-import { NoHeadNoVersion } from '@teambit/legacy/dist/scope/exceptions/no-head-no-version';
+import { NoHeadNoVersion } from '@teambit/legacy.scope';
 
 type ConsumerProps = {
   projectPath: string;

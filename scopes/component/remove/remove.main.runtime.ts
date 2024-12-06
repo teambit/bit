@@ -12,7 +12,7 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import { IssuesClasses } from '@teambit/component-issues';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
-import { NoHeadNoVersion } from '@teambit/legacy/dist/scope/exceptions/no-head-no-version';
+import { NoHeadNoVersion } from '@teambit/legacy.scope';
 import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
 import { deleteComponentsFiles } from './delete-component-files';
 import { RemoveCmd } from './remove-cmd';

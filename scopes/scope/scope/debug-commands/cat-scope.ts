@@ -1,4 +1,4 @@
-import { loadScope, Scope } from '@teambit/legacy/dist/scope';
+import { loadScope, Scope } from '@teambit/legacy.scope';
 import { Lane, ModelComponent, ScopeMeta, Symlink, Version } from '@teambit/scope.objects';
 import BitObject from '@teambit/scope.objects';
 

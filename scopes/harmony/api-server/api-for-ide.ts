@@ -15,7 +15,7 @@ import { Log } from '@teambit/scope.objects';
 import { ComponentCompareMain } from '@teambit/component-compare';
 import { GeneratorMain } from '@teambit/generator';
 import { getParsedHistoryMetadata } from '@teambit/legacy.consumer';
-import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
+import { RemovedObjects } from '@teambit/legacy.scope';
 import { RemoveMain } from '@teambit/remove';
 import { compact, uniq } from 'lodash';
 import { ConfigMain } from '@teambit/config';

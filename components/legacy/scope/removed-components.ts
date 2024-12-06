@@ -9,7 +9,7 @@ export type RemovedObjectSerialized = {
   removedLanes: string[];
 };
 
-export default class RemovedObjects {
+export class RemovedObjects {
   removedComponentIds: ComponentIdList;
   missingComponents: ComponentIdList;
   dependentBits: Record<string, ComponentIdList>;

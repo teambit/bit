@@ -7,7 +7,7 @@ import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ComponentIdList } from '@teambit/component-id';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
 import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
 import compact from 'lodash.compact';
 import { Logger } from '@teambit/logger';

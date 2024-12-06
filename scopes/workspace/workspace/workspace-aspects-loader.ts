@@ -17,7 +17,7 @@ import fs from 'fs-extra';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { ComponentID } from '@teambit/component-id';
-import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import { ComponentNotFound } from '@teambit/legacy.scope';
 import pMapSeries from 'p-map-series';
 import { difference, compact, groupBy, partition } from 'lodash';
 import { Consumer } from '@teambit/legacy.consumer';

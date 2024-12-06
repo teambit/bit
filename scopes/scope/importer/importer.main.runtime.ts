@@ -11,7 +11,7 @@ import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-w
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
-import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
+import { ScopeComponentsImporter } from '@teambit/legacy.scope';
 import { importAllArtifactsFromLane } from '@teambit/component.sources';
 import { InstallAspect, InstallMain } from '@teambit/install';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
