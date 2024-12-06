@@ -8,7 +8,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Component, InvalidComponent } from '@teambit/component';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import ComponentsPendingImport from '@teambit/legacy.consumer';
+import { ComponentsPendingImport } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { ModelComponent } from '@teambit/scope.objects';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
