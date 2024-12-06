@@ -9,7 +9,7 @@ import {
   FetchMissingHistory,
 } from '@teambit/legacy/dist/scope/actions';
 import ActionNotFound from '@teambit/legacy/dist/scope/exceptions/action-not-found';
-import { AuthData } from '@teambit/legacy/dist/scope/network/http/http';
+import { AuthData } from '@teambit/scope.network';
 
 type ActionClassesList = new () => Action<any, any>;
 type ExternalAction = { name: string; execute: Function };

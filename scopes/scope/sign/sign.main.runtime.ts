@@ -15,7 +15,7 @@ import { ObjectList } from '@teambit/scope.objects';
 import { Remotes, Remote, getScopeRemotes } from '@teambit/scope.remotes';
 import { ComponentIdList } from '@teambit/component-id';
 import Version, { Log } from '@teambit/scope.objects';
-import { Http } from '@teambit/legacy/dist/scope/network/http';
+import { Http } from '@teambit/scope.network';
 import { LanesAspect, LanesMain } from '@teambit/lanes';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';

@@ -1,4 +1,4 @@
-import { getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
+import { getAuthDataFromHeader } from '@teambit/scope.network';
 
 export class Registry {
   constructor(

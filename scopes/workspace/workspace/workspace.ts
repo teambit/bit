@@ -65,7 +65,7 @@ import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { isHash } from '@teambit/component-version';
 import { GlobalConfigMain } from '@teambit/global-config';
-import { getAuthHeader, fetchWithAgent as fetch } from '@teambit/legacy/dist/scope/network/http/http';
+import { getAuthHeader, fetchWithAgent as fetch } from '@teambit/scope.network';
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,

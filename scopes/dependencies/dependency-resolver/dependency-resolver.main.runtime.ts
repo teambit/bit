@@ -26,7 +26,7 @@ import {
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { DetectorHook } from '@teambit/dependencies';
-import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
+import { Http, ProxyConfig, NetworkConfig } from '@teambit/scope.network';
 import { onTagIdTransformer } from '@teambit/snapping';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
@@ -93,7 +93,7 @@ import { EnvPolicy } from './policy/env-policy';
 export const BIT_CLOUD_REGISTRY = `https://node-registry.${getCloudDomain()}/`;
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
-export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
+export { ProxyConfig, NetworkConfig } from '@teambit/scope.network';
 
 export interface DependencyResolverComponentData {
   packageName: string;

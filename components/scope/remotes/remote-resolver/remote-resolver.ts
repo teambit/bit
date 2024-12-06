@@ -9,7 +9,7 @@ import {
   getSymphonyUrl,
 } from '@teambit/legacy/dist/constants';
 import Scope from '@teambit/legacy/dist/scope/scope';
-import { getAuthHeader, getFetcherWithAgent } from '@teambit/legacy/dist/scope/network/http/http';
+import { getAuthHeader, getFetcherWithAgent } from '@teambit/scope.network';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { ScopeNotFoundOrDenied } from '../exceptions/scope-not-found-or-denied';
 

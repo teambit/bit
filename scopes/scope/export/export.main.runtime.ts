@@ -15,14 +15,14 @@ import { Scope } from '@teambit/legacy/dist/scope';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { LaneReadmeComponent } from '@teambit/scope.objects';
-import { Http } from '@teambit/legacy/dist/scope/network/http';
+import { Http } from '@teambit/scope.network';
 import { ObjectItem, ObjectList } from '@teambit/scope.objects';
 import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Remotes, Remote, getScopeRemotes } from '@teambit/scope.remotes';
 import { EjectAspect, EjectMain, EjectResults } from '@teambit/eject';
-import { ExportOrigin } from '@teambit/legacy/dist/scope/network/http/http';
+import { ExportOrigin } from '@teambit/scope.network';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import {

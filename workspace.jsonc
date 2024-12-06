@@ -725,6 +725,9 @@
     "scopes/scope/objects": {
       "teambit.pkg/pkg": {}
     },
+    "scopes/scope/network": {
+      "teambit.pkg/pkg": {}
+    },
     "components/semantics/doc-parser": {
       "teambit.pkg/pkg": {}
     }

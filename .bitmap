@@ -1228,6 +1228,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/multi-tester"
     },
+    "network": {
+        "name": "network",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.scope",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/scope/network",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.33": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
+    },
     "network/get-port": {
         "name": "network/get-port",
         "scope": "teambit.toolbox",

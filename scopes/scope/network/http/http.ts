@@ -12,13 +12,13 @@ import { LaneId } from '@teambit/lane-id';
 import { getAgent, AgentOptions } from '@teambit/toolbox.network.agent';
 import { ListScopeResult } from '@teambit/legacy.component-list';
 import { Network } from '../network';
-import Component from '../../../consumer/component';
+import Component from '@teambit/legacy/dist/consumer/component';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import { LaneData } from '../../lanes/lanes';
-import { ComponentLog } from '../../models/model-component';
-import { ScopeDescriptor } from '../../scope';
-import globalFlags from '../../../cli/global-flags';
-import { getSync, list } from '../../../api/consumer/lib/global-config';
+import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
+import { ComponentLog } from '@teambit/scope.objects';
+import { ScopeDescriptor } from '@teambit/legacy/dist/scope/scope';
+import globalFlags from '@teambit/legacy/dist/cli/global-flags';
+import { getSync, list } from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import {
   CFG_HTTPS_PROXY,
   CFG_PROXY,
@@ -44,13 +44,13 @@ import {
   CFG_NETWORK_STRICT_SSL,
   CENTRAL_BIT_HUB_URL_IMPORTER,
   CENTRAL_BIT_HUB_URL_IMPORTER_V2,
-} from '../../../constants';
-import logger from '../../../logger/logger';
-import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
+} from '@teambit/legacy/dist/constants';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { ObjectItemsStream, ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
 import { remoteErrorHandler } from '../remote-error-handler';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
-import RemovedObjects from '../../removed-components';
+import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
 import { loader } from '@teambit/legacy.loader';
 import { UnexpectedNetworkError } from '../exceptions';

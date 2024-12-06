@@ -35,7 +35,7 @@ import { Types } from '@teambit/legacy/dist/scope/object-registrar';
 import { ObjectList } from '@teambit/scope.objects';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { SnapsDistance, getDivergeData } from '@teambit/component.snap-distance';
-import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
+import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/scope.network';
 import { remove, FETCH_OPTIONS, ExternalActions } from '@teambit/legacy.scope-api';
 import { BitError } from '@teambit/bit-error';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
