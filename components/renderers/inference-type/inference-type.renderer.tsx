@@ -46,7 +46,9 @@ function InferenceTypeComponent(props: APINodeRenderProps) {
     >
       {isSpread && (
         <Tooltip
+          className={styles.syntaxTooltip}
           placement={'bottom-end'}
+          theme="light"
           content={
             <SyntaxHighlighter
               language={lang}
