@@ -441,6 +441,11 @@
       ],
       [
         "",
+        "show-internal-urls",
+        "show urls for all internal dev servers"
+      ],
+      [
+        "",
         "skip-compilation",
         "skip the auto-compilation before starting the web-server"
       ],
