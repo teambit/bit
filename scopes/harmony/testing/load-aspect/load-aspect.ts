@@ -10,10 +10,8 @@ import { ComponentID } from '@teambit/component';
 import { CLIAspect } from '@teambit/cli';
 import { NodeAspect } from '@teambit/node';
 import { ComponentLoader } from '@teambit/legacy.consumer-component';
-import ComponentConfig from '@teambit/legacy.consumer-config';
-import ComponentOverrides from '@teambit/legacy.consumer-config';
+import { LegacyWorkspaceConfig, ComponentOverrides, ComponentConfig } from '@teambit/legacy.consumer-config';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import WorkspaceConfig from '@teambit/legacy.consumer-config';
 import { DependenciesAspect } from '@teambit/dependencies';
 
 function getPackageName(aspect: any, id: ComponentID) {
@@ -131,5 +129,5 @@ function clearGlobalsIfNeeded() {
   // registerCoreExtensions() from @teambit/bit, which as far as I remember should not be a dependency of this aspect.
   // ExtensionDataList.coreExtensionsNames = new Map();
   // @ts-ignore
-  WorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
+  LegacyWorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
 }

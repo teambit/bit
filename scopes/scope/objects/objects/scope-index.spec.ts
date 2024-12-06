@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 
 import { ModelComponent } from '../models';
-import ScopeIndex from './scope-index';
+import { ScopeIndex } from './scope-index';
 import BitObject from './object';
 
 describe('ComponentsIndex', () => {

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import RemovedObjects from './removed-components';
+import { RemovedObjects } from './removed-components';
 
 describe('RemovedComponents', () => {
   const payload = {
