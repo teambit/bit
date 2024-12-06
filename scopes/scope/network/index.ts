@@ -5,6 +5,7 @@ export {
   Http,
   ProxyConfig,
   NetworkConfig,
+  ExportOrigin,
   fetchWithAgent,
   getAuthHeader,
   getFetcherWithAgent,

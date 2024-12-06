@@ -9,7 +9,7 @@ import tarFS from 'tar-fs';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '@teambit/legacy.constants';
 import { BitMap } from '@teambit/legacy.bit-map';
-import WorkspaceConfig from '@teambit/legacy.consumer-config';
+import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { getWorkspaceInfo, WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import Diagnosis, { ExamineResult } from './diagnosis';
 import DoctorRegistrar from './doctor-registrar';
@@ -195,7 +195,7 @@ export class DoctorMain {
       if (consumerInfo && consumerInfo.hasWorkspaceConfig) {
         // TODO: support new config as well
         const scopePath = findScopePath(consumerInfo.path);
-        const config = scopePath ? await WorkspaceConfig.loadIfExist(consumerInfo.path, scopePath) : undefined;
+        const config = scopePath ? await LegacyWorkspaceConfig.loadIfExist(consumerInfo.path, scopePath) : undefined;
         const legacyPlainConfig = config?._legacyPlainObject();
         if (legacyPlainConfig) {
           pack.entry({ name: 'config.json' }, JSON.stringify(legacyPlainConfig, null, 4));

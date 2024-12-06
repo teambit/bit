@@ -1,13 +1,11 @@
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
-import { Lane, LaneHistory, Version } from '@teambit/scope.objects';
+import { HistoryItem, Ref, Lane, LaneHistory, Version } from '@teambit/scope.objects';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Ref } from '@teambit/scope.objects';
 import { DiffResults, DiffOptions, outputDiffResults } from '@teambit/legacy.component-diff';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { ComponentCompareMain } from '@teambit/component-compare';
-import { HistoryItem } from '@teambit/scope.objects';
 import chalk from 'chalk';
 
 type LaneData = {

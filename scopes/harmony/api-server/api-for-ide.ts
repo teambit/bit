@@ -11,7 +11,7 @@ import { ExportMain } from '@teambit/export';
 import { CheckoutMain } from '@teambit/checkout';
 import { ApplyVersionResults } from '@teambit/merging';
 import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
-import { Log } from '@teambit/scope.objects';
+import { LaneLog } from '@teambit/scope.objects';
 import { ComponentCompareMain } from '@teambit/component-compare';
 import { GeneratorMain } from '@teambit/generator';
 import { getParsedHistoryMetadata } from '@teambit/legacy.consumer';
@@ -46,7 +46,7 @@ type LaneObj = {
   name: string;
   scope: string;
   id: string;
-  log: Log;
+  log: LaneLog;
   components: Array<{ id: string; head: string }>;
   isNew: boolean;
   forkedFrom?: string;

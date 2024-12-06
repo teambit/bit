@@ -13,11 +13,14 @@ import { logger } from '@teambit/legacy.logger';
 import { glob, writeFile, ChownOptions, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { removeEmptyDir } from '@teambit/toolbox.fs.remove-empty-dir';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
-import { HashNotFound, OutdatedIndexJson } from '@teambit/legacy.scope';
-import { RemoteLanes } from '@teambit/legacy.scope';
-import { UnmergedComponents } from '@teambit/legacy.scope';
-import { ScopeMeta } from '@teambit/scope.objects';
-import { ScopeJson } from '@teambit/legacy.scope';
+import {
+  Types,
+  HashNotFound,
+  OutdatedIndexJson,
+  ScopeJson,
+  UnmergedComponents,
+  RemoteLanes,
+} from '@teambit/legacy.scope';
 import { ScopeIndex, IndexType } from './scope-index';
 import BitObject from './object';
 import { ObjectItem, ObjectList } from './object-list';
@@ -25,8 +28,7 @@ import BitRawObject from './raw-object';
 import Ref from './ref';
 import { ContentTransformer, onPersist, onRead } from './repository-hooks';
 import { getMaxSizeForObjects, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import { Types } from '@teambit/legacy.scope';
-import { Lane, ModelComponent } from '@teambit/scope.objects';
+import { ScopeMeta, Lane, ModelComponent } from '@teambit/scope.objects';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';

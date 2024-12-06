@@ -32,11 +32,12 @@ export {
   ServerIsBusy,
   UnknownObjectType,
   PersistFailed,
+  VersionInvalid,
 } from './exceptions';
 export { validateType } from './validate-type';
 export { RemovedObjects, RemovedObjectSerialized } from './removed-components';
 export { ComponentObjects } from './component-objects';
-export { LaneData } from './lanes/lanes';
+export { LaneData, serializeLaneData } from './lanes/lanes';
 export { UnmergedComponents } from './lanes/unmerged-components';
 export { Tmp } from './repositories';
 export { UnmergedComponent, UNMERGED_FILENAME } from './lanes/unmerged-components';
@@ -50,3 +51,4 @@ export { loadScopeIfExist } from './scope-loader';
 export { ScopeComponentsImporter, errorIsTypeOfMissingObject } from './component-ops/scope-components-importer';
 export { multipleVersionDependenciesToConsumer, VersionDependencies } from './version-dependencies';
 export { MergeResult } from './repositories/sources';
+export { RemoteLanes } from './lanes/remote-lanes';

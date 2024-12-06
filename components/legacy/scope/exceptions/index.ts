@@ -25,6 +25,7 @@ import { VersionNotFoundOnFS } from './version-not-found-on-fs';
 import ServerIsBusy from './server-is-busy';
 import { UnknownObjectType } from './unknown-object-type';
 import { PersistFailed } from './persist-failed';
+import VersionInvalid from './version-invalid';
 
 export {
   ActionNotFound,
@@ -55,4 +56,5 @@ export {
   ServerIsBusy,
   UnknownObjectType,
   PersistFailed,
+  VersionInvalid,
 };

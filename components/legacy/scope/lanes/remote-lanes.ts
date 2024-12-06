@@ -7,9 +7,7 @@ import { compact, set } from 'lodash';
 import { Mutex } from 'async-mutex';
 import { PREVIOUS_DEFAULT_LANE, REMOTE_REFS_DIR } from '@teambit/legacy.constants';
 import { glob } from '@teambit/legacy.utils';
-import { Lane, ModelComponent } from '../models';
-import { LaneComponent } from '../models/lane';
-import { Ref } from '../objects';
+import { Ref, LaneComponent, Lane, ModelComponent } from '@teambit/scope.objects';
 import { logger } from '@teambit/legacy.logger';
 
 type Lanes = { [laneName: string]: LaneComponent[] };
@@ -17,7 +15,7 @@ type Lanes = { [laneName: string]: LaneComponent[] };
 /**
  * each lane holds components and hashes, which are the heads of the remote
  */
-export default class RemoteLanes {
+export class RemoteLanes {
   basePath: string;
   private remotes: { [remoteName: string]: Lanes } = {};
   private changed: { [remoteName: string]: { [laneName: string]: boolean } } = {};
