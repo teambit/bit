@@ -8,7 +8,8 @@ import { logger } from '@teambit/legacy.logger';
 import { InvalidIndexJson } from '@teambit/legacy.scope';
 import { ModelComponent, Symlink } from '../models';
 import Lane from '../models/lane';
-import { BitObject, Ref } from '.';
+import BitObject from './object';
+import Ref from './ref';
 
 const COMPONENTS_INDEX_FILENAME = 'index.json';
 

@@ -4,10 +4,10 @@ import { BitError } from '@teambit/bit-error';
 import { compact, difference, uniqBy } from 'lodash';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import Ref from '../objects/ref';
-import { BitObject } from '@teambit/scope.objects';
+import { BitObject } from '../objects';
 import type Version from './version';
 import { getVersionParentsFromVersion } from '@teambit/component.snap-distance';
-import { ModelComponent } from '.';
+import ModelComponent from './model-component';
 
 export type VersionParents = {
   hash: Ref;

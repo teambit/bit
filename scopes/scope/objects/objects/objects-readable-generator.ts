@@ -1,7 +1,9 @@
 import pMapSeries from 'p-map-series';
 import { BitError } from '@teambit/bit-error';
 import { Readable } from 'stream';
-import { BitObject, Ref, Repository } from '.';
+import BitObject from './object';
+import Repository from './repository';
+import Ref from './ref';
 import { Scope } from '@teambit/legacy.scope';
 import { logger } from '@teambit/legacy.logger';
 import { getAllVersionHashesMemoized } from '@teambit/component.snap-distance';

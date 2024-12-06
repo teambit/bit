@@ -1,4 +1,4 @@
-import { BitObject } from '.';
+import BitObject from './object';
 import { ExportMetadata, Lane, LaneHistory, ModelComponent, Version, VersionHistory } from '../models';
 
 export class BitObjectList {

@@ -1,7 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import { getStringifyArgs } from '@teambit/legacy.utils';
-import { Ref } from '../objects';
-import { BitObject } from '@teambit/scope.objects';
+import { BitObject, Ref } from '../objects';
 
 type ExportMetadataProps = {
   exportVersions: ExportVersions[];

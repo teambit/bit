@@ -13,7 +13,7 @@ import { getStringifyArgs } from '@teambit/legacy.utils';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { hasVersionByRef } from '@teambit/component.snap-distance';
 import { BitObject, Ref, Repository } from '../objects';
-import { Version } from '.';
+import Version from './version';
 import * as globalConfig from '@teambit/legacy.global-config';
 
 export type Log = { date: string; username?: string; email?: string; profileImage?: string };

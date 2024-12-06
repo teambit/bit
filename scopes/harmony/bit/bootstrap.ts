@@ -2,10 +2,10 @@ import Bluebird from 'bluebird';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import semver from 'semver';
-import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { Analytics } from '@teambit/legacy.analytics';
 import { handleUnhandledRejection } from '@teambit/cli';
-import { BIT_VERSION, GLOBAL_CONFIG, GLOBAL_LOGS } from '@teambit/legacy.constants';
+import { GLOBAL_CONFIG, GLOBAL_LOGS } from '@teambit/legacy.constants';
 import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambit/legacy.logger';
 import { loader } from '@teambit/legacy.loader';
 
@@ -122,12 +122,8 @@ function warnIfRunningAsRoot() {
 export function printBitVersionIfAsked() {
   if (process.argv[2]) {
     if (['-V', '-v', '--version'].includes(process.argv[2])) {
-      const harmonyVersion = getBitVersionGracefully();
-      if (harmonyVersion) {
-        console.log(harmonyVersion); // eslint-disable-line no-console
-      } else {
-        console.log(BIT_VERSION); // eslint-disable-line no-console
-      }
+      const harmonyVersion = getBitVersion();
+      console.log(harmonyVersion); // eslint-disable-line no-console
       process.exit();
     }
   }

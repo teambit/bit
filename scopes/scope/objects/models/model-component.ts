@@ -38,7 +38,7 @@ import {
   BitIdCompIdError,
 } from '@teambit/legacy.scope';
 import { Repository, BitObject, Ref } from '../objects';
-import { Lane } from '.';
+import Lane from './lane';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
 import Version from './version';

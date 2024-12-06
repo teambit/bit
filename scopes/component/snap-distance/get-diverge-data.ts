@@ -3,7 +3,7 @@ import { Graph } from '@teambit/graph.cleargraph';
 import { UnmergedComponent, NoCommonSnap, VersionNotFoundOnFS } from '@teambit/legacy.scope';
 import { ModelComponent, Ref, Repository, VersionParents, versionParentsToGraph } from '@teambit/scope.objects';
 import { SnapsDistance } from './snaps-distance';
-import { getAllVersionHashes, getAllVersionParents } from '@teambit/component.snap-distance';
+import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
 
 /**
  * *** NEW WAY ***

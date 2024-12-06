@@ -14,7 +14,6 @@ import { Analytics } from '@teambit/legacy.analytics';
 import {
   BIT_GIT_DIR,
   BIT_HIDDEN_DIR,
-  BIT_VERSION,
   BITS_DIRNAME,
   CURRENT_UPSTREAM,
   DEFAULT_BIT_VERSION,
@@ -26,7 +25,7 @@ import {
 } from '@teambit/legacy.constants';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
-import Consumer from '../consumer/consumer';
+import { Consumer, UnexpectedPackageName } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
 import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import RemoveModelComponents from './component-ops/remove-model-components';
@@ -56,10 +55,10 @@ import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
 import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-json';
 import ClientIdInUse from './exceptions/client-id-in-use';
-import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
 import { getDivergeData } from '@teambit/component.snap-distance';
 import { StagedSnaps } from './staged-snaps';
 import { collectGarbage } from './garbage-collector';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -760,7 +759,7 @@ once done, to continue working, please run "bit cc"`
     if (name === CURRENT_UPSTREAM) {
       throw new BitError(`the name "${CURRENT_UPSTREAM}" is a reserved word, please use another name`);
     }
-    const scopeJson = new ScopeJson({ name, groupName, version: BIT_VERSION });
+    const scopeJson = new ScopeJson({ name, groupName, version: getBitVersion() });
     return scopeJson;
   }
 

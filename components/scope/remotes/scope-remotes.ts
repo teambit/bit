@@ -1,5 +1,5 @@
 import { ComponentID } from '@teambit/component-id';
-import { GlobalRemotes } from '@teambit/scope.remotes';
+import { GlobalRemotes } from './global-remotes';
 import { Scope } from '@teambit/legacy.scope';
 import { Remotes } from './remotes';
 

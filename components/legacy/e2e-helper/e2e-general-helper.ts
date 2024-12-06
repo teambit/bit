@@ -6,13 +6,7 @@ import tar from 'tar';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { defaultErrorHandler } from '@teambit/cli';
-import {
-  BIT_HIDDEN_DIR,
-  BIT_VERSION,
-  MergeConfigFilename,
-  REMOTE_REFS_DIR,
-  WORKSPACE_JSONC,
-} from '@teambit/legacy.constants';
+import { BIT_HIDDEN_DIR, MergeConfigFilename, REMOTE_REFS_DIR, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
 import CommandHelper from './e2e-command-helper';
 import { ensureAndWriteJson } from './e2e-helper';
@@ -118,10 +112,6 @@ export default class GeneralHelper {
 
   getRequireBitPath(box: string, name: string) {
     return `@bit/${this.scopes.remote}.${box}.${name}`;
-  }
-
-  getBitVersion() {
-    return BIT_VERSION;
   }
 
   generateRandomTmpDirName() {

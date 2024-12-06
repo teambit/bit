@@ -3,7 +3,7 @@ import R from 'ramda';
 import { NULL_BYTE, SPACE_DELIMITER } from '@teambit/legacy.constants';
 import { getStringifyArgs, inflate } from '@teambit/legacy.utils';
 import { typesObj as types } from '@teambit/legacy.scope';
-import { BitObject } from '.';
+import BitObject from './object';
 
 export default class BitRawObject {
   headers: string[];

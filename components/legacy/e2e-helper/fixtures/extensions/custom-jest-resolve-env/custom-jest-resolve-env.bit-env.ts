@@ -1,3 +1,5 @@
+// @bit-no-check
+
 import {
   TypescriptTask,
 } from '@teambit/typescript.typescript-compiler';

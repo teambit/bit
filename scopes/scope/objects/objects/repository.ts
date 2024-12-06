@@ -28,7 +28,7 @@ import BitRawObject from './raw-object';
 import Ref from './ref';
 import { ContentTransformer, onPersist, onRead } from './repository-hooks';
 import { getMaxSizeForObjects, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import { ScopeMeta, Lane, ModelComponent } from '@teambit/scope.objects';
+import { ScopeMeta, Lane, ModelComponent } from '../models';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';

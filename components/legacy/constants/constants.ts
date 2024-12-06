@@ -4,8 +4,6 @@ import { homedir, platform } from 'os';
 import type { PathOsBased } from '@teambit/toolbox.path.path';
 import { getSync } from '@teambit/legacy.global-config';
 
-const packageFile = require('../package.json');
-
 export const IS_WINDOWS = platform() === 'win32';
 
 function getDirectory(): PathOsBased {
@@ -451,13 +449,6 @@ export const SCOPE_JSON = 'scope.json';
 export const SCOPE_JSONC = 'scope.jsonc';
 
 export const DEFAULT_RESOLVER = () => '';
-
-/**
- * current bit application version
- */
-export const BIT_VERSION = packageFile.version;
-
-export const BIT_INSTALL_METHOD = packageFile.installationMethod;
 
 export const TOKEN_FLAG_NAME = 'token';
 
