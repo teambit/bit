@@ -6,7 +6,7 @@ import { ComponentsList } from '@teambit/legacy.component-list';
 import { ConsumerComponent as Component, DEPENDENCIES_TYPES_UI_MAP } from '@teambit/legacy.consumer-component';
 import { Consumer } from '@teambit/legacy.consumer';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
-import { getAllVersionsInfo } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
+import { getAllVersionsInfo } from '@teambit/component.snap-distance';
 import { IdNotFoundInGraph } from '@teambit/legacy/dist/scope/exceptions/id-not-found-in-graph';
 import { ModelComponent, Version } from '@teambit/scope.objects';
 import Scope from '@teambit/legacy/dist/scope/scope';

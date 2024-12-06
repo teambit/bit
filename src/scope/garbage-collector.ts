@@ -2,7 +2,7 @@ import pMap from 'p-map';
 import { logger } from '@teambit/legacy.logger';
 import { Lane, LaneHistory, ModelComponent, ScopeMeta, Source, Version, VersionHistory } from './models';
 import Scope, { GarbageCollectorOpts } from './scope';
-import { getAllVersionsInfo } from './component-ops/traverse-versions';
+import { getAllVersionsInfo } from '@teambit/component.snap-distance';
 import pMapSeries from 'p-map-series';
 import { compact, uniq } from 'lodash';
 import { Ref } from '@teambit/scope.objects';

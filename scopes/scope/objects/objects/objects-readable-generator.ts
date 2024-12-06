@@ -4,7 +4,7 @@ import { Readable } from 'stream';
 import { BitObject, Ref, Repository } from '.';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { logger } from '@teambit/legacy.logger';
-import { getAllVersionHashesMemoized } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
+import { getAllVersionHashesMemoized } from '@teambit/component.snap-distance';
 import { Lane, LaneHistory, ModelComponent, Version } from '../models';
 import { ObjectItem } from './object-list';
 

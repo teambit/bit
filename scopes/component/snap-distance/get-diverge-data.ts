@@ -6,7 +6,7 @@ import { ModelComponent } from '@teambit/scope.objects';
 import { VersionParents, versionParentsToGraph } from '@teambit/scope.objects';
 import { Ref, Repository } from '@teambit/scope.objects';
 import { SnapsDistance } from './snaps-distance';
-import { getAllVersionHashes, getAllVersionParents } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
+import { getAllVersionHashes, getAllVersionParents } from '@teambit/component.snap-distance';
 import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 
 /**

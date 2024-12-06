@@ -12,7 +12,8 @@ import {
   getSubsetOfVersionParents,
   getVersionParentsFromVersion,
   VersionInfo,
-} from '../component-ops/traverse-versions';
+  getDivergeData,
+} from '@teambit/component.snap-distance';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import { ModelComponent, Source, Symlink, Version } from '../models';
@@ -27,7 +28,6 @@ import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import { getDivergeData } from '@teambit/component.snap-distance';
 
 export type ComponentTree = {
   component: ModelComponent;

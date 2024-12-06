@@ -11,7 +11,7 @@ import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
-import { hasVersionByRef } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
+import { hasVersionByRef } from '@teambit/component.snap-distance';
 import { BitObject, Ref, Repository } from '../objects';
 import { Version } from '.';
 import * as globalConfig from '@teambit/legacy.global-config';

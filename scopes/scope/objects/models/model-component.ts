@@ -24,7 +24,7 @@ import {
   getAllVersionParents,
   getAllVersionsInfo,
   getVersionParentsFromVersion,
-} from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
+} from '@teambit/component.snap-distance';
 import ComponentVersion from '@teambit/legacy/dist/scope/component-version';
 import {
   HeadNotFound,

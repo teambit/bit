@@ -6,7 +6,7 @@ import { getStringifyArgs } from '@teambit/legacy.utils';
 import Ref from '../objects/ref';
 import { BitObject } from '@teambit/scope.objects';
 import type Version from './version';
-import { getVersionParentsFromVersion } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
+import { getVersionParentsFromVersion } from '@teambit/component.snap-distance';
 import { ModelComponent } from '.';
 
 export type VersionParents = {
