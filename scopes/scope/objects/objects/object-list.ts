@@ -95,7 +95,10 @@ export class ObjectList {
           data.push(chunk);
         });
         stream.on('end', () => {
-          objects.push({ ...ObjectList.extractScopeAndHash(header.name), buffer: Buffer.concat(data) });
+          objects.push({
+            ...ObjectList.extractScopeAndHash(header.name),
+            buffer: Buffer.concat(data as unknown as Uint8Array[]),
+          });
           next(); // ready for next entry
         });
         stream.on('error', (err) => reject(err));
@@ -123,7 +126,7 @@ export class ObjectList {
         data.push(chunk);
       });
       stream.on('end', () => {
-        const allData = Buffer.concat(data);
+        const allData = Buffer.concat(data as unknown as Uint8Array[]);
         if (header.name === TAR_STREAM_ERROR_FILENAME) {
           passThrough.emit('error', new Error(allData.toString()));
           return;

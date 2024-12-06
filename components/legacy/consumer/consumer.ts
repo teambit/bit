@@ -45,6 +45,7 @@ import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound } from './exceptions';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
+import { FsCache } from '@teambit/workspace.modules.fs-cache';
 
 type ConsumerProps = {
   projectPath: string;
@@ -101,7 +102,7 @@ export default class Consumer {
     return this._dirStructure;
   }
 
-  get componentFsCache() {
+  get componentFsCache(): FsCache {
     return this.componentLoader.componentFsCache;
   }
 
