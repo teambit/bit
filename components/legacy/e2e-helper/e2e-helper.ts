@@ -24,7 +24,7 @@ import CapsulesHelper from './e2e-capsules-helper';
 export type HelperOptions = {
   scopesOptions?: ScopesOptions;
 };
-export default class Helper {
+export class Helper {
   debugMode: boolean;
   scopes: ScopesData;
   scopeJson: ScopeJsonHelper;

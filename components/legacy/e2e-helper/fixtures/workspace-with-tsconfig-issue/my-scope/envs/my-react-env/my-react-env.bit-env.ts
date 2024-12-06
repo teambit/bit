@@ -1,3 +1,6 @@
+// @bit-no-check
+// @ts-nocheck
+
 /**
  * this env extends react-env
  * @see https://bit.cloud/teambit/react/react-env

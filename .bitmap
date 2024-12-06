@@ -585,6 +585,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/doctor"
     },
+    "e2e-helper": {
+        "name": "e2e-helper",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/e2e-helper",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.10": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
+    },
     "eject": {
         "name": "eject",
         "scope": "teambit.workspace",

@@ -4,7 +4,7 @@ import { capitalize } from 'lodash';
 import * as path from 'path';
 import tar from 'tar';
 
-import * as fixtures from '../../src/fixtures/fixtures';
+import * as fixtures from './fixtures/fixtures';
 import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import NpmHelper from './e2e-npm-helper';
@@ -77,7 +77,7 @@ export default class FixtureHelper {
     return this.command.tagWithoutBuild('bar/foo');
   }
   getFixturesDir() {
-    return path.join(__dirname, '../../e2e/fixtures');
+    return path.join(__dirname, '../fixtures');
   }
 
   copyFixtureDir(src: string, dest: string) {

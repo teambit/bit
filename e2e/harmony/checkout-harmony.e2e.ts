@@ -5,8 +5,8 @@ import * as path from 'path';
 
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { NewerVersionFound } from '../../src/consumer/exceptions';
-import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
-import { Extensions, FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
+import { Helper, FileStatusWithoutChalk } from '@teambit/legacy.e2e-helper';
+import { Extensions, FILE_CHANGES_CHECKOUT_MSG } from '@teambit/legacy.constants';
 
 chai.use(require('chai-fs'));
 

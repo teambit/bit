@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
+import { Helper, FileStatusWithoutChalk } from '@teambit/legacy.e2e-helper';
 
 describe('handling binary files in Bit', function () {
   this.timeout(0);

@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import LegacyHelper from '@teambit/legacy/dist/e2e-helper/e2e-helper';
+import { Helper as LegacyHelper } from '@teambit/legacy.e2e-helper';
 import { assign, parse, stringify } from 'comment-json';
 
 export type WorkspaceData = { workspacePath: string; remoteScopePath: string; remoteScopeName: string };

@@ -1,6 +1,6 @@
 /* eslint no-console: 0 */
 import { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 const maxComponents = 100; // 3K should work as well but it regressed
 const maxFlattenedDependencies = 10;

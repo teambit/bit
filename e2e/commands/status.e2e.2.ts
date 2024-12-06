@@ -2,10 +2,9 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import { IssuesClasses, MISSING_DEPS_SPACE } from '@teambit/component-issues';
-import { IMPORT_PENDING_MSG, statusFailureMsg, statusInvalidComponentsMsg } from '../../src/constants';
+import { IMPORT_PENDING_MSG, statusFailureMsg, statusInvalidComponentsMsg } from '@teambit/legacy.constants';
 import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../src/fixtures/fixtures';
+import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
 
 const assertArrays = require('chai-arrays');
 

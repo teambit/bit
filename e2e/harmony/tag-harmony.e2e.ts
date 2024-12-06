@@ -2,9 +2,9 @@ import chai, { expect } from 'chai';
 import chalk from 'chalk';
 import path from 'path';
 import { uniq } from 'lodash';
-import { Extensions } from '../../src/constants';
+import { Extensions } from '@teambit/legacy.constants';
 import { SchemaName } from '@teambit/legacy.consumer-component';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
