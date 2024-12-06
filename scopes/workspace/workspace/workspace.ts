@@ -57,10 +57,10 @@ import {
 import path from 'path';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { WatchOptions } from '@teambit/watcher';
-import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import type { ComponentLog } from '@teambit/scope.objects';
 import { SourceFile, DataToPersist, JsonVinyl } from '@teambit/component.sources';
 import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
-import { Lane } from '@teambit/legacy/dist/scope/models';
+import { Lane } from '@teambit/scope.objects';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { isHash } from '@teambit/component-version';

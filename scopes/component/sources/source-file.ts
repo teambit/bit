@@ -1,7 +1,7 @@
 import vinylFile from 'vinyl-file';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { SourceFileModel } from '@teambit/legacy/dist/scope/models/version';
-import { Repository } from '@teambit/legacy/dist/scope/objects';
+import { SourceFileModel } from '@teambit/scope.objects';
+import { Repository } from '@teambit/scope.objects';
 import { PathOsBased } from '@teambit/toolbox.path.path';
 import FileSourceNotFound from './file-source-not-found';
 import AbstractVinyl from './abstract-vinyl';

@@ -6,15 +6,21 @@ import logger from '../../logger/logger';
 import { Remotes, Remote, getScopeRemotes } from '@teambit/scope.remotes';
 import { ComponentNotFound, MergeConflict, MergeConflictOnRemote } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import { Lane, Version, ModelComponent, VersionHistory, LaneHistory } from '../models';
 import Scope from '../scope';
-import { ObjectList } from '../objects/object-list';
+import {
+  Lane,
+  Version,
+  ModelComponent,
+  VersionHistory,
+  LaneHistory,
+  Ref,
+  BitObjectList,
+  ObjectList,
+} from '@teambit/scope.objects';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
 import { loader } from '@teambit/legacy.loader';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { MergeResult } from '../repositories/sources';
-import { Ref } from '../objects';
-import { BitObjectList } from '../objects/bit-object-list';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 

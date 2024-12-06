@@ -6,7 +6,7 @@ import { mergeObjects } from '../component-ops/export-scope-components';
 import { Action } from './action';
 import logger from '../../logger/logger';
 import ServerIsBusy from '../exceptions/server-is-busy';
-import { BitObjectList } from '../objects/bit-object-list';
+import { BitObjectList } from '@teambit/scope.objects';
 import { getAllVersionHashes } from '../component-ops/traverse-versions';
 
 type Options = { clientId: string; isResumingExport: boolean };

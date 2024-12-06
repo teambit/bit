@@ -8,7 +8,7 @@ import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { getAllVersionsInfo } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
 import { IdNotFoundInGraph } from '@teambit/legacy/dist/scope/exceptions/id-not-found-in-graph';
-import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
+import { ModelComponent, Version } from '@teambit/scope.objects';
 import Scope from '@teambit/legacy/dist/scope/scope';
 
 export type DependenciesInfo = {

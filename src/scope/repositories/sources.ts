@@ -19,7 +19,7 @@ import { ModelComponent, Source, Symlink, Version } from '../models';
 import Lane, { LaneComponent } from '../models/lane';
 import { ComponentProps } from '../models/model-component';
 import { BitObject, Ref } from '../objects';
-import Repository from '../objects/repository';
+import { Repository } from '@teambit/scope.objects';
 import Scope from '../scope';
 import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';

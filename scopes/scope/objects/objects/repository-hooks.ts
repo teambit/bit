@@ -1,7 +1,7 @@
 import isRelative from 'is-relative-path';
 import path from 'path';
 
-import { ScopeJson } from '../scope-json';
+import { ScopeJson } from '@teambit/legacy/dist/scope/scope-json';
 
 export type ContentTransformer = (content: Buffer) => Buffer;
 

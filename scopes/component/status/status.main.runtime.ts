@@ -10,7 +10,7 @@ import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import { ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { ModelComponent } from '@teambit/scope.objects';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { SnapsDistance } from '@teambit/component.snap-distance';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';

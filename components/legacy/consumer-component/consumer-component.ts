@@ -15,9 +15,7 @@ import {
 } from '@teambit/legacy/dist/constants';
 import { Doclet, parser as docsParser } from '@teambit/semantics.doc-parser';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { ScopeListItem } from '@teambit/legacy/dist/scope/models/model-component';
-import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
-import Version, { DepEdge, Log } from '@teambit/legacy/dist/scope/models/version';
+import { Version, DepEdge, Log, ScopeListItem, DependenciesGraph, ModelComponent } from '@teambit/scope.objects';
 import { pathNormalizeToLinux, PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { ComponentMap } from '@teambit/legacy.bit-map';
@@ -37,7 +35,6 @@ import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './co
 import { Dependencies, Dependency } from './dependencies';
 import { ComponentNotFoundInPath } from './exceptions/component-not-found-in-path';
 import MainFileRemoved from './exceptions/main-file-removed';
-import { ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { ComponentLoadOptions } from './component-loader';
 import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
 

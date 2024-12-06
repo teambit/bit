@@ -4,9 +4,9 @@ import { BitError } from '@teambit/bit-error';
 import { compact, difference, uniqBy } from 'lodash';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import Ref from '../objects/ref';
-import BitObject from '../objects/object';
+import { BitObject } from '@teambit/scope.objects';
 import type Version from './version';
-import { getVersionParentsFromVersion } from '../component-ops/traverse-versions';
+import { getVersionParentsFromVersion } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
 import { ModelComponent } from '.';
 
 export type VersionParents = {

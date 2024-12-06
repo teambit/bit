@@ -5,7 +5,7 @@ import { BitError } from '@teambit/bit-error';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { compact } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { Ref } from '@teambit/scope.objects';
 import { CheckoutAspect, CheckoutMain, CheckoutProps } from '@teambit/checkout';
 import { StashAspect } from './stash.aspect';
 import { StashCmd, StashListCmd, StashLoadCmd, StashSaveCmd } from './stash.cmd';

@@ -2,7 +2,7 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ApplyVersionResults } from '@teambit/merging';
-import { Lane } from '@teambit/legacy/dist/scope/models';
+import { Lane } from '@teambit/scope.objects';
 import { CheckoutProps } from '@teambit/checkout';
 import { Workspace } from '@teambit/workspace';
 import { Logger } from '@teambit/logger';

@@ -1,6 +1,6 @@
 import { BitError } from '@teambit/bit-error';
-import { Source, Version } from '@teambit/legacy/dist/scope/models';
-import { SourceFileModel } from '@teambit/legacy/dist/scope/models/version';
+import { Source, Version } from '@teambit/scope.objects';
+import { SourceFileModel } from '@teambit/scope.objects';
 import { Tmp } from '@teambit/legacy/dist/scope/repositories';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { PathLinux, pathNormalizeToLinux, PathOsBased } from '@teambit/toolbox.path.path';

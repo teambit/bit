@@ -4,7 +4,7 @@ import { SemVer } from 'semver';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { BuildStatus } from '@teambit/legacy/dist/constants';
-import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import { ComponentLog } from '@teambit/scope.objects';
 import type { DependencyList } from '@teambit/dependency-resolver';
 import { slice } from 'lodash';
 import { ComponentFactory } from './component-factory';

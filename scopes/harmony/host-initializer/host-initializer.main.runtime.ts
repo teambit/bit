@@ -4,7 +4,7 @@ import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { Scope } from '@teambit/legacy/dist/scope';
-import { Repository } from '@teambit/legacy/dist/scope/objects';
+import { Repository } from '@teambit/scope.objects';
 import { isDirEmpty } from '@teambit/toolbox.fs.is-dir-empty';
 import { WorkspaceExtensionProps } from '@teambit/config';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';

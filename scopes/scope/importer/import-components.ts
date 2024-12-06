@@ -4,7 +4,7 @@ import pMapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Scope } from '@teambit/legacy/dist/scope';
-import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
+import { Lane, ModelComponent, Version } from '@teambit/scope.objects';
 import { getLatestVersionNumber, pathNormalizeToLinux, hasWildcard } from '@teambit/legacy.utils';
 import Component from '@teambit/legacy/dist/consumer/component';
 import { applyModifiedVersion } from '@teambit/checkout';

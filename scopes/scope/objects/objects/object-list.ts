@@ -5,10 +5,10 @@ import { Readable, PassThrough, pipeline } from 'stream';
 import { BitObject } from '.';
 import { BitObjectList } from './bit-object-list';
 import Ref from './ref';
-import logger from '../../logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import { ExportMetadata } from '../models';
-import { UnknownObjectType } from '../exceptions/unknown-object-type';
+import { UnknownObjectType } from '@teambit/legacy/dist/scope/exceptions/unknown-object-type';
 
 /**
  * when error occurred during streaming between HTTP server and client, there is no good way to

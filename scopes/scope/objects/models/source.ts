@@ -1,4 +1,4 @@
-import BitObject from '../objects/object';
+import { BitObject } from '../objects';
 
 // TODO: fix .parse
 // @ts-ignore

@@ -1256,6 +1256,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/notifications/aspect"
     },
+    "objects": {
+        "name": "objects",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.scope",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/scope/objects",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.33": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
+    },
     "overview/api-reference-table-of-contents": {
         "name": "overview/api-reference-table-of-contents",
         "scope": "teambit.api-reference",

@@ -6,7 +6,7 @@ import { ConsumerComponent as Component } from '@teambit/legacy.consumer-compone
 import { DataToPersist, RemovePath } from '@teambit/component.sources';
 import Consumer from '@teambit/legacy/dist/consumer/consumer';
 import { isHash } from '@teambit/component-version';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { Ref } from '@teambit/scope.objects';
 import { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 

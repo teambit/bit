@@ -20,7 +20,7 @@ import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { Lane, ModelComponent } from '@teambit/scope.objects';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { Component } from '@teambit/component';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -31,7 +31,7 @@ import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { isHash, isTag } from '@teambit/component-version';
-import { BitObject, Ref, Repository } from '@teambit/legacy/dist/scope/objects';
+import { BitObject, Ref, Repository } from '@teambit/scope.objects';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { ArtifactFiles, ArtifactSource, getArtifactsFiles, SourceFile } from '@teambit/component.sources';
 import {
@@ -41,7 +41,7 @@ import {
   ParentNotFound,
 } from '@teambit/legacy/dist/scope/exceptions';
 import { DependenciesAspect, DependenciesMain } from '@teambit/dependencies';
-import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';
+import Version, { DepEdge, DepEdgeType, Log } from '@teambit/scope.objects';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
@@ -62,7 +62,7 @@ import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { AddVersionOpts } from '@teambit/legacy/dist/scope/models/model-component';
+import { AddVersionOpts } from '@teambit/scope.objects';
 
 export type PackageIntegritiesByPublishedPackages = Map<string, string | undefined>;
 

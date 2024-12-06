@@ -35,22 +35,31 @@ import ComponentVersion from './component-version';
 import { ComponentNotFound, ScopeNotFound } from './exceptions';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import Lanes from './lanes/lanes';
-import { ModelComponent, Symlink, Version } from './models';
-import Lane from './models/lane';
-import { ComponentLog } from './models/model-component';
-import { BitObject, BitRawObject, Ref, Repository } from './objects';
-import { ComponentItem, IndexType } from './objects/scope-index';
+import {
+  ModelComponent,
+  Symlink,
+  Version,
+  BitObject,
+  BitRawObject,
+  Ref,
+  Repository,
+  Lane,
+  ComponentLog,
+  ComponentItem,
+  IndexType,
+  ObjectItem,
+  ObjectList,
+  DependenciesGraph,
+} from '@teambit/scope.objects';
 import RemovedObjects from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
 import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-json';
-import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
 import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
 import { getDivergeData } from '@teambit/component.snap-distance';
 import { StagedSnaps } from './staged-snaps';
 import { collectGarbage } from './garbage-collector';
-import { type DependenciesGraph } from './models/dependencies-graph';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);

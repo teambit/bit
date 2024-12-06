@@ -6,13 +6,8 @@ import { LaneId } from '@teambit/lane-id';
 import { LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { loadScope, Scope } from '@teambit/legacy/dist/scope';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
-import {
-  ComponentWithCollectOptions,
-  ObjectsReadableGenerator,
-} from '@teambit/legacy/dist/scope/objects/objects-readable-generator';
+import { Lane, LaneHistory, Ref, ComponentWithCollectOptions, ObjectsReadableGenerator } from '@teambit/scope.objects';
 import { LaneNotFound } from './exceptions/lane-not-found';
-import { Lane, LaneHistory } from '@teambit/legacy/dist/scope/models';
 
 /**
  * 'component-delta' is not supported anymore in fetchSchema of 0.0.3 and above.

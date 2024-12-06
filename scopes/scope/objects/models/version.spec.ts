@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import R from 'ramda';
 
-import versionWithDepsFixture from '../../../fixtures/version-model-extended.json';
-import versionFixture from '../../../fixtures/version-model-object.json';
+import versionWithDepsFixture from '../fixtures/version-model-extended.json';
+import versionFixture from '../fixtures/version-model-object.json';
 import { SchemaName } from '@teambit/legacy.consumer-component';
-import Version from '../../scope/models/version';
+import Version from './version';
 
 const getVersionWithDepsFixture = () => {
   return Version.parse(JSON.stringify(R.clone(versionWithDepsFixture)), '12c830ed25854dc731b58e014c6b4960ccb59092');

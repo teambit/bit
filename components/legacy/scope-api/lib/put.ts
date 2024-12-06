@@ -1,7 +1,7 @@
 import { ComponentIdList } from '@teambit/component-id';
 import { loadScope } from '@teambit/legacy/dist/scope';
 import { exportManyBareScope } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
-import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
+import { ObjectList } from '@teambit/scope.objects';
 
 export type ComponentObjectsInput = {
   path: string;

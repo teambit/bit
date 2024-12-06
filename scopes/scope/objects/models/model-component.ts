@@ -10,43 +10,48 @@ import pMapSeries from 'p-map-series';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { BitId } from '@teambit/legacy-bit-id';
-import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '../../constants';
+import {
+  DEFAULT_BIT_RELEASE_TYPE,
+  DEFAULT_BIT_VERSION,
+  DEFAULT_LANGUAGE,
+  Extensions,
+} from '@teambit/legacy/dist/constants';
 import { ConsumerComponent, SchemaName, Dependencies, Dependency } from '@teambit/legacy.consumer-component';
 import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
-import ComponentOverrides from '../../consumer/config/component-overrides';
+import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { ValidationError } from '@teambit/legacy.cli.error';
-import logger from '../../logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import { getLatestVersion, validateVersion } from '@teambit/pkg.modules.semver-helper';
-import ComponentObjects from '../component-objects';
+import ComponentObjects from '@teambit/legacy/dist/scope/component-objects';
 import { SnapsDistance, getDivergeData } from '@teambit/component.snap-distance';
 import {
   getAllVersionParents,
   getAllVersionsInfo,
   getVersionParentsFromVersion,
-} from '../component-ops/traverse-versions';
-import ComponentVersion from '../component-version';
+} from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
+import ComponentVersion from '@teambit/legacy/dist/scope/component-version';
 import {
   HeadNotFound,
   ParentNotFound,
   VersionAlreadyExists,
   VersionNotFound,
   VersionNotFoundOnFS,
-} from '../exceptions';
-import { BitObject, Ref } from '../objects';
-import Repository from '../objects/repository';
+} from '@teambit/legacy/dist/scope/exceptions';
+import { BitObject, Ref } from '@teambit/legacy/dist/scope/objects';
+import { Repository } from '@teambit/scope.objects';
 import { Lane } from '.';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
 import Version from './version';
 import VersionHistory, { VersionParents } from './version-history';
-import { ObjectItem } from '../objects/object-list';
-import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
-import { errorIsTypeOfMissingObject } from '../component-ops/scope-components-importer';
-import type Scope from '../scope';
-import { BitIdCompIdError } from '../exceptions/bit-id-comp-id-err';
+import { ObjectItem } from '@teambit/scope.objects';
+import { NoHeadNoVersion } from '@teambit/legacy/dist/scope/exceptions/no-head-no-version';
+import { errorIsTypeOfMissingObject } from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
+import type Scope from '@teambit/legacy/dist/scope/scope';
+import { BitIdCompIdError } from '@teambit/legacy/dist/scope/exceptions/bit-id-comp-id-err';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { getBindingPrefixByDefaultScope } from '../../consumer/config/component-config';
+import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
 
 type State = {
   versions?: {

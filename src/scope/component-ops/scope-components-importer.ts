@@ -19,7 +19,7 @@ import { ObjectItemsStream, ObjectList } from '../objects/object-list';
 import SourcesRepository, { ComponentDef } from '../repositories/sources';
 import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
 import VersionDependencies from '../version-dependencies';
-import { BitObjectList } from '../objects/bit-object-list';
+import { BitObjectList } from '@teambit/scope.objects';
 import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';

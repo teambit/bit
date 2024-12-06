@@ -5,7 +5,7 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Component, ComponentID } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ComponentIdList } from '@teambit/component-id';
-import { Lane } from '@teambit/legacy/dist/scope/models';
+import { Lane } from '@teambit/scope.objects';
 import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
 import compact from 'lodash.compact';

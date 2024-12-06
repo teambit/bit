@@ -1,5 +1,5 @@
 import { getStringifyArgs } from '@teambit/legacy.utils';
-import BitObject from '../objects/object';
+import { BitObject } from '@teambit/scope.objects';
 import Ref from '../objects/ref';
 
 type ScopeMetaProps = {

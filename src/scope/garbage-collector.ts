@@ -5,7 +5,7 @@ import Scope, { GarbageCollectorOpts } from './scope';
 import { getAllVersionsInfo } from './component-ops/traverse-versions';
 import pMapSeries from 'p-map-series';
 import { compact, uniq } from 'lodash';
-import { Ref } from './objects';
+import { Ref } from '@teambit/scope.objects';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import chalk from 'chalk';
 import { VersionNotFound } from './exceptions';

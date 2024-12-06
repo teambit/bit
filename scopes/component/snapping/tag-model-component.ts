@@ -17,19 +17,19 @@ import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { OnTagOpts } from '@teambit/builder';
-import { DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
-import { Log } from '@teambit/legacy/dist/scope/models/version';
+import { DependenciesGraph } from '@teambit/scope.objects';
+import { Log } from '@teambit/scope.objects';
 import {
   MessagePerComponent,
   MessagePerComponentFetcher,
 } from '@teambit/legacy/dist/scope/component-ops/message-per-component';
-import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { Lane, ModelComponent } from '@teambit/scope.objects';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace, AutoTagResult } from '@teambit/workspace';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
-import { AddVersionOpts } from '@teambit/legacy/dist/scope/models/model-component';
+import { AddVersionOpts } from '@teambit/scope.objects';
 
 export type onTagIdTransformer = (id: ComponentID) => ComponentID | null;
 

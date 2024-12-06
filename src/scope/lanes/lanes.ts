@@ -5,11 +5,18 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { Scope } from '..';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import logger from '../../logger/logger';
-import { Lane, LaneHistory, Version } from '../models';
-import { BitObject, Repository } from '../objects';
-import { IndexType, LaneItem } from '../objects/scope-index';
+import {
+  LaneComponent,
+  Log,
+  IndexType,
+  LaneItem,
+  BitObject,
+  Repository,
+  Lane,
+  LaneHistory,
+  Version,
+} from '@teambit/scope.objects';
 import { ScopeJson, TrackLane } from '../scope-json';
-import { LaneComponent, Log } from '../models/lane';
 
 export default class Lanes {
   objects: Repository;

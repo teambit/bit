@@ -1,13 +1,13 @@
 import { inflateSync } from 'zlib';
 
-import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
+import { NULL_BYTE, SPACE_DELIMITER } from '@teambit/legacy/dist/constants';
 import { deflate, inflate } from '@teambit/legacy.utils';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
-import { typesObj as types } from '../object-registrar';
+import { typesObj as types } from '@teambit/legacy/dist/scope/object-registrar';
 import { ObjectItem } from './object-list';
 import Ref from './ref';
 import Repository from './repository';
-import { UnknownObjectType } from '../exceptions/unknown-object-type';
+import { UnknownObjectType } from '@teambit/legacy/dist/scope/exceptions/unknown-object-type';
 
 function parse(buffer: Buffer): BitObject {
   const { type, hash, contents } = extractHeaderAndContent(buffer);

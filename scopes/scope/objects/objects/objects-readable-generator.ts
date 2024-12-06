@@ -2,9 +2,9 @@ import pMapSeries from 'p-map-series';
 import { BitError } from '@teambit/bit-error';
 import { Readable } from 'stream';
 import { BitObject, Ref, Repository } from '.';
-import { Scope } from '..';
-import logger from '../../logger/logger';
-import { getAllVersionHashesMemoized } from '../component-ops/traverse-versions';
+import { Scope } from '@teambit/legacy/dist/scope';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { getAllVersionHashesMemoized } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
 import { Lane, LaneHistory, ModelComponent, Version } from '../models';
 import { ObjectItem } from './object-list';
 

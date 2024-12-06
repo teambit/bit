@@ -1,8 +1,8 @@
 import R from 'ramda';
 
-import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
+import { NULL_BYTE, SPACE_DELIMITER } from '@teambit/legacy/dist/constants';
 import { getStringifyArgs, inflate } from '@teambit/legacy.utils';
-import { typesObj as types } from '../object-registrar';
+import { typesObj as types } from '@teambit/legacy/dist/scope/object-registrar';
 import { BitObject } from '.';
 
 export default class BitRawObject {

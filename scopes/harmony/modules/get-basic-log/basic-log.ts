@@ -1,6 +1,6 @@
 import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY } from '@teambit/legacy/dist/constants';
-import { Log } from '@teambit/legacy/dist/scope/models/version';
+import { Log } from '@teambit/scope.objects';
 import { getBitCloudUser } from '@teambit/cloud.modules.get-cloud-user';
 
 export async function getBasicLog(): Promise<Log> {

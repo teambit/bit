@@ -5,7 +5,7 @@ import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
-import ScopeIndex from '@teambit/legacy/dist/scope/objects/scope-index';
+import ScopeIndex from '@teambit/scope.objects';
 
 export type CacheClearResult = { succeed: string[]; failed: string[] };
 

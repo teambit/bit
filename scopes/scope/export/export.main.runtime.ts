@@ -9,14 +9,14 @@ import { Consumer } from '@teambit/legacy/dist/consumer';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { Lane, ModelComponent } from '@teambit/scope.objects';
 import { hasWildcard } from '@teambit/legacy.utils';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { LaneReadmeComponent } from '@teambit/legacy/dist/scope/models/lane';
+import { LaneReadmeComponent } from '@teambit/scope.objects';
 import { Http } from '@teambit/legacy/dist/scope/network/http';
-import { ObjectItem, ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
+import { ObjectItem, ObjectList } from '@teambit/scope.objects';
 import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
@@ -30,7 +30,7 @@ import {
   validateRemotes,
   removePendingDirs,
 } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
-import { BitObject, Ref } from '@teambit/legacy/dist/scope/objects';
+import { BitObject, Ref } from '@teambit/scope.objects';
 import { PersistFailed } from '@teambit/legacy/dist/scope/exceptions/persist-failed';
 import { getAllVersionHashes } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
 import { ExportAspect } from './export.aspect';
