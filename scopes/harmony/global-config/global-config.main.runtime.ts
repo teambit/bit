@@ -17,8 +17,8 @@ import {
   set,
   setSync,
   invalidateCache,
+  GlobalConfig,
 } from '@teambit/legacy.global-config';
-import { GlobalConfig } from '@teambit/legacy/dist/global-config';
 import { GlobalConfigAspect } from './global-config.aspect';
 import { GlobalsCmd } from './globals.cmd';
 import { SystemCmd, SystemLogCmd, SystemTailLogCmd } from './system.cmd';

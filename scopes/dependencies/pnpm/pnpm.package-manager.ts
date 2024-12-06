@@ -38,7 +38,7 @@ import {
   convertToLockfileFile as convertLockfileObjectToLockfileFile,
 } from '@pnpm/lockfile.fs';
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
-import { ServerSendOutStream } from '@teambit/legacy/dist/logger/pino-logger';
+import { ServerSendOutStream } from '@teambit/legacy.logger';
 import { join } from 'path';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';

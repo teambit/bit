@@ -471,7 +471,13 @@
         "version": "",
         "defaultScope": "teambit.legacy",
         "mainFile": "constants.ts",
-        "rootDir": "components/legacy/constants"
+        "rootDir": "components/legacy/constants",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.33": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
     },
     "consumer": {
         "name": "consumer",
@@ -1804,7 +1810,13 @@
         "version": "",
         "defaultScope": "teambit.legacy",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/global-config"
+        "rootDir": "components/legacy/global-config",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.33": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
     },
     "teambit.legacy/logger": {
         "name": "logger",

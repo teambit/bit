@@ -162,7 +162,7 @@ export class ComponentMap {
 
   static getPathWithoutRootDir(rootDir: PathLinux, filePath: PathLinux): PathLinux {
     const newPath = pathRelativeLinux(rootDir, filePath);
-    if (newPath.startsWith('@teambit/legacy/dist/consumer')) {
+    if (newPath.startsWith('..')) {
       // this is forbidden for security reasons. Allowing files to be written outside the components directory may
       // result in overriding OS files.
       throw new OutsideRootDir(filePath, rootDir);
