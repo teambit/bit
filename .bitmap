@@ -767,13 +767,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/git/git"
     },
-    "global-config": {
-        "name": "global-config",
-        "scope": "teambit.harmony",
-        "version": "0.0.1065",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/global-config"
-    },
     "graph": {
         "name": "graph",
         "scope": "teambit.component",
@@ -955,13 +948,6 @@
         "version": "0.0.3",
         "mainFile": "index.ts",
         "rootDir": "components/legacy/loader"
-    },
-    "logger": {
-        "name": "logger",
-        "scope": "teambit.harmony",
-        "version": "0.0.1155",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/logger"
     },
     "mdx": {
         "name": "mdx",
@@ -1671,13 +1657,6 @@
         "version": "1.0.485",
         "mainFile": "index.ts",
         "rootDir": "scopes/semantics/schema"
-    },
-    "scope": {
-        "name": "scope",
-        "scope": "teambit.scope",
-        "version": "1.0.485",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/scope/scope"
     },
     "scope-api": {
         "name": "scope-api",
