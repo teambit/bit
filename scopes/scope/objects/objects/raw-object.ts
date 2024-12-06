@@ -1,9 +1,8 @@
-import R from 'ramda';
-
 import { NULL_BYTE, SPACE_DELIMITER } from '@teambit/legacy.constants';
 import { getStringifyArgs, inflate } from '@teambit/legacy.utils';
 import { typesObj as types } from '@teambit/legacy.scope';
 import BitObject from './object';
+import { clone } from 'lodash';
 
 export default class BitRawObject {
   headers: string[];
@@ -104,7 +103,7 @@ export default class BitRawObject {
 
   refs(): string[] {
     if (this.type === 'Component') {
-      return R.values(this.parsedContent.versions);
+      return Object.values(this.parsedContent.versions);
     }
     if (this.type === 'Version') {
       const files = this.parsedContent.files ? this.parsedContent.files.map((file) => file.file) : [];
@@ -135,7 +134,7 @@ export default class BitRawObject {
   }
 
   clone() {
-    const parsedContent = this.parsedContent ? R.clone(this.parsedContent) : undefined;
+    const parsedContent = this.parsedContent ? clone(this.parsedContent) : undefined;
     // TODO: Should also clone the buffers (content)
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new BitRawObject(undefined, this._ref, this.type, this.content, parsedContent);

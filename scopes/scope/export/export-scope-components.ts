@@ -1,6 +1,5 @@
 import mapSeries from 'p-map-series';
-import { compact, partition } from 'lodash';
-import R from 'ramda';
+import { compact, partition, property, sortBy } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { logger } from '@teambit/legacy.logger';
 import { Remotes, Remote, getScopeRemotes } from '@teambit/scope.remotes';
@@ -228,10 +227,10 @@ export async function mergeObjects(
   const componentsWithConflicts = errors.filter((result) => result instanceof MergeConflict) as MergeConflict[];
   if (componentsWithConflicts.length || componentsNeedUpdate.length) {
     const idsAndVersions = componentsWithConflicts.map((c) => ({ id: c.id, versions: c.versions }));
-    const idsAndVersionsWithConflicts = R.sortBy(R.prop('id'), idsAndVersions);
-    const idsOfNeedUpdateComps = R.sortBy(
-      R.prop('id'),
-      componentsNeedUpdate.map((c) => ({ id: c.id, lane: c.lane }))
+    const idsAndVersionsWithConflicts = sortBy(idsAndVersions, property('id'));
+    const idsOfNeedUpdateComps = sortBy(
+      componentsNeedUpdate.map((c) => ({ id: c.id, lane: c.lane })),
+      property('id')
     );
     scope.objects.clearObjectsFromCache(); // just in case this error is caught. we don't want to persist anything by mistake.
     throw new MergeConflictOnRemote(idsAndVersionsWithConflicts, idsOfNeedUpdateComps);
@@ -380,7 +379,7 @@ export async function resumeExport(scope: Scope, exportId: string, remotes: stri
   const remotesForPersist: RemotesForPersist[] = remotesObj.map((remote) => ({ remote }));
   await validateRemotes(remotesObj, exportId);
   await persistRemotes(remotesForPersist, exportId);
-  return R.flatten(remotesForPersist.map((r) => r.exportedIds));
+  return compact(remotesForPersist.map((r) => r.exportedIds).flat());
 }
 
 export async function removePendingDirs(pushedRemotes: Remote[], clientId: string) {

@@ -1,5 +1,4 @@
-import R from 'ramda';
-import { pickBy } from 'lodash';
+import { isEmpty, pickBy } from 'lodash';
 import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
@@ -264,7 +263,7 @@ export default class Version extends BitObject {
         key === 'overrides' ||
         key === 'extensions'
       ) {
-        return !R.isEmpty(val);
+        return !isEmpty(val);
       }
       return !!val;
     };
@@ -342,7 +341,7 @@ export default class Version extends BitObject {
   }
 
   getAllDependenciesIds(): ComponentIdList {
-    const allDependencies = R.flatten(Object.values(this.depsIdsGroupedByType));
+    const allDependencies = Object.values(this.depsIdsGroupedByType).flat();
     return ComponentIdList.fromArray(allDependencies);
   }
 

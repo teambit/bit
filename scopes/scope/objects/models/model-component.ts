@@ -1,5 +1,4 @@
-import { clone, equals, forEachObjIndexed } from 'ramda';
-import { forEach, isEmpty, pickBy, mapValues } from 'lodash';
+import { forEach, isEmpty, pickBy, mapValues, isEqual, clone } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag, isSnap, LATEST_VERSION } from '@teambit/component-version';
@@ -388,7 +387,7 @@ export default class Component extends BitObject {
 
   compatibleWith(component: Component, local: boolean): boolean {
     const { thisComponentVersions, otherComponentVersions } = this._getComparableVersionsObjects(component, local);
-    return equals(thisComponentVersions, otherComponentVersions);
+    return isEqual(thisComponentVersions, otherComponentVersions);
   }
 
   diffWith(component: Component, local: boolean): string[] {
@@ -1096,16 +1095,6 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     const versions = Object.values(this.versionsIncludeOrphaned);
     if (this.head) versions.push(this.head);
     return versions;
-  }
-
-  replaceRef(oldRef: Ref, newRef: Ref) {
-    const replace = (value, key) => {
-      if (value === oldRef.hash) {
-        // @ts-ignore
-        this.versions[key] = newRef.hash;
-      }
-    };
-    forEachObjIndexed(replace, this.versions);
   }
 
   validateBeforePersisting(componentStr: string): void {

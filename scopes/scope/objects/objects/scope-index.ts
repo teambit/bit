@@ -2,7 +2,6 @@
 import fs from 'fs-extra';
 import { Mutex } from 'async-mutex';
 import * as path from 'path';
-import R from 'ramda';
 import { LaneId } from '@teambit/lane-id';
 import { logger } from '@teambit/legacy.logger';
 import { InvalidIndexJson } from '@teambit/legacy.scope';
@@ -10,6 +9,7 @@ import { ModelComponent, Symlink } from '../models';
 import Lane from '../models/lane';
 import BitObject from './object';
 import Ref from './ref';
+import { difference } from 'lodash';
 
 const COMPONENTS_INDEX_FILENAME = 'index.json';
 
@@ -101,7 +101,7 @@ export class ScopeIndex {
     await this.writeIndexMutex.runExclusive(() => fs.writeJson(this.indexPath, this.index, { spaces: 2 }));
   }
   getAll(): IndexItem[] {
-    return R.flatten(Object.values(this.index));
+    return Object.values(this.index).flat();
   }
 
   getHashes(indexType: IndexType): string[] {
@@ -154,7 +154,7 @@ export class ScopeIndex {
     for (const entity of Object.keys(IndexType)) {
       const found = this.index[entity].find((indexItem) => indexItem.hash === hash);
       if (found) {
-        this.index[entity] = R.without([found], this.index[entity]);
+        this.index[entity] = difference(this.index[entity], [found]);
         return true;
       }
     }

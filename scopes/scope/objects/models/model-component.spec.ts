@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import R from 'ramda';
 
 import ModelComponent from './model-component';
+import { clone } from 'lodash';
 
 const modelComponentFixture = {
   name: 'bar/foo',
@@ -29,7 +29,7 @@ const modelComponentFixture = {
 };
 
 const getModelComponentFixture = (): typeof modelComponentFixture => {
-  return R.clone(modelComponentFixture);
+  return clone(modelComponentFixture);
 };
 
 const getModelComponent = (obj: object): ModelComponent => {

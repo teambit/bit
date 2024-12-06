@@ -3,11 +3,11 @@ import mapSeries from 'p-map-series';
 import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
-import R from 'ramda';
 import { VersionDependencies, Scope } from '@teambit/legacy.scope';
 import { ConsumerComponent as Component, Dependencies } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
 import { Lane } from '@teambit/scope.objects';
+import { compact, tail, uniq } from 'lodash';
 
 export class FlattenedDependenciesGetter {
   private dependenciesGraph: GraphLib;
@@ -48,9 +48,8 @@ export class FlattenedDependenciesGetter {
     const allDependencies = this.components.map((component) => {
       return getEdges(this.dependenciesGraph, component.id.toString());
     });
-    const idsStr: string[] = R.uniq(R.flatten(allDependencies));
+    const idsStr: string[] = compact(uniq(allDependencies.flat()));
     const bitIds = idsStr
-      .filter((id) => id)
       .map((idStr) => this.dependenciesGraph.node(idStr))
       .filter((bitId) => !this.components.find((c) => c.id.isEqual(bitId)));
     const scopeComponentsImporter = this.scope.scopeImporter;
@@ -121,7 +120,7 @@ function getEdges(graph: GraphLib, id: BitIdStr): BitIdStr[] | null {
   if (!graph.hasNode(id)) return null;
   // @ts-ignore
   const edges = graphlib.alg.preorder(graph, id);
-  return R.tail(edges); // the first item is the component itself
+  return tail(edges); // the first item is the component itself
 }
 
 /**
