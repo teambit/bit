@@ -1102,6 +1102,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/html/modules/fetch-html-from-url"
     },
+    "modules/find-scope-path": {
+        "name": "modules/find-scope-path",
+        "scope": "teambit.scope",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "components/modules/find-scope-path"
+    },
     "modules/fs-cache": {
         "name": "modules/fs-cache",
         "scope": "teambit.workspace",
