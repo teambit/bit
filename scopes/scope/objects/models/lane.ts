@@ -62,7 +62,7 @@ export default class Lane extends BitObject {
     this.name = props.name;
     this.scope = props.scope;
     this.components = props.components || [];
-    this.log = props.log || {};
+    this.log = props.log || { date: Date.now().toString() };
     this._hash = props.hash;
     this.readmeComponent = props.readmeComponent;
     this.forkedFrom = props.forkedFrom;

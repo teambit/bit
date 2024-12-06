@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 import { ComponentIdList } from '@teambit/component-id';
 
-import { Consumer } from '../consumer';
+import Consumer from './consumer';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 
 describe('Consumer', function () {

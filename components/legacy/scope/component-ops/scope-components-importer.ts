@@ -1,4 +1,3 @@
-import { filter } from 'bluebird';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Mutex, withTimeout } from 'async-mutex';
 import mapSeries from 'p-map-series';
@@ -491,7 +490,10 @@ export class ScopeComponentsImporter {
       await Promise.all(
         Object.keys(groupedHashes).map(async (scopeName) => {
           const uniqueHashes: string[] = R.uniq(groupedHashes[scopeName]);
-          const missing = await filter(uniqueHashes, async (hash) => !(await this.repo.has(new Ref(hash))));
+          const missingWithNull = await Promise.all(
+            uniqueHashes.map(async (hash) => (!(await this.repo.has(new Ref(hash))) ? hash : null))
+          );
+          const missing = compact(missingWithNull);
           if (missing.length) {
             groupedHashedMissing[scopeName] = missing;
           }

@@ -216,7 +216,7 @@ export class Component {
     this.deprecated = deprecated || false;
     this.removed = removed;
     this.scopesList = scopesList;
-    this.extensions = extensions || [];
+    this.extensions = extensions || new ExtensionDataList();
     this.componentFromModel = componentFromModel;
     this.modelComponent = modelComponent;
     this.schema = schema;

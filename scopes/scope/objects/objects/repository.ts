@@ -42,7 +42,7 @@ export default class Repository {
   onPersist: ContentTransformer;
   scopePath: string;
   scopeIndex: ScopeIndex;
-  private cache: InMemoryCache<BitObject>;
+  protected cache: InMemoryCache<BitObject>;
   remoteLanes!: RemoteLanes;
   unmergedComponents!: UnmergedComponents;
   persistMutex = new Mutex();

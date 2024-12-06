@@ -16,7 +16,6 @@ export async function createConsumer(
   generator?: string
 ): Promise<Consumer> {
   const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
-  let existingGitHooks;
   // avoid using the default scope-name `path.basename(process.cwd())` when generated from the workspace.
   // otherwise, components with the same scope-name will get ComponentNotFound on import
   const scopeName = `${path.basename(process.cwd())}-local-${generateRandomStr()}`;
@@ -34,7 +33,6 @@ export async function createConsumer(
     created: true,
     scope,
     config: legacyConfig,
-    existingGitHooks,
   });
   await consumer.setBitMap();
   if (!noPackageJson) {

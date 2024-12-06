@@ -52,8 +52,6 @@ type ConsumerProps = {
   scope: Scope;
   created?: boolean;
   isolated?: boolean;
-  addedGitHooks?: string[] | undefined;
-  existingGitHooks: string[] | undefined;
 };
 
 const BITMAP_HISTORY_DIR_NAME = 'bitmap-history';
@@ -69,8 +67,6 @@ export default class Consumer {
   scope: Scope;
   bitMap: BitMap;
   isolated = false; // Mark that the consumer instance is of isolated env and not real
-  addedGitHooks: string[] | undefined; // list of git hooks added during init process
-  existingGitHooks: string[] | undefined; // list of git hooks already exists during init process
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _dirStructure: DirStructure;
   _componentsStatusCache: Record<string, any> = {}; // cache loaded components
@@ -78,22 +74,12 @@ export default class Consumer {
   componentLoader: ComponentLoader;
   packageJson: PackageJsonFile;
   public onCacheClear: Array<() => void | Promise<void>> = [];
-  constructor({
-    projectPath,
-    config,
-    scope,
-    created = false,
-    isolated = false,
-    addedGitHooks,
-    existingGitHooks,
-  }: ConsumerProps) {
+  constructor({ projectPath, config, scope, created = false, isolated = false }: ConsumerProps) {
     this.projectPath = projectPath;
     this.config = config;
     this.created = created;
     this.isolated = isolated;
     this.scope = scope;
-    this.addedGitHooks = addedGitHooks;
-    this.existingGitHooks = existingGitHooks;
     // @ts-ignore todo: remove after deleting teambit.legacy
     this.componentLoader = ComponentLoader.getInstance(this);
     this.packageJson = PackageJsonFile.loadSync(projectPath);

@@ -1,17 +1,15 @@
 import fs from 'fs-extra';
-import { filter } from 'bluebird';
 import path from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { logger } from '@teambit/legacy.logger';
-import { Scope } from '@teambit/legacy.scope';
-import { Lane, Source } from '@teambit/scope.objects';
-import { Ref } from '@teambit/scope.objects';
+import { Scope, MissingObjects } from '@teambit/legacy.scope';
+import { Ref, Lane, Source } from '@teambit/scope.objects';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { ArtifactVinyl } from './artifact';
-import { MissingObjects } from '@teambit/legacy.scope';
+import { compact } from 'lodash';
 
 export type ArtifactRef = { relativePath: string; ref: Ref; url?: string };
 export type ArtifactModel = { relativePath: string; file: string; url?: string };
@@ -114,7 +112,13 @@ export class ArtifactFiles {
     if (this.isEmpty()) return [];
     if (this.vinyls.length) return this.vinyls;
     const allHashes = this.refs.map((artifact) => artifact.ref);
-    const missing = await filter(allHashes, async (hash) => !(await scope.objects.has(hash)));
+    // const missingWithNulls = await Promise.all(allHashes.map((hash) => scope.objects.maybeGet(hash)));
+
+    const missingWithNull = await Promise.all(
+      allHashes.map(async (hash) => (!(await scope.objects.has(hash)) ? hash : null))
+    );
+
+    const missing = compact(missingWithNull);
     if (missing.length) await this.importMissing(id, scope, missing);
     const getOneArtifact = async (artifact: ArtifactRef) => {
       const content = (await artifact.ref.load(scope.objects)) as Source;

@@ -1,4 +1,3 @@
-import Bluebird from 'bluebird';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import semver from 'semver';
@@ -65,14 +64,6 @@ process.emit = function (name, data) {
   // eslint-disable-next-line prefer-rest-params
   return originalEmit.apply(process, arguments as unknown as Parameters<typeof process.emit>);
 };
-
-// by default Bluebird enables the longStackTraces when env is `development`, or when
-// BLUEBIRD_DEBUG is set.
-// the drawback of enabling it all the time is a performance hit. (see http://bluebirdjs.com/docs/api/promise.longstacktraces.html)
-// some commands are slower by 20% with this enabled.
-Bluebird.config({
-  longStackTraces: Boolean(process.env.BLUEBIRD_DEBUG || process.env.BIT_LOG),
-});
 
 export async function bootstrap() {
   enableLoaderIfPossible();
