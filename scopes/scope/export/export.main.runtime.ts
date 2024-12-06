@@ -20,7 +20,7 @@ import { EjectAspect, EjectMain, EjectResults } from '@teambit/eject';
 import { Http, ExportOrigin } from '@teambit/scope.network';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { persistRemotes, validateRemotes, removePendingDirs } from '@teambit/export';
+import { persistRemotes, validateRemotes, removePendingDirs } from './export-scope-components';
 import {
   Lane,
   ModelComponent,
