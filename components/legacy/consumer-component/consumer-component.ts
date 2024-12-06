@@ -20,23 +20,24 @@ import { pathNormalizeToLinux, PathLinux, PathOsBased, PathOsBasedRelative } fro
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { ComponentMap } from '@teambit/legacy.bit-map';
 import { IgnoredDirectory } from './exceptions/ignored-directory';
-import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
+import ComponentsPendingImport from '@teambit/legacy.consumer';
 import { Dist, License, SourceFile, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
-import ComponentConfig, {
+import {
+  ComponentConfig,
   ComponentConfigLoadOptions,
   ILegacyWorkspaceConfig,
-} from '@teambit/legacy/dist/consumer/config';
-import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
+  ComponentOverrides,
+  getBindingPrefixByDefaultScope,
+} from '@teambit/legacy.consumer-config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import ComponentOutOfSync from '@teambit/legacy/dist/consumer/exceptions/component-out-of-sync';
+import { Consumer } from '@teambit/legacy.consumer';
+import ComponentOutOfSync from '@teambit/legacy.consumer';
 import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';
 import { ComponentNotFoundInPath } from './exceptions/component-not-found-in-path';
 import MainFileRemoved from './exceptions/main-file-removed';
 import { ComponentLoadOptions } from './component-loader';
-import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
 
 export type CustomResolvedPath = { destinationPath: PathLinux; importSource: string };
 

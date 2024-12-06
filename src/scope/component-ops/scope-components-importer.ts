@@ -10,7 +10,7 @@ import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/ha
 import { compact, flatten, partition, uniq } from 'lodash';
 import { Scope } from '..';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import logger from '../../logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import ComponentVersion from '../component-version';
 import { ComponentNotFound, HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import { Lane, ModelComponent, Version, VersionHistory } from '../models';
@@ -23,7 +23,7 @@ import { BitObjectList } from '@teambit/scope.objects';
 import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import { BuildStatus } from '../../constants';
+import { BuildStatus } from '@teambit/legacy/dist/constants';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
 import { getAllVersionHashes } from './traverse-versions';

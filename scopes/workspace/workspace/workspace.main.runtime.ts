@@ -16,8 +16,8 @@ import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { ComponentMain, Component } from '@teambit/component';
 import type { VariantsMain } from '@teambit/variants';
-import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
-import type { ComponentConfigLoadOptions } from '@teambit/legacy/dist/consumer/config';
+import { Consumer, loadConsumerIfExist } from '@teambit/legacy.consumer';
+import type { ComponentConfigLoadOptions } from '@teambit/legacy.consumer-config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import {
   ComponentLoadOptions,

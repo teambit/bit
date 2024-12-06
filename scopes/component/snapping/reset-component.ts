@@ -1,7 +1,7 @@
 import { BitError } from '@teambit/bit-error';
 import { ComponentID } from '@teambit/component-id';
 import { Scope } from '@teambit/legacy/dist/scope';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { Lane, ModelComponent } from '@teambit/scope.objects';

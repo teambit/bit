@@ -1,5 +1,5 @@
 import { ComponentIdList } from '@teambit/component-id';
-import { loadConsumer } from '@teambit/legacy/dist/consumer';
+import { loadConsumer } from '@teambit/legacy.consumer';
 import { ModelComponent, Symlink } from '@teambit/scope.objects';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
 

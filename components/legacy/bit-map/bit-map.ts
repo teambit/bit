@@ -9,7 +9,7 @@ import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
-import type { Consumer } from '@teambit/legacy/dist/consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
 import {
   AUTO_GENERATED_MSG,
   AUTO_GENERATED_STAMP,

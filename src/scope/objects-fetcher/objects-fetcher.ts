@@ -6,7 +6,7 @@ import { pipeline } from 'stream/promises';
 import { Scope } from '..';
 import { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import { loader } from '@teambit/legacy.loader';
-import logger from '../../logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { ScopeNotFound } from '../exceptions';
 import { ErrorFromRemote } from '../exceptions/error-from-remote';
 import { UnexpectedNetworkError } from '../network/exceptions';

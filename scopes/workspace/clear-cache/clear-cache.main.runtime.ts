@@ -1,6 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { getRemoteByName } from '@teambit/scope.remotes';
-import { loadConsumerIfExist, Consumer } from '@teambit/legacy/dist/consumer';
+import { loadConsumerIfExist, Consumer } from '@teambit/legacy.consumer';
 import ClearCacheCmd from './clear-cache-cmd';
 import { ClearCacheAspect } from './clear-cache.aspect';
 import { clearCache, CacheClearResult } from './clear-cache';

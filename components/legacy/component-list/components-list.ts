@@ -8,9 +8,9 @@ import Scope from '@teambit/legacy/dist/scope/scope';
 import { fetchRemoteVersions } from '@teambit/scope.remotes';
 import { isBitIdMatchByWildcards } from '@teambit/legacy.utils';
 import { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
-import Component from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { InvalidComponent, ComponentLoadOptions } from '@teambit/legacy.consumer-component';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 
 export type ListScopeResult = {
   id: ComponentID;

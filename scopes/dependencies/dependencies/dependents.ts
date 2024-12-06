@@ -1,7 +1,7 @@
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { loadConsumerIfExist, Consumer } from '@teambit/legacy/dist/consumer';
-import ConsumerNotFound from '@teambit/legacy/dist/consumer/exceptions/consumer-not-found';
+import { loadConsumerIfExist, Consumer } from '@teambit/legacy.consumer';
+import ConsumerNotFound from '@teambit/legacy.consumer';
 import { DependencyGraph, DependenciesInfo } from '@teambit/legacy.dependency-graph';
 
 export type DependentsResults = {

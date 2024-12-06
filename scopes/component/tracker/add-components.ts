@@ -23,7 +23,7 @@ import MissingMainFileMultipleComponents from './exceptions/missing-main-file-mu
 import { ParentDirTracked } from './exceptions/parent-dir-tracked';
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { BitError } from '@teambit/bit-error';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { glob, isDir, pathNormalizeToLinux, PathLinux, PathLinuxRelative, PathOsBased } from '@teambit/legacy.utils';

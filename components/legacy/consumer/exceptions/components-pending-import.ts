@@ -1,7 +1,7 @@
 import { BitError } from '@teambit/bit-error';
-import { IMPORT_PENDING_MSG } from '../../constants';
+import { IMPORT_PENDING_MSG } from '@teambit/legacy/dist/constants';
 
-export default class ComponentsPendingImport extends BitError {
+export class ComponentsPendingImport extends BitError {
   constructor(ids: string[]) {
     super(`${IMPORT_PENDING_MSG}
 (specifically: ${ids.join(' ')})`);

@@ -3,7 +3,7 @@ import * as path from 'path';
 import { pickBy } from 'lodash';
 import R from 'ramda';
 import { BitIds } from '@teambit/legacy-bit-id';
-import { DEFAULT_EXTENSIONS, DEFAULT_LANGUAGE, PACKAGE_JSON } from '../../constants';
+import { DEFAULT_EXTENSIONS, DEFAULT_LANGUAGE, PACKAGE_JSON } from '@teambit/legacy/dist/constants';
 import { PathLinux, PathOsBased } from '@teambit/legacy.utils';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 

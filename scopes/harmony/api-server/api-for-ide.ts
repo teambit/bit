@@ -14,7 +14,7 @@ import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log
 import { Log } from '@teambit/scope.objects';
 import { ComponentCompareMain } from '@teambit/component-compare';
 import { GeneratorMain } from '@teambit/generator';
-import { getParsedHistoryMetadata } from '@teambit/legacy/dist/consumer/consumer';
+import { getParsedHistoryMetadata } from '@teambit/legacy.consumer';
 import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 import { RemoveMain } from '@teambit/remove';
 import { compact, uniq } from 'lodash';

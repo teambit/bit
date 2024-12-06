@@ -5,12 +5,12 @@ import pMapSeries from 'p-map-series';
 import { LaneId } from '@teambit/lane-id';
 import { compact, set } from 'lodash';
 import { Mutex } from 'async-mutex';
-import { PREVIOUS_DEFAULT_LANE, REMOTE_REFS_DIR } from '../../constants';
+import { PREVIOUS_DEFAULT_LANE, REMOTE_REFS_DIR } from '@teambit/legacy/dist/constants';
 import { glob } from '@teambit/legacy.utils';
 import { Lane, ModelComponent } from '../models';
 import { LaneComponent } from '../models/lane';
 import { Ref } from '../objects';
-import logger from '../../logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 
 type Lanes = { [laneName: string]: LaneComponent[] };
 

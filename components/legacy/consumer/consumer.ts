@@ -15,11 +15,11 @@ import {
   DEPENDENCIES_FIELDS,
   DOT_GIT_DIR,
   LATEST,
-} from '../constants';
-import logger from '../logger/logger';
-import { Scope } from '../scope';
-import { ComponentNotFound, ScopeNotFound } from '../scope/exceptions';
-import { Lane, ModelComponent, Version } from '../scope/models';
+} from '@teambit/legacy/dist/constants';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { Scope } from '@teambit/legacy/dist/scope';
+import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import format from 'string-format';
@@ -33,8 +33,8 @@ import {
   parseScope,
 } from '@teambit/legacy.utils';
 import { BitMap, NextVersion } from '@teambit/legacy.bit-map';
-import Component from './component';
 import {
+  ConsumerComponent as Component,
   Dependencies,
   ComponentLoader,
   ComponentLoadOptions,
@@ -47,7 +47,7 @@ import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound } from './exceptions';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
-import { NoHeadNoVersion } from '../scope/exceptions/no-head-no-version';
+import { NoHeadNoVersion } from '@teambit/legacy/dist/scope/exceptions/no-head-no-version';
 
 type ConsumerProps = {
   projectPath: string;

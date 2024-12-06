@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { ComponentID } from '@teambit/component-id';
 import Version from '@teambit/scope.objects';
 import { SourceFile, RemovePath, DataToPersist } from '@teambit/component.sources';

@@ -1,5 +1,5 @@
 import { resolve, join } from 'path';
-import { loadConsumer } from '@teambit/legacy/dist/consumer';
+import { loadConsumer } from '@teambit/legacy.consumer';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { readdirSync } from 'fs';
@@ -10,10 +10,10 @@ import { ComponentID } from '@teambit/component';
 import { CLIAspect } from '@teambit/cli';
 import { NodeAspect } from '@teambit/node';
 import { ComponentLoader } from '@teambit/legacy.consumer-component';
-import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
-import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
+import ComponentConfig from '@teambit/legacy.consumer-config';
+import ComponentOverrides from '@teambit/legacy.consumer-config';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
+import WorkspaceConfig from '@teambit/legacy.consumer-config';
 import { DependenciesAspect } from '@teambit/dependencies';
 
 function getPackageName(aspect: any, id: ComponentID) {

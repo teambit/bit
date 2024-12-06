@@ -8,7 +8,7 @@ import { PromptCanceled } from '@teambit/legacy.cli.prompts';
 import { ScopeMain } from '@teambit/scope';
 import { Lane } from '@teambit/scope.objects';
 import { StagedSnaps } from '@teambit/legacy/dist/scope/staged-snaps';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { BitError } from '@teambit/bit-error';
 import { BitObject } from '@teambit/scope.objects';
 import { Logger } from '@teambit/logger';

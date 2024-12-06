@@ -1,6 +1,6 @@
 import { Writable } from 'stream';
 import { BitObject, Repository } from '../objects';
-import logger from '../../logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { Lane, LaneHistory, ModelComponent, Version, VersionHistory } from '../models';
 import { ObjectItem } from '../objects/object-list';
 import { WriteObjectsQueue } from './write-objects-queue';

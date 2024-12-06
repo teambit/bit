@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { compact, partition } from 'lodash';
 import R from 'ramda';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import logger from '../../logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { Remotes, Remote, getScopeRemotes } from '@teambit/scope.remotes';
 import { ComponentNotFound, MergeConflict, MergeConflictOnRemote } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';

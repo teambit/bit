@@ -1,4 +1,4 @@
-import logger from '../../logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import { ModelComponent } from '../models';

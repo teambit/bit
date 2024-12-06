@@ -1,7 +1,7 @@
 import { ComponentID } from '@teambit/component-id';
 import { loader } from '@teambit/legacy.loader';
-import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
-import Component from '@teambit/legacy/dist/consumer/component';
+import { Consumer, loadConsumerIfExist } from '@teambit/legacy.consumer';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import { loadScope, Scope } from '@teambit/legacy/dist/scope';
 import { DependenciesInfo } from '@teambit/legacy.dependency-graph';

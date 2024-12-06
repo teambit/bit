@@ -1,6 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { getRemoteByName } from '@teambit/scope.remotes';
-import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
+import { loadConsumerIfExist } from '@teambit/legacy.consumer';
 import { VersionHistoryAspect } from './version-history.aspect';
 import {
   BuildOptions,

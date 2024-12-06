@@ -1,9 +1,9 @@
 import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { LATEST_BIT_VERSION } from '../../constants';
+import { LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
 import Consumer from '../../consumer/consumer';
-import logger from '../../logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { Lane } from '../models';
 import { Ref } from '../objects';
 import RemovedObjects from '../removed-components';

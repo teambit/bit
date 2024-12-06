@@ -3,7 +3,7 @@ import chalk from 'chalk';
 
 type DivergeData = { id: string; snapsLocal: number; snapsRemote: number };
 
-export default class ComponentsPendingMerge extends BitError {
+export class ComponentsPendingMerge extends BitError {
   divergeData: DivergeData[];
   constructor(divergeData: DivergeData[]) {
     const componentsStr = divergeData

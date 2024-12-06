@@ -1,5 +1,5 @@
-import { loadConsumer } from '@teambit/legacy/dist/consumer';
-import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
+import { loadConsumer } from '@teambit/legacy.consumer';
+import WorkspaceConfig from '@teambit/legacy.consumer-config';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
 export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {

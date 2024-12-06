@@ -2,7 +2,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { ComponentID } from '@teambit/component-id';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
+import { ConsumerNotFound } from '@teambit/legacy.consumer';
 import { getRemoteByName, Remote } from '@teambit/scope.remotes';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { BitError } from '@teambit/bit-error';

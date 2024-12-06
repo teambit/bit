@@ -1,5 +1,5 @@
 import { BitError } from '@teambit/bit-error';
-import { DEFAULT_COMPONENTS_DIR_PATH } from '../../constants';
+import { DEFAULT_COMPONENTS_DIR_PATH } from '@teambit/legacy/dist/constants';
 
 export default class BitStructure {
   private _componentsDefaultDirectory: string;

@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 
-import { GLOBAL_CONFIG, GLOBAL_CONFIG_FILE } from '../constants';
+import { GLOBAL_CONFIG, GLOBAL_CONFIG_FILE } from '@teambit/legacy/dist/constants';
 
 export function getGlobalConfigPath() {
   return path.join(GLOBAL_CONFIG, GLOBAL_CONFIG_FILE);

@@ -2,8 +2,8 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import { v4 } from 'uuid';
 
-import { BIT_TMP_DIRNAME } from '../../constants';
-import logger from '../../logger/logger';
+import { BIT_TMP_DIRNAME } from '@teambit/legacy/dist/constants';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { PathOsBased } from '@teambit/toolbox.path.path';
 import Repository from '../repository';
 

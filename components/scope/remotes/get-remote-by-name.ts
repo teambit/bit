@@ -1,4 +1,4 @@
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { getScopeRemotes } from './scope-remotes';
 import { Remote } from './remote';
 import { Remotes } from './remotes';

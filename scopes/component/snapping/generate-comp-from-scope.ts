@@ -2,7 +2,7 @@ import { ComponentID } from '@teambit/component-id';
 import { Dependency, ConsumerComponent, CURRENT_SCHEMA } from '@teambit/legacy.consumer-component';
 import { SourceFile } from '@teambit/component.sources';
 import { ScopeMain } from '@teambit/scope';
-import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
+import ComponentOverrides from '@teambit/legacy.consumer-config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { Component } from '@teambit/component';
 import { DependenciesMain } from '@teambit/dependencies';

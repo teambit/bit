@@ -18,7 +18,7 @@ import {
 } from '@teambit/legacy/dist/constants';
 import { ConsumerComponent, SchemaName, Dependencies, Dependency } from '@teambit/legacy.consumer-component';
 import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
-import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
+import ComponentOverrides from '@teambit/legacy.consumer-config';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { getStringifyArgs } from '@teambit/legacy.utils';
@@ -51,7 +51,7 @@ import { errorIsTypeOfMissingObject } from '@teambit/legacy/dist/scope/component
 import type Scope from '@teambit/legacy/dist/scope/scope';
 import { BitIdCompIdError } from '@teambit/legacy/dist/scope/exceptions/bit-id-comp-id-err';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { getBindingPrefixByDefaultScope } from '@teambit/legacy/dist/consumer/config/component-config';
+import { getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
 
 type State = {
   versions?: {

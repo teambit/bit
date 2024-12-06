@@ -1,7 +1,7 @@
 import { ComponentIdList } from '@teambit/component-id';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { DataToPersist, RemovePath } from '@teambit/component.sources';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 
 export async function deleteComponentsFiles(consumer: Consumer, bitIds: ComponentIdList) {
   logger.debug(`deleteComponentsFiles, ids: ${bitIds.toString()}`);

@@ -1,5 +1,5 @@
 import { ComponentID } from '@teambit/component-id';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { Workspace } from '@teambit/workspace';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { isEmpty } from 'lodash';

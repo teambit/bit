@@ -4,7 +4,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { VERSION_DELIMITER } from '@teambit/legacy/dist/constants';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { ConsumerComponent as Component, DEPENDENCIES_TYPES_UI_MAP } from '@teambit/legacy.consumer-component';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { getAllVersionsInfo } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
 import { IdNotFoundInGraph } from '@teambit/legacy/dist/scope/exceptions/id-not-found-in-graph';

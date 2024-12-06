@@ -53,7 +53,7 @@ export enum IndexType {
 
 type Index = { [IndexType.components]: ComponentItem[]; [IndexType.lanes]: LaneItem[] };
 
-export default class ScopeIndex {
+export class ScopeIndex {
   indexPath: string;
   index: Index;
   writeIndexMutex = new Mutex();

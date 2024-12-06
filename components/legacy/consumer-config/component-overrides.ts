@@ -6,7 +6,7 @@ import {
   MANUALLY_REMOVE_DEPENDENCY,
   OVERRIDE_COMPONENT_PREFIX,
   DEPENDENCIES_FIELDS,
-} from '../../constants';
+} from '@teambit/legacy/dist/constants';
 import { SourceFile } from '@teambit/component.sources';
 import ComponentConfig from './component-config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
@@ -38,7 +38,7 @@ export type ComponentOverridesData = DependenciesOverridesData & {
 
 type OverridesLoadRegistry = { [extId: string]: Function };
 
-export default class ComponentOverrides {
+export class ComponentOverrides {
   private overrides: ConsumerOverridesOfComponent;
   constructor(overrides: ConsumerOverridesOfComponent | null | undefined) {
     this.overrides = overrides || {};

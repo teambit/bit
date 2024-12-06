@@ -1,6 +1,6 @@
 import path from 'path';
 import winston from 'winston';
-import { DEBUG_LOG, GLOBAL_LOGS } from '../constants';
+import { DEBUG_LOG, GLOBAL_LOGS } from '@teambit/legacy/dist/constants';
 
 // Store the extensionsLoggers to prevent create more than one logger for the same extension
 // in case the extension developer use api.logger more than once

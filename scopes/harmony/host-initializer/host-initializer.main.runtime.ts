@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { Repository } from '@teambit/scope.objects';

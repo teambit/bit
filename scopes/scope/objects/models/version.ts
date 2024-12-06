@@ -14,7 +14,7 @@ import {
   ConsumerComponent,
 } from '@teambit/legacy.consumer-component';
 import { getRefsFromExtensions, SourceFile } from '@teambit/component.sources';
-import { ComponentOverridesData } from '@teambit/legacy/dist/consumer/config/component-overrides';
+import { ComponentOverridesData } from '@teambit/legacy.consumer-config';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { Doclet } from '@teambit/semantics.doc-parser';
 import logger from '@teambit/legacy/dist/logger/logger';
@@ -22,8 +22,7 @@ import { getStringifyArgs, PathLinux, pathNormalizeToLinux } from '@teambit/lega
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import VersionInvalid from '@teambit/legacy/dist/scope/exceptions/version-invalid';
 import { BitObject, Ref } from '@teambit/legacy/dist/scope/objects';
-import { ObjectItem } from '@teambit/scope.objects';
-import { Repository } from '@teambit/scope.objects';
+import { ObjectItem, Repository } from '@teambit/scope.objects';
 import validateVersionInstance from '@teambit/legacy/dist/scope/version-validator';
 import Source from './source';
 import { BitIdCompIdError } from '@teambit/legacy/dist/scope/exceptions/bit-id-comp-id-err';

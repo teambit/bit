@@ -33,7 +33,7 @@ import type { VariantsMain } from '@teambit/variants';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName, BitId } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
-import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
+import { Consumer, loadConsumer } from '@teambit/legacy.consumer';
 import { GetBitMapComponentOptions, MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { ComponentsList } from '@teambit/legacy.component-list';

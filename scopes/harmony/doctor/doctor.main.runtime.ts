@@ -9,7 +9,7 @@ import tarFS from 'tar-fs';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '@teambit/legacy/dist/constants';
 import { BitMap } from '@teambit/legacy.bit-map';
-import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
+import WorkspaceConfig from '@teambit/legacy.consumer-config';
 import { getWorkspaceInfo, WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import Diagnosis, { ExamineResult } from './diagnosis';
 import DoctorRegistrar from './doctor-registrar';

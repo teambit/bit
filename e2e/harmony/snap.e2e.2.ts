@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 import { HASH_SIZE, AUTO_SNAPPED_MSG, FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
-import ComponentsPendingMerge from '../../src/consumer/exceptions/components-pending-merge';
+import { ComponentsPendingMerge } from '@teambit/legacy.consumer';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { MergeConflictOnRemote } from '../../src/scope/exceptions';

@@ -4,7 +4,7 @@ import pathlib from 'path';
 import { BitError } from '@teambit/bit-error';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { BitId } from '@teambit/legacy-bit-id';
-import { SCOPE_JSON, SCOPE_JSONC } from '../constants';
+import { SCOPE_JSON, SCOPE_JSONC } from '@teambit/legacy/dist/constants';
 import { Remote } from '@teambit/scope.remotes';
 import { cleanObject, writeFile } from '@teambit/legacy.utils';
 import { ScopeJsonNotFound } from './exceptions';

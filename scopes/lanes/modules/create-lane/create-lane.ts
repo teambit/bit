@@ -1,6 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { ScopeMain } from '@teambit/scope';
 // import { ComponentIdList } from '@teambit/component-id';
 import Lane, { LaneComponent } from '@teambit/scope.objects';

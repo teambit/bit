@@ -1,6 +1,6 @@
 import { pickBy } from 'lodash';
 import R from 'ramda';
-import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_PACKAGE_MANAGER } from '../../constants';
+import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_PACKAGE_MANAGER } from '@teambit/legacy/dist/constants';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import AbstractConfig from './abstract-config';
 import { InvalidPackageJson } from './exceptions';

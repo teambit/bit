@@ -465,12 +465,40 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/config-merger"
     },
+    "consumer": {
+        "name": "consumer",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/consumer",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.33": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
+    },
     "consumer-component": {
         "name": "consumer-component",
         "scope": "teambit.legacy",
         "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "components/legacy/consumer-component"
+    },
+    "consumer-config": {
+        "name": "consumer-config",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/consumer-config",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.33": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
     },
     "content/cli-reference": {
         "name": "content/cli-reference",

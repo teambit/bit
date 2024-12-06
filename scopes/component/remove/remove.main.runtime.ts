@@ -3,7 +3,7 @@ import semver from 'semver';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
+import { ConsumerNotFound } from '@teambit/legacy.consumer';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { compact } from 'lodash';
 import { hasWildcard } from '@teambit/legacy.utils';

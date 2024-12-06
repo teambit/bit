@@ -28,7 +28,7 @@ import { componentIdToPackageName } from '@teambit/pkg.modules.component-package
 import { DetectorHook } from '@teambit/dependencies';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/scope.network';
 import { onTagIdTransformer } from '@teambit/snapping';
-import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
 import fs from 'fs-extra';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';

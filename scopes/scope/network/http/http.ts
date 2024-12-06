@@ -12,7 +12,7 @@ import { LaneId } from '@teambit/lane-id';
 import { getAgent, AgentOptions } from '@teambit/toolbox.network.agent';
 import { ListScopeResult } from '@teambit/legacy.component-list';
 import { Network } from '../network';
-import Component from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { ComponentLog } from '@teambit/scope.objects';

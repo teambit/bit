@@ -1,5 +1,5 @@
 import pMap from 'p-map';
-import logger from '../logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { Lane, LaneHistory, ModelComponent, ScopeMeta, Source, Version, VersionHistory } from './models';
 import Scope, { GarbageCollectorOpts } from './scope';
 import { getAllVersionsInfo } from './component-ops/traverse-versions';

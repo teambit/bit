@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { pickBy } from 'lodash';
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
-import logger from '../../logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { ConsumerComponent as Component, ComponentLoadOptions } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile } from '@teambit/component.sources';
 import AbstractConfig from './abstract-config';
@@ -22,7 +22,7 @@ type ConfigLoadRegistry = { [extId: string]: Function };
 // TODO: unify this and the same in src/components/utils/load-extensions/load-resolved-extensions.ts
 const ignoreLoadingExtensionsErrors = false;
 
-export default class ComponentConfig extends AbstractConfig {
+export class ComponentConfig extends AbstractConfig {
   defaultScope: string | undefined;
   componentHasWrittenConfig = false; // whether a component has component.json written to FS or package.json written with 'bit' property
   packageJsonFile: PackageJsonFile | null | undefined;

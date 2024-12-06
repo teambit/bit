@@ -5,17 +5,15 @@ import { ComponentIssue } from '@teambit/component-issues';
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { BIT_MAP } from '@teambit/legacy/dist/constants';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { ModelComponent } from '@teambit/scope.objects';
+import { ModelComponent, VERSION_ZERO } from '@teambit/scope.objects';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { getLastModifiedPathsTimestampMs } from '@teambit/toolbox.fs.last-modified';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
 import { Component, InvalidComponent } from './consumer-component';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { Consumer, ComponentsPendingImport } from '@teambit/legacy.consumer';
 import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import { ComponentMap } from '@teambit/legacy.bit-map';
-import { VERSION_ZERO } from '@teambit/scope.objects';
 import { loader } from '@teambit/legacy.loader';
 
 export type ComponentLoadOptions = {

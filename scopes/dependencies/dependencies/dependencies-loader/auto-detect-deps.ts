@@ -12,7 +12,7 @@ import {
   ConsumerComponent as Component,
 } from '@teambit/legacy.consumer-component';
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import logger from '@teambit/legacy/dist/logger/logger';
 import { getExt } from '@teambit/toolbox.fs.extension-getter';
 import {

@@ -9,7 +9,7 @@ import { PathLinux, resolvePackagePath } from '@teambit/legacy.utils';
 import { ResolvedPackageData, resolvePackageData } from '../resolve-pkg-data';
 import { Workspace } from '@teambit/workspace';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { ComponentMap } from '@teambit/legacy.bit-map';
 import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';

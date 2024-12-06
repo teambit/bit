@@ -13,7 +13,7 @@ import { deleteComponentsFiles } from './delete-component-files';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
 import pMapSeries from 'p-map-series';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { getNodeModulesPathOfComponent } from '@teambit/pkg.modules.component-package-name';
 import { RemovedLocalObjects } from './removed-local-objects';
