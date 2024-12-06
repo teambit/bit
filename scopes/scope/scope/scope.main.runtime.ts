@@ -38,7 +38,7 @@ import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teamb
 import { remove, FETCH_OPTIONS, ExternalActions } from '@teambit/legacy.scope-api';
 import { BitError } from '@teambit/bit-error';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
+import { resumeExport } from '@teambit/export';
 import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';

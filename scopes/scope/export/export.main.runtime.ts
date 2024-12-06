@@ -25,11 +25,7 @@ import { EjectAspect, EjectMain, EjectResults } from '@teambit/eject';
 import { ExportOrigin } from '@teambit/scope.network';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import {
-  persistRemotes,
-  validateRemotes,
-  removePendingDirs,
-} from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
+import { persistRemotes, validateRemotes, removePendingDirs } from '@teambit/export';
 import { BitObject, Ref } from '@teambit/scope.objects';
 import { PersistFailed } from '@teambit/legacy/dist/scope/exceptions/persist-failed';
 import { getAllVersionHashes } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';

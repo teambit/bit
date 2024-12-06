@@ -1,7 +1,7 @@
 import { ComponentIdList } from '@teambit/component-id';
 import { Scope } from '@teambit/legacy/dist/scope';
 import logger from '@teambit/legacy/dist/logger/logger';
-import { saveObjects } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
+import { saveObjects } from '@teambit/export';
 import { Lane } from '@teambit/legacy/dist/scope/models';
 import { AuthData } from '@teambit/legacy/dist/scope/network/http/http';
 import { Action } from './action';
