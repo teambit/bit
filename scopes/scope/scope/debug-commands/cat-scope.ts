@@ -1,6 +1,5 @@
 import { loadScope, Scope } from '@teambit/legacy.scope';
-import { Lane, ModelComponent, ScopeMeta, Symlink, Version } from '@teambit/scope.objects';
-import BitObject from '@teambit/scope.objects';
+import { BitObject, Lane, ModelComponent, ScopeMeta, Symlink, Version } from '@teambit/scope.objects';
 
 export async function catScope(path: string, full?: boolean): Promise<BitObject[]> {
   const scope: Scope = await loadScope(path);

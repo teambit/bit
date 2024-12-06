@@ -19,19 +19,24 @@ import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import { ModelComponent, Lane, Version } from '@teambit/scope.objects';
-import { Ref, Repository } from '@teambit/scope.objects';
-import LegacyScope, { LegacyOnTagResult } from '@teambit/legacy.scope';
+import {
+  Ref,
+  Repository,
+  DependenciesGraph,
+  DepEdge,
+  ObjectList,
+  ModelComponent,
+  Lane,
+  Version,
+} from '@teambit/scope.objects';
+import { Scope as LegacyScope, LegacyOnTagResult, Scope, Types, loadScopeIfExist } from '@teambit/legacy.scope';
 import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
-import { loadScopeIfExist } from '@teambit/legacy.scope';
 import { ExportPersist, PostSign } from '@teambit/scope.remote-actions';
 import { DependencyResolverAspect, DependencyResolverMain, NodeLinker } from '@teambit/dependency-resolver';
 import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
-import { Scope } from '@teambit/legacy.scope';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import chokidar from 'chokidar';
-import { Types } from '@teambit/legacy.scope';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { SnapsDistance, getDivergeData } from '@teambit/component.snap-distance';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/scope.network';
@@ -44,9 +49,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { compact, slice, difference, partition } from 'lodash';
-import { DependenciesGraph, DepEdge, ObjectList } from '@teambit/scope.objects';
-import { getGlobalConfigPath } from '@teambit/legacy.global-config';
-import { invalidateCache } from '@teambit/legacy.global-config';
+import { invalidateCache, getGlobalConfigPath } from '@teambit/legacy.global-config';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';

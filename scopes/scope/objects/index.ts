@@ -16,6 +16,7 @@ export { ObjectItem, ObjectList, ObjectItemsStream } from './objects/object-list
 export { BitObjectList } from './objects/bit-object-list';
 export { LaneComponent, Log } from './models/lane';
 export { DependenciesGraph } from './models/dependencies-graph';
-export { DepEdge, DepEdgeType } from './models/version';
+export { DepEdge, DepEdgeType, SourceFileModel } from './models/version';
 export { ComponentWithCollectOptions, ObjectsReadableGenerator } from './objects/objects-readable-generator';
 export { ScopeIndex } from './objects/scope-index';
+export { VersionHistoryGraph } from './models/version-history';
