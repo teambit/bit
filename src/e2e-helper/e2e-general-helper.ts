@@ -12,7 +12,7 @@ import {
   MergeConfigFilename,
   REMOTE_REFS_DIR,
   WORKSPACE_JSONC,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
 import CommandHelper from './e2e-command-helper';
 import { ensureAndWriteJson } from './e2e-helper';

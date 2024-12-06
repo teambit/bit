@@ -2,12 +2,7 @@ import retry from 'async-retry';
 import { GraphQLClient, gql } from 'graphql-request';
 import { InvalidScopeName, isValidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import { getSync } from '@teambit/legacy.global-config';
-import {
-  CFG_HUB_DOMAIN_KEY,
-  DEFAULT_HUB_DOMAIN,
-  CFG_USER_TOKEN_KEY,
-  getSymphonyUrl,
-} from '@teambit/legacy/dist/constants';
+import { CFG_HUB_DOMAIN_KEY, DEFAULT_HUB_DOMAIN, CFG_USER_TOKEN_KEY, getSymphonyUrl } from '@teambit/legacy.constants';
 import Scope from '@teambit/legacy/dist/scope/scope';
 import { getAuthHeader, getFetcherWithAgent } from '@teambit/scope.network';
 import { logger } from '@teambit/legacy.logger';

@@ -3,7 +3,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { VERSION_ZERO } from '@teambit/scope.objects';
 import { Consumer } from '@teambit/legacy.consumer';
-import { LATEST } from '@teambit/legacy/dist/constants';
+import { LATEST } from '@teambit/legacy.constants';
 import { ModelComponent } from '@teambit/scope.objects';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import ComponentsPendingImport from '@teambit/legacy.consumer';

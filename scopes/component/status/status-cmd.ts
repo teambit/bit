@@ -10,7 +10,7 @@ import {
   statusInvalidComponentsMsg,
   statusWorkspaceIsCleanMsg,
   BASE_DOCS_DOMAIN,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { compact, groupBy, partition } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import { StatusMain, StatusResult } from './status.main.runtime';

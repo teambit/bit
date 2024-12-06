@@ -7,7 +7,7 @@ import { WorkspaceAspect, OutsideWorkspaceError, Workspace, AutoTagResult } from
 import semver, { ReleaseType } from 'semver';
 import { compact, difference, uniq } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Extensions, LATEST, BuildStatus } from '@teambit/legacy/dist/constants';
+import { Extensions, LATEST, BuildStatus } from '@teambit/legacy.constants';
 import { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import pMapSeries from 'p-map-series';

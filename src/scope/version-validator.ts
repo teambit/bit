@@ -6,7 +6,7 @@ import packageNameValidate from 'validate-npm-package-name';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { isSnap, isTag } from '@teambit/component-version';
-import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
+import { DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
 import { SchemaName, Dependencies, DEPENDENCIES_TYPES } from '@teambit/legacy.consumer-component';
 import { getArtifactsFiles, PackageJsonFile } from '@teambit/component.sources';
 import { componentOverridesForbiddenFields, nonPackageJsonFields } from '@teambit/legacy.consumer-config';

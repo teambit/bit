@@ -26,7 +26,7 @@ import {
   CFG_USER_NAME_KEY,
   DEFAULT_CLOUD_DOMAIN,
   CFG_CLOUD_DOMAIN_KEY,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { fetchWithAgent as fetch } from '@teambit/scope.network';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';

@@ -2,7 +2,7 @@ import * as path from 'path';
 import { homedir, platform } from 'os';
 
 import type { PathOsBased } from '@teambit/toolbox.path.path';
-import { getSync } from './api/consumer/lib/global-config';
+import { getSync } from '@teambit/legacy.global-config';
 
 const packageFile = require('../package.json');
 

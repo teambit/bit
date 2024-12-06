@@ -53,7 +53,7 @@ import {
   BIT_ROOTS_DIR,
   CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS,
   CFG_USER_TOKEN_KEY,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import path from 'path';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { WatchOptions } from '@teambit/watcher';

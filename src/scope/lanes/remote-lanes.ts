@@ -5,7 +5,7 @@ import pMapSeries from 'p-map-series';
 import { LaneId } from '@teambit/lane-id';
 import { compact, set } from 'lodash';
 import { Mutex } from 'async-mutex';
-import { PREVIOUS_DEFAULT_LANE, REMOTE_REFS_DIR } from '@teambit/legacy/dist/constants';
+import { PREVIOUS_DEFAULT_LANE, REMOTE_REFS_DIR } from '@teambit/legacy.constants';
 import { glob } from '@teambit/legacy.utils';
 import { Lane, ModelComponent } from '../models';
 import { LaneComponent } from '../models/lane';

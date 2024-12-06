@@ -1,7 +1,7 @@
 import path from 'path';
 import glob from 'glob';
 import { Scope } from '@teambit/legacy/dist/scope';
-import { PENDING_OBJECTS_DIR } from '@teambit/legacy/dist/constants';
+import { PENDING_OBJECTS_DIR } from '@teambit/legacy.constants';
 import { mergeObjects } from '@teambit/export';
 import { Action } from './action';
 import { logger } from '@teambit/legacy.logger';

@@ -19,7 +19,7 @@ import {
   PathOsBasedAbsolute,
 } from '@teambit/legacy.utils';
 import { ComponentMap } from '@teambit/legacy.bit-map';
-import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
+import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
 import { DataToPersist } from '@teambit/component.sources';
 import { ConfigMergerAspect, ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import { MergeStrategy } from '@teambit/merging';

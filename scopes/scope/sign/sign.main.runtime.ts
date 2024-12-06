@@ -9,7 +9,7 @@ import { Component, ComponentID } from '@teambit/component';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
-import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy/dist/constants';
+import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy.constants';
 import { PostSign } from '@teambit/scope.remote-actions';
 import { ObjectList } from '@teambit/scope.objects';
 import { Remotes, Remote, getScopeRemotes } from '@teambit/scope.remotes';

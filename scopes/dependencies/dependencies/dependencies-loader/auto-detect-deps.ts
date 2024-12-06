@@ -11,7 +11,7 @@ import {
   ImportSpecifier,
   ConsumerComponent as Component,
 } from '@teambit/legacy.consumer-component';
-import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
+import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
 import { Consumer } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
 import { getExt } from '@teambit/toolbox.fs.extension-getter';

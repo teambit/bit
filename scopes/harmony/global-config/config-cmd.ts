@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import rightpad from 'pad-right';
 import * as config from '@teambit/legacy.global-config';
-import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
+import { BASE_DOCS_DOMAIN } from '@teambit/legacy.constants';
 import { Command, CommandOptions } from '@teambit/cli';
 
 class ConfigSet implements Command {

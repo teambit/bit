@@ -23,7 +23,7 @@ import {
   OBJECTS_DIR,
   SCOPE_JSON,
   PENDING_OBJECTS_DIR,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import Consumer from '../consumer/consumer';

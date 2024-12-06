@@ -19,7 +19,7 @@ import {
   CFG_USER_EMAIL_KEY,
   CFG_USER_NAME_KEY,
   DEFAULT_BIT_ENV,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { analyticsPrompt, errorReportingPrompt } from '@teambit/legacy.cli.prompts';
 
 const LEVEL = {

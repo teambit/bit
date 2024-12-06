@@ -8,7 +8,7 @@ import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Component, ComponentID } from '@teambit/component';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
+import { BuildStatus, LATEST } from '@teambit/legacy.constants';
 import { ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
 import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';

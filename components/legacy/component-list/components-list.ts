@@ -1,7 +1,7 @@
 import pFilter from 'p-filter';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import R from 'ramda';
-import { LATEST } from '@teambit/legacy/dist/constants';
+import { LATEST } from '@teambit/legacy.constants';
 import { Lane } from '@teambit/scope.objects';
 import ModelComponent from '@teambit/scope.objects';
 import Scope from '@teambit/legacy/dist/scope/scope';

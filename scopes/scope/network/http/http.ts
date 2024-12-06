@@ -44,7 +44,7 @@ import {
   CFG_NETWORK_STRICT_SSL,
   CENTRAL_BIT_HUB_URL_IMPORTER,
   CENTRAL_BIT_HUB_URL_IMPORTER_V2,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import { ObjectItemsStream, ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';

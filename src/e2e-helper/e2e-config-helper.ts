@@ -1,6 +1,6 @@
 import R from 'ramda';
 
-import { getCloudDomain, CFG_GIT_EXECUTABLE_PATH } from '@teambit/legacy/dist/constants';
+import { getCloudDomain, CFG_GIT_EXECUTABLE_PATH } from '@teambit/legacy.constants';
 import CommandHelper from './e2e-command-helper';
 
 export default class ConfigHelper {

@@ -8,7 +8,7 @@ import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
 import pMap from 'p-map';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
-import { OBJECTS_DIR } from '@teambit/legacy/dist/constants';
+import { OBJECTS_DIR } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import { glob, writeFile, ChownOptions, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { removeEmptyDir } from '@teambit/toolbox.fs.remove-empty-dir';

@@ -1,5 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { CheckoutMain } from './checkout.main.runtime';
 import { CheckoutCmd } from './checkout-cmd';
 

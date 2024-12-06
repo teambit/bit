@@ -22,7 +22,7 @@ import {
   CFG_USER_TOKEN_KEY,
   CFG_ISOLATED_SCOPE_CAPSULES,
   getCloudDomain,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { DetectorHook } from '@teambit/dependencies';

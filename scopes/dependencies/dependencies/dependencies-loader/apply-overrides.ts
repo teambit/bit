@@ -2,7 +2,7 @@ import path from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { cloneDeep, difference, forEach, isEmpty, pick, pickBy, uniq } from 'lodash';
 import { IssuesList, IssuesClasses, MissingPackagesData } from '@teambit/component-issues';
-import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy/dist/constants';
+import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy.constants';
 import { ConsumerComponent as Component, Dependency } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile } from '@teambit/component.sources';
 import { PathLinux, resolvePackagePath } from '@teambit/legacy.utils';

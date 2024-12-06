@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import * as path from 'path';
-import { GLOBAL_CONFIG, GLOBAL_REMOTES } from '@teambit/legacy/dist/constants';
+import { GLOBAL_CONFIG, GLOBAL_REMOTES } from '@teambit/legacy.constants';
 import { Remote } from '@teambit/scope.remotes';
 import { writeFile } from '@teambit/legacy.utils';
 

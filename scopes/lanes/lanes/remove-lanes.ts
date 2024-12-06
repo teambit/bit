@@ -3,7 +3,7 @@ import { LaneId } from '@teambit/lane-id';
 import { Consumer } from '@teambit/legacy.consumer';
 import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
 import { Http } from '@teambit/scope.network';
-import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL } from '@teambit/legacy/dist/constants';
+import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL } from '@teambit/legacy.constants';
 
 export async function removeLanes(consumer: Consumer | undefined, lanes: string[], remote: boolean, force: boolean) {
   if (remote) {

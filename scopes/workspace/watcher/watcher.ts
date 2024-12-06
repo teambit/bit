@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import { dirname, basename } from 'path';
 import { compact, difference, partition } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BIT_MAP, CFG_WATCH_USE_POLLING, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
+import { BIT_MAP, CFG_WATCH_USE_POLLING, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { Consumer } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
 import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';

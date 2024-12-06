@@ -1,7 +1,7 @@
 import hash from 'object-hash';
 import yn from 'yn';
 import { getSync } from '@teambit/legacy.global-config';
-import { CFG_ANALYTICS_ANONYMOUS_KEY } from '@teambit/legacy/dist/constants';
+import { CFG_ANALYTICS_ANONYMOUS_KEY } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import cloneErrorObject, { systemFields } from './clone-error-object';
 

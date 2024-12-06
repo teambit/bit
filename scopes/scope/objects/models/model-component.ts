@@ -10,12 +10,7 @@ import pMapSeries from 'p-map-series';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { BitId } from '@teambit/legacy-bit-id';
-import {
-  DEFAULT_BIT_RELEASE_TYPE,
-  DEFAULT_BIT_VERSION,
-  DEFAULT_LANGUAGE,
-  Extensions,
-} from '@teambit/legacy/dist/constants';
+import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '@teambit/legacy.constants';
 import { ConsumerComponent, SchemaName, Dependencies, Dependency } from '@teambit/legacy.consumer-component';
 import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
 import ComponentOverrides from '@teambit/legacy.consumer-config';

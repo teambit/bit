@@ -1,5 +1,5 @@
 import { BitError } from '@teambit/bit-error';
-import { BASE_LEGACY_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
+import { BASE_LEGACY_DOCS_DOMAIN } from '@teambit/legacy.constants';
 
 export default class PermissionDenied extends BitError {
   scope: string;

@@ -39,7 +39,7 @@ import { remove, FETCH_OPTIONS, ExternalActions } from '@teambit/legacy.scope-ap
 import { BitError } from '@teambit/bit-error';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { resumeExport } from '@teambit/export';
-import { GLOBAL_SCOPE } from '@teambit/legacy/dist/constants';
+import { GLOBAL_SCOPE } from '@teambit/legacy.constants';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';

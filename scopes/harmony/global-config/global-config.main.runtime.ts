@@ -6,7 +6,7 @@ import {
   GLOBAL_CONFIG,
   CFG_CAPSULES_ROOT_BASE_DIR,
   GLOBALS_DEFAULT_CAPSULES,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import {
   del,
   delSync,

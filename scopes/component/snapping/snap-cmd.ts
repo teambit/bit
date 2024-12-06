@@ -9,7 +9,7 @@ import {
   AUTO_SNAPPED_MSG,
   COMPONENT_PATTERN_HELP,
   CFG_FORCE_LOCAL_BUILD,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { Logger } from '@teambit/logger';
 import { SnappingMain, SnapResults } from './snapping.main.runtime';
 import { outputIdsIfExists } from './tag-cmd';

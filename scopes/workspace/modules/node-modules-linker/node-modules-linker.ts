@@ -3,7 +3,7 @@ import pMapSeries from 'p-map-series';
 import * as path from 'path';
 import { linkPkgsToRootComponents } from '@teambit/workspace.root-components';
 import { ComponentID } from '@teambit/component-id';
-import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy/dist/constants';
+import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy.constants';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile, DataToPersist, RemovePath, Symlink } from '@teambit/component.sources';

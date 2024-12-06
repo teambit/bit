@@ -3,7 +3,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import * as path from 'path';
 import { ComponentIssue } from '@teambit/component-issues';
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import { BIT_MAP } from '@teambit/legacy/dist/constants';
+import { BIT_MAP } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import { ModelComponent, VERSION_ZERO } from '@teambit/scope.objects';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';

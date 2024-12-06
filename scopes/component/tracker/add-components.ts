@@ -8,7 +8,7 @@ import format from 'string-format';
 import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID } from '@teambit/component-id';
 import { BitIdStr, BitId } from '@teambit/legacy-bit-id';
-import { PACKAGE_JSON, VERSION_DELIMITER, AUTO_GENERATED_STAMP } from '@teambit/legacy/dist/constants';
+import { PACKAGE_JSON, VERSION_DELIMITER, AUTO_GENERATED_STAMP } from '@teambit/legacy.constants';
 import {
   BitMap,
   ComponentMap,

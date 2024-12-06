@@ -12,7 +12,7 @@ import {
   BuildStatus,
   DEFAULT_LANGUAGE,
   Extensions,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { Doclet, parser as docsParser } from '@teambit/semantics.doc-parser';
 import { logger } from '@teambit/legacy.logger';
 import { Version, DepEdge, Log, ScopeListItem, DependenciesGraph, ModelComponent } from '@teambit/scope.objects';

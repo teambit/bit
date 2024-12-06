@@ -1,5 +1,5 @@
 import * as globalConfig from '@teambit/legacy.global-config';
-import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY } from '@teambit/legacy/dist/constants';
+import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY } from '@teambit/legacy.constants';
 import { Log } from '@teambit/scope.objects';
 import { getBitCloudUser } from '@teambit/cloud.modules.get-cloud-user';
 

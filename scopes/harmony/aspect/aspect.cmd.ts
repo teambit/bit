@@ -3,7 +3,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { CLITable } from '@teambit/cli-table';
 import chalk from 'chalk';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { AspectMain } from './aspect.main.runtime';
 
 export class ListAspectCmd implements Command {

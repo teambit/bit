@@ -5,7 +5,7 @@ import semver from 'semver';
 import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
 import { Analytics } from '@teambit/legacy.analytics';
 import { handleUnhandledRejection } from '@teambit/cli';
-import { BIT_VERSION, GLOBAL_CONFIG, GLOBAL_LOGS } from '@teambit/legacy/dist/constants';
+import { BIT_VERSION, GLOBAL_CONFIG, GLOBAL_LOGS } from '@teambit/legacy.constants';
 import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambit/legacy.logger';
 import { loader } from '@teambit/legacy.loader';
 

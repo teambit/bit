@@ -4,7 +4,7 @@ import { IssuesClasses } from '@teambit/component-issues';
 import { getLastModifiedComponentTimestampMs } from '@teambit/toolbox.fs.last-modified';
 import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { DependencyLoaderOpts, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
-import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
+import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
 import { Workspace } from '@teambit/workspace';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DevFilesMain } from '@teambit/dev-files';

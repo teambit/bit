@@ -1,5 +1,5 @@
 import { BitError } from '@teambit/bit-error';
-import { VERSION_CHANGED_BIT_ID_TO_COMP_ID } from '@teambit/legacy/dist/constants';
+import { VERSION_CHANGED_BIT_ID_TO_COMP_ID } from '@teambit/legacy.constants';
 
 export class BitIdCompIdError extends BitError {
   constructor(readonly id: string) {

@@ -1,7 +1,7 @@
 import gitconfig from 'gitconfig';
 import R from 'ramda';
 import { BitError } from '@teambit/bit-error';
-import { BASE_DOCS_DOMAIN, ENV_VARIABLE_CONFIG_PREFIX } from '@teambit/legacy/dist/constants';
+import { BASE_DOCS_DOMAIN, ENV_VARIABLE_CONFIG_PREFIX } from '@teambit/legacy.constants';
 import Config from './config';
 
 export function set(key: string, val: string): Promise<Config> {

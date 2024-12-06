@@ -465,6 +465,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/config-merger"
     },
+    "constants": {
+        "name": "constants",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "constants.ts",
+        "rootDir": "components/legacy/constants"
+    },
     "consumer": {
         "name": "consumer",
         "scope": "",

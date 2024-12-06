@@ -1,7 +1,7 @@
 import GraphLib, { Graph } from 'graphlib';
 import pMapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { VERSION_DELIMITER } from '@teambit/legacy/dist/constants';
+import { VERSION_DELIMITER } from '@teambit/legacy.constants';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { ConsumerComponent as Component, DEPENDENCIES_TYPES_UI_MAP } from '@teambit/legacy.consumer-component';
 import { Consumer } from '@teambit/legacy.consumer';

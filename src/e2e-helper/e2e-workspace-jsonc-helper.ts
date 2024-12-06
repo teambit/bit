@@ -2,7 +2,7 @@ import { assign, parse, stringify } from 'comment-json';
 import fs from 'fs-extra';
 import * as path from 'path';
 
-import { WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
+import { WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import ScopesData from './e2e-scopes';
 
 // TODO: improve this by combine into a base class shared between this and e2e-bit-json-helper

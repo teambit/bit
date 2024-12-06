@@ -17,7 +17,7 @@ import {
   OLD_BIT_MAP,
   VERSION_DELIMITER,
   BITMAP_PREFIX_MESSAGE,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import {
   pathJoinLinux,

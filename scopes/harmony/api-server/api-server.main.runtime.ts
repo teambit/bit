@@ -32,7 +32,7 @@ import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { DEFAULT_AUTH_TYPE, Http } from '@teambit/scope.network';
-import { getSymphonyUrl } from '@teambit/legacy/dist/constants';
+import { getSymphonyUrl } from '@teambit/legacy.constants';
 
 export class ApiServerMain {
   constructor(

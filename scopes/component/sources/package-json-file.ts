@@ -4,7 +4,7 @@ import detectNewline from 'detect-newline';
 import fs from 'fs-extra';
 import * as path from 'path';
 import stringifyPackage from 'stringify-package';
-import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy/dist/constants';
+import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';

@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import fetch from 'node-fetch';
 import { getSync } from '@teambit/legacy.global-config';
-import { CFG_ANALYTICS_DOMAIN_KEY, DEFAULT_ANALYTICS_DOMAIN } from '@teambit/legacy/dist/constants';
+import { CFG_ANALYTICS_DOMAIN_KEY, DEFAULT_ANALYTICS_DOMAIN } from '@teambit/legacy.constants';
 
 const ANALYTICS_DOMAIN = getSync(CFG_ANALYTICS_DOMAIN_KEY) || DEFAULT_ANALYTICS_DOMAIN;
 /**

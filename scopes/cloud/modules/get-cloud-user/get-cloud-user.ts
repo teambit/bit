@@ -1,5 +1,5 @@
 import { CloudUser } from '@teambit/cloud.models.cloud-user';
-import { CFG_USER_TOKEN_KEY, getCloudDomain } from '@teambit/legacy/dist/constants';
+import { CFG_USER_TOKEN_KEY, getCloudDomain } from '@teambit/legacy.constants';
 import * as globalConfig from '@teambit/legacy.global-config';
 import { fetchWithAgent as fetch } from '@teambit/scope.network';
 

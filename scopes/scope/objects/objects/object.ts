@@ -1,6 +1,6 @@
 import { inflateSync } from 'zlib';
 
-import { NULL_BYTE, SPACE_DELIMITER } from '@teambit/legacy/dist/constants';
+import { NULL_BYTE, SPACE_DELIMITER } from '@teambit/legacy.constants';
 import { deflate, inflate } from '@teambit/legacy.utils';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { typesObj as types } from '@teambit/legacy/dist/scope/object-registrar';

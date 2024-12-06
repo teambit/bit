@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 
-import { BIT_MAP } from '@teambit/legacy/dist/constants';
+import { BIT_MAP } from '@teambit/legacy.constants';
 import { LANE_KEY, SCHEMA_FIELD } from '@teambit/legacy.bit-map';
 import FsHelper from './e2e-fs-helper';
 import ScopesData from './e2e-scopes';

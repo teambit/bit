@@ -4,7 +4,7 @@ import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
 import { v4 } from 'uuid';
-import { BuildStatus, DEFAULT_BUNDLE_FILENAME, Extensions } from '@teambit/legacy/dist/constants';
+import { BuildStatus, DEFAULT_BUNDLE_FILENAME, Extensions } from '@teambit/legacy.constants';
 import {
   isSchemaSupport,
   SchemaFeature,

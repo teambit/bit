@@ -6,7 +6,7 @@ import { isEmpty } from 'lodash';
 import { Dependency, Dependencies, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
+import { DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
 import OverridesDependencies from './overrides-dependencies';
 import { DebugComponentsDependency, getValidVersion } from './auto-detect-deps';
 

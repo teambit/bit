@@ -9,7 +9,7 @@ import {
   CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR,
   CFG_USE_DATED_CAPSULES,
   CFG_CACHE_LOCK_ONLY_CAPSULES,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
 import { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';

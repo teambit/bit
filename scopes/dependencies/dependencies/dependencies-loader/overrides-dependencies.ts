@@ -1,8 +1,4 @@
-import {
-  DEPENDENCIES_FIELDS,
-  MANUALLY_ADD_DEPENDENCY,
-  MANUALLY_REMOVE_DEPENDENCY,
-} from '@teambit/legacy/dist/constants';
+import { DEPENDENCIES_FIELDS, MANUALLY_ADD_DEPENDENCY, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import { ConsumerComponent as Component, ManuallyChangedDependencies } from '@teambit/legacy.consumer-component';
 import { FileType } from './auto-detect-deps';

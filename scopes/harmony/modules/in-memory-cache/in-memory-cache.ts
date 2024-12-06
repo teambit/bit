@@ -1,5 +1,5 @@
 import { getNumberFromConfig } from '@teambit/legacy.global-config';
-import { CFG_CACHE_MAX_ITEMS_COMPONENTS, CFG_CACHE_MAX_ITEMS_OBJECTS } from '@teambit/legacy/dist/constants';
+import { CFG_CACHE_MAX_ITEMS_COMPONENTS, CFG_CACHE_MAX_ITEMS_OBJECTS } from '@teambit/legacy.constants';
 
 export interface InMemoryCache<T> {
   set(key: string, value: T): void;

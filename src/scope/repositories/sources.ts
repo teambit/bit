@@ -2,7 +2,7 @@ import { BitError } from '@teambit/bit-error';
 import { ComponentID } from '@teambit/component-id';
 import { isHash } from '@teambit/component-version';
 import pMap from 'p-map';
-import { BuildStatus } from '@teambit/legacy/dist/constants';
+import { BuildStatus } from '@teambit/legacy.constants';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
 import ComponentObjects from '../component-objects';

@@ -1,4 +1,4 @@
-import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '@teambit/legacy/dist/constants';
+import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '@teambit/legacy.constants';
 import { loadScope, Scope } from '@teambit/legacy/dist/scope';
 import Version from '@teambit/scope.objects';
 

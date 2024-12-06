@@ -12,7 +12,7 @@ import {
   MergeStrategy,
 } from '@teambit/merging';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
-import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
+import { HEAD, LATEST } from '@teambit/legacy.constants';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import mapSeries from 'p-map-series';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';

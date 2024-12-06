@@ -2,11 +2,7 @@ import chalk from 'chalk';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import {
-  DEFAULT_BIT_RELEASE_TYPE,
-  COMPONENT_PATTERN_HELP,
-  CFG_FORCE_LOCAL_BUILD,
-} from '@teambit/legacy/dist/constants';
+import { DEFAULT_BIT_RELEASE_TYPE, COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ReleaseType } from 'semver';

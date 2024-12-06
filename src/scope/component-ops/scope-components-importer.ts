@@ -23,7 +23,7 @@ import { BitObjectList } from '@teambit/scope.objects';
 import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import { BuildStatus } from '@teambit/legacy/dist/constants';
+import { BuildStatus } from '@teambit/legacy.constants';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
 import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
 import { getAllVersionHashes } from './traverse-versions';

@@ -3,7 +3,7 @@ import * as pathlib from 'path';
 import { BitError } from '@teambit/bit-error';
 import { getSync } from '@teambit/legacy.global-config';
 import { initScope } from '@teambit/legacy.scope-api';
-import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy/dist/constants';
+import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy.constants';
 import { WorkspaceExtensionProps } from '@teambit/config';
 import { Command, CommandOptions } from '@teambit/cli';
 import { HostInitializerMain } from './host-initializer.main.runtime';

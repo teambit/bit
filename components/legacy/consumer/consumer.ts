@@ -15,7 +15,7 @@ import {
   DEPENDENCIES_FIELDS,
   DOT_GIT_DIR,
   LATEST,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';

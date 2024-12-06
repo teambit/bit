@@ -3,7 +3,7 @@ import globby from 'globby';
 import ignore from 'ignore';
 import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
-import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '@teambit/legacy/dist/constants';
+import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '@teambit/legacy.constants';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
 import { isValidPath } from '@teambit/legacy.utils';

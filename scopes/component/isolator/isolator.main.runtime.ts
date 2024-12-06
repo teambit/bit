@@ -28,11 +28,7 @@ import { Logger, LoggerAspect, LoggerMain, LongProcessLogger } from '@teambit/lo
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import LegacyScope from '@teambit/legacy/dist/scope/scope';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
-import {
-  DEPENDENCIES_FIELDS,
-  PACKAGE_JSON,
-  CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR,
-} from '@teambit/legacy/dist/constants';
+import { DEPENDENCIES_FIELDS, PACKAGE_JSON, CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR } from '@teambit/legacy.constants';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import {
   PackageJsonFile,

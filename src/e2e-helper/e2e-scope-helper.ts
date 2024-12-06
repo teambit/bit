@@ -6,7 +6,7 @@ import * as yaml from 'yaml';
 import * as ini from 'ini';
 import { createLinkOrSymlink } from '@teambit/toolbox.fs.link-or-symlink';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
-import { IS_WINDOWS } from '@teambit/legacy/dist/constants';
+import { IS_WINDOWS } from '@teambit/legacy.constants';
 import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import NpmHelper from './e2e-npm-helper';

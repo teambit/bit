@@ -5,7 +5,7 @@ import { v4 } from 'uuid';
 import { BitError } from '@teambit/bit-error';
 import { Scope } from '@teambit/legacy/dist/scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BuildStatus, Extensions } from '@teambit/legacy/dist/constants';
+import { BuildStatus, Extensions } from '@teambit/legacy.constants';
 import { ConsumerComponent, CURRENT_SCHEMA } from '@teambit/legacy.consumer-component';
 import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
 import { Consumer } from '@teambit/legacy.consumer';
