@@ -18,7 +18,7 @@ import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { ComponentLog } from '@teambit/scope.objects';
 import { ScopeDescriptor } from '@teambit/legacy/dist/scope/scope';
 import globalFlags from '@teambit/legacy/dist/cli/global-flags';
-import { getSync, list } from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import { getSync, list } from '@teambit/legacy.global-config';
 import {
   CFG_HTTPS_PROXY,
   CFG_PROXY,

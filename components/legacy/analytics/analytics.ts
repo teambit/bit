@@ -7,7 +7,7 @@ import R from 'ramda';
 import { serializeError } from 'serialize-error';
 import uniqid from 'uniqid';
 import yn from 'yn';
-import { getSync, setSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import { getSync, setSync } from '@teambit/legacy.global-config';
 import { CLIArgs } from '@teambit/legacy/dist/cli/command';
 import {
   BIT_VERSION,

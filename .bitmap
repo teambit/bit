@@ -745,13 +745,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/git/git"
     },
-    "global-config": {
-        "name": "global-config",
-        "scope": "teambit.harmony",
-        "version": "0.0.1064",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/global-config"
-    },
     "graph": {
         "name": "graph",
         "scope": "teambit.component",
@@ -1782,6 +1775,21 @@
         "version": "0.0.19",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/tagged-exports"
+    },
+    "teambit.harmony/global-config": {
+        "name": "global-config",
+        "scope": "teambit.harmony",
+        "version": "0.0.1064",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/global-config"
+    },
+    "teambit.legacy/global-config": {
+        "name": "global-config",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.legacy",
+        "mainFile": "index.ts",
+        "rootDir": "components/legacy/global-config"
     },
     "tester": {
         "name": "tester",

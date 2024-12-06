@@ -14,7 +14,7 @@ import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { hasVersionByRef } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
 import { BitObject, Ref, Repository } from '../objects';
 import { Version } from '.';
-import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import * as globalConfig from '@teambit/legacy.global-config';
 
 export type Log = { date: string; username?: string; email?: string; profileImage?: string };
 

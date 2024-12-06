@@ -1,7 +1,7 @@
 /* eslint max-classes-per-file: 0 */
 import chalk from 'chalk';
 import rightpad from 'pad-right';
-import * as config from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import * as config from '@teambit/legacy.global-config';
 import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { Command, CommandOptions } from '@teambit/cli';
 

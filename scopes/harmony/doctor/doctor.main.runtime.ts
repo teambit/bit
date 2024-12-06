@@ -18,7 +18,7 @@ import { compact } from 'lodash';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
 import { getExt } from '@teambit/toolbox.fs.extension-getter';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
-import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import * as globalConfig from '@teambit/legacy.global-config';
 import { getNpmVersion } from './core-diagnoses/validate-npm-exec';
 import { getYarnVersion } from './core-diagnoses/validate-yarn-exec';
 import { DiagnosisNotFound } from './exceptions/diagnosis-not-found';

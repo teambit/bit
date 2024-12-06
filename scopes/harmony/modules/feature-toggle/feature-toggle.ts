@@ -13,7 +13,7 @@
  */
 
 import { CFG_FEATURE_TOGGLE } from '@teambit/legacy/dist/constants';
-import { getSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import { getSync } from '@teambit/legacy.global-config';
 
 export const ENV_VAR_FEATURE_TOGGLE = 'BIT_FEATURES';
 
