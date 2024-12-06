@@ -8,7 +8,7 @@ import { serializeError } from 'serialize-error';
 import uniqid from 'uniqid';
 import yn from 'yn';
 import { getSync, setSync } from '@teambit/legacy.global-config';
-import { CLIArgs } from '@teambit/legacy/dist/cli/command';
+import { CLIArgs } from '@teambit/cli';
 import {
   BIT_VERSION,
   CFG_ANALYTICS_ANONYMOUS_KEY,

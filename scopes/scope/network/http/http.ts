@@ -17,7 +17,7 @@ import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
 import { ComponentLog } from '@teambit/scope.objects';
 import { ScopeDescriptor } from '@teambit/legacy/dist/scope/scope';
-import globalFlags from '@teambit/legacy/dist/cli/global-flags';
+import { globalFlags } from '@teambit/cli';
 import { getSync, list } from '@teambit/legacy.global-config';
 import {
   CFG_HTTPS_PROXY,

@@ -1,5 +1,5 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { CLIAspect, CLIMain, MainRuntime, globalFlags } from '@teambit/cli';
 import { v4 } from 'uuid';
 import chalk from 'chalk';
 import os from 'os';
@@ -28,7 +28,6 @@ import {
   CFG_CLOUD_DOMAIN_KEY,
 } from '@teambit/legacy/dist/constants';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import globalFlags from '@teambit/legacy/dist/cli/global-flags';
 import { fetchWithAgent as fetch } from '@teambit/scope.network';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';

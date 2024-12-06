@@ -10,7 +10,7 @@
 import { Workspace } from '@teambit/workspace';
 import { Consumer } from '@teambit/legacy.consumer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import defaultErrorHandler from '@teambit/legacy/dist/cli/default-error-handler';
+import { defaultErrorHandler } from '@teambit/cli';
 import { getScopeRemotes } from '@teambit/scope.remotes';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';

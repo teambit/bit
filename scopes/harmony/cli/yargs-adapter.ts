@@ -1,4 +1,4 @@
-import { Command } from '@teambit/legacy/dist/cli/command';
+import { Command } from './command';
 import { Arguments, CommandModule, Argv, Options } from 'yargs';
 import { TOKEN_FLAG } from '@teambit/legacy/dist/constants';
 import { camelCase } from 'lodash';
