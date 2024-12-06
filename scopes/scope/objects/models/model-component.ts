@@ -13,40 +13,39 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '@teambit/legacy.constants';
 import { ConsumerComponent, SchemaName, Dependencies, Dependency } from '@teambit/legacy.consumer-component';
 import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
-import ComponentOverrides from '@teambit/legacy.consumer-config';
+import { ComponentOverrides, getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import { getLatestVersion, validateVersion } from '@teambit/pkg.modules.semver-helper';
-import ComponentObjects from '@teambit/legacy.scope';
-import { SnapsDistance, getDivergeData } from '@teambit/component.snap-distance';
 import {
+  SnapsDistance,
+  getDivergeData,
   getAllVersionParents,
   getAllVersionsInfo,
   getVersionParentsFromVersion,
 } from '@teambit/component.snap-distance';
-import ComponentVersion from '@teambit/legacy.scope';
 import {
+  ComponentObjects,
+  ComponentVersion,
   HeadNotFound,
   ParentNotFound,
   VersionAlreadyExists,
   VersionNotFound,
   VersionNotFoundOnFS,
+  NoHeadNoVersion,
+  errorIsTypeOfMissingObject,
+  BitIdCompIdError,
 } from '@teambit/legacy.scope';
-import { BitObject, Ref } from '@teambit/scope.objects';
-import { Repository } from '@teambit/scope.objects';
+import { Repository, BitObject, Ref } from '../objects';
 import { Lane } from '.';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
 import Version from './version';
 import VersionHistory, { VersionParents } from './version-history';
 import { ObjectItem } from '../objects/object-list';
-import { NoHeadNoVersion } from '@teambit/legacy.scope';
-import { errorIsTypeOfMissingObject } from '@teambit/legacy.scope';
-import type Scope from '@teambit/legacy.scope';
-import { BitIdCompIdError } from '@teambit/legacy.scope';
+import type { Scope } from '@teambit/legacy.scope';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
 
 type State = {
   versions?: {

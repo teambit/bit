@@ -14,11 +14,11 @@ import { glob, writeFile, ChownOptions, PathOsBasedAbsolute } from '@teambit/leg
 import { removeEmptyDir } from '@teambit/toolbox.fs.remove-empty-dir';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import { HashNotFound, OutdatedIndexJson } from '@teambit/legacy.scope';
-import RemoteLanes from '@teambit/legacy.scope';
-import UnmergedComponents from '@teambit/legacy.scope';
-import ScopeMeta from '@teambit/scope.objects';
+import { RemoteLanes } from '@teambit/legacy.scope';
+import { UnmergedComponents } from '@teambit/legacy.scope';
+import { ScopeMeta } from '@teambit/scope.objects';
 import { ScopeJson } from '@teambit/legacy.scope';
-import ScopeIndex, { IndexType } from './scope-index';
+import { ScopeIndex, IndexType } from './scope-index';
 import BitObject from './object';
 import { ObjectItem, ObjectList } from './object-list';
 import BitRawObject from './raw-object';

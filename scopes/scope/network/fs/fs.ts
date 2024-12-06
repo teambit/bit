@@ -3,12 +3,8 @@ import { fetch, put, remove, action, FETCH_OPTIONS, PushOptions } from '@teambit
 import { ComponentsList, ListScopeResult } from '@teambit/legacy.component-list';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import { LaneData } from '@teambit/legacy.scope';
-import { ComponentLog } from '@teambit/scope.objects';
-import { ObjectItemsStream, ObjectList, Ref } from '@teambit/scope.objects';
-import { RemovedObjects } from '@teambit/legacy.scope';
-import Scope, { ScopeDescriptor } from '@teambit/legacy.scope';
-import loadScope from '@teambit/legacy.scope';
+import { ComponentLog, ObjectItemsStream, ObjectList, Ref } from '@teambit/scope.objects';
+import { RemovedObjects, LaneData, loadScope, Scope, ScopeDescriptor } from '@teambit/legacy.scope';
 import { FsScopeNotLoaded } from '../exceptions';
 import { Network } from '../network';
 

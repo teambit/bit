@@ -11,4 +11,5 @@ export {
   validateRemotes,
   resumeExport,
   removePendingDirs,
+  mergeObjects,
 } from './export-scope-components';

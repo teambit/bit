@@ -2,8 +2,7 @@ import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Consumer } from '@teambit/legacy.consumer';
-import { Scope } from '@teambit/legacy.scope';
+import { ComponentsPendingMerge, Consumer } from '@teambit/legacy.consumer';
 import { Lane, ModelComponent, Version } from '@teambit/scope.objects';
 import { getLatestVersionNumber, pathNormalizeToLinux, hasWildcard } from '@teambit/legacy.utils';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
@@ -17,9 +16,12 @@ import {
   MergeResultsThreeWay,
   FilesStatus,
 } from '@teambit/merging';
-import ComponentsPendingMerge from '@teambit/legacy.consumer';
-import { ScopeComponentsImporter } from '@teambit/legacy.scope';
-import VersionDependencies, { multipleVersionDependenciesToConsumer } from '@teambit/legacy.scope';
+import {
+  multipleVersionDependenciesToConsumer,
+  VersionDependencies,
+  ScopeComponentsImporter,
+  Scope,
+} from '@teambit/legacy.scope';
 import { GraphMain } from '@teambit/graph';
 import { Workspace } from '@teambit/workspace';
 import { ComponentWriterMain, ComponentWriterResults, ManyComponentsWriterParams } from '@teambit/component-writer';

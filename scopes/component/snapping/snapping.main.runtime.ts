@@ -40,7 +40,7 @@ import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { LaneId } from '@teambit/lane-id';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ExportAspect, ExportMain } from '@teambit/export';
-import UnmergedComponents from '@teambit/legacy.scope';
+import { UnmergedComponents } from '@teambit/legacy.scope';
 import { isHash, isTag } from '@teambit/component-version';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { ArtifactFiles, ArtifactSource, getArtifactsFiles, SourceFile } from '@teambit/component.sources';

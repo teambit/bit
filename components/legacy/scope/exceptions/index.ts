@@ -22,6 +22,9 @@ import ScopeNotFound from './scope-not-found';
 import VersionAlreadyExists from './version-already-exists';
 import VersionNotFound from './version-not-found';
 import { VersionNotFoundOnFS } from './version-not-found-on-fs';
+import ServerIsBusy from './server-is-busy';
+import { UnknownObjectType } from './unknown-object-type';
+import { PersistFailed } from './persist-failed';
 
 export {
   ActionNotFound,
@@ -49,4 +52,7 @@ export {
   OutdatedIndexJson,
   HeadNotFound,
   VersionNotFoundOnFS,
+  ServerIsBusy,
+  UnknownObjectType,
+  PersistFailed,
 };

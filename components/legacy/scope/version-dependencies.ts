@@ -1,12 +1,11 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import ComponentWithDependencies from './component-dependencies';
-import ComponentVersion from './component-version';
+import { ComponentVersion } from './component-version';
 import { DependenciesNotFound } from './exceptions/dependencies-not-found';
-import { Version } from './models';
-import Repository from './objects/repository';
+import { Repository, Version } from '@teambit/scope.objects';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 
-export default class VersionDependencies {
+export class VersionDependencies {
   constructor(
     public component: ComponentVersion,
     public dependencies: ComponentVersion[],

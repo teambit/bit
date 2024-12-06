@@ -3,6 +3,8 @@ export { getDivergeData } from './get-diverge-data';
 export {
   VersionInfo,
   getAllVersionHashes,
+  getAllVersionHashesMemoized,
+  hasVersionByRef,
   getAllVersionParents,
   getAllVersionsInfo,
   getSubsetOfVersionParents,

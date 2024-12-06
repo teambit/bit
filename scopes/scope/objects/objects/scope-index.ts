@@ -5,7 +5,7 @@ import * as path from 'path';
 import R from 'ramda';
 import { LaneId } from '@teambit/lane-id';
 import { logger } from '@teambit/legacy.logger';
-import InvalidIndexJson from '@teambit/legacy.scope';
+import { InvalidIndexJson } from '@teambit/legacy.scope';
 import { ModelComponent, Symlink } from '../models';
 import Lane from '../models/lane';
 import { BitObject, Ref } from '.';

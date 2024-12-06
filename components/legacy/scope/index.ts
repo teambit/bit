@@ -29,6 +29,9 @@ export {
   OutdatedIndexJson,
   HeadNotFound,
   VersionNotFoundOnFS,
+  ServerIsBusy,
+  UnknownObjectType,
+  PersistFailed,
 } from './exceptions';
 export { validateType } from './validate-type';
 export { RemovedObjects, RemovedObjectSerialized } from './removed-components';
@@ -41,6 +44,8 @@ export { StagedSnaps } from './staged-snaps';
 export { ComponentVersion } from './component-version';
 export { validateVersionInstance } from './version-validator';
 export { typesObj, typesToObject, Types } from './object-registrar';
-export { GarbageCollectorOpts, LegacyOnTagResult } from './scope';
+export { GarbageCollectorOpts, LegacyOnTagResult, ScopeDescriptor } from './scope';
 export { loadScopeIfExist } from './scope-loader';
-export { ScopeComponentsImporter } from './component-ops/scope-components-importer';
+export { ScopeComponentsImporter, errorIsTypeOfMissingObject } from './component-ops/scope-components-importer';
+export { multipleVersionDependenciesToConsumer, VersionDependencies } from './version-dependencies';
+export { MergeResult } from './repositories/sources';

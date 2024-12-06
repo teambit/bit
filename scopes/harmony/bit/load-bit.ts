@@ -32,14 +32,12 @@ import { getWorkspaceInfo, WorkspaceInfo } from '@teambit/workspace.modules.work
 import { BitMap } from '@teambit/legacy.bit-map';
 import { BitError } from '@teambit/bit-error';
 import { ComponentLoader } from '@teambit/legacy.consumer-component';
-import ComponentConfig from '@teambit/legacy.consumer-config';
-import ComponentOverrides from '@teambit/legacy.consumer-config';
+import { LegacyWorkspaceConfig, ComponentOverrides, ComponentConfig } from '@teambit/legacy.consumer-config';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { satisfies } from 'semver';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { ClearCacheAspect } from '@teambit/clear-cache';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import WorkspaceConfig from '@teambit/legacy.consumer-config';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { logger } from '@teambit/legacy.logger';
@@ -367,9 +365,9 @@ export function takeLegacyGlobalsSnapshot(): LegacyGlobal[] {
       empty: [],
     },
     {
-      classInstance: WorkspaceConfig,
+      classInstance: LegacyWorkspaceConfig,
       methodName: 'workspaceConfigLoadingRegistry',
-      value: WorkspaceConfig.workspaceConfigLoadingRegistry,
+      value: LegacyWorkspaceConfig.workspaceConfigLoadingRegistry,
       empty: undefined,
     },
     {

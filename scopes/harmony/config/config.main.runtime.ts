@@ -1,7 +1,10 @@
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
-import { ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
-import LegacyWorkspaceConfig, { WorkspaceConfigLoadFunction } from '@teambit/legacy.consumer-config';
+import {
+  ILegacyWorkspaceConfig,
+  LegacyWorkspaceConfig,
+  WorkspaceConfigLoadFunction,
+} from '@teambit/legacy.consumer-config';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { MainRuntime } from '@teambit/cli';
