@@ -1,6 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
-import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
+import { BASE_DOCS_DOMAIN } from '@teambit/legacy.constants';
 
 export default class MissingMainFileMultipleComponents extends BitError {
   componentIds: string[];

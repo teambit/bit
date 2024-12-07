@@ -2,8 +2,8 @@ import { dirname, basename } from 'path';
 import fs from 'fs-extra';
 import stringifyPackage from 'stringify-package';
 import writeFileAtomic from 'write-file-atomic';
-import ValidationError from '@teambit/legacy/dist/error/validation-error';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { ValidationError } from '@teambit/legacy.cli.error';
+import { logger } from '@teambit/legacy.logger';
 import AbstractVinyl from './abstract-vinyl';
 
 /**

@@ -1,4 +1,4 @@
-import { loadScope } from '@teambit/legacy/dist/scope';
+import { loadScope } from '@teambit/legacy.scope';
 
 export function set(key: string, value: string): Promise<any> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

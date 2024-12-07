@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { Command, CommandOptions } from '@teambit/cli';
@@ -9,7 +9,7 @@ import {
   AUTO_SNAPPED_MSG,
   COMPONENT_PATTERN_HELP,
   CFG_FORCE_LOCAL_BUILD,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { Logger } from '@teambit/logger';
 import { SnappingMain, SnapResults } from './snapping.main.runtime';
 import { outputIdsIfExists } from './tag-cmd';

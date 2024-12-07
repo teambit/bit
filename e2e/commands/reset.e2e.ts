@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('bit reset command', function () {
   this.timeout(0);

@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { mergeReport, MergeStrategy } from '@teambit/merging';
 import { GlobalConfigMain } from '@teambit/global-config';
-import { COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import { removeTemplate } from '@teambit/remove';
 import { MergeLanesMain } from './merge-lanes.main.runtime';

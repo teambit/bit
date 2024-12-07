@@ -3,7 +3,7 @@ import { platform } from 'os';
 import fsNative from 'fs';
 import { BitError } from '@teambit/bit-error';
 import * as path from 'path';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 
 /**
  * create a link (hard-link). if not possible (e.g. it's a directory) or avoidHardLink is true, use symlink.

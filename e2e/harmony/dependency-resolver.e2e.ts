@@ -3,9 +3,8 @@ import path from 'path';
 import { Modules, readModulesManifest } from '@pnpm/modules-yaml';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import rimraf from 'rimraf';
-import { Extensions } from '../../src/constants';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../src/fixtures/fixtures';
+import { Extensions } from '@teambit/legacy.constants';
+import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));

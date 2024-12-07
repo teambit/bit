@@ -1,16 +1,14 @@
 import GraphLib, { Graph } from 'graphlib';
 import pMapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { VERSION_DELIMITER } from '@teambit/legacy/dist/constants';
+import { VERSION_DELIMITER } from '@teambit/legacy.constants';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
-import { DEPENDENCIES_TYPES_UI_MAP } from '@teambit/legacy/dist/consumer/component/dependencies/dependencies';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { ConsumerComponent as Component, DEPENDENCIES_TYPES_UI_MAP } from '@teambit/legacy.consumer-component';
+import { Consumer } from '@teambit/legacy.consumer';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
-import { getAllVersionsInfo } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
-import { IdNotFoundInGraph } from '@teambit/legacy/dist/scope/exceptions/id-not-found-in-graph';
-import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
-import Scope from '@teambit/legacy/dist/scope/scope';
+import { getAllVersionsInfo } from '@teambit/component.snap-distance';
+import { Scope, IdNotFoundInGraph } from '@teambit/legacy.scope';
+import { ModelComponent, Version } from '@teambit/scope.objects';
 
 export type DependenciesInfo = {
   id: ComponentID;

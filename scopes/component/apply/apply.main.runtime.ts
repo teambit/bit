@@ -7,7 +7,7 @@ import pMapSeries from 'p-map-series';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { Lane } from '@teambit/legacy/dist/scope/models';
+import { Lane } from '@teambit/scope.objects';
 import { LaneId } from '@teambit/lane-id';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import {

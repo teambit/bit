@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 /**
  * skipping the permissions tests as it won't be easy to have the CIs testing 'sudo' commands.

@@ -1,7 +1,7 @@
 import mapSeries from 'p-map-series';
 import type { MissingPackagesData } from '@teambit/component-issues';
 import { get } from 'lodash';
-import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
 import { DependencyFactory } from './dependency-factory';
 import { SerializedDependency } from './dependency';
 import { DependencyList } from './dependency-list';

@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { ComponentCompareMain } from '@teambit/component-compare';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { LaneDiffGenerator } from './lane-diff-generator';
 
 export class LaneDiffCmd implements Command {

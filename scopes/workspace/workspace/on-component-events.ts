@@ -1,5 +1,5 @@
 import { Component, ComponentID, AspectData } from '@teambit/component';
-import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
+import { ComponentLoadOptions } from '@teambit/legacy.consumer-component';
 import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { WatchOptions } from '@teambit/watcher';
 

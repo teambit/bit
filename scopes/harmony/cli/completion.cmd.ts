@@ -1,4 +1,4 @@
-import { Command } from '@teambit/legacy/dist/cli/command';
+import { Command } from './command';
 
 export class CompletionCmd implements Command {
   name = 'completion';

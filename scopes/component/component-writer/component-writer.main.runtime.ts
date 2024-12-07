@@ -10,7 +10,7 @@ import { uniq } from 'lodash';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 import { MoverAspect, MoverMain } from '@teambit/mover';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import {
   isDir,
   isDirEmptySync,
@@ -19,11 +19,11 @@ import {
   PathOsBasedAbsolute,
 } from '@teambit/legacy.utils';
 import { ComponentMap } from '@teambit/legacy.bit-map';
-import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
+import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
 import { DataToPersist } from '@teambit/component.sources';
 import { ConfigMergerAspect, ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import { MergeStrategy } from '@teambit/merging';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import ComponentWriter, { ComponentWriterProps } from './component-writer';
 import { ComponentWriterAspect } from './component-writer.aspect';
 

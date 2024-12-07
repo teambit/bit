@@ -1,5 +1,5 @@
 import { ComponentIdList } from '@teambit/component-id';
-import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
+import { RemovedObjects } from '@teambit/legacy.scope';
 
 export class RemovedLocalObjects extends RemovedObjects {
   modifiedComponents: ComponentIdList;

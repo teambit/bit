@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { MainAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { ComponentMap } from '@teambit/component';
-import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
+import { type DependenciesGraph } from '@teambit/scope.objects';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/toolbox.path.path';
 import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';

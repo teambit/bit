@@ -1,17 +1,18 @@
 import pFilter from 'p-filter';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import R from 'ramda';
-import { LATEST } from '@teambit/legacy/dist/constants';
-import { Lane } from '@teambit/legacy/dist/scope/models';
-import ModelComponent from '@teambit/legacy/dist/scope/models/model-component';
-import Scope from '@teambit/legacy/dist/scope/scope';
-import { fetchRemoteVersions } from '@teambit/legacy/dist/scope/scope-remotes';
+import { LATEST } from '@teambit/legacy.constants';
+import { ModelComponent, Lane } from '@teambit/scope.objects';
+import { Scope } from '@teambit/legacy.scope';
+import { fetchRemoteVersions } from '@teambit/scope.remotes';
 import { isBitIdMatchByWildcards } from '@teambit/legacy.utils';
 import { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
-import Component from '@teambit/legacy/dist/consumer/component';
-import { InvalidComponent } from '@teambit/legacy/dist/consumer/component/consumer-component';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
+import {
+  ConsumerComponent as Component,
+  InvalidComponent,
+  ComponentLoadOptions,
+} from '@teambit/legacy.consumer-component';
+import { Consumer } from '@teambit/legacy.consumer';
 
 export type ListScopeResult = {
   id: ComponentID;

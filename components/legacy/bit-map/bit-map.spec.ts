@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import * as path from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { BitId } from '@teambit/legacy-bit-id';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { BitMap } from './bit-map';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 

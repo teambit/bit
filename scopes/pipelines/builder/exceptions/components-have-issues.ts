@@ -1,6 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 import { IssuesAspect } from '@teambit/issues';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import chalk from 'chalk';
 import { uniq } from 'lodash';
 

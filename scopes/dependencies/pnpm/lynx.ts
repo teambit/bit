@@ -16,7 +16,7 @@ import {
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
-import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
+import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
 import {
   MutatedProject,
   mutateModules,

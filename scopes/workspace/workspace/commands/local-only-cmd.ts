@@ -1,6 +1,6 @@
 /* eslint max-classes-per-file: 0 */
 import chalk from 'chalk';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { Command, CommandOptions } from '@teambit/cli';
 import { Workspace } from '../workspace';
 

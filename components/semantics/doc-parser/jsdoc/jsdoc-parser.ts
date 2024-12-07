@@ -1,4 +1,4 @@
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { PathOsBased } from '@teambit/toolbox.path.path';
 import extractDataRegex from '../extract-data-regex';
 import { Doclet } from '../types';

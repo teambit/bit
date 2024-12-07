@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
-import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
+import { SnapsDistance } from '@teambit/component.snap-distance';
 import { IssuesList } from '@teambit/component-issues';
 import {
   IMPORT_PENDING_MSG,
@@ -10,7 +10,7 @@ import {
   statusInvalidComponentsMsg,
   statusWorkspaceIsCleanMsg,
   BASE_DOCS_DOMAIN,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { compact, groupBy, partition } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import { StatusMain, StatusResult } from './status.main.runtime';

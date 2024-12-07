@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '@teambit/harmony.modules.feature-toggle';
 import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 
 const WORKSPACE_CACHE = 'cache';
 const COMPONENTS_CACHE = 'components';

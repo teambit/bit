@@ -1,7 +1,7 @@
 import path from 'path';
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { PATTERN_HELP } from '@teambit/legacy.constants';
 
 import { EjectConfOptions, EjectConfResult, Workspace } from './workspace';
 

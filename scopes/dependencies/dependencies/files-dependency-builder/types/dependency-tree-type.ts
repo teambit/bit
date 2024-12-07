@@ -1,4 +1,4 @@
-import { ImportSpecifier } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
+import { ImportSpecifier } from '@teambit/legacy.consumer-component';
 import { ResolvedPackageData } from '../../resolve-pkg-data';
 import { DependencyDetector } from '../detector-hook';
 import { isEmpty } from 'lodash';

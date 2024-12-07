@@ -1,4 +1,4 @@
-import { MergeConfigFilename } from '@teambit/legacy/dist/constants';
+import { MergeConfigFilename } from '@teambit/legacy.constants';
 import path from 'path';
 import fs from 'fs-extra';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';

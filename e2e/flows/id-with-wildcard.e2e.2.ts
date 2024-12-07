@@ -2,7 +2,7 @@ import { NoIdMatchPattern } from '@teambit/scope';
 import { expect } from 'chai';
 
 import { NoIdMatchWildcard } from '@teambit/lister';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('component id with wildcard', function () {
   this.timeout(0);

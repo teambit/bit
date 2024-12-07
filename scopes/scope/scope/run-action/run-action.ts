@@ -1,5 +1,5 @@
-import { loadScope, Scope } from '@teambit/legacy/dist/scope';
-import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
+import { loadScope, Scope } from '@teambit/legacy.scope';
+import { getScopeRemotes } from '@teambit/scope.remotes';
 
 export async function runAction(actionName: string, remote: string, options = {}): Promise<any> {
   const scope: Scope = await loadScope();

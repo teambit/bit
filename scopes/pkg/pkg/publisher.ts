@@ -6,7 +6,7 @@ import { Workspace } from '@teambit/workspace';
 import { ComponentIdList } from '@teambit/component-id';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Scope } from '@teambit/legacy.scope';
 import fsx from 'fs-extra';
 import mapSeries from 'p-map-series';
 import { join } from 'path';

@@ -3,7 +3,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import fs from 'fs-extra';
 import chalk from 'chalk';
 import cp from 'child_process';
-import { DEBUG_LOG } from '@teambit/legacy/dist/constants';
+import { DEBUG_LOG } from '@teambit/legacy.constants';
 
 export class SystemCmd implements Command {
   name = 'system <sub-command>';

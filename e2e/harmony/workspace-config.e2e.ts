@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('workspace config (workspace.jsonc)', function () {
   this.timeout(0);

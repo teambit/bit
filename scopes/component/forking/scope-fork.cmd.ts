@@ -1,5 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
 import { ForkingMain } from './forking.main.runtime';
 

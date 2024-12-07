@@ -6,18 +6,20 @@ import { Component, ComponentFS, Config, InvalidComponent, State, TagMap } from 
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import mapSeries from 'p-map-series';
 import { compact, fromPairs, groupBy, pick, uniq, uniqBy } from 'lodash';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import {
+  ComponentNotFoundInPath,
+  ConsumerComponent,
+  ComponentLoadOptions as LegacyComponentLoadOptions,
+} from '@teambit/legacy.consumer-component';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { IssuesClasses } from '@teambit/component-issues';
-import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import { ComponentNotFound } from '@teambit/legacy.scope';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
-import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
-import { ComponentLoadOptions as LegacyComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 import { MergeConfigConflict } from '../exceptions/merge-config-conflict';

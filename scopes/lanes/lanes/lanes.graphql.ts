@@ -2,7 +2,7 @@ import { Schema } from '@teambit/graphql';
 import { LaneId } from '@teambit/lane-id';
 import { ComponentID } from '@teambit/component-id';
 import Fuse from 'fuse.js';
-import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
+import { LaneData } from '@teambit/legacy.scope';
 import { gql } from 'graphql-tag';
 import { flatten, slice } from 'lodash';
 import { LaneComponentDiffStatus, LaneDiffStatus, LaneDiffStatusOptions, LanesMain } from './lanes.main.runtime';

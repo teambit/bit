@@ -1,7 +1,7 @@
 import path from 'path';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
-import { Consumer } from '@teambit/legacy/dist/consumer';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Consumer } from '@teambit/legacy.consumer';
+import { Scope } from '@teambit/legacy.scope';
 import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { ConfigMain, WorkspaceConfig, WorkspaceExtensionProps, WorkspaceConfigFileProps } from '@teambit/config';
@@ -16,7 +16,6 @@ export async function createConsumer(
   generator?: string
 ): Promise<Consumer> {
   const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
-  let existingGitHooks;
   // avoid using the default scope-name `path.basename(process.cwd())` when generated from the workspace.
   // otherwise, components with the same scope-name will get ComponentNotFound on import
   const scopeName = `${path.basename(process.cwd())}-local-${generateRandomStr()}`;
@@ -34,7 +33,6 @@ export async function createConsumer(
     created: true,
     scope,
     config: legacyConfig,
-    existingGitHooks,
   });
   await consumer.setBitMap();
   if (!noPackageJson) {

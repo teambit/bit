@@ -5,10 +5,9 @@ import GraphLib from 'graphlib';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
-import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
+import { ConsumerNotFound, Consumer, loadConsumerIfExist } from '@teambit/legacy.consumer';
 import { DependencyGraph, VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
-import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
+import { getRemoteByName } from '@teambit/scope.remotes';
 import { ComponentMain } from '@teambit/component';
 
 type GraphOpt = {

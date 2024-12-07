@@ -8,7 +8,7 @@ import {
   DOT_GIT_DIR,
   OLD_BIT_MAP,
   WORKSPACE_JSONC,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 
 export type WorkspaceInfo = {
   path: string;

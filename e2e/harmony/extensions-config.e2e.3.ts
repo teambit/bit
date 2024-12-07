@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 
-import Helper from '../../src/e2e-helper/e2e-helper';
-import { ComponentNotFound } from '../../src/scope/exceptions';
+import { Helper } from '@teambit/legacy.e2e-helper';
+import { ComponentNotFound } from '@teambit/legacy.scope';
 
 chai.use(require('chai-fs'));
 

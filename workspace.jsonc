@@ -713,7 +713,22 @@
     "components/typescript-compiler": {
       "teambit.pkg/pkg": {}
     },
+    "components/scope/remotes": {
+      "teambit.pkg/pkg": {}
+    },
     "scopes/component/sources": {
+      "teambit.pkg/pkg": {}
+    },
+    "scopes/component/snap-distance": {
+      "teambit.pkg/pkg": {}
+    },
+    "scopes/scope/objects": {
+      "teambit.pkg/pkg": {}
+    },
+    "scopes/scope/network": {
+      "teambit.pkg/pkg": {}
+    },
+    "scopes/scope/remote-actions": {
       "teambit.pkg/pkg": {}
     },
     "components/semantics/doc-parser": {

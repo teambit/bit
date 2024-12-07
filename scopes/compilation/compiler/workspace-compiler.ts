@@ -12,7 +12,7 @@ import path from 'path';
 import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
-import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
+import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
 import { AbstractVinyl, Dist, DataToPersist, RemovePath } from '@teambit/component.sources';
 import {
   linkToNodeModulesByComponents,

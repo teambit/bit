@@ -1,9 +1,9 @@
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { uniqBy } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
-import type { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
-import { BitObjectList } from '@teambit/legacy/dist/scope/objects/bit-object-list';
-import { getAllVersionsInfo } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
+import type { ObjectList } from '@teambit/scope.objects';
+import { BitObjectList } from '@teambit/scope.objects';
+import { getAllVersionsInfo } from '@teambit/component.snap-distance';
 import { Dependency } from './model/dependency';
 
 type BitIdNode = Node<ComponentID>;

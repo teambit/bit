@@ -17,7 +17,7 @@ import type { EnvsExecutionResult, EnvsMain, ExecutionContext, PreviewEnv } from
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain, UIRoot } from '@teambit/ui';
 import { CacheAspect, CacheMain } from '@teambit/cache';
-import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
+import { CACHE_ROOT } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
 import { uniq } from 'lodash';

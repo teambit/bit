@@ -1,5 +1,6 @@
 node_modules
 e2e/fixtures
+components/legacy/e2e-helper/fixtures
 scopes/semantics/schema/mock
 
 # A temp file should be required from outside (via npm) so no point to fix it

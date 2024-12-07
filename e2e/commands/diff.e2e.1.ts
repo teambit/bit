@@ -3,9 +3,8 @@ import fs from 'fs-extra';
 import * as path from 'path';
 
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../src/fixtures/fixtures';
-import { VersionNotFound } from '../../src/scope/exceptions';
+import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
+import { VersionNotFound } from '@teambit/legacy.scope';
 
 const barFooV1 = "module.exports = function foo() { return 'got foo'; };\n";
 const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };\n";

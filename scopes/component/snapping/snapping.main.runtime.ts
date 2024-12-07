@@ -1,26 +1,43 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import fs from 'fs-extra';
-import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
-import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import {
+  LegacyOnTagResult,
+  UnmergedComponents,
+  VersionNotFound,
+  ComponentNotFound,
+  HeadNotFound,
+  ParentNotFound,
+} from '@teambit/legacy.scope';
+import { FlattenedDependenciesGetter } from './get-flattened-dependencies';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace, AutoTagResult } from '@teambit/workspace';
 import semver, { ReleaseType } from 'semver';
 import { compact, difference, uniq } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Extensions, LATEST, BuildStatus } from '@teambit/legacy/dist/constants';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Extensions, LATEST, BuildStatus } from '@teambit/legacy.constants';
+import { ComponentsPendingImport, Consumer } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import pMapSeries from 'p-map-series';
-import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import pMap from 'p-map';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
+import {
+  BitObject,
+  Ref,
+  Repository,
+  Lane,
+  ModelComponent,
+  Version,
+  DepEdge,
+  DepEdgeType,
+  Log,
+  AddVersionOpts,
+} from '@teambit/scope.objects';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { Component } from '@teambit/component';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -29,20 +46,10 @@ import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { LaneId } from '@teambit/lane-id';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ExportAspect, ExportMain } from '@teambit/export';
-import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { isHash, isTag } from '@teambit/component-version';
-import { BitObject, Ref, Repository } from '@teambit/legacy/dist/scope/objects';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { ArtifactFiles, ArtifactSource, getArtifactsFiles, SourceFile } from '@teambit/component.sources';
-import {
-  VersionNotFound,
-  ComponentNotFound,
-  HeadNotFound,
-  ParentNotFound,
-} from '@teambit/legacy/dist/scope/exceptions';
-import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { DependenciesAspect, DependenciesMain } from '@teambit/dependencies';
-import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
@@ -63,7 +70,6 @@ import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { AddVersionOpts } from '@teambit/legacy/dist/scope/models/model-component';
 
 export type PackageIntegritiesByPublishedPackages = Map<string, string | undefined>;
 

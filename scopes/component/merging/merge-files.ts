@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import execa from 'execa';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { GitNotFound, getGitExecutablePath } from '@teambit/git.modules.git-executable';
 import { PathLinux, PathOsBased } from '@teambit/legacy.utils';
 

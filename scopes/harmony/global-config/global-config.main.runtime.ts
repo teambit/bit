@@ -6,7 +6,7 @@ import {
   GLOBAL_CONFIG,
   CFG_CAPSULES_ROOT_BASE_DIR,
   GLOBALS_DEFAULT_CAPSULES,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import {
   del,
   delSync,
@@ -17,8 +17,8 @@ import {
   set,
   setSync,
   invalidateCache,
-} from '@teambit/legacy/dist/api/consumer/lib/global-config';
-import { GlobalConfig } from '@teambit/legacy/dist/global-config';
+  GlobalConfig,
+} from '@teambit/legacy.global-config';
 import { GlobalConfigAspect } from './global-config.aspect';
 import { GlobalsCmd } from './globals.cmd';
 import { SystemCmd, SystemLogCmd, SystemTailLogCmd } from './system.cmd';

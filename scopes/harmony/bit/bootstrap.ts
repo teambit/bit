@@ -1,12 +1,11 @@
-import Bluebird from 'bluebird';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import semver from 'semver';
-import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { Analytics } from '@teambit/legacy.analytics';
 import { handleUnhandledRejection } from '@teambit/cli';
-import { BIT_VERSION, GLOBAL_CONFIG, GLOBAL_LOGS } from '@teambit/legacy/dist/constants';
-import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambit/legacy/dist/logger/logger';
+import { GLOBAL_CONFIG, GLOBAL_LOGS } from '@teambit/legacy.constants';
+import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambit/legacy.logger';
 import { loader } from '@teambit/legacy.loader';
 
 const RECOMMENDED_NODE_VERSIONS = '>=20.0.0 <23.0.0';
@@ -66,14 +65,6 @@ process.emit = function (name, data) {
   return originalEmit.apply(process, arguments as unknown as Parameters<typeof process.emit>);
 };
 
-// by default Bluebird enables the longStackTraces when env is `development`, or when
-// BLUEBIRD_DEBUG is set.
-// the drawback of enabling it all the time is a performance hit. (see http://bluebirdjs.com/docs/api/promise.longstacktraces.html)
-// some commands are slower by 20% with this enabled.
-Bluebird.config({
-  longStackTraces: Boolean(process.env.BLUEBIRD_DEBUG || process.env.BIT_LOG),
-});
-
 export async function bootstrap() {
   enableLoaderIfPossible();
   printBitVersionIfAsked();
@@ -122,12 +113,8 @@ function warnIfRunningAsRoot() {
 export function printBitVersionIfAsked() {
   if (process.argv[2]) {
     if (['-V', '-v', '--version'].includes(process.argv[2])) {
-      const harmonyVersion = getBitVersionGracefully();
-      if (harmonyVersion) {
-        console.log(harmonyVersion); // eslint-disable-line no-console
-      } else {
-        console.log(BIT_VERSION); // eslint-disable-line no-console
-      }
+      const harmonyVersion = getBitVersion();
+      console.log(harmonyVersion); // eslint-disable-line no-console
       process.exit();
     }
   }

@@ -1,10 +1,6 @@
-import {
-  DEPENDENCIES_FIELDS,
-  MANUALLY_ADD_DEPENDENCY,
-  MANUALLY_REMOVE_DEPENDENCY,
-} from '@teambit/legacy/dist/constants';
-import logger from '@teambit/legacy/dist/logger/logger';
-import Component, { ManuallyChangedDependencies } from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { DEPENDENCIES_FIELDS, MANUALLY_ADD_DEPENDENCY, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy.constants';
+import { logger } from '@teambit/legacy.logger';
+import { ConsumerComponent as Component, ManuallyChangedDependencies } from '@teambit/legacy.consumer-component';
 import { FileType } from './auto-detect-deps';
 
 export default class OverridesDependencies {

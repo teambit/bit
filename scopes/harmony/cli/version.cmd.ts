@@ -1,4 +1,4 @@
-import type { CommandOptions, Command } from '@teambit/legacy/dist/cli/command';
+import type { CommandOptions, Command } from './command';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 
 export class VersionCmd implements Command {

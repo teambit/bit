@@ -1,7 +1,7 @@
 import { LinkDetail } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { ComponentID } from '@teambit/component-id';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import path from 'path';
 

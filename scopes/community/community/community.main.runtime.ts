@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { BASE_COMMUNITY_DOMAIN, BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
+import { BASE_COMMUNITY_DOMAIN, BASE_DOCS_DOMAIN } from '@teambit/legacy.constants';
 // import { HelloWorldStarter } from '@teambit/community.starters.hello-world';
 // import { } from '@teambit/community.starters.hello-world-angular';
 // import {} from '@learnbit-vue/hello-world.starters.hello-world';

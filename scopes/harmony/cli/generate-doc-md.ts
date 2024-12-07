@@ -1,4 +1,4 @@
-import { CommandOptions, Command, CommandArg } from '@teambit/legacy/dist/cli/command';
+import { CommandOptions, Command, CommandArg } from './command';
 import { pick } from 'lodash';
 import { getCommandId } from './get-command-id';
 

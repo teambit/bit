@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { IS_WINDOWS } from '../../src/constants';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { IS_WINDOWS } from '@teambit/legacy.constants';
+import { Helper } from '@teambit/legacy.e2e-helper';
 import { HttpHelper } from '../http-helper';
 
 // @TODO: fix for Windows

@@ -4,36 +4,34 @@ import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { BitError } from '@teambit/bit-error';
 import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, getCloudDomain } from '@teambit/legacy/dist/constants';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, getCloudDomain } from '@teambit/legacy.constants';
+import { Consumer } from '@teambit/legacy.consumer';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
 import { hasWildcard } from '@teambit/legacy.utils';
-import { Scope } from '@teambit/legacy/dist/scope';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { LaneReadmeComponent } from '@teambit/legacy/dist/scope/models/lane';
-import { Http } from '@teambit/legacy/dist/scope/network/http';
-import { ObjectItem, ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
 import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
-import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
+import { Remotes, Remote, getScopeRemotes } from '@teambit/scope.remotes';
 import { EjectAspect, EjectMain, EjectResults } from '@teambit/eject';
-import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
-import { ExportOrigin } from '@teambit/legacy/dist/scope/network/http/http';
+import { Http, ExportOrigin } from '@teambit/scope.network';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { persistRemotes, validateRemotes, removePendingDirs } from './export-scope-components';
 import {
-  persistRemotes,
-  validateRemotes,
-  removePendingDirs,
-} from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
-import { BitObject, Ref } from '@teambit/legacy/dist/scope/objects';
-import { PersistFailed } from '@teambit/legacy/dist/scope/exceptions/persist-failed';
-import { getAllVersionHashes } from '@teambit/legacy/dist/scope/component-ops/traverse-versions';
+  Lane,
+  ModelComponent,
+  ObjectItem,
+  ObjectList,
+  LaneReadmeComponent,
+  BitObject,
+  Ref,
+} from '@teambit/scope.objects';
+import { Scope, PersistFailed } from '@teambit/legacy.scope';
+import { getAllVersionHashes } from '@teambit/component.snap-distance';
 import { ExportAspect } from './export.aspect';
 import { ExportCmd } from './export-cmd';
 import { ResumeExportCmd } from './resume-export-cmd';

@@ -4,7 +4,7 @@ import globby from 'globby';
 import chalk from 'chalk';
 import { PromptCanceled } from '@teambit/legacy.cli.prompts';
 import pMapSeries from 'p-map-series';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
+import { ConsumerNotFound } from '@teambit/legacy.consumer';
 import yesno from 'yesno';
 import { defaults, flatMap, isFunction, pick, uniq } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';

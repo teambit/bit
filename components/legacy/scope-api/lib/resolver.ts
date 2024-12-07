@@ -1,4 +1,4 @@
-import { loadScope } from '@teambit/legacy/dist/scope';
+import { loadScope } from '@teambit/legacy.scope';
 
 export const setResolver = (currentPath: string, resolverPath: string): Promise<any> => {
   return loadScope(currentPath).then((scope) => {

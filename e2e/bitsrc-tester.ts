@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 
-import { getCloudDomain } from '../src/constants';
+import { getCloudDomain } from '@teambit/legacy.constants';
 
 // const apiBaseUrl = process.env.NODE_ENV === 'production' ? `https://api.${getCloudDomain()}` : `https://api-stg.${getCloudDomain()}`;
 const skipBitDevTests = process.env.SKIP_BIT_DEV_TESTS === 'True' || process.env.SKIP_BIT_DEV_TESTS === 'true';

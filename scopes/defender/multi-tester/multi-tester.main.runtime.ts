@@ -1,4 +1,4 @@
-import { getCloudDomain } from '@teambit/legacy/dist/constants';
+import { getCloudDomain } from '@teambit/legacy.constants';
 import { MainRuntime } from '@teambit/cli';
 import { Tester } from '@teambit/tester';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
