@@ -93,7 +93,7 @@ export default class FixtureHelper {
   copyFixtureExtensions(dir = '', cwd: string = this.scopes.localPath, targetFolder?: string) {
     const sourceDir = path.join(this.getFixturesDir(), 'extensions', dir);
     const target = path.join(cwd, targetFolder || dir);
-    fs.copySync(sourceDir, target);
+    fs.copySync(sourceDir, target, { dereference: true });
   }
 
   copyFixtureFile(pathToFile = '', newName: string = path.basename(pathToFile), cwd: string = this.scopes.localPath) {
