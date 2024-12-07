@@ -7,9 +7,8 @@ import { ConsumerComponent as Component, DEPENDENCIES_TYPES_UI_MAP } from '@team
 import { Consumer } from '@teambit/legacy.consumer';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { getAllVersionsInfo } from '@teambit/component.snap-distance';
-import { IdNotFoundInGraph } from '@teambit/legacy.scope';
+import { Scope, IdNotFoundInGraph } from '@teambit/legacy.scope';
 import { ModelComponent, Version } from '@teambit/scope.objects';
-import { Scope } from '@teambit/legacy.scope';
 
 export type DependenciesInfo = {
   id: ComponentID;

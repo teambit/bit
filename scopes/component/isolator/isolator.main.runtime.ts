@@ -26,7 +26,7 @@ import {
 } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain, LongProcessLogger } from '@teambit/logger';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Scope as LegacyScope } from '@teambit/legacy.scope';
+import { Scope, Scope as LegacyScope } from '@teambit/legacy.scope';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { DEPENDENCIES_FIELDS, PACKAGE_JSON, CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR } from '@teambit/legacy.constants';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
@@ -45,7 +45,6 @@ import {
 import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { Scope } from '@teambit/legacy.scope';
 import { type DependenciesGraph } from '@teambit/scope.objects';
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';

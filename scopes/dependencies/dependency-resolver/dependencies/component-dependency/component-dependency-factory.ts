@@ -2,8 +2,11 @@ import mapSeries from 'p-map-series';
 import { ComponentMain } from '@teambit/component';
 import { compact } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
-import { Dependency, Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
-import { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
+import {
+  ConsumerComponent as LegacyComponent,
+  Dependency,
+  Dependency as LegacyDependency,
+} from '@teambit/legacy.consumer-component';
 import type { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { ComponentDependency, SerializedComponentDependency, TYPE } from './component-dependency';

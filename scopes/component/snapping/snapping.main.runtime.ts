@@ -1,7 +1,14 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import fs from 'fs-extra';
-import { LegacyOnTagResult, UnmergedComponents } from '@teambit/legacy.scope';
+import {
+  LegacyOnTagResult,
+  UnmergedComponents,
+  VersionNotFound,
+  ComponentNotFound,
+  HeadNotFound,
+  ParentNotFound,
+} from '@teambit/legacy.scope';
 import { FlattenedDependenciesGetter } from './get-flattened-dependencies';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace, AutoTagResult } from '@teambit/workspace';
 import semver, { ReleaseType } from 'semver';
@@ -42,7 +49,6 @@ import { ExportAspect, ExportMain } from '@teambit/export';
 import { isHash, isTag } from '@teambit/component-version';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { ArtifactFiles, ArtifactSource, getArtifactsFiles, SourceFile } from '@teambit/component.sources';
-import { VersionNotFound, ComponentNotFound, HeadNotFound, ParentNotFound } from '@teambit/legacy.scope';
 import { DependenciesAspect, DependenciesMain } from '@teambit/dependencies';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';

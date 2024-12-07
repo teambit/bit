@@ -13,13 +13,11 @@ import {
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { ModelComponent, VersionHistory } from '@teambit/scope.objects';
-import { Ref } from '@teambit/scope.objects';
+import { VersionHistoryGraph, Ref, ModelComponent, VersionHistory } from '@teambit/scope.objects';
 import { ExternalActions } from '@teambit/legacy.scope-api';
 import { BuildVersionHistoryAction } from './build-version-history-action';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { compact } from 'lodash';
-import { VersionHistoryGraph } from '@teambit/scope.objects';
 import { CatVersionHistoryCmd } from './cat-version-history-cmd';
 
 type BuildResult = { err?: Error; added?: string[] };

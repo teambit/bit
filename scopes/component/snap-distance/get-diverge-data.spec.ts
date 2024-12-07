@@ -1,8 +1,7 @@
 import { expect } from 'chai';
-import { Ref } from '@teambit/scope.objects';
 import { getDivergeDataBetweenTwoSnaps } from './get-diverge-data';
 import * as SourceTargetDiffDistance from './fixtures/source-target-diff-distance';
-import { VersionHistory } from '@teambit/scope.objects';
+import { Ref, VersionHistory } from '@teambit/scope.objects';
 
 describe('getDivergeDataBetweenTwoSnaps', () => {
   describe('when there are multiple common-snaps, some are closer to the source and some are closer to the target', () => {
