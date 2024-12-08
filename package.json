@@ -115,6 +115,7 @@
     "@teambit/toolbox.time.timer": "~0.0.1",
     "@teambit/legacy.utils": "~0.0.2"
   },
+  "devDependencies": {},
   "pnpm": {
     "neverBuiltDependencies": [
       "core-js"
