@@ -98,6 +98,7 @@ export default class FixtureHelper {
     // remove "// @bit-no-check" from the files
     const files = fs.readdirSync(target);
     files.forEach((file) => {
+      if (!file.endsWith('.ts') && !file.endsWith('.js')) return;
       const filePath = path.join(target, file);
       let fileContent = fs.readFileSync(filePath, 'utf8');
       fileContent = fileContent.replace('// @bit-no-check', '');
