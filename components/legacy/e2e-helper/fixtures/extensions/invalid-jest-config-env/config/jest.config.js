@@ -1,3 +1,7 @@
+// @bit-no-check
+// @ts-nocheck
+
+
 // Override the Jest config to ignore transpiling from specific folders
 // See the base Jest config: https://bit.cloud/teambit/react/react/~code/jest/jest.config.js
 

@@ -1,3 +1,7 @@
+// @bit-no-check
+// @ts-nocheck
+
+
 import {
   TypescriptTask,
 } from '@teambit/typescript.typescript-compiler';
@@ -6,7 +10,9 @@ import { Pipeline } from "@teambit/builder";
 import { Tester, TesterContext } from '@teambit/tester';
 import { EnvHandler } from '@teambit/envs';
 import { Component } from '@teambit/component';
+// @ts-ignore
 import { ReactEnv } from '@teambit/react.react-env';
+// @ts-ignore
 import type { ReactEnvInterface } from '@teambit/react.react-env';
 import { JestTask, JestTester } from '@teambit/defender.jest-tester';
 

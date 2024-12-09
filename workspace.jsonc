@@ -722,7 +722,8 @@
       // See more info here -
       // https://github.com/garycourt/uri-js/pull/95
       // https://github.com/garycourt/uri-js/issues/97
-      "uri-js": "npm:uri-js-replace"
+      "uri-js": "npm:uri-js-replace",
+      "encoding": "-"
     },
     "rootComponents": true,
     "nodeVersion": "22.11.0",
