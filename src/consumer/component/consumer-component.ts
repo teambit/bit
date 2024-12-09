@@ -18,7 +18,7 @@ import { ComponentMap } from '@teambit/legacy.bit-map';
 import { IgnoredDirectory } from './exceptions/ignored-directory';
 import ComponentsPendingImport from '../exceptions/components-pending-import';
 import { Dist, License, SourceFile, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
-import ComponentConfig, { ComponentConfigLoadOptions, ILegacyWorkspaceConfig } from '../config';
+import ComponentConfig, { ComponentConfigLoadOptions } from '../config';
 import ComponentOverrides from '../config/component-overrides';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import Consumer from '../consumer';
@@ -499,7 +499,6 @@ export default class Component {
     consumer: Consumer;
     loadOpts?: ComponentLoadOptions;
   }): Promise<Component> {
-    const workspaceConfig: ILegacyWorkspaceConfig = consumer.config;
     const modelComponent = await consumer.scope.getModelComponentIfExist(id);
     const componentFromModel = await consumer.loadComponentFromModelIfExist(id);
     if (!componentFromModel && id._legacy.hasScope()) {
@@ -531,16 +530,7 @@ export default class Component {
 
     const bindingPrefix = componentFromModel?.bindingPrefix;
 
-    const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : undefined;
     const files = await getLoadedFiles(consumer, componentMap, id, compDirAbs);
-
-    const overrides = await ComponentOverrides.loadFromConsumer(
-      id,
-      workspaceConfig,
-      overridesFromModel,
-      componentConfig,
-      files
-    );
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
     const docsP = _getDocsForFiles(files, consumer.componentFsCache);
@@ -570,7 +560,6 @@ export default class Component {
       componentMap,
       docs: flattenedDocs,
       deprecated,
-      overrides,
       schema: getSchema(),
       defaultScope: defaultScope || null,
       packageJsonFile,
