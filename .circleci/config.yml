@@ -499,11 +499,11 @@ jobs:
           path: bit/yarn.lock
 
   bit_build:
-    resource_class: 2xlarge
+    resource_class: xlarge
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=30000
+      NODE_OPTIONS: --max-old-space-size=15000
     steps:
       - attach_workspace:
           at: ./
@@ -535,16 +535,16 @@ jobs:
           name: 'bit build'
           command: 'cd bit && bit build'
           environment:
-            NODE_OPTIONS: --max-old-space-size=30000
+            NODE_OPTIONS: --max-old-space-size=15000
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
   bit_tag:
-    resource_class: 2xlarge
+    resource_class: xlarge
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=30 000
+      NODE_OPTIONS: --max-old-space-size=15000
     steps:
       - attach_workspace:
           at: ./
