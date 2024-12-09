@@ -702,7 +702,7 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.31",
-        "@teambit/legacy": "1.0.770",
+        // "@teambit/legacy": "1.0.770",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
         "graphql": "15.8.0",
@@ -746,7 +746,7 @@
         "react",
         "react-dom",
         "@testing-library/react",
-        "@teambit/legacy",
+        // "@teambit/legacy",
         "typescript"
       ],
       "ignoreMissing": []

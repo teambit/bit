@@ -566,7 +566,7 @@ jobs:
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
-      - run: cd bit && node scripts/bump-bit-legacy-ver.js
+      # - run: cd bit && node scripts/bump-bit-legacy-ver.js
       - run: bvm link
       - run: cd bit && bit config set force_local_build true
       # temporary, check if we can remove it

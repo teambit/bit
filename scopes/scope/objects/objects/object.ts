@@ -141,7 +141,7 @@ path: ${err.path}`);
    * prefer using `this.parseObject()`, unless it must be sync.
    */
   static parseSync(fileContents: Buffer): BitObject {
-    // todo: fix after merging #9359
+    // @ts-ignore todo: fix after merging #9359
     const buffer = inflateSync(fileContents);
     return parse(buffer);
   }
