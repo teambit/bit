@@ -109,6 +109,12 @@
   },
   "dependencies": {
     "@teambit/legacy.scope-api": "~0.0.1",
+    "@teambit/scope.objects": "~0.0.1",
+    "@teambit/legacy.consumer": "~0.0.1",
+    "@teambit/legacy.constants": "~0.0.1",
+    "@teambit/legacy.e2e-helper": "~0.0.1",
+    "@teambit/legacy.logger": "~0.0.1",
+    "@teambit/component.snap-distance": "~0.0.1",
     "@teambit/component.sources": "~0.0.1",
     "@teambit/legacy.consumer-component": "~0.0.1",
     "@teambit/toolbox.crypto.sha1": "~0.0.1",

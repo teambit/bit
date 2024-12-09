@@ -1,5 +1,5 @@
 export { SnapsDistance } from './snaps-distance';
-export { getDivergeData } from './get-diverge-data';
+export { getDivergeData, getDivergeDataBetweenTwoSnaps } from './get-diverge-data';
 export {
   VersionInfo,
   getAllVersionHashes,
