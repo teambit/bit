@@ -1,6 +1,6 @@
 import padRight from 'pad-right';
 import { Command, CommandOptions } from '@teambit/cli';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
 import type { PreviewMain } from './preview.main.runtime';
 import { EnvsExecutionResult } from '@teambit/envs';

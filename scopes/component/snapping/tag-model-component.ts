@@ -3,35 +3,26 @@ import { isEmpty } from 'lodash';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 import { BitError } from '@teambit/bit-error';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Scope } from '@teambit/legacy.scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BuildStatus, Extensions } from '@teambit/legacy/dist/constants';
-import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/component-schema';
+import { BuildStatus, Extensions } from '@teambit/legacy.constants';
+import { ConsumerComponent, CURRENT_SCHEMA } from '@teambit/legacy.consumer-component';
 import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import { NewerVersionFound } from '@teambit/legacy/dist/consumer/exceptions';
+import { NewerVersionFound, Consumer } from '@teambit/legacy.consumer';
 import { Component } from '@teambit/component';
 import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
-import { AutoTagResult, getAutoTagInfo } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { OnTagOpts } from '@teambit/builder';
-import { DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
-import { Log } from '@teambit/legacy/dist/scope/models/version';
-import {
-  MessagePerComponent,
-  MessagePerComponentFetcher,
-} from '@teambit/legacy/dist/scope/component-ops/message-per-component';
-import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { AddVersionOpts, Lane, ModelComponent, Log, DependenciesGraph } from '@teambit/scope.objects';
+import { MessagePerComponent, MessagePerComponentFetcher } from './message-per-component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
-import { Workspace } from '@teambit/workspace';
+import { Workspace, AutoTagResult } from '@teambit/workspace';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
-import { AddVersionOpts } from '@teambit/legacy/dist/scope/models/model-component';
 
 export type onTagIdTransformer = (id: ComponentID) => ComponentID | null;
 
@@ -249,7 +240,7 @@ export async function tagModelComponent({
   // them as dependencies.
   const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
   const autoTagDataWithLocalOnly =
-    skipAutoTag || !consumer ? [] : await getAutoTagInfo(consumer, ComponentIdList.fromArray(idsToTriggerAutoTag));
+    skipAutoTag || !consumer ? [] : await workspace.getAutoTagInfo(ComponentIdList.fromArray(idsToTriggerAutoTag));
   const localOnly = workspace?.listLocalOnly();
   const autoTagData = localOnly
     ? autoTagDataWithLocalOnly.filter((autoTagItem) => !localOnly.hasWithoutVersion(autoTagItem.component.id))

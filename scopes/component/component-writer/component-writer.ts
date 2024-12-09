@@ -1,12 +1,12 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Scope } from '@teambit/legacy.scope';
 import { PathLinuxRelative, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DataToPersist, RemovePath } from '@teambit/component.sources';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { isHash } from '@teambit/component-version';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { Ref } from '@teambit/scope.objects';
 import { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 

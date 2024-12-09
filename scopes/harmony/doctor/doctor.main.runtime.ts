@@ -7,9 +7,9 @@ import Stream from 'stream';
 import tar from 'tar-stream';
 import tarFS from 'tar-fs';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
-import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '@teambit/legacy/dist/constants';
+import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '@teambit/legacy.constants';
 import { BitMap } from '@teambit/legacy.bit-map';
-import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
+import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { getWorkspaceInfo, WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import Diagnosis, { ExamineResult } from './diagnosis';
 import DoctorRegistrar from './doctor-registrar';
@@ -18,7 +18,7 @@ import { compact } from 'lodash';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
 import { getExt } from '@teambit/toolbox.fs.extension-getter';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
-import * as globalConfig from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import * as globalConfig from '@teambit/legacy.global-config';
 import { getNpmVersion } from './core-diagnoses/validate-npm-exec';
 import { getYarnVersion } from './core-diagnoses/validate-yarn-exec';
 import { DiagnosisNotFound } from './exceptions/diagnosis-not-found';
@@ -195,7 +195,7 @@ export class DoctorMain {
       if (consumerInfo && consumerInfo.hasWorkspaceConfig) {
         // TODO: support new config as well
         const scopePath = findScopePath(consumerInfo.path);
-        const config = scopePath ? await WorkspaceConfig.loadIfExist(consumerInfo.path, scopePath) : undefined;
+        const config = scopePath ? await LegacyWorkspaceConfig.loadIfExist(consumerInfo.path, scopePath) : undefined;
         const legacyPlainConfig = config?._legacyPlainObject();
         if (legacyPlainConfig) {
           pack.entry({ name: 'config.json' }, JSON.stringify(legacyPlainConfig, null, 4));

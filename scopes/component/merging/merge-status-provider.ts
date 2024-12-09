@@ -2,16 +2,13 @@ import { Workspace } from '@teambit/workspace';
 import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
-import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
-import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { Tmp } from '@teambit/legacy/dist/scope/repositories';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { getDivergeData, SnapsDistance } from '@teambit/component.snap-distance';
+import { Lane, ModelComponent, Version, Ref } from '@teambit/scope.objects';
+import { NoCommonSnap, Tmp } from '@teambit/legacy.scope';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ImporterMain } from '@teambit/importer';
 import { Logger } from '@teambit/logger';
 import { compact } from 'lodash';
-import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
-import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
 import { ComponentConfigMerger } from '@teambit/config-merger';
 import { ScopeMain } from '@teambit/scope';
 import { threeWayMerge, MergeStrategy } from './merge-version';
@@ -106,7 +103,7 @@ export class MergeStatusProvider {
     if (!divergeData) throw new Error(`getDivergedMergeStatus, divergeData is missing for ${id.toString()}`);
     if (!currentComponent) throw new Error(`getDivergedMergeStatus, currentComponent is missing for ${id.toString()}`);
 
-    const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
+    const baseSnap = divergeData.commonSnapBeforeDiverge as unknown as Ref; // must be set when isTrueMerge
     this.logger.debug(`merging snaps details:
 id:      ${id.toStringWithoutVersion()}
 base:    ${baseSnap.toString()}

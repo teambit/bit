@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import path from 'path';
 import { Modules, readModulesManifest } from '@pnpm/modules-yaml';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('pnpm install with default settings', function () {
   let helper: Helper;

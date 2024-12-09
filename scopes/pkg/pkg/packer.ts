@@ -8,7 +8,7 @@ import { ComponentResult, ArtifactDefinition } from '@teambit/builder';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { isSnap } from '@teambit/component-version';
 import { ScopeMain } from '@teambit/scope';
-import LegacyScope from '@teambit/legacy/dist/scope/scope';
+import { Scope as LegacyScope } from '@teambit/legacy.scope';
 import { checksumFile } from '@teambit/legacy.utils';
 import { Logger } from '@teambit/logger';
 import pMap from 'p-map';

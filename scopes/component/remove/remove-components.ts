@@ -4,19 +4,17 @@ import partition from 'lodash.partition';
 import { Workspace } from '@teambit/workspace';
 import { ComponentIdList } from '@teambit/component-id';
 import { compact, isEmpty } from 'lodash';
-import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, LATEST_BIT_VERSION } from '@teambit/legacy/dist/constants';
+import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, LATEST_BIT_VERSION } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
-import logger from '@teambit/legacy/dist/logger/logger';
-import { Http } from '@teambit/legacy/dist/scope/network/http';
-import { Remotes } from '@teambit/legacy/dist/remotes';
-import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
+import { logger } from '@teambit/legacy.logger';
+import { Http } from '@teambit/scope.network';
+import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
 import { deleteComponentsFiles } from './delete-component-files';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
-import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
+import { RemovedObjects } from '@teambit/legacy.scope';
 import pMapSeries from 'p-map-series';
-import { Consumer } from '@teambit/legacy/dist/consumer';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { Consumer } from '@teambit/legacy.consumer';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { getNodeModulesPathOfComponent } from '@teambit/pkg.modules.component-package-name';
 import { RemovedLocalObjects } from './removed-local-objects';
 
@@ -126,7 +124,7 @@ async function removeLocal(
         else nonModifiedComponents.push(id);
       } catch (err: any) {
         // if a component has an error, such as, missing main file, we do want to allow removing that component
-        if (Component.isComponentInvalidByErrorType(err)) {
+        if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
           nonModifiedComponents.push(id);
         } else {
           throw err;

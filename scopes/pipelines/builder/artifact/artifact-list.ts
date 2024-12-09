@@ -2,7 +2,7 @@ import { Component } from '@teambit/component';
 import pMapSeries from 'p-map-series';
 import type { ArtifactObject } from '@teambit/component.sources';
 import { ComponentID } from '@teambit/component-id';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Scope } from '@teambit/legacy.scope';
 import { ArtifactVinyl } from '@teambit/component.sources';
 import { FsArtifact } from './fs-artifact';
 import { Artifact } from './artifact';
