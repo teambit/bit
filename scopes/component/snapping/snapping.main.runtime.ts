@@ -970,8 +970,9 @@ another option, in case this dependency is not in main yet is to remove all refe
   }): Promise<{
     component: ModelComponent;
     version: Version;
+    addedVersionStr: string;
   }> {
-    const { component, version } = await this._addCompFromScopeToObjects(source, lane, addVersionOpts);
+    const { addedVersionStr, component, version } = await this._addCompFromScopeToObjects(source, lane, addVersionOpts);
     const unmergedComponent = this.scope.legacyScope.objects.unmergedComponents.getEntry(component.toComponentId());
     if (unmergedComponent) {
       if (unmergedComponent.unrelated) {
@@ -1004,7 +1005,7 @@ another option, in case this dependency is not in main yet is to remove all refe
       this.scope.legacyScope.objects.unmergedComponents.removeComponent(component.toComponentId());
     }
     if (shouldValidateVersion) version.validate();
-    return { component, version };
+    return { addedVersionStr, component, version };
   }
 
   async _addCompFromScopeToObjects(
@@ -1014,6 +1015,7 @@ another option, in case this dependency is not in main yet is to remove all refe
   ): Promise<{
     component: ModelComponent;
     version: Version;
+    addedVersionStr: string;
   }> {
     const objectRepo = this.objectsRepo;
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model
@@ -1031,12 +1033,18 @@ another option, in case this dependency is not in main yet is to remove all refe
     if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
     if (dependenciesGraph) this.objectsRepo.add(dependenciesGraph);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, lane, source.previouslyUsedVersion, addVersionOpts);
+    const addedVersionStr = component.addVersion(
+      version,
+      source.version,
+      lane,
+      source.previouslyUsedVersion,
+      addVersionOpts
+    );
     objectRepo.add(component);
     if (lane) objectRepo.add(lane);
     files.forEach((file) => objectRepo.add(file.file));
     if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
-    return { component, version };
+    return { component, version, addedVersionStr };
   }
 
   async _enrichComp(consumerComponent: ConsumerComponent, modifiedLog?: Log) {

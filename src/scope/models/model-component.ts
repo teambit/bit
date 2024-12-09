@@ -692,6 +692,7 @@ export default class Component extends BitObject {
     }
     // user on main
     const head = this.getHead();
+    const parent = previouslyUsedVersion ? this.getRef(previouslyUsedVersion) : null;
     if (
       head &&
       head.toString() !== versionToAdd &&
@@ -702,11 +703,12 @@ export default class Component extends BitObject {
       // if this is a hash and it's the same hash as the current head, adding it as a parent
       // results in a parent and a version has the same hash.
       // @todo: fix it in a more elegant way
-      const parent = previouslyUsedVersion ? this.getRef(previouslyUsedVersion) : null;
       const parentToSet = setHeadAsParent ? head : parent;
       version.addAsOnlyParent(parentToSet || head);
     }
-    this.setHead(version.hash());
+    if (!parent || !head || parent.isEqual(head)) {
+      this.setHead(version.hash());
+    }
     if (isTag(versionToAdd)) {
       this.setVersion(versionToAdd, version.hash());
     }
