@@ -94,6 +94,15 @@ export default class FixtureHelper {
     const sourceDir = path.join(this.getFixturesDir(), 'extensions', dir);
     const target = path.join(cwd, targetFolder || dir);
     fs.copySync(sourceDir, target, { dereference: true });
+
+    // remove "// @bit-no-check" from the files
+    const files = fs.readdirSync(target);
+    files.forEach((file) => {
+      const filePath = path.join(target, file);
+      let fileContent = fs.readFileSync(filePath, 'utf8');
+      fileContent = fileContent.replace('// @bit-no-check', '');
+      fs.writeFileSync(filePath, fileContent);
+    });
   }
 
   copyFixtureFile(pathToFile = '', newName: string = path.basename(pathToFile), cwd: string = this.scopes.localPath) {
