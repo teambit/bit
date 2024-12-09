@@ -35,6 +35,7 @@ import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { compact } from 'lodash';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -491,15 +492,13 @@ please either remove the component (bit remove) or remove the lane.`);
     }
     // don't throw if not found because on export not all objects are sent to the remote
     const allVersionsInfo = await getAllVersionsInfo({ modelComponent: incomingComp, throws: false, versionObjects });
-    const allHashes = allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
+    const allHashes = compact(allVersionsInfo.map((v) => v.ref));
     const incomingTagsAndSnaps = incomingComp.switchHashesWithTagsIfExist(allHashes);
     if (!existingComp) {
       this.throwForMissingVersions(allVersionsInfo, incomingComp);
       return { mergedComponent: incomingComp, mergedVersions: incomingTagsAndSnaps };
     }
-    const hashesOfHistoryGraph = allVersionsInfo
-      .map((v) => (v.isPartOfHistory ? v.ref : null))
-      .filter((ref) => ref) as Ref[];
+    const hashesOfHistoryGraph = compact(allVersionsInfo.map((v) => (v.isPartOfHistory ? v.ref : null)));
     const existingComponentHead = existingComp.getHead()?.clone();
     const existingHeadIsMissingInIncomingComponent = Boolean(
       incomingComp.hasHead() &&

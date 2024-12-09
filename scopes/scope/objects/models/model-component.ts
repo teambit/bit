@@ -540,7 +540,7 @@ export default class Component extends BitObject {
     }
 
     const head = this.getHeadRegardlessOfLane();
-    const headVersion = head ? ((await repo.load(head)) as Version) : undefined;
+    const headVersion = head ? ((await repo.load(head)) as unknown as Version) : undefined;
     const removeAspect = headVersion?.extensions.findCoreExtension(Extensions.remove);
     const removeRange = removeAspect?.config.range;
     const deprecationAspect = headVersion?.extensions.findCoreExtension(Extensions.deprecation);

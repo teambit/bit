@@ -155,7 +155,7 @@ export class ObjectsReadableGenerator {
       });
       const missingParentsHashes = allParentsHashes.filter((h) => !h.isEqual(version.hash()));
       const parentVersions = await pMapSeries(missingParentsHashes, (parentHash) => parentHash.load(this.repo));
-      allVersions.push(...(parentVersions as Version[]));
+      allVersions.push(...(parentVersions as unknown as Version[]));
       // note: don't bring the head. otherwise, component-delta of the head won't bring all history of this comp.
     }
     allVersions.push(version);

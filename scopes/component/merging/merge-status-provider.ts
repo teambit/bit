@@ -103,7 +103,7 @@ export class MergeStatusProvider {
     if (!divergeData) throw new Error(`getDivergedMergeStatus, divergeData is missing for ${id.toString()}`);
     if (!currentComponent) throw new Error(`getDivergedMergeStatus, currentComponent is missing for ${id.toString()}`);
 
-    const baseSnap = divergeData.commonSnapBeforeDiverge as Ref; // must be set when isTrueMerge
+    const baseSnap = divergeData.commonSnapBeforeDiverge as unknown as Ref; // must be set when isTrueMerge
     this.logger.debug(`merging snaps details:
 id:      ${id.toStringWithoutVersion()}
 base:    ${baseSnap.toString()}

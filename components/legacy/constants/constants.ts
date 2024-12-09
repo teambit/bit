@@ -263,7 +263,6 @@ export const IGNORE_LIST = [
   '**/.env',
   '**/.env.local',
   '**/.env.**.local',
-  '**/.bitmap',
   '**/component.json',
   '**/node_modules/**',
   '**/package-lock.json',
