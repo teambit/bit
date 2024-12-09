@@ -69,7 +69,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   [
     'I',
     'ignore-newest-version',
-    'allow tagging even when the component has newer versions e.g. for hotfixes (default = false)',
+    'allow tagging even when the component has newer versions e.g. for hotfixes. the new tag will be detached head',
   ],
   [
     '',
