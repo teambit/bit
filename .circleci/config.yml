@@ -474,7 +474,6 @@ jobs:
           key: core-aspect-env-v0.0.63-v1
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a107
-      - run: cd bit && npm run link-bit-legacy
       # - run: cd bit && bbit compile
 
       # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
@@ -566,7 +565,6 @@ jobs:
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
-      # - run: cd bit && node scripts/bump-bit-legacy-ver.js
       - run: bvm link
       - run: cd bit && bit config set force_local_build true
       # temporary, check if we can remove it
@@ -582,11 +580,9 @@ jobs:
       - run: cd bit && git diff
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
       # - run: cd bit && bbit checkout head
-      # - run: cd bit && npm run link-bit-legacy
       # since we removed the node_modules we need to make sure we compile, install and link everything again
       # - run: cd bit && bbit install --skip-import
       # - run: cd bit && bbit compile
-      - run: cd bit && npm run link-bit-legacy
       # temporary, check if we can remove it
       - run: cd bit && bit cc
 
