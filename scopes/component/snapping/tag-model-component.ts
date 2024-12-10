@@ -313,7 +313,7 @@ export async function tagModelComponent({
   // (it's being deleted in snapping.main.runtime - `_addCompToObjects` method)
   const unmergedComps = workspace ? await workspace.listComponentsDuringMerge() : [];
   const lane = await legacyScope.getCurrentLaneObject();
-  const stagedConfig = await workspace.scope.getStagedConfig();
+  const stagedConfig = workspace ? await workspace.scope.getStagedConfig() : undefined;
   if (soft) {
     if (!consumer) throw new Error(`unable to soft-tag without consumer`);
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
@@ -324,7 +324,7 @@ export async function tagModelComponent({
     if (!build) emptyBuilderData(allComponentsToTag);
     addBuildStatus(allComponentsToTag, BuildStatus.Pending);
 
-    const currentLane = consumer.getCurrentLaneId();
+    const currentLane = consumer ? consumer.getCurrentLaneId() : undefined;
     await mapSeries(allComponentsToTag, async (component) => {
       const results = await snapping._addCompToObjects({
         source: component,
@@ -337,7 +337,7 @@ export async function tagModelComponent({
       });
       if (workspace) {
         const modelComponent = component.modelComponent || (await legacyScope.getModelComponent(component.id));
-        await updateVersions(workspace, stagedConfig, currentLane, modelComponent, true, results.addedVersionStr);
+        await updateVersions(workspace, stagedConfig!, currentLane!, modelComponent, true, results.addedVersionStr);
       } else {
         const tagData = tagDataPerComp?.find((t) => t.componentId.isEqualWithoutVersion(component.id));
         if (tagData?.isNew) results.version.removeAllParents();
