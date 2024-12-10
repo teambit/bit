@@ -8,7 +8,7 @@ import {
 } from '../../scopes/harmony/aspect-loader/constants';
 import { CannotLoadExtension } from '../../scopes/harmony/aspect-loader/exceptions';
 // TODO: think about how to change this require or move this tests
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 

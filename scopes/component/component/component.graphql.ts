@@ -3,12 +3,13 @@ import { gql } from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
-import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import { ComponentLog } from '@teambit/scope.objects';
+import { Schema } from '@teambit/graphql';
 import { Component } from './component';
 import { ComponentFactory } from './component-factory';
 import { ComponentMain } from './component.main.runtime';
 
-export function componentSchema(componentExtension: ComponentMain) {
+export function componentSchema(componentExtension: ComponentMain): Schema {
   return {
     typeDefs: gql`
       scalar JSON

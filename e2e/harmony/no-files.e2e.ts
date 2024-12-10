@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
-import { IgnoredDirectory } from '../../src/consumer/component/exceptions/ignored-directory';
+import { Helper } from '@teambit/legacy.e2e-helper';
+import { IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));

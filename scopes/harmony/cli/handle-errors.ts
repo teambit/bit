@@ -1,5 +1,5 @@
-import logger from '@teambit/legacy/dist/logger/logger';
-import defaultHandleError from '@teambit/legacy/dist/cli/default-error-handler';
+import { logger } from '@teambit/legacy.logger';
+import defaultHandleError from './default-error-handler';
 import { loader } from '@teambit/legacy.loader';
 
 let exitOnUnhandled = true;

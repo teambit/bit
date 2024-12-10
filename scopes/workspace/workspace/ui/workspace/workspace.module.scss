@@ -12,6 +12,14 @@
   }
 }
 
+.minimalCorner {
+  width: 130px;
+  &.dark {
+    --bit-border-color-lightest: #333333;
+    --bit-text-color-heavy: white;
+  }
+}
+
 .workspaceWrapper {
   display: flex;
   flex-direction: column;

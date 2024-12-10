@@ -1,48 +1,55 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import fs from 'fs-extra';
-import { LegacyOnTagResult } from '@teambit/legacy/dist/scope/scope';
-import { FlattenedDependenciesGetter } from '@teambit/legacy/dist/scope/component-ops/get-flattened-dependencies';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import {
+  LegacyOnTagResult,
+  UnmergedComponents,
+  VersionNotFound,
+  ComponentNotFound,
+  HeadNotFound,
+  ParentNotFound,
+} from '@teambit/legacy.scope';
+import { FlattenedDependenciesGetter } from './get-flattened-dependencies';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace, AutoTagResult } from '@teambit/workspace';
 import semver, { ReleaseType } from 'semver';
 import { compact, difference, uniq } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Extensions, LATEST, BuildStatus } from '@teambit/legacy/dist/constants';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Extensions, LATEST, BuildStatus } from '@teambit/legacy.constants';
+import { ComponentsPendingImport, Consumer } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import pMapSeries from 'p-map-series';
-import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import pMap from 'p-map';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
+import {
+  BitObject,
+  Ref,
+  Repository,
+  Lane,
+  ModelComponent,
+  Version,
+  DepEdge,
+  DepEdgeType,
+  Log,
+  AddVersionOpts,
+} from '@teambit/scope.objects';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { Component } from '@teambit/component';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { LaneId } from '@teambit/lane-id';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ExportAspect, ExportMain } from '@teambit/export';
-import UnmergedComponents from '@teambit/legacy/dist/scope/lanes/unmerged-components';
 import { isHash, isTag } from '@teambit/component-version';
-import { BitObject, Ref, Repository } from '@teambit/legacy/dist/scope/objects';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { ArtifactFiles, ArtifactSource, getArtifactsFiles, SourceFile } from '@teambit/component.sources';
-import {
-  VersionNotFound,
-  ComponentNotFound,
-  HeadNotFound,
-  ParentNotFound,
-} from '@teambit/legacy/dist/scope/exceptions';
-import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
 import { DependenciesAspect, DependenciesMain } from '@teambit/dependencies';
-import Version, { DepEdge, DepEdgeType, Log } from '@teambit/legacy/dist/scope/models/version';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
@@ -55,7 +62,7 @@ import { FlattenedEdgesGetter } from './flattened-edges';
 import { SnapDistanceCmd } from './snap-distance-cmd';
 import {
   removeLocalVersionsForAllComponents,
-  untagResult,
+  ResetResult,
   getComponentsWithOptionToUntag,
   removeLocalVersionsForMultipleComponents,
 } from './reset-component';
@@ -350,6 +357,7 @@ if you're willing to lose the history from the head to the specified version, us
       persist: true,
       ids: componentIds,
       message: params.message as string,
+      setHeadAsParent: params.ignoreNewestVersion,
     });
 
     const { taggedComponents, publishedPackages } = results;
@@ -668,11 +676,11 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     head?: boolean,
     force = false,
     soft = false
-  ): Promise<{ results: untagResult[]; isSoftUntag: boolean }> {
+  ): Promise<{ results: ResetResult[]; isSoftUntag: boolean }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     const currentLane = await consumer.getCurrentLaneObject();
-    const untag = async (): Promise<untagResult[]> => {
+    const untag = async (): Promise<ResetResult[]> => {
       if (!componentPattern) {
         return removeLocalVersionsForAllComponents(consumer, this.remove, currentLane, head);
       }
@@ -699,7 +707,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
         })
       );
     };
-    let results: untagResult[];
+    let results: ResetResult[];
     const isRealUntag = !soft;
     if (isRealUntag) {
       results = await untag();
@@ -959,17 +967,17 @@ another option, in case this dependency is not in main yet is to remove all refe
     source,
     lane,
     shouldValidateVersion = false,
-    updateDependentsOnLane = false,
+    addVersionOpts,
   }: {
     source: ConsumerComponent;
     lane?: Lane;
     shouldValidateVersion?: boolean;
-    updateDependentsOnLane?: boolean;
+    addVersionOpts?: AddVersionOpts;
   }): Promise<{
     component: ModelComponent;
     version: Version;
   }> {
-    const { component, version } = await this._addCompFromScopeToObjects(source, lane, updateDependentsOnLane);
+    const { component, version } = await this._addCompFromScopeToObjects(source, lane, addVersionOpts);
     const unmergedComponent = this.scope.legacyScope.objects.unmergedComponents.getEntry(component.toComponentId());
     if (unmergedComponent) {
       if (unmergedComponent.unrelated) {
@@ -1008,7 +1016,7 @@ another option, in case this dependency is not in main yet is to remove all refe
   async _addCompFromScopeToObjects(
     source: ConsumerComponent,
     lane?: Lane,
-    updateDependentsOnLane = false
+    addVersionOpts?: AddVersionOpts
   ): Promise<{
     component: ModelComponent;
     version: Version;
@@ -1029,7 +1037,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
     if (dependenciesGraph) this.objectsRepo.add(dependenciesGraph);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    component.addVersion(version, source.version, lane, source.previouslyUsedVersion, updateDependentsOnLane);
+    component.addVersion(version, source.version, lane, source.previouslyUsedVersion, addVersionOpts);
     objectRepo.add(component);
     if (lane) objectRepo.add(lane);
     files.forEach((file) => objectRepo.add(file.file));

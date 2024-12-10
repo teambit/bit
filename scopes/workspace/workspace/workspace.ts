@@ -18,7 +18,6 @@ import {
   AspectList,
 } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
-import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
 import { ComponentScopeDirMap, ConfigMain, WorkspaceConfig } from '@teambit/config';
 import {
   DependencyResolverMain,
@@ -36,11 +35,11 @@ import type { VariantsMain } from '@teambit/variants';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName, BitId } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
-import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
+import { Consumer, loadConsumer } from '@teambit/legacy.consumer';
 import { GetBitMapComponentOptions, MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList, ExtensionDataEntry, REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy.extension-data';
 import {
   PathOsBased,
   PathOsBasedRelative,
@@ -56,19 +55,19 @@ import {
   BIT_ROOTS_DIR,
   CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS,
   CFG_USER_TOKEN_KEY,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import path from 'path';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { WatchOptions } from '@teambit/watcher';
-import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import type { ComponentLog } from '@teambit/scope.objects';
 import { SourceFile, DataToPersist, JsonVinyl } from '@teambit/component.sources';
-import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
-import { Lane } from '@teambit/legacy/dist/scope/models';
+import { ScopeComponentsImporter } from '@teambit/legacy.scope';
+import { Lane } from '@teambit/scope.objects';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
-import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
+import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { isHash } from '@teambit/component-version';
 import { GlobalConfigMain } from '@teambit/global-config';
-import { getAuthHeader, fetchWithAgent as fetch } from '@teambit/legacy/dist/scope/network/http/http';
+import { getAuthHeader, fetchWithAgent as fetch } from '@teambit/scope.network';
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,
@@ -116,6 +115,7 @@ import {
   ComponentStatusLoader,
   ComponentStatusResult,
 } from './workspace-component/component-status-loader';
+import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
 
 export type EjectConfResult = {
   configPath: string;
@@ -361,14 +361,16 @@ export class Workspace implements ComponentFactory {
     return this.config.icon;
   }
 
+  async getAutoTagInfo(changedComponents: ComponentIdList) {
+    return getAutoTagInfo(this.consumer, changedComponents);
+  }
+
   async listAutoTagPendingComponentIds(): Promise<ComponentID[]> {
     const componentsList = new ComponentsList(this.consumer);
     const modifiedComponents = (await this.modified()).map((c) => c.id);
     const newComponents = (await componentsList.listNewComponents()) as ComponentIdList;
     if (!modifiedComponents || !modifiedComponents.length) return [];
-    const autoTagPending = await this.consumer.listComponentsForAutoTagging(
-      ComponentIdList.fromArray(modifiedComponents)
-    );
+    const autoTagPending = await getAutoTagPending(this.consumer, ComponentIdList.fromArray(modifiedComponents));
     const localOnly = this.listLocalOnly();
     const comps = autoTagPending
       .filter((autoTagComp) => !newComponents.has(autoTagComp.componentId))

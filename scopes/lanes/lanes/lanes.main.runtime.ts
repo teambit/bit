@@ -5,34 +5,28 @@ import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
+import { getRemoteByName } from '@teambit/scope.remotes';
 import { LaneDiffCmd, LaneDiffGenerator, LaneDiffResults, LaneHistoryDiffCmd } from '@teambit/lanes.modules.diff';
-import { LaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
+import { NoCommonSnap, Scope as LegacyScope, TrackLane, LaneData } from '@teambit/legacy.scope';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DiffOptions } from '@teambit/legacy.component-diff';
 import { MergeStrategy, MergeOptions, MergingMain, MergingAspect } from '@teambit/merging';
-import { TrackLane } from '@teambit/legacy/dist/scope/scope-json';
-import { HistoryItem } from '@teambit/legacy/dist/scope/models/lane-history';
 import { FetchCmd, ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
-import { Lane, LaneHistory, Version } from '@teambit/legacy/dist/scope/models';
-import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
-import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
+import { Ref, HistoryItem, Lane, LaneHistory, Version } from '@teambit/scope.objects';
+import { SnapsDistance, getDivergeData } from '@teambit/component.snap-distance';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { compact } from 'lodash';
 import { ComponentCompareMain, ComponentCompareAspect } from '@teambit/component-compare';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
-import { ComponentsList, DivergeDataPerId } from '@teambit/legacy.component-list';
-import { NoCommonSnap } from '@teambit/legacy/dist/scope/exceptions/no-common-snap';
+import { ComponentsList } from '@teambit/legacy.component-list';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { removeLanes } from './remove-lanes';
 import { LanesAspect } from './lanes.aspect';
@@ -115,6 +109,8 @@ export type LaneComponentDiffStatus = {
 export type LaneDiffStatusOptions = {
   skipChanges?: boolean;
 };
+
+export type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
 
 export type LaneDiffStatus = {
   source: LaneId;
@@ -1046,6 +1042,62 @@ please create a new lane instead, which will include all components of this lane
           repo: consumer.scope.objects,
           modelComponent,
           targetHead: headOnForked.head,
+          sourceHead: headOnLane,
+          throws: false,
+        });
+        if (!divergeData.snapsOnTargetOnly.length && !divergeData.err) return undefined;
+        return { id: modelComponent.toComponentId(), divergeData };
+      })
+    );
+
+    return compact(results);
+  }
+
+  /**
+   * list components on a lane that their main got updates.
+   */
+  async listUpdatesFromMainPending(componentsList: ComponentsList): Promise<DivergeDataPerId[]> {
+    const consumer = this.workspace?.consumer;
+    if (!consumer) throw new Error(`unable to get listUpdatesFromForked outside of a workspace`);
+    if (consumer.isOnMain()) {
+      return [];
+    }
+    const allIds = consumer.bitMap.getAllBitIds();
+
+    const duringMergeIds = componentsList.listDuringMergeStateComponents();
+
+    const componentsFromModel = await componentsList.getModelComponents();
+    const compFromModelOnWorkspace = componentsFromModel
+      .filter((c) => allIds.hasWithoutVersion(c.toComponentId()))
+      // if a component is merge-pending, it needs to be resolved first before getting more updates from main
+      .filter((c) => !duringMergeIds.hasWithoutVersion(c.toComponentId()));
+
+    // by default, when on a lane, main is not fetched. we need to fetch it to get the latest updates.
+    await consumer.scope.scopeImporter.importWithoutDeps(
+      ComponentIdList.fromArray(compFromModelOnWorkspace.map((c) => c.toComponentId())),
+      {
+        cache: false,
+        includeVersionHistory: true,
+        ignoreMissingHead: true,
+        reason: 'main components of the current lane to check for updates',
+      }
+    );
+    const results = await Promise.all(
+      compFromModelOnWorkspace.map(async (modelComponent) => {
+        const headOnMain = modelComponent.head;
+        if (!headOnMain) return undefined;
+        const checkedOutVersion = allIds.searchWithoutVersion(modelComponent.toComponentId())?.version;
+        if (!checkedOutVersion) {
+          throw new Error(
+            `listUpdatesFromMainPending: unable to find ${modelComponent.toComponentId()} in the workspace`
+          );
+        }
+        const headOnLane = modelComponent.getRef(checkedOutVersion);
+
+        const divergeData = await getDivergeData({
+          repo: consumer.scope.objects,
+          modelComponent,
+          targetHead: headOnMain,
           sourceHead: headOnLane,
           throws: false,
         });

@@ -1,6 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
-import type { DependenciesInfo } from '@teambit/legacy/dist/scope/graph/scope-graph';
+import type { DependenciesInfo } from '@teambit/legacy.dependency-graph';
 import GraphLib from 'graphlib';
 import { uniq } from 'lodash';
 

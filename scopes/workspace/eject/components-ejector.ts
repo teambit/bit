@@ -8,12 +8,12 @@
  * removing the component files, so then it's easier to rollback.
  */
 import { Workspace } from '@teambit/workspace';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import defaultErrorHandler from '@teambit/legacy/dist/cli/default-error-handler';
-import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
+import { defaultErrorHandler } from '@teambit/cli';
+import { getScopeRemotes } from '@teambit/scope.remotes';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DataToPersist, RemovePath } from '@teambit/component.sources';
 import { Logger } from '@teambit/logger';
 import { InstallMain } from '@teambit/install';

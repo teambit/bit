@@ -5,8 +5,8 @@ import { addDistTag } from '@pnpm/registry-mock';
 import { IssuesClasses } from '@teambit/component-issues';
 import { getAnotherInstallRequiredOutput } from '@teambit/install';
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import { IS_WINDOWS } from '../../src/constants';
+import { Helper } from '@teambit/legacy.e2e-helper';
+import { IS_WINDOWS } from '@teambit/legacy.constants';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));

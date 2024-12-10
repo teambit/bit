@@ -1,22 +1,19 @@
-import { compact } from 'lodash';
 import pFilter from 'p-filter';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import R from 'ramda';
-import { LATEST } from '@teambit/legacy/dist/constants';
-import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
-import { getDivergeData } from '@teambit/legacy/dist/scope/component-ops/get-diverge-data';
-import { Lane } from '@teambit/legacy/dist/scope/models';
-import ModelComponent from '@teambit/legacy/dist/scope/models/model-component';
-import Scope from '@teambit/legacy/dist/scope/scope';
-import { fetchRemoteVersions } from '@teambit/legacy/dist/scope/scope-remotes';
+import { LATEST } from '@teambit/legacy.constants';
+import { ModelComponent, Lane } from '@teambit/scope.objects';
+import { Scope } from '@teambit/legacy.scope';
+import { fetchRemoteVersions } from '@teambit/scope.remotes';
 import { isBitIdMatchByWildcards } from '@teambit/legacy.utils';
 import { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
-import Component from '@teambit/legacy/dist/consumer/component';
-import { InvalidComponent } from '@teambit/legacy/dist/consumer/component/consumer-component';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
+import {
+  ConsumerComponent as Component,
+  InvalidComponent,
+  ComponentLoadOptions,
+} from '@teambit/legacy.consumer-component';
+import { Consumer } from '@teambit/legacy.consumer';
 
-export type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
 export type ListScopeResult = {
   id: ComponentID;
   currentlyUsedVersion?: string | null | undefined;
@@ -26,7 +23,6 @@ export type ListScopeResult = {
   laneReadmeOf?: string[];
 };
 
-export type DivergedComponent = { id: ComponentID; diverge: SnapsDistance };
 export type OutdatedComponent = { id: ComponentID; headVersion: string; latestVersion?: string };
 
 export class ComponentsList {
@@ -38,8 +34,6 @@ export class ComponentsList {
   _modelComponents: ModelComponent[];
   _invalidComponents: InvalidComponent[];
   _removedComponents: Component[];
-  // @ts-ignore
-  private _mergePendingComponents: DivergedComponent[];
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.scope = consumer.scope;
@@ -75,12 +69,13 @@ export class ComponentsList {
     return this.getFromFileSystem(loadOpts);
   }
 
-  async listOutdatedComponents(loadOpts?: ComponentLoadOptions): Promise<OutdatedComponent[]> {
+  async listOutdatedComponents(
+    mergePendingComponentIds: ComponentIdList,
+    loadOpts?: ComponentLoadOptions
+  ): Promise<OutdatedComponent[]> {
     const fileSystemComponents = await this.getComponentsFromFS(loadOpts);
     const componentsFromModel = await this.getModelComponents();
     const unmergedComponents = this.listDuringMergeStateComponents();
-    const mergePendingComponents = await this.listMergePendingComponents();
-    const mergePendingComponentsIds = ComponentIdList.fromArray(mergePendingComponents.map((c) => c.id));
     const currentLane = await this.consumer.getCurrentLaneObject();
     const currentLaneIds = currentLane?.toComponentIds();
     const outdatedComps: OutdatedComponent[] = [];
@@ -95,7 +90,7 @@ export class ComponentsList {
           unmergedComponents.hasWithoutVersion(component.componentId)
         )
           return;
-        if (mergePendingComponentsIds.hasWithoutVersion(component.componentId)) {
+        if (mergePendingComponentIds.hasWithoutVersion(component.componentId)) {
           // by default, outdated include merge-pending since the remote-head and local-head are
           // different, however we want them both to be separated as they need different treatment
           return;
@@ -121,82 +116,6 @@ export class ComponentsList {
       })
     );
     return outdatedComps;
-  }
-
-  /**
-   * list components on a lane that their main got updates.
-   */
-  async listUpdatesFromMainPending(): Promise<DivergeDataPerId[]> {
-    if (this.consumer.isOnMain()) {
-      return [];
-    }
-    const allIds = this.bitMap.getAllBitIds();
-
-    const duringMergeIds = this.listDuringMergeStateComponents();
-
-    const componentsFromModel = await this.getModelComponents();
-    const compFromModelOnWorkspace = componentsFromModel
-      .filter((c) => allIds.hasWithoutVersion(c.toComponentId()))
-      // if a component is merge-pending, it needs to be resolved first before getting more updates from main
-      .filter((c) => !duringMergeIds.hasWithoutVersion(c.toComponentId()));
-
-    // by default, when on a lane, main is not fetched. we need to fetch it to get the latest updates.
-    await this.scope.scopeImporter.importWithoutDeps(
-      ComponentIdList.fromArray(compFromModelOnWorkspace.map((c) => c.toComponentId())),
-      {
-        cache: false,
-        includeVersionHistory: true,
-        ignoreMissingHead: true,
-        reason: 'main components of the current lane to check for updates',
-      }
-    );
-    const results = await Promise.all(
-      compFromModelOnWorkspace.map(async (modelComponent) => {
-        const headOnMain = modelComponent.head;
-        if (!headOnMain) return undefined;
-        const checkedOutVersion = allIds.searchWithoutVersion(modelComponent.toComponentId())?.version;
-        if (!checkedOutVersion) {
-          throw new Error(
-            `listUpdatesFromMainPending: unable to find ${modelComponent.toComponentId()} in the workspace`
-          );
-        }
-        const headOnLane = modelComponent.getRef(checkedOutVersion);
-
-        const divergeData = await getDivergeData({
-          repo: this.scope.objects,
-          modelComponent,
-          targetHead: headOnMain,
-          sourceHead: headOnLane,
-          throws: false,
-        });
-        if (!divergeData.snapsOnTargetOnly.length && !divergeData.err) return undefined;
-        return { id: modelComponent.toComponentId(), divergeData };
-      })
-    );
-
-    return compact(results);
-  }
-
-  async listMergePendingComponents(): Promise<DivergedComponent[]> {
-    if (!this._mergePendingComponents) {
-      const allIds = this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
-      const componentsFromModel = await this.getModelComponents();
-      const duringMergeComps = this.listDuringMergeStateComponents();
-      this._mergePendingComponents = (
-        await Promise.all(
-          allIds.map(async (componentId: ComponentID) => {
-            const modelComponent = componentsFromModel.find((c) =>
-              c.toComponentId().isEqualWithoutVersion(componentId)
-            );
-            if (!modelComponent || duringMergeComps.hasWithoutVersion(componentId)) return null;
-            const divergedData = await modelComponent.getDivergeDataForMergePending(this.scope.objects);
-            if (!divergedData.isDiverged()) return null;
-            return { id: modelComponent.toComponentId(), diverge: divergedData };
-          })
-        )
-      ).filter((x) => x) as DivergedComponent[];
-    }
-    return this._mergePendingComponents;
   }
 
   listDuringMergeStateComponents(): ComponentIdList {

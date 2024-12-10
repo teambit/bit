@@ -1,7 +1,7 @@
 import { ComponentID } from '@teambit/component-id';
 import path from 'path';
 import readPkgUp from 'read-pkg-up';
-import { PACKAGE_JSON } from '@teambit/legacy/dist/constants';
+import { PACKAGE_JSON } from '@teambit/legacy.constants';
 import { PackageJsonFile } from '@teambit/component.sources';
 import { PathLinuxAbsolute, PathOsBased, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import { resolvePackageNameByPath } from '@teambit/legacy.utils';

@@ -17,7 +17,7 @@ import type { EnvsExecutionResult, EnvsMain, ExecutionContext, PreviewEnv } from
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain, UIRoot } from '@teambit/ui';
 import { CacheAspect, CacheMain } from '@teambit/cache';
-import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
+import { CACHE_ROOT } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
 import { uniq } from 'lodash';
@@ -801,7 +801,7 @@ export class PreviewMain {
     return [...linkFiles, previewRuntime];
   }
 
-  private async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
+  async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
     const { rebuild, skipUiBuild } = this.ui.runtimeOptions;
 
     const [name, uiRoot] = this.getUi();
@@ -884,12 +884,12 @@ export class PreviewMain {
     return Promise.all(paths);
   }
 
+  /**
+   * @deprecated
+   * use `writePreviewEntry` instead
+   */
   async writePreviewRuntime(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
-    const [name, uiRoot] = this.getUi();
-    const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
-    const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
-    const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id);
-    return filePath;
+    return this.writePreviewEntry(context, aspectsIdsToNotFilterOut);
   }
 
   async resolveAspects(

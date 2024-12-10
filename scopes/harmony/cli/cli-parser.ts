@@ -1,10 +1,10 @@
 import didYouMean from 'didyoumean';
 import yargs from 'yargs';
-import { Command } from '@teambit/legacy/dist/cli/command';
-import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
+import { Command } from './command';
+import { GroupsType } from './command-groups';
 import { compact } from 'lodash';
-import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { loadConsumerIfExist } from '@teambit/legacy.consumer';
+import { logger } from '@teambit/legacy.logger';
 import { loader } from '@teambit/legacy.loader';
 import chalk from 'chalk';
 import { getCommandId } from './get-command-id';

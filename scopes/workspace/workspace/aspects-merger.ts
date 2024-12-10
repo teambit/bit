@@ -1,10 +1,10 @@
 import { Harmony } from '@teambit/harmony';
 import { Component } from '@teambit/component';
-import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
+import { UnmergedComponent } from '@teambit/legacy.scope';
 import { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
-import { ExtensionDataList, getCompareExtPredicate } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList, getCompareExtPredicate } from '@teambit/legacy.extension-data';
 import { partition, mergeWith, merge, uniq, uniqWith, compact } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { AspectSpecificField, ExtensionsOrigin, Workspace } from './workspace';

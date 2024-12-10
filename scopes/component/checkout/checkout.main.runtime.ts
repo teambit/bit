@@ -12,13 +12,13 @@ import {
   MergeStrategy,
 } from '@teambit/merging';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
-import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
+import { HEAD, LATEST } from '@teambit/legacy.constants';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import mapSeries from 'p-map-series';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import { Version, ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
-import { Tmp } from '@teambit/legacy/dist/scope/repositories';
-import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
+import { Version, ModelComponent, Lane } from '@teambit/scope.objects';
+import { Tmp } from '@teambit/legacy.scope';
+import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
 import { applyVersion, ComponentStatus, ComponentStatusBase, throwForFailures } from './checkout-version';

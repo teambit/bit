@@ -1,12 +1,11 @@
-import Bluebird from 'bluebird';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import semver from 'semver';
-import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { Analytics } from '@teambit/legacy.analytics';
 import { handleUnhandledRejection } from '@teambit/cli';
-import { BIT_VERSION, GLOBAL_CONFIG, GLOBAL_LOGS } from '@teambit/legacy/dist/constants';
-import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambit/legacy/dist/logger/logger';
+import { GLOBAL_CONFIG, GLOBAL_LOGS } from '@teambit/legacy.constants';
+import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambit/legacy.logger';
 import { loader } from '@teambit/legacy.loader';
 
 const RECOMMENDED_NODE_VERSIONS = '>=20.0.0 <23.0.0';
@@ -25,6 +24,9 @@ const originalEmit = process.emit;
 // @ts-expect-error - TS complains about the return type of originalEmit.apply
 process.emit = function (name, data) {
   // --------------------------------------------
+
+  // 1. avoid punycode deprecation warning
+  //
   // this fix is based on yarn fix for the similar issue, see code here:
   // https://github.com/yarnpkg/berry/blob/2cf0a8fe3e4d4bd7d4d344245d24a85a45d4c5c9/packages/yarnpkg-pnp/sources/loader/applyPatch.ts#L414-L435
   // ignore punycode deprecation warning
@@ -42,25 +44,26 @@ process.emit = function (name, data) {
   // but we don't want to override it automatically for all the users
   // there are many other packages (like webpack, eslint, etc) that are using this uri-js package
   // so if we won't ignore it, all users will get this warning
+  //
+  // 2. ignore util._extend deprecation warning
+  //
+  // this warning is coming from the http-proxy package
+  // see: https://github.com/http-party/node-http-proxy/pull/1666
   if (
-    name === `warning` &&
-    typeof data === `object` &&
-    ((data.name === `DeprecationWarning` && data.message.includes(`punycode`)) || data.code === `DEP0040`)
+    // filter out the warning
+    (name === `warning` &&
+      typeof data === `object` &&
+      ((data.name === `DeprecationWarning` && data.message.includes(`punycode`)) || data.code === `DEP0040`)) ||
+    (data.name === `DeprecationWarning` && data.message.includes(`util._extend`)) ||
+    data.code === `DEP0060`
   )
     return false;
+
   // --------------------------------------------
 
   // eslint-disable-next-line prefer-rest-params
   return originalEmit.apply(process, arguments as unknown as Parameters<typeof process.emit>);
 };
-
-// by default Bluebird enables the longStackTraces when env is `development`, or when
-// BLUEBIRD_DEBUG is set.
-// the drawback of enabling it all the time is a performance hit. (see http://bluebirdjs.com/docs/api/promise.longstacktraces.html)
-// some commands are slower by 20% with this enabled.
-Bluebird.config({
-  longStackTraces: Boolean(process.env.BLUEBIRD_DEBUG || process.env.BIT_LOG),
-});
 
 export async function bootstrap() {
   enableLoaderIfPossible();
@@ -110,12 +113,8 @@ function warnIfRunningAsRoot() {
 export function printBitVersionIfAsked() {
   if (process.argv[2]) {
     if (['-V', '-v', '--version'].includes(process.argv[2])) {
-      const harmonyVersion = getBitVersionGracefully();
-      if (harmonyVersion) {
-        console.log(harmonyVersion); // eslint-disable-line no-console
-      } else {
-        console.log(BIT_VERSION); // eslint-disable-line no-console
-      }
+      const harmonyVersion = getBitVersion();
+      console.log(harmonyVersion); // eslint-disable-line no-console
       process.exit();
     }
   }

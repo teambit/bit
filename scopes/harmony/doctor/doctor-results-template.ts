@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { table } from 'table';
+import type { Alignment } from 'table';
 import { DoctorMetaData, DoctorRunAllResults } from './doctor.main.runtime';
 import { ExamineResult } from './diagnosis';
 
@@ -8,7 +9,7 @@ import { ExamineResult } from './diagnosis';
 
 const summeryTableColumnConfig = {
   columnDefault: {
-    alignment: 'left',
+    alignment: 'left' as Alignment,
   },
 };
 

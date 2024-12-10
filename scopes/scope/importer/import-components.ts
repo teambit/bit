@@ -2,11 +2,10 @@ import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Consumer } from '@teambit/legacy/dist/consumer';
-import { Scope } from '@teambit/legacy/dist/scope';
-import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
+import { ComponentsPendingMerge, Consumer } from '@teambit/legacy.consumer';
+import { Lane, ModelComponent, Version } from '@teambit/scope.objects';
 import { getLatestVersionNumber, pathNormalizeToLinux, hasWildcard } from '@teambit/legacy.utils';
-import Component from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { applyModifiedVersion } from '@teambit/checkout';
 import {
   FileStatus,
@@ -17,11 +16,12 @@ import {
   MergeResultsThreeWay,
   FilesStatus,
 } from '@teambit/merging';
-import ComponentsPendingMerge from '@teambit/legacy/dist/consumer/exceptions/components-pending-merge';
-import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
-import VersionDependencies, {
+import {
   multipleVersionDependenciesToConsumer,
-} from '@teambit/legacy/dist/scope/version-dependencies';
+  VersionDependencies,
+  ScopeComponentsImporter,
+  Scope,
+} from '@teambit/legacy.scope';
 import { GraphMain } from '@teambit/graph';
 import { Workspace } from '@teambit/workspace';
 import { ComponentWriterMain, ComponentWriterResults, ManyComponentsWriterParams } from '@teambit/component-writer';

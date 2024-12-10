@@ -3,7 +3,7 @@ import { compact, flatten } from 'lodash';
 import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { Menu, MenuWidgetSlot, MenuWidget } from '@teambit/ui-foundation.ui.menu';
+import { MenuWidgetSlot, MenuWidget } from '@teambit/ui-foundation.ui.menu';
 import { SidebarAspect, SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
 import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
@@ -24,7 +24,7 @@ import {
   ComponentFiltersSlot,
 } from '@teambit/component.ui.component-drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
-import { Workspace } from './ui';
+import { Workspace, WorkspaceMenu } from './ui';
 import { WorkspaceAspect } from './workspace.aspect';
 import { workspaceDrawer } from './workspace.ui.drawer';
 
@@ -262,7 +262,7 @@ export class WorkspaceUI {
     workspaceUI.registerMenuRoutes([
       {
         path: '/',
-        element: <Menu menuItemSlot={workspaceUI.menuItemSlot} widgetSlot={workspaceUI.menuWidgetSlot} />,
+        element: <WorkspaceMenu menuItemSlot={workspaceUI.menuItemSlot} widgetSlot={workspaceUI.menuWidgetSlot} />,
       },
       {
         path: workspaceUI.componentUi.routePath,

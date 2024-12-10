@@ -7,18 +7,18 @@ import { ScopeAspect, ScopeMain, ComponentNotFound } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Component, ComponentID } from '@teambit/component';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { BuildStatus, LATEST } from '@teambit/legacy.constants';
 import { ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
 import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { LanesAspect, Lane, LanesMain } from '@teambit/lanes';
-import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { UpdateDependenciesCmd } from './update-dependencies.cmd';
 import { UpdateDependenciesAspect } from './update-dependencies.aspect';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { Ref } from '@teambit/scope.objects';
 import { isSnap } from '@teambit/component-version';
 
 export type UpdateDepsOptions = {

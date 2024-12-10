@@ -7,10 +7,9 @@ import R from 'ramda';
 import { serializeError } from 'serialize-error';
 import uniqid from 'uniqid';
 import yn from 'yn';
-import { getSync, setSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
-import { CLIArgs } from '@teambit/legacy/dist/cli/command';
+import { getSync, setSync } from '@teambit/legacy.global-config';
+import { CLIArgs } from '@teambit/cli';
 import {
-  BIT_VERSION,
   CFG_ANALYTICS_ANONYMOUS_KEY,
   CFG_ANALYTICS_ENVIRONMENT_KEY,
   CFG_ANALYTICS_ERROR_REPORTS_KEY,
@@ -19,8 +18,9 @@ import {
   CFG_USER_EMAIL_KEY,
   CFG_USER_NAME_KEY,
   DEFAULT_BIT_ENV,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { analyticsPrompt, errorReportingPrompt } from '@teambit/legacy.cli.prompts';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 
 const LEVEL = {
   DEBUG: 'debug',
@@ -136,7 +136,7 @@ class Analytics {
     this.anonymous = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
     this.command = command;
     this.flags = this._hashFlags(flags);
-    this.release = BIT_VERSION;
+    this.release = getBitVersion();
     this.args = this._hashArgs(args);
     this.nodeVersion = process.version;
     this.os = process.platform;

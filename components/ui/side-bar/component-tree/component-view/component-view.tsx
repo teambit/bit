@@ -47,15 +47,25 @@ export function ComponentView(props: ComponentViewProps) {
   component = component as ComponentModel;
 
   const envId = !isMissingCompOrEnvId ? ComponentID.fromString(component.environment?.id as string) : undefined;
+  const isEnvOnCurrentLane = envId
+    ? lanesModel?.isComponentOnLaneButNotOnMain(envId, false, lanesModel.viewedLane?.id)
+    : false;
+
+  const envUrl = !envId
+    ? undefined
+    : (isEnvOnCurrentLane &&
+        lanesModel?.viewedLane?.id &&
+        `${window.location.origin}${LanesModel.getLaneComponentUrl(envId, lanesModel.viewedLane?.id)}`) ||
+      ComponentUrl.toUrl(envId, {
+        includeVersion: true,
+        useLocationOrigin: !window.location.host.startsWith('localhost'),
+      });
 
   const envTooltip = envId ? (
     <Link
       external
       className={styles.envLink}
-      href={ComponentUrl.toUrl(envId, {
-        includeVersion: true,
-        useLocationOrigin: !window.location.host.startsWith('localhost'),
-      })}
+      href={envUrl}
       onClick={(event) => {
         // do not trigger component selection
         event.stopPropagation();

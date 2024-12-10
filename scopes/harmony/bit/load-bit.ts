@@ -27,22 +27,20 @@ import { Harmony, RuntimeDefinition, Extension } from '@teambit/harmony';
 import { Config } from '@teambit/harmony/dist/harmony-config';
 import { readConfigFile } from '@teambit/harmony/dist/harmony-config/config-reader';
 import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
-import { loadConsumer } from '@teambit/legacy/dist/consumer';
+import { loadConsumer } from '@teambit/legacy.consumer';
 import { getWorkspaceInfo, WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { BitError } from '@teambit/bit-error';
-import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
-import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
-import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
+import { ComponentLoader } from '@teambit/legacy.consumer-component';
+import { LegacyWorkspaceConfig, ComponentOverrides, ComponentConfig } from '@teambit/legacy.consumer-config';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { satisfies } from 'semver';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { ClearCacheAspect } from '@teambit/clear-cache';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
-import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { ExternalActions } from '@teambit/legacy.scope-api';
 import { readdir, readFile } from 'fs-extra';
 import { resolve, join } from 'path';
@@ -367,9 +365,9 @@ export function takeLegacyGlobalsSnapshot(): LegacyGlobal[] {
       empty: [],
     },
     {
-      classInstance: WorkspaceConfig,
+      classInstance: LegacyWorkspaceConfig,
       methodName: 'workspaceConfigLoadingRegistry',
-      value: WorkspaceConfig.workspaceConfigLoadingRegistry,
+      value: LegacyWorkspaceConfig.workspaceConfigLoadingRegistry,
       empty: undefined,
     },
     {

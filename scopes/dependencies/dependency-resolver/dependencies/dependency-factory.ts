@@ -1,4 +1,4 @@
-import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
 import { Dependency, SerializedDependency } from './dependency';
 import { DependencyList } from './dependency-list';
 

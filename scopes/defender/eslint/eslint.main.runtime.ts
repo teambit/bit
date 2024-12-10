@@ -8,7 +8,7 @@ import {
   EslintConfigTransformContext,
   EslintConfigTransformer,
 } from '@teambit/defender.eslint.config-mutator';
-import { getCloudDomain } from '@teambit/legacy/dist/constants';
+import { getCloudDomain } from '@teambit/legacy.constants';
 import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { ESLintAspect } from './eslint.aspect';
 import { ESLintLinter } from './eslint.linter';
