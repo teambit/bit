@@ -702,7 +702,6 @@
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
         "@teambit/base-react.navigation.link": "2.0.31",
-        // "@teambit/legacy": "1.0.770",
         "@testing-library/react": "^12.1.5",
         "core-js": "^3.10.0",
         "graphql": "15.8.0",
@@ -746,7 +745,7 @@
         "react",
         "react-dom",
         "@testing-library/react",
-        // "@teambit/legacy",
+        "@teambit/legacy",
         "typescript"
       ],
       "ignoreMissing": []
@@ -784,12 +783,9 @@
     "{*/**}": {
       "teambit.dependencies/dependency-resolver": {
         "policy": {
-          "dependencies": {
-            "@teambit/legacy": "-"
-          },
+          "dependencies": {},
           "devDependencies": {
-            "@types/mocha": "9.1.0",
-            "@teambit/legacy": "-"
+            "@types/mocha": "9.1.0"
           },
           "peerDependencies": {}
         }
@@ -831,7 +827,7 @@
             "@teambit/base-react.navigation.link": "2.0.31",
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
-            // "@teambit/legacy": "1.0.770",
+            "@teambit/legacy": "2.0.0",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
