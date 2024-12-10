@@ -1,4 +1,3 @@
-import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { SourceFile } from '@teambit/component.sources';
 import { MainRuntime } from '@teambit/cli';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
@@ -7,7 +6,10 @@ import { SlotRegistry, Slot } from '@teambit/harmony';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { EnvsAspect } from '@teambit/envs';
 import type { EnvJsonc, EnvsMain } from '@teambit/envs';
-import { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
+import {
+  ConsumerComponent as LegacyComponent,
+  Dependency as LegacyDependency,
+} from '@teambit/legacy.consumer-component';
 import { Component, ComponentMain, ComponentAspect } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { DevFilesAspect } from './dev-files.aspect';

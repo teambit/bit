@@ -1,6 +1,5 @@
 import pMap from 'p-map';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
-import { Dependencies } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { Component, ComponentFS, Config, InvalidComponent, State, TagMap } from '@teambit/component';
@@ -11,6 +10,7 @@ import {
   ComponentNotFoundInPath,
   ConsumerComponent,
   ComponentLoadOptions as LegacyComponentLoadOptions,
+  Dependencies,
 } from '@teambit/legacy.consumer-component';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { IssuesClasses } from '@teambit/component-issues';

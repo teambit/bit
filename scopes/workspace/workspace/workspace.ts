@@ -1,6 +1,5 @@
 /* eslint-disable max-lines */
 import memoize from 'memoizee';
-import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { parse } from 'comment-json';
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -57,7 +56,7 @@ import {
   CFG_USER_TOKEN_KEY,
 } from '@teambit/legacy.constants';
 import path from 'path';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent, Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog } from '@teambit/scope.objects';
 import { SourceFile, DataToPersist, JsonVinyl } from '@teambit/component.sources';

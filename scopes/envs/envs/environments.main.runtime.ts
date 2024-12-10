@@ -1,5 +1,5 @@
 import { isCoreAspect } from '@teambit/bit';
-import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
+import { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import pLocate from 'p-locate';
 import { parse } from 'comment-json';
 import { SourceFile } from '@teambit/component.sources';
