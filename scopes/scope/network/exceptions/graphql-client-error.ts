@@ -1,6 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 import { ClientError } from 'graphql-request';
-import { PermissionDenied } from '.';
+import PermissionDenied from './permission-denied';
 
 /**
  * @see https://www.npmjs.com/package/graphql-request#error-handling
