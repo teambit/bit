@@ -24,7 +24,6 @@ import { Dist, License, SourceFile, PackageJsonFile, DataToPersist } from '@team
 import {
   ComponentConfig,
   ComponentConfigLoadOptions,
-  ILegacyWorkspaceConfig,
   ComponentOverrides,
   getBindingPrefixByDefaultScope,
 } from '@teambit/legacy.consumer-config';
