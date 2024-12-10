@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
-import { objectListToGraph, IdGraph } from '@teambit/graph';
+import type { IdGraph } from '@teambit/graph';
+import { objectListToGraph } from '@teambit/graph/dist/object-list-to-graph';
 import { loadBit } from '@teambit/bit';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { ModelComponent, Version } from '@teambit/scope.objects';
