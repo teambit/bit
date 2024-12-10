@@ -18,8 +18,7 @@ import pMapSeries from 'p-map-series';
 import fs from 'fs-extra';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { createRoot } from '@teambit/harmony.modules.harmony-root-generator';
-import { join, resolve } from 'path';
-import { promisify } from 'util';
+import { join, resolve as pathResolve } from 'path';
 import webpack from 'webpack';
 import { UiServerStartedEvent } from './events';
 import { UnknownUI, UnknownBuildError } from './exceptions';
@@ -239,10 +238,14 @@ export class UiMain {
 
     const compiler = webpack(config);
     this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" running webpack`);
-    const compilerRun = promisify(compiler.run.bind(compiler));
-    const results = await compilerRun();
+    const [results, errors] = await this.runWebpackPromise(compiler);
+
     this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" completed webpack`);
     if (!results) throw new UnknownBuildError();
+    if (errors) {
+      this.clearConsole();
+      throw new Error(errors);
+    }
     if (results?.hasErrors()) {
       this.clearConsole();
       throw new Error(results?.toString());
@@ -254,6 +257,23 @@ export class UiMain {
   registerStartPlugin(startPlugin: StartPlugin) {
     this.startPluginSlot.register(startPlugin);
     return this;
+  }
+
+  private async runWebpackPromise(
+    compiler: webpack.MultiCompiler
+  ): Promise<[webpack.MultiStats | undefined, string | undefined]> {
+    return new Promise((resolve) =>
+      // TODO: split to multiple processes to reduce time and configure concurrent builds.
+      // @see https://github.com/trivago/parallel-webpack
+      compiler.run((err, stats) => {
+        if (err) {
+          this.logger.error('get error from webpack compiler, when bundling ui server, full error:', err);
+
+          return resolve([undefined, `${err.toString()}\n${err.stack}`]);
+        }
+        return resolve([stats, undefined]);
+      })
+    );
   }
 
   private async initiatePlugins(options: StartPluginOptions) {
@@ -468,7 +488,7 @@ export class UiMain {
       harmonyPackage,
       shouldRun
     );
-    const filepath = resolve(join(path || __dirname, `${runtimeName}.root${sha1(contents)}.js`));
+    const filepath = pathResolve(join(path || __dirname, `${runtimeName}.root${sha1(contents)}.js`));
     if (fs.existsSync(filepath)) return filepath;
     fs.outputFileSync(filepath, contents);
     return filepath;

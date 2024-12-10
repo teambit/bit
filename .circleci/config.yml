@@ -382,26 +382,6 @@ jobs:
           name: 'notify community slack'
           command: 'cd bit && node ./scripts/slack-deploy-notification.js community'
 
-  unit_test:
-    <<: *defaults
-    steps:
-      - run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      - attach_workspace:
-          at: ./
-      - run: 'cd bit && mkdir junit'
-      - run:
-          name: 'Run unit tests'
-          command: 'cd bit && npm run test-circle'
-          environment:
-            FORCE_COLOR: 1
-            MOCHA_FILE: junit/unit-test-results.xml
-          when: always
-      - store_test_results:
-          path: bit/junit
-      - store_artifacts:
-          path: bit/junit
 
   lint:
     <<: *defaults
@@ -586,7 +566,7 @@ jobs:
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
-      - run: cd bit && node scripts/bump-bit-legacy-ver.js
+      # - run: cd bit && node scripts/bump-bit-legacy-ver.js
       - run: bvm link
       - run: cd bit && bit config set force_local_build true
       # temporary, check if we can remove it
@@ -1249,9 +1229,6 @@ workflows:
           requires:
             - set_npm_registries
             - checkout_code
-      - unit_test:
-          requires:
-            - setup_harmony
       - lint:
           requires:
             - setup_harmony

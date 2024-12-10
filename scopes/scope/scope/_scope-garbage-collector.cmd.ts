@@ -1,5 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import { GarbageCollectorOpts } from '@teambit/legacy/dist/scope/scope';
+import { GarbageCollectorOpts } from '@teambit/legacy.scope';
 import { ScopeMain } from './scope.main.runtime';
 
 /**

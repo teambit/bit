@@ -5,7 +5,7 @@ import { fetch } from '@pnpm/fetch';
 import execa from 'execa';
 import * as path from 'path';
 
-import Helper from '../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 const skipRegistryTests = process.env.SKIP_REGISTRY_TESTS === 'True' || process.env.SKIP_REGISTRY_TESTS === 'true';
 export const supportNpmCiRegistryTesting = !skipRegistryTests;

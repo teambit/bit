@@ -1,4 +1,4 @@
-import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
+import { Consumer, loadConsumer } from '@teambit/legacy.consumer';
 import { NothingToCompareTo } from './nothing-to-compare-to';
 
 export async function getConsumerComponent({

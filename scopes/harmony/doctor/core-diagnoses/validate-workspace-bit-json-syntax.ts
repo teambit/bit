@@ -1,5 +1,5 @@
-import { loadConsumer } from '@teambit/legacy/dist/consumer';
-import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
+import { loadConsumer } from '@teambit/legacy.consumer';
+import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
 export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
@@ -21,7 +21,7 @@ export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
     const consumer = await loadConsumer();
     const consumerPath = consumer.getPath();
     try {
-      await WorkspaceConfig.loadIfExist(consumerPath, consumer.scope.path);
+      await LegacyWorkspaceConfig.loadIfExist(consumerPath, consumer.scope.path);
       return {
         valid: true,
       };

@@ -8,7 +8,7 @@ import { instance } from '@viz-js/viz';
 import { Graph as ClearGraph } from '@teambit/graph.cleargraph';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import * as path from 'path';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 
 export type GraphConfig = {
   layout?: string; // dot Layout to use in the graph

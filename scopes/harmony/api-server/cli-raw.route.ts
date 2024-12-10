@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import chalk from 'chalk';
 import { Route, Request, Response } from '@teambit/express';
 import { Logger } from '@teambit/logger';
-import legacyLogger, { getLevelFromArgv } from '@teambit/legacy/dist/logger/logger';
+import { logger as legacyLogger, getLevelFromArgv } from '@teambit/legacy.logger';
 import { reloadFeatureToggle } from '@teambit/harmony.modules.feature-toggle';
 import { loader } from '@teambit/legacy.loader';
 import { APIForIDE } from './api-for-ide';

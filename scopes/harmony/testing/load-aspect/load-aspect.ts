@@ -1,5 +1,5 @@
 import { resolve, join } from 'path';
-import { loadConsumer } from '@teambit/legacy/dist/consumer';
+import { loadConsumer } from '@teambit/legacy.consumer';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { readdirSync } from 'fs';
@@ -9,11 +9,9 @@ import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
 import { ComponentID } from '@teambit/component';
 import { CLIAspect } from '@teambit/cli';
 import { NodeAspect } from '@teambit/node';
-import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
-import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
-import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
+import { ComponentLoader } from '@teambit/legacy.consumer-component';
+import { LegacyWorkspaceConfig, ComponentOverrides, ComponentConfig } from '@teambit/legacy.consumer-config';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { DependenciesAspect } from '@teambit/dependencies';
 
 function getPackageName(aspect: any, id: ComponentID) {
@@ -131,5 +129,5 @@ function clearGlobalsIfNeeded() {
   // registerCoreExtensions() from @teambit/bit, which as far as I remember should not be a dependency of this aspect.
   // ExtensionDataList.coreExtensionsNames = new Map();
   // @ts-ignore
-  WorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
+  LegacyWorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
 }

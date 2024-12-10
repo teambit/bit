@@ -1,5 +1,5 @@
 import { ComponentID, AspectList, AspectEntry, ResolveComponentIdFunc } from '@teambit/component';
-import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
+import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
 import {
   ExtensionDataList,
   configEntryToDataEntry,

@@ -1,6 +1,6 @@
 import { Harmony } from '@teambit/harmony';
 import { Component } from '@teambit/component';
-import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
+import { UnmergedComponent } from '@teambit/legacy.scope';
 import { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';

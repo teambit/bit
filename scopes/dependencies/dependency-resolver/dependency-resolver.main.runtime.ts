@@ -22,13 +22,13 @@ import {
   CFG_USER_TOKEN_KEY,
   CFG_ISOLATED_SCOPE_CAPSULES,
   getCloudDomain,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { DetectorHook } from '@teambit/dependencies';
-import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
+import { Http, ProxyConfig, NetworkConfig } from '@teambit/scope.network';
 import { onTagIdTransformer } from '@teambit/snapping';
-import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
 import fs from 'fs-extra';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
@@ -93,7 +93,7 @@ import { EnvPolicy } from './policy/env-policy';
 export const BIT_CLOUD_REGISTRY = `https://node-registry.${getCloudDomain()}/`;
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
-export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
+export { ProxyConfig, NetworkConfig } from '@teambit/scope.network';
 
 export interface DependencyResolverComponentData {
   packageName: string;

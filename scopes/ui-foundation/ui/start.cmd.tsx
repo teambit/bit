@@ -1,6 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 import { Command, CommandOptions } from '@teambit/cli';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { Logger } from '@teambit/logger';
 import openBrowser from 'react-dev-utils/openBrowser';
 import chalk from 'chalk';
@@ -112,7 +112,13 @@ Bit server is running on ${chalk.cyan(url)}`);
         }
         return undefined;
       })
-      .catch((error) => this.logger.error(error));
+      .catch((error) => {
+        this.logger.error(`failed to start the UI server. ${error.message}`);
+        // spinnies.fail('ui-server', { text: `failed to start the UI server. ${error.message}` });
+        throw new Error(
+          'failed to start the UI server, please try running the command with --log flag, or check bit debug.log file (see its location by running bit globals)'
+        );
+      });
 
     // DO NOT CHANGE THIS - this meant to be an async hook.
     // eslint-disable-next-line @typescript-eslint/no-floating-promises

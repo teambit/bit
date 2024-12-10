@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import gitignore from 'parse-gitignore';
 
-import { GIT_IGNORE, IGNORE_LIST } from '@teambit/legacy/dist/constants';
+import { GIT_IGNORE, IGNORE_LIST } from '@teambit/legacy.constants';
 
 export const BIT_IGNORE = '.bitignore';
 

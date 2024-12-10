@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { MergeStrategy } from '@teambit/merging';
 import { Command, CommandOptions } from '@teambit/cli';
 import { CheckoutProps } from '@teambit/checkout';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import { StashMain } from './stash.main.runtime';
 

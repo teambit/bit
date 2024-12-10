@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
 import prettyTime from 'pretty-time';
 import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
 import { BuilderMain } from './builder.main.runtime';
 import { IssuesClasses } from '@teambit/component-issues';

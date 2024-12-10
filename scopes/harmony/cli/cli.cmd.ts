@@ -1,8 +1,8 @@
 // eslint-disable-next-line max-classes-per-file
-import type { Command, CommandOptions } from '@teambit/legacy/dist/cli/command';
-import legacyLogger from '@teambit/legacy/dist/logger/logger';
+import type { Command, CommandOptions } from './command';
+import { logger as legacyLogger } from '@teambit/legacy.logger';
 import { handleErrorAndExit } from './handle-errors';
-import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
+import { loadConsumerIfExist } from '@teambit/legacy.consumer';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import readline from 'readline';
 import { CLIParser } from './cli-parser';

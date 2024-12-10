@@ -37,14 +37,14 @@ import {
   writeLockfileFile,
   convertToLockfileFile as convertLockfileObjectToLockfileFile,
 } from '@pnpm/lockfile.fs';
-import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
-import { ServerSendOutStream } from '@teambit/legacy/dist/logger/pino-logger';
+import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
+import { ServerSendOutStream } from '@teambit/legacy.logger';
 import { join } from 'path';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
-import { type DependenciesGraph } from '@teambit/legacy/dist/scope/models/dependencies-graph';
+import { type DependenciesGraph } from '@teambit/scope.objects';
 
 export type { RebuildFn };
 
