@@ -6,7 +6,6 @@
   "preferGlobal": true,
   "private": false,
   "files": [
-    "/bin",
     "/dist"
   ],
   "engines": {
@@ -23,9 +22,6 @@
       "dist/analytics/analytics-sender.js",
       "dist/specs-runner/worker.js"
     ]
-  },
-  "bin": {
-    "bit": "bin/bit.js"
   },
   "repository": {
     "type": "git",
@@ -66,8 +62,8 @@
     "performance-test-circle": "mocha --require ./babel-register --reporter mocha-multi-reporters --reporter-options configFile=mocha-multi-reporters-config.json --colors ./e2e/performance/*.performance*.ts",
     "bit-hub-test-circle": "mocha --require ./babel-register --reporter mocha-multi-reporters --reporter-options configFile=mocha-multi-reporters-config.json --colors ./e2e/bit-hub/*.ts",
     "setup": "bit install &&  bit compile",
-    "full-setup": "rm -rf node_modules/.bin/bit && bit install && husky install && bit compile",
-    "full-setup:bbit": "rm -rf node_modules/.bin/bbit && bbit install && husky install && bbit compile",
+    "full-setup": "rm -rf node_modules/.bin/bit && bit install && husky install && bit compile && rm -rf node_modules/.bin/bit",
+    "full-setup:bbit": "rm -rf node_modules/.bin/bbit && bbit install && husky install && bbit compile && rm -rf node_modules/.bin/bit",
     "full-setup:windows": "bit install && husky install && bit compile",
     "full-setup:windows:bbit": "rm -rf node_modules/.bin && bbit install && npx husky install && echo 'please run `bbit compile`'",
     "husky:install": "husky install",
