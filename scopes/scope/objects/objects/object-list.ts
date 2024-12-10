@@ -2,7 +2,7 @@ import tarStream from 'tar-stream';
 import pMap from 'p-map';
 import { compact } from 'lodash';
 import { Readable, PassThrough, pipeline } from 'stream';
-import { BitObject } from '.';
+import BitObject from './object';
 import { BitObjectList } from './bit-object-list';
 import Ref from './ref';
 import { logger } from '@teambit/legacy.logger';

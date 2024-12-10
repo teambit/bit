@@ -1,4 +1,4 @@
-import { AbstractVinyl } from '.';
+import AbstractVinyl from './abstract-vinyl';
 
 export class ArtifactVinyl extends AbstractVinyl {
   url?: string;
