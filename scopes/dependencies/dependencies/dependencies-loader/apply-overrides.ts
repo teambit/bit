@@ -3,7 +3,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { cloneDeep, difference, forEach, isEmpty, pick, pickBy, uniq } from 'lodash';
 import { IssuesList, IssuesClasses, MissingPackagesData } from '@teambit/component-issues';
 import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy.constants';
-import { ConsumerComponent as Component, Dependency } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent as Component, Dependency, Dependencies } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile } from '@teambit/component.sources';
 import { PathLinux, resolvePackagePath } from '@teambit/legacy.utils';
 import { ResolvedPackageData, resolvePackageData } from '../resolve-pkg-data';
@@ -11,10 +11,11 @@ import { Workspace } from '@teambit/workspace';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Consumer } from '@teambit/legacy.consumer';
 import { ComponentMap } from '@teambit/legacy.bit-map';
+import { Logger } from '@teambit/logger';
+import { ComponentOverrides } from '@teambit/legacy.consumer-config';
 import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';
 import { DebugDependencies, FileType } from './auto-detect-deps';
-import { Logger } from '@teambit/logger';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -76,6 +77,26 @@ export class ApplyOverrides {
     this.debugDependenciesData = { components: [] };
   }
 
+  private async setOverridesDependencies() {
+    const overrides = await this.getOverridesData();
+    this.component.overrides = overrides;
+  }
+
+  private getEnvExtendsDeps() {
+    const wsDeps = this.allDependencies.dependencies || [];
+    const modelDeps = this.component.componentFromModel?.dependencies.dependencies || [];
+    const merged = Dependencies.merge([wsDeps, modelDeps]);
+    return merged.get();
+  }
+
+  private async getOverridesData() {
+    if (this.component.overrides) return this.component.overrides;
+
+    const overrides = await ComponentOverrides.loadFromConsumer(this.component, this.getEnvExtendsDeps());
+
+    return overrides;
+  }
+
   get consumer(): Consumer | undefined {
     return this.workspace?.consumer;
   }
@@ -85,6 +106,7 @@ export class ApplyOverrides {
     overridesDependencies: OverridesDependencies;
     autoDetectOverrides?: Record<string, any>;
   }> {
+    await this.setOverridesDependencies();
     await this.populateDependencies();
     const dependenciesData = new DependenciesData(
       this.allDependencies,
@@ -187,7 +209,8 @@ export class ApplyOverrides {
     this.autoDetectOverrides = await this.workspace?.getAutoDetectOverrides(
       this.component.extensions,
       this.component.id,
-      this.component.files
+      this.component.files,
+      this.getEnvExtendsDeps()
     );
   }
 
@@ -581,7 +604,11 @@ export class ApplyOverrides {
   }
 
   private async applyAutoDetectedPeersFromEnvOnEnvItSelf(): Promise<void> {
-    const envPolicy = await this.depsResolver.getEnvPolicyFromEnvId(this.component.id, this.component.files);
+    const envPolicy = await this.depsResolver.getEnvPolicyFromEnvId(
+      this.component.id,
+      this.component.files,
+      this.getEnvExtendsDeps()
+    );
     if (!envPolicy) return;
     const envPolicyManifest = envPolicy.selfPolicy.toVersionManifest();
 

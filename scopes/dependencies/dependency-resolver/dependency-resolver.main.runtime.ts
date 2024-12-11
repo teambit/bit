@@ -28,7 +28,10 @@ import { componentIdToPackageName } from '@teambit/pkg.modules.component-package
 import { DetectorHook } from '@teambit/dependencies';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/scope.network';
 import { onTagIdTransformer } from '@teambit/snapping';
-import { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
+import {
+  ConsumerComponent as LegacyComponent,
+  Dependency as LegacyDependency,
+} from '@teambit/legacy.consumer-component';
 import fs from 'fs-extra';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
@@ -1030,8 +1033,12 @@ export class DependencyResolverMain {
     return this.getComponentEnvPolicyFromEnv(env.env, { envId });
   }
 
-  async getEnvPolicyFromEnvId(id: ComponentID, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
-    const fromFile = await this.getEnvPolicyFromFile(id.toString(), legacyFiles);
+  async getEnvPolicyFromEnvId(
+    id: ComponentID,
+    legacyFiles?: SourceFile[],
+    envExtendsDeps?: LegacyDependency[]
+  ): Promise<EnvPolicy | undefined> {
+    const fromFile = await this.getEnvPolicyFromFile(id.toString(), legacyFiles, envExtendsDeps);
     if (fromFile) return fromFile;
     const envDef = this.envs.getEnvDefinitionById(id);
     if (!envDef) return undefined;
@@ -1058,14 +1065,25 @@ export class DependencyResolverMain {
     }
     const fromFile = await this.getEnvPolicyFromFile(envId.toString());
     if (fromFile) return fromFile;
+
     this.envsWithoutManifest.add(envId.toString());
     const env = this.envs.getEnv(component).env;
     return this.getComponentEnvPolicyFromEnv(env, { envId: envIdWithoutVersion });
   }
 
-  getEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): EnvPolicy | undefined {
-    const object = this.envs.getEnvManifest(envComponent, legacyFiles) as any;
-    const policy = object?.policy;
+  async getEnvManifest(
+    envComponent?: Component,
+    legacyFiles?: SourceFile[],
+    envExtendsDeps?: LegacyDependency[]
+  ): Promise<EnvPolicy | undefined> {
+    let envManifest;
+    if (envComponent) {
+      envManifest = this.envs.getEnvManifest(envComponent) as any;
+    }
+    if (!envManifest && legacyFiles) {
+      envManifest = await this.envs.calculateEnvManifest(undefined, legacyFiles, envExtendsDeps);
+    }
+    const policy = envManifest?.policy;
     if (!policy) return undefined;
     const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policy, {
       includeLegacyPeersInSelfPolicy: envComponent && this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()),
@@ -1100,11 +1118,15 @@ export class DependencyResolverMain {
     return { policy };
   }
 
-  private async getEnvPolicyFromFile(envId: string, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
+  private async getEnvPolicyFromFile(
+    envId: string,
+    legacyFiles?: SourceFile[],
+    envExtendsDeps?: LegacyDependency[]
+  ): Promise<EnvPolicy | undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
     if (isCoreEnv) return undefined;
     if (legacyFiles) {
-      return this.getEnvManifest(undefined, legacyFiles);
+      return this.getEnvManifest(undefined, legacyFiles, envExtendsDeps);
     }
     const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
     return this.getEnvManifest(envComponent);
@@ -1157,7 +1179,8 @@ export class DependencyResolverMain {
   async mergeVariantPolicies(
     configuredExtensions: ExtensionDataList,
     id: ComponentID,
-    legacyFiles?: SourceFile[]
+    legacyFiles?: SourceFile[],
+    envExtendsDeps?: LegacyDependency[]
   ): Promise<VariantPolicy> {
     let policiesFromSlots: VariantPolicy = VariantPolicy.getEmpty();
     let policiesFromConfig: VariantPolicy = VariantPolicy.getEmpty();
@@ -1185,7 +1208,7 @@ export class DependencyResolverMain {
       policiesFromConfig = VariantPolicy.fromConfigObject(currentConfig.policy, { source: 'config' });
     }
     const policiesFromEnvForItself =
-      (await this.getPoliciesFromEnvForItself(id, legacyFiles)) ?? VariantPolicy.getEmpty();
+      (await this.getPoliciesFromEnvForItself(id, legacyFiles, envExtendsDeps)) ?? VariantPolicy.getEmpty();
 
     const result = VariantPolicy.mergePolices([
       policiesFromEnv,
@@ -1200,8 +1223,12 @@ export class DependencyResolverMain {
    * These are the policies that the env itself defines for itself.
    * So policies installed only locally for the env, not to any components that use the env.
    */
-  async getPoliciesFromEnvForItself(id: ComponentID, legacyFiles?: SourceFile[]): Promise<VariantPolicy | undefined> {
-    const envPolicy = await this.getEnvPolicyFromEnvId(id, legacyFiles);
+  async getPoliciesFromEnvForItself(
+    id: ComponentID,
+    legacyFiles?: SourceFile[],
+    envExtendsDeps?: LegacyDependency[]
+  ): Promise<VariantPolicy | undefined> {
+    const envPolicy = await this.getEnvPolicyFromEnvId(id, legacyFiles, envExtendsDeps);
     return envPolicy?.selfPolicy;
   }
 
@@ -1551,6 +1578,9 @@ export class DependencyResolverMain {
       postInstallSlot
     );
 
+    const envJsoncDetector = envs.getEnvJsoncDetector();
+    dependencyResolver.registerDetector(envJsoncDetector);
+
     componentAspect.registerShowFragments([
       new DependenciesFragment(dependencyResolver),
       new DevDependenciesFragment(dependencyResolver),
@@ -1562,8 +1592,18 @@ export class DependencyResolverMain {
 
     LegacyComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
-      async (configuredExtensions: ExtensionDataList, id: ComponentID, legacyFiles: SourceFile[]) => {
-        const policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
+      async (
+        configuredExtensions: ExtensionDataList,
+        id: ComponentID,
+        legacyFiles: SourceFile[],
+        envExtendsDeps?: LegacyDependency[]
+      ) => {
+        const policy = await dependencyResolver.mergeVariantPolicies(
+          configuredExtensions,
+          id,
+          legacyFiles,
+          envExtendsDeps
+        );
         return policy.toLegacyDepsOverrides();
       }
     );
