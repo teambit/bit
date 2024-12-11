@@ -6,7 +6,6 @@
   "preferGlobal": true,
   "private": false,
   "files": [
-    "/bin",
     "/dist"
   ],
   "engines": {
@@ -23,9 +22,6 @@
       "dist/analytics/analytics-sender.js",
       "dist/specs-runner/worker.js"
     ]
-  },
-  "bin": {
-    "bit": "bin/bit.js"
   },
   "repository": {
     "type": "git",
