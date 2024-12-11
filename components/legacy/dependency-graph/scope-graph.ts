@@ -154,9 +154,7 @@ export class DependencyGraph {
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest = false, reverse = false): Promise<Graph> {
-    // @ts-ignore todo: remove after deleting teambit.legacy
     const componentsList = new ComponentsList(consumer);
-    // @ts-ignore todo: remove after deleting teambit.legacy
     const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
     const graph = new Graph();
     const allModelComponents: ModelComponent[] = await consumer.scope.list();
@@ -191,9 +189,7 @@ export class DependencyGraph {
    * returns a graph that each node is a ComponentID object.
    */
   static async buildGraphFromCurrentlyUsedComponents(consumer: Consumer): Promise<Graph> {
-    // @ts-ignore todo: remove after deleting teambit.legacy
     const componentsList = new ComponentsList(consumer);
-    // @ts-ignore todo: remove after deleting teambit.legacy
     const workspaceComponents: Component[] = await componentsList.getComponentsFromFS();
     const graph = new Graph();
     workspaceComponents.forEach((component: Component) => {

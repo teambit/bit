@@ -200,7 +200,6 @@ export class ComponentLoader {
       }
       fromModel.setRemoved();
       fromModel.componentMap = componentMap;
-      // @ts-ignore todo: remove after deleting teambit.legacy
       removedComponents.push(fromModel);
       return null;
     }

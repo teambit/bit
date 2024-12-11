@@ -377,7 +377,6 @@ export default class Version extends BitObject {
     }
     if (includeArtifacts) {
       const artifacts = getRefsFromExtensions(this.extensions);
-      // @ts-ignore todo: remove after deleting teambit.legacy
       allRefs.push(...artifacts);
     }
     if (this.flattenedEdgesRef) allRefs.push(this.flattenedEdgesRef);
@@ -799,7 +798,6 @@ export default class Version extends BitObject {
   }
 
   modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {
-    // @ts-ignore todo: remove after deleting teambit.legacy
     return Promise.all(this.files.map((file) => SourceFile.loadFromSourceFileModel(file, repository)));
   }
 
