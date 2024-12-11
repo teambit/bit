@@ -35,6 +35,7 @@ const whitelist = [
   '@typescript-eslint/typescript-estree', // required for @typescript-eslint/parser in .eslintrc.js
   '@mdx-js/mdx', // required for @mdx-js/react in mdx files - maybe should be added to envs (like we have in env.jsonc)
   // then we can remove it from here
+  'mocha-multi-reporters',
 ];
 used.push(...whitelist);
 unused = unused.filter((dep) => !whitelist.includes(dep));
