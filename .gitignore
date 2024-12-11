@@ -23,13 +23,8 @@ coverage
 # node-waf configuration
 .lock-wscript
 
-# Compiled binary addons (http://nodejs.org/api/addons.html)
-build/Release
-
 # Dependency directories
 node_modules
-jspm_packages
-!fixtures/filing-cabinet/node_modules
 !scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/node_modules
 
 # Optional npm cache directory
@@ -51,19 +46,9 @@ jspm_packages
 .idea/
 
 #output
-dist/*
 public/
-!components/*/dist/
 eslint-report.html
 types/*
-
-#distrubution
-distribution/
-
-bit-*.tar.gz
-tmp/
-bin/node
-nodeBin
 
 # bit directories
 .bit
@@ -73,13 +58,6 @@ nodeBin
 
 #vscode history
 .history
-
-#gitbook
-_book
-
-# pkg releases
-/releases/
-bin/bit
 
 # sonarcloud dir
 .scannerwork
@@ -95,9 +73,3 @@ package-lock.json
 !.yarn/plugins
 !.yarn/sdks
 !.yarn/versions
-
-# component issues
-scopes/component/component-issues/dist/
-
-# component version
-scopes/component/component-version/dist/
