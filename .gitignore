@@ -41,10 +41,6 @@ jspm_packages
 # Optional REPL history
 .node_repl_history
 
-# Output of 'npm pack'
-*.tgz
-!e2e/fixtures/**/*.tgz
-
 # Yarn Integrity file
 .yarn-Integrity
 
