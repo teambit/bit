@@ -17,7 +17,7 @@ import { IssuesClasses } from '@teambit/component-issues';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import type { AspectDefinition } from '@teambit/aspect-loader';
-import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { head, uniq } from 'lodash';
@@ -1110,13 +1110,13 @@ export class EnvsMain {
       ComponentMain,
       CLIMain,
       WorkerMain,
-      IssuesMain
+      IssuesMain,
     ],
     config: EnvsConfig,
     [envSlot, servicesRegistry, envJsoncMergeCustomizerSlot]: [
       EnvsRegistry,
       ServicesRegistry,
-      EnvJsoncMergeCustomizerRegistry
+      EnvJsoncMergeCustomizerRegistry,
     ],
     context: Harmony
   ) {

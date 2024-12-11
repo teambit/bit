@@ -1,14 +1,11 @@
 import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { VERSION_ZERO } from '@teambit/legacy/dist/scope/models/model-component';
-import { Consumer } from '@teambit/legacy/dist/consumer';
-import { LATEST } from '@teambit/legacy/dist/constants';
-import { ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { ModelComponent, VERSION_ZERO } from '@teambit/scope.objects';
+import { Consumer, ComponentsPendingImport, ComponentOutOfSync } from '@teambit/legacy.consumer';
+import { LATEST } from '@teambit/legacy.constants';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
-import ComponentsPendingImport from '@teambit/legacy/dist/consumer/exceptions/components-pending-import';
-import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
-import ComponentOutOfSync from '@teambit/legacy/dist/consumer/exceptions/component-out-of-sync';
+import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 import { Workspace } from '..';
 
 export type ComponentStatusLegacy = {

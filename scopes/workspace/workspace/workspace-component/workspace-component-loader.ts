@@ -6,18 +6,20 @@ import { Component, ComponentFS, Config, InvalidComponent, State, TagMap } from 
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import mapSeries from 'p-map-series';
 import { compact, fromPairs, groupBy, pick, uniq, uniqBy } from 'lodash';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import {
+  ComponentNotFoundInPath,
+  ConsumerComponent,
+  ComponentLoadOptions as LegacyComponentLoadOptions,
+} from '@teambit/legacy.consumer-component';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { IssuesClasses } from '@teambit/component-issues';
-import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import { ComponentNotFound } from '@teambit/legacy.scope';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
-import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
-import { ComponentLoadOptions as LegacyComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 import { MergeConfigConflict } from '../exceptions/merge-config-conflict';
@@ -113,9 +115,12 @@ export class WorkspaceComponentLoader {
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<GetManyRes> {
+    const idsWithoutEmpty = compact(ids);
+    if (!idsWithoutEmpty.length) {
+      return { components: [], invalidComponents: [] };
+    }
     const callId = Math.floor(Math.random() * 1000); // generate a random callId to be able to identify the call from the logs
     this.logger.profile(`getMany-${callId}`);
-    const idsWithoutEmpty = compact(ids);
     this.logger.setStatusLine(`loading ${ids.length} component(s)`);
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
       // We don't want to load extension or execute the load slot at this step
@@ -162,6 +167,7 @@ export class WorkspaceComponentLoader {
         idsWithEmptyStrs.includes(comp.id.toString()) || idsWithEmptyStrs.includes(comp.id.toStringWithoutVersion())
     );
     this.logger.profile(`getMany-${callId}`);
+    this.logger.clearStatusLine();
     return { components: requestedComponents, invalidComponents };
   }
 
@@ -944,7 +950,7 @@ function createComponentCacheKey(id: ComponentID, loadOpts?: ComponentLoadOption
   return `${id.toString()}:${JSON.stringify(sortKeys(relevantOpts ?? {}))}`;
 }
 
-function sortKeys(obj: Object) {
+function sortKeys(obj: object) {
   return fromPairs(Object.entries(obj).sort(([k1], [k2]) => k1.localeCompare(k2)));
 }
 

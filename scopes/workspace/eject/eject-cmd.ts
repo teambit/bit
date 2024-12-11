@@ -1,6 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { Workspace } from '@teambit/workspace';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { ejectTemplate } from './eject-template';
 import { EjectMain } from './eject.main.runtime';
 
@@ -29,7 +29,10 @@ export class EjectCmd implements Command {
   loader = true;
   group = 'development';
 
-  constructor(private ejectMain: EjectMain, private workspace: Workspace) {}
+  constructor(
+    private ejectMain: EjectMain,
+    private workspace: Workspace
+  ) {}
 
   async report(
     [pattern]: [string],

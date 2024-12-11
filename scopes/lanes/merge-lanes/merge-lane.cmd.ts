@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { mergeReport, MergeStrategy } from '@teambit/merging';
 import { GlobalConfigMain } from '@teambit/global-config';
-import { COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import { removeTemplate } from '@teambit/remove';
 import { MergeLanesMain } from './merge-lanes.main.runtime';
@@ -72,7 +72,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       'ignore-config-changes',
       'allow merging when components are modified due to config changes (such as dependencies) only and not files',
     ],
-    ['', 'verbose', 'show details of components that were not merged successfully'],
+    ['', 'verbose', 'display detailed information about components that were legitimately unmerged'],
     ['x', 'skip-dependency-installation', 'do not install dependencies of the imported components'],
     ['', 'skip-fetch', 'use the local state of target-lane if exits locally, without updating it from the remote'],
     [
@@ -100,7 +100,10 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
   private = true;
   remoteOp = true;
 
-  constructor(private mergeLanes: MergeLanesMain, private globalConfig: GlobalConfigMain) {}
+  constructor(
+    private mergeLanes: MergeLanesMain,
+    private globalConfig: GlobalConfigMain
+  ) {}
 
   async report(
     [name, pattern]: [string, string],

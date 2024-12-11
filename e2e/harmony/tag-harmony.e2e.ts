@@ -2,9 +2,9 @@ import chai, { expect } from 'chai';
 import chalk from 'chalk';
 import path from 'path';
 import { uniq } from 'lodash';
-import { Extensions } from '../../src/constants';
-import { SchemaName } from '../../src/consumer/component/component-schema';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Extensions } from '@teambit/legacy.constants';
+import { SchemaName } from '@teambit/legacy.consumer-component';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -458,6 +458,18 @@ describe('tag components on Harmony', function () {
       );
       expect(pkgJson.version).to.equal('0.0.1');
       expect(pkgJson.componentId.version).to.equal('0.0.1');
+    });
+  });
+  describe('tagging a snapped component by specifying the id', () => {
+    let tagOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponentsWithoutBuild();
+      tagOutput = helper.command.tagWithoutBuild('comp1');
+    });
+    it('should tag successfully without needing to add --unmodified', () => {
+      expect(tagOutput).to.have.string('comp1@0.0.1');
     });
   });
 });

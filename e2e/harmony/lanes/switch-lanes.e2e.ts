@@ -1,9 +1,8 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-import { statusWorkspaceIsCleanMsg } from '../../../src/constants';
+import { statusWorkspaceIsCleanMsg } from '@teambit/legacy.constants';
 import { LANE_KEY } from '@teambit/legacy.bit-map';
-import Helper from '../../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../../src/fixtures/fixtures';
+import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../../npm-ci-registry';
 
 chai.use(require('chai-fs'));
@@ -402,6 +401,25 @@ describe('bit lane command', function () {
     it('should not change the files and keep them same as the lane', () => {
       const fileContent = helper.fs.readFile('comp1/index.js');
       expect(fileContent).to.include('v2');
+    });
+  });
+  describe('switch to main when only one component was snapped on a lane', () => {
+    let switchOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.install();
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+
+      switchOutput = helper.command.switchLocalLane('main', '--head -x');
+    });
+    it('should switch the component on the lane only', () => {
+      expect(switchOutput).to.have.string('switched 1 components');
+      expect(switchOutput).to.have.string('skipped legitimately for 1 component(s)');
     });
   });
 });

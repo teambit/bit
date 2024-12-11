@@ -2,7 +2,8 @@ import { ArtifactFactory, BuilderAspect } from '@teambit/builder';
 import type { BuilderMain } from '@teambit/builder';
 import { Asset, BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime, CLIAspect } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
 import {
   Component,
   ComponentAspect,
@@ -12,11 +13,11 @@ import {
   ResolveAspectsOptions,
 } from '@teambit/component';
 import { EnvsAspect } from '@teambit/envs';
-import type { EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
+import type { EnvsExecutionResult, EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain, UIRoot } from '@teambit/ui';
 import { CacheAspect, CacheMain } from '@teambit/cache';
-import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
+import { CACHE_ROOT } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import objectHash from 'object-hash';
 import { uniq } from 'lodash';
@@ -29,6 +30,7 @@ import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { ArtifactFiles } from '@teambit/component.sources';
 import { WatcherAspect, WatcherMain } from '@teambit/watcher';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -66,6 +68,8 @@ import { PreviewService } from './preview.service';
 import { PUBLIC_DIR, RUNTIME_NAME, buildPreBundlePreview, generateBundlePreviewEntry } from './pre-bundle';
 import { BUNDLE_DIR, PreBundlePreviewTask } from './pre-bundle.task';
 import { createBundleHash, getBundlePath, readBundleHash } from './pre-bundle-utils';
+import { GeneratePreviewCmd } from './generate-preview.cmd';
+import { ServePreviewCmd } from './serve-preview.cmd';
 
 const noopResult = {
   results: [],
@@ -204,8 +208,12 @@ export class PreviewMain {
 
     private logger: Logger,
 
-    private dependencyResolver: DependencyResolverMain
+    private dependencyResolver: DependencyResolverMain,
+
+    private express: ExpressMain
   ) {}
+
+  private previewService: PreviewService;
 
   get tempFolder(): string {
     return this.workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR;
@@ -298,6 +306,98 @@ export class PreviewMain {
     }
     const envComponent = await this.envs.getEnvComponent(component);
     return this.doesEnvUseNameParam(envComponent);
+  }
+
+  async generateComponentPreview(
+    componentPattern: string,
+    name: string
+  ): Promise<EnvsExecutionResult<{ [id: string]: string }>> {
+    const componentIds = componentPattern
+      ? await this.workspace?.idsByPattern(componentPattern, true)
+      : this.workspace?.listIds();
+    if (!componentIds) {
+      throw new BitError(`unable to find components by the pattern: ${componentPattern}`);
+    }
+    const components = await this.workspace?.getMany(componentIds);
+    if (!components) {
+      throw new BitError(`unable to find components by the pattern: ${componentPattern}`);
+    }
+    const envsRuntime = await this.envs.createEnvironment(components);
+    const previewResults = await envsRuntime.run(this.previewService, { name });
+    return previewResults;
+  }
+
+  async serveLocalPreview({ port }: { port: number }): Promise<number> {
+    const app = this.express.createApp();
+
+    const getDir = async (comp, msg) => {
+      const componentPreviewIndex = await this.previewService.readComponentsPreview(msg);
+      const componentPreviewFolder = componentPreviewIndex[comp];
+      const envPreviewDir = this.previewService.getEnvLocalPreviewDir(msg, componentPreviewFolder);
+      if (!componentPreviewFolder) {
+        return undefined;
+      }
+      const publicDir = join(envPreviewDir, 'public');
+      return publicDir;
+    };
+
+    // const dynamicRouteRegex = '/?[^/@]+(/[^~]*)?';
+    // readonly route = `/:componentId(${this.dynamicRouteRegex})/~aspect${this.registerRoute.route}`;
+    // app.use(`/:message/:componentId(${dynamicRouteRegex})`, async (req, res, next) => {
+
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    app.use(`/:message/:componentId(*)`, async (req, res, next) => {
+      // const comp = req.query.comp as string;
+      // const msg = req.query.message as string;
+      let comp = req.params.componentId as string;
+      const msg = req.params.message as string;
+      // Check if the folderName is provided
+      if (!comp) {
+        return res.status(400).send('Please specify a comp.');
+      }
+
+      if (!msg) {
+        return res.status(400).send('Please specify a message.');
+      }
+
+      if (comp.endsWith('/')) {
+        comp = comp.slice(0, -1);
+      }
+
+      let filePath: string | undefined;
+
+      if (comp.endsWith('.js') || comp.endsWith('.css') || comp.endsWith('.map')) {
+        const splitted = comp.split('/');
+        filePath = splitted.pop();
+        comp = splitted.join('/');
+      }
+      const publicDir = await getDir(comp, msg);
+      if (!publicDir) {
+        return res.status(404).send('Folder not found.');
+      }
+      if (filePath) {
+        const file = join(publicDir, filePath);
+        if (!existsSync(file)) {
+          return res.status(404).send('File not found.');
+        }
+        return res.sendFile(file);
+      }
+
+      // Serve files from the specified folder
+      this.express.static(publicDir)(req, res, next);
+    });
+
+    const server = await app.listen(port);
+
+    return new Promise((resolve, reject) => {
+      server.on('error', (err) => {
+        reject(err);
+      });
+      server.on('listening', () => {
+        this.logger.consoleSuccess(`Bit preview server is listening on port ${port}`);
+        resolve(port);
+      });
+    });
   }
 
   /**
@@ -695,12 +795,13 @@ export class PreviewMain {
     });
 
     const previewRuntime = await this.writePreviewEntry(context);
-    const linkFiles = await this.updateLinkFiles(context.components, context);
+    const previews = this.previewSlot.values();
+    const linkFiles = await this.updateLinkFiles(previews, context.components, context);
 
     return [...linkFiles, previewRuntime];
   }
 
-  private async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
+  async writePreviewEntry(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
     const { rebuild, skipUiBuild } = this.ui.runtimeOptions;
 
     const [name, uiRoot] = this.getUi();
@@ -735,8 +836,7 @@ export class PreviewMain {
     return previewRuntime;
   }
 
-  private updateLinkFiles(components: Component[] = [], context: ExecutionContext) {
-    const previews = this.previewSlot.values();
+  updateLinkFiles(previews: PreviewDefinition[], components: Component[] = [], context: ExecutionContext) {
     const paths = previews.map(async (previewDef) => {
       const defaultTemplatePath = await previewDef.renderTemplatePathByEnv?.(context.env);
       const visitedEnvs = new Set();
@@ -784,12 +884,12 @@ export class PreviewMain {
     return Promise.all(paths);
   }
 
+  /**
+   * @deprecated
+   * use `writePreviewEntry` instead
+   */
   async writePreviewRuntime(context: { components: Component[] }, aspectsIdsToNotFilterOut: string[] = []) {
-    const [name, uiRoot] = this.getUi();
-    const resolvedAspects = await this.resolveAspects(PreviewRuntime.name, undefined, uiRoot);
-    const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context, aspectsIdsToNotFilterOut);
-    const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id);
-    return filePath;
+    return this.writePreviewEntry(context, aspectsIdsToNotFilterOut);
   }
 
   async resolveAspects(
@@ -846,7 +946,7 @@ export class PreviewMain {
   private getDefaultStrategies() {
     return [
       new EnvBundlingStrategy(this, this.pkg, this.dependencyResolver),
-      new ComponentBundlingStrategy(this, this.pkg, this.dependencyResolver, this.logger),
+      new ComponentBundlingStrategy(this, this.dependencyResolver, this.logger),
     ];
   }
 
@@ -866,8 +966,8 @@ export class PreviewMain {
 
     // add / remove / etc
     updater(executionRef);
-
-    await this.updateLinkFiles(executionRef.currentComponents, executionRef.executionCtx);
+    const previews = this.previewSlot.values();
+    await this.updateLinkFiles(previews, executionRef.currentComponents, executionRef.executionCtx);
     return noopResult;
   };
 
@@ -940,6 +1040,8 @@ export class PreviewMain {
     GraphqlAspect,
     WatcherAspect,
     ScopeAspect,
+    CLIAspect,
+    ExpressAspect,
   ];
 
   static defaultConfig = {
@@ -965,6 +1067,8 @@ export class PreviewMain {
       graphql,
       watcher,
       scope,
+      cli,
+      express,
     ]: [
       BundlerMain,
       BuilderMain,
@@ -980,7 +1084,9 @@ export class PreviewMain {
       DependencyResolverMain,
       GraphqlMain,
       WatcherMain,
-      ScopeMain
+      ScopeMain,
+      CLIMain,
+      ExpressMain,
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
@@ -1002,8 +1108,11 @@ export class PreviewMain {
       builder,
       workspace,
       logger,
-      dependencyResolver
+      dependencyResolver,
+      express
     );
+
+    cli.register(new GeneratePreviewCmd(preview), new ServePreviewCmd(preview));
 
     if (workspace)
       uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger, watcher));
@@ -1044,8 +1153,10 @@ export class PreviewMain {
     if (scope) {
       scope.registerOnCompAspectReCalc((c) => preview.calcPreviewData(c));
     }
+    const previewService = new PreviewService(preview, logger, dependencyResolver, scope);
 
-    envs.registerService(new PreviewService());
+    envs.registerService(previewService);
+    preview.previewService = previewService;
 
     graphql.register(previewSchema(preview));
 

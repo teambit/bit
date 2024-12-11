@@ -1,9 +1,9 @@
 import { Graph } from '@teambit/graph.cleargraph';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentID } from '@teambit/component-id';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { CompIdGraph } from '@teambit/graph';
-import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import type { ComponentLog } from '@teambit/scope.objects';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import type { DependencyList } from '@teambit/dependency-resolver';
 import { Component, InvalidComponent } from './component';
@@ -30,6 +30,12 @@ export type LoadAspectsOptions = {
   aspects. If set to `false` or not provided, the method will print/throw an error if a required module is missing.
   (considering throwOnError as well) */
   hideMissingModuleError?: boolean;
+
+  /* The `ignoreErrorFunc` property is an optional parameter that can be passed to the `LoadAspectsOptions` object in
+  the `ComponentFactory` interface. If provided, it will be called with the error that occurred during the loading of
+  aspects. If the function returns `true`, the method will ignore the error and continue loading the other aspects.
+  If the function returns `false`, the method will print/throw the error. */
+  ignoreErrorFunc?: (err: Error) => boolean;
 
   /* The `ignoreErrors` property is an optional boolean parameter that can be passed to the `LoadAspectsOptions` object in
   the `ComponentFactory` interface. If set to `true`, it will cause the `loadAspects` method to ignore any errors that

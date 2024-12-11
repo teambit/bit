@@ -1,7 +1,7 @@
 import c from 'chalk';
 import Table from 'cli-table';
 import { isEmpty, isNil } from 'lodash';
-import { Doclet } from '@teambit/legacy/dist/jsdoc/types';
+import { Doclet } from '@teambit/semantics.doc-parser';
 
 const paintExample = (example) => {
   return example.raw;

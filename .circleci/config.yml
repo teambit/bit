@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: cimg/node:20.11.1
+    - image: cimg/node:22.12.0
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -87,7 +87,7 @@ commands: # reusable commands
         default: 'BASE_IMAGE'
         type: string
       docker_build_arg_value:
-        default: 'node:20.11.1'
+        default: 'node:22.12.0'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -116,7 +116,7 @@ commands: # reusable commands
         default: 'BASE_IMAGE'
         type: string
       docker_build_arg_value:
-        default: 'node:20.11.1'
+        default: 'node:22.12.0'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -198,13 +198,13 @@ commands: # reusable commands
   windows_set_node_version:
     parameters:
       version:
-        default: 20.11.1
+        default: 22.12.0
         type: string
     steps:
       - run: choco upgrade nvm -y
       - run: nvm -v
-      - run: nvm install 20.11.1
-      - run: nvm use 20.11.1
+      - run: nvm install 22.12.0
+      - run: nvm use 22.12.0
       - run: node -v
   windows_add_bvm_to_path:
     steps:
@@ -230,7 +230,7 @@ commands: # reusable commands
           name: Install pnpm
           command: >
             npm config set prefix '~/.npm-global' &&
-            npm install --global pnpm@8.10.4 &&
+            npm install --global pnpm@9.14.4 &&
             echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
 
   compress_bit:
@@ -265,15 +265,15 @@ jobs:
   #         at: ./
   #     - docker_build_and_push
 
-  docker_build_node_20:
+  docker_build_node_22:
     machine:
       image: ubuntu-2004:202111-02
     steps:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:20.11.1"
-          docker_tag_suffix: "-node-20.11.1"
+          docker_build_arg_value: "node:22.12.0"
+          docker_tag_suffix: "-node-22.12.0"
 
   # docker_non_root_build:
   #   machine:
@@ -285,19 +285,20 @@ jobs:
   #         image_name: "bitcli/bit-non-root"
   #         docker_file_name: "Dockerfile-bit-non-root"
 
-  docker_non_root_build_node_20:
+  docker_non_root_build_node_22:
     machine:
       image: ubuntu-2004:202111-02
     steps:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:20.11.1"
+          docker_build_arg_value: "node:22.12.0"
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-20.11.1"
+          docker_tag_suffix: "-node-22.12.0"
 
-  server_docker_build_node_20:
+
+  server_docker_build_node_22:
     machine:
       image: ubuntu-2004:202111-02
     steps:
@@ -305,11 +306,10 @@ jobs:
           at: ./
       - docker_build_and_push:
           docker_build_arg_name: "BIT_IMAGE"
-          docker_build_arg_value: "`npm show @teambit/bit version`-node-20.11.1"
+          docker_build_arg_value: "`npm show @teambit/bit version`-node-22.12.0"
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-20.11.1"
-
+          docker_tag_suffix: "-node-22.12.0"
   set_ssh_key:
     <<: *defaults
     working_directory: ~/.ssh
@@ -382,26 +382,6 @@ jobs:
           name: 'notify community slack'
           command: 'cd bit && node ./scripts/slack-deploy-notification.js community'
 
-  unit_test:
-    <<: *defaults
-    steps:
-      - run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      - attach_workspace:
-          at: ./
-      - run: 'cd bit && mkdir junit'
-      - run:
-          name: 'Run unit tests'
-          command: 'cd bit && npm run test-circle'
-          environment:
-            FORCE_COLOR: 1
-            MOCHA_FILE: junit/unit-test-results.xml
-          when: always
-      - store_test_results:
-          path: bit/junit
-      - store_artifacts:
-          path: bit/junit
 
   lint:
     <<: *defaults
@@ -431,9 +411,6 @@ jobs:
       - attach_workspace:
           at: ./
       - run:
-          name: 'generate types'
-          command: 'cd bit && npm run build:types'
-      - run:
           name: 'run TSC'
           command: 'cd bit && npm run check-types'
       - run:
@@ -461,7 +438,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.59-v1
+          key: core-aspect-env-v0.0.63-v1
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
@@ -491,10 +468,9 @@ jobs:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.0.59-v1
+          key: core-aspect-env-v0.0.63-v1
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a107
-      - run: cd bit && npm run link-bit-legacy
       # - run: cd bit && bbit compile
 
       # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
@@ -502,12 +478,6 @@ jobs:
       # - run: cd bit && ls -l node_modules/@babel/cli/bin
       # - run: cd bit && ls -l node_modules/.bin
 
-      - run:
-          name: 'Build bit source code'
-          command: 'cd bit && npm run build'
-      - run:
-          name: 'Build bit-legacy types'
-          command: 'cd bit && npm run build:types'
       - persist_to_workspace:
           root: .
           paths:
@@ -537,7 +507,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.59-v1
+          key: core-aspect-env-v0.0.63-v1
       # - update_ssh_agent
       # temporary, check if we can remove it
       - run: cd bit && bit cc
@@ -574,7 +544,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.59-v1
+          key: core-aspect-env-v0.0.63-v1
       - bit_config:
           env: "hub"
       - restore_cache:
@@ -586,13 +556,13 @@ jobs:
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
-      - run: cd bit && node scripts/bump-bit-legacy-ver.js
       - run: bvm link
       - run: cd bit && bit config set force_local_build true
       # temporary, check if we can remove it
       - run: cd bit && bit cc
       - run: cd bit && bit status
       - run: cd bit && bit diff
+      - run: cd bit && rm -rf node_modules/.bin/bit
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
@@ -602,11 +572,9 @@ jobs:
       - run: cd bit && git diff
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
       # - run: cd bit && bbit checkout head
-      # - run: cd bit && npm run link-bit-legacy
       # since we removed the node_modules we need to make sure we compile, install and link everything again
       # - run: cd bit && bbit install --skip-import
       # - run: cd bit && bbit compile
-      - run: cd bit && npm run link-bit-legacy
       # temporary, check if we can remove it
       - run: cd bit && bit cc
 
@@ -668,6 +636,7 @@ jobs:
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values linux --values linux &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm add @teambit/bit
       - compress_bit
       - run:
@@ -714,6 +683,7 @@ jobs:
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values darwin --values darwin &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm add @teambit/bit
       - compress_bit
       - run:
@@ -762,6 +732,7 @@ jobs:
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values win32 --values win32 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.neverBuiltDependencies --values cpu-features --values ssh2 &&
+            pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm add @teambit/bit
       - compress_bit
       - run:
@@ -845,7 +816,7 @@ jobs:
       - run: cd bit && git diff
       - run:
           name: export components
-          command: cd bit && bit export
+          command: cd bit && bit export --verbose
           no_output_timeout: '20m'
       - run:
           name: backup bit objects (after export)
@@ -887,7 +858,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.59-v1
+          key: core-aspect-env-v0.0.63-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -897,7 +868,7 @@ jobs:
       - run: 'cd bit && mkdir junit'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       # Make sure when we run bit from e2e tests we run it from the global not from here
-      - run: 'rm bit/node_modules/.bin/bit'
+      - run: 'rm -rf bit/node_modules/.bin/bit'
       - run:
           name: 'Run e2e tests'
           command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs -n 1 npm run mocha-circleci'
@@ -923,9 +894,9 @@ jobs:
       # - run: node -v
       # - run: npm -v
       # - run: yarn -v
-      # # - run: choco install nodejs --version 20.11.1
+      # # - run: choco install nodejs --version 22.12.0
       # # - run: node -v
-      # - run: cinst nodejs --version 20.11.1
+      # - run: cinst nodejs --version 22.12.0
       # - run: node -v
 
   windows_checkout_code:
@@ -1012,18 +983,6 @@ jobs:
           paths:
             - bit/node_modules
 
-  windows_build:
-    <<: *windows_defaults
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: 'Build bit source code'
-          command: 'cd bit; npm run build'
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bit/dist
 
   windows_bvm_install:
     <<: *windows_defaults
@@ -1100,8 +1059,6 @@ jobs:
       - run: 'ls bit\bit'
       - run: 'cd bit\bit; bit install'
       - run: 'cd bit\bit; bit compile'
-      - run: 'cd bit\bit; npm run build'
-      - run: 'cd bit\bit; npm run build:types:windows'
       - persist_to_workspace:
           root: .
           paths:
@@ -1246,9 +1203,6 @@ workflows:
           requires:
             - set_npm_registries
             - checkout_code
-      - unit_test:
-          requires:
-            - setup_harmony
       - lint:
           requires:
             - setup_harmony
@@ -1283,9 +1237,6 @@ workflows:
   #         requires:
   #           - windows_checkout_code
   #           - windows_set_npm_registries
-  #     - windows_build:
-  #         requires:
-  #           - windows_install_npm_deps
   #     - windows_e2e_test:
   #         requires:
   #           - windows_build
@@ -1355,24 +1306,15 @@ workflows:
       # - server_docker_build:
       #     requires:
       #       - docker_build
-      # - docker_build_node_18:
-      #     requires:
-      #       - harmony_publish_to_gcloud
-      # - docker_non_root_build_node_18:
-      #     requires:
-      #       - harmony_publish_to_gcloud
-      # - server_docker_build_node_18:
-      #     requires:
-      #       - docker_build_node_18
-      - docker_build_node_20:
+      - docker_build_node_22:
           requires:
             - harmony_publish_to_gcloud
-      - docker_non_root_build_node_20:
+      - docker_non_root_build_node_22:
           requires:
             - harmony_publish_to_gcloud
-      - server_docker_build_node_20:
+      - server_docker_build_node_22:
           requires:
-            - docker_build_node_20
+            - docker_build_node_22
 
   windows-nightly:
     triggers:
@@ -1501,30 +1443,18 @@ workflows:
       #     requires:
       #       - harmony_deploy_approval_job
       #       - docker_build
-      # - docker_build_node_18:
-      #     requires:
-      #       - harmony_deploy_approval_job
-      #       - harmony_publish_to_gcloud
-      # - docker_non_root_build_node_18:
-      #     requires:
-      #       - harmony_deploy_approval_job
-      #       - harmony_publish_to_gcloud
-      # - server_docker_build_node_18:
-      #     requires:
-      #       - harmony_deploy_approval_job
-      #       - docker_build_node_18
-      - docker_build_node_20:
+      - docker_build_node_22:
           requires:
             - harmony_deploy_approval_job
             - harmony_publish_to_gcloud
-      - docker_non_root_build_node_20:
+      - docker_non_root_build_node_22:
           requires:
             - harmony_deploy_approval_job
             - harmony_publish_to_gcloud
-      - server_docker_build_node_20:
+      - server_docker_build_node_22:
           requires:
             - harmony_deploy_approval_job
-            - docker_build_node_20
+            - docker_build_node_22
 
   # uncomment to update esbuild arm64 cache
   # get_arm64_workflow_packages:
@@ -1561,17 +1491,17 @@ workflows:
   #           - bundle_version_macos
   #           - bundle_version_windows
   #           - checkout_code # This is needed to generate index.json
-  #     - docker_build_node_20:
+  #     - docker_build_node_22:
   #         requires:
   #           - checkout_code
   #           - harmony_publish_to_gcloud
-  #     - docker_non_root_build_node_20:
+  #     - docker_non_root_build_node_22:
   #         requires:
   #           - checkout_code
   #           - harmony_publish_to_gcloud
-  #     - server_docker_build_node_20:
+  #     - server_docker_build_node_22:
   #         requires:
-  #           - docker_build_node_20
+  #           - docker_build_node_22
   # uncomment to print node version on windows default orb
   # windows_print_node_version_workflow:
   #   jobs:

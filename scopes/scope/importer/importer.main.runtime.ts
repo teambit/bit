@@ -2,7 +2,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Analytics } from '@teambit/legacy.analytics';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { InvalidScopeName, InvalidScopeNameFromRemote } from '@teambit/legacy-bit-id';
 import pMapSeries from 'p-map-series';
@@ -11,13 +11,12 @@ import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-w
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
-import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
+import { ScopeComponentsImporter } from '@teambit/legacy.scope';
 import { importAllArtifactsFromLane } from '@teambit/component.sources';
 import { InstallAspect, InstallMain } from '@teambit/install';
-import loader from '@teambit/legacy/dist/cli/loader';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import { Lane } from '@teambit/legacy/dist/scope/models';
-import { ScopeNotFoundOrDenied } from '@teambit/legacy/dist/remotes/exceptions/scope-not-found-or-denied';
+import { Lane } from '@teambit/scope.objects';
+import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { GraphAspect, GraphMain } from '@teambit/graph';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { BitError } from '@teambit/bit-error';
@@ -151,7 +150,7 @@ export class ImporterMain {
         `please provide the type of objects you would like to pull, the options are --components and --lanes`
       );
     }
-    loader.start('fetching objects...');
+    this.logger.setStatusLine('fetching objects...');
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
 
@@ -203,7 +202,7 @@ export class ImporterMain {
           err instanceof InvalidScopeNameFromRemote
         ) {
           // the lane could be a local lane so no need to throw an error in such case
-          loader.stop();
+          logger.clearStatusLine();
           logger.console(`unable to get lane's data from a remote due to an error:\n${err.message}`, 'warn', 'yellow');
         } else {
           throw err;
@@ -326,7 +325,7 @@ export class ImporterMain {
     InstallMain,
     EnvsMain,
     LoggerMain,
-    ListerMain
+    ListerMain,
   ]) {
     const logger = loggerMain.createLogger(ImporterAspect.id);
     const importerMain = new ImporterMain(workspace, depResolver, graph, scope, componentWriter, envs, logger, lister);

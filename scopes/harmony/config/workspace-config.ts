@@ -1,11 +1,11 @@
 import { ComponentID } from '@teambit/component-id';
-import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
+import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
-import { ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
-import LegacyWorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { LegacyWorkspaceConfig, ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { logger } from '@teambit/legacy.logger';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
-import { currentDateAndTimeToFileName } from '@teambit/legacy/dist/consumer/consumer';
+import { currentDateAndTimeToFileName } from '@teambit/legacy.consumer';
 import { assign, parse, stringify, CommentJSONValue } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';

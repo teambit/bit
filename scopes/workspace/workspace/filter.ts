@@ -1,6 +1,6 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
-import { ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { ModelComponent } from '@teambit/scope.objects';
 import { compact } from 'lodash';
 import { Workspace } from './workspace';
 
@@ -53,10 +53,12 @@ export class Filter {
   }
 
   async byEnv(env: string, withinIds?: ComponentID[]): Promise<ComponentID[]> {
-    const ids = withinIds || (await this.workspace.listIds());
+    const ids = withinIds || this.workspace.listIds();
     const comps = await this.workspace.getMany(ids);
     const compsUsingEnv = comps.filter((c) => {
       const envId = this.workspace.envs.getEnvId(c);
+      if (envId === env) return true;
+      // try without version
       const envIdWithoutVer = ComponentID.getStringWithoutVersion(envId);
       return envIdWithoutVer === env;
     });
@@ -126,9 +128,11 @@ export class Filter {
     const compIds = ComponentIdList.fromArray(ids);
     const componentsFromModel = await this.getModelComps(ids);
     const compsDuringMerge = this.byDuringMergeState();
+    const localOnly = this.workspace.listLocalOnly();
     const comps = componentsFromModel
       .filter((c) => compIds.hasWithoutVersion(c.toComponentId()))
       .filter((c) => !compsDuringMerge.hasWithoutVersion(c.toComponentId()))
+      .filter((c) => !localOnly.hasWithoutVersion(c.toComponentId()))
       .filter((c) => c.isHeadSnap());
     return comps.map((c) => c.toComponentIdWithHead());
   }

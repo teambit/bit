@@ -33,7 +33,11 @@ import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 export type AspectSource = { aspectName: string; source: string; level: string };
 
 export class AspectMain {
-  constructor(readonly aspectEnv: AspectEnv, private envs: EnvsMain, private workspace: Workspace) {}
+  constructor(
+    readonly aspectEnv: AspectEnv,
+    private envs: EnvsMain,
+    private workspace: Workspace
+  ) {}
 
   /**
    * compose your own aspect environment.
@@ -229,7 +233,7 @@ export class AspectMain {
       CLIMain,
       LoggerMain,
       WorkerMain,
-      DevFilesMain
+      DevFilesMain,
     ],
     config,
     slots,

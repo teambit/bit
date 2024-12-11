@@ -11,7 +11,10 @@ import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { CloudAspect } from './cloud.aspect';
 
 export class CloudUI {
-  constructor(private userBarSectionSlot: UserBarSectionSlot, private userBarItemSlot: UserBarItemSlot) {}
+  constructor(
+    private userBarSectionSlot: UserBarSectionSlot,
+    private userBarItemSlot: UserBarItemSlot
+  ) {}
   /**
    * register a new user bar item.
    */
@@ -154,8 +157,8 @@ export class CloudUI {
       //   },
       // },
     ]);
-    workspace.registerMenuWidget([cloudUI.CloudUserBar]);
     if (workspace) {
+      workspace.registerMenuWidget([cloudUI.CloudUserBar]);
       lanes.registerMenuWidget(cloudUI.CloudUserBar);
       component.registerRightSideMenuItem({
         item: <cloudUI.CloudUserBar key={'cloud-user-bar-comp-menu'} />,

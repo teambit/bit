@@ -24,7 +24,11 @@ export interface ManifestToJsonOptions {
 }
 
 export class Manifest {
-  constructor(public name: string, public version: SemVer, public dependencies: ManifestDependenciesObject) {}
+  constructor(
+    public name: string,
+    public version: SemVer,
+    public dependencies: ManifestDependenciesObject
+  ) {}
 
   // Should be implemented on sub classes
   // get dir(): string {

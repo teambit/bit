@@ -10,7 +10,10 @@ export type MultiCompilerOptions = {
 export class MultiTester implements Tester {
   displayName = 'Multi tester';
 
-  constructor(readonly id: string, readonly testers: Tester[]) {}
+  constructor(
+    readonly id: string,
+    readonly testers: Tester[]
+  ) {}
 
   displayConfig() {
     return this.testers

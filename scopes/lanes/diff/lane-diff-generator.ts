@@ -1,12 +1,12 @@
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
-import { Lane, Version } from '@teambit/legacy/dist/scope/models';
+import { HistoryItem, Ref, Lane, LaneHistory, Version } from '@teambit/scope.objects';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { DiffResults, DiffOptions } from '@teambit/legacy.component-diff';
-import { DEFAULT_LANE } from '@teambit/lane-id';
+import { DiffResults, DiffOptions, outputDiffResults } from '@teambit/legacy.component-diff';
+import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { ComponentCompareMain } from '@teambit/component-compare';
+import chalk from 'chalk';
 
 type LaneData = {
   name: string;
@@ -118,7 +118,7 @@ export class LaneDiffGenerator {
         if (idsToCheckDiff && !idsToCheckDiff.hasWithoutVersion(id)) {
           return;
         }
-        await this.componentDiff(id, head, diffOptions);
+        await this.componentDiff(id, head, diffOptions, true);
       })
     );
 
@@ -133,10 +133,102 @@ export class LaneDiffGenerator {
     };
   }
 
-  private async componentDiff(id: ComponentID, toLaneHead: Ref | null, diffOptions: DiffOptions) {
+  async generateDiffHistory(
+    lane: Lane,
+    laneHistory: LaneHistory,
+    fromHistoryId: string,
+    toHistoryId: string,
+    pattern?: string
+  ): Promise<LaneDiffResults> {
+    const laneId = lane.toLaneId();
+    const history = laneHistory.getHistory();
+    const fromLane = history[fromHistoryId];
+    const toLane = history[toHistoryId];
+    if (!fromLane)
+      throw new Error(`unable to find the from-history-id "${fromHistoryId}" in lane "${laneId.toString()}"`);
+    if (!toLane) throw new Error(`unable to find the to-history-id "${toHistoryId}" in lane "${laneId.toString()}"`);
+    this.fromLaneData = this.mapHistoryToLaneData(laneId, fromHistoryId, fromLane);
+    this.toLaneData = this.mapHistoryToLaneData(laneId, toHistoryId, toLane);
+
+    let idsToCheckDiff: ComponentIdList | undefined;
+    if (pattern) {
+      const compIds = this.toLaneData.components.map((c) => c.id);
+      idsToCheckDiff = ComponentIdList.fromArray(await this.scope.filterIdsFromPoolIdsByPattern(pattern, compIds));
+    }
+
+    if (!this.toLaneData.components.length) {
+      throw new BitError(`lane-history "${toHistoryId}" is empty, nothing to show`);
+    }
+
+    const idsOfTo = ComponentIdList.fromArray(
+      this.toLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
+    );
+    await this.scope.legacyScope.scopeImporter.importWithoutDeps(idsOfTo, {
+      cache: true,
+      lane,
+      ignoreMissingHead: true,
+      reason: `for the "to" diff - ${laneId.toString()}-${toHistoryId}`,
+    });
+    const idsOfFrom = ComponentIdList.fromArray(
+      this.fromLaneData.components.map((c) => c.id.changeVersion(c.head?.toString()))
+    );
+    await this.scope.legacyScope.scopeImporter.importWithoutDeps(idsOfFrom, {
+      cache: true,
+      lane,
+      ignoreMissingHead: true,
+      reason: `for the "from" diff - ${laneId.toString()}-${fromHistoryId}`,
+    });
+
+    await Promise.all(
+      this.toLaneData.components.map(async ({ id, head }) => {
+        if (idsToCheckDiff && !idsToCheckDiff.hasWithoutVersion(id)) {
+          return;
+        }
+        await this.componentDiff(id, head);
+      })
+    );
+
+    return {
+      newCompsFrom: this.newCompsFrom.map((id) => id.toString()),
+      newCompsTo: this.newCompsTo.map((id) => id.toString()),
+      compsWithDiff: this.compsWithDiff,
+      compsWithNoChanges: this.compsWithNoChanges.map((id) => id.toString()),
+      toLaneName: this.toLaneData.name,
+      fromLaneName: this.fromLaneData.name,
+      failures: this.failures,
+    };
+  }
+
+  laneDiffResultsToString(laneDiffResults: LaneDiffResults): string {
+    const { compsWithDiff, newCompsFrom, newCompsTo, toLaneName, fromLaneName, failures } = laneDiffResults;
+
+    const newCompsOutput = (laneName: string, ids: string[]) => {
+      if (!ids.length) return '';
+      const newCompsIdsStr = ids.map((id) => chalk.bold(id)).join('\n');
+      const newCompsTitle = `\nThe following components were introduced in ${chalk.bold(laneName)} lane`;
+      return `${chalk.inverse(newCompsTitle)}\n${newCompsIdsStr}`;
+    };
+
+    const diffResultsStr = outputDiffResults(compsWithDiff);
+
+    const failuresTitle = `\n\nDiff failed on the following component(s)`;
+    const failuresIds = failures.map((f) => `${f.id.toString()} - ${chalk.red(f.msg)}`).join('\n');
+    const failuresStr = failures.length ? `${chalk.inverse(failuresTitle)}\n${failuresIds}` : '';
+    const newCompsToStr = newCompsOutput(toLaneName, newCompsTo);
+
+    const newCompsFromStr = newCompsOutput(fromLaneName, newCompsFrom);
+    return `${diffResultsStr}${newCompsToStr}${newCompsFromStr}${failuresStr}`;
+  }
+
+  private async componentDiff(
+    id: ComponentID,
+    toLaneHead: Ref | null,
+    diffOptions: DiffOptions = {},
+    compareToHeadIfEmpty = false
+  ) {
     const modelComponent = await this.scope.legacyScope.getModelComponent(id);
-    const fromLaneHead =
-      this.fromLaneData.components.find((c) => c.id.isEqualWithoutVersion(id))?.head || modelComponent.head;
+    const foundFromLane = this.fromLaneData.components.find((c) => c.id.isEqualWithoutVersion(id))?.head;
+    const fromLaneHead = compareToHeadIfEmpty ? foundFromLane || modelComponent.head : foundFromLane;
     if (!fromLaneHead) {
       this.newCompsTo.push(id);
       return;
@@ -229,6 +321,20 @@ export class LaneDiffGenerator {
         version: lc.id.version?.toString(),
       })),
       remote: lane.toLaneId().toString(),
+    };
+  }
+
+  private mapHistoryToLaneData(laneId: LaneId, historyId: string, historyItem: HistoryItem): LaneData {
+    return {
+      name: historyId,
+      components: historyItem.components.map((compStr) => {
+        const compId = ComponentID.fromString(compStr);
+        return {
+          id: compId.changeVersion(undefined),
+          head: Ref.from(compId.version),
+        };
+      }),
+      remote: laneId.toString(),
     };
   }
 }

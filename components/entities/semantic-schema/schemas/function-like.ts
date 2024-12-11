@@ -47,14 +47,14 @@ export class FunctionLikeSchema extends SchemaNode {
     return [...this.params, this.returnType, ...(this.decorators || [])];
   }
 
-  toString({ color }) {
-    const bold = color ? chalk.bold : (text: string) => text;
+  toString(options?: { color?: boolean }) {
+    const bold = options?.color ? chalk.bold : (text: string) => text;
     const paramsStr = this.params.map((param) => param.toString()).join(', ');
     const typeParamsStr = this.typeParams ? `<${this.typeParams.join(', ')}>` : '';
-    const decoratorsStr = this.decorators?.map((decorator) => decorator.toString({ color })).join('\n');
+    const decoratorsStr = this.decorators?.map((decorator) => decorator.toString(options)).join('\n');
     return `${this.decorators ? `${decoratorsStr}\n` : ''}${this.modifiersToString()}${typeParamsStr}${bold(
       this.name
-    )}(${paramsStr}): ${this.returnType.toString({ color })}`;
+    )}(${paramsStr}): ${this.returnType.toString(options)}`;
   }
 
   toFullSignature(options?: { showDocs?: boolean }): string {

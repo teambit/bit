@@ -8,7 +8,7 @@ import {
   MergeConfigFilename,
   FILE_CHANGES_CHECKOUT_MSG,
   CFG_FORCE_LOCAL_BUILD,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { ConfigMergeResult, WorkspaceConfigUpdateResult, WorkspaceDepsUpdates } from '@teambit/config-merger';
 import { BitError } from '@teambit/bit-error';
@@ -53,7 +53,10 @@ optionally use '--abort' to revert the last merge. to revert a lane merge, use "
   ] as CommandOptions;
   loader = true;
 
-  constructor(private merging: MergingMain, private globalConfig: GlobalConfigMain) {}
+  constructor(
+    private merging: MergingMain,
+    private globalConfig: GlobalConfigMain
+  ) {}
 
   async report(
     [pattern]: [string],

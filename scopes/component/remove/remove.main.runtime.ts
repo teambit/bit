@@ -3,7 +3,7 @@ import semver from 'semver';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
+import { ConsumerNotFound } from '@teambit/legacy.consumer';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { compact } from 'lodash';
 import { hasWildcard } from '@teambit/legacy.utils';
@@ -12,7 +12,7 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import { IssuesClasses } from '@teambit/component-issues';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
-import { NoHeadNoVersion } from '@teambit/legacy/dist/scope/exceptions/no-head-no-version';
+import { NoHeadNoVersion } from '@teambit/legacy.scope';
 import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
 import { deleteComponentsFiles } from './delete-component-files';
 import { RemoveCmd } from './remove-cmd';
@@ -452,7 +452,7 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
     ImporterMain,
     DependencyResolverMain,
     IssuesMain,
-    ListerMain
+    ListerMain,
   ]) {
     const logger = loggerMain.createLogger(RemoveAspect.id);
     const removeMain = new RemoveMain(workspace, scope, logger, importerMain, depResolver, lister);

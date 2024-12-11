@@ -6,7 +6,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { IssuesClasses } from '@teambit/component-issues';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { Component } from '@teambit/component';
-import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
+import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
 import { WatcherAspect, WatcherMain } from '@teambit/watcher';
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
 import { ComponentID } from '@teambit/component-id';
@@ -153,7 +153,7 @@ export class CompilerMain {
     GeneratorMain,
     DependencyResolverMain,
     WatcherMain,
-    IssuesMain
+    IssuesMain,
   ]) {
     const logger = loggerMain.createLogger(CompilerAspect.id);
     const compilerService = new CompilerService();

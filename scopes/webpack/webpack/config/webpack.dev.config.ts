@@ -160,9 +160,7 @@ export function configFactory(
       }),
     ],
 
-    snapshot: {
-      ...(componentPathsRegExps && componentPathsRegExps.length > 0 ? { managedPaths: componentPathsRegExps } : {}),
-    },
+    snapshot: componentPathsRegExps && componentPathsRegExps.length > 0 ? { managedPaths: componentPathsRegExps } : {},
 
     watchOptions: {
       poll: true,

@@ -10,7 +10,10 @@ import { ComponentGraph } from './component-graph';
 import { ComponentIdGraph } from './component-id-graph';
 
 export class GraphMain {
-  constructor(private componentAspect: ComponentMain, private logger: Logger) {}
+  constructor(
+    private componentAspect: ComponentMain,
+    private logger: Logger
+  ) {}
 
   /**
    * important - prefer using `getGraphIds()` it's way better in terms of performance.
@@ -32,7 +35,7 @@ export class GraphMain {
     GraphqlMain,
     ComponentMain,
     CLIMain,
-    LoggerMain
+    LoggerMain,
   ]) {
     const logger = loggerMain.createLogger(GraphAspect.id);
 

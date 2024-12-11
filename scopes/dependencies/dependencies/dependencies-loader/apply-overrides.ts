@@ -2,19 +2,19 @@ import path from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { cloneDeep, difference, forEach, isEmpty, pick, pickBy, uniq } from 'lodash';
 import { IssuesList, IssuesClasses, MissingPackagesData } from '@teambit/component-issues';
-import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy/dist/constants';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy.constants';
+import { ConsumerComponent as Component, Dependency } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile } from '@teambit/component.sources';
 import { PathLinux, resolvePackagePath } from '@teambit/legacy.utils';
 import { ResolvedPackageData, resolvePackageData } from '../resolve-pkg-data';
 import { Workspace } from '@teambit/workspace';
-import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { ComponentMap } from '@teambit/legacy.bit-map';
 import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';
 import { DebugDependencies, FileType } from './auto-detect-deps';
+import { Logger } from '@teambit/logger';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -53,6 +53,7 @@ export class ApplyOverrides {
   constructor(
     private component: Component,
     private depsResolver: DependencyResolverMain,
+    private logger: Logger,
     private workspace?: Workspace
   ) {
     this.componentId = component.componentId;
@@ -149,6 +150,8 @@ export class ApplyOverrides {
     // issue doesn't seems like an issue any more.
     await this.applyAutoDetectedPeersFromEnvOnEnvItSelf();
     this.manuallyAddDependencies();
+    // Ensuring component dependencies are not part of the package dependencies to prevent duplications
+    this.removeCompDepsFromPackages();
     // Doing this here (after manuallyAddDependencies) because usually the env of the env is adding dependencies as peer of the env
     // which will make this not work if it come before
     // example:
@@ -245,6 +248,12 @@ export class ApplyOverrides {
         const dependencyValue = overrides[depField][dependency];
         const componentData = this._getComponentIdToAdd(dependency, dependencyValue);
         if (componentData?.componentId) {
+          if (componentData.componentId.isEqualWithoutVersion(this.componentId)) {
+            this.logger.warn(
+              `component ${this.componentId.toString()} depends on itself ${componentData.componentId.toString()}. ignoring it.`
+            );
+            return;
+          }
           const dependencyExist = existingDependencies[depField].find((d) =>
             d.id.isEqualWithoutVersion(componentData.componentId)
           );
@@ -278,11 +287,11 @@ export class ApplyOverrides {
     const { components, packages } = dependencies;
     DEPENDENCIES_FIELDS.forEach((depField) => {
       if (components[depField] && components[depField].length) {
-        components[depField].forEach((depData) =>
+        components[depField].forEach((depData) => {
           this.allDependencies[depField].push(
             new Dependency(depData.componentId, [], depData.packageName, depData.versionRange)
-          )
-        );
+          );
+        });
       }
       if (packages[depField] && !isEmpty(packages[depField])) {
         Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], packages[depField]);
@@ -306,6 +315,33 @@ export class ApplyOverrides {
         (dep) => !dep.packageName || !componentPeers.has(dep.packageName)
       );
     }
+  }
+
+  /**
+   * The function `removeCompDepsFromPackages` removes component dependencies from different package dependency fields
+   * based on certain conditions.
+   */
+  private removeCompDepsFromPackages() {
+    const currPackagesKeys = ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].reduce(
+      (acc, field) => {
+        acc[field] = Object.keys(this.allPackagesDependencies[field]);
+        return acc;
+      },
+      {}
+    );
+
+    DEPENDENCIES_FIELDS.forEach((depField) => {
+      if (this.allDependencies[depField].length) {
+        this.allDependencies[depField].forEach((dep) => {
+          ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
+            const keys = currPackagesKeys[field];
+            if (keys.includes(dep.packageName)) {
+              delete this.allPackagesDependencies[field][dep.packageName];
+            }
+          });
+        });
+      }
+    });
   }
 
   /**

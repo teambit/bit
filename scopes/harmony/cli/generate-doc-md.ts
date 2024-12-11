@@ -1,4 +1,4 @@
-import { CommandOptions, Command, CommandArg } from '@teambit/legacy/dist/cli/command';
+import { CommandOptions, Command, CommandArg } from './command';
 import { pick } from 'lodash';
 import { getCommandId } from './get-command-id';
 
@@ -9,7 +9,10 @@ export type GenerateOpts = {
 type CommandObject = ReturnType<typeof oneCommandToObject> & { commands?: any };
 
 export class GenerateCommandsDoc {
-  constructor(private commands: Command[], private options: GenerateOpts) {}
+  constructor(
+    private commands: Command[],
+    private options: GenerateOpts
+  ) {}
 
   generate(): string {
     const commands = this.getAllPublicCommandsSorted();

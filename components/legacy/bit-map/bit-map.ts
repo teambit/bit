@@ -9,7 +9,7 @@ import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
-import type { Consumer } from '@teambit/legacy/dist/consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
 import {
   AUTO_GENERATED_MSG,
   AUTO_GENERATED_STAMP,
@@ -17,8 +17,8 @@ import {
   OLD_BIT_MAP,
   VERSION_DELIMITER,
   BITMAP_PREFIX_MESSAGE,
-} from '@teambit/legacy/dist/constants';
-import logger from '@teambit/legacy/dist/logger/logger';
+} from '@teambit/legacy.constants';
+import { logger } from '@teambit/legacy.logger';
 import {
   pathJoinLinux,
   pathNormalizeToLinux,
@@ -324,6 +324,13 @@ export class BitMap {
         throw new DuplicateRootDir(rootDir, idsWithSameRootDir);
       }
     });
+  }
+
+  addFromComponentJson(id: ComponentID, componentFromJson: Record<string, any>) {
+    componentFromJson.id = id;
+    const componentMap = ComponentMap.fromJson(componentFromJson as any);
+    this.components.push(componentMap);
+    this.markAsChanged();
   }
 
   loadComponents(componentsJson: Record<string, any>, defaultScope: string) {

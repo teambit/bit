@@ -1,7 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import open from 'open';
 import { ejectTemplate } from '@teambit/eject';
-import { WILDCARD_HELP, COMPONENT_PATTERN_HELP, getCloudDomain } from '@teambit/legacy/dist/constants';
+import { WILDCARD_HELP, COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
 import { isEmpty } from 'lodash';
 import { ExportMain, ExportResult } from './export.main.runtime';
@@ -55,6 +55,7 @@ export class ExportCmd implements Command {
     ],
     ['', 'fork-lane-new-scope', 'allow exporting a forked lane into a different scope than the original scope'],
     ['', 'open-browser', 'open a browser once the export is completed in the cloud job url'],
+    ['', 'verbose', 'per exported component, show the versions being exported'],
     ['j', 'json', 'show output in json format'],
   ] as CommandOptions;
   loader = true;
@@ -75,31 +76,50 @@ export class ExportCmd implements Command {
       headOnly,
       forkLaneNewScope = false,
       openBrowser = false,
+      verbose = false,
     }: any
   ): Promise<string> {
-    const { componentsIds, nonExistOnBitMap, removedIds, missingScope, exportedLanes, ejectResults, rippleJobs } =
-      await this.exportMain.export({
-        ids,
-        eject,
-        includeNonStaged: all || allVersions,
-        allVersions: allVersions || all,
-        originDirectly,
-        resumeExportId: resume,
-        headOnly,
-        ignoreMissingArtifacts,
-        forkLaneNewScope,
-      });
+    const {
+      componentsIds,
+      newIdsOnRemote,
+      nonExistOnBitMap,
+      removedIds,
+      missingScope,
+      exportedLanes,
+      ejectResults,
+      rippleJobUrls,
+    } = await this.exportMain.export({
+      ids,
+      eject,
+      includeNonStaged: all || allVersions,
+      allVersions: allVersions || all,
+      originDirectly,
+      resumeExportId: resume,
+      headOnly,
+      ignoreMissingArtifacts,
+      forkLaneNewScope,
+    });
+
     if (isEmpty(componentsIds) && isEmpty(nonExistOnBitMap) && isEmpty(missingScope) && !exportedLanes.length) {
       return chalk.yellow('nothing to export');
     }
     const exportedLane = exportedLanes[0]?.id();
+    const getExportedIds = () => {
+      if (!verbose) return componentsIds.join('\n');
+      return componentsIds
+        .map((id) => {
+          const versions = newIdsOnRemote
+            .filter((newId) => newId.isEqualWithoutVersion(id))
+            .map((newId) => newId.version);
+          return `${id.toString()} - ${versions.join(', ') || 'n/a'}`;
+        })
+        .join('\n');
+    };
     const exportOutput = () => {
       if (isEmpty(componentsIds)) return exportedLane ? `exported the lane ${chalk.bold(exportedLane)}` : '';
       const lanesOutput = exportedLanes.length ? ` the lane ${chalk.bold(exportedLanes[0].id())} and` : '';
       return chalk.green(
-        `exported${lanesOutput} the following ${componentsIds.length} component(s):\n${chalk.bold(
-          componentsIds.join('\n')
-        )}`
+        `exported${lanesOutput} the following ${componentsIds.length} component(s):\n${chalk.bold(getExportedIds())}`
       );
     };
     const nonExistOnBitMapOutput = () => {
@@ -134,23 +154,16 @@ export class ExportCmd implements Command {
       return `\n${output}`;
     };
     const rippleJobsOutput = () => {
-      if (!rippleJobs.length) return '';
+      if (!rippleJobUrls.length) return '';
       const shouldOpenBrowser = openBrowser && !process.env.CI;
       const prefix = shouldOpenBrowser ? 'Your browser has been opened to the following link' : 'Visit the link below';
       const msg = `\n\n${prefix} to track the progress of building the components in the cloud\n`;
-      const lane = exportedLanes.length ? exportedLanes?.[0] : undefined;
-      const fullUrls = lane
-        ? rippleJobs.map(
-            (job) =>
-              `https://${getCloudDomain()}/${lane.scope.replace('.', '/')}/~lane/${lane.name}/~ripple-ci/job/${job}`
-          )
-        : rippleJobs.map((job) => `https://${getCloudDomain()}/ripple-ci/job/${job}`);
       if (shouldOpenBrowser) {
-        open(fullUrls[0], { url: true }).catch(() => {
+        open(rippleJobUrls[0], { url: true }).catch(() => {
           /** it's ok, the user is instructed to open the browser manually */
         });
       }
-      const urlsColored = fullUrls.map((url) => chalk.bold.underline(url));
+      const urlsColored = rippleJobUrls.map((url) => chalk.bold.underline(url));
       return msg + urlsColored.join('\n');
     };
 

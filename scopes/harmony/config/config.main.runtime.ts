@@ -1,8 +1,10 @@
-import { getConsumerInfo } from '@teambit/legacy/dist/consumer';
-import { ExtensionDataEntry, ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
-import LegacyWorkspaceConfig, {
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
+import {
+  ILegacyWorkspaceConfig,
+  LegacyWorkspaceConfig,
   WorkspaceConfigLoadFunction,
-} from '@teambit/legacy/dist/consumer/config/workspace-config';
+} from '@teambit/legacy.consumer-config';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { MainRuntime } from '@teambit/cli';
@@ -23,7 +25,10 @@ export type ConfigDeps = [];
 export type ConfigConfig = {};
 
 export class ConfigMain {
-  constructor(public workspaceConfig?: WorkspaceConfig, public scopeConfig?: WorkspaceConfig) {}
+  constructor(
+    public workspaceConfig?: WorkspaceConfig,
+    public scopeConfig?: WorkspaceConfig
+  ) {}
 
   get type(): ConfigType {
     if (this.workspaceConfig) {
@@ -128,7 +133,7 @@ export class ConfigMain {
 ConfigAspect.addRuntime(ConfigMain);
 
 async function loadWorkspaceConfigIfExist(cwd = process.cwd()): Promise<WorkspaceConfig | undefined> {
-  const consumerInfo = await getConsumerInfo(cwd);
+  const consumerInfo = await getWorkspaceInfo(cwd);
   const configDirPath = consumerInfo?.path || cwd;
   const scopePath = findScopePath(configDirPath);
   const workspaceConfig = await WorkspaceConfig.loadIfExist(configDirPath, scopePath);

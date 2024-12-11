@@ -22,17 +22,28 @@ export const ENV_STRATEGY_ARTIFACT_NAME = 'preview';
 export class EnvBundlingStrategy implements BundlingStrategy {
   name = 'env';
 
-  constructor(private preview: PreviewMain, private pkg: PkgMain, private dependencyResolver: DependencyResolverMain) {}
+  constructor(
+    private preview: PreviewMain,
+    private pkg: PkgMain,
+    private dependencyResolver: DependencyResolverMain
+  ) {}
 
   async computeTargets(context: ComputeTargetsContext, previewDefs: PreviewDefinition[]) {
     const outputPath = this.getOutputPath(context);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
     const htmlConfig = this.generateHtmlConfig({ dev: context.dev });
     const peers = await this.dependencyResolver.getPreviewHostDependenciesFromEnv(context.envDefinition.env);
+    const componentDirectoryMap = {};
+    context.components.forEach((component) => {
+      const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
+      if (!capsule) return;
+      componentDirectoryMap[component.id.toString()] = capsule.path;
+    });
 
     return [
       {
         entries: await this.computePaths(outputPath, previewDefs, context),
+        componentDirectoryMap,
         html: [htmlConfig],
         components: context.components,
         outputPath,
@@ -109,7 +120,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     defs: PreviewDefinition[],
     context: ComputeTargetsContext
   ): Promise<string[]> {
-    const previewMain = await this.preview.writePreviewRuntime(context);
+    const previewMain = await this.preview.writePreviewEntry(context);
     const moduleMapsPromise = defs.map(async (previewDef) => {
       const moduleMap = await previewDef.getModuleMap(context.components);
 

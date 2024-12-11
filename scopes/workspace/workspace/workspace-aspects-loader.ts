@@ -1,9 +1,9 @@
-import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy/dist/constants';
+import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy.constants';
 import { GlobalConfigMain } from '@teambit/global-config';
 import findRoot from 'find-root';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { Graph } from '@teambit/graph.cleargraph';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ExtensionManifest, Harmony, Aspect } from '@teambit/harmony';
 import {
   AspectDefinition,
@@ -17,10 +17,10 @@ import fs from 'fs-extra';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { ComponentID } from '@teambit/component-id';
-import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import { ComponentNotFound } from '@teambit/legacy.scope';
 import pMapSeries from 'p-map-series';
 import { difference, compact, groupBy, partition } from 'lodash';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { Component, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
 import { ScopeMain } from '@teambit/scope';
 import { Logger } from '@teambit/logger';
@@ -92,6 +92,7 @@ export class WorkspaceAspectsLoader {
       runSubscribers: true,
       skipDeps: false,
       hideMissingModuleError: !!this.workspace.inInstallContext,
+      ignoreErrorFunc: this.workspace.inInstallContext ? ignoreAspectLoadingError : () => false,
       ignoreErrors: false,
       resolveEnvsFromRoots: this.resolveEnvsFromRoots,
       forceLoad: false,
@@ -107,7 +108,7 @@ ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts, null, 2)}`);
     const [localAspects, nonLocalAspects] = partition(ids, (id) => id.startsWith('file:'));
     const localAspectsMap = await this.aspectLoader.loadAspectFromPath(localAspects);
-    this.workspace.localAspects = localAspectsMap;
+    this.workspace.localAspects = { ...this.workspace.localAspects, ...localAspectsMap };
 
     let notLoadedIds = nonLocalAspects;
     if (!mergedOpts.forceLoad) {
@@ -155,6 +156,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       idsWithoutCore,
       mergedOpts.throwOnError,
       mergedOpts.hideMissingModuleError,
+      mergedOpts.ignoreErrorFunc,
       neededFor,
       mergedOpts.runSubscribers
     );
@@ -220,6 +222,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     seeders: string[],
     throwOnError: boolean,
     hideMissingModuleError: boolean,
+    ignoreErrorFunc?: (err: Error) => boolean,
     neededFor?: string,
     runSubscribers = true
   ): Promise<{ manifests: Array<Aspect | ExtensionManifest>; requireableComponents: RequireableComponent[] }> {
@@ -242,7 +245,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     await this.aspectLoader.loadExtensionsByManifests(
       manifests,
       { seeders, neededFor },
-      { throwOnError, hideMissingModuleError }
+      { throwOnError, hideMissingModuleError, ignoreErrorFunc }
     );
     return { manifests, requireableComponents };
   }
@@ -733,6 +736,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       useScopeAspectsCapsule: true,
       throwOnError: false,
       hideMissingModuleError: !!this.workspace.inInstallContext,
+      ignoreErrorFunc: this.workspace.inInstallContext ? ignoreAspectLoadingError : undefined,
       resolveEnvsFromRoots: this.resolveEnvsFromRoots,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
@@ -906,4 +910,13 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     nonWorkspaceIds = nonWorkspaceComps.map((c) => c.id);
     return { workspaceIds, nonWorkspaceIds };
   }
+}
+
+function ignoreAspectLoadingError(err: Error) {
+  // Ignoring that error as probably we are in the middle of the installation process
+  // so we didn't yet compile the aspect to esm correctly
+  if (err.message.includes(`Cannot use 'import.meta' outside a module`)) {
+    return true;
+  }
+  return false;
 }

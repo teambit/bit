@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { difference } from 'lodash';
-import { readCurrentLockfile } from '@pnpm/lockfile-file';
+import { readCurrentLockfile } from '@pnpm/lockfile.fs';
 import { depPathToDirName } from '@teambit/dependencies.pnpm.dep-path';
 
 /**

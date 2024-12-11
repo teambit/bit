@@ -1,10 +1,11 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import legacyLogger from '@teambit/legacy/dist/logger/logger';
-import { CLIArgs, Flags, Command } from '@teambit/legacy/dist/cli/command';
+import { logger as legacyLogger } from '@teambit/legacy.logger';
+import { CLIArgs, Flags, Command } from './command';
 import pMapSeries from 'p-map-series';
-import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
+import { groups, GroupsType } from './command-groups';
 import { HostInitializerMain } from '@teambit/host-initializer';
-import { loadConsumerIfExist, getConsumerInfo } from '@teambit/legacy/dist/consumer';
+import { loadConsumerIfExist } from '@teambit/legacy.consumer';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
@@ -185,7 +186,7 @@ export class CLIMain {
       CommandsSlot,
       OnStartSlot,
       OnCommandStartSlot,
-      OnBeforeExitSlot
+      OnBeforeExitSlot,
     ]
   ) {
     const logger = loggerMain.createLogger(CLIAspect.id);
@@ -213,8 +214,8 @@ async function ensureWorkspaceAndScope() {
     await loadConsumerIfExist();
   } catch (err) {
     const potentialWsPath = process.cwd();
-    const consumerInfo = await getConsumerInfo(potentialWsPath);
-    if (consumerInfo && !consumerInfo.hasScope && consumerInfo.hasBitMap && consumerInfo.hasConsumerConfig) {
+    const consumerInfo = await getWorkspaceInfo(potentialWsPath);
+    if (consumerInfo && !consumerInfo.hasScope && consumerInfo.hasBitMap && consumerInfo.hasWorkspaceConfig) {
       await HostInitializerMain.init(potentialWsPath);
     }
     // do nothing. it could fail for example with ScopeNotFound error, which is taken care of in "bit init".

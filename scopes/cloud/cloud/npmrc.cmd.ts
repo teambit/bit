@@ -17,7 +17,10 @@ export class NpmrcGenerateCmd implements Command {
 
   private port?: string;
 
-  constructor(private cloud: CloudMain, _port?: number) {
+  constructor(
+    private cloud: CloudMain,
+    _port?: number
+  ) {
     this.port = _port?.toString();
   }
 

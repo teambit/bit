@@ -1,5 +1,5 @@
 import { TimerResponse, Timer } from '@teambit/toolbox.time.timer';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentFactory, ComponentID } from '@teambit/component';
 import chalk from 'chalk';
@@ -52,7 +52,11 @@ export class LintCmd implements Command {
     ['j', 'json', 'return the lint results in json format'],
   ] as CommandOptions;
 
-  constructor(private linter: LinterMain, private componentHost: ComponentFactory, private workspace: Workspace) {}
+  constructor(
+    private linter: LinterMain,
+    private componentHost: ComponentFactory,
+    private workspace: Workspace
+  ) {}
 
   async report([pattern]: [string], linterOptions: LintCmdOptions) {
     const { code, data } = await this.json([pattern], linterOptions);

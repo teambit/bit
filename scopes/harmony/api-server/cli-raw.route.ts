@@ -3,9 +3,9 @@ import fs from 'fs-extra';
 import chalk from 'chalk';
 import { Route, Request, Response } from '@teambit/express';
 import { Logger } from '@teambit/logger';
-import legacyLogger, { getLevelFromArgv } from '@teambit/legacy/dist/logger/logger';
+import { logger as legacyLogger, getLevelFromArgv } from '@teambit/legacy.logger';
 import { reloadFeatureToggle } from '@teambit/harmony.modules.feature-toggle';
-import loader from '@teambit/legacy/dist/cli/loader';
+import { loader } from '@teambit/legacy.loader';
 import { APIForIDE } from './api-for-ide';
 
 /**
@@ -18,18 +18,24 @@ import { APIForIDE } from './api-for-ide';
 }
  */
 export class CLIRawRoute implements Route {
-  constructor(private logger: Logger, private cli: CLIMain, private apiForIDE: APIForIDE) {}
+  constructor(
+    private logger: Logger,
+    private cli: CLIMain,
+    private apiForIDE: APIForIDE
+  ) {}
 
   method = 'post';
   route = '/cli-raw';
 
   middlewares = [
     async (req: Request, res: Response) => {
-      const { command, pwd, envBitFeatures, ttyPath } = req.body;
+      const { command, pwd, envBitFeatures, ttyPath, isPty } = req.body;
       this.logger.debug(`cli-raw server: got request for ${command}`);
-      if (pwd && !process.cwd().startsWith(pwd)) {
+      if (pwd && !pwd.startsWith(process.cwd())) {
         throw new Error(`bit-server is running on a different directory. bit-server: ${process.cwd()}, pwd: ${pwd}`);
       }
+      // there are 3 methods to interact with bit-server: 1) SSE, 2) TTY, 3) PTY. See server-commander.ts for more info.
+      const isSSE = !ttyPath && !isPty;
 
       // save the original process.stdout.write method
       const originalStdoutWrite = process.stdout.write;
@@ -47,7 +53,8 @@ export class CLIRawRoute implements Route {
           fs.writeSync(fileHandle, chunk.toString());
           return originalStderrWrite.call(process.stdout, chunk, encoding, callback);
         };
-      } else {
+      }
+      if (isSSE) {
         process.env.BIT_CLI_SERVER_NO_TTY = 'true';
         loader.shouldSendServerEvents = true;
       }
@@ -56,9 +63,10 @@ export class CLIRawRoute implements Route {
       const levelFromArgv = getLevelFromArgv(command);
       if (levelFromArgv) {
         currentLogger = legacyLogger.logger;
-        if (ttyPath) {
+        if (ttyPath || isPty) {
           legacyLogger.switchToConsoleLogger(levelFromArgv);
-        } else {
+        }
+        if (isSSE) {
           legacyLogger.switchToSSELogger(levelFromArgv);
         }
       }
@@ -81,8 +89,10 @@ export class CLIRawRoute implements Route {
         const commandRunner = await cliParser.parse(command);
         const result = await commandRunner.runCommand(true);
         await this.apiForIDE.logFinishCmdHistory(cmdStrLog, 0);
+        this.logger.clearStatusLine();
         res.json(result);
       } catch (err: any) {
+        this.logger.clearStatusLine();
         if (err instanceof YargsExitWorkaround) {
           res.json({ data: err.helpMsg, exitCode: err.exitCode });
         } else {
@@ -95,14 +105,16 @@ export class CLIRawRoute implements Route {
           });
         }
       } finally {
+        // important! at this stage, don't write to stdout/stderr anymore, e.g. don't do "this.logger.clearStatusLine()"
+        // because the socket (for pty) is already closed.
         if (ttyPath) {
           process.stdout.write = originalStdoutWrite;
           process.stderr.write = originalStderrWrite;
-        } else {
+        }
+        if (isSSE) {
           delete process.env.BIT_CLI_SERVER_NO_TTY;
           loader.shouldSendServerEvents = false;
         }
-        this.logger.clearStatusLine();
         // change chalk back to false, otherwise, the IDE will have colors. (this is a global setting)
         chalk.enabled = false;
         if (shouldReloadFeatureToggle) {

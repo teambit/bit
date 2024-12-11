@@ -1,23 +1,21 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace, AutoTagResult } from '@teambit/workspace';
+import { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { SnappingAspect, SnappingMain, TagResults } from '@teambit/snapping';
 import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
-import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
-import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
-import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { UnmergedComponent } from '@teambit/legacy.scope';
+import { Ref, Lane, ModelComponent } from '@teambit/scope.objects';
 import chalk from 'chalk';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
 import { RemoveAspect, RemoveMain, deleteComponentsFiles } from '@teambit/remove';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
@@ -37,7 +35,7 @@ import {
   ConfigMergeResult,
   WorkspaceConfigUpdateResult,
 } from '@teambit/config-merger';
-import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
+import { SnapsDistance } from '@teambit/component.snap-distance';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
@@ -58,6 +56,8 @@ type ResolveUnrelatedData = {
   unrelatedHead: Ref;
   unrelatedLaneId: LaneId;
 };
+
+export type DivergedComponent = { id: ComponentID; diverge: SnapsDistance };
 
 export type ComponentMergeStatus = ComponentStatusBase & {
   mergeResults?: MergeResultsThreeWay | null;
@@ -96,6 +96,7 @@ export type ApplyVersionResults = {
   failedComponents?: FailedComponents[];
   removedComponents?: ComponentID[];
   addedComponents?: ComponentID[]; // relevant when restoreMissingComponents is true (e.g. bit lane merge-abort)
+  newComponents?: ComponentID[]; // relevant for "bit stash load". (stashedBitmapEntries is populated)
   resolvedComponents?: ConsumerComponent[]; // relevant for bit merge --resolve
   abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
   mergeSnapResults?: MergeSnapResults;
@@ -143,7 +144,7 @@ export class MergingMain {
     } else if (abort) {
       mergeResults = await this.abortMerge(pattern);
     } else {
-      const bitIds = await this.getComponentsToMerge(consumer, pattern);
+      const bitIds = await this.getComponentsToMerge(pattern);
       mergeResults = await this.mergeComponentsFromRemote(
         consumer,
         bitIds,
@@ -268,9 +269,8 @@ export class MergingMain {
 
     let workspaceConfigConflictWriteError: Error | undefined;
     if (workspaceDepsConflicts) {
-      workspaceConfigConflictWriteError = await this.configMerger.writeWorkspaceJsoncWithConflictsGracefully(
-        workspaceDepsConflicts
-      );
+      workspaceConfigConflictWriteError =
+        await this.configMerger.writeWorkspaceJsoncWithConflictsGracefully(workspaceDepsConflicts);
     }
     if (this.workspace) await this.configMerger.generateConfigMergeConflictFileForAll(allConfigMerge);
 
@@ -664,13 +664,30 @@ export class MergingMain {
     return unresolvedComponents.map((u) => ComponentID.fromObject(u.id));
   }
 
-  private async getComponentsToMerge(consumer: Consumer, pattern?: string): Promise<ComponentID[]> {
+  private async getComponentsToMerge(pattern?: string): Promise<ComponentID[]> {
     if (pattern) {
       return this.workspace.idsByPattern(pattern);
     }
-    const componentsList = new ComponentsList(consumer);
-    const mergePending = await componentsList.listMergePendingComponents();
+    const mergePending = await this.listMergePendingComponents();
     return mergePending.map((c) => c.id);
+  }
+
+  async listMergePendingComponents(componentsList?: ComponentsList): Promise<DivergedComponent[]> {
+    const consumer = this.workspace.consumer;
+    componentsList = componentsList || new ComponentsList(consumer);
+    const allIds = consumer.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
+    const componentsFromModel = await componentsList.getModelComponents();
+    const duringMergeComps = componentsList.listDuringMergeStateComponents();
+    const mergePendingComponents = await Promise.all(
+      allIds.map(async (componentId: ComponentID) => {
+        const modelComponent = componentsFromModel.find((c) => c.toComponentId().isEqualWithoutVersion(componentId));
+        if (!modelComponent || duringMergeComps.hasWithoutVersion(componentId)) return null;
+        const divergedData = await modelComponent.getDivergeDataForMergePending(consumer.scope.objects);
+        if (!divergedData.isDiverged()) return null;
+        return { id: modelComponent.toComponentId(), diverge: divergedData };
+      })
+    );
+    return compact(mergePendingComponents);
   }
 
   static slots = [];
@@ -720,7 +737,7 @@ export class MergingMain {
     RemoveMain,
     GlobalConfigMain,
     ConfigMergerMain,
-    DependencyResolverMain
+    DependencyResolverMain,
   ]) {
     const logger = loggerMain.createLogger(MergingAspect.id);
     const merging = new MergingMain(

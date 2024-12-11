@@ -7,12 +7,16 @@ import { Logger } from '@teambit/logger';
 const STAGED_CONFIG_DIR = 'staged-config';
 
 type Config = Record<string, any> | undefined;
-type ComponentConfig = { id: ComponentID; config: Config };
-type ComponentConfigObj = { id: ComponentIdObj; config: Config };
+type ComponentConfig = { id: ComponentID; config: Config; componentMapObject: Record<string, any> };
+type ComponentConfigObj = { id: ComponentIdObj; config: Config; componentMapObject: Record<string, any> };
 
 export class StagedConfig {
   hasChanged = false;
-  constructor(readonly filePath: string, private componentsConfig: ComponentConfig[], private logger: Logger) {}
+  constructor(
+    readonly filePath: string,
+    private componentsConfig: ComponentConfig[],
+    private logger: Logger
+  ) {}
 
   static async load(scopePath: string, logger: Logger, laneId?: LaneId): Promise<StagedConfig> {
     const lanePath = laneId ? path.join(laneId.scope, laneId.name) : DEFAULT_LANE;
@@ -20,7 +24,7 @@ export class StagedConfig {
     let componentsConfig: ComponentConfig[] = [];
     try {
       const fileContent = await fs.readJson(filePath);
-      componentsConfig = fileContent.map((item) => ({ id: ComponentID.fromObject(item.id), config: item.config }));
+      componentsConfig = fileContent.map((item) => ({ ...item, id: ComponentID.fromObject(item.id) }));
     } catch (err: any) {
       if (err.code === 'ENOENT') {
         componentsConfig = [];
@@ -32,7 +36,7 @@ export class StagedConfig {
   }
 
   toObject(): ComponentConfigObj[] {
-    return this.componentsConfig.map(({ id, config }) => ({ id: id.toObject(), config }));
+    return this.componentsConfig.map(({ id, ...rest }) => ({ id: id.toObject(), ...rest }));
   }
 
   async write() {
@@ -42,6 +46,10 @@ export class StagedConfig {
 
   getConfigPerId(id: ComponentID): Config {
     return this.componentsConfig.find((c) => c.id.isEqual(id, { ignoreVersion: true }))?.config;
+  }
+
+  getPerId(id: ComponentID): ComponentConfig | undefined {
+    return this.componentsConfig.find((c) => c.id.isEqual(id, { ignoreVersion: true }));
   }
 
   getAll() {
@@ -58,12 +66,12 @@ export class StagedConfig {
     this.componentsConfig = [];
   }
 
-  addComponentConfig(id: ComponentID, config: Config) {
+  addComponentConfig(id: ComponentID, config: Config, componentMapObject: Record<string, any>) {
     const exists = this.componentsConfig.find((c) => c.id.isEqual(id, { ignoreVersion: true }));
     if (exists) {
       exists.config = config;
     } else {
-      this.componentsConfig.push({ id, config });
+      this.componentsConfig.push({ id, config, componentMapObject });
     }
     this.hasChanged = true;
   }

@@ -5,8 +5,8 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { BuilderAspect } from '@teambit/builder';
-import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ModelComponent, Version } from '@teambit/scope.objects';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import {
   DependencyResolverAspect,
   DependencyList,
@@ -316,7 +316,7 @@ export class ComponentCompareMain {
     Workspace,
     TesterMain,
     DependencyResolverMain,
-    ImporterMain
+    ImporterMain,
   ]) {
     const logger = loggerMain.createLogger(ComponentCompareAspect.id);
     const componentCompareMain = new ComponentCompareMain(

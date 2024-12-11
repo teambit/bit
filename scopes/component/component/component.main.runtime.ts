@@ -5,7 +5,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';
 import { flatten, orderBy } from 'lodash';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
 import { componentSchema } from './component.graphql';

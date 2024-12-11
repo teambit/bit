@@ -1,12 +1,8 @@
 import chalk from 'chalk';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Command, CommandOptions } from '@teambit/cli';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
-import {
-  DEFAULT_BIT_RELEASE_TYPE,
-  COMPONENT_PATTERN_HELP,
-  CFG_FORCE_LOCAL_BUILD,
-} from '@teambit/legacy/dist/constants';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { DEFAULT_BIT_RELEASE_TYPE, COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
 import { GlobalConfigMain } from '@teambit/global-config';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ReleaseType } from 'semver';
@@ -115,7 +111,11 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
   remoteOp = true; // In case a compiler / tester is not installed
   examples = [{ cmd: 'tag --ver 1.0.0', description: 'tag all components to version 1.0.0' }];
 
-  constructor(private snapping: SnappingMain, private logger: Logger, private globalConfig: GlobalConfigMain) {}
+  constructor(
+    private snapping: SnappingMain,
+    private logger: Logger,
+    private globalConfig: GlobalConfigMain
+  ) {}
 
   // eslint-disable-next-line complexity
   async report([patterns = []]: [string[]], options: TagParams): Promise<string> {

@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
 import glob from 'glob';
 import path from 'path';
-import { loadConsumer } from '@teambit/legacy/dist/consumer';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { loadConsumer } from '@teambit/legacy.consumer';
+import { Scope } from '@teambit/legacy.scope';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
 import { uniq } from 'lodash';
 

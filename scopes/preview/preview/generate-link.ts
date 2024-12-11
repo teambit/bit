@@ -54,7 +54,7 @@ export function generateLink(
   });
 
   const contents = `
-import { linkModules } from '${normalizePath(join(previewDistDir, 'preview.preview.runtime.js'))}';
+import { linkModules } from '${normalizePath(join(previewDistDir, 'preview-modules.js'))}';
 
 ${getModuleImports(moduleLinks, tempPackageDir)}
 

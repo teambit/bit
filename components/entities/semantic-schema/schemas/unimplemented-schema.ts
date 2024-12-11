@@ -1,7 +1,11 @@
 import { SchemaLocation, SchemaNode } from '../schema-node';
 
 export class UnImplementedSchema extends SchemaNode {
-  constructor(readonly location: SchemaLocation, readonly name: string, readonly type: string) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly name: string,
+    readonly type: string
+  ) {
     super();
   }
 

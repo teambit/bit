@@ -168,7 +168,7 @@ export class NodeMain {
       ReactMain,
       GeneratorMain,
       TypescriptMain,
-      WorkerMain
+      WorkerMain,
     ],
     config,
     slots,

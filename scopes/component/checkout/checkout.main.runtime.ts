@@ -3,7 +3,6 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
-import { BEFORE_CHECKOUT } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import {
   ApplyVersionResults,
@@ -13,17 +12,18 @@ import {
   MergeStrategy,
 } from '@teambit/merging';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
-import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
+import { HEAD, LATEST } from '@teambit/legacy.constants';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import mapSeries from 'p-map-series';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import { Version, ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
-import { Tmp } from '@teambit/legacy/dist/scope/repositories';
-import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
+import { Version, ModelComponent, Lane } from '@teambit/scope.objects';
+import { Tmp } from '@teambit/legacy.scope';
+import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
 import { applyVersion, ComponentStatus, ComponentStatusBase, throwForFailures } from './checkout-version';
 import { RevertCmd } from './revert-cmd';
+import { ComponentMap } from '@teambit/legacy.bit-map';
 
 export type CheckoutProps = {
   version?: string; // if reset/head/latest is true, the version is undefined
@@ -47,6 +47,7 @@ export type CheckoutProps = {
   versionPerId?: ComponentID[]; // if given, the ComponentID.version is the version to checkout to.
   skipUpdatingBitmap?: boolean; // needed for stash
   loadStash?: boolean;
+  stashedBitmapEntries?: Array<Partial<ComponentMap>>;
   restoreMissingComponents?: boolean; // in case .bitmap has a component and it's missing from the workspace, restore it (from model)
   allowAddingComponentsFromScope?: boolean; // in case the id doesn't exist in .bitmap, add it from the scope (relevant for switch)
   includeLocallyDeleted?: boolean; // include components that were deleted locally. currently enabled for "bit checkout reset" only.
@@ -74,6 +75,7 @@ export class CheckoutMain {
     const { version, ids, promptMergeOptions } = checkoutProps;
     await this.syncNewComponents(checkoutProps);
     const addedComponents = await this.restoreMissingComponents(checkoutProps);
+    const newComponents = await this.addNewComponents(checkoutProps);
     const bitIds = ComponentIdList.fromArray(ids?.map((id) => id) || []);
     // don't use Promise.all, it loads the components and this operation must be in sequence.
     const allComponentStatusBeforeMerge = await mapSeries(bitIds, (id) =>
@@ -189,6 +191,7 @@ export class CheckoutMain {
       components: appliedVersionComponents,
       removedComponents: componentIdsToRemove,
       addedComponents,
+      newComponents,
       version,
       failedComponents,
       leftUnresolvedConflicts,
@@ -231,9 +234,47 @@ export class CheckoutMain {
     return missing;
   }
 
+  async addNewComponents(checkoutProps: CheckoutProps): Promise<undefined | ComponentID[]> {
+    const stashedBitmapEntries = checkoutProps.stashedBitmapEntries;
+    if (!stashedBitmapEntries) return;
+    const newBitmapEntries = stashedBitmapEntries.filter((entry) => entry.defaultScope);
+    if (!newBitmapEntries.length) return;
+    const newComps = await mapSeries(newBitmapEntries, async (bitmapEntry) => {
+      const id = bitmapEntry.id!;
+      const existingId = this.workspace.bitMap.getBitmapEntryIfExist(id, { ignoreVersion: true });
+      if (existingId) return;
+      const modelComponent = ModelComponent.fromBitId(id);
+      const repo = this.workspace.scope.legacyScope.objects;
+      const consumerComp = await modelComponent.toConsumerComponent(id.version, id.scope, repo);
+      const newCompId = ComponentID.fromObject({ name: id.fullName }, bitmapEntry.defaultScope!);
+      await this.componentWriter.writeMany({
+        components: [consumerComp],
+        skipDependencyInstallation: true,
+        writeToPath: bitmapEntry.rootDir,
+        skipUpdatingBitMap: true,
+      });
+
+      this.workspace.consumer.bitMap.addComponent({
+        componentId: newCompId,
+        files: consumerComp.files.map((f) => ({
+          name: f.basename,
+          relativePath: f.relative,
+          test: f.test,
+        })),
+        mainFile: bitmapEntry.mainFile!,
+        config: bitmapEntry.config,
+        defaultScope: bitmapEntry.defaultScope,
+      });
+      await this.workspace.triggerOnComponentAdd(newCompId, { compile: true });
+      return newCompId;
+    });
+    await this.workspace.bitMap.write();
+    return compact(newComps);
+  }
+
   async checkoutByCLIValues(componentPattern: string, checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
     const { revert, head } = checkoutProps;
-    this.logger.setStatusLine(revert ? 'reverting components...' : BEFORE_CHECKOUT);
+    this.logger.setStatusLine(revert ? 'reverting components...' : 'switching component version...');
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     await this.importer.importCurrentObjects(); // important. among others, it fetches the remote lane object and its new components.
@@ -419,11 +460,15 @@ export class CheckoutMain {
     if (existingBitMapId && !currentlyUsedVersion) {
       return returnFailure(`component ${id.toStringWithoutVersion()} is new`);
     }
-    if (version && currentlyUsedVersion === version) {
-      // it won't be relevant for 'reset' as it doesn't have a version
-      return returnFailure(`component ${id.toStringWithoutVersion()} is already at version ${version}`, true);
+
+    if ((version && currentlyUsedVersion === version) || (versionPerId && currentlyUsedVersion === newVersion)) {
+      // it won't be relevant for 'reset' as it doesn't have a version/versionPerId
+      return returnFailure(
+        `component ${id.toStringWithoutVersion()} is already at version ${version || newVersion}`,
+        true
+      );
     }
-    if (headVersion && currentlyUsedVersion === newVersion) {
+    if ((headVersion || latestVersion) && currentlyUsedVersion === newVersion) {
       return returnFailure(
         `component ${id.toStringWithoutVersion()} is already at the latest version, which is ${newVersion}`,
         true
@@ -528,7 +573,7 @@ export class CheckoutMain {
     LoggerMain,
     ComponentWriterMain,
     ImporterMain,
-    RemoveMain
+    RemoveMain,
   ]) {
     const logger = loggerMain.createLogger(CheckoutAspect.id);
     const checkoutMain = new CheckoutMain(workspace, logger, compWriter, importer, remove);

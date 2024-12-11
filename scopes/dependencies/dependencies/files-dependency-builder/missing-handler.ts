@@ -10,7 +10,11 @@ export type FoundPackages = {
 };
 
 export class MissingHandler {
-  constructor(private missing: Missing, private componentDir: string, private workspacePath: string) {}
+  constructor(
+    private missing: Missing,
+    private componentDir: string,
+    private workspacePath: string
+  ) {}
 
   /**
    * Run over each entry in the missing array and transform the missing from list of paths

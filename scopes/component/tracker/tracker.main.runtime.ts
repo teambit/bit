@@ -20,7 +20,10 @@ export type TrackData = {
 };
 
 export class TrackerMain {
-  constructor(private workspace: Workspace, private logger: Logger) {}
+  constructor(
+    private workspace: Workspace,
+    private logger: Logger
+  ) {}
 
   /**
    * add a new component to the .bitmap file.

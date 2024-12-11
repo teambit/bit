@@ -2,10 +2,8 @@ import { Component, ComponentFS, ComponentID, Config, Snap, State, Tag, TagMap }
 import pMapSeries from 'p-map-series';
 import { Logger } from '@teambit/logger';
 import { SemVer } from 'semver';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { VERSION_ZERO } from '@teambit/legacy/dist/scope/models/model-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { VERSION_ZERO, Ref, ModelComponent, Version } from '@teambit/scope.objects';
 import { BitError } from '@teambit/bit-error';
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import type { ScopeMain } from './scope.main.runtime';
@@ -13,7 +11,10 @@ import type { ScopeMain } from './scope.main.runtime';
 export class ScopeComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
   private importedComponentsCache: InMemoryCache<boolean>;
-  constructor(private scope: ScopeMain, private logger: Logger) {
+  constructor(
+    private scope: ScopeMain,
+    private logger: Logger
+  ) {
     this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.importedComponentsCache = createInMemoryCache({ maxAge: 1000 * 60 * 30 }); // 30 min
   }
@@ -194,9 +195,9 @@ export class ScopeComponentLoader {
   private async createStateFromVersion(
     id: ComponentID,
     version: Version,
-    consumerComponent?: ConsumerComponent
+    consumerComponentOptional?: ConsumerComponent
   ): Promise<State> {
-    consumerComponent = consumerComponent || (await this.scope.legacyScope.getConsumerComponent(id));
+    const consumerComponent = consumerComponentOptional || (await this.scope.legacyScope.getConsumerComponent(id));
     const state = new State(
       // We use here the consumerComponent.extensions instead of version.extensions
       // because as part of the conversion to consumer component the artifacts are initialized as Artifact instances

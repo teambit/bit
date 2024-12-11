@@ -9,7 +9,7 @@ import type { Environment } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
-import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
+import { ComponentLoadOptions } from '@teambit/legacy.consumer-component';
 import { AbstractVinyl } from '@teambit/component.sources';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Doc, DocPropList } from '@teambit/docs.entities.doc';
@@ -185,7 +185,7 @@ export class DocsMain {
       LoggerMain,
       DevFilesMain,
       EnvsMain,
-      ScopeMain
+      ScopeMain,
     ],
     config: DocsConfig,
     [docPropSlot, docReaderSlot]: [DocPropSlot, DocReaderSlot]

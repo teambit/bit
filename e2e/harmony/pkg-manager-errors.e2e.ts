@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -37,6 +37,7 @@ describe('bit checkout command', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(afterExport);
         helper.command.createLane();
+        helper.command.snapAllComponentsWithoutBuild('--unmodified');
       });
       it('should not throw', () => {
         const output = helper.command.switchLocalLane('main');

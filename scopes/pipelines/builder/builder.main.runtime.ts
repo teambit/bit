@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ArtifactVinyl, ArtifactFiles, ArtifactObject } from '@teambit/component.sources';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
@@ -183,7 +183,7 @@ export class BuilderMain {
         if (this.envs.isUsingCoreEnv(comp)) {
           return [comp.id.toString(), { envId, inWs: false, lastTaggedEnvHasOnlyOverview: false }] as [
             string,
-            { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview?: boolean; isEnvTaggedWithComp?: boolean }
+            { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview?: boolean; isEnvTaggedWithComp?: boolean },
           ];
         }
 
@@ -191,7 +191,7 @@ export class BuilderMain {
         if (envId && !compsBeingTaggedLookup.has(comp.id.toString())) {
           return [comp.id.toString(), { envId, isEnvTaggedWithComp: false }] as [
             string,
-            { envId: string; inWs?: boolean; lastTaggedEnvHasOnlyOverview?: boolean; isEnvTaggedWithComp?: boolean }
+            { envId: string; inWs?: boolean; lastTaggedEnvHasOnlyOverview?: boolean; isEnvTaggedWithComp?: boolean },
           ];
         }
 
@@ -204,7 +204,7 @@ export class BuilderMain {
 
         return [comp.id.toString(), { envId, inWs, lastTaggedEnvHasOnlyOverview, isEnvTaggedWithComp: true }] as [
           string,
-          { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean; isEnvTaggedWithComp?: boolean }
+          { envId: string; inWs: boolean; lastTaggedEnvHasOnlyOverview: boolean; isEnvTaggedWithComp?: boolean },
         ];
       })
     );
@@ -392,7 +392,7 @@ export class BuilderMain {
       seedersOnly: isolateOptions?.seedersOnly,
       originalSeeders: ids,
       capsulesBaseDir,
-      ...(builderOptions || {}),
+      ...builderOptions,
     };
     this.logger.consoleTitle(`Total ${components.length} components to build`);
     const buildResult: TaskResultsList = await envs.runOnce(this.buildService, builderServiceOptions);
@@ -547,7 +547,7 @@ export class BuilderMain {
       ComponentMain,
       UiMain,
       GlobalConfigMain,
-      IssuesMain
+      IssuesMain,
     ],
     config,
     [buildTaskSlot, tagTaskSlot, snapTaskSlot]: [TaskSlot, TaskSlot, TaskSlot]

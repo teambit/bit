@@ -6,7 +6,7 @@ import { SlotRegistry, Slot } from '@teambit/harmony';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { EnvsAspect } from '@teambit/envs';
 import type { EnvJsonc, EnvsMain } from '@teambit/envs';
-import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
 import { Component, ComponentMain, ComponentAspect } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { DevFilesAspect } from './dev-files.aspect';
@@ -140,7 +140,7 @@ export class DevFilesMain {
 
   mergeEnvManifestPatterns(parent: EnvJsonc, child: EnvJsonc): Partial<EnvJsonc> {
     const merged: Partial<EnvJsonc> = {
-      patterns: { ...(parent.patterns || {}), ...(child.patterns || {}) },
+      patterns: { ...parent.patterns, ...child.patterns },
     };
     return merged;
   }

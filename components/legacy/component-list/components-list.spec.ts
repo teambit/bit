@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { ModelComponent } from '@teambit/scope.objects';
 import { ComponentsList } from './components-list';
 
 describe('ComponentList', function () {

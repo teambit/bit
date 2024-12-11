@@ -3,15 +3,14 @@ import pMapSeries from 'p-map-series';
 import * as path from 'path';
 import { linkPkgsToRootComponents } from '@teambit/workspace.root-components';
 import { ComponentID } from '@teambit/component-id';
-import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy/dist/constants';
+import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy.constants';
 import { BitMap } from '@teambit/legacy.bit-map';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
-import { PackageJsonFile, DataToPersist, RemovePath } from '@teambit/component.sources';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { PackageJsonFile, DataToPersist, RemovePath, Symlink } from '@teambit/component.sources';
+import { Consumer } from '@teambit/legacy.consumer';
+import { logger } from '@teambit/legacy.logger';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName, getNodeModulesPathOfComponent } from '@teambit/pkg.modules.component-package-name';
-import Symlink from '@teambit/legacy/dist/links/symlink';
 import { Workspace } from '@teambit/workspace';
 import { snapToSemver } from '@teambit/component-package-version';
 import { Component } from '@teambit/component';
@@ -35,7 +34,10 @@ export default class NodeModuleLinker {
   existingLinks: NodeModulesLinksResult[];
   packageJsonCreated: boolean;
 
-  constructor(private components: Component[], private workspace: Workspace) {
+  constructor(
+    private components: Component[],
+    private workspace: Workspace
+  ) {
     this.consumer = this.workspace.consumer;
     // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = this.consumer.bitMap;

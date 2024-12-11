@@ -11,14 +11,13 @@ import { ExportMain } from '@teambit/export';
 import { CheckoutMain } from '@teambit/checkout';
 import { ApplyVersionResults } from '@teambit/merging';
 import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
-import { Log } from '@teambit/legacy/dist/scope/models/lane';
+import { LaneLog } from '@teambit/scope.objects';
 import { ComponentCompareMain } from '@teambit/component-compare';
 import { GeneratorMain } from '@teambit/generator';
-import { getParsedHistoryMetadata } from '@teambit/legacy/dist/consumer/consumer';
-import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
+import { getParsedHistoryMetadata } from '@teambit/legacy.consumer';
+import { RemovedObjects } from '@teambit/legacy.scope';
 import { RemoveMain } from '@teambit/remove';
 import { compact, uniq } from 'lodash';
-import { getCloudDomain } from '@teambit/legacy/dist/constants';
 import { ConfigMain } from '@teambit/config';
 import { LANE_REMOTE_DELIMITER, LaneId } from '@teambit/lane-id';
 import { ApplicationMain } from '@teambit/application';
@@ -47,7 +46,7 @@ type LaneObj = {
   name: string;
   scope: string;
   id: string;
-  log: Log;
+  log: LaneLog;
   components: Array<{ id: string; head: string }>;
   isNew: boolean;
   forkedFrom?: string;
@@ -105,6 +104,10 @@ export class APIForIDE {
     const endStr = code === 0 ? 'succeeded' : 'failed';
     const str = `${op}, ${endStr}`;
     await this.writeToCmdHistory(str);
+  }
+
+  getProcessPid() {
+    return process.pid;
   }
 
   private async writeToCmdHistory(str: string) {
@@ -319,6 +322,11 @@ export class APIForIDE {
     return results;
   }
 
+  async blame(filePath: string) {
+    const results = await this.componentLog.blame(filePath);
+    return results;
+  }
+
   async changedFilesFromParent(id: string): Promise<FileHashDiffFromParent[]> {
     const results = await this.componentLog.getChangedFilesFromParent(id);
     return results;
@@ -381,13 +389,13 @@ export class APIForIDE {
   }
 
   async export() {
-    const { componentsIds, removedIds, exportedLanes, rippleJobs } = await this.exporter.export();
-    const rippleJobsFullUrls = rippleJobs.map((job) => `https://${getCloudDomain()}/ripple-ci/job/${job}`);
+    const { componentsIds, removedIds, exportedLanes, rippleJobUrls } = await this.exporter.export();
     return {
       componentsIds: componentsIds.map((c) => c.toString()),
       removedIds: removedIds.map((c) => c.toString()),
       exportedLanes: exportedLanes.map((l) => l.id()),
-      rippleJobs: rippleJobsFullUrls,
+      rippleJobs: rippleJobUrls, // for backward compatibility. bit-extension until 1.1.52 expects rippleJobs.
+      rippleJobUrls,
     };
   }
 
@@ -410,7 +418,12 @@ export class APIForIDE {
       throw new Error('id should include the scope name');
     }
     const [scope, ...nameSplit] = idIncludeScope.split('/');
-    return this.generator.generateComponentTemplate([nameSplit.join('/')], templateName, { scope });
+    return this.generator.generateComponentTemplate(
+      [nameSplit.join('/')],
+      templateName,
+      { scope },
+      { optimizeReportForNonTerminal: true }
+    );
   }
 
   async removeComponent(componentsPattern: string) {

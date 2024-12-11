@@ -58,7 +58,7 @@ export default function cabinet(options: Options) {
   }
   if (ext === '.css' && dependency.startsWith('~')) resolver = lookupStyling;
 
-  const detector = detectorHook.getDetector(ext);
+  const detector = detectorHook.getDetector(ext, filename);
   if (detector) {
     // test if the new detector API has a dependency lookup.
     if (detector.dependencyLookup) {
@@ -71,7 +71,7 @@ export default function cabinet(options: Options) {
 
   if (options?.envDetectors) {
     for (const envDetector of options.envDetectors) {
-      if (envDetector.isSupported({ ext }) && envDetector.dependencyLookup) {
+      if (envDetector.isSupported({ ext, filename }) && envDetector.dependencyLookup) {
         resolver = envDetector.dependencyLookup;
       }
     }

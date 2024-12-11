@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { MergeStrategy } from '@teambit/merging';
 import { Command, CommandOptions } from '@teambit/cli';
 import { CheckoutProps } from '@teambit/checkout';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import { StashMain } from './stash.main.runtime';
 
@@ -14,6 +14,11 @@ export class StashSaveCmd implements Command {
   group = 'development';
   options = [
     ['p', 'pattern', COMPONENT_PATTERN_HELP],
+    [
+      '',
+      'include-new',
+      'EXPERIMENTAL. by default, only modified components are stashed. use this flag to include new components',
+    ],
     ['m', 'message <string>', 'message to be attached to the stashed components'],
   ] as CommandOptions;
   loader = true;
@@ -25,12 +30,14 @@ export class StashSaveCmd implements Command {
     {
       pattern,
       message,
+      includeNew,
     }: {
       pattern?: string;
       message?: string;
+      includeNew?: boolean;
     }
   ) {
-    const compIds = await this.stash.save({ pattern, message });
+    const compIds = await this.stash.save({ pattern, message, includeNew });
     return chalk.green(`stashed ${compIds.length} components`);
   }
 }

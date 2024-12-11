@@ -1,6 +1,7 @@
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
-import { ComponentMap } from '@teambit/component';
+import { ComponentID, ComponentMap } from '@teambit/component';
+import { type DependenciesGraph } from '@teambit/scope.objects';
 import { Registries } from './registry';
 import { DepsFilterFn } from './manifest';
 import { NetworkConfig, ProxyConfig } from './dependency-resolver.main.runtime';
@@ -131,6 +132,8 @@ export type PackageManagerInstallOptions = {
    * This is used by Ripple CI.
    */
   returnListOfDepsRequiringBuild?: boolean;
+
+  dependenciesGraph?: DependenciesGraph;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -206,4 +209,16 @@ export interface PackageManager {
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string>;
 
   findUsages?(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string>;
+
+  calcDependenciesGraph?(options: CalcDepsGraphOptions): Promise<DependenciesGraph | undefined>;
 }
+
+export interface CalcDepsGraphOptions {
+  componentRelativeDir: string;
+  componentIdByPkgName: ComponentIdByPkgName;
+  rootDir: string;
+  componentRootDir?: string;
+  pkgName?: string;
+}
+
+export type ComponentIdByPkgName = Map<string, ComponentID>;

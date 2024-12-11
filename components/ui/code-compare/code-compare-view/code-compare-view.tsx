@@ -31,6 +31,7 @@ const languageOverrides: Record<string, string> = {
   jsx: 'javascript',
   mdx: 'markdown',
   md: 'markdown',
+  vue: 'html',
 };
 
 export function CodeCompareViewLoader({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
@@ -50,32 +51,45 @@ export function CodeCompareView({
     editor?: any;
     monaco?: Monaco;
   }>();
-
-  const { baseId, compareId, modifiedFileContent, originalFileContent, modifiedPath, originalPath, loading } =
-    useCodeCompare({
-      fileName,
-    });
+  const {
+    baseId,
+    compareId,
+    modifiedFileContent,
+    originalFileContent,
+    modifiedPath,
+    originalPath,
+    loading: loadingData,
+  } = useCodeCompare({
+    fileName,
+  });
 
   const componentCompareContext = useComponentCompare();
   const DiffEditor = useCodeCompareEditor();
+  const [loading, setLoading] = useState<boolean>(Boolean(loadingData));
+  const [isDiffComputed, setIsDiffComputed] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (loading !== loadingData) {
+      setLoading(Boolean(loadingData));
+    }
+    if (isDiffComputed && loadingData) setIsDiffComputed(false);
+  }, [loadingData]);
 
   const getDefaultView: () => EditorViewMode = () => {
     if (!baseId) return 'inline';
     if (baseId && compareId && baseId.isEqual(compareId)) return 'inline';
     if (!originalFileContent || !modifiedFileContent) return 'inline';
-    if (
-      !componentCompareContext?.fileCompareDataByName?.get(fileName)?.status ||
-      componentCompareContext?.fileCompareDataByName?.get(fileName)?.status === 'UNCHANGED'
-    )
-      return 'inline';
-
+    if (componentCompareContext?.fileCompareDataByName?.get(fileName)?.status === 'UNCHANGED') return 'inline';
     return 'split';
   };
 
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
+
   const [ignoreWhitespace, setIgnoreWhitespace] = useState<boolean>(false);
   const [view, setView] = useState<EditorViewMode>(getDefaultView());
   const [wrap, setWrap] = useState<boolean>(true);
+  const [diffOnly, setDiffOnly] = useState<boolean>(true);
+
   const language = useMemo(() => {
     if (!fileName) return languageOverrides.ts;
     const fileEnding = fileName?.split('.').pop() ?? '';
@@ -97,113 +111,54 @@ export function CodeCompareView({
 
   const [containerHeight, setContainerHeight] = useState<string | undefined>(isFullScreen ? '100%' : undefined);
 
-  const getDisplayedLineCount = (editorInstance: any, containerWidth: any, changedLines = 0) => {
+  const getEditorHeight = (editorInstance: any) => {
     if (!monacoRef.current?.monaco) return 0;
 
     const model = editorInstance.getModel();
 
-    if (!model) {
-      return 0;
-    }
+    if (!model) return 0;
 
-    const lineCount = model.getLineCount();
+    const lineHeight = editorInstance.getOption(monacoRef.current.monaco.editor.EditorOption.lineHeight);
+    const lineCount = editorInstance.getModel()?.getLineCount() || 1;
+    const height = editorInstance.getTopForLineNumber(lineCount + 1) + lineHeight;
 
-    let displayedLines = view === 'inline' ? 0 : changedLines * 1;
-
-    const lineWidth = editorInstance.getOption(monacoRef.current.monaco.editor.EditorOption.wordWrapColumn);
-    const fontWidthApproximation = 8;
-
-    for (let lineNumber = 1; lineNumber <= lineCount; lineNumber += 1) {
-      const line = model.getLineContent(lineNumber);
-      const length = line.length || 1;
-      const lineFitsContainer = length * fontWidthApproximation <= containerWidth;
-      const wrappedLineCount = (lineFitsContainer ? 1 : Math.ceil(length / lineWidth)) || 1;
-      displayedLines += wrappedLineCount;
-    }
-
-    return displayedLines;
-  };
-  const changedLinesRef = useRef(0);
-  const updateChangedLines = () => {
-    if (!monacoRef.current) return;
-
-    const modifiedEditor = monacoRef.current.editor.getModifiedEditor();
-    const modifiedModel = modifiedEditor.getModel();
-    const modifiedModelValue = modifiedModel.getValue();
-
-    if (!modifiedModelValue) {
-      changedLinesRef.current = 0;
-      return;
-    }
-
-    const diffResult = monacoRef.current.editor.getLineChanges() ?? [];
-
-    let adjustedLines = 0;
-    diffResult.forEach((change: any) => {
-      if (change.originalEndLineNumber !== 0) {
-        const removedLines =
-          change.originalEndLineNumber > change.originalStartLineNumber
-            ? change.originalEndLineNumber - change.originalStartLineNumber
-            : 0;
-        adjustedLines += removedLines;
-      }
-    });
-
-    changedLinesRef.current = adjustedLines;
+    return height;
   };
 
   const updateEditorHeight = () => {
-    if (isFullScreen) return `100%`;
-    if (!monacoRef.current?.monaco) return undefined;
+    if (isFullScreen) return;
+    if (!monacoRef.current?.monaco) return;
 
     const originalEditor = monacoRef.current.editor.getOriginalEditor();
     const modifiedEditor = monacoRef.current.editor.getModifiedEditor();
-
-    const lineHeight = originalEditor.getOption(monacoRef.current.monaco.editor.EditorOption.lineHeight);
 
     const originalModel = originalEditor.getModel();
     const modifiedModel = modifiedEditor.getModel();
 
     if (!originalModel || !modifiedModel) {
-      return undefined;
+      return;
     }
 
-    updateChangedLines();
+    const diffResult = monacoRef.current.editor.getLineChanges() ?? [];
 
-    const paddingTop = originalEditor.getOption(monacoRef.current.monaco.editor.EditorOption.padding)?.top || 0;
-    const paddingBottom = originalEditor.getOption(monacoRef.current.monaco.editor.EditorOption.padding)?.bottom || 0;
-    const glyphMargin = originalEditor.getOption(monacoRef.current.monaco.editor.EditorOption.glyphMargin);
-    const lineNumbers = originalEditor.getOption(monacoRef.current.monaco.editor.EditorOption.lineNumbers);
+    const originalContentHeight = getEditorHeight(originalEditor);
+    const modifiedContentHeight = getEditorHeight(modifiedEditor);
 
-    const glyphMarginHeight = glyphMargin ? lineHeight : 0;
-    const lineNumbersHeight = lineNumbers.renderType !== 0 ? lineHeight : 0;
+    if (!originalContentHeight && !modifiedContentHeight) return;
 
-    const originalContainerWidth = originalEditor.getLayoutInfo().contentWidth;
-    const modifiedContainerWidth = modifiedEditor.getLayoutInfo().contentWidth;
-
-    const originalDisplayedLines = getDisplayedLineCount(originalEditor, originalContainerWidth);
-    const modifiedDisplayedLines = getDisplayedLineCount(
-      modifiedEditor,
-      modifiedContainerWidth,
-      changedLinesRef.current
-    );
-
-    const originalContentHeight =
-      originalDisplayedLines * lineHeight + paddingTop + paddingBottom + glyphMarginHeight + lineNumbersHeight;
-    const modifiedContentHeight =
-      modifiedDisplayedLines * lineHeight + paddingTop + paddingBottom + glyphMarginHeight + lineNumbersHeight;
-
-    const maxHeight = Math.max(Math.max(originalContentHeight, modifiedContentHeight), 250);
+    const maxHeight =
+      Math.max(Math.max(originalContentHeight, modifiedContentHeight), 250) + (diffResult.length > 0 ? 24 : 0);
 
     const originalDomNode = originalEditor.getDomNode()?.parentElement;
     const modifiedDomNode = modifiedEditor.getDomNode()?.parentElement;
 
     if (!originalDomNode || !modifiedDomNode) {
-      return undefined;
+      return;
     }
 
+    modifiedDomNode.style.height = `${maxHeight}px`;
+    monacoRef.current.editor.layout();
     setContainerHeight(() => `${maxHeight}px`);
-    return undefined;
   };
 
   useEffect(() => {
@@ -260,22 +215,45 @@ export function CodeCompareView({
           'editor.lineHighlightBorder': '#6a57fd',
         },
       });
-      monaco.editor.setTheme('bit');
-      editor.getOriginalEditor().onDidChangeModelDecorations(updateEditorHeight);
-      editor.getModifiedEditor().onDidChangeModelDecorations(updateEditorHeight);
-      const containerElement = containerRef.current;
-      let resizeObserver: ResizeObserver | undefined;
 
-      if (containerElement) {
-        resizeObserver = new ResizeObserver(() => {
-          setTimeout(() => {
-            updateEditorHeight();
-          });
+      monaco.editor.setTheme('bit');
+
+      if (!originalFileContent || !modifiedFileContent) {
+        setIsDiffComputed(() => {
+          updateEditorHeight();
+          return true;
         });
-        resizeObserver.observe(containerElement);
       }
 
-      return () => containerElement && resizeObserver?.unobserve(containerElement);
+      editor.onDidUpdateDiff(() => {
+        setIsDiffComputed(() => {
+          updateEditorHeight();
+          return true;
+        });
+      });
+
+      editor.getModifiedEditor().onDidContentSizeChange(() => {
+        const originalFileIsEmpty = editor.getOriginalEditor().getModel()?.getLineCount() === 1;
+        const modifiedFileIsEmpty = editor.getModifiedEditor().getModel()?.getLineCount() === 1;
+        const hasDiff = (monacoRef.current?.editor.getLineChanges() ?? []).length > 0;
+
+        if (originalFileIsEmpty || modifiedFileIsEmpty) {
+          updateEditorHeight();
+        }
+
+        if (isDiffComputed) {
+          updateEditorHeight();
+        }
+
+        if (!isDiffComputed && hasDiff) {
+          setTimeout(() => {
+            setIsDiffComputed(() => {
+              updateEditorHeight();
+              return true;
+            });
+          }, 150);
+        }
+      });
     },
     [fileName, view, compareId?.toString(), componentCompareContext?.hidden, loading, files.length]
   );
@@ -293,6 +271,7 @@ export function CodeCompareView({
         ignoreWhitespace={ignoreWhitespace}
         editorViewMode={view}
         wordWrap={wrap}
+        diffOnly={diffOnly}
         Loader={<CodeCompareViewLoader />}
       />
     ),
@@ -311,6 +290,7 @@ export function CodeCompareView({
       compareId?.toString(),
       baseId?.toString(),
       DiffEditor,
+      diffOnly,
     ]
   );
 
@@ -318,7 +298,7 @@ export function CodeCompareView({
     ? '100%'
     : (!!containerHeight && `calc(${containerHeight} + 30px)`) || '250px';
 
-  const codeContainerHeightStyle = isFullScreen ? 'calc(100% - 30px)' : containerHeight ?? '220px';
+  const codeContainerHeightStyle = isFullScreen ? 'calc(100% - 30px)' : (containerHeight ?? '220px');
   const fileCompareDataByName = componentCompareContext?.fileCompareDataByName;
   const codeNavFiles = React.useMemo(() => {
     return files.filter((file) => {
@@ -330,6 +310,8 @@ export function CodeCompareView({
       return false;
     });
   }, [files.length, fileName, fileCompareDataByName?.size]);
+
+  const hideLoader = !loading && files.length > 0 && !!containerHeight && isDiffComputed;
 
   return (
     <div
@@ -347,12 +329,17 @@ export function CodeCompareView({
           files={codeNavFiles}
           selectedFile={fileName}
           fileIconMatchers={fileIconMatchers}
-          onTabClicked={onTabClicked}
+          onTabClicked={(id, event) => {
+            if (id !== fileName) setIsDiffComputed(false);
+            onTabClicked?.(id, event);
+          }}
           getHref={getHref}
           widgets={widgets}
           Menu={
             <CodeCompareEditorSettings
               wordWrap={wrap}
+              diffOnly={diffOnly}
+              onDiffOnlyChanged={(value) => setDiffOnly(value)}
               ignoreWhitespace={ignoreWhitespace}
               editorViewMode={view}
               onViewModeChanged={(value) => setView(value)}
@@ -368,12 +355,17 @@ export function CodeCompareView({
           maxHeight: codeContainerHeightStyle,
           height: codeContainerHeightStyle,
         }}
-        className={classNames(styles.componentCompareCodeDiffEditorContainer, isFullScreen && styles.isFullScreen)}
+        className={classNames(
+          styles.componentCompareCodeDiffEditorContainer,
+          !hideLoader && styles.loading,
+          isFullScreen && styles.isFullScreen
+        )}
       >
         <CodeCompareViewLoader
           className={classNames(
-            !(loading || files.length === 0) && styles.hideLoader,
-            isFullScreen && styles.isFullScreen
+            hideLoader && styles.hideLoader,
+            isFullScreen && styles.isFullScreen,
+            styles.fullHeight
           )}
         />
         {loading ? null : diffEditor}

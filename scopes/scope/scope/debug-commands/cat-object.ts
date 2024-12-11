@@ -1,4 +1,4 @@
-import { loadScope } from '@teambit/legacy/dist/scope';
+import { loadScope } from '@teambit/legacy.scope';
 
 export async function catObject(hash: string, pretty: boolean, stringify: boolean, headers: boolean) {
   const scope = await loadScope();

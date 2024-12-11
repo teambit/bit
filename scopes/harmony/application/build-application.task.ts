@@ -48,7 +48,10 @@ export class AppsBuildTask implements BuildTask {
   name = BUILD_TASK;
   aspectId = ApplicationAspect.id;
   readonly location = 'end';
-  constructor(private application: ApplicationMain, private opt: Options = { deploy: true }) {}
+  constructor(
+    private application: ApplicationMain,
+    private opt: Options = { deploy: true }
+  ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const originalSeedersIds = context.capsuleNetwork.originalSeedersCapsules.map((c) => c.component.id.toString());

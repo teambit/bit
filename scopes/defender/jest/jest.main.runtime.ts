@@ -1,7 +1,7 @@
 import { MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { WorkerAspect, WorkerMain, HarmonyWorker } from '@teambit/worker';
-import { getCloudDomain } from '@teambit/legacy/dist/constants';
+import { getCloudDomain } from '@teambit/legacy.constants';
 import { JestAspect } from './jest.aspect';
 import { JestTester, JestTesterOptions } from './jest.tester';
 import type { JestWorker } from './jest.worker';
@@ -9,7 +9,10 @@ import type { JestWorker } from './jest.worker';
 export const WORKER_NAME = 'jest';
 
 export class JestMain {
-  constructor(private jestWorker: HarmonyWorker<JestWorker>, private logger: Logger) {}
+  constructor(
+    private jestWorker: HarmonyWorker<JestWorker>,
+    private logger: Logger
+  ) {}
 
   /**
    * @deprecated use jest tester from https://bit.cloud/teambit/defender/jest-tester

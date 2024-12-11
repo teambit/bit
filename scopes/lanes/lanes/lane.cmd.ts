@@ -6,10 +6,10 @@ import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { checkoutOutput } from '@teambit/checkout';
 import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Command, CommandOptions } from '@teambit/cli';
-import { LaneData, serializeLaneData } from '@teambit/legacy/dist/scope/lanes/lanes';
+import { LaneData, serializeLaneData } from '@teambit/legacy.scope';
 import { BitError } from '@teambit/bit-error';
 import { approveOperation } from '@teambit/legacy.cli.prompts';
-import { COMPONENT_PATTERN_HELP, DEFAULT_CLOUD_DOMAIN } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP, DEFAULT_CLOUD_DOMAIN } from '@teambit/legacy.constants';
 import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
 import { SwitchCmd } from './switch.cmd';
 import { FetchCmd } from '@teambit/importer';
@@ -37,7 +37,11 @@ export class LaneListCmd implements Command {
   remoteOp = true;
   skipWorkspace = true;
 
-  constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain) {}
+  constructor(
+    private lanes: LanesMain,
+    private workspace: Workspace,
+    private scope: ScopeMain
+  ) {}
 
   async report(args, laneOptions: LaneOptions): Promise<string> {
     const { details, remote, merged, notMerged } = laneOptions;
@@ -144,7 +148,11 @@ export class LaneShowCmd implements Command {
   remoteOp = true;
   skipWorkspace = true;
 
-  constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain) {}
+  constructor(
+    private lanes: LanesMain,
+    private workspace: Workspace,
+    private scope: ScopeMain
+  ) {}
 
   async report([name]: [string], laneOptions: LaneOptions): Promise<string> {
     const lanes = await this.geLanesData([name], laneOptions);
@@ -488,7 +496,10 @@ export class LaneRemoveCompCmd implements Command {
   ] as CommandOptions;
   loader = true;
 
-  constructor(private workspace: Workspace, private lanes: LanesMain) {}
+  constructor(
+    private workspace: Workspace,
+    private lanes: LanesMain
+  ) {}
 
   async report(): Promise<string> {
     throw new BitError(`bit lane remove-comp has been removed. please use "bit remove" or "bit delete" instead`);
@@ -528,7 +539,10 @@ export class LaneFetchCmd implements Command {
   options = [['a', 'all', 'fetch all remote lanes']] as CommandOptions;
   loader = true;
 
-  constructor(private fetchCmd: FetchCmd, private lanes: LanesMain) {}
+  constructor(
+    private fetchCmd: FetchCmd,
+    private lanes: LanesMain
+  ) {}
 
   async report([laneId]: [string], { all }: { all?: boolean }): Promise<string> {
     if (all) return this.fetchCmd.report([[]], { lanes: true });
@@ -562,7 +576,11 @@ export class LaneCmd implements Command {
   helpUrl = 'reference/components/lanes';
   commands: Command[] = [];
 
-  constructor(private lanes: LanesMain, private workspace: Workspace, private scope: ScopeMain) {}
+  constructor(
+    private lanes: LanesMain,
+    private workspace: Workspace,
+    private scope: ScopeMain
+  ) {}
 
   async report([name]: [string], laneOptions: LaneOptions): Promise<string> {
     return new LaneListCmd(this.lanes, this.workspace, this.scope).report([name], laneOptions);

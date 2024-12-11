@@ -17,7 +17,9 @@
       opacity: 1;
       color: var(--bit-text-color-light, #6c707c);
       //TODO - fix hover effect and timing of icon
-      transition: visibility 200ms, opacity 100ms ease-in-out;
+      transition:
+        visibility 200ms,
+        opacity 100ms ease-in-out;
       .icon {
         &:hover {
           color: var(--bit-text-color-heavy);
@@ -59,7 +61,9 @@
     opacity: 0;
     visibility: hidden;
     font-size: 13px;
-    transition: visibility 200ms, opacity 100ms ease-in-out;
+    transition:
+      visibility 200ms,
+      opacity 100ms ease-in-out;
   }
   .codeLink {
     cursor: pointer;
@@ -120,7 +124,9 @@
         background-color: var(--bit-accent-color, #6c5ce7);
         height: 3px;
         border-radius: 10px;
-        transition: background-color 300ms, height 300ms;
+        transition:
+          background-color 300ms,
+          height 300ms;
       }
     }
   }

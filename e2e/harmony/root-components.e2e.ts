@@ -3,7 +3,7 @@ import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
@@ -1306,7 +1306,9 @@ module.exports.default = {
 }`
       );
       helper.extensions.addExtensionToVariant('custom-react', 'teambit.envs/env', {});
-      helper.command.install();
+      // for unclear reason, since upgrading core-envs to use @types/node@20.12.10, the following line throws an error "Unexpected token 'export'"
+      // helper.command.install();
+      helper.command.install('--add-missing-deps');
     });
     after(() => {
       helper.scopeHelper.destroy();

@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { DIAGNOSIS_NAME_VALIDATE_GIT_EXEC } from '@teambit/doctor';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('bit doctor - git exec validation', function () {
   this.timeout(0);

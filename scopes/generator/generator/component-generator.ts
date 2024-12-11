@@ -1,4 +1,3 @@
-import Vinyl from 'vinyl';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import path from 'path';
@@ -9,14 +8,12 @@ import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { TrackerMain } from '@teambit/tracker';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
-import { PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
 import { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ComponentID } from '@teambit/component-id';
 import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 
-import { ComponentTemplate, ComponentFile, ComponentConfig } from './component-template';
+import { ComponentTemplate, ComponentConfig } from './component-template';
 import { CreateOptions } from './create.cmd';
 import { OnComponentCreateSlot } from './generator.main.runtime';
 
@@ -33,7 +30,9 @@ export type GenerateResult = {
   installMissingDependencies?: boolean;
 };
 
-export type OnComponentCreateFn = (generateResults: GenerateResult[]) => Promise<void>;
+export type InstallOptions = { optimizeReportForNonTerminal?: boolean };
+
+export type OnComponentCreateFn = (generateResults: GenerateResult[], installOptions?: InstallOptions) => Promise<void>;
 
 export class ComponentGenerator {
   constructor(
@@ -48,7 +47,8 @@ export class ComponentGenerator {
     private logger: Logger,
     private onComponentCreateSlot: OnComponentCreateSlot,
     private aspectId: string,
-    private envId?: ComponentID
+    private envId?: ComponentID,
+    private installOptions: InstallOptions = {}
   ) {}
 
   async generate(force = false): Promise<GenerateResult[]> {
@@ -101,7 +101,7 @@ export class ComponentGenerator {
   private async runOnComponentCreateHook(generateResults: GenerateResult[]) {
     const fns = this.onComponentCreateSlot.values();
     if (!fns.length) return;
-    await Promise.all(fns.map((fn) => fn(generateResults)));
+    await Promise.all(fns.map((fn) => fn(generateResults, this.installOptions)));
   }
 
   /**
@@ -159,7 +159,10 @@ export class ComponentGenerator {
       envId: this.envId,
     });
     const mainFile = files.find((file) => file.isMain);
-    await this.writeComponentFiles(componentPath, files);
+    await this.newComponentHelper.writeComponentFiles(
+      componentPath,
+      files.map((f) => ({ path: f.relativePath, content: f.content }))
+    );
     const addResults = await this.tracker.track({
       rootDir: componentPath,
       mainFile: mainFile?.relativePath,
@@ -257,28 +260,5 @@ export class ComponentGenerator {
     await this.tracker.addEnvToConfig(userEnv, config);
 
     return config;
-  }
-
-  /**
-   * writes the generated template files to the default directory set in the workspace config
-   */
-  private async writeComponentFiles(
-    componentPath: string,
-    templateFiles: ComponentFile[]
-  ): Promise<PathOsBasedRelative[]> {
-    const dataToPersist = new DataToPersist();
-    const vinylFiles = templateFiles.map((templateFile) => {
-      const templateFileVinyl = new Vinyl({
-        base: componentPath,
-        path: path.join(componentPath, templateFile.relativePath),
-        contents: Buffer.from(templateFile.content),
-      });
-      return AbstractVinyl.fromVinyl(templateFileVinyl);
-    });
-    const results = vinylFiles.map((v) => v.path);
-    dataToPersist.addManyFiles(vinylFiles);
-    dataToPersist.addBasePath(this.workspace.path);
-    await dataToPersist.persistAllToFS();
-    return results;
   }
 }

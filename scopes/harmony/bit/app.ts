@@ -5,19 +5,27 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
+import fs from 'fs';
+import gracefulFs from 'graceful-fs';
+// monkey patch fs module to avoid EMFILE error (especially when running watch operation)
+gracefulFs.gracefulify(fs);
+
 import './hook-require';
 import { bootstrap } from './bootstrap';
 import { handleErrorAndExit } from '@teambit/cli';
 import { runCLI } from './load-bit';
 import { autocomplete } from './autocomplete';
 import { ServerCommander, shouldUseBitServer } from './server-commander';
+import { spawnPTY } from './server-forever';
 
 if (process.argv.includes('--get-yargs-completions')) {
   autocomplete();
   process.exit(0);
 }
 
-if (shouldUseBitServer()) {
+if (process.argv.includes('server-forever')) {
+  spawnPTY();
+} else if (shouldUseBitServer()) {
   new ServerCommander().execute().catch(() => {
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     initApp();

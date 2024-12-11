@@ -236,7 +236,7 @@ export class TesterMain {
       GraphqlMain,
       UiMain,
       DevFilesMain,
-      BuilderMain
+      BuilderMain,
     ],
     config: TesterExtensionConfig
   ) {

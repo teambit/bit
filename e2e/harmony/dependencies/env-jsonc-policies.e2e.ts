@@ -2,62 +2,7 @@ import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import Helper from '../../../src/e2e-helper/e2e-helper';
-
-export const ENV_POLICY = {
-  peers: [
-    {
-      name: 'react',
-      version: '^18.0.0',
-      supportedRange: '^17.0.0 || ^18.0.0',
-    },
-    {
-      name: 'react-dom',
-      version: '^18.0.0',
-      supportedRange: '^17.0.0 || ^18.0.0',
-    },
-    {
-      name: 'graphql',
-      version: '14.7.0',
-      supportedRange: '^14.7.0',
-    },
-  ],
-  dev: [
-    {
-      name: '@types/react',
-      version: '18.0.25',
-      hidden: true,
-      force: true,
-    },
-    {
-      name: '@types/react-dom',
-      version: '^18.0.0',
-      hidden: true,
-      force: true,
-    },
-    {
-      name: '@types/jest',
-      version: '29.2.2',
-      hidden: true,
-      force: true,
-    },
-  ],
-  runtime: [
-    {
-      name: 'is-positive',
-      version: '2.0.0',
-    },
-    {
-      name: 'is-string',
-      version: '1.0.7',
-    },
-    {
-      name: 'is-odd',
-      version: '3.0.1',
-      force: true,
-    },
-  ],
-};
+import { Helper, ENV_POLICY } from '@teambit/legacy.e2e-helper';
 
 export const ENV_POLICY_LEVEL1 = {
   peers: [
@@ -158,7 +103,7 @@ const ENV_JSONC_LEVEL3 = {
   },
 };
 
-function generateEnvJsoncWithExtends(extendsName: string, envJsonc: Object) {
+function generateEnvJsoncWithExtends(extendsName: string, envJsonc: object) {
   return {
     extends: extendsName,
     ...envJsonc,

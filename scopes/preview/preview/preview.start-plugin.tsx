@@ -3,7 +3,8 @@ import { BundlerMain, ComponentServer } from '@teambit/bundler';
 import { PubsubMain } from '@teambit/pubsub';
 import { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
 import { Workspace } from '@teambit/workspace';
-import { SubscribeToWebpackEvents, CompilationResult } from '@teambit/preview.cli.webpack-events-listener';
+import { SubscribeToEvents } from '@teambit/preview.cli.dev-server-events-listener';
+import { SubscribeToWebpackEvents } from '@teambit/preview.cli.webpack-events-listener';
 import { CompilationInitiator } from '@teambit/compiler';
 import { Logger } from '@teambit/logger';
 import { CheckTypes, WatcherMain } from '@teambit/watcher';
@@ -34,7 +35,7 @@ export class PreviewStartPlugin implements StartPlugin {
   serversMap: Record<string, ComponentServer> = {};
 
   async initiate(options: StartPluginOptions) {
-    this.listenToDevServers();
+    this.listenToDevServers(options.showInternalUrls);
 
     const components = await this.workspace.getComponentsByUserInput(!options.pattern, options.pattern);
     // TODO: logic for creating preview servers must be refactored to this aspect from the DevServer aspect.
@@ -80,14 +81,24 @@ export class PreviewStartPlugin implements StartPlugin {
   }
 
   // TODO: this should be a part of the devServer
-  private listenToDevServers() {
+  private listenToDevServers(showInternalUrls?: boolean) {
     // keep state changes immutable!
+    SubscribeToEvents(this.pubsub, {
+      onStart: (id) => {
+        this.handleOnStartCompiling(id);
+      },
+      onDone: (id, results) => {
+        this.handleOnDoneCompiling(id, results, showInternalUrls);
+      },
+    });
+    // @deprecated
+    // for legacy webpack bit report plugin
     SubscribeToWebpackEvents(this.pubsub, {
       onStart: (id) => {
         this.handleOnStartCompiling(id);
       },
       onDone: (id, results) => {
-        this.handleOnDoneCompiling(id, results);
+        this.handleOnDoneCompiling(id, results, showInternalUrls);
       },
     });
   }
@@ -102,7 +113,7 @@ export class PreviewStartPlugin implements StartPlugin {
     }
   }
 
-  private handleOnDoneCompiling(id: string, results: CompilationResult) {
+  private handleOnDoneCompiling(id: string, results, showInternalUrls?: boolean) {
     this.serversState[id] = {
       isCompiling: false,
       isReady: true,
@@ -111,18 +122,21 @@ export class PreviewStartPlugin implements StartPlugin {
     };
     const previewServer = this.serversMap[id];
     const spinnerId = getSpinnerId(id);
-    const errors = results.errors || [];
-    const hasErrors = !!errors.length;
-    const warnings = getWarningsWithoutIgnored(results.warnings);
-    const hasWarnings = !!warnings.length;
-    const url = `http://localhost:${previewServer.port}`;
-    const text = getSpinnerDoneMessage(this.serversMap[id], errors, warnings, url);
-    if (hasErrors) {
-      this.logger.multiSpinner.fail(spinnerId, { text });
-    } else if (hasWarnings) {
-      this.logger.multiSpinner.warn(spinnerId, { text });
-    } else {
-      this.logger.multiSpinner.succeed(spinnerId, { text });
+    const spinner = this.logger.multiSpinner.spinners[spinnerId];
+    if (spinner && spinner.isActive()) {
+      const errors = results.errors || [];
+      const hasErrors = !!errors.length;
+      const warnings = getWarningsWithoutIgnored(results.warnings);
+      const hasWarnings = !!warnings.length;
+      const url = `http://localhost:${previewServer.port}`;
+      const text = getSpinnerDoneMessage(this.serversMap[id], errors, warnings, url, undefined, showInternalUrls);
+      if (hasErrors) {
+        this.logger.multiSpinner.fail(spinnerId, { text });
+      } else if (hasWarnings) {
+        this.logger.multiSpinner.warn(spinnerId, { text });
+      } else {
+        this.logger.multiSpinner.succeed(spinnerId, { text });
+      }
     }
 
     const noneAreCompiling = Object.values(this.serversState).every((x) => !x.isCompiling);
@@ -170,7 +184,8 @@ function getSpinnerDoneMessage(
   errors: Error[],
   warnings: Error[],
   url: string,
-  verbose = false
+  verbose = false,
+  showInternalUrls?: boolean
 ) {
   const hasErrors = !!errors.length;
   const hasWarnings = !!warnings.length;
@@ -185,7 +200,7 @@ function getSpinnerDoneMessage(
   const warningsTxt = hasWarnings ? warnings.map((warning) => warning.message).join('\n') : '';
   const warningsTxtWithTitle = hasWarnings ? chalk.yellow(`\nWarnings:\n${warningsTxt}`) : '';
 
-  const urlMessage = hasErrors ? '' : `at ${chalk.cyan(url)}`;
+  const urlMessage = hasErrors || !showInternalUrls ? '' : `at ${chalk.cyan(url)}`;
   return `${prefix} ${envId}${includedEnvs} ${urlMessage} ${errorsTxtWithTitle} ${warningsTxtWithTitle}`;
 }
 

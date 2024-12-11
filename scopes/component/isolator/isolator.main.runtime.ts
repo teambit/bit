@@ -26,14 +26,10 @@ import {
 } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain, LongProcessLogger } from '@teambit/logger';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import LegacyScope from '@teambit/legacy/dist/scope/scope';
+import { Scope, Scope as LegacyScope } from '@teambit/legacy.scope';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
-import {
-  DEPENDENCIES_FIELDS,
-  PACKAGE_JSON,
-  CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR,
-} from '@teambit/legacy/dist/constants';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { DEPENDENCIES_FIELDS, PACKAGE_JSON, CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR } from '@teambit/legacy.constants';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import {
   PackageJsonFile,
   ArtifactFiles,
@@ -49,7 +45,7 @@ import {
 import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { type DependenciesGraph } from '@teambit/scope.objects';
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
 import path, { basename } from 'path';
@@ -298,7 +294,7 @@ export class IsolatorMain {
       GraphMain,
       GlobalConfigMain,
       AspectLoaderMain,
-      CLIMain
+      CLIMain,
     ],
     _config,
     [capsuleTransferSlot]: [CapsuleTransferSlot]
@@ -593,6 +589,7 @@ export class IsolatorMain {
    * @param opts
    * @param legacyScope
    */
+  /* eslint-disable complexity */
   private async createCapsules(
     components: Component[],
     capsulesDir: string,
@@ -626,6 +623,7 @@ export class IsolatorMain {
       await fs.emptyDir(capsulesDir);
     }
     let capsules = await this.createCapsulesFromComponents(components, capsulesDir, config);
+    this.writeRootPackageJson(capsulesDir, this.getCapsuleDirHash(opts.baseDir || ''));
     const allCapsuleList = CapsuleList.fromArray(capsules);
     let capsuleList = allCapsuleList;
     if (opts.getExistingAsIs) {
@@ -699,13 +697,22 @@ export class IsolatorMain {
           })
         );
       } else {
+        const dependenciesGraph = await legacyScope?.getDependenciesGraphByComponentIds(
+          capsuleList.getAllComponentIDs()
+        );
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
           cachePackagesOnCapsulesRoot,
           linkedDependencies,
           packageManager: opts.packageManager,
+          dependenciesGraph,
         });
+        if (dependenciesGraph == null) {
+          // If the graph was not present in the model, we use the just created lockfile inside the capsules
+          // to populate the graph.
+          await this.addDependenciesGraphToComponents(capsuleList, components, capsulesDir);
+        }
       }
       if (installLongProcessLogger) {
         installLongProcessLogger.end('success');
@@ -735,6 +742,24 @@ export class IsolatorMain {
     }
 
     return allCapsuleList;
+  }
+  /* eslint-enable complexity */
+
+  private async addDependenciesGraphToComponents(
+    capsuleList: CapsuleList,
+    components: Component[],
+    capsulesDir: string
+  ): Promise<void> {
+    const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(components);
+    const opts = {
+      componentIdByPkgName,
+      rootDir: capsulesDir,
+    };
+    await Promise.all(
+      capsuleList.map((capsule) =>
+        this.dependencyResolver.addDependenciesGraph(capsule.component, path.relative(capsulesDir, capsule.path), opts)
+      )
+    );
   }
 
   private async markCapsulesAsReady(capsuleList: CapsuleList): Promise<void> {
@@ -777,6 +802,7 @@ export class IsolatorMain {
       linkedDependencies?: Record<string, Record<string, string>>;
       packageManager?: string;
       nodeLinker?: NodeLinker;
+      dependenciesGraph?: DependenciesGraph;
     }
   ) {
     const installer = this.dependencyResolver.getInstaller({
@@ -798,6 +824,7 @@ export class IsolatorMain {
       forceTeambitHarmonyLink: !this.dependencyResolver.hasHarmonyInRootPolicy(),
       excludeExtensionsDependencies: true,
       dedupeInjectedDeps: true,
+      dependenciesGraph: opts.dependenciesGraph,
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {
@@ -988,6 +1015,10 @@ export class IsolatorMain {
     };
   }
 
+  private getCapsuleDirHash(baseDir: string): string {
+    return hash(baseDir).substring(0, CAPSULE_DIR_LENGTH);
+  }
+
   /** @deprecated use the new function signature with an object parameter instead */
   getCapsulesRootDir(baseDir: string, rootBaseDir?: string, useHash?: boolean): PathOsBasedAbsolute;
   getCapsulesRootDir(getCapsuleDirOpts: GetCapsuleDirOpts): PathOsBasedAbsolute;
@@ -1028,7 +1059,7 @@ export class IsolatorMain {
       return path.join(capsulesRootBaseDir, datedBaseDir, dateDir, hashDir);
     }
     const dir = getCapsuleDirOptsWithDefaults.useHash
-      ? hash(getCapsuleDirOptsWithDefaults.baseDir).substring(0, CAPSULE_DIR_LENGTH)
+      ? this.getCapsuleDirHash(getCapsuleDirOptsWithDefaults.baseDir)
       : getCapsuleDirOptsWithDefaults.baseDir;
     return path.join(capsulesRootBaseDir, dir);
   }
@@ -1037,6 +1068,17 @@ export class IsolatorMain {
     const dirToDelete = rootDir || this.getRootDirOfAllCapsules();
     await fs.remove(dirToDelete);
     return dirToDelete;
+  }
+
+  private writeRootPackageJson(capsulesDir: string, hashDir: string): void {
+    const rootPackageJson = path.join(capsulesDir, 'package.json');
+    if (!fs.existsSync(rootPackageJson)) {
+      const packageJson = {
+        name: `capsules-${hashDir}`,
+        'bit-capsule': true,
+      };
+      fs.outputJsonSync(rootPackageJson, packageJson);
+    }
   }
 
   private async createCapsulesFromComponents(

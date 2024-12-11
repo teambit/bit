@@ -16,7 +16,7 @@ import {
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
-import { BIT_ROOTS_DIR } from '@teambit/legacy/dist/constants';
+import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
 import {
   MutatedProject,
   mutateModules,
@@ -364,7 +364,7 @@ function initReporter(opts?: ReportOptions) {
         ...opts?.peerDependencyRules,
       },
     },
-    streamParser,
+    streamParser: streamParser as any, // eslint-disable-line
     // Linked in core aspects are excluded from the output to reduce noise.
     // Other @teambit/ dependencies will be shown.
     // Only those that are symlinked from outside the workspace will be hidden.

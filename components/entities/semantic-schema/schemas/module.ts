@@ -9,7 +9,11 @@ export class ModuleSchema extends SchemaNode {
   internals: SchemaNode[];
   namespace?: string;
 
-  constructor(readonly location: SchemaLocation, exports: SchemaNode[], internals: SchemaNode[]) {
+  constructor(
+    readonly location: SchemaLocation,
+    exports: SchemaNode[],
+    internals: SchemaNode[]
+  ) {
     super();
     this.exports = exports;
     this.internals = internals;
@@ -20,14 +24,17 @@ export class ModuleSchema extends SchemaNode {
   }
 
   flatExportsRecursively() {
-    this.exports = this.exports.reduce((acc, exp) => {
-      if (exp instanceof ModuleSchema) {
-        exp.flatExportsRecursively();
-        if (exp.namespace) return [...acc, exp];
-        return [...acc, ...exp.exports];
-      }
-      return [...acc, exp];
-    }, [] as (ExportSchema | SchemaNode)[]);
+    this.exports = this.exports.reduce(
+      (acc, exp) => {
+        if (exp instanceof ModuleSchema) {
+          exp.flatExportsRecursively();
+          if (exp.namespace) return [...acc, exp];
+          return [...acc, ...exp.exports];
+        }
+        return [...acc, exp];
+      },
+      [] as (ExportSchema | SchemaNode)[]
+    );
   }
 
   toString(options?: { color?: boolean }) {

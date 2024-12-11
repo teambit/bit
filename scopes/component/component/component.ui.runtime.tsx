@@ -236,6 +236,7 @@ export class ComponentUI {
         componentIdStr={options.componentId}
         useComponentFilters={options.useComponentFilters}
         RightNode={options.RightNode}
+        authToken={options.authToken}
       />
     );
   }
@@ -327,7 +328,7 @@ export class ComponentUI {
       MenuItemSlot,
       ComponentPageSlot,
       ComponentSearchResultSlot,
-      RightSideMenuSlot
+      RightSideMenuSlot,
     ]
   ) {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)

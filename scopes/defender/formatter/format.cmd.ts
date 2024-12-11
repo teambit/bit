@@ -1,5 +1,5 @@
 import { TimerResponse, Timer } from '@teambit/toolbox.time.timer';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentFactory, ComponentID } from '@teambit/component';
 import chalk from 'chalk';

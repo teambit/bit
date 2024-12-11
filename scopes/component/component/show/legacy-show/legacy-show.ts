@@ -1,6 +1,6 @@
 import { getConsumerComponent } from './get-consumer-component';
 import { getScopeComponent } from './get-scope-component';
-import loader from '@teambit/legacy/dist/cli/loader/loader';
+import { loader } from '@teambit/legacy.loader';
 
 const BEFORE_SHOW_REMOTE = 'showing a component...';
 

@@ -1,9 +1,9 @@
-import logger, { shouldDisableLoader } from '@teambit/legacy/dist/logger/logger';
-import { CLIArgs, Command, Flags } from '@teambit/legacy/dist/cli/command';
-import loader from '@teambit/legacy/dist/cli/loader';
+import { logger, shouldDisableLoader } from '@teambit/legacy.logger';
+import { CLIArgs, Command, Flags } from './command';
+import { loader } from '@teambit/legacy.loader';
 import { handleErrorAndExit } from './handle-errors';
-import { TOKEN_FLAG_NAME } from '@teambit/legacy/dist/constants';
-import globalFlags from '@teambit/legacy/dist/cli/global-flags';
+import { TOKEN_FLAG_NAME } from '@teambit/legacy.constants';
+import globalFlags from './global-flags';
 import { Analytics } from '@teambit/legacy.analytics';
 import { OnCommandStartSlot } from './cli.main.runtime';
 import pMapSeries from 'p-map-series';
@@ -74,7 +74,10 @@ export class CommandRunner {
     const code = result.code || 0;
     const data = result.data || result;
     if (shouldReturnResult) return { data, exitCode: code };
-    await this.writeAndExit(JSON.stringify(data, null, 2), code);
+    const isJsonStream = Boolean(this.flags.stream);
+    if (isJsonStream) data.end = true;
+    const jsonStr = isJsonStream ? `${JSON.stringify(data)}\n` : JSON.stringify(data, null, 2);
+    await this.writeAndExit(jsonStr, code);
   }
 
   private async runReportHandler(shouldReturnResult = false): Promise<CommandResult | undefined> {

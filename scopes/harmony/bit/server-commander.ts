@@ -1,3 +1,47 @@
+/**
+ * This file is responsible for interacting with bit through a long-running background process "bit-server" rather than directly.
+ * Why not directly?
+ * 1. startup cost. currently it takes around 1 second to bootstrap bit.
+ * 2. an experimental package-manager saves node_modules in-memory. if a client starts a new process, it won't have the node_modules in-memory.
+ *
+ * In this file, there are three ways to achieve this. It's outlined in the order it was evolved.
+ * The big challenge here is to show the output correctly to the client even though the server is running in a different process.
+ *
+ * 1. process.env.BIT_CLI_SERVER === 'true'
+ * This method uses SSE - Server Send Events. The server sends events to the client with the output to print. The client listens to
+ * these events and prints them. It's cumbersome. For this, the logger was changed and every time the logger needs to print to the console,
+ * it was using this SSE to send events. Same with the loader.
+ * Cons: Other output, such as pnpm, needs an extra effort to print - for pnpm, the "process" object was passed to pnpm
+ * and its stdout was modified to use the SSE.
+ * However, other tools that print directly to the console, such as Jest, won't work.
+ *
+ * 2. process.env.BIT_CLI_SERVER_TTY === 'true'
+ * Because the terminal - tty is a fd (file descriptor) on mac/linux, it can be passed to the server. The server can write to this
+ * fd and it will be printed to the client terminal. On the server, the process.stdout.write was monkey-patched to
+ * write to the tty. (see cli-raw.route.ts file).
+ * It solves the problem of Jest and other tools that print directly to the console.
+ * Cons:
+ * A. It doesn't work on Windows. Windows doesn't treat tty as a file descriptor.
+ * B. We need two ways communication. Commands such as "bit update", display a prompt with option to select using the arrow keys.
+ *    This is not possible with the tty approach. Also, if the client hits Ctrl+C, the server won't know about it and it
+ *    won't kill the process.
+ *
+ * 3. process.env.BIT_CLI_SERVER_PTY === 'true'
+ * This is the most advanced approach. It spawns a pty (pseudo terminal) process to communicate between the client and the server.
+ * The client connects to the server using a socket. The server writes to the socket and the client reads from it.
+ * The client also writes to the socket and the server reads from it. See server-forever.ts to understand better.
+ * In order to pass terminal sequences, such as arrow keys or Ctrl+C, the stdin of the client is set to raw mode.
+ * In theory, this approach could work by spawning a normal process, not pty, however, then, the stdin/stdout are non-tty,
+ * and as a result, loaders such as Ora and chalk won't work.
+ * With this new approach, we also support terminating and reloading the server. A new command is added
+ * "bit server-forever", which spawns the pty-process. If the client hits Ctrl+C, this server-forever process will kill
+ * the pty-process and re-load it.
+ * Keep in mind, that to send the command and get the results, we still using http. The usage of the pty is only for
+ * the input/output during the command.
+ * I was trying to avoid the http, and use only the pty, by implementing readline to get the command from the socket,
+ * but then I wasn't able to return the prompt to the user easily. So, I decided to keep the http for the request/response part.
+ */
+
 import fetch from 'node-fetch';
 import net from 'net';
 import fs from 'fs-extra';
@@ -6,8 +50,9 @@ import { join } from 'path';
 import EventSource from 'eventsource';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import chalk from 'chalk';
-import loader from '@teambit/legacy/dist/cli/loader';
+import { loader } from '@teambit/legacy.loader';
 import { printBitVersionIfAsked } from './bootstrap';
+import { getSocketPort } from './server-forever';
 
 class ServerPortFileNotFound extends Error {
   constructor(filePath: string) {
@@ -59,16 +104,22 @@ export class ServerCommander {
 
   async runCommandWithHttpServer(): Promise<CommandResult | undefined> {
     await this.printPortIfAsked();
+    this.printSocketPortIfAsked();
     printBitVersionIfAsked();
     const port = await this.getExistingUsedPort();
     const url = `http://localhost:${port}/api`;
+    const shouldUsePTY = process.env.BIT_CLI_SERVER_PTY === 'true';
+
+    if (shouldUsePTY) {
+      await this.connectToSocket();
+    }
     const ttyPath = this.shouldUseTTYPath()
       ? execSync('tty', {
           encoding: 'utf8',
           stdio: ['inherit', 'pipe', 'pipe'],
         }).trim()
       : undefined;
-    if (!ttyPath) this.initSSE(url);
+    if (!ttyPath && !shouldUsePTY) this.initSSE(url);
     // parse the args and options from the command
     const args = process.argv.slice(2);
     if (!args.includes('--json') && !args.includes('-j')) {
@@ -76,7 +127,7 @@ export class ServerCommander {
     }
     const endpoint = `cli-raw`;
     const pwd = process.cwd();
-    const body = { command: args, pwd, envBitFeatures: process.env.BIT_FEATURES, ttyPath };
+    const body = { command: args, pwd, envBitFeatures: process.env.BIT_FEATURES, ttyPath, isPty: shouldUsePTY };
     let res;
     try {
       res = await fetch(`${url}/${endpoint}`, {
@@ -104,6 +155,67 @@ export class ServerCommander {
       // the response is not json, ignore the body.
     }
     throw new Error(jsonResponse?.message || jsonResponse || res.statusText);
+  }
+
+  private async connectToSocket() {
+    return new Promise<void>((resolve, reject) => {
+      const socketPort = getSocketPort();
+      const socket = net.createConnection({ port: socketPort });
+
+      const resetStdin = () => {
+        process.stdin.setRawMode(false);
+        process.stdin.pause();
+      };
+
+      // Handle errors that occur before or after connection
+      socket.on('error', (err: any) => {
+        if (err.code === 'ECONNREFUSED') {
+          reject(
+            new Error(`Error: Unable to connect to the socket on port ${socketPort}.
+Please run the command "bit server-forever" first to start the server.`)
+          );
+        }
+        resetStdin();
+        socket.destroy(); // Ensure the socket is fully closed
+        reject(err);
+      });
+
+      // Handle successful connection
+      socket.on('connect', () => {
+        process.stdin.setRawMode(true);
+        process.stdin.resume();
+
+        // Forward stdin to the socket
+        process.stdin.on('data', (data: any) => {
+          socket.write(data);
+
+          // Detect Ctrl+C (hex code '03')
+          if (data.toString('hex') === '03') {
+            // Important to write it to the socket so the server knows to kill the PTY process
+            process.stdin.setRawMode(false);
+            process.stdin.pause();
+            socket.end();
+            process.exit();
+          }
+        });
+
+        // Forward data from the socket to stdout
+        socket.on('data', (data: any) => {
+          process.stdout.write(data);
+        });
+
+        // Handle socket close and end events
+        const cleanup = () => {
+          resetStdin();
+          socket.destroy();
+        };
+
+        socket.on('close', cleanup);
+        socket.on('end', cleanup);
+
+        resolve(); // Connection successful, resolve the Promise
+      });
+    });
   }
 
   /**
@@ -147,6 +259,18 @@ export class ServerCommander {
       if (err instanceof ScopeNotFound || err instanceof ServerPortFileNotFound || err instanceof ServerIsNotRunning) {
         process.exit(0);
       }
+      console.error(err.message); // eslint-disable-line no-console
+      process.exit(1);
+    }
+  }
+
+  private printSocketPortIfAsked() {
+    if (!process.argv.includes('cli-server-socket-port')) return;
+    try {
+      const port = getSocketPort();
+      process.stdout.write(port.toString());
+      process.exit(0);
+    } catch (err: any) {
       console.error(err.message); // eslint-disable-line no-console
       process.exit(1);
     }
@@ -216,6 +340,7 @@ export function shouldUseBitServer() {
   const hasFlag =
     process.env.BIT_CLI_SERVER === 'true' ||
     process.env.BIT_CLI_SERVER === '1' ||
+    process.env.BIT_CLI_SERVER_PTY === 'true' ||
     process.env.BIT_CLI_SERVER_TTY === 'true';
   return (
     hasFlag &&

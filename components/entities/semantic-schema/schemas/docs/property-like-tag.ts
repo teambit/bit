@@ -7,7 +7,12 @@ import { TagName, TagSchema } from './tag';
  */
 export class PropertyLikeTagSchema extends TagSchema {
   readonly type?: SchemaNode;
-  constructor(readonly location: SchemaLocation, readonly name: string, readonly comment?: string, type?: SchemaNode) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly name: string,
+    readonly comment?: string,
+    type?: SchemaNode
+  ) {
     super(location, TagName.parameter, comment);
     this.type = type;
   }

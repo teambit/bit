@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { compact } from 'lodash';
 import { applyVersionReport, installationErrorOutput, MergeStrategy, compilationErrorOutput } from '@teambit/merging';
 import { Command, CommandOptions } from '@teambit/cli';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { LanesMain } from './lanes.main.runtime';
 
 export class SwitchCmd implements Command {
@@ -40,6 +40,7 @@ ${COMPONENT_PATTERN_HELP}`,
       'alias <string>',
       "relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote",
     ],
+    ['', 'verbose', 'display detailed information about components that legitimately were not switched'],
     ['j', 'json', 'return the output as JSON'],
   ] as CommandOptions;
   loader = true;
@@ -58,6 +59,7 @@ ${COMPONENT_PATTERN_HELP}`,
       workspaceOnly = false,
       skipDependencyInstallation = false,
       pattern,
+      verbose,
       json = false,
     }: {
       head?: boolean;
@@ -70,6 +72,7 @@ ${COMPONENT_PATTERN_HELP}`,
       skipDependencyInstallation?: boolean;
       override?: boolean;
       pattern?: string;
+      verbose?: boolean;
       json?: boolean;
     }
   ) {
@@ -91,14 +94,19 @@ ${COMPONENT_PATTERN_HELP}`,
     }
     const getFailureOutput = () => {
       if (!failedComponents || !failedComponents.length) return '';
-      const title = 'the switch has been canceled for the following component(s)';
-      const body = failedComponents
-        .map((failedComponent) => {
-          const color = failedComponent.unchangedLegitimately ? 'white' : 'red';
-          return `${chalk.bold(failedComponent.id.toString())} - ${chalk[color](failedComponent.unchangedMessage)}`;
+      const title = '\nswitch skipped for the following component(s)';
+      const body = compact(
+        failedComponents.map((failedComponent) => {
+          // all failures here are "unchangedLegitimately". otherwise, it would have been thrown as an error
+          if (!verbose) return null;
+          return `${chalk.bold(failedComponent.id.toString())} - ${chalk.white(failedComponent.unchangedMessage)}`;
         })
-        .join('\n');
-      return `${title}\n${body}`;
+      ).join('\n');
+      if (!body) {
+        return `${chalk.bold(`\nswitch skipped legitimately for ${failedComponents.length} component(s)`)}
+  (use --verbose to list them next time)`;
+      }
+      return `${chalk.underline(title)}\n${body}`;
     };
     const getSuccessfulOutput = () => {
       const laneSwitched = chalk.green(`\nsuccessfully set "${chalk.bold(lane)}" as the active lane`);

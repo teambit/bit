@@ -16,6 +16,7 @@ import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
+import { type DependenciesGraph } from '@teambit/scope.objects';
 import {
   CodemodResult,
   linkToNodeModulesWithCodemod,
@@ -85,6 +86,7 @@ export type WorkspaceInstallOptions = {
   lockfileOnly?: boolean;
   writeConfigFiles?: boolean;
   skipPrune?: boolean;
+  dependenciesGraph?: DependenciesGraph;
 };
 
 export type ModulesInstallOptions = Omit<WorkspaceInstallOptions, 'updateExisting' | 'lifecycleType' | 'import'>;
@@ -199,7 +201,7 @@ export class InstallMain {
     this.postInstallSlot.register(fn);
   }
 
-  async onComponentCreate(generateResults: GenerateResult[]) {
+  async onComponentCreate(generateResults: GenerateResult[], installOptions?: Partial<WorkspaceInstallOptions>) {
     this.workspace.inInstallContext = true;
     let runInstall = false;
     let packages: string[] = [];
@@ -243,10 +245,10 @@ export class InstallMain {
     // `the following environments are not installed yet: ${nonLoadedEnvs.join(', ')}. installing them now...`
     // );
     await this.install(packages, {
+      ...installOptions,
       addMissingDeps: installMissing,
       skipIfExisting: true,
       writeConfigFiles: false,
-      optimizeReportForNonTerminal: !process.stdout.isTTY,
       // skipPrune: true,
     });
   }
@@ -326,6 +328,7 @@ export class InstallMain {
     const pmInstallOptions: PackageManagerInstallOptions = {
       ...calcManifestsOpts,
       autoInstallPeers: this.dependencyResolver.config.autoInstallPeers,
+      dependenciesGraph: options?.dependenciesGraph,
       includeOptionalDeps: options?.includeOptionalDeps,
       neverBuiltDependencies: this.dependencyResolver.config.neverBuiltDependencies,
       overrides: this.dependencyResolver.config.overrides,
@@ -460,6 +463,7 @@ export class InstallMain {
    * @returns
    */
   private async reloadMovedEnvs() {
+    this.logger.debug('reloadMovedEnvs');
     const allEnvs = this.envs.getAllRegisteredEnvs();
     const movedEnvs = await pFilter(allEnvs, async (env) => {
       if (!env.__path) return false;
@@ -907,9 +911,7 @@ export class InstallMain {
     return Object.fromEntries(
       compact(
         await Promise.all(
-          (
-            await this.app.listAppsComponents()
-          ).map(async (app) => {
+          (await this.app.listAppsComponents()).map(async (app) => {
             const appPkgName = this.dependencyResolver.getPackageName(app);
             const appManifest = Object.values(manifests).find(({ name }) => name === appPkgName);
             if (!appManifest) return null;
@@ -1215,6 +1217,13 @@ export class InstallMain {
     }
   }
 
+  async onComponentChange(component: Component) {
+    const isEnv = this.envs.isEnv(component);
+    if (isEnv) {
+      await this.reloadEnvs([component.id]);
+    }
+  }
+
   static slots = [Slot.withType<PreLinkSlot>(), Slot.withType<PreInstallSlot>(), Slot.withType<PostInstallSlot>()];
   static dependencies = [
     DependencyResolverAspect,
@@ -1262,20 +1271,13 @@ export class InstallMain {
       IpcEventsMain,
       GeneratorMain,
       WorkspaceConfigFilesMain,
-      AspectLoaderMain
+      AspectLoaderMain,
     ],
     _,
     [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot],
     harmony: Harmony
   ) {
     const logger = loggerExt.createLogger(InstallAspect.id);
-    ipcEvents.registerGotEventSlot(async (eventName) => {
-      if (eventName !== 'onPostInstall') return;
-      logger.debug('got onPostInstall event, clear workspace and all components cache');
-      await workspace.clearCache();
-      workspace.clearAllComponentsCache();
-      await pMapSeries(postInstallSlot.values(), (fn) => fn());
-    });
     const installExt = new InstallMain(
       dependencyResolver,
       logger,
@@ -1293,6 +1295,13 @@ export class InstallMain {
       ipcEvents,
       harmony
     );
+    ipcEvents.registerGotEventSlot(async (eventName) => {
+      if (eventName !== 'onPostInstall') return;
+      logger.debug('got onPostInstall event, clear workspace and all components cache');
+      await workspace.clearCache();
+      await pMapSeries(postInstallSlot.values(), (fn) => fn());
+      await installExt.reloadMovedEnvs();
+    });
     if (issues) {
       issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));
     }
@@ -1307,6 +1316,7 @@ export class InstallMain {
     // workspace.registerOnAspectsResolve(installExt.onAspectsResolveSubscriber.bind(installExt));
     if (workspace) {
       workspace.registerOnRootAspectAdded(installExt.onRootAspectAddedSubscriber.bind(installExt));
+      workspace.registerOnComponentChange(installExt.onComponentChange.bind(installExt));
     }
     cli.register(...commands);
     return installExt;

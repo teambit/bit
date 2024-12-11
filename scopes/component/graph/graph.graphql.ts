@@ -59,7 +59,7 @@ export function graphSchema(graphBuilder: GraphBuilder, componentAspect: Compone
                   sourceId: edge.sourceId,
                   targetId: edge.targetId,
                   dependencyLifecycleType: getDependencyLifecycleType(edge.attr.type),
-                } as { sourceId: string; targetId: string; dependencyLifecycleType: EdgeType })
+                }) as { sourceId: string; targetId: string; dependencyLifecycleType: EdgeType }
             )
             .sort((a, b) => textCmp(a.sourceId, b.sourceId))
             .sort((a, b) => textCmp(a.targetId, b.targetId));

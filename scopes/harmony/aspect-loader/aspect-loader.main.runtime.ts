@@ -5,8 +5,8 @@ import esmLoader from '@teambit/node.utils.esm-loader';
 import { readdirSync, existsSync } from 'fs-extra';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { ComponentID } from '@teambit/component-id';
-import LegacyScope from '@teambit/legacy/dist/scope/scope';
-import { GLOBAL_SCOPE, DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
+import { Scope as LegacyScope } from '@teambit/legacy.scope';
+import { GLOBAL_SCOPE, DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
 import { MainRuntime } from '@teambit/cli';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
@@ -61,6 +61,7 @@ export type LoadExtByManifestContext = {
 export type LoadExtByManifestOptions = {
   throwOnError?: boolean;
   hideMissingModuleError?: boolean;
+  ignoreErrorFunc?: (err: Error) => boolean;
   ignoreErrors?: boolean;
   /**
    * If this is enabled then we will show loading error only once for a given extension
@@ -782,6 +783,8 @@ export class AspectLoaderMain {
       if (mergedOptions.ignoreErrors) return;
       if ((e.code === 'MODULE_NOT_FOUND' || e.code === 'ERR_MODULE_NOT_FOUND') && mergedOptions.hideMissingModuleError)
         return;
+
+      if (mergedOptions.ignoreErrorFunc && mergedOptions.ignoreErrorFunc(e)) return;
       // TODO: improve texts
       const errorMsg = e.message.split('\n')[0];
       const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids, errorMsg, neededFor);
@@ -881,7 +884,7 @@ export class AspectLoaderMain {
     [onAspectLoadErrorSlot, onLoadRequireableExtensionSlot, pluginSlot]: [
       OnAspectLoadErrorSlot,
       OnLoadRequireableExtensionSlot,
-      PluginDefinitionSlot
+      PluginDefinitionSlot,
     ],
     harmony: Harmony
   ) {

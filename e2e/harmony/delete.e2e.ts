@@ -1,7 +1,7 @@
 import path from 'path';
 import { IssuesClasses } from '@teambit/component-issues';
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
@@ -265,6 +265,30 @@ describe('bit delete command', function () {
       helper.command.tagAllWithoutBuild('--ver 2.0.0 --unmodified');
       const deletionData = helper.command.showComponentParsedHarmonyByTitle('comp1', 'removed');
       expect(deletionData.removed).to.be.false;
+    });
+  });
+  describe('reset after delete on lane', () => {
+    let output: string;
+    let bitmapEntryBefore: Record<string, any>;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.createLane();
+      helper.command.snapAllComponents();
+      helper.command.export();
+
+      helper.command.softRemoveOnLane('comp1');
+      const bitmap = helper.bitMap.read();
+      bitmapEntryBefore = bitmap.comp1;
+      helper.command.snapAllComponents('--unmodified');
+      output = helper.command.resetAll();
+    });
+    it('should reset the deleted component', () => {
+      expect(output).to.have.string('2 component(s) were reset');
+    });
+    it('should revert the .bitmap entry of the deleted component as it was before', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1).to.deep.equal(bitmapEntryBefore);
     });
   });
 });

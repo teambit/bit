@@ -38,7 +38,11 @@ export type DeprecationMetadata = {
 };
 
 export class DeprecationMain {
-  constructor(private scope: ScopeMain, private workspace: Workspace, private depsResolver: DependencyResolverMain) {}
+  constructor(
+    private scope: ScopeMain,
+    private workspace: Workspace,
+    private depsResolver: DependencyResolverMain
+  ) {}
 
   async getDeprecationInfo(component: Component): Promise<DeprecationInfo> {
     const headComponent = await this.getHeadComponent(component);
@@ -169,7 +173,7 @@ export class DeprecationMain {
     Workspace,
     CLIMain,
     DependencyResolverMain,
-    IssuesMain
+    IssuesMain,
   ]) {
     const deprecation = new DeprecationMain(scope, workspace, depsResolver);
     issues.registerAddComponentsIssues(deprecation.addDeprecatedDependenciesIssues.bind(deprecation));

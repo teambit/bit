@@ -3,13 +3,12 @@ import fs from 'fs-extra';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { InvalidScopeName } from '@teambit/legacy-bit-id';
 import path from 'path';
-import { AUTO_SNAPPED_MSG, IMPORT_PENDING_MSG } from '../../../src/constants';
+import { AUTO_SNAPPED_MSG, IMPORT_PENDING_MSG } from '@teambit/legacy.constants';
 import { LANE_KEY } from '@teambit/legacy.bit-map';
-import Helper from '../../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../../src/fixtures/fixtures';
+import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../../npm-ci-registry';
-import { FetchMissingHistory } from '../../../src/scope/actions';
+import { FetchMissingHistory } from '@teambit/scope.remote-actions';
 
 chai.use(require('chai-fs'));
 
@@ -526,7 +525,7 @@ describe('bit lane command', function () {
       output = helper.command.resetAll();
     });
     it('should untag successfully', () => {
-      expect(output).to.have.string('1 component(s) were untagged');
+      expect(output).to.have.string('1 component(s) were reset');
     });
     it('should change the component to be new', () => {
       const status = helper.command.statusJson();

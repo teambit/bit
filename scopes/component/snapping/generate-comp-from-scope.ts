@@ -1,12 +1,10 @@
 import { ComponentID } from '@teambit/component-id';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
+import { Dependency, ConsumerComponent, CURRENT_SCHEMA } from '@teambit/legacy.consumer-component';
 import { SourceFile } from '@teambit/component.sources';
 import { ScopeMain } from '@teambit/scope';
-import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
+import { ComponentOverrides } from '@teambit/legacy.consumer-config';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { Component } from '@teambit/component';
-import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/component-schema';
 import { DependenciesMain } from '@teambit/dependencies';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { FileData } from './snap-from-scope.cmd';
@@ -63,9 +61,8 @@ export async function generateCompFromScope(
   // an error saying "the extension ${extensionId.toString()} is missing from the flattenedDependencies"
   await snapping._addFlattenedDependenciesToComponents([consumerComponent]);
 
-  const { version, files: filesBitObject } = await scope.legacyScope.sources.consumerComponentToVersion(
-    consumerComponent
-  );
+  const { version, files: filesBitObject } =
+    await scope.legacyScope.sources.consumerComponentToVersion(consumerComponent);
   const modelComponent = scope.legacyScope.sources.findOrAddComponent(consumerComponent);
   consumerComponent.version = version.hash().toString();
   await scope.legacyScope.objects.writeObjectsToTheFS([version, modelComponent, ...filesBitObject.map((f) => f.file)]);

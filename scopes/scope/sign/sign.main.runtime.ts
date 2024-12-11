@@ -7,20 +7,17 @@ import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { isSnap } from '@teambit/component-version';
 import { Component, ComponentID } from '@teambit/component';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
-import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy/dist/constants';
-import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
-import { PostSign } from '@teambit/legacy/dist/scope/actions';
-import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
-import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
+import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy.constants';
+import { PostSign } from '@teambit/scope.remote-actions';
+import { Version, Log, Lane, ObjectList } from '@teambit/scope.objects';
+import { Remotes, Remote, getScopeRemotes } from '@teambit/scope.remotes';
 import { ComponentIdList } from '@teambit/component-id';
-import Version, { Log } from '@teambit/legacy/dist/scope/models/version';
-import { Http } from '@teambit/legacy/dist/scope/network/http';
+import { Http } from '@teambit/scope.network';
 import { LanesAspect, LanesMain } from '@teambit/lanes';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
-import { Lane } from '@teambit/legacy/dist/scope/models';
 import { SignCmd, SignOptions } from './sign.cmd';
 import { SignAspect } from './sign.aspect';
 import { ExportAspect, ExportMain } from '@teambit/export';
@@ -64,7 +61,7 @@ export class SignMain {
   async sign(
     ids: ComponentID[],
     laneIdStr?: string,
-    { originalScope, push, rebuild, saveLocally }: SignOptions = {}
+    { originalScope, push, rebuild, saveLocally, reuseCapsules, tasks }: SignOptions = {}
   ): Promise<SignResult | null> {
     this.throwIfOnWorkspace();
     if (push && rebuild) {
@@ -110,15 +107,26 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     this.logger.clearStatusLine();
     // it's enough to check the first component whether it's a snap or tag, because it can't be a mix of both
     const shouldRunSnapPipeline = isSnap(components[0].id.version);
+    await Promise.all(
+      components.map((component) => this.scope.legacyScope.loadDependenciesGraphForComponent(component.state._consumer))
+    );
     const { builderDataMap, pipeResults } = await this.builder.tagListener(
       components,
       { throwOnError: false, isSnap: shouldRunSnapPipeline },
-      { seedersOnly: true, installOptions: { copyPeerToRuntimeOnComponents: true, installPeersFromEnvs: true } }
+      {
+        seedersOnly: true,
+        getExistingAsIs: reuseCapsules,
+        emptyRootDir: !reuseCapsules,
+        installOptions: { copyPeerToRuntimeOnComponents: true, installPeersFromEnvs: true },
+      },
+      {
+        tasks: tasks ? tasks.split(',').map((task) => task.trim()) : [],
+      }
     );
     const legacyBuildResults = this.scope.builderDataMapToLegacyOnTagResults(builderDataMap);
     const legacyComponents = components.map((c) => c.state._consumer);
     this.snapping._updateComponentsByTagResult(legacyComponents, legacyBuildResults);
-    const publishedPackages = this.snapping._getPublishedPackages(legacyComponents);
+    const publishedPackages = Array.from(this.snapping._getPublishedPackages(legacyComponents).keys());
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     if (push) {
@@ -300,7 +308,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       BuilderMain,
       LanesMain,
       SnappingMain,
-      ExportMain
+      ExportMain,
     ],
     _,
     [onPostSignSlot]: [OnPostSignSlot],
