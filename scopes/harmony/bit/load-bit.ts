@@ -11,7 +11,8 @@ process.env.BROWSERSLIST_IGNORE_OLD_DATA = 'true';
 
 import './hook-require';
 
-import AspectLoaderAspect, {
+import {
+  AspectLoaderAspect,
   getAspectDir,
   getAspectDistDir,
   AspectLoaderMain,
@@ -48,7 +49,7 @@ import { getAllCoreAspectsIds, isCoreAspect, manifestsMap } from './manifests';
 import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
 import { BitConfig } from './bit.provider';
-import EnvsAspect, { EnvsMain } from '@teambit/envs';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 
 async function loadLegacyConfig(config: any) {
