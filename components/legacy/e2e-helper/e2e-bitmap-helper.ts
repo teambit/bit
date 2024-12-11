@@ -18,7 +18,6 @@ export default class BitMapHelper {
 
   read(bitMapPath: string = path.join(this.scopes.localPath, BIT_MAP), withoutComment = true) {
     const map = fs.readFileSync(bitMapPath) || {};
-    // @ts-ignore todo: remove after deleting teambit.legacy
     return json.parse(map.toString('utf8'), undefined, withoutComment);
   }
 
