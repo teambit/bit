@@ -8,7 +8,7 @@ const workspaceJson = fs.readFileSync(`${__dirname}/../workspace.jsonc`, 'utf8')
 const workspaceJsonParsed = parse(workspaceJson);
 const policy = workspaceJsonParsed['teambit.dependencies/dependency-resolver'].policy;
 const workspacePackages = [...Object.keys(policy.dependencies), ...Object.keys(policy.peerDependencies)];
-const sourceCode = ['src', 'scopes', 'e2e'];
+const sourceCode = ['src', 'scopes', 'e2e', 'components'];
 const sourceCodeAbs = sourceCode.map((dir) => `${__dirname}/../${dir}`);
 const sourceFiles = globby.sync(sourceCodeAbs);
 
@@ -23,7 +23,6 @@ const whitelist = [
   'babel-plugin-ramda',
   'eslint-plugin-mocha',
   'eslint-plugin-promise',
-  'gh-release',
   'mocha-circleci-reporter',
   'mocha-junit-reporter',
   'prettier-eslint',
@@ -34,6 +33,8 @@ const whitelist = [
   'npm', // needed for e2e tests
   'cross-env', // needed for e2e tests on Windows
   '@typescript-eslint/typescript-estree', // required for @typescript-eslint/parser in .eslintrc.js
+  '@mdx-js/mdx', // required for @mdx-js/react in mdx files - maybe should be added to envs (like we have in env.jsonc)
+  // then we can remove it from here
 ];
 used.push(...whitelist);
 unused = unused.filter((dep) => !whitelist.includes(dep));
