@@ -5,8 +5,7 @@ import esmLoader from '@teambit/node.utils.esm-loader';
 import { readdirSync, existsSync } from 'fs-extra';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { ComponentID } from '@teambit/component-id';
-import { Scope as LegacyScope } from '@teambit/legacy.scope';
-import { GLOBAL_SCOPE, DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
+import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
 import { MainRuntime } from '@teambit/cli';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
@@ -16,8 +15,6 @@ import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { replaceFileExtToJs } from '@teambit/compilation.modules.babel-compiler';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { LegacyGlobal, loadBit, takeLegacyGlobalsSnapshot } from '@teambit/bit';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import mapSeries from 'p-map-series';
 import { difference, compact, flatten, intersection, uniqBy, some, isEmpty, isObject } from 'lodash';
@@ -588,46 +585,6 @@ export class AspectLoaderMain {
 
   isAspectComponent(component: Component): boolean {
     return this.envs.isUsingAspectEnv(component);
-  }
-
-  /**
-   * get or create a global scope, import the non-core aspects, load bit from that scope, create
-   * capsules for the aspects and load them from the capsules.
-   */
-  async loadAspectsFromGlobalScope(
-    aspectIds: string[]
-  ): Promise<{ components: Component[]; globalScopeHarmony: Harmony; legacyGlobalsSnapshot: LegacyGlobal[] }> {
-    const globalScope = await LegacyScope.ensure(GLOBAL_SCOPE, 'global-scope');
-    await globalScope.ensureDir();
-    const legacyGlobalsSnapshot = takeLegacyGlobalsSnapshot();
-    const globalScopeHarmony = await loadBit(globalScope.path);
-    const scope = globalScopeHarmony.get<ScopeMain>(ScopeAspect.id);
-    const aspectLoader = globalScopeHarmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
-    const ids = aspectIds.map((id) => ComponentID.fromString(id));
-    const hasVersions = ids.every((id) => id.hasVersion());
-    const useCache = hasVersions; // if all components has versions, try to use the cached aspects
-    await scope.import(ids, { useCache, reason: 'to load aspects from global scope' });
-    const components = await scope.getMany(ids, true);
-
-    // don't use `await scope.loadAspectsFromCapsules(components, true);`
-    // it won't work for globalScope because `this !== scope.aspectLoader` (this instance
-    // is not the same as the aspectLoader instance Scope has)
-    const resolvedAspects = await scope.getResolvedAspects(components, { workspaceName: 'global-scope' });
-    try {
-      await aspectLoader.loadRequireableExtensions(resolvedAspects, true);
-    } catch (err: any) {
-      if (err?.error?.code === 'MODULE_NOT_FOUND') {
-        const resolvedAspectsAgain = await scope.getResolvedAspects(components, {
-          skipIfExists: false,
-          workspaceName: 'global-scope',
-        });
-        await aspectLoader.loadRequireableExtensions(resolvedAspectsAgain, true);
-      } else {
-        throw err;
-      }
-    }
-
-    return { components, globalScopeHarmony, legacyGlobalsSnapshot };
   }
 
   filterAspectDefs(

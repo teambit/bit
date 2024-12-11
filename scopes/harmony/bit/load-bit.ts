@@ -12,6 +12,7 @@ process.env.BROWSERSLIST_IGNORE_OLD_DATA = 'true';
 import './hook-require';
 
 import {
+  AspectLoaderAspect,
   getAspectDir,
   getAspectDistDir,
   AspectLoaderMain,
@@ -44,10 +45,12 @@ import { logger } from '@teambit/legacy.logger';
 import { ExternalActions } from '@teambit/legacy.scope-api';
 import { readdir, readFile } from 'fs-extra';
 import { resolve, join } from 'path';
-import { manifestsMap } from './manifests';
+import { getAllCoreAspectsIds, isCoreAspect, manifestsMap } from './manifests';
 import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
 import { BitConfig } from './bit.provider';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 
 async function loadLegacyConfig(config: any) {
   const harmony = await Harmony.load([ConfigAspect], ConfigRuntime.name, config.toObject());
@@ -277,9 +280,18 @@ export async function loadBit(path = process.cwd()) {
 
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
   if (loadCLIOnly) return harmony;
-  const aspectLoader = harmony.get<AspectLoaderMain>('teambit.harmony/aspect-loader');
+  const aspectLoader = harmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
   aspectLoader.setMainAspect(getMainAspect());
+  const envs = harmony.get<EnvsMain>(EnvsAspect.id);
+  envs.setCoreAspectIds(getAllCoreAspectsIds());
+  const generator = harmony.get<GeneratorMain>(GeneratorAspect.id);
+  generator.setBitApi({
+    loadBit,
+    takeLegacyGlobalsSnapshot,
+    restoreGlobalsFromSnapshot,
+    isCoreAspect,
+  });
   return harmony;
 }
 
