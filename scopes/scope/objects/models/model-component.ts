@@ -836,8 +836,8 @@ export default class Component extends BitObject {
       const refs = versionObject.refsWithOptions(false, false);
       refsWithoutArtifacts.push(...refs);
       const refsFromExtensions = getRefsFromExtensions(versionObject.extensions);
-      locallyChangedHashes.includes(versionObject.hash().toString()) // @ts-ignore todo: remove after deleting teambit.legacy
-        ? artifactsRefs.push(...refsFromExtensions) // @ts-ignore todo: remove after deleting teambit.legacy
+      locallyChangedHashes.includes(versionObject.hash().toString())
+        ? artifactsRefs.push(...refsFromExtensions)
         : artifactsRefsFromExportedVersions.push(...refsFromExtensions);
     });
     const loadedRefs: ObjectItem[] = [];
@@ -1060,7 +1060,6 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       // @ts-ignore
       license: scopeMeta ? License.deserialize(scopeMeta.license) : undefined, // todo: make sure we have license in case of local scope
       log,
-      // @ts-ignore todo: remove after deleting teambit.legacy
       overrides: ComponentOverrides.loadFromScope(version.overrides),
       packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated,

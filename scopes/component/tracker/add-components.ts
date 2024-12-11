@@ -96,7 +96,6 @@ export default class AddComponents {
   constructor(context: AddContext, addProps: AddProps) {
     this.workspace = context.workspace;
     this.consumer = context.workspace.consumer;
-    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = this.consumer.bitMap;
     this.componentPaths = addProps.componentPaths;
     this.id = addProps.id;

@@ -255,7 +255,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   async findOrAddComponent(consumerComponent: ConsumerComponent): Promise<ModelComponent> {
-    // @ts-ignore todo: remove after deleting teambit.legacy
     if (consumerComponent.modelComponent) return consumerComponent.modelComponent;
     const propsFromComp = this.getPropsFromConsumerComp(consumerComponent);
     const comp = ModelComponent.from(propsFromComp);

@@ -39,7 +39,6 @@ export default class NodeModuleLinker {
     private workspace: Workspace
   ) {
     this.consumer = this.workspace.consumer;
-    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = this.consumer.bitMap;
     this.dataToPersist = new DataToPersist();
     this.existingLinks = [];
