@@ -472,4 +472,39 @@ describe('tag components on Harmony', function () {
       expect(tagOutput).to.have.string('comp1@0.0.1');
     });
   });
+  describe('maintain two main branches 1.x and 2.x, tagging the older branch 1.x with a patch', () => {
+    let ver2Head: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild('--ver 1.0.0');
+      helper.fixtures.populateComponents(1, undefined, 'version2');
+      helper.command.tagAllWithoutBuild('--ver 2.0.0');
+      ver2Head = helper.command.getHead('comp1');
+      helper.command.export();
+      helper.command.checkoutVersion('1.0.0', 'comp1', '-x');
+      helper.fixtures.populateComponents(1, undefined, 'version101');
+      helper.command.tagAllWithoutBuild('--ver 1.0.1 --ignore-newest-version');
+      helper.command.export();
+    });
+    it('should keep the head as 2.x and not change it to 1.0.1', () => {
+      const comp = helper.command.catComponent('comp1');
+      expect(comp.head).to.equal(ver2Head);
+    });
+    it('should update the .bitmap according to the patch version and not the head', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('1.0.1');
+    });
+    describe('importing the component to a new workspace', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('comp1', '-x');
+      });
+      it('should import the latest: 2.x and not the patch 1.01', () => {
+        const bitmap = helper.bitMap.read();
+        expect(bitmap.comp1.version).to.equal('2.0.0');
+      });
+    });
+  });
 });
