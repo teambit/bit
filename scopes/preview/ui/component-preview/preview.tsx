@@ -162,7 +162,9 @@ export function ComponentPreview({
     <div ref={containerRef} className={classNames(styles.preview, className)} style={{ height: forceHeight }}>
       <iframe
         {...rest}
+        title={rest.title}
         ref={currentRef}
+        sandbox="allow-scripts allow-same-origin"
         style={{
           ...style,
           height: forceHeight || (isScaling ? finalHeight + innerBottomPadding : legacyIframeHeight),
