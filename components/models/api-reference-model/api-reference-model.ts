@@ -139,7 +139,7 @@ export class APIReferenceModel {
     try {
       const apiSchema = APISchema.fromObject(result.getHost.getSchema);
       return new APIReferenceModel(apiSchema, renderers);
-    } catch (e) {
+    } catch {
       return new APIReferenceModel(
         APISchema.empty(ComponentID.fromObject((result.getHost.getSchema as any).componentId as ComponentIdObj) as any),
         renderers
