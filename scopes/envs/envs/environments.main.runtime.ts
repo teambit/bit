@@ -467,7 +467,7 @@ export class EnvsMain {
   getOrCalculateEnv(component: Component): EnvDefinition {
     try {
       return this.getEnv(component);
-    } catch (err) {
+    } catch {
       return this.calculateEnv(component);
     }
   }
@@ -997,7 +997,7 @@ export class EnvsMain {
           if (this.implements(env, service)) {
             services.push([id, service]);
           }
-        } catch (err) {
+        } catch {
           this.logger.warn(`failed loading service ${id} for env ${env.id}`);
         }
       });

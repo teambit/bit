@@ -72,7 +72,7 @@ export async function tagParser(
         try {
           const formattedComment = comment && (await formatter.formatSnippet(comment));
           return new TagSchema(context.getLocation(tag), tagName, formattedComment);
-        } catch (e) {
+        } catch {
           return simpleTag(tag, tagName, context);
         }
       }

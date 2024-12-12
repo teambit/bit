@@ -11,7 +11,7 @@ export function makeTempDir(prefix = '') {
 export function getPreviewDistDir(): string {
   try {
     return toWindowsCompatiblePath(join(getAspectDirFromBvm('@teambit/preview'), 'dist'));
-  } catch (err) {
+  } catch {
     return __dirname;
   }
 }

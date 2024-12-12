@@ -224,7 +224,7 @@ export class AspectLoaderMain {
     if (this.failedAspects.includes(id)) return true;
     try {
       return this.harmony.get(id);
-    } catch (err: any) {
+    } catch {
       return false;
     }
   }
@@ -240,7 +240,7 @@ export class AspectLoaderMain {
         id,
         icon,
       };
-    } catch (err) {
+    } catch {
       return undefined;
     }
   }

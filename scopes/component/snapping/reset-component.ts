@@ -63,16 +63,15 @@ export async function removeLocalVersionsForAllComponents(
 ): Promise<ResetResult[]> {
   const componentsToUntag = await getComponentsWithOptionToUntag(consumer, remove);
   const force = true; // when removing local versions from all components, no need to check if the component is used as a dependency
-  return removeLocalVersionsForMultipleComponents(componentsToUntag, lane, head, force, consumer.scope);
+  return removeLocalVersionsForMultipleComponents(componentsToUntag, consumer.scope, lane, head, force);
 }
 
 export async function removeLocalVersionsForMultipleComponents(
   componentsToUntag: ModelComponent[],
+  scope: Scope,
   lane?: Lane,
   head?: boolean,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  force: boolean,
-  scope: Scope
+  force?: boolean
 ) {
   if (!componentsToUntag.length) {
     throw new BitError(`no components found to reset on your workspace`);

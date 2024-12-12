@@ -37,7 +37,7 @@ class CacheClearer {
   private async getConsumerGracefully(): Promise<Consumer | undefined> {
     try {
       return await loadConsumerIfExist();
-    } catch (err: any) {
+    } catch {
       return undefined;
     }
   }

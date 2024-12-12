@@ -23,7 +23,7 @@ export function resolvePeerToDirOrFile(peerName: string, logger: Logger, hostRoo
     resolved = require.resolve(peerName, options);
     const folder = findRoot(resolved);
     return folder;
-  } catch (e) {
+  } catch {
     if (resolved) {
       logger.warn(`Couldn't find root dir for "${peerName}" from path "${resolved}" to add it as webpack alias`);
     } else {

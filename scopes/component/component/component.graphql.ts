@@ -230,7 +230,7 @@ export function componentSchema(componentExtension: ComponentMain): Schema {
             const componentId = await host.resolveComponentId(id);
             const component = await host.get(componentId);
             return component;
-          } catch (error: any) {
+          } catch {
             return null;
           }
         },

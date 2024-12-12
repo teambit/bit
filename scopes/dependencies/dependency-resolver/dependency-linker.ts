@@ -623,7 +623,7 @@ export class DependencyLinker {
     try {
       targetStat = fs.lstatSync(targetPath);
       // eslint-disable-next-line no-empty
-    } catch (e: any) {}
+    } catch {}
     if (targetStat && !hasLocalInstallation) {
       // Do not override links created by other means
       if (!targetStat.isSymbolicLink()) {
@@ -713,7 +713,7 @@ function isPathSymlink(folderPath: string): boolean | undefined {
   try {
     const stat = fs.lstatSync(folderPath);
     return stat.isSymbolicLink();
-  } catch (e: any) {
+  } catch {
     return undefined;
   }
 }

@@ -238,7 +238,7 @@ export class ApplicationMain {
             // eslint-disable-next-line
             const appManifest = require(pluginPath)?.default;
             return appManifest;
-          } catch (err) {
+          } catch {
             this.logger.error(`failed loading app manifest: ${pluginPath}`);
             return undefined;
           }
