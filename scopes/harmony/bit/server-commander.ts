@@ -272,7 +272,7 @@ Please run the command "bit server-forever" first to start the server.`)
     try {
       await this.deleteServerPortFile();
       process.exit(0);
-    } catch (err: any) {
+    } catch {
       // probably file doesn't exist.
       process.exit(0);
     }
