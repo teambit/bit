@@ -11,7 +11,7 @@ export function getBitVersion(): string {
 export function getBitVersionGracefully(): string | null {
   try {
     return getBitVersion();
-  } catch (err: any) {
+  } catch {
     return null;
   }
 }

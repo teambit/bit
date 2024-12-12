@@ -166,7 +166,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     try {
       this.harmony.get('teambit.workspace/workspace');
       return true;
-    } catch (err: any) {
+    } catch {
       return false;
     }
   }

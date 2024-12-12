@@ -291,7 +291,7 @@ export class GeneratorMain {
     let workspace: Workspace;
     try {
       workspace = harmony.get<Workspace>(WorkspaceAspect.id);
-    } catch (err: any) {
+    } catch {
       throw new Error(`fatal: "${workspacePath}" is not a valid Bit workspace, make sure the path is correct`);
     }
     const aspectComponentId = await workspace.resolveComponentId(aspectId);

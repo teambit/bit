@@ -73,7 +73,7 @@ export class TrackerMain {
     let userEnvIdWithPotentialVersion: string;
     try {
       userEnvIdWithPotentialVersion = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(userEnvId);
-    } catch (err) {
+    } catch {
       // the env needs to be without version
       userEnvIdWithPotentialVersion = userEnvId.toStringWithoutVersion();
     }

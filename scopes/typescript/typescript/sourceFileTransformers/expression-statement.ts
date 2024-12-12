@@ -14,7 +14,7 @@ export const expressionStatementTransformer: SourceFileTransformer = (mapping: R
           return ts.factory.createIdentifier(newName);
         }
         return identifier;
-      } catch (e) {
+      } catch {
         return identifier;
       }
     };

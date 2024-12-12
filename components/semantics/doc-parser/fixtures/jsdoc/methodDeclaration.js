@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-useless-constructor */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // @bit-no-check
 /* Class representing a point. */
 class Point {

@@ -54,7 +54,7 @@ function parseJsonFile(pkgPath: string): Json | undefined {
 function safeFindRoot(filepath: string) {
   try {
     return findRoot(filepath);
-  } catch (e: any) {
+  } catch {
     // might happen for "scaffolding" files outside the project.
     return undefined;
   }
