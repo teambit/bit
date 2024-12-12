@@ -45,7 +45,6 @@
     "check-types": "tsc",
     "ts-watch": "tsc -w",
     "oxlint": "oxlint --deny-warnings",
-    "oxlint:checkstyle": "oxlint --deny-warnings --format checkstyle",
     "lint:only": "eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\"",
     "lint": "tsc && eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\"",
     "lint:table": "eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\" --format table",
