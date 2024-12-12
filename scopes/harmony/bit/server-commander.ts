@@ -45,14 +45,19 @@
 import fetch from 'node-fetch';
 import net from 'net';
 import fs from 'fs-extra';
-import { execSync } from 'child_process';
-import { join } from 'path';
+import { exec, execSync } from 'child_process';
+import { join, dirname } from 'path';
+import os from 'os';
 import EventSource from 'eventsource';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import chalk from 'chalk';
 import { loader } from '@teambit/legacy.loader';
 import { printBitVersionIfAsked } from './bootstrap';
-import { getSocketPort } from './server-forever';
+import { getPidByPort, getSocketPort } from './server-forever';
+
+const CMD_SERVER_PORT = 'cli-server-port';
+const CMD_SERVER_PORT_DELETE = 'cli-server-port-delete';
+const CMD_SERVER_SOCKET_PORT = 'cli-server-socket-port';
 
 class ServerPortFileNotFound extends Error {
   constructor(filePath: string) {
@@ -102,9 +107,10 @@ export class ServerCommander {
     return process.env.BIT_CLI_SERVER_TTY === 'true';
   }
 
-  async runCommandWithHttpServer(): Promise<CommandResult | undefined> {
-    await this.printPortIfAsked();
-    this.printSocketPortIfAsked();
+  async runCommandWithHttpServer(): Promise<CommandResult | undefined | void> {
+    if (process.argv.includes(CMD_SERVER_PORT)) return this.printPortAndExit();
+    if (process.argv.includes(CMD_SERVER_SOCKET_PORT)) return this.printSocketPortAndExit();
+    if (process.argv.includes(CMD_SERVER_PORT_DELETE)) return this.deletePortAndExit();
     printBitVersionIfAsked();
     const port = await this.getExistingUsedPort();
     const url = `http://localhost:${port}/api`;
@@ -249,8 +255,7 @@ Please run the command "bit server-forever" first to start the server.`)
     });
   }
 
-  private async printPortIfAsked() {
-    if (!process.argv.includes('cli-server-port')) return;
+  private async printPortAndExit() {
     try {
       const port = await this.getExistingUsedPort();
       process.stdout.write(port.toString());
@@ -263,9 +268,17 @@ Please run the command "bit server-forever" first to start the server.`)
       process.exit(1);
     }
   }
+  private async deletePortAndExit() {
+    try {
+      await this.deleteServerPortFile();
+      process.exit(0);
+    } catch (err: any) {
+      // probably file doesn't exist.
+      process.exit(0);
+    }
+  }
 
-  private printSocketPortIfAsked() {
-    if (!process.argv.includes('cli-server-socket-port')) return;
+  private printSocketPortAndExit() {
     try {
       const port = getSocketPort();
       process.stdout.write(port.toString());
@@ -278,7 +291,7 @@ Please run the command "bit server-forever" first to start the server.`)
 
   private async getExistingUsedPort(): Promise<number> {
     const port = await this.getExistingPort();
-    const isPortInUse = await this.isPortInUse(port);
+    const isPortInUse = await this.isPortInUseForCurrentDir(port);
     if (!isPortInUse) {
       await this.deleteServerPortFile();
       throw new ServerIsNotRunning(port);
@@ -287,25 +300,18 @@ Please run the command "bit server-forever" first to start the server.`)
     return port;
   }
 
-  private isPortInUse(port: number): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      const client = new net.Socket();
-
-      client.once('error', (err: any) => {
-        if (err.code === 'ECONNREFUSED' || err.code === 'EHOSTUNREACH') {
-          resolve(false);
-        } else {
-          reject(err);
-        }
-      });
-
-      client.once('connect', () => {
-        client.end();
-        resolve(true);
-      });
-
-      client.connect({ port, host: 'localhost' });
-    });
+  private async isPortInUseForCurrentDir(port: number) {
+    const pid = getPidByPort(port);
+    if (!pid) {
+      return false;
+    }
+    const dirUsedByPort = await getCwdByPid(pid);
+    if (!dirUsedByPort) {
+      // might not be supported by Windows. this is on-best-effort basis.
+      return true;
+    }
+    const currentDir = process.cwd();
+    return dirUsedByPort === currentDir;
   }
 
   private async getExistingPort(): Promise<number> {
@@ -347,4 +353,75 @@ export function shouldUseBitServer() {
     process.argv.length > 2 && // if it has no args, it shows the help
     !commandsToSkip.includes(process.argv[2])
   );
+}
+
+/**
+ * Executes a command and returns stdout as a string.
+ */
+function execCommand(cmd: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    exec(cmd, { encoding: 'utf-8' }, (error, stdout) => {
+      if (error) {
+        return reject(error);
+      }
+      resolve(stdout.trim());
+    });
+  });
+}
+
+/**
+ * Get the CWD of a process by PID.
+ *
+ * On Linux: readlink /proc/<pid>/cwd
+ * On macOS: lsof -p <pid> and parse line with 'cwd'
+ * On Windows: Attempt with wmic (not guaranteed)
+ */
+async function getCwdByPid(pid: string): Promise<string | null> {
+  const platform = os.platform();
+
+  try {
+    if (platform === 'linux') {
+      const cwd = await execCommand(`readlink /proc/${pid}/cwd`);
+      return cwd || null;
+    } else if (platform === 'darwin') {
+      // macOS does not have /proc, but lsof -p <pid> shows cwd line like:
+      // COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF   NODE NAME
+      // node    12345 user  cwd    DIR    1,2      1024  56789 /Users/username/project
+      const output = await execCommand(`lsof -p ${pid}`);
+      const line = output.split('\n').find((l) => l.includes(' cwd '));
+      if (!line) return null;
+      const parts = line.trim().split(/\s+/);
+      // The last part should be the directory path
+      return parts[parts.length - 1] || null;
+    } else if (platform === 'win32') {
+      // On Windows, we can try wmic:
+      // wmic process where "ProcessId=<pid>" get CommandLine,ExecutablePath
+      // CommandLine or ExecutablePath might give hints.
+      // This is not guaranteed to give the original working directory, as Windows doesn't expose it easily.
+      const output = await execCommand(`wmic process where "ProcessId=${pid}" get ExecutablePath /format:list`);
+      // Output looks like:
+      // ExecutablePath=C:\path\to\executable.exe
+      const line = output.split('\n').find((l) => l.startsWith('ExecutablePath='));
+      if (line) {
+        const exePath = line.split('=')[1].trim();
+        // Guess: the working directory might be the directory containing the executable
+        return dirname(exePath);
+      }
+      // If no executable path, try CommandLine
+      const cmdOutput = await execCommand(`wmic process where "ProcessId=${pid}" get CommandLine /format:list`);
+      const cmdLine = cmdOutput.split('\n').find((l) => l.startsWith('CommandLine='));
+      if (cmdLine) {
+        const command = cmdLine.split('=')[1].trim();
+        // Attempt a guess: if command is a full path, take its directory
+        if (command.includes('\\')) {
+          return dirname(command.split(' ')[0]);
+        }
+      }
+      return null;
+    } else {
+      throw new Error(`Platform ${platform} not supported`);
+    }
+  } catch {
+    return null;
+  }
 }
