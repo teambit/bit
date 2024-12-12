@@ -151,7 +151,7 @@ export class ServerCommander {
     let jsonResponse;
     try {
       jsonResponse = await res.json();
-    } catch (e: any) {
+    } catch {
       // the response is not json, ignore the body.
     }
     throw new Error(jsonResponse?.message || jsonResponse || res.statusText);
