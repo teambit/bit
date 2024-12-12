@@ -535,7 +535,11 @@ this command marks the components as deleted, and after snap/tag and export they
 
 **Usage**: `deps remove <component-pattern> <package...>`
 
-**Description**: remove a dependency to component(s)
+**Description**: remove a dependency from one or more components  
+this command removes the dependency whether it was set by 'bit deps set'/variants or by auto-detection.  
+if the dependency was auto-detected, it will be marked with a minus sign in the .bitmap file.  
+otherwise, the config is written to .bitmap without the dependency.  
+see also 'bit deps unset'
 
 | **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
 | ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -551,7 +555,10 @@ this command marks the components as deleted, and after snap/tag and export they
 
 **Usage**: `deps unset <component-pattern> <package...>`
 
-**Description**: unset a dependency to component(s) that was previously set by "bit deps set"
+**Description**: unset a dependency to component(s) that was set via config (e.g. "bit deps set" or variants)  
+this command removes the dependency only when it was set by config not if it was auto detected.  
+in the .bitmap file, the config is written without the dependency.  
+see also "bit deps remove"
 
 | **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
 | ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
