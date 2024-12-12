@@ -42,7 +42,7 @@ export class PubsubPreview {
   private inIframe() {
     try {
       return isBrowser && window.self !== window.top;
-    } catch (e: any) {
+    } catch {
       return false;
     }
   }

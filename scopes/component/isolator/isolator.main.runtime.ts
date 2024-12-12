@@ -1116,7 +1116,7 @@ export class IsolatorMain {
         try {
           const previousPackageJsonRaw = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
           previousPackageJson = JSON.parse(previousPackageJsonRaw);
-        } catch (e: any) {
+        } catch {
           // package-json doesn't exist in the capsule, that's fine, it'll be considered as a cache miss
         }
         return {

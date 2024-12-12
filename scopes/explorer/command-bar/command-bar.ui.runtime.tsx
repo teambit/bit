@@ -154,9 +154,9 @@ export class CommandBarUI {
 
     return (
       <CommandBar
+        key="CommandBarUI"
         {...results}
         onEnter={onEnter}
-        key="CommandBarUI"
         className={styles.commanderUi}
         placeholder="Search anything or type > to only search commands"
         visible={visible}

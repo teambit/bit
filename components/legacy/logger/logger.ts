@@ -151,7 +151,7 @@ class BitLogger implements IBitLogger {
     if (color) {
       try {
         messageStr = chalk.keyword(color)(messageStr);
-      } catch (e: any) {
+      } catch {
         this.trace('a wrong color provided to logger.console method');
       }
     }
@@ -230,7 +230,7 @@ class BitLogger implements IBitLogger {
     if (!this.commandHistoryBasePath) return;
     try {
       fs.appendFileSync(path.join(this.commandHistoryBasePath, commandHistoryFile), `${str}\n`);
-    } catch (error) {
+    } catch {
       // never mind
     }
   }

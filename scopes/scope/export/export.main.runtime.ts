@@ -803,7 +803,7 @@ async function getParsedId(consumer: Consumer, id: string): Promise<ComponentID>
   // .bitmap and only in the scope. we support this case and enable to export
   try {
     return consumer.getParsedId(id);
-  } catch (err: any) {
+  } catch {
     return consumer.scope.getParsedId(id);
   }
 }

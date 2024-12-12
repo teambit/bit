@@ -144,7 +144,7 @@ function attachVersionsFromBitmap(rawConfig: Record<string, any>, consumerInfo: 
     BitMap.removeNonComponentFields(parsedBitMap);
     // Do nothing here, invalid bitmaps will be handled later
     // eslint-disable-next-line no-empty
-  } catch (e: any) {}
+  } catch {}
   const wsConfig = rawConfig['teambit.workspace/workspace'];
   if (!wsConfig) throw new BitError('workspace.jsonc is missing the "teambit.workspace/workspace" property');
   const defaultScope = wsConfig.defaultScope;
@@ -174,7 +174,7 @@ function getVersionFromBitMapIds(allBitmapIds: ComponentIdList, aspectId: string
   let aspectBitId: ComponentID;
   try {
     aspectBitId = ComponentID.fromString(aspectId);
-  } catch (err: any) {
+  } catch {
     throw new Error(
       `unable to parse the component-id "${aspectId}" from the workspace.jsonc file, make sure this is a component id`
     );
@@ -207,7 +207,7 @@ function getMainAspect() {
     // eslint-disable-next-line global-require
     const packageJson = require(`${mainAspectDir}/package.json`);
     version = packageJson.version;
-  } catch (err: any) {
+  } catch {
     version = undefined;
   }
 
@@ -317,7 +317,7 @@ export async function runCLI() {
   let hasWorkspace = true;
   try {
     harmony.get('teambit.workspace/workspace');
-  } catch (err: any) {
+  } catch {
     hasWorkspace = false;
   }
   await cli.run(hasWorkspace);
