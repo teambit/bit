@@ -397,7 +397,7 @@ jobs:
           at: ./
       - run:
           name: 'run OXlint'
-          command: 'cd bit && npm run oxlint'
+          command: 'cd bit && mkdir junit && npx oxlint --deny-warnings --format checkstyle > junit/oxlint-results.xml'
       - run:
           name: 'run ESLint'
           command: 'cd bit && node --max-old-space-size=4096 node_modules/eslint/bin/eslint.js "{src,e2e,scopes,components}/**/*.{ts,tsx}" --format junit -o junit/eslint-results.xml'
