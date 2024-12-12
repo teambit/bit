@@ -396,6 +396,9 @@ jobs:
       - attach_workspace:
           at: ./
       - run:
+          name: 'run OXlint'
+          command: 'cd bit && npm run oxlint'
+      - run:
           name: 'run ESLint'
           command: 'cd bit && node --max-old-space-size=4096 node_modules/eslint/bin/eslint.js "{src,e2e,scopes,components}/**/*.{ts,tsx}" --format junit -o junit/eslint-results.xml'
           environment:

@@ -12,6 +12,7 @@
     "node": ">=12.22.0"
   },
   "lint-staged": {
+    "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}": "oxlint --deny-warnings",
     "*.{ts,js,jsx,tsx,css,scss,md,mdx}": [
       "prettier --write",
       "git add"
@@ -43,6 +44,7 @@
     "ts-coverage": "type-coverage",
     "check-types": "tsc",
     "ts-watch": "tsc -w",
+    "oxlint": "oxlint --deny-warnings",
     "lint:only": "eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\"",
     "lint": "tsc && eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\"",
     "lint:table": "eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\" --format table",
@@ -87,6 +89,7 @@
     "lint-staged": "lint-staged"
   },
   "dependencies": {
+    "oxlint": "0.15.0",
     "husky": "9.1.7"
   },
   "devDependencies": {},
