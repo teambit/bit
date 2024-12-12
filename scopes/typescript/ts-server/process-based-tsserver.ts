@@ -315,7 +315,7 @@ export class ProcessBasedTsServer {
 
     try {
       message = JSON.parse(messageString);
-    } catch (error) {
+    } catch {
       // If the message isn't valid JSON, it's not a valid tsserver message. Reject the promise.
       reject?.(new Error(`Received invalid message from TSServer: ${untrimmedMessageString}`));
       return;

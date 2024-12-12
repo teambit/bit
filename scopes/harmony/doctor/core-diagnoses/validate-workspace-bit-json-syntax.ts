@@ -25,7 +25,7 @@ export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
       return {
         valid: true,
       };
-    } catch (e: any) {
+    } catch {
       return {
         valid: false,
         data: {},

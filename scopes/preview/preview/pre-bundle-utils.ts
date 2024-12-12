@@ -61,7 +61,7 @@ export function getBundlePath(bundleId: string, bundleDir: string, aspectDir: st
       return undefined;
     }
     return bundlePath;
-  } catch (err) {
+  } catch {
     return undefined;
   }
 }

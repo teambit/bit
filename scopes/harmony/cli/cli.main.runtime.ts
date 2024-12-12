@@ -212,7 +212,7 @@ CLIAspect.addRuntime(CLIMain);
 async function ensureWorkspaceAndScope() {
   try {
     await loadConsumerIfExist();
-  } catch (err) {
+  } catch {
     const potentialWsPath = process.cwd();
     const consumerInfo = await getWorkspaceInfo(potentialWsPath);
     if (consumerInfo && !consumerInfo.hasScope && consumerInfo.hasBitMap && consumerInfo.hasWorkspaceConfig) {

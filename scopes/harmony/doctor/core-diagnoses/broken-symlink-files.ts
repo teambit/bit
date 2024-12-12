@@ -62,7 +62,7 @@ export default class BrokenSymlinkFiles extends Diagnosis {
     try {
       const link = await fs.readlink(symlinkPath);
       return link;
-    } catch (err: any) {
+    } catch {
       // probably not a symlink
       return null;
     }

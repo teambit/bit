@@ -150,7 +150,7 @@ also, make sure the tsconfig.json in the root has the "jsx" setting defined.`);
 
     const exportNode = await context.computeSchema(definitionNode.parent);
     return new ExportSchema(location, name, exportNode, alias);
-  } catch (e) {
+  } catch {
     const exportNode = new UnresolvedSchema(context.getLocation(element.name), element.name.getText());
     return new ExportSchema(context.getLocation(element.name), element.name.getText(), exportNode);
   }

@@ -57,7 +57,7 @@ Original error: ${err}`);
     try {
       fs.symlinkSync(srcPath, destPath);
       logger.trace(`createLinkOrSymlink, symlinkOrHardLink() successfully created the symlink`);
-    } catch (err: any) {
+    } catch {
       // it can be a file or directory, we don't know. just run link(), it will junction for dirs and hard-link for files.
       link();
     }

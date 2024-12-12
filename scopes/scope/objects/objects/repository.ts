@@ -295,7 +295,7 @@ export default class Repository {
           const buffer = await this.loadRaw(ref);
           const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash);
           return bitRawObject;
-        } catch (err: any) {
+        } catch {
           logger.error(`Couldn't load the ref ${ref} this object is probably corrupted and should be delete`);
           return null;
         }
@@ -413,7 +413,7 @@ export default class Repository {
       // Run hook to transform content pre reading
       const transformedContent = this.onRead(objectFile);
       return BitObject.parseSync(transformedContent);
-    } catch (err: any) {
+    } catch {
       if (throws) {
         throw new HashNotFound(ref.toString());
       }

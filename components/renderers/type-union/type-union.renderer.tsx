@@ -28,8 +28,8 @@ function TypeUnionComponent(props: APINodeRenderProps) {
           return (
             <React.Fragment key={`typeUnionMember-container-${type.toString()}-${index}}`}>
               <typeRenderer.Component
-                {...props}
                 key={`typeUnionMember-${type.toString()}-${index}}`}
+                {...props}
                 apiNode={{ ...props.apiNode, api: type, renderer: typeRenderer }}
                 depth={(props.depth ?? 0) + 1}
                 metadata={{ [type.__schema]: { columnView: true } }}

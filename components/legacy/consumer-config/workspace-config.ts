@@ -125,7 +125,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     try {
       const file = await AbstractConfig.loadJsonFileIfExist(packageJsonPath);
       return file;
-    } catch (e: any) {
+    } catch {
       throw new InvalidPackageJson(packageJsonPath);
     }
   }
