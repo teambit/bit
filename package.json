@@ -75,10 +75,6 @@
     "pkg:mac": "pkg bin/bit.js --targets node10-macos-x64 --out-path releases/mac --options --no-warnings --config package.json",
     "pkg:windows": "pkg bin/bit.js --targets node10-win-x64 --out-path releases/windows --options --no-warnings --config package.json",
     "pkg:all": "pkg bin/bit.js --targets node10-macos-x64,node10-win-x64,node10-linux-x64 --out-path releases/ --options --no-warnings --config package.json",
-    "pre-release": "gh-release -a releases/bit-legacy-linux,releases/bit-legacy-win.exe,releases/bit-legacy-macos --prerelease",
-    "release": "gh-release -a releases/bit-legacy-linux,releases/bit-legacy-win.exe,releases/bit-legacy-macos",
-    "release:circle": "gh-release -a releases/bit-legacy-linux,releases/bit-legacy-win.exe,releases/bit-legacy-macos -y",
-    "pre-release:circle": "gh-release -a releases/bit-legacy-linux,releases/bit-legacy-win.exe,releases/bit-legacy-macos -y --prerelease",
     "pre-release:inc-pack": "npm run pkg:all && npm run pre-release",
     "release:inc-pack": "npm run pkg:all && npm run release",
     "brew-bump:dry-run": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump' --dry-run",
@@ -90,7 +86,9 @@
     "generate-cli-reference-docs": "bit cli generate --docs > scopes/harmony/cli-reference/cli-reference.docs.mdx",
     "lint-staged": "lint-staged"
   },
-  "dependencies": {},
+  "dependencies": {
+    "husky": "9.1.7"
+  },
   "devDependencies": {},
   "pnpm": {
     "neverBuiltDependencies": [

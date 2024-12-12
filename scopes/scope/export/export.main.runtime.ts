@@ -206,7 +206,6 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const nonExistOnBitMap = exported.filter(
       (id) => !workspaceIds.hasWithoutVersion(id) && !removedIds.hasWithoutVersion(id)
     );
-    // @ts-ignore todo: remove after deleting teambit.legacy
     const updatedIds = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
     // re-generate the package.json, this way, it has the correct data in the componentId prop.
     await linkToNodeModulesByIds(this.workspace, updatedIds, true);

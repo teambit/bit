@@ -495,7 +495,6 @@ once done, to continue working, please run "bit cc"`
     returnResultsWithVersion = false
   ): Promise<{ [key: string]: ComponentIdList }> {
     logger.debug(`scope.getDependentsBitIds, bitIds: ${bitIds.toString()}`);
-    // @ts-ignore todo: fix after deleting teambit.legacy
     const idsGraph = await DependencyGraph.buildIdsGraphWithAllVersions(this);
     logger.debug(`scope.getDependentsBitIds, idsGraph the graph was built successfully`);
     const dependencyGraph = new DependencyGraph(idsGraph);

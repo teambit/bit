@@ -1,5 +1,4 @@
 import fs from 'fs-extra';
-import { loadBit } from '@teambit/bit';
 import { Harmony } from '@teambit/harmony';
 import { Component } from '@teambit/component';
 import execa from 'execa';
@@ -22,7 +21,7 @@ import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/w
 import { WorkspaceTemplate, WorkspaceContext } from './workspace-template';
 import { NewOptions } from './new.cmd';
 import { GeneratorAspect } from './generator.aspect';
-import { GeneratorMain } from './generator.main.runtime';
+import { BitApi, GeneratorMain } from './generator.main.runtime';
 
 export type GenerateResult = { id: ComponentID; dir: string; files: string[]; envId: string };
 
@@ -42,6 +41,7 @@ export class WorkspaceGenerator {
     private workspacePath: string,
     private options: NewOptions & { currentDir?: boolean },
     private template: WorkspaceTemplate,
+    private bitApi: BitApi,
     private aspectComponent?: Component
   ) {}
 
@@ -147,7 +147,7 @@ export class WorkspaceGenerator {
   }
 
   private async reloadBitInWorkspaceDir() {
-    this.harmony = await loadBit(this.workspacePath);
+    this.harmony = await this.bitApi.loadBit(this.workspacePath);
     this.workspace = this.harmony.get<Workspace>(WorkspaceAspect.id);
     this.install = this.harmony.get<InstallMain>(InstallAspect.id);
     const loggerMain = this.harmony.get<LoggerMain>(LoggerAspect.id);
