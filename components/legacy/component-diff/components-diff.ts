@@ -104,7 +104,7 @@ export function outputDiffResults(diffResults: DiffResults[]): string {
     .map((diffResult) => {
       if (diffResult.hasDiff) {
         const titleStr = `showing diff for ${chalk.bold(diffResult.id.toStringWithoutVersion())}`;
-        const titleSeparator = new Array(titleStr.length).fill('-').join('');
+        const titleSeparator = Array.from({ length: titleStr.length }).fill('-').join('');
         const title = chalk.cyan(`${titleSeparator}\n${titleStr}\n${titleSeparator}`);
         // @ts-ignore since hasDiff is true, filesDiff must be set
         const filesWithDiff = diffResult.filesDiff.filter((file) => file.diffOutput);
