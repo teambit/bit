@@ -9,7 +9,7 @@ export function hashErrorIfNeeded(error: Error) {
   let clonedError = error;
   try {
     clonedError = cloneErrorObject(error);
-  } catch (e: any) {
+  } catch {
     logger.warn('could not clone error', error);
   }
 
@@ -22,7 +22,7 @@ export function hashErrorIfNeeded(error: Error) {
   fieldToHash.forEach((field) => {
     try {
       clonedError[field] = hashValue(clonedError[field]);
-    } catch (e: any) {
+    } catch {
       logger.debug(`could not hash field ${field}`);
     }
   });

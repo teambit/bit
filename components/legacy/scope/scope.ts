@@ -820,7 +820,7 @@ once done, to continue working, please run "bit cc"`
     let versionObj: Version;
     try {
       versionObj = await this.getVersionInstance(id);
-    } catch (err) {
+    } catch {
       return undefined;
     }
     return versionObj.loadDependenciesGraph(this.objects);

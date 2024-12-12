@@ -93,7 +93,7 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
     try {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return await fs.lstat(this.path);
-    } catch (err: any) {
+    } catch {
       return null; // probably file does not exist
     }
   }

@@ -440,7 +440,7 @@ function pkgNamesToComponentIds(
 function tryReadPackageJson(pkgDir: string) {
   try {
     return JSON.parse(fs.readFileSync(join(pkgDir, 'package.json'), 'utf8'));
-  } catch (err) {
+  } catch {
     return undefined;
   }
 }

@@ -209,7 +209,7 @@ export async function diffBetweenComponentsObjects(
     try {
       if (lt(left, right, opts)) return 'upgraded';
       if (gt(left, right, opts)) return 'downgraded';
-    } catch (err: any) {
+    } catch {
       // the semver is probably a range, no need to compare, just fallback to the "changed"
     }
     return 'changed';

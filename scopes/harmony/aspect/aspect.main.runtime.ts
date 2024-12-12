@@ -165,7 +165,7 @@ export class AspectMain {
       try {
         const fromRemote = await this.workspace.scope.getRemoteComponent(aspectCompId);
         aspectCompId = aspectCompId.changeVersion(fromRemote.id.version);
-      } catch (err) {
+      } catch {
         throw new BitError(
           `unable to find ${aspectId} in the remote. if this is a local aspect, please provide a version with your aspect (${aspectId}) to update to`
         );

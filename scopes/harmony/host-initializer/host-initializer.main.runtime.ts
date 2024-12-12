@@ -57,7 +57,7 @@ export class HostInitializerMain {
     let consumer: Consumer | undefined;
     try {
       consumer = await createConsumer(consumerPath, noGit, noPackageJson, workspaceConfigProps, generator);
-    } catch (err) {
+    } catch {
       // it's possible that at this stage the consumer fails to load due to scope issues.
       // still we want to load it to include its instance of "scope.json", so then later when "consumer.write()", we
       // don't lose some scope metadata

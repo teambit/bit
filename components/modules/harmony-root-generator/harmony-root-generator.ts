@@ -177,7 +177,7 @@ function getDefaultOrOnlyExport(filePath: string): string | undefined {
     const exports = require(filePath);
     if (exports.default) return undefined;
     if (Object.keys(exports).length === 1) return Object.keys(exports)[0];
-  } catch (e) {
+  } catch {
     // ignore this error, fallback to just using the default export
   }
   return undefined;

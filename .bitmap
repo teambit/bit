@@ -1979,7 +1979,7 @@
     "ui/component-preview": {
         "name": "ui/component-preview",
         "scope": "teambit.preview",
-        "version": "1.0.17",
+        "version": "1.0.18",
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/ui/component-preview"
     },
