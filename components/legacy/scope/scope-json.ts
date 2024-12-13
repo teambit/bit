@@ -56,8 +56,6 @@ export class ScopeJson {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   set name(suggestedName: string) {
     this._name = BitId.getValidScopeName(suggestedName);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -156,7 +154,7 @@ export class ScopeJson {
     let jsonParsed: ScopeJsonProps;
     try {
       jsonParsed = JSON.parse(json);
-    } catch (err) {
+    } catch {
       throw new BitError(`unable to parse the scope.json file located at "${scopeJsonPath}".
 edit the file to fix the error, or delete it and run "bit init" to recreate it`);
     }

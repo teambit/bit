@@ -1,3 +1,4 @@
+/* eslint-disable */
 // // @bit-no-check
 // {
 // 	"very invalid": "javascript",

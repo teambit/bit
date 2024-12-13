@@ -49,8 +49,8 @@ function ClassComponent(props: APINodeRenderProps) {
               if (!DecoratorComponent) return null;
               return (
                 <DecoratorComponent
-                  {...props}
                   key={`decorator-${decorator.name}`}
+                  {...props}
                   apiNode={{ ...props.apiNode, renderer: decoratorRenderer, api: decorator }}
                 />
               );

@@ -50,8 +50,8 @@ export function VariableNodeSummary({
 
   return (
     <TableRow
-      {...rest}
       key={`${__schema}-${name}`}
+      {...rest}
       className={classnames(className, styles.row)}
       headings={headings}
       colNumber={headings.length as any}

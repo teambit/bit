@@ -49,7 +49,7 @@ export class WebpackDevServer implements DevServer {
       // eslint-disable-next-line import/no-dynamic-require, global-require
       const packageJson = require(packageJsonPath);
       return packageJson.version;
-    } catch (err) {
+    } catch {
       return 'unknown';
     }
   }

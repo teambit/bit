@@ -259,7 +259,6 @@ export class ComponentWriterMain {
     };
     return {
       workspace: this.workspace,
-      // @ts-ignore todo: remove after deleting teambit.legacy
       bitMap: this.consumer.bitMap,
       component,
       writeToPath: componentRootDir,

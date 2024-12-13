@@ -1046,7 +1046,7 @@ export class PreviewMain {
 
   static defaultConfig = {
     disabled: false,
-    onlyOverview: false,
+    onlyOverview: true,
   };
 
   static async provider(

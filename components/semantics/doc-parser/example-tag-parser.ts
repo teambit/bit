@@ -138,7 +138,7 @@ export default function parse(exampleRaw: string): Example {
         currentStatus = parseToken(currentToken, line, currentStatus, example);
       }
     }
-  } catch (e: any) {
+  } catch {
     // That's fine. The example probably doesn't comply with our standard
   }
 

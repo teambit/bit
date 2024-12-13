@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // @bit-no-check
 export default function({
   // Just requiring any files that exist

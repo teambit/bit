@@ -24,7 +24,7 @@ export async function getMergeStrategyInteractive(): Promise<MergeStrategy> {
     const result = await resolveConflictPrompt();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return mergeOptionsCli[result.mergeStrategy];
-  } catch (err: any) {
+  } catch {
     // probably user clicked ^C
     throw new BitError('the action has been canceled');
   }

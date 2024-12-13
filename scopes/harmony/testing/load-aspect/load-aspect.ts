@@ -83,7 +83,7 @@ function getMainFilePath(aspect: any, id: ComponentID) {
   try {
     // try core aspects
     return require.resolve(packageName);
-  } catch (err) {
+  } catch {
     // fallback to a naive way of converting componentId to pkg-name. (it won't work when the component has special pkg name settings)
     packageName = `@${id.scope.replace('.', '/')}.${id.fullName.replaceAll('/', '.')}`;
     return require.resolve(packageName);

@@ -1,7 +1,6 @@
 import { join } from 'path';
 import findRoot from 'find-root';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
-import { isCoreAspect } from '@teambit/bit';
 import { existsSync, readFileSync } from 'fs-extra';
 import pLocate from 'p-locate';
 import { parse } from 'comment-json';
@@ -113,6 +112,8 @@ export class EnvsMain {
 
   private alreadyShownWarning = {};
 
+  private coreAspectIds: string[] = [];
+
   /**
    * icon of the extension.
    */
@@ -156,6 +157,13 @@ export class EnvsMain {
    */
   async createEnvironment(components: Component[]): Promise<Runtime> {
     return this.createRuntime(components);
+  }
+
+  setCoreAspectIds(ids: string[]) {
+    this.coreAspectIds = ids;
+  }
+  isCoreAspect(id: string) {
+    return this.coreAspectIds.includes(id);
   }
 
   /**
@@ -459,7 +467,7 @@ export class EnvsMain {
   getOrCalculateEnv(component: Component): EnvDefinition {
     try {
       return this.getEnv(component);
-    } catch (err) {
+    } catch {
       return this.calculateEnv(component);
     }
   }
@@ -858,7 +866,7 @@ export class EnvsMain {
     const envId = await pLocate(ids, async (id) => {
       const idWithoutVersion = id.split('@')[0];
       if (this.isCoreEnv(idWithoutVersion)) return true;
-      if (isCoreAspect(idWithoutVersion)) return false;
+      if (this.isCoreAspect(idWithoutVersion)) return false;
       const envDef = this.getEnvDefinitionByStringId(id);
       if (envDef) return true;
       const envDefWithoutVersion = this.getEnvDefinitionByStringId(idWithoutVersion);
@@ -989,7 +997,7 @@ export class EnvsMain {
           if (this.implements(env, service)) {
             services.push([id, service]);
           }
-        } catch (err) {
+        } catch {
           this.logger.warn(`failed loading service ${id} for env ${env.id}`);
         }
       });

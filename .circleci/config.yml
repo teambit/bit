@@ -396,6 +396,9 @@ jobs:
       - attach_workspace:
           at: ./
       - run:
+          name: 'run OXlint'
+          command: 'cd bit && npm run oxlint'
+      - run:
           name: 'run ESLint'
           command: 'cd bit && node --max-old-space-size=4096 node_modules/eslint/bin/eslint.js "{src,e2e,scopes,components}/**/*.{ts,tsx}" --format junit -o junit/eslint-results.xml'
           environment:
@@ -562,6 +565,7 @@ jobs:
       - run: cd bit && bit cc
       - run: cd bit && bit status
       - run: cd bit && bit diff
+      # - run: cd bit && rm -rf node_modules/.bin/bit
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
@@ -867,7 +871,7 @@ jobs:
       - run: 'cd bit && mkdir junit'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       # Make sure when we run bit from e2e tests we run it from the global not from here
-      - run: 'rm -rf bit/node_modules/.bin/bit'
+      # - run: 'rm -rf bit/node_modules/.bin/bit'
       - run:
           name: 'Run e2e tests'
           command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs -n 1 npm run mocha-circleci'

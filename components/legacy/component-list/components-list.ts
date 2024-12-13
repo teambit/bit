@@ -37,7 +37,6 @@ export class ComponentsList {
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.scope = consumer.scope;
-    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = consumer.bitMap;
   }
 

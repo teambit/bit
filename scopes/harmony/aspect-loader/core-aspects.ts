@@ -36,7 +36,7 @@ function resolveFromCurrDir(packageName: string, aspectName: string): string | u
       throw new Error(`unable to find ${aspectName} in ${dirPath}`);
     }
     return dirPath;
-  } catch (err) {
+  } catch {
     return undefined;
   }
 }
@@ -71,7 +71,7 @@ export function getAspectDir(id: string): string {
 
   try {
     dirPath = getAspectDirFromPath(id);
-  } catch (err: any) {
+  } catch {
     dirPath = resolve(__dirname, '../..', aspectName, 'dist');
   }
   if (!existsSync(dirPath)) {

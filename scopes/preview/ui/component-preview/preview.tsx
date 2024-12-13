@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import React, { IframeHTMLAttributes, useState, useRef, useEffect } from 'react';
 import classNames from 'classnames';
 import { compact } from 'lodash';
@@ -97,6 +98,8 @@ export function ComponentPreview({
   style,
   ...rest
 }: ComponentPreviewProps) {
+  const host = component.host;
+  const sandbox = host === 'teambit.scope/scope' ? 'allow-scripts allow-same-origin' : undefined;
   const [heightIframeRef, iframeHeight] = useIframeContentHeight({ skip: false, viewport });
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [width, setWidth] = useState(0);
@@ -162,6 +165,7 @@ export function ComponentPreview({
     <div ref={containerRef} className={classNames(styles.preview, className)} style={{ height: forceHeight }}>
       <iframe
         {...rest}
+        sandbox={sandbox}
         ref={currentRef}
         style={{
           ...style,

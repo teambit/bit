@@ -274,7 +274,7 @@ export class BitMap {
       const mapFileContent = BitMap.loadRawSync(dirPath);
       if (!mapFileContent) return;
       json.parse(mapFileContent.toString('utf8'), undefined, true);
-    } catch (err: any) {
+    } catch {
       deleteBitMapFile();
     }
   }

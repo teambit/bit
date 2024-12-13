@@ -12,6 +12,7 @@ process.env.BROWSERSLIST_IGNORE_OLD_DATA = 'true';
 import './hook-require';
 
 import {
+  AspectLoaderAspect,
   getAspectDir,
   getAspectDistDir,
   AspectLoaderMain,
@@ -44,10 +45,12 @@ import { logger } from '@teambit/legacy.logger';
 import { ExternalActions } from '@teambit/legacy.scope-api';
 import { readdir, readFile } from 'fs-extra';
 import { resolve, join } from 'path';
-import { manifestsMap } from './manifests';
+import { getAllCoreAspectsIds, isCoreAspect, manifestsMap } from './manifests';
 import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
 import { BitConfig } from './bit.provider';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 
 async function loadLegacyConfig(config: any) {
   const harmony = await Harmony.load([ConfigAspect], ConfigRuntime.name, config.toObject());
@@ -141,7 +144,7 @@ function attachVersionsFromBitmap(rawConfig: Record<string, any>, consumerInfo: 
     BitMap.removeNonComponentFields(parsedBitMap);
     // Do nothing here, invalid bitmaps will be handled later
     // eslint-disable-next-line no-empty
-  } catch (e: any) {}
+  } catch {}
   const wsConfig = rawConfig['teambit.workspace/workspace'];
   if (!wsConfig) throw new BitError('workspace.jsonc is missing the "teambit.workspace/workspace" property');
   const defaultScope = wsConfig.defaultScope;
@@ -171,7 +174,7 @@ function getVersionFromBitMapIds(allBitmapIds: ComponentIdList, aspectId: string
   let aspectBitId: ComponentID;
   try {
     aspectBitId = ComponentID.fromString(aspectId);
-  } catch (err: any) {
+  } catch {
     throw new Error(
       `unable to parse the component-id "${aspectId}" from the workspace.jsonc file, make sure this is a component id`
     );
@@ -204,7 +207,7 @@ function getMainAspect() {
     // eslint-disable-next-line global-require
     const packageJson = require(`${mainAspectDir}/package.json`);
     version = packageJson.version;
-  } catch (err: any) {
+  } catch {
     version = undefined;
   }
 
@@ -277,9 +280,18 @@ export async function loadBit(path = process.cwd()) {
 
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
   if (loadCLIOnly) return harmony;
-  const aspectLoader = harmony.get<AspectLoaderMain>('teambit.harmony/aspect-loader');
+  const aspectLoader = harmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
   aspectLoader.setMainAspect(getMainAspect());
+  const envs = harmony.get<EnvsMain>(EnvsAspect.id);
+  envs.setCoreAspectIds(getAllCoreAspectsIds());
+  const generator = harmony.get<GeneratorMain>(GeneratorAspect.id);
+  generator.setBitApi({
+    loadBit,
+    takeLegacyGlobalsSnapshot,
+    restoreGlobalsFromSnapshot,
+    isCoreAspect,
+  });
   return harmony;
 }
 
@@ -305,7 +317,7 @@ export async function runCLI() {
   let hasWorkspace = true;
   try {
     harmony.get('teambit.workspace/workspace');
-  } catch (err: any) {
+  } catch {
     hasWorkspace = false;
   }
   await cli.run(hasWorkspace);

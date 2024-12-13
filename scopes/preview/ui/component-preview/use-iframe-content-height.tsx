@@ -28,7 +28,7 @@ export function useIframeContentHeight({
       setIframeHeight(newHeight);
       setIframeWidth(newWidth || 0);
       first = false;
-    } catch (_) {
+    } catch {
       // eslint-disable-next-line
     }
   }, interval);

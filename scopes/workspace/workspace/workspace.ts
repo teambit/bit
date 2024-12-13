@@ -252,7 +252,6 @@ export class Workspace implements ComponentFactory {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
     this.validateConfig();
-    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     // memoize this method to improve performance.
     this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized = memoize(
@@ -679,7 +678,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
         id,
         consumer: this.consumer,
       });
-    } catch (err) {
+    } catch {
       return undefined;
     }
   }
@@ -746,7 +745,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
         // cases where it might fail (like when importing aspect, after the import objects
         // when we write the package.json we run the applyTransformers which get to pkg which call
         // host.get, but the component not written yet to the fs, so it fails.)
-      } catch (e) {
+      } catch {
         this.logger.debug(`fail to load self as aspect with id ${component.id.toString()}`);
         this.componentLoadedSelfAsAspects.delete(component.id.toString());
         return component;
@@ -1334,7 +1333,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     try {
       const parsedEnvId = await this.resolveComponentId(envId);
       env = await this.get(parsedEnvId);
-    } catch (err) {
+    } catch {
       return; // unable to get the component for some reason. don't sweat it. forget about the warning
     }
     if (!this.envs.isUsingEnvEnv(env)) {
@@ -1715,7 +1714,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   async _reloadConsumer() {
     this.consumer = await loadConsumer(this.path, true);
-    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
     await this.clearCache();
   }
@@ -1750,7 +1748,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     let pkgJson: Record<string, any> | undefined;
     try {
       pkgJson = await fs.readJson(pkgJsonPath);
-    } catch (err) {
+    } catch {
       // never mind the reason. probably it's not there.
     }
     if (pkgJson) {
@@ -1910,7 +1908,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       }
       // Handle use case 3
       return await this.scope.resolveComponentId(idWithVersion);
-    } catch (error: any) {
+    } catch {
       return ComponentID.fromString(id.toString());
     }
   }
@@ -2043,7 +2041,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       try {
         const fromRemote = await this.scope.getRemoteComponent(envId);
         return envId.changeVersion(fromRemote.id.version);
-      } catch (err) {
+      } catch {
         throw new BitError(`unable to find ${envIdStr} in the remote`);
       }
     };
