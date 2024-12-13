@@ -222,7 +222,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "1.9.12",
+        "version": "1.9.13",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -488,7 +488,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.498",
+        "version": "2.0.499",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
