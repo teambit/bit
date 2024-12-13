@@ -27,6 +27,16 @@ export class DetachedHeads {
     return this.heads;
   }
 
+  /**
+   * happens during reset. these heads are local, so no need to enter them into "deleted" array.
+   */
+  removeLocalHeads(refs: Ref[]) {
+    this.heads = this.heads.filter((head) => !refs.find((ref) => ref.isEqual(head)));
+    if (this.current && refs.find((ref) => ref.isEqual(this.current!))) {
+      this.current = undefined;
+    }
+  }
+
   clearCurrent() {
     this.current = undefined;
   }

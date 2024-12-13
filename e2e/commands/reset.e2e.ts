@@ -317,6 +317,12 @@ describe('bit reset command', function () {
       helper.command.export();
       helper.command.checkoutVersion('0.0.2', 'comp1', '-x');
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+
+      // an intermediate step, make sure the component is detached
+      const comp = helper.command.catComponent('comp1');
+      expect(comp).to.have.property('detachedHeads');
+      expect(comp.detachedHeads.current).to.not.be.undefined;
+
       helper.command.resetAll();
     });
     it('expect .bitmap to point to the same version as it was before the reset, and not the latest', () => {
@@ -326,6 +332,10 @@ describe('bit reset command', function () {
     it('should not show the component as modified', () => {
       const status = helper.command.statusJson();
       expect(status.modifiedComponents).to.have.lengthOf(0);
+    });
+    it('should clear the detached head', () => {
+      const comp = helper.command.catComponent('comp1');
+      expect(comp).to.not.have.property('detachedHeads');
     });
   });
 });
