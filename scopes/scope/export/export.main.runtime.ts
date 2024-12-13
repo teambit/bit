@@ -340,7 +340,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         return [head];
       }
       const fromWorkspace = this.workspace?.getIdIfExist(modelComponent.toComponentId());
-      const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects, fromWorkspace?.version);
+      const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects, fromWorkspace);
       if (!allVersions) {
         return localTagsOrHashes;
       }
@@ -428,7 +428,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           scope.objects,
           refs.map((ref) => ref.toString()),
           throwForMissingArtifacts,
-          idFromWorkspace?.version
+          idFromWorkspace
         );
         const objectsList = await new ObjectList(objectItems).toBitObjects();
         const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
