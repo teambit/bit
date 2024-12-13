@@ -1,6 +1,5 @@
 import { BitError } from '@teambit/bit-error';
 import { ComponentID } from '@teambit/component-id';
-import { Scope } from '@teambit/legacy.scope';
 import { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { logger } from '@teambit/legacy.logger';
@@ -8,21 +7,31 @@ import { Lane, ModelComponent } from '@teambit/scope.objects';
 import { RemoveMain } from '@teambit/remove';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 
-export type ResetResult = { id: ComponentID; versions: string[]; component?: ModelComponent };
+export type ResetResult = {
+  id: ComponentID;
+  versions: string[];
+  component?: ModelComponent;
+  /**
+   * relevant when the component was detached head so the head didn't change.
+   * we want .bitmap to have the version before the detachment. not as the head.
+   */
+  versionToSetInBitmap?: string;
+};
 
 /**
  * If head is false, remove all local versions.
  */
 export async function removeLocalVersion(
-  scope: Scope,
+  consumer: Consumer,
   id: ComponentID,
   lane?: Lane,
   head?: boolean,
   force = false
 ): Promise<ResetResult> {
-  const component: ModelComponent = await scope.getModelComponent(id);
+  const component: ModelComponent = await consumer.scope.getModelComponent(id);
   const idStr = id.toString();
-  const localVersions = await component.getLocalHashes(scope.objects);
+  const fromBitmap = consumer.bitMap.getComponentIdIfExist(id);
+  const localVersions = await component.getLocalHashes(consumer.scope.objects, fromBitmap);
   if (!localVersions.length) throw new BitError(`unable to untag ${idStr}, the component is not staged`);
   const headRef = component.getHeadRegardlessOfLane();
   if (!headRef) {
@@ -35,7 +44,7 @@ export async function removeLocalVersion(
   const versionsToRemoveStr = component.switchHashesWithTagsIfExist(versionsToRemove);
 
   if (!force) {
-    const dependencyGraph = await DependencyGraph.loadAllVersions(scope);
+    const dependencyGraph = await DependencyGraph.loadAllVersions(consumer.scope);
 
     versionsToRemoveStr.forEach((versionToRemove) => {
       const idWithVersion = component.toComponentId().changeVersion(versionToRemove);
@@ -50,9 +59,18 @@ export async function removeLocalVersion(
     });
   }
 
-  await scope.sources.removeComponentVersions(component, versionsToRemove, versionsToRemoveStr, lane, head);
+  const headBefore = component.getHead();
+  await consumer.scope.sources.removeComponentVersions(component, versionsToRemove, versionsToRemoveStr, lane, head);
+  const headAfter = component.getHead();
+  let versionToSetInBitmap;
+  if (headBefore && headAfter && headBefore.isEqual(headAfter) && !lane) {
+    // if it's on main and the head didn't change, it means that it was in a detached-head state.
+    const divergeData = component.getDivergeData();
+    const snapBeforeDetached = divergeData.commonSnapBeforeDiverge;
+    if (snapBeforeDetached) versionToSetInBitmap = component.getTagOfRefIfExists(snapBeforeDetached);
+  }
 
-  return { id, versions: versionsToRemoveStr, component };
+  return { id, versions: versionsToRemoveStr, component, versionToSetInBitmap };
 }
 
 export async function removeLocalVersionsForAllComponents(
@@ -63,23 +81,22 @@ export async function removeLocalVersionsForAllComponents(
 ): Promise<ResetResult[]> {
   const componentsToUntag = await getComponentsWithOptionToUntag(consumer, remove);
   const force = true; // when removing local versions from all components, no need to check if the component is used as a dependency
-  return removeLocalVersionsForMultipleComponents(componentsToUntag, lane, head, force, consumer.scope);
+  return removeLocalVersionsForMultipleComponents(consumer, componentsToUntag, lane, head, force);
 }
 
 export async function removeLocalVersionsForMultipleComponents(
+  consumer: Consumer,
   componentsToUntag: ModelComponent[],
   lane?: Lane,
   head?: boolean,
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  force: boolean,
-  scope: Scope
+  force?: boolean
 ) {
   if (!componentsToUntag.length) {
     throw new BitError(`no components found to reset on your workspace`);
   }
   // if only head is removed, there is risk of deleting dependencies version without their dependents.
   if (!force && head) {
-    const dependencyGraph = await DependencyGraph.loadAllVersions(scope);
+    const dependencyGraph = await DependencyGraph.loadAllVersions(consumer.scope);
     const candidateComponentsIds = componentsToUntag.map((component) => {
       const bitId = component.toComponentId();
       const headRef = component.getHeadRegardlessOfLane();
@@ -104,7 +121,7 @@ export async function removeLocalVersionsForMultipleComponents(
   }
   logger.debug(`found ${componentsToUntag.length} components to untag`);
   return Promise.all(
-    componentsToUntag.map((component) => removeLocalVersion(scope, component.toComponentId(), lane, head, force))
+    componentsToUntag.map((component) => removeLocalVersion(consumer, component.toComponentId(), lane, head, force))
   );
 }
 

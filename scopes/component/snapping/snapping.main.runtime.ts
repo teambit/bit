@@ -54,7 +54,7 @@ import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
 import ResetCmd from './reset-cmd';
-import { tagModelComponent, updateComponentsVersions, BasicTagParams, BasicTagSnapParams } from './tag-model-component';
+import { tagModelComponent, BasicTagParams, BasicTagSnapParams, updateVersions } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
 import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
@@ -690,7 +690,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       const componentsToUntag = candidateComponents.filter((modelComponent) =>
         idsMatchingPatternBitIds.hasWithoutVersion(modelComponent.toComponentId())
       );
-      return removeLocalVersionsForMultipleComponents(componentsToUntag, currentLane, head, force, consumer.scope);
+      return removeLocalVersionsForMultipleComponents(consumer, componentsToUntag, currentLane, head, force);
     };
     const softUntag = async () => {
       const softTaggedComponentsIds = this.workspace.filter.bySoftTagged();
@@ -712,8 +712,14 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     if (isRealUntag) {
       results = await untag();
       await consumer.scope.objects.persist();
-      const components = results.map((result) => result.component);
-      await updateComponentsVersions(this.workspace, components as ModelComponent[], false);
+      const currentLaneId = consumer.getCurrentLaneId();
+      const stagedConfig = await this.workspace.scope.getStagedConfig();
+
+      await pMapSeries(results, async ({ component, versionToSetInBitmap }) => {
+        if (!component) return;
+        await updateVersions(this.workspace, stagedConfig, currentLaneId, component, versionToSetInBitmap, false);
+      });
+      await this.workspace.scope.legacyScope.stagedSnaps.write();
     } else {
       results = await softUntag();
       consumer.bitMap.markAsChanged();
@@ -1407,7 +1413,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     const tagFromScopeCmd = new TagFromScopeCmd(snapping, logger);
     const snapFromScopeCmd = new SnapFromScopeCmd(snapping, logger);
     const resetCmd = new ResetCmd(snapping);
-    const snapDistanceCmd = new SnapDistanceCmd(scope);
+    const snapDistanceCmd = new SnapDistanceCmd(scope, workspace);
     cli.register(tagCmd, snapCmd, resetCmd, tagFromScopeCmd, snapFromScopeCmd, snapDistanceCmd);
     return snapping;
   }

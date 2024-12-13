@@ -5,7 +5,7 @@ import { ModelComponent, VERSION_ZERO } from '@teambit/scope.objects';
 import { Consumer, ComponentsPendingImport, ComponentOutOfSync } from '@teambit/legacy.consumer';
 import { LATEST } from '@teambit/legacy.constants';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
-import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
+import { ComponentNotFoundInPath, ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { Workspace } from '..';
 
 export type ComponentStatusLegacy = {
@@ -63,7 +63,7 @@ export class ComponentStatusLoader {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const status: ComponentStatusLegacy = {};
     const componentFromModel: ModelComponent | undefined = await this.consumer.scope.getModelComponentIfExist(id);
-    let componentFromFileSystem;
+    let componentFromFileSystem: ConsumerComponent | undefined;
     try {
       // change to 'latest' before loading from FS. don't change to null, otherwise, it'll cause
       // loadOne to not find model component as it assumes there is no version
@@ -100,9 +100,13 @@ export class ComponentStatusLoader {
     }
 
     const lane = await this.consumer.getCurrentLaneObject();
-    await componentFromModel.setDivergeData(this.consumer.scope.objects);
-    status.staged = await componentFromModel.isLocallyChanged(this.consumer.scope.objects, lane);
     const versionFromFs = componentFromFileSystem.id.version;
+    status.staged = await componentFromModel.isLocallyChanged(
+      this.consumer.scope.objects,
+      lane,
+      componentFromFileSystem.id
+    );
+
     const idStr = id.toString();
     if (!componentFromFileSystem.id.hasVersion()) {
       throw new ComponentOutOfSync(idStr);

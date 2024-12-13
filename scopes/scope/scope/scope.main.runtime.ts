@@ -1000,9 +1000,9 @@ export class ScopeMain implements ComponentFactory {
     return allIdsFiltered;
   }
 
-  async getSnapDistance(id: ComponentID, throws = true): Promise<SnapsDistance> {
+  async getSnapDistance(id: ComponentID, throws = true, workspaceId?: ComponentID): Promise<SnapsDistance> {
     const modelComp = await this.legacyScope.getModelComponent(id);
-    await modelComp.setDivergeData(this.legacyScope.objects, throws);
+    await modelComp.setDivergeData(this.legacyScope.objects, throws, undefined, workspaceId);
     return modelComp.getDivergeData();
   }
   /**

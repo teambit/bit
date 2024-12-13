@@ -337,7 +337,7 @@ export async function tagModelComponent({
       });
       if (workspace) {
         const modelComponent = component.modelComponent || (await legacyScope.getModelComponent(component.id));
-        await updateVersions(workspace, stagedConfig!, currentLane!, modelComponent, true, results.addedVersionStr);
+        await updateVersions(workspace, stagedConfig!, currentLane!, modelComponent, results.addedVersionStr, true);
       } else {
         const tagData = tagDataPerComp?.find((t) => t.componentId.isEqualWithoutVersion(component.id));
         if (tagData?.isNew) results.version.removeAllParents();
@@ -589,17 +589,17 @@ function isAvailableOnMain(currentLane: LaneId, modelComponent: ModelComponent, 
   return modelComponent.hasHead();
 }
 
-async function updateVersions(
+export async function updateVersions(
   workspace: Workspace,
   stagedConfig: StagedConfig,
   currentLane: LaneId,
   modelComponent: ModelComponent,
-  isTag = true,
-  addedVersionStr?: string
+  versionToSetInBitmap?: string, // helpful for detached head
+  isTag = true
 ) {
   const consumer = workspace.consumer;
   const idLatest: ComponentID = modelComponent.toBitIdWithLatestVersionAllowNull();
-  const id = addedVersionStr ? idLatest.changeVersion(addedVersionStr) : idLatest;
+  const id = versionToSetInBitmap ? idLatest.changeVersion(versionToSetInBitmap) : idLatest;
   const isOnBitmap = consumer.bitMap.getComponentIfExist(id, { ignoreVersion: true });
   if (!isOnBitmap && !isTag) {
     // handle the case when a component was deleted, snapped/tagged and is now reset.
@@ -628,21 +628,6 @@ async function updateVersions(
     componentMap.config = stagedConfig.getConfigPerId(compId);
   }
   componentMap.clearNextVersion();
-}
-
-export async function updateComponentsVersions(
-  workspace: Workspace,
-  components: Array<ModelComponent>,
-  isTag = true
-): Promise<StagedConfig> {
-  const consumer = workspace.consumer;
-  const currentLane = consumer.getCurrentLaneId();
-  const stagedConfig = await workspace.scope.getStagedConfig();
-
-  await mapSeries(components, (component) => updateVersions(workspace, stagedConfig, currentLane, component, isTag));
-  await workspace.scope.legacyScope.stagedSnaps.write();
-
-  return stagedConfig;
 }
 
 function replacePendingVersions(

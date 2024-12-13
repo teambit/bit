@@ -161,7 +161,8 @@ export class ComponentsList {
     const fromBitMap = this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
     const modelComponents = await this.getModelComponents();
     const pendingExportComponents = await pFilter(modelComponents, async (component: ModelComponent) => {
-      if (!fromBitMap.searchWithoutVersion(component.toComponentId())) {
+      const foundInBitMap = fromBitMap.searchWithoutVersion(component.toComponentId());
+      if (!foundInBitMap) {
         // it's not on the .bitmap only in the scope, as part of the out-of-sync feature, it should
         // be considered as staged and should be exported. same for soft-removed components, which are on scope only.
         // notice that we use `hasLocalChanges`
@@ -170,8 +171,7 @@ export class ComponentsList {
         // be exported unexpectedly.
         return component.isLocallyChangedRegardlessOfLanes();
       }
-      await component.setDivergeData(this.scope.objects);
-      return component.isLocallyChanged(this.scope.objects, lane);
+      return component.isLocallyChanged(this.scope.objects, lane, foundInBitMap);
     });
     const ids = ComponentIdList.fromArray(pendingExportComponents.map((c) => c.toComponentId()));
     return this.updateIdsFromModelIfTheyOutOfSync(ids);

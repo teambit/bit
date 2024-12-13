@@ -1130,9 +1130,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   getIdIfExist(componentId: ComponentID): ComponentID | undefined {
-    const id = this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId));
-    if (!id) return undefined;
-    return componentId.changeVersion(id.version);
+    return this.consumer.bitmapIdsFromCurrentLane.find((_) => _.isEqualWithoutVersion(componentId));
   }
 
   mergeBitmaps(bitmapContent: string, otherBitmapContent: string, opts: BitmapMergeOptions = {}): string {

@@ -253,7 +253,7 @@ export default class ImportComponents {
     return filtered;
   }
 
-  async _fetchDivergeData(components: Component[]) {
+  private async _fetchDivergeData(components: Component[]) {
     if (this.options.objectsOnly) {
       // no need for it when importing objects only. if it's enabled, in case when on a lane and a non-lane
       // component is in bitmap using an older version, it throws "getDivergeData: unable to find Version X of Y"
@@ -261,8 +261,9 @@ export default class ImportComponents {
     }
     await Promise.all(
       components.map(async (component) => {
+        const fromWorkspace = this.workspace.getIdIfExist(component.id);
         const modelComponent = await this.scope.getModelComponent(component.id);
-        await modelComponent.setDivergeData(this.scope.objects, undefined, false);
+        await modelComponent.setDivergeData(this.scope.objects, undefined, false, fromWorkspace);
         this.divergeData.push(modelComponent);
       })
     );

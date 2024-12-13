@@ -84,6 +84,7 @@ export type ComponentProps = {
   scopesList?: ScopeListItem[];
   head?: Ref;
   schema?: string | undefined;
+  detachedHead?: Ref[];
 };
 
 export const VERSION_ZERO = '0.0.0';
@@ -134,6 +135,7 @@ export default class Component extends BitObject {
   laneId?: LaneId; // doesn't get saved in the scope.
   laneDataIsPopulated = false; // doesn't get saved in the scope, used to improve performance of loading the lane data
   schema: string | undefined;
+  detachedHead?: Ref[] | undefined; // get saved locally, removed before gets to the remote.
   private divergeData?: SnapsDistance;
   private populateVersionHistoryMutex = new Mutex();
   constructor(props: ComponentProps) {
@@ -153,6 +155,7 @@ export default class Component extends BitObject {
     this.scopesList = props.scopesList || [];
     this.head = props.head;
     this.schema = props.schema;
+    this.detachedHead = props.detachedHead;
   }
 
   get versionArray(): Ref[] {
@@ -292,13 +295,15 @@ export default class Component extends BitObject {
    * is found there, it'll stop the traversal and not mark it as remote.
    * in this example, during the merge, lane-a was fetched, and the remote-ref of this lane has snap-x as the head.
    */
-  async setDivergeData(repo: Repository, throws = true, fromCache = true): Promise<void> {
+  async setDivergeData(repo: Repository, throws = true, fromCache = true, workspaceId?: ComponentID): Promise<void> {
     if (!this.divergeData || !fromCache) {
       const remoteHead = (this.laneId ? this.calculatedRemoteHeadWhenOnLane : this.remoteHead) || null;
+      const workspaceVersion = workspaceId?.hasVersion() ? workspaceId.version : null;
       this.divergeData = await getDivergeData({
         repo,
         modelComponent: this,
         targetHead: remoteHead,
+        sourceHead: workspaceVersion ? this.getRef(workspaceVersion) : undefined,
         throws,
       });
     }
@@ -819,12 +824,13 @@ export default class Component extends BitObject {
   async collectVersionsObjects(
     repo: Repository,
     versions: string[],
-    throwForMissingLocalArtifacts = false
+    throwForMissingLocalArtifacts = false,
+    workspaceId?: ComponentID
   ): Promise<ObjectItem[]> {
     const refsWithoutArtifacts: Ref[] = [];
     const artifactsRefs: Ref[] = [];
     const artifactsRefsFromExportedVersions: Ref[] = [];
-    const locallyChangedVersions = await this.getLocalTagsOrHashes(repo);
+    const locallyChangedVersions = await this.getLocalTagsOrHashes(repo, workspaceId);
     const locallyChangedHashes = locallyChangedVersions.map((v) =>
       isTag(v) ? this.versionsIncludeOrphaned[v].hash : v
     );
@@ -1144,19 +1150,14 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     return localVersions.includes(tag);
   }
 
-  async hasLocalVersion(repo: Repository, version: string): Promise<boolean> {
-    const localVersions = await this.getLocalTagsOrHashes(repo);
-    return localVersions.includes(version);
-  }
-
-  async getLocalTagsOrHashes(repo: Repository): Promise<string[]> {
-    const localHashes = await this.getLocalHashes(repo);
+  async getLocalTagsOrHashes(repo: Repository, workspaceId?: ComponentID): Promise<string[]> {
+    const localHashes = await this.getLocalHashes(repo, workspaceId);
     if (!localHashes.length) return [];
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
-  async getLocalHashes(repo: Repository): Promise<Ref[]> {
-    await this.setDivergeData(repo);
+  async getLocalHashes(repo: Repository, workspaceId?: ComponentID): Promise<Ref[]> {
+    await this.setDivergeData(repo, undefined, undefined, workspaceId);
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnSourceOnly;
     if (!localHashes.length) return [];
@@ -1175,10 +1176,11 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
    * whether the component was locally changed, either by adding a new snap/tag or by merging
    * components from different lanes.
    */
-  async isLocallyChanged(repo: Repository, lane?: Lane | null): Promise<boolean> {
+  async isLocallyChanged(repo: Repository, lane?: Lane | null, workspaceId?: ComponentID): Promise<boolean> {
     if (lane) await this.populateLocalAndRemoteHeads(repo, lane);
-    await this.setDivergeData(repo);
-    return this.getDivergeData().isSourceAhead();
+    await this.setDivergeData(repo, undefined, undefined, workspaceId);
+    const divergeData = this.getDivergeData();
+    return divergeData.isSourceAhead();
   }
 
   async getVersionHistory(repo: Repository): Promise<VersionHistory> {
