@@ -45,6 +45,7 @@ import VersionHistory, { VersionParents } from './version-history';
 import { ObjectItem } from '../objects/object-list';
 import type { Scope } from '@teambit/legacy.scope';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { DetachedHeads } from './detach-heads';
 
 type State = {
   versions?: {
@@ -84,7 +85,7 @@ export type ComponentProps = {
   scopesList?: ScopeListItem[];
   head?: Ref;
   schema?: string | undefined;
-  detachedHead?: Ref[];
+  detachedHeads?: DetachedHeads;
 };
 
 export const VERSION_ZERO = '0.0.0';
@@ -135,7 +136,7 @@ export default class Component extends BitObject {
   laneId?: LaneId; // doesn't get saved in the scope.
   laneDataIsPopulated = false; // doesn't get saved in the scope, used to improve performance of loading the lane data
   schema: string | undefined;
-  detachedHead?: Ref[] | undefined; // get saved locally, removed before gets to the remote.
+  detachedHeads: DetachedHeads;
   private divergeData?: SnapsDistance;
   private populateVersionHistoryMutex = new Mutex();
   constructor(props: ComponentProps) {
@@ -155,7 +156,7 @@ export default class Component extends BitObject {
     this.scopesList = props.scopesList || [];
     this.head = props.head;
     this.schema = props.schema;
-    this.detachedHead = props.detachedHead;
+    this.detachedHeads = props.detachedHeads || new DetachedHeads();
   }
 
   get versionArray(): Ref[] {
@@ -706,8 +707,11 @@ export default class Component extends BitObject {
       const parentToSet = setHeadAsParent ? head : parent;
       version.addAsOnlyParent(parentToSet || head);
     }
-    if (!parent || !head || parent.isEqual(head)) {
+    if (parent && head && !parent.isEqual(head)) {
+      this.detachedHeads.setHead(version.hash());
+    } else {
       this.setHead(version.hash());
+      this.detachedHeads.clearCurrent();
     }
     if (isTag(versionToAdd)) {
       this.setVersion(versionToAdd, version.hash());
@@ -792,6 +796,7 @@ export default class Component extends BitObject {
       bindingPrefix: this.bindingPrefix,
       remotes: this.scopesList,
       schema: this.schema,
+      detachedHeads: this.detachedHeads.toObject(),
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.local) componentObject.local = this.local;
@@ -1290,6 +1295,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       scopesList: rawComponent.remotes,
       head: rawComponent.head ? Ref.from(rawComponent.head) : undefined,
       schema: rawComponent.schema || (rawComponent.head ? SchemaName.Harmony : SchemaName.Legacy),
+      detachedHeads: DetachedHeads.fromObject(rawComponent.detachedHeads),
     });
   }
 

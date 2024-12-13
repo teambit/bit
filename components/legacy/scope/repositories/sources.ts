@@ -502,6 +502,7 @@ please either remove the component (bit remove) or remove the lane.`);
     const existingHeadIsMissingInIncomingComponent = Boolean(
       incomingComp.hasHead() &&
         existingComponentHead &&
+        !incomingComp.detachedHeads.getCurrent() &&
         !hashesOfHistoryGraph.find((ref) => ref.isEqual(existingComponentHead))
     );
     // currently it'll always be true. later, we might want to support exporting

@@ -73,6 +73,8 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
   ],
   ['b', 'build', 'locally run the build pipeline (i.e. not via rippleCI) and complete the tag'],
+  ['', 'detach-head', 'in case a component is checked out to and older version, tag it without changing the head'],
+  ['', 'set-head', 'in case a component is checked out to and older version, change head to the newly created version'],
 ] as CommandOptions;
 
 export type TagParams = {
