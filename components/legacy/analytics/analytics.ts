@@ -133,6 +133,9 @@ class Analytics {
     return args.map((arg) => this._hashLightly(arg));
   }
   static init(command: string, flags: Record<string, any>, args: CLIArgs) {
+    this.analytics_usage = yn(getSync(CFG_ANALYTICS_REPORTING_KEY), { default: false });
+    // Do not initialize analytics if the user didn't approve it
+    if (!this.analytics_usage) return;
     this.anonymous = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
     this.command = command;
     this.flags = this._hashFlags(flags);
@@ -144,7 +147,6 @@ class Analytics {
     this.username = !this.anonymous
       ? getSync(CFG_USER_EMAIL_KEY) || getSync(CFG_USER_NAME_KEY) || os.hostname() || this.getID()
       : this.getID();
-    this.analytics_usage = yn(getSync(CFG_ANALYTICS_REPORTING_KEY), { default: false });
     this.error_usage = this.analytics_usage ? true : yn(getSync(CFG_ANALYTICS_ERROR_REPORTS_KEY), { default: false });
     this.environment = getSync(CFG_ANALYTICS_ENVIRONMENT_KEY) || DEFAULT_BIT_ENV;
   }

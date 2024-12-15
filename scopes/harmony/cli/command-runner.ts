@@ -47,7 +47,12 @@ export class CommandRunner {
   }
 
   private bootstrapCommand() {
-    Analytics.init(this.commandName, this.flags, this.args);
+    try {
+      Analytics.init(this.commandName, this.flags, this.args);
+    } catch (err: any) {
+      // ignoring the error, we don't want to fail the app if analytics failed.
+      logger.error('failed to initialize analytics', err);
+    }
     logger.info(`[*] started a new command: "${this.commandName}" with the following data:`, {
       args: this.args,
       flags: this.flags,
