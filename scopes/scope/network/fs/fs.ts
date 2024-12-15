@@ -60,7 +60,6 @@ export default class Fs implements Network {
   }
 
   list(namespacesUsingWildcards?: string, includeDeleted = false): Promise<ListScopeResult[]> {
-    // @ts-ignore todo: remove after deleting teambit.legacy
     return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards, includeDeleted);
   }
 
@@ -79,7 +78,6 @@ export default class Fs implements Network {
 
   async graph(bitId?: ComponentID): Promise<DependencyGraph> {
     const scope = this.getScope();
-    // @ts-ignore todo: fix after deleting teambit.legacy
     const dependencyGraph = await DependencyGraph.loadLatest(scope);
     // get as string to mimic the exact steps of using ssh
     const getGraphAsString = (): object => {

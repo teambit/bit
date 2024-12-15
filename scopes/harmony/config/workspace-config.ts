@@ -280,7 +280,7 @@ export class WorkspaceConfig implements HostConfig {
     let parsed;
     try {
       parsed = parse(contentBuffer.toString());
-    } catch (e: any) {
+    } catch {
       throw new InvalidConfigFile(workspaceJsoncPath);
     }
     return WorkspaceConfig.fromObject(parsed, workspaceJsoncPath, scopePath);

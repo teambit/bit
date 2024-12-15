@@ -527,7 +527,6 @@ export class Component {
     // by default, imported components are not written with bit.json file.
     // use the component from the model to get their bit.json values
     if (componentFromModel) {
-      // @ts-ignore todo: remove after deleting teambit.legacy
       componentConfig.mergeWithComponentData(componentFromModel);
     }
 
@@ -538,7 +537,6 @@ export class Component {
     const files = await getLoadedFiles(consumer, componentMap, id, compDirAbs);
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
-    // @ts-ignore todo: remove after deleting teambit.legacy
     const docsP = _getDocsForFiles(files, consumer.componentFsCache);
     const docs = await Promise.all(docsP);
     const flattenedDocs = docs ? R.flatten(docs) : [];
@@ -586,7 +584,6 @@ async function getLoadedFiles(
     logger.error(`rethrowing an error of ${componentMap.noFilesError.message}`);
     throw componentMap.noFilesError;
   }
-  // @ts-ignore todo: remove after deleting teambit.legacy
   await componentMap.trackDirectoryChangesHarmony(consumer);
   const sourceFiles = componentMap.files.map((file) => {
     const filePath = path.join(bitDir, file.relativePath);

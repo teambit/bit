@@ -18,7 +18,7 @@ export const functionNamesTransformer: SourceFileTransformer = (mapping: Record<
           }
         }
         return ts.visitEachChild(node, updateTypeReference, context);
-      } catch (e) {
+      } catch {
         return node;
       }
     };

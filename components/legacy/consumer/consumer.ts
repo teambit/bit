@@ -81,12 +81,10 @@ export default class Consumer {
     this.created = created;
     this.isolated = isolated;
     this.scope = scope;
-    // @ts-ignore todo: remove after deleting teambit.legacy
     this.componentLoader = ComponentLoader.getInstance(this);
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
   async setBitMap() {
-    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = await BitMap.load(this);
   }
 

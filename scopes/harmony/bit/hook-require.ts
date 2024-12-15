@@ -21,7 +21,7 @@ export function hookRequire() {
         const pkgJson = this.constructor._load(path.join(id, 'package.json'), this);
         if (!pkgJson.main || pkgJson.main === 'index.js') throw firstErr;
         return this.constructor._load(path.join(id, pkgJson.main), this);
-      } catch (err) {
+      } catch {
         throw firstErr;
       }
     }

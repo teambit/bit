@@ -14,7 +14,7 @@ function formatProperties(props) {
     try {
       const descriptionAST = doctrine.parse(description, { unwrap: true, recoverable: true, sloppy: true });
       if (descriptionAST && descriptionAST.tags[0]) return descriptionAST.tags[0].description;
-    } catch (err: any) {
+    } catch {
       // failed to parse the react property, that's fine, it'll return the original description
     }
     return description;

@@ -39,7 +39,6 @@ export default class NodeModuleLinker {
     private workspace: Workspace
   ) {
     this.consumer = this.workspace.consumer;
-    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = this.consumer.bitMap;
     this.dataToPersist = new DataToPersist();
     this.existingLinks = [];
@@ -159,7 +158,7 @@ export default class NodeModuleLinker {
         let stat;
         try {
           stat = await fs.lstat(dest);
-        } catch (err) {
+        } catch {
           // Ignore this error, it's probably because the file doesn't exist
         }
         if (stat && stat.isSymbolicLink()) {
@@ -196,7 +195,7 @@ export default class NodeModuleLinker {
         this.dataToPersist.removePath(new RemovePath(linkPath));
       }
       return undefined;
-    } catch (err: any) {
+    } catch {
       return undefined; // probably file does not exist
     }
   }

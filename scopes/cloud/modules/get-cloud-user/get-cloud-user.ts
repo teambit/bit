@@ -18,7 +18,7 @@ export async function getBitCloudUser(): Promise<CloudUser | undefined> {
     const user = object.payload;
 
     return user;
-  } catch (error) {
+  } catch {
     return undefined;
   }
 }

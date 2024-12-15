@@ -2,7 +2,6 @@ import multimatch from 'multimatch';
 import mapSeries from 'p-map-series';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { MainRuntime } from '@teambit/cli';
-import { getAllCoreAspectsIds } from '@teambit/bit';
 import { getRootComponentDir } from '@teambit/workspace.root-components';
 import { ComponentAspect, Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
@@ -704,7 +703,7 @@ export class DependencyResolverMain {
    * returns component-ids string without a version.
    */
   getCompIdsThatShouldNotBeInPolicy(): string[] {
-    return [...getAllCoreAspectsIds(), 'teambit.harmony/harmony'];
+    return [...this.aspectLoader.getCoreAspectIds(), 'teambit.harmony/harmony'];
   }
 
   /**

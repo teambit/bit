@@ -621,7 +621,7 @@ export class ScopeMain implements ComponentFactory {
     let versionObj: Version;
     try {
       versionObj = await this.legacyScope.getVersionInstance(id);
-    } catch (err) {
+    } catch {
       return undefined;
     }
 
@@ -1076,7 +1076,7 @@ export class ScopeMain implements ComponentFactory {
   async getLegacyMinimal(id: ComponentID): Promise<ConsumerComponent | undefined> {
     try {
       return await this.legacyScope.getConsumerComponent(id);
-    } catch (err) {
+    } catch {
       // in case the component is missing locally, this.get imports it.
       return (await this.get(id))?.state._consumer;
     }

@@ -80,7 +80,7 @@ export function spawnPTY() {
 
   server.on('error', (err: any) => {
     if (err.code === 'EADDRINUSE') {
-      const pid = getPidByPort(PORT);
+      const pid = getPidByPort(PORT, true);
       const usedByPid = pid ? ` (used by PID ${pid})` : '';
       const killCmd = pid ? `\nAlternatively, you can kill the process by running "kill ${pid}".` : '';
       console.error(`Error: Port ${PORT} is already in use${usedByPid}.
@@ -145,7 +145,7 @@ export function getPortFromPath(path: string): number {
   return port;
 }
 
-function getPidByPort(port: number): string | null {
+export function getPidByPort(port: number, consoleErrors = false): string | null {
   const platform = process.platform;
   try {
     if (platform === 'darwin' || platform === 'linux') {
@@ -178,10 +178,10 @@ function getPidByPort(port: number): string | null {
         }
       }
     } else {
-      console.error('Unsupported platform:', platform);
+      if (consoleErrors) console.error('Unsupported platform:', platform);
     }
   } catch (error: any) {
-    console.error('Error executing command:', error.message);
+    if (consoleErrors) console.error('Error executing command:', error.message);
   }
   return null;
 }

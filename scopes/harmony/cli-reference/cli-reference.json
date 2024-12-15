@@ -2755,8 +2755,8 @@
             "remove from peerDependencies"
           ]
         ],
-        "description": "remove a dependency to component(s)",
-        "extendedDescription": "",
+        "description": "remove a dependency from one or more components",
+        "extendedDescription": "this command removes the dependency whether it was set by 'bit deps set'/variants or by auto-detection.\nif the dependency was auto-detected, it will be marked with a minus sign in the .bitmap file.\notherwise, the config is written to .bitmap without the dependency.\nsee also 'bit deps unset'",
         "group": "info",
         "private": false,
         "arguments": [
@@ -2785,8 +2785,8 @@
             "unset from peerDependencies"
           ]
         ],
-        "description": "unset a dependency to component(s) that was previously set by \"bit deps set\"",
-        "extendedDescription": "",
+        "description": "unset a dependency to component(s) that was set via config (e.g. \"bit deps set\" or variants)",
+        "extendedDescription": "this command removes the dependency only when it was set by config not if it was auto detected.\nin the .bitmap file, the config is written without the dependency.\nsee also \"bit deps remove\"",
         "group": "info",
         "private": false,
         "arguments": [

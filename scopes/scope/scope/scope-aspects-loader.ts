@@ -327,7 +327,7 @@ needed-for: ${neededFor || '<unknown>'}`);
           }
         });
         return manifests;
-      } catch (err) {
+      } catch {
         return null;
       }
     };

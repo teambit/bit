@@ -31,7 +31,6 @@ import { PnpmAspect } from '@teambit/pnpm';
 import { PreviewAspect } from '@teambit/preview';
 import { ComponentSizerAspect } from '@teambit/component-sizer';
 import { ReactAspect } from '@teambit/react';
-import { ReactNativeAspect } from '@teambit/react-native';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { SchemaAspect } from '@teambit/schema';
 import { PubsubAspect } from '@teambit/pubsub';
@@ -143,7 +142,6 @@ export const manifestsMap = {
   [LoggerAspect.id]: LoggerAspect,
   [PkgAspect.id]: PkgAspect,
   [ReactAspect.id]: ReactAspect,
-  [ReactNativeAspect.id]: ReactNativeAspect,
   [WorkerAspect.id]: WorkerAspect,
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,

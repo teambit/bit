@@ -690,7 +690,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       const componentsToUntag = candidateComponents.filter((modelComponent) =>
         idsMatchingPatternBitIds.hasWithoutVersion(modelComponent.toComponentId())
       );
-      return removeLocalVersionsForMultipleComponents(componentsToUntag, currentLane, head, force, consumer.scope);
+      return removeLocalVersionsForMultipleComponents(componentsToUntag, consumer.scope, currentLane, head, force);
     };
     const softUntag = async () => {
       const softTaggedComponentsIds = this.workspace.filter.bySoftTagged();
