@@ -447,7 +447,7 @@ if you're willing to lose the history from the head to the specified version, us
     const componentIdsLatest = componentIds.map((id) => id.changeVersion(LATEST));
     const newCompsData = compact(snapDataPerComp.map((t) => (t.isNew ? t : null)));
     const newComponents = await Promise.all(
-      newCompsData.map((newComp) => generateCompFromScope(this.scope, newComp, this))
+      newCompsData.map((newComp) => generateCompFromScope(this.scope, this.dependencyResolver, newComp, this))
     );
 
     await this.scope.import(componentIdsLatest, {

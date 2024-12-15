@@ -1,6 +1,7 @@
 import R from 'ramda';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
+import { uniqBy } from 'lodash';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { Scope, validateType } from '@teambit/legacy.scope';
 import { fetchRemoteVersions } from '@teambit/scope.remotes';
@@ -206,4 +207,18 @@ export default class Dependencies {
       });
     });
   }
+
+  static merge(lists: Dependency[][]): Dependencies {
+    const res: Dependency[] = [];
+    const deps = lists.reduce((acc, curr) => {
+      acc = acc.concat(curr);
+      return acc;
+    }, res);
+    return new Dependencies(uniqDeps(deps));
+  }
+}
+
+function uniqDeps(dependencies: Array<Dependency>): Array<Dependency> {
+  const uniq = uniqBy(dependencies, (dep) => dep.id.toStringWithoutVersion());
+  return uniq;
 }

@@ -24,7 +24,6 @@ import { Dist, License, SourceFile, PackageJsonFile, DataToPersist } from '@team
 import {
   ComponentConfig,
   ComponentConfigLoadOptions,
-  ILegacyWorkspaceConfig,
   ComponentOverrides,
   getBindingPrefixByDefaultScope,
 } from '@teambit/legacy.consumer-config';
@@ -88,7 +87,7 @@ export class Component {
     ComponentConfig.registerOnComponentConfigLoading(extId, func);
   }
 
-  static registerOnComponentOverridesLoading(extId, func: (id, config, legacyFiles) => any) {
+  static registerOnComponentOverridesLoading(extId, func: (id, config, legacyFiles, envExtendsDeps) => any) {
     ComponentOverrides.registerOnComponentOverridesLoading(extId, func);
   }
 
@@ -504,7 +503,6 @@ export class Component {
     consumer: Consumer;
     loadOpts?: ComponentLoadOptions;
   }): Promise<Component> {
-    const workspaceConfig: ILegacyWorkspaceConfig = consumer.config;
     const modelComponent = await consumer.scope.getModelComponentIfExist(id);
     const componentFromModel = (await consumer.loadComponentFromModelIfExist(id)) as Component | undefined;
     if (!componentFromModel && id._legacy.hasScope()) {
@@ -536,16 +534,7 @@ export class Component {
 
     const bindingPrefix = componentFromModel?.bindingPrefix;
 
-    const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : undefined;
     const files = await getLoadedFiles(consumer, componentMap, id, compDirAbs);
-
-    const overrides = await ComponentOverrides.loadFromConsumer(
-      id,
-      workspaceConfig,
-      overridesFromModel,
-      componentConfig,
-      files
-    );
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
     const docsP = _getDocsForFiles(files, consumer.componentFsCache);
@@ -575,7 +564,6 @@ export class Component {
       componentMap,
       docs: flattenedDocs,
       deprecated,
-      overrides,
       schema: getSchema(),
       defaultScope: defaultScope || null,
       packageJsonFile,

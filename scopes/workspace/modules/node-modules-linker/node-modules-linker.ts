@@ -304,7 +304,11 @@ export async function linkToNodeModulesByIds(
     if (loadFromScope) {
       return workspace.scope.getMany(componentsIds);
     }
-    return workspace.getMany(componentsIds, { idsToNotLoadAsAspects: componentsIds.map((id) => id.toString()) });
+    return workspace.getMany(componentsIds, {
+      idsToNotLoadAsAspects: componentsIds.map((id) => id.toString()),
+      loadSeedersAsAspects: false,
+      loadExtensions: false,
+    });
   };
   const components = await getComponents();
   const nodeModuleLinker = new NodeModuleLinker(components, workspace);

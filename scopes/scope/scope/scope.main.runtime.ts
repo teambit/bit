@@ -294,7 +294,8 @@ export class ScopeMain implements ComponentFactory {
     const policy = await this.dependencyResolver.mergeVariantPolicies(
       component.config.extensions,
       component.id,
-      component.state._consumer.files
+      component.state._consumer.files,
+      component.state._consumer.dependencies.dependencies
     );
     const dependenciesList = await this.dependencyResolver.extractDepsFromLegacy(component, policy);
 
@@ -303,6 +304,15 @@ export class ScopeMain implements ComponentFactory {
       dependencies: dependenciesList.serialize(),
       policy: policy.serialize(),
     };
+    const resolvedEnvJsonc = await this.envs.calculateEnvManifest(
+      component,
+      component.state._consumer.files,
+      component.state._consumer.dependencies.dependencies
+    );
+    if (resolvedEnvJsonc) {
+      // @ts-ignore
+      envsData.resolvedEnvJsonc = resolvedEnvJsonc;
+    }
     // Make sure we are adding the envs / deps data first because other on load events might depend on it
     await Promise.all([
       this.upsertExtensionData(component, EnvsAspect.id, envsData),
