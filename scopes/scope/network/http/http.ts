@@ -683,12 +683,19 @@ export class Http implements Network {
   private getHeaders(headers: { [key: string]: string } = {}) {
     const authHeader = this.token ? getAuthHeader(this.token) : {};
     const localScope = this.localScopeName ? { 'x-request-scope': this.localScopeName } : {};
+    let clientVersion;
+    try {
+      clientVersion = this.getClientVersion();
+    } catch (err) {
+      // Ignore the error, we don't want to fail the request if we can't get the client version
+      logger.error(`failed getting bit version from the client, error: ${err}`);
+    }
     return Object.assign(
       headers,
       authHeader,
       localScope,
       { connection: 'keep-alive' },
-      { 'x-client-version': this.getClientVersion() }
+      { 'x-client-version': clientVersion }
     );
   }
 
