@@ -1077,7 +1077,7 @@ export class DependencyResolverMain {
   ): Promise<EnvPolicy | undefined> {
     let envManifest;
     if (envComponent) {
-      envManifest = this.envs.getEnvManifest(envComponent) as any;
+      envManifest = (await this.envs.getOrCalculateEnvManifest(envComponent, legacyFiles, envExtendsDeps)) as any;
     }
     if (!envManifest && legacyFiles) {
       envManifest = await this.envs.calculateEnvManifest(undefined, legacyFiles, envExtendsDeps);
@@ -1125,7 +1125,11 @@ export class DependencyResolverMain {
     const isCoreEnv = this.envs.isCoreEnv(envId);
     if (isCoreEnv) return undefined;
     if (legacyFiles) {
-      return this.getEnvManifest(undefined, legacyFiles, envExtendsDeps);
+      const envJsonc = legacyFiles.find((file) => file.basename === 'env.jsonc');
+      if (envJsonc) {
+        return this.getEnvManifest(undefined, legacyFiles, envExtendsDeps);
+      }
+      return undefined;
     }
     const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
     return this.getEnvManifest(envComponent);

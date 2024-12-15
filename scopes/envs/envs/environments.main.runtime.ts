@@ -311,6 +311,20 @@ export class EnvsMain {
     return data.resolvedEnvJsonc;
   }
 
+  async getOrCalculateEnvManifest(
+    component: Component,
+    legacyFiles?: SourceFile[],
+    envExtendsDeps?: LegacyDependency[]
+  ): Promise<ResolvedEnvJsonc | undefined> {
+    try {
+      return (
+        this.getEnvManifest(component) || (await this.calculateEnvManifest(component, legacyFiles, envExtendsDeps))
+      );
+    } catch {
+      return this.calculateEnvManifest(component);
+    }
+  }
+
   async calculateEnvManifest(
     envComponent?: Component,
     legacyFiles?: SourceFile[],
