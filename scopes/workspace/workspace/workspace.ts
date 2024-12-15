@@ -832,8 +832,12 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     return results;
   }
 
-  async triggerOnComponentAdd(id: ComponentID, watchOpts: WatchOptions): Promise<OnComponentEventResult[]> {
-    const component = await this.get(id);
+  async triggerOnComponentAdd(
+    id: ComponentID,
+    watchOpts: WatchOptions,
+    loadOptions?: ComponentLoadOptions
+  ): Promise<OnComponentEventResult[]> {
+    const component = await this.get(id, undefined, undefined, undefined, loadOptions);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     const files = component.state.filesystem.files.map((file) => file.path);

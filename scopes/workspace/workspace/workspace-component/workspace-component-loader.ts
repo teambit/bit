@@ -390,9 +390,14 @@ export class WorkspaceComponentLoader {
     // Ensure we won't load the same extension many times
     // We don't want to ignore version here, as we do want to load different extensions with same id but different versions here
     const mergedExtensions = ExtensionDataList.mergeConfigs(allExtensions, false);
-    this.logger.profile('loadComponentsExtensions');
-    await this.workspace.loadComponentsExtensions(mergedExtensions);
-    this.logger.profile('loadComponentsExtensions');
+    const filteredMergeExtensions = mergedExtensions.filter((ext) => {
+      return !loadOpts.idsToNotLoadAsAspects?.includes(ext.stringId);
+    });
+    if (loadOpts.loadExtensions) {
+      this.logger.profile('loadComponentsExtensions');
+      await this.workspace.loadComponentsExtensions(filteredMergeExtensions);
+      this.logger.profile('loadComponentsExtensions');
+    }
     let wsComponentsWithAspects = workspaceComponents;
     // if (loadOpts.seeders) {
     this.logger.profile('executeLoadSlot');

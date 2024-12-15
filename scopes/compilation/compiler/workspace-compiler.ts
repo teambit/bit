@@ -311,7 +311,8 @@ export class WorkspaceCompiler {
     });
     if (
       ((err.code && (err.code === 'MODULE_NOT_FOUND' || err.code === 'ERR_REQUIRE_ESM')) ||
-        err.message.includes('import.meta')) &&
+        err.message.includes('import.meta') ||
+        err.message.includes('exports is not defined')) &&
       this.workspace
     ) {
       await this.compileComponents(
