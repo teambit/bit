@@ -564,7 +564,7 @@
         "diff": "^7.0.0",
         "dreidels": "0.6.1",
         "enquirer": "2.3.6",
-        "esbuild": "^0.20.1",
+        "esbuild": "^0.24.0",
         "esbuild-plugin-ignore": "^1.1.1",
         "eslint-config-airbnb-typescript": "17.1.0",
         "eslint-import-resolver-node": "0.3.4",
