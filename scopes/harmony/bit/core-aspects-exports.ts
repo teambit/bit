@@ -37,7 +37,6 @@ export * as isolator from '@teambit/isolator';
 export * as logger from '@teambit/logger';
 export * as pkg from '@teambit/pkg';
 export * as react from '@teambit/react';
-export * as reactNative from '@teambit/react-native';
 export * as worker from '@teambit/worker';
 export * as scope from '@teambit/scope';
 export * as tester from '@teambit/tester';
