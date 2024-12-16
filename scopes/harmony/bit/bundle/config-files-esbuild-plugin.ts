@@ -42,8 +42,7 @@ async function handleRelativePath(args: OnResolveArgs, bundleDir: string) {
   const packageDirName = `@teambit/${componentName}`;
   // const origFilePath = join(args.resolveDir, args.path);
   // const relativePath = getFilePathRelativeToPackage(args.resolveDir, args.path);
-  // TODO: dist is hard coded now which is not great
-  const origFilePath = join(packageDirName, 'dist', relativePath);
+  const origFilePath = join(packageDirName, relativePath);
   // const targetDirName = getTargetDirName(args.resolveDir);
   const targetDirName = `${scopeName}.${componentName}`;
   // const targetDir = join(bundleDir, targetDirName, parsed.dir);
@@ -73,14 +72,16 @@ async function parseArgsFromNodeModules(args: OnResolveArgs): Promise<ParsedArgs
   const parts = resolveDir.split('/@teambit/');
   const idParts = parts[1].split('/');
   const componentName = idParts[0];
-  const relativePath = filePath;
-  const packageJsonPath = join(parts[0], '@teambit', componentName, 'package.json');
+  const componentDir = join(parts[0], '@teambit', componentName);
+  const relativeResolvedDir = resolveDir.replace(`${componentDir}/`, '');
+  const relativePath = join(relativeResolvedDir, filePath.replace('./', ''));
+  const packageJsonPath = join(componentDir, 'package.json');
   const jsonValue = await fs.readJson(packageJsonPath);
   const scopeName = jsonValue.componentId.scope.replace('teambit.', '');
   return {
     scopeName,
     componentName,
-    relativePath: relativePath.replace('./', ''),
+    relativePath,
   };
 }
 
