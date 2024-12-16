@@ -58,7 +58,7 @@ import ClientIdInUse from './exceptions/client-id-in-use';
 import { getDivergeData } from '@teambit/component.snap-distance';
 import { StagedSnaps } from './staged-snaps';
 import { collectGarbage } from './garbage-collector';
-import { getBitVersion } from '@teambit/bit.get-bit-version';
+import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -758,7 +758,7 @@ once done, to continue working, please run "bit cc"`
     if (name === CURRENT_UPSTREAM) {
       throw new BitError(`the name "${CURRENT_UPSTREAM}" is a reserved word, please use another name`);
     }
-    const scopeJson = new ScopeJson({ name, groupName, version: getBitVersion() });
+    const scopeJson = new ScopeJson({ name, groupName, version: getBitVersionGracefully() || 'unknown' });
     return scopeJson;
   }
 

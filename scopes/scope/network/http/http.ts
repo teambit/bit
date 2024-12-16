@@ -51,7 +51,7 @@ import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-respons
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
 import { loader } from '@teambit/legacy.loader';
 import { UnexpectedNetworkError } from '../exceptions';
-import { getBitVersion } from '@teambit/bit.get-bit-version';
+import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
 
 const _fetch: typeof fetch = nodeFetch as unknown as typeof fetch;
 
@@ -683,12 +683,10 @@ export class Http implements Network {
   private getHeaders(headers: { [key: string]: string } = {}) {
     const authHeader = this.token ? getAuthHeader(this.token) : {};
     const localScope = this.localScopeName ? { 'x-request-scope': this.localScopeName } : {};
-    let clientVersion;
-    try {
-      clientVersion = this.getClientVersion();
-    } catch (err) {
+    const clientVersion = this.getClientVersion() || 'unknown';
+    if (clientVersion === 'unknown') {
       // Ignore the error, we don't want to fail the request if we can't get the client version
-      logger.error(`failed getting bit version from the client, error: ${err}`);
+      logger.error('failed getting bit version from the client');
     }
     return Object.assign(
       headers,
@@ -699,8 +697,8 @@ export class Http implements Network {
     );
   }
 
-  private getClientVersion(): string {
-    return getBitVersion();
+  private getClientVersion(): string | null {
+    return getBitVersionGracefully();
   }
 
   private addAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {
