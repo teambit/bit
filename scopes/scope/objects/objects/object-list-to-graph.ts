@@ -1,8 +1,8 @@
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { uniqBy } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
-import type { ObjectList } from '@teambit/scope.objects';
-import { BitObjectList } from '@teambit/scope.objects';
+import type { ObjectList } from './object-list';
+import { BitObjectList } from './bit-object-list';
 import { getAllVersionsInfo } from '@teambit/component.snap-distance';
 import { Dependency } from '@teambit/graph';
 
