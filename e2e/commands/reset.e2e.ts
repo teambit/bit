@@ -316,7 +316,7 @@ describe('bit reset command', function () {
       helper.command.tagWithoutBuild();
       helper.command.export();
       helper.command.checkoutVersion('0.0.2', 'comp1', '-x');
-      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified --detach-head');
 
       // an intermediate step, make sure the component is detached
       const comp = helper.command.catComponent('comp1');

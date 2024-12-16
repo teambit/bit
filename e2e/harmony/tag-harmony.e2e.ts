@@ -484,7 +484,7 @@ describe('tag components on Harmony', function () {
       helper.command.export();
       helper.command.checkoutVersion('1.0.0', 'comp1', '-x');
       helper.fixtures.populateComponents(1, undefined, 'version101');
-      helper.command.tagAllWithoutBuild('--ver 1.0.1 --ignore-newest-version');
+      helper.command.tagAllWithoutBuild('--ver 1.0.1 --detach-head');
       helper.command.export();
     });
     it('should keep the head as 2.x and not change it to 1.0.1', () => {

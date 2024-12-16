@@ -1,5 +1,5 @@
 import mapSeries from 'p-map-series';
-import { isEmpty } from 'lodash';
+import { compact } from 'lodash';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 import { BitError } from '@teambit/bit-error';
@@ -168,6 +168,7 @@ function getVersionByEnteredId(
   return undefined;
 }
 
+// eslint-disable-next-line complexity
 export async function tagModelComponent({
   snapping,
   consumerComponents,
@@ -199,7 +200,7 @@ export async function tagModelComponent({
   updateDependentsOnLane = false, // on lane, adds it into updateDependents prop
   setHeadAsParent, // kind of rebase. in case component is checked out to older version, ignore that version, use head
   detachHead,
-  overrideHead: setHead,
+  overrideHead,
 }: {
   snapping: SnappingMain;
   components: Component[];
@@ -264,30 +265,13 @@ export async function tagModelComponent({
   const messagePerId = await getMessagePerId();
 
   // check for each one of the components whether it is using an old version
+  // TODO: once --detach-head is supported by the remote, deprecate --ignore-newest-version. and change this
+  // throwForNewestVersion to suggest using --detach-head instead. also, it the error should not be limited
+  // to tags and can be thrown for snaps as well.
+  // once --ignore-newest-version is removed, no need for this condition. it's ok to not provide the override-head option.
+  if (ignoreNewestVersion && !detachHead) overrideHead = true;
   if (!ignoreNewestVersion && !isSnap) {
-    const newestVersionsP = allComponentsToTag.map(async (component) => {
-      if (component.componentFromModel) {
-        // otherwise it's a new component, so this check is irrelevant
-        const modelComponent = await legacyScope.getModelComponentIfExist(component.id);
-        if (!modelComponent) throw new BitError(`component ${component.id} was not found in the model`);
-        if (!modelComponent.listVersions().length) return null; // no versions yet, no issues.
-        const latest = modelComponent.getHeadRegardlessOfLaneAsTagOrHash();
-        if (latest !== component.version) {
-          return {
-            componentId: component.id.toStringWithoutVersion(),
-            currentVersion: component.version,
-            latestVersion: latest,
-          };
-        }
-      }
-      return null;
-    });
-    const newestVersions = await Promise.all(newestVersionsP);
-    const newestVersionsWithoutEmpty = newestVersions.filter((newest) => newest);
-    if (!isEmpty(newestVersionsWithoutEmpty)) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      throw new NewerVersionFound(newestVersionsWithoutEmpty);
-    }
+    await throwForNewestVersion(allComponentsToTag, legacyScope);
   }
 
   logger.debugAndAddBreadCrumb('tag-model-components', 'sequentially persist all components');
@@ -338,7 +322,7 @@ export async function tagModelComponent({
           addToUpdateDependentsInLane: updateDependentsOnLane,
           setHeadAsParent,
           detachHead,
-          overrideHead: setHead,
+          overrideHead: overrideHead,
         },
       });
       if (workspace) {
@@ -416,6 +400,31 @@ export async function tagModelComponent({
     stagedConfig,
     removedComponents,
   };
+}
+
+async function throwForNewestVersion(allComponentsToTag: ConsumerComponent[], legacyScope: Scope) {
+  const newestVersionsP = allComponentsToTag.map(async (component) => {
+    if (component.componentFromModel) {
+      // otherwise it's a new component, so this check is irrelevant
+      const modelComponent = await legacyScope.getModelComponentIfExist(component.id);
+      if (!modelComponent) throw new BitError(`component ${component.id} was not found in the model`);
+      if (!modelComponent.listVersions().length) return null; // no versions yet, no issues.
+      const latest = modelComponent.getHeadRegardlessOfLaneAsTagOrHash();
+      if (latest !== component.version) {
+        return {
+          componentId: component.id.toStringWithoutVersion(),
+          currentVersion: component.version!,
+          latestVersion: latest,
+        };
+      }
+    }
+    return null;
+  });
+  const newestVersions = await Promise.all(newestVersionsP);
+  const newestVersionsWithoutEmpty = compact(newestVersions);
+  if (newestVersionsWithoutEmpty.length) {
+    throw new NewerVersionFound(newestVersionsWithoutEmpty);
+  }
 }
 
 function addIntegritiesToConsumerComponentsGraphs(

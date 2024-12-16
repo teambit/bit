@@ -65,6 +65,11 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       'fail-fast',
       'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
+    [
+      '',
+      'detach-head',
+      'UNSUPPORTED YET. in case a component is checked out to and older version, snap it without changing the head',
+    ],
   ] as CommandOptions;
   loader = true;
 
@@ -90,6 +95,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       rebuildDepsGraph,
       unmodified = false,
       failFast = false,
+      detachHead,
     }: {
       unmerged?: boolean;
       editor?: string;
@@ -123,6 +129,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       rebuildDepsGraph,
       unmodified,
       exitOnFirstFailedTask: failFast,
+      detachHead,
     });
 
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);

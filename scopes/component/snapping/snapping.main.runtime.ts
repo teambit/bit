@@ -579,6 +579,7 @@ if you're willing to lose the history from the head to the specified version, us
     rebuildDepsGraph,
     unmodified = false,
     exitOnFirstFailedTask = false,
+    detachHead,
   }: Partial<BasicTagSnapParams> & {
     pattern?: string;
     legacyBitIds?: ComponentIdList;
@@ -624,6 +625,7 @@ if you're willing to lose the history from the head to the specified version, us
       rebuildDepsGraph,
       packageManagerConfigRootDir: this.workspace.path,
       exitOnFirstFailedTask,
+      detachHead,
     });
 
     const snapResults: Partial<SnapResults> = {
