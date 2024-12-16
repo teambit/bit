@@ -686,7 +686,7 @@ export class Http implements Network {
     const clientVersion = this.getClientVersion() || 'unknown';
     if (clientVersion === 'unknown') {
       // Ignore the error, we don't want to fail the request if we can't get the client version
-      logger.error(`failed getting bit version from the client, error: ${err}`);
+      logger.error('failed getting bit version from the client');
     }
     return Object.assign(
       headers,
