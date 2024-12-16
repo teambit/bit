@@ -22,11 +22,11 @@ export class WorkspacePolicyFactory {
   fromPackageJson(packageJson: Record<string, any>) {
     const obj = {
       dependencies: {
-        ...(packageJson.devDependencies || {}),
-        ...(packageJson.dependencies || {}),
+        ...packageJson.devDependencies,
+        ...packageJson.dependencies,
       },
       peerDependencies: {
-        ...(packageJson.peerDependencies || {}),
+        ...packageJson.peerDependencies,
       },
     };
     return this.fromConfigObject(obj);

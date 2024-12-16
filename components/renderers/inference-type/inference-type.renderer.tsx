@@ -5,6 +5,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
 import tsxSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
 import defaultTheme from '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme';
 import classNames from 'classnames';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 
 import styles from './inference-type.module.scss';
@@ -46,7 +47,9 @@ function InferenceTypeComponent(props: APINodeRenderProps) {
     >
       {isSpread && (
         <Tooltip
+          className={styles.syntaxTooltip}
           placement={'bottom-end'}
+          theme="light"
           content={
             <SyntaxHighlighter
               language={lang}
@@ -62,7 +65,10 @@ function InferenceTypeComponent(props: APINodeRenderProps) {
             </SyntaxHighlighter>
           }
         >
-          {`...rest`}
+          <div className={styles.infoIconWrapper}>
+            {'...rest'}
+            <Icon of="information" className={styles.infoIcon} />
+          </div>
         </Tooltip>
       )}
       {!isSpread &&

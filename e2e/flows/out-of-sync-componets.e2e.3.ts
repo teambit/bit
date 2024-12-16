@@ -1,9 +1,8 @@
 import chai, { expect } from 'chai';
-
-import { IMPORT_PENDING_MSG } from '../../src/constants';
-import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
-import ComponentsPendingImport from '../../src/consumer/component-ops/exceptions/components-pending-import';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
+import { IMPORT_PENDING_MSG } from '@teambit/legacy.constants';
+import { ComponentsPendingImport } from '@teambit/legacy.consumer';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -195,7 +194,7 @@ describe('components that are not synced between the scope and the consumer', fu
     describe('bit tag', () => {
       it('should stop the tagging process and throw an error suggesting to import the components', () => {
         const err = new ComponentsPendingImport([`${helper.scopes.remote}/bar/foo@0.0.1`]);
-        helper.general.expectToThrow(() => helper.command.tagWithoutBuild('bar/foo'), err);
+        helper.general.expectToThrow(() => helper.command.tagWithoutBuild('bar/foo', '--unmodified'), err);
       });
     });
     describe('bit status', () => {

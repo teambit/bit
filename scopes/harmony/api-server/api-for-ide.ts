@@ -1,7 +1,8 @@
 import path from 'path';
 import fs from 'fs-extra';
+import filenamify from 'filenamify';
 import { CompFiles, Workspace, FilesStatus } from '@teambit/workspace';
-import { PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedAbsolute, PathOsBasedRelative, pathJoinLinux } from '@teambit/legacy.utils';
 import pMap from 'p-map';
 import { SnappingMain } from '@teambit/snapping';
 import { LanesMain } from '@teambit/lanes';
@@ -10,17 +11,22 @@ import { ExportMain } from '@teambit/export';
 import { CheckoutMain } from '@teambit/checkout';
 import { ApplyVersionResults } from '@teambit/merging';
 import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
-import { Log } from '@teambit/legacy/dist/scope/models/lane';
+import { LaneLog } from '@teambit/scope.objects';
 import { ComponentCompareMain } from '@teambit/component-compare';
 import { GeneratorMain } from '@teambit/generator';
-import { getParsedHistoryMetadata } from '@teambit/legacy/dist/consumer/consumer';
-import RemovedObjects from '@teambit/legacy/dist/scope/removed-components';
+import { getParsedHistoryMetadata } from '@teambit/legacy.consumer';
+import { RemovedObjects } from '@teambit/legacy.scope';
 import { RemoveMain } from '@teambit/remove';
-import { compact } from 'lodash';
-import { getCloudDomain } from '@teambit/legacy/dist/constants';
+import { compact, uniq } from 'lodash';
 import { ConfigMain } from '@teambit/config';
+import { LANE_REMOTE_DELIMITER, LaneId } from '@teambit/lane-id';
+import { ApplicationMain } from '@teambit/application';
+import { DeprecationMain } from '@teambit/deprecation';
+import { EnvsMain } from '@teambit/envs';
+import fetch from 'node-fetch';
 
 const FILES_HISTORY_DIR = 'files-history';
+const ENV_ICONS_DIR = 'env-icons';
 const LAST_SNAP_DIR = 'last-snap';
 const CMD_HISTORY = 'command-history-ide';
 
@@ -40,7 +46,7 @@ type LaneObj = {
   name: string;
   scope: string;
   id: string;
-  log: Log;
+  log: LaneLog;
   components: Array<{ id: string; head: string }>;
   isNew: boolean;
   forkedFrom?: string;
@@ -58,7 +64,20 @@ type WorkspaceHistory = {
   history: Array<{ path: PathOsBasedAbsolute; fileId: string; reason?: string }>;
 };
 
+type CompMetadata = {
+  id: string;
+  isDeprecated: boolean;
+  appName?: string; // in case it's an app
+  env: {
+    id: string;
+    name?: string;
+    icon: string;
+    localIconPath?: string;
+  };
+};
+
 export class APIForIDE {
+  private existingEnvIcons: string[] | undefined;
   constructor(
     private workspace: Workspace,
     private snapping: SnappingMain,
@@ -70,7 +89,10 @@ export class APIForIDE {
     private componentCompare: ComponentCompareMain,
     private generator: GeneratorMain,
     private remove: RemoveMain,
-    private config: ConfigMain
+    private config: ConfigMain,
+    private application: ApplicationMain,
+    private deprecation: DeprecationMain,
+    private envs: EnvsMain
   ) {}
 
   async logStartCmdHistory(op: string) {
@@ -82,6 +104,10 @@ export class APIForIDE {
     const endStr = code === 0 ? 'succeeded' : 'failed';
     const str = `${op}, ${endStr}`;
     await this.writeToCmdHistory(str);
+  }
+
+  getProcessPid() {
+    return process.pid;
   }
 
   private async writeToCmdHistory(str: string) {
@@ -171,7 +197,83 @@ export class APIForIDE {
   }
 
   async createLane(name: string) {
+    if (name.includes(LANE_REMOTE_DELIMITER)) {
+      const laneId = LaneId.parse(name);
+      return this.lanes.createLane(laneId.name, { scope: laneId.scope });
+    }
     return this.lanes.createLane(name);
+  }
+
+  async getCompsMetadata(): Promise<CompMetadata[]> {
+    const comps = await this.workspace.list();
+    const apps = await this.application.listAppsIdsAndNames();
+    const results: CompMetadata[] = await pMap(
+      comps,
+      async (comp) => {
+        const id = comp.id;
+        const deprecationInfo = await this.deprecation.getDeprecationInfo(comp);
+        const foundApp = apps.find((app) => app.id === id.toString());
+        const env = this.envs.getEnv(comp);
+        return {
+          id: id.toStringWithoutVersion(),
+          isDeprecated: deprecationInfo.isDeprecate,
+          appName: foundApp?.name,
+          env: {
+            id: env.id,
+            name: env.name,
+            icon: env.icon,
+          },
+        };
+      },
+      { concurrency: 30 }
+    );
+    const allIcons = uniq(compact(results.map((r) => r.env.icon)));
+    const iconsMap = await this.getEnvIconsMapFetchIfMissing(allIcons);
+    results.forEach((r) => {
+      r.env.localIconPath = iconsMap[r.env.icon];
+    });
+    return results;
+  }
+
+  private getEnvIconsFullPath() {
+    return path.join(this.workspace.scope.path, ENV_ICONS_DIR);
+  }
+
+  private async getExistingEnvIcons(): Promise<string[]> {
+    if (!this.existingEnvIcons) {
+      const envIconsDir = this.getEnvIconsFullPath();
+      await fs.ensureDir(envIconsDir);
+      const existingIcons = await fs.readdir(envIconsDir);
+      this.existingEnvIcons = existingIcons;
+    }
+    return this.existingEnvIcons;
+  }
+
+  private async getEnvIconsMapFetchIfMissing(icons: string[]): Promise<{ [iconHttpUrl: string]: string }> {
+    const existingIcons = await this.getExistingEnvIcons();
+    const iconsMap: Record<string, string> = {};
+    await Promise.all(
+      icons.map(async (icon) => {
+        const iconFileName = filenamify(icon, { replacement: '-' });
+        const fullIconPath = path.join(this.workspace.scope.path, ENV_ICONS_DIR, iconFileName);
+        if (existingIcons.includes(iconFileName)) {
+          iconsMap[icon] = fullIconPath;
+          return;
+        }
+        let res;
+        // download the icon from the url and save it locally.
+        try {
+          res = await fetch(icon);
+        } catch (err: any) {
+          throw new Error(`failed to get the icon from ${icon}, error: ${err.message}`);
+        }
+        const svgText = await res.text();
+        await fs.outputFile(fullIconPath, svgText);
+        iconsMap[icon] = fullIconPath;
+        this.existingEnvIcons?.push(iconFileName);
+      })
+    );
+    return iconsMap;
   }
 
   async getCompFiles(id: string): Promise<{ dirAbs: string; filesRelative: PathOsBasedRelative[] }> {
@@ -189,6 +291,7 @@ export class APIForIDE {
     // const dirName = filenamify(compId.toString(), { replacement: '_' });
     const filePathsRootDir = path.join(this.workspace.scope.path, FILES_HISTORY_DIR, LAST_SNAP_DIR, compDir);
     await fs.remove(filePathsRootDir); // in case it has old data
+    await fs.ensureDir(filePathsRootDir);
 
     const modelComponent = await this.workspace.scope.getBitObjectModelComponent(compId);
     if (!modelComponent) {
@@ -219,6 +322,11 @@ export class APIForIDE {
     return results;
   }
 
+  async blame(filePath: string) {
+    const results = await this.componentLog.blame(filePath);
+    return results;
+  }
+
   async changedFilesFromParent(id: string): Promise<FileHashDiffFromParent[]> {
     const results = await this.componentLog.getChangedFilesFromParent(id);
     return results;
@@ -232,6 +340,10 @@ export class APIForIDE {
   async setDefaultScope(scopeName: string) {
     await this.workspace.setDefaultScope(scopeName);
     return scopeName;
+  }
+
+  getDefaultScope() {
+    return this.workspace.defaultScope;
   }
 
   async getCompFilesDirPathFromLastSnapUsingCompFiles(
@@ -277,13 +389,13 @@ export class APIForIDE {
   }
 
   async export() {
-    const { componentsIds, removedIds, exportedLanes, rippleJobs } = await this.exporter.export();
-    const rippleJobsFullUrls = rippleJobs.map((job) => `https://${getCloudDomain()}/ripple-ci/job/${job}`);
+    const { componentsIds, removedIds, exportedLanes, rippleJobUrls } = await this.exporter.export();
     return {
       componentsIds: componentsIds.map((c) => c.toString()),
       removedIds: removedIds.map((c) => c.toString()),
       exportedLanes: exportedLanes.map((l) => l.id()),
-      rippleJobs: rippleJobsFullUrls,
+      rippleJobs: rippleJobUrls, // for backward compatibility. bit-extension until 1.1.52 expects rippleJobs.
+      rippleJobUrls,
     };
   }
 
@@ -306,16 +418,34 @@ export class APIForIDE {
       throw new Error('id should include the scope name');
     }
     const [scope, ...nameSplit] = idIncludeScope.split('/');
-    return this.generator.generateComponentTemplate([nameSplit.join('/')], templateName, { scope });
+    return this.generator.generateComponentTemplate(
+      [nameSplit.join('/')],
+      templateName,
+      { scope },
+      { optimizeReportForNonTerminal: true }
+    );
   }
 
-  async removeComponent(id: string) {
+  async removeComponent(componentsPattern: string) {
     const results = await this.remove.remove({
-      componentsPattern: id,
+      componentsPattern,
       force: true,
     });
     const serializedResults = (results.localResult as RemovedObjects).serialize();
     return serializedResults;
+  }
+
+  async deleteComponents(componentsPattern: string, opts): Promise<string[]> {
+    const results = await this.remove.deleteComps(componentsPattern, opts);
+    const serializedResults = results.map((c) => c.id.toString());
+    return serializedResults;
+  }
+
+  async deprecateComponent(id: string, newId?: string, range?: string): Promise<boolean> {
+    return this.deprecation.deprecateByCLIValues(id, newId, range);
+  }
+  async undeprecateComponent(id: string): Promise<boolean> {
+    return this.deprecation.unDeprecateByCLIValues(id);
   }
 
   async switchLane(name: string) {
@@ -336,9 +466,15 @@ export class APIForIDE {
 
   async getModifiedByConfig(): Promise<ModifiedByConfig[]> {
     const modifiedComps = await this.workspace.modified();
+    const autoTagIds = await this.workspace.listAutoTagPendingComponentIds();
+    const autoTagComps = await this.workspace.getMany(autoTagIds);
+    const locallyDeletedIds = await this.workspace.locallyDeletedIds();
+    const locallyDeletedComps = await this.workspace.getMany(locallyDeletedIds);
+    const allComps = [...modifiedComps, ...autoTagComps, ...locallyDeletedComps];
+    const allIds = allComps.map((c) => c.id);
     const results = await Promise.all(
-      modifiedComps.map(async (comp) => {
-        const wsComp = await this.componentCompare.getConfigForDiffByCompObject(comp);
+      allComps.map(async (comp) => {
+        const wsComp = await this.componentCompare.getConfigForDiffByCompObject(comp, allIds);
         const scopeComp = await this.componentCompare.getConfigForDiffById(comp.id.toString());
         const hasSameDeps = JSON.stringify(wsComp.dependencies) === JSON.stringify(scopeComp.dependencies);
         const hasSameAspects = JSON.stringify(wsComp.aspects) === JSON.stringify(scopeComp.aspects);

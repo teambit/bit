@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
 import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { TypescriptMain } from '../typescript.main.runtime';
 
 export class CheckTypesCmd implements Command {
@@ -16,7 +16,11 @@ export class CheckTypesCmd implements Command {
     ['', 'strict', 'in case issues found, exit with code 1'],
   ] as CommandOptions;
 
-  constructor(private typescript: TypescriptMain, private workspace: Workspace, private logger: Logger) {}
+  constructor(
+    private typescript: TypescriptMain,
+    private workspace: Workspace,
+    private logger: Logger
+  ) {}
 
   async report([pattern]: [string], { all = false, strict = false }: { all: boolean; strict: boolean }) {
     if (!this.workspace) throw new OutsideWorkspaceError();

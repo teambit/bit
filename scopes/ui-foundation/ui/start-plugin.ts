@@ -10,6 +10,11 @@ export type StartPluginOptions = {
    * component pattern it applies on.
    */
   pattern?: string;
+
+  /**
+   * Show the internal urls of the dev servers
+   */
+  showInternalUrls?: boolean;
 };
 
 export interface StartPlugin {

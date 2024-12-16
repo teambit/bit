@@ -1,10 +1,10 @@
 import ignorePlugin from 'esbuild-plugin-ignore';
-import { build, Options, defineConfig } from 'tsup';
+import { build, Options } from 'tsup';
 import { configFilesEsbuildPlugin } from './config-files-esbuild-plugin';
 import { timeEsbuildPlugin } from './esbuild-plugin-time';
 import { externals } from './externals';
 
-export async function runTsup(outDir: string, appFile: string) {
+export async function runTsup(outDir: string, _appFile: string) {
   const opts: Options = {
     entry: ['/Users/giladshoham/dev/bit/bit/scopes/harmony/bit/app.ts'],
     splitting: false,
@@ -33,7 +33,7 @@ export async function runTsup(outDir: string, appFile: string) {
       configFilesEsbuildPlugin(outDir),
       timeEsbuildPlugin('Bit bundle'),
     ],
-    esbuildOptions(options, context) {
+    esbuildOptions(options, _context) {
       options.define['process.env.BIT_LOG'] = '"debug"';
     },
   };

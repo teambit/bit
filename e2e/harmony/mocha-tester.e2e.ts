@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -16,7 +16,7 @@ describe('Mocha Tester', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
-      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env@0.0.8');
+      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env@0.0.42');
       helper.command.install();
     });
     describe('component without any test file', () => {
@@ -97,7 +97,7 @@ describe('Mocha Tester', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponentsTS(1);
-      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env@0.0.8');
+      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env@0.0.42');
       helper.command.install();
       helper.fs.outputFile(
         'comp1/foo.ts',

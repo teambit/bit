@@ -15,7 +15,10 @@ type LinterTransformationMap = ServiceTransformationMap & {
 export class LinterService implements EnvService<LintResults> {
   name = 'linter';
 
-  constructor(private linterConfig: LinterConfig, private workspace: Workspace) {}
+  constructor(
+    private linterConfig: LinterConfig,
+    private workspace: Workspace
+  ) {}
 
   async run(context: ExecutionContext, options: LinterOptions): Promise<LintResults> {
     const mergedOpts = this.optionsWithDefaults(options);

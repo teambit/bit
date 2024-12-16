@@ -1,5 +1,6 @@
 import { resolve, join } from 'path';
-import { getConsumerInfo, loadConsumer } from '@teambit/legacy/dist/consumer';
+import { loadConsumer } from '@teambit/legacy.consumer';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { readdirSync } from 'fs';
 import { Harmony, Aspect } from '@teambit/harmony';
@@ -8,11 +9,9 @@ import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
 import { ComponentID } from '@teambit/component';
 import { CLIAspect } from '@teambit/cli';
 import { NodeAspect } from '@teambit/node';
-import ComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
-import ComponentConfig from '@teambit/legacy/dist/consumer/config/component-config';
-import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
+import { ComponentLoader } from '@teambit/legacy.consumer-component';
+import { LegacyWorkspaceConfig, ComponentOverrides, ComponentConfig } from '@teambit/legacy.consumer-config';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import WorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
 import { DependenciesAspect } from '@teambit/dependencies';
 
 function getPackageName(aspect: any, id: ComponentID) {
@@ -34,8 +33,10 @@ export async function loadAspect<T>(targetAspect: Aspect, cwd = process.cwd(), r
 }
 
 /**
- * returns an instance of Harmony. with this instance, you can get any aspect you loaded.
+ * returns an instance of Harmony. with this instance, you can get any aspect you loaded (or its dependencies).
  * e.g. `const workspace = harmony.get<Workspace>(WorkspaceAspect.id);`
+ * when used for tests, specify all aspects you need and call it once. this way, you make sure all of them are in sync
+ * and use the same instances of each other.
  */
 export async function loadManyAspects(
   targetAspects: Aspect[],
@@ -82,7 +83,7 @@ function getMainFilePath(aspect: any, id: ComponentID) {
   try {
     // try core aspects
     return require.resolve(packageName);
-  } catch (err) {
+  } catch {
     // fallback to a naive way of converting componentId to pkg-name. (it won't work when the component has special pkg name settings)
     packageName = `@${id.scope.replace('.', '/')}.${id.fullName.replaceAll('/', '.')}`;
     return require.resolve(packageName);
@@ -90,7 +91,7 @@ function getMainFilePath(aspect: any, id: ComponentID) {
 }
 
 export async function getConfig(cwd = process.cwd()) {
-  const consumerInfo = await getConsumerInfo(cwd);
+  const consumerInfo = await getWorkspaceInfo(cwd);
   const scopePath = findScopePath(cwd);
   const globalConfigOpts = {
     name: '.bitrc.jsonc',
@@ -128,7 +129,5 @@ function clearGlobalsIfNeeded() {
   // registerCoreExtensions() from @teambit/bit, which as far as I remember should not be a dependency of this aspect.
   // ExtensionDataList.coreExtensionsNames = new Map();
   // @ts-ignore
-  WorkspaceConfig.workspaceConfigEnsuringRegistry = undefined;
-  // @ts-ignore
-  WorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
+  LegacyWorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
 }

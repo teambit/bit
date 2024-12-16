@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -53,6 +53,7 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
       helper.fs.deletePath('.bit');
+      helper.command.init();
       scopeOutOfSync = helper.scopeHelper.cloneLocalScope();
     });
     describe('bit build', () => {
@@ -91,6 +92,7 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.command.export();
       helper.command.tagAllWithoutBuild('--unmodified'); // 0.0.2
       helper.fs.deletePath('.bit');
+      helper.command.init();
       helper.scopeHelper.addRemoteScope();
     });
     it('bit import should not throw', () => {
@@ -110,6 +112,7 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
       helper.fs.deletePath('.bit');
+      helper.command.init();
       helper.scopeHelper.addRemoteScope();
     });
     it('should recrate the lane', () => {

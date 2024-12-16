@@ -5,8 +5,8 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { BuilderAspect } from '@teambit/builder';
-import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ModelComponent, Version } from '@teambit/scope.objects';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import {
   DependencyResolverAspect,
   DependencyList,
@@ -20,8 +20,8 @@ import {
   FieldsDiff,
   FileDiff,
   getFilesDiff,
-} from '@teambit/legacy/dist/consumer/component-ops/components-diff';
-import { diffBetweenComponentsObjects } from '@teambit/legacy/dist/consumer/component-ops/components-object-diff';
+  diffBetweenComponentsObjects,
+} from '@teambit/legacy.component-diff';
 import { TesterMain, TesterAspect } from '@teambit/tester';
 import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
 import { componentCompareSchema } from './component-compare.graphql';
@@ -136,11 +136,13 @@ export class ComponentCompareMain {
     return this.getConfigForDiffByCompObject(component);
   }
 
-  async getConfigForDiffByCompObject(component: Component) {
+  async getConfigForDiffByCompObject(component: Component, modifiedIds?: ComponentID[]) {
     const depData = this.depResolver.getDependencies(component);
+    const modifiedIdsStr = modifiedIds?.map((id) => id.toStringWithoutVersion());
     const serializedToString = (dep: SerializedDependency) => {
       const idWithoutVersion = dep.__type === 'package' ? dep.id : dep.id.split('@')[0];
-      return `${idWithoutVersion}@${dep.version} (${dep.lifecycle}) ${dep.source ? `(${dep.source})` : ''}`;
+      const version = modifiedIdsStr?.includes(idWithoutVersion) ? `<modified>` : dep.version;
+      return `${idWithoutVersion}@${version} (${dep.lifecycle}) ${dep.source ? `(${dep.source})` : ''}`;
     };
     const serializeAndSort = (deps: DependencyList) => {
       const serialized = deps.serialize().map(serializedToString);
@@ -314,7 +316,7 @@ export class ComponentCompareMain {
     Workspace,
     TesterMain,
     DependencyResolverMain,
-    ImporterMain
+    ImporterMain,
   ]) {
     const logger = loggerMain.createLogger(ComponentCompareAspect.id);
     const componentCompareMain = new ComponentCompareMain(

@@ -7,8 +7,8 @@ import {
   getIdSetters,
   getIdentifiers,
 } from '@teambit/harmony.modules.harmony-root-generator';
-import { sha1 } from '@teambit/legacy/dist/utils';
-import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compatible-path';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
+import normalizePath from 'normalize-path';
 import webpack from 'webpack';
 import { promisify } from 'util';
 import { PreviewAspect } from './preview.aspect';
@@ -125,7 +125,7 @@ export async function generateBundlePreviewEntry(rootAspectId: string, previewPr
   const manifest = readJsonSync(manifestPath);
   const imports = manifest.entrypoints
     .map((entry: string) => {
-      const entryPath = toWindowsCompatiblePath(join(previewPreBundlePath, entry));
+      const entryPath = normalizePath(join(previewPreBundlePath, entry));
       return entry.endsWith('.js') || entry.endsWith('.cjs') || entry.endsWith('.mjs')
         ? `import { run } from '${entryPath}';`
         : `import '${entryPath}';`;

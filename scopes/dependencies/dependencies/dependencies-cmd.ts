@@ -3,9 +3,9 @@ import { Command, CommandOptions } from '@teambit/cli';
 import Table from 'cli-table';
 import chalk from 'chalk';
 import archy from 'archy';
-import { generateDependenciesInfoTable } from '@teambit/legacy/dist/cli/templates/component-template';
 import { ComponentIdGraph } from '@teambit/graph';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
+import { generateDependenciesInfoTable } from './template';
 import { DependenciesMain } from './dependencies.main.runtime';
 
 type GetDependenciesFlags = {
@@ -29,7 +29,7 @@ export class DependenciesGetCmd implements Command {
   alias = '';
   options = [
     ['', 'scope', 'get the data from the scope instead of the workspace'],
-    ['t', 'tree', 'EXPERIMENTAL. render dependencies as a tree, similar to "npm ls"'],
+    ['t', 'tree', 'render dependencies as a tree, similar to "npm ls"'],
   ] as CommandOptions;
 
   constructor(private deps: DependenciesMain) {}
@@ -126,7 +126,11 @@ export class DependenciesRemoveCmd implements Command {
     },
   ];
   group = 'info';
-  description = 'remove a dependency to component(s)';
+  description = 'remove a dependency from one or more components';
+  extendedDescription = `this command removes the dependency whether it was set by 'bit deps set'/variants or by auto-detection.
+if the dependency was auto-detected, it will be marked with a minus sign in the .bitmap file.
+otherwise, the config is written to .bitmap without the dependency.
+see also 'bit deps unset'`;
   alias = '';
   options = [
     ['d', 'dev', 'remove from devDependencies'],
@@ -160,7 +164,10 @@ export class DependenciesUnsetCmd implements Command {
     },
   ];
   group = 'info';
-  description = 'unset a dependency to component(s) that was previously set by "bit deps set"';
+  description = 'unset a dependency to component(s) that was set via config (e.g. "bit deps set" or variants)';
+  extendedDescription = `this command removes the dependency only when it was set by config not if it was auto detected.
+in the .bitmap file, the config is written without the dependency.
+see also "bit deps remove"`;
   alias = '';
   options = [
     ['d', 'dev', 'unset from devDependencies'],
@@ -228,7 +235,7 @@ export class DependenciesBlameCmd implements Command {
     },
   ];
   group = 'info';
-  description = 'EXPERIMENTAL. find out which snap/tag changed a dependency version';
+  description = 'find out which snap/tag changed a dependency version';
   alias = '';
   options = [] as CommandOptions;
 
@@ -283,7 +290,7 @@ export class DependenciesUsageCmd implements Command {
     },
   ];
   group = 'info';
-  description = 'EXPERIMENTAL. find components that use the specified dependency';
+  description = 'find components that use the specified dependency';
   alias = '';
   options = [['', 'depth <number>', 'max display depth of the dependency graph']] as CommandOptions;
 

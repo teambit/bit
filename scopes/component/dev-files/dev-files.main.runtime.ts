@@ -1,12 +1,15 @@
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import { MainRuntime } from '@teambit/cli';
-import { parse } from 'comment-json';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { flatten, isFunction } from 'lodash';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import { EnvsAspect } from '@teambit/envs';
+import type { EnvJsonc, EnvsMain } from '@teambit/envs';
+import {
+  ConsumerComponent as LegacyComponent,
+  Dependency as LegacyDependency,
+} from '@teambit/legacy.consumer-component';
 import { Component, ComponentMain, ComponentAspect } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { DevFilesAspect } from './dev-files.aspect';
@@ -32,6 +35,13 @@ type DevPattern = string[] | DevPatternDescriptor;
  * dev pattern is a list of strings or a function that returns a list of strings. an example to a pattern can be "[*.spec.ts]"
  */
 export type DevPatterns = ((component: Component) => DevPattern) | DevPattern;
+
+export type EnvJsoncPatterns = {
+  compositions?: string[];
+  docs?: string[];
+  tests?: string[];
+  [key: string]: string[] | undefined;
+};
 
 /**
  * slot for dev file patterns.
@@ -61,12 +71,12 @@ export class DevFilesMain {
    * computing of dev patterns is a merge of the configuration, the env (env.getDevPatterns(component)) and
    * the registering aspects (through registerDevPattern()).
    */
-  async computeDevPatterns(component: Component) {
+  async computeDevPatterns(component: Component, envExtendsDeps?: LegacyDependency[]) {
     const entry = component.state.aspects.get(DevFilesAspect.id);
     const configuredPatterns = entry?.config.devFilePatterns || [];
 
     const fromSlot = await this.computeDevPatternsFromSlot(component);
-    const fromEnv = await this.computeDevPatternsFromEnv(component, fromSlot.names);
+    const fromEnv = await this.computeDevPatternsFromEnv(component, fromSlot.names, envExtendsDeps);
 
     const res = Object.assign(
       {
@@ -109,10 +119,12 @@ export class DevFilesMain {
 
   private async computeDevPatternsFromEnv(
     component: Component,
-    patternNames: { [name: string]: string }
+    patternNames: { [name: string]: string },
+    envExtendsDeps?: LegacyDependency[]
   ): Promise<{ [id: string]: string[] }> {
-    const envId = this.envs.getEnvId(component);
-    const fromEnvJsonFile = await this.computeDevPatternsFromEnvJsoncFile(envId);
+    const envId = (await this.envs.getOrCalculateEnvId(component)).toString();
+    const fromEnvJsonFile = await this.computeDevPatternsFromEnvJsoncFile(envId, undefined, envExtendsDeps);
+
     let fromEnvFunc;
     if (!fromEnvJsonFile) {
       const envDef = await this.envs.calculateEnv(component, { skipWarnings: !!this.workspace?.inInstallContext });
@@ -131,28 +143,32 @@ export class DevFilesMain {
     return envPatternsObject;
   }
 
+  mergeEnvManifestPatterns(parent: EnvJsonc, child: EnvJsonc): Partial<EnvJsonc> {
+    const merged: Partial<EnvJsonc> = {
+      patterns: { ...parent.patterns, ...child.patterns },
+    };
+    return merged;
+  }
+
   private async computeDevPatternsFromEnvJsoncFile(
     envId: string,
-    legacyFiles?: SourceFile[]
+    legacyFiles?: SourceFile[],
+    envExtendsDeps?: LegacyDependency[]
   ): Promise<string[] | undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
+
     if (isCoreEnv) return undefined;
-    let envJson;
+    let envJsonc;
     if (legacyFiles) {
-      envJson = legacyFiles.find((file) => {
-        return file.relative === 'env.jsonc' || file.relative === 'env.json';
-      });
+      envJsonc = await this.envs.calculateEnvManifest(undefined, legacyFiles, envExtendsDeps);
     } else {
       const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
-      envJson = envComponent.filesystem.files.find((file) => {
-        return file.relative === 'env.jsonc' || file.relative === 'env.json';
-      });
+      envJsonc = await this.envs.calculateEnvManifest(envComponent, undefined, envExtendsDeps);
     }
 
-    if (!envJson) return undefined;
+    if (!envJsonc) return undefined;
 
-    const object = parse(envJson.contents.toString('utf8'));
-    return object.patterns;
+    return envJsonc.patterns;
   }
 
   /**
@@ -190,20 +206,26 @@ export class DevFilesMain {
     return new DevFiles(rawDevFiles);
   }
 
-  async getDevFilesForConsumerComp(consumerComponent: LegacyComponent): Promise<string[]> {
+  async getDevFilesForConsumerComp(
+    consumerComponent: LegacyComponent,
+    envExtendsDeps?: LegacyDependency[]
+  ): Promise<string[]> {
     const componentId = consumerComponent.id;
     // Do not change the storeInCache=false arg. if you think you need to change it, please talk to Gilad first
-    const component = await this.workspace.get(componentId, consumerComponent, true, false, { loadExtensions: false });
+    const component = await this.workspace.get(componentId, consumerComponent, true, false, {
+      loadExtensions: false,
+      // executeLoadSlot: false,
+    });
     if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
-    const computedDevFiles = await this.computeDevFiles(component);
+    const computedDevFiles = await this.computeDevFiles(component, envExtendsDeps);
     return computedDevFiles.list();
   }
 
   /**
    * compute all dev files of a component.
    */
-  async computeDevFiles(component: Component): Promise<DevFiles> {
-    const devPatterns = await this.computeDevPatterns(component);
+  async computeDevFiles(component: Component, envExtendsDeps?: LegacyDependency[]): Promise<DevFiles> {
+    const devPatterns = await this.computeDevPatterns(component, envExtendsDeps);
     const rawDevFiles = Object.keys(devPatterns).reduce((acc, aspectId) => {
       if (!acc[aspectId]) acc[aspectId] = [];
       const patterns = devPatterns[aspectId];
@@ -231,6 +253,7 @@ export class DevFilesMain {
   ) {
     const devFiles = new DevFilesMain(envs, workspace, devPatternSlot, config);
     componentAspect.registerShowFragments([new DevFilesFragment(devFiles)]);
+    envs.registerEnvJsoncMergeCustomizer(devFiles.mergeEnvManifestPatterns.bind(devFiles));
 
     const calcDevOnLoad = async (component: Component) => {
       return {

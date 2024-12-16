@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai';
-import { Extensions } from '@teambit/legacy/dist/constants';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Extensions } from '@teambit/legacy.constants';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -188,24 +188,34 @@ describe('sign command', function () {
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
       signOutput = helper.command.sign(
         [`${secondScopeName}/comp1@${snapHash}`],
-        `--lane ${helper.scopes.remote}/dev`,
+        `--lane ${helper.scopes.remote}/dev --save-locally`,
         signRemote.scopePath
       );
       expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
       expect(signOutput).to.not.include('tag pipe');
       expect(signOutput).to.include('snap pipe');
+
+      const obj = helper.command.catObject(snapHash, true, signRemote.scopePath);
+      const pkgAspectData = helper.command.getAspectsData(obj, Extensions.pkg);
+      const version = pkgAspectData.data.pkgJson.version;
+      expect(version).to.equal(`0.0.0-${snapHash}`);
     });
     it('should be able to sign previous snaps on this lane successfully', () => {
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
       signOutput = helper.command.sign(
         [`${secondScopeName}/comp1@${firstSnapHash}`],
-        `--lane ${helper.scopes.remote}/dev`,
+        `--lane ${helper.scopes.remote}/dev --save-locally`,
         signRemote.scopePath
       );
       expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
+
+      const obj = helper.command.catObject(firstSnapHash, true, signRemote.scopePath);
+      const pkgAspectData = helper.command.getAspectsData(obj, Extensions.pkg);
+      const version = pkgAspectData.data.pkgJson.version;
+      expect(version).to.equal(`0.0.0-${firstSnapHash}`);
     });
-    // todo: support exporting to a non-hub
-    it.skip('should sign the last successfully and export', () => {
+    it('should sign the last successfully and export', () => {
+      signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
       signOutput = helper.command.sign(
         [`${secondScopeName}/comp1@${snapHash}`],
@@ -215,7 +225,7 @@ describe('sign command', function () {
       expect(signOutput).to.include('the following 1 component(s) were signed with build-status "succeed"');
     });
   });
-  describe.skip('circular dependencies between two scopes', () => {
+  describe('circular dependencies between two scopes', () => {
     let signOutput: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
@@ -229,14 +239,14 @@ describe('sign command', function () {
       helper.workspaceJsonc.addToVariant('comp2', 'defaultScope', secondRemote.scopeName);
       helper.command.addComponent('comp2');
       helper.command.linkAndCompile();
-      helper.command.tagAllWithoutBuild();
+      helper.command.tagAllWithoutBuild('--ignore-issues="CircularDependencies"');
       helper.command.export();
 
       const signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
       helper.scopeHelper.addRemoteScope(secondRemote.scopePath, signRemote.scopePath);
       signOutput = helper.command.sign(
         [`${helper.scopes.remote}/comp1`, `${secondRemote.scopeName}/comp2`],
-        '',
+        '--push',
         signRemote.scopePath
       );
     });

@@ -3,13 +3,12 @@ import fs from 'fs-extra';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { InvalidScopeName } from '@teambit/legacy-bit-id';
 import path from 'path';
-import { AUTO_SNAPPED_MSG, IMPORT_PENDING_MSG } from '../../../src/constants';
-import { LANE_KEY } from '../../../src/consumer/bit-map/bit-map';
-import Helper from '../../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../../src/fixtures/fixtures';
-import { removeChalkCharacters } from '../../../src/utils';
+import { AUTO_SNAPPED_MSG, IMPORT_PENDING_MSG } from '@teambit/legacy.constants';
+import { LANE_KEY } from '@teambit/legacy.bit-map';
+import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
+import { removeChalkCharacters } from '@teambit/legacy.utils';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../../npm-ci-registry';
-import { FetchMissingHistory } from '../../../src/scope/actions';
+import { FetchMissingHistory } from '@teambit/scope.remote-actions';
 
 chai.use(require('chai-fs'));
 
@@ -21,101 +20,6 @@ describe('bit lane command', function () {
   });
   after(() => {
     helper.scopeHelper.destroy();
-  });
-  describe('lane readme', () => {
-    let laneWithoutReadme;
-    let laneWithUnsnappedReadme;
-    let laneWithSnappedReadme;
-    before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.command.createLane();
-      helper.fixtures.populateComponents(2);
-      laneWithoutReadme = helper.scopeHelper.cloneLocalScope();
-      helper.command.addLaneReadme('comp1', 'dev');
-      laneWithUnsnappedReadme = helper.scopeHelper.cloneLocalScope();
-      helper.command.snapAllComponentsWithoutBuild();
-      laneWithSnappedReadme = helper.scopeHelper.cloneLocalScope();
-    });
-    it('bit lane readme-add [compId] [laneName] should allow adding unsnapped components', () => {
-      helper.scopeHelper.getClonedLocalScope(laneWithUnsnappedReadme);
-      const laneOutput = helper.command.catLane('dev');
-      expect(laneOutput.readmeComponent.id.name).to.be.string('comp1');
-    });
-    it('bit lane readme-add [compId] [laneName] should allow adding snapped components', () => {
-      helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
-      const laneOutput = helper.command.catLane('dev');
-      expect(laneOutput.readmeComponent.id.name).to.be.string('comp1');
-    });
-    it('bit lane readme-add [compId] should allow adding snapped components to the current lane', () => {
-      helper.scopeHelper.getClonedLocalScope(laneWithoutReadme);
-      const readmeOutput = helper.command.addLaneReadme('comp1');
-      expect(readmeOutput).to.have.string('comp1 has been successfully added as the readme component for the lane dev');
-    });
-    it('bit lane readme-remove [laneName] should remove existing readme component', () => {
-      helper.scopeHelper.getClonedLocalScope(laneWithUnsnappedReadme);
-      const readmeOutput = helper.command.removeLaneReadme('dev');
-      expect(readmeOutput).to.have.string('the readme component has been successfully removed from the lane dev');
-    });
-    it('bit lane readme-remove should remove existing readme component from the current lane', () => {
-      helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
-      const readmeOutput = helper.command.removeLaneReadme();
-      expect(readmeOutput).to.have.string('the readme component has been successfully removed from the lane dev');
-    });
-    it('bit lane readme-remove should throw an error when there no readme component added to the lane', () => {
-      const cmd = () => helper.command.removeLaneReadme();
-      expect(cmd).to.throw();
-    });
-    it('bit lane should show the readme component', () => {
-      helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
-      const laneOutput = helper.command.catLane('dev');
-      const output = helper.command.listLanes();
-      expect(output).to.have.string(`readme component`);
-      expect(output).to.have.string(`${laneOutput.readmeComponent.id.name} - ${laneOutput.readmeComponent.head}`);
-    });
-    it('bit list should show the readme component', () => {
-      const listOutput = helper.command.listLocalScope();
-      expect(listOutput).to.have.string(`[Lane Readme]: ${helper.scopeHelper.scopes.remote}/dev`);
-    });
-    it('should export component as lane readme ', () => {
-      helper.command.exportLane();
-      const output = helper.command.listRemoteLanesParsed();
-      expect(output.lanes[0].readmeComponent.id).to.contain('comp1');
-    });
-    it('bitmap should show the lane config for a readme component', () => {
-      helper.scopeHelper.getClonedLocalScope(laneWithUnsnappedReadme);
-      const bitMap = helper.bitMap.read();
-      expect(bitMap.comp1.config['teambit.lanes/lanes']).to.deep.equal({
-        readme: { [`${helper.scopeHelper.scopes.remote}/dev`]: true },
-      });
-    });
-    it('should not allow exporting a lane with unsnapped readme component', () => {
-      helper.scopeHelper.getClonedLocalScope(laneWithUnsnappedReadme);
-      helper.command.snapComponentWithoutBuild('comp2');
-      expect(() => helper.command.exportLane()).throws();
-    });
-    describe('deleting the lane readme', () => {
-      before(() => {
-        helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
-        helper.command.switchLocalLane('main');
-      });
-      it('should allow deleting the lane readme on a successful merge', () => {
-        const cmd = () => helper.command.mergeLane('dev');
-        expect(cmd).to.not.throw();
-      });
-      it('should delete the readme component on successful merge', () => {
-        helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
-        helper.command.switchLocalLane('main');
-        const output = helper.command.mergeLane('dev');
-        expect(output).to.have.string('removed components');
-        expect(output).to.have.string('comp1');
-      });
-      it('should keep the readme component on successful merge when (--keep-readme) is set', () => {
-        helper.scopeHelper.getClonedLocalScope(laneWithSnappedReadme);
-        helper.command.switchLocalLane('main');
-        const mergeOutput = helper.command.mergeLane('dev', '--keep-readme');
-        expect(mergeOutput).to.not.have.string('removed components');
-      });
-    });
   });
   describe('creating a new lane without any component', () => {
     let output;
@@ -621,7 +525,7 @@ describe('bit lane command', function () {
       output = helper.command.resetAll();
     });
     it('should untag successfully', () => {
-      expect(output).to.have.string('1 component(s) were untagged');
+      expect(output).to.have.string('1 component(s) were reset');
     });
     it('should change the component to be new', () => {
       const status = helper.command.statusJson();
@@ -1073,7 +977,7 @@ describe('bit lane command', function () {
       expect(status.invalidComponents[0].error.name).to.equal('NoCommonSnap');
     });
     it('should be able to export with no error', () => {
-      expect(() => helper.command.export('--fork-lane-new-scope')).to.not.throw();
+      expect(() => helper.command.export('--fork-lane-new-scope --all')).to.not.throw();
     });
   });
   describe('snapping and un-tagging on a lane', () => {
@@ -1294,6 +1198,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.exportLane();
       helper.fs.deletePath('.bit');
+      helper.command.init();
       helper.scopeHelper.addRemoteScope();
     });
     it('should re-create scope.json with checkout to the lane specified in the .bitmap file', () => {
@@ -1349,6 +1254,7 @@ describe('bit lane command', function () {
       helper.command.export();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.fs.deletePath('.bit');
+      helper.command.init();
       helper.scopeHelper.addRemoteScope();
     });
     it('bit status should not throw', () => {

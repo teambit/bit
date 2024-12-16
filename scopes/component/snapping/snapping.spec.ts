@@ -15,13 +15,12 @@ import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { ComponentID } from '@teambit/component-id';
-import { Version } from '@teambit/legacy/dist/scope/models';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { Ref, Version } from '@teambit/scope.objects';
 import { mockComponents } from '@teambit/component.testing.mock-components';
 import { SnappingMain } from './snapping.main.runtime';
 import { SnappingAspect } from './snapping.aspect';
-import { ComponentsHaveIssues } from './components-have-issues';
 import { SnapDataPerCompRaw } from './snap-from-scope.cmd';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 
 describe('Snapping aspect', function () {
   this.timeout(0);
@@ -44,7 +43,7 @@ describe('Snapping aspect', function () {
       try {
         await snapping.tag({ ids: ['comp1'] });
       } catch (err: any) {
-        expect(err.constructor.name).to.equal(ComponentsHaveIssues.name);
+        expect(err.constructor.name).to.equal('ComponentsHaveIssues');
       }
     });
     // @todo: this test fails during "bit build" for some reason. It passes on "bit test";
@@ -146,6 +145,61 @@ describe('Snapping aspect', function () {
     });
     after(async () => {
       await destroyWorkspace(workspaceData);
+    });
+  });
+  describe('local-only', () => {
+    let harmony: Harmony;
+    let workspace: Workspace;
+    let workspaceData: WorkspaceData;
+    before(async () => {
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      await mockComponents(workspacePath, { numOfComponents: 3 });
+      harmony = await loadManyAspects([WorkspaceAspect, SnappingAspect], workspacePath);
+      workspace = harmony.get<Workspace>(WorkspaceAspect.id);
+      const comp1Id = await workspace.idsByPattern('comp1');
+      await workspace.setLocalOnly(comp1Id);
+    });
+    after(async () => {
+      await destroyWorkspace(workspaceData);
+    });
+    it('should be able to list it', async () => {
+      const list = workspace.listLocalOnly();
+      expect(list).to.have.lengthOf(1);
+      expect(list[0].toString()).to.include('comp1');
+    });
+    it('should be ignored by tag command', async () => {
+      const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
+      const tagResults = await snapping.tag({});
+      expect(tagResults?.taggedComponents).to.have.lengthOf(2);
+      const taggedNames = tagResults?.taggedComponents.map((c) => c.name);
+      expect(taggedNames).to.not.include('comp1');
+    });
+    it('should be ignored by snap command', async () => {
+      const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
+      const tagResults = await snapping.snap({ unmodified: true });
+      expect(tagResults?.snappedComponents).to.have.lengthOf(2);
+      const taggedNames = tagResults?.snappedComponents.map((c) => c.name);
+      expect(taggedNames).to.not.include('comp1');
+    });
+    it('should be ignored when it is an auto-tag candidate', async () => {
+      const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
+      await snapping.tag({ unmodified: true });
+      const tagResults = await snapping.tag({ ids: ['comp3'], unmodified: true });
+      expect(tagResults?.autoTaggedResults).to.have.lengthOf(1); // only comp3 should be auto-tagged
+      const taggedNames = tagResults?.autoTaggedResults.map((c) => c.component.name);
+      expect(taggedNames).to.not.include('comp1');
+    });
+    it('should block setting local-only when a component is staged', async () => {
+      const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
+      await snapping.tag({ unmodified: true });
+      const comp2Id = await workspace.idsByPattern('comp2');
+      try {
+        await workspace.setLocalOnly(comp2Id);
+        expect.fail('should have thrown an error');
+      } catch (err: any) {
+        expect(err.message).to.include('unable to set the following component(s) as local-only');
+      }
     });
   });
 });

@@ -2,7 +2,7 @@
 // import fs from 'fs';
 import chai, { expect } from 'chai';
 import path from 'path';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
@@ -165,13 +165,13 @@ describe('skipping compilation on install', function () {
     expect(path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}/comp1/dist`)).to.not.be.a.path();
   });
 });
-
 describe('do not fail on environment loading files from a location inside node_modules that does not exist', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
     helper = new Helper();
     helper.fixtures.copyFixtureDir('workspace-with-tsconfig-issue', helper.scopes.localPath);
+    helper.command.init();
   });
   it('should not fail', () => {
     helper.command.install();

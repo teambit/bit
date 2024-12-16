@@ -1,25 +1,32 @@
 import fs from 'fs-extra';
 import path from 'path';
+import Vinyl from 'vinyl';
 import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
 import { TrackerAspect, TrackerMain } from '@teambit/tracker';
-import { isDirEmpty } from '@teambit/legacy/dist/utils';
+import { PathLinuxRelative, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import { isDirEmpty } from '@teambit/toolbox.fs.is-dir-empty';
 import { ComponentID } from '@teambit/component-id';
 import { Harmony } from '@teambit/harmony';
-import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace, WorkspaceComponentLoadOptions } from '@teambit/workspace';
 import { PkgAspect } from '@teambit/pkg';
 import { RenamingAspect } from '@teambit/renaming';
+import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
 import { EnvsAspect } from '@teambit/envs';
 import { NewComponentHelperAspect } from './new-component-helper.aspect';
 import { incrementPathRecursively } from '@teambit/component-writer';
 
 const aspectsConfigToIgnore: string[] = [PkgAspect.id, RenamingAspect.id];
+type File = { path: string; content: string };
 
 export class NewComponentHelperMain {
-  constructor(private workspace: Workspace, private harmony: Harmony, private tracker: TrackerMain) {}
+  constructor(
+    private workspace: Workspace,
+    private harmony: Harmony,
+    private tracker: TrackerMain
+  ) {}
   /**
    * when creating/forking a component, the user provides the new name and optionally the scope/namespace.
    * from this user input, create a ComponentID.
@@ -85,7 +92,14 @@ export class NewComponentHelperMain {
   async writeAndAddNewComp(
     comp: Component,
     targetId: ComponentID,
-    options?: { path?: string; scope?: string; env?: string; incrementPathIfConflicted?: boolean },
+    options?: {
+      path?: string;
+      scope?: string;
+      env?: string;
+      incrementPathIfConflicted?: boolean;
+      compile?: boolean;
+      loadOptions?: WorkspaceComponentLoadOptions;
+    },
     config?: { [aspectName: string]: any }
   ) {
     const targetPath = this.getNewComponentPath(targetId, {
@@ -120,7 +134,59 @@ export class NewComponentHelperMain {
     await this.workspace.bitMap.write(`adding ${targetId.toString()}`);
     await this.workspace.clearCache();
     // this takes care of compiling the component as well
+    await this.workspace.triggerOnComponentAdd(targetId, { compile: options?.compile ?? true }, options?.loadOptions);
+  }
+
+  async writeAndAddNewCompFromFiles(
+    files: File[],
+    targetId: ComponentID,
+    mainFile: string,
+    options?: { path?: string; incrementPathIfConflicted?: boolean },
+    config?: { [aspectName: string]: any }
+  ) {
+    const targetPath = this.getNewComponentPath(targetId, {
+      pathFromUser: options?.path,
+      incrementPathIfConflicted: options?.incrementPathIfConflicted,
+    });
+    await this.throwForExistingPath(targetPath);
+    await this.writeComponentFiles(targetPath, files);
+
+    try {
+      await this.tracker.track({
+        rootDir: targetPath,
+        componentName: targetId.fullName,
+        mainFile,
+        defaultScope: targetId.scope,
+        config,
+      });
+    } catch (err) {
+      await fs.remove(targetPath);
+      throw err;
+    }
+
+    await this.workspace.bitMap.write(`adding ${targetId.toString()}`);
+    // this takes care of compiling the component as well
     await this.workspace.triggerOnComponentAdd(targetId, { compile: true });
+  }
+
+  /**
+   * writes component files into the specified directory.
+   */
+  async writeComponentFiles(componentPath: string, files: File[]): Promise<PathOsBasedRelative[]> {
+    const dataToPersist = new DataToPersist();
+    const vinylFiles = files.map((file) => {
+      const templateFileVinyl = new Vinyl({
+        base: componentPath,
+        path: path.join(componentPath, file.path),
+        contents: Buffer.from(file.content),
+      });
+      return AbstractVinyl.fromVinyl(templateFileVinyl);
+    });
+    const results = vinylFiles.map((v) => v.path);
+    dataToPersist.addManyFiles(vinylFiles);
+    dataToPersist.addBasePath(this.workspace.path);
+    await dataToPersist.persistAllToFS();
+    return results;
   }
 
   private async throwForExistingPath(targetPath: string) {

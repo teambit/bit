@@ -1,7 +1,7 @@
 import { ComponentResult } from '@teambit/builder';
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 
 import { Publisher, PublisherOptions } from './publisher';
 

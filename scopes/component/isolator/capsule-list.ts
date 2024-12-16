@@ -26,6 +26,9 @@ export default class CapsuleList extends Array<Capsule> {
   getAllComponents(): Component[] {
     return this.map((c) => c.component);
   }
+  getAllComponentIDs(): ComponentID[] {
+    return this.map((c) => c.component.id);
+  }
   getGraphIds(): Graph<Component, string> {
     const components = this.getAllComponents();
     const graph = new Graph<Component, string>();

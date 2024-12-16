@@ -2,16 +2,17 @@ import path from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { cloneDeep, difference, forEach, isEmpty, pick, pickBy, uniq } from 'lodash';
 import { IssuesList, IssuesClasses, MissingPackagesData } from '@teambit/component-issues';
-import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy/dist/constants';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
-import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
-import { ResolvedPackageData, resolvePackageData, resolvePackagePath } from '@teambit/legacy/dist/utils/packages';
-import { PathLinux } from '@teambit/legacy/dist/utils/path';
+import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy.constants';
+import { ConsumerComponent as Component, Dependency, Dependencies } from '@teambit/legacy.consumer-component';
+import { PackageJsonFile } from '@teambit/component.sources';
+import { PathLinux, resolvePackagePath } from '@teambit/legacy.utils';
+import { ResolvedPackageData, resolvePackageData } from '../resolve-pkg-data';
 import { Workspace } from '@teambit/workspace';
-import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
+import { Consumer } from '@teambit/legacy.consumer';
+import { ComponentMap } from '@teambit/legacy.bit-map';
+import { Logger } from '@teambit/logger';
+import { ComponentOverrides } from '@teambit/legacy.consumer-config';
 import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';
 import { DebugDependencies, FileType } from './auto-detect-deps';
@@ -53,6 +54,7 @@ export class ApplyOverrides {
   constructor(
     private component: Component,
     private depsResolver: DependencyResolverMain,
+    private logger: Logger,
     private workspace?: Workspace
   ) {
     this.componentId = component.componentId;
@@ -75,6 +77,26 @@ export class ApplyOverrides {
     this.debugDependenciesData = { components: [] };
   }
 
+  private async setOverridesDependencies() {
+    const overrides = await this.getOverridesData();
+    this.component.overrides = overrides;
+  }
+
+  private getEnvExtendsDeps() {
+    const wsDeps = this.allDependencies.dependencies || [];
+    const modelDeps = this.component.componentFromModel?.dependencies.dependencies || [];
+    const merged = Dependencies.merge([wsDeps, modelDeps]);
+    return merged.get();
+  }
+
+  private async getOverridesData() {
+    if (this.component.overrides) return this.component.overrides;
+
+    const overrides = await ComponentOverrides.loadFromConsumer(this.component, this.getEnvExtendsDeps());
+
+    return overrides;
+  }
+
   get consumer(): Consumer | undefined {
     return this.workspace?.consumer;
   }
@@ -84,6 +106,7 @@ export class ApplyOverrides {
     overridesDependencies: OverridesDependencies;
     autoDetectOverrides?: Record<string, any>;
   }> {
+    await this.setOverridesDependencies();
     await this.populateDependencies();
     const dependenciesData = new DependenciesData(
       this.allDependencies,
@@ -128,14 +151,35 @@ export class ApplyOverrides {
     this.applyWorkspacePolicy();
     this.makeLegacyAsPeer();
     await this.applyAutoDetectOverridesOnComponent();
-    this.manuallyAddDependencies();
+    // This was moved here (it used to be after this.manuallyAddDependencies) to fix an issue with a case where
+    // an env define the same dependency defined by its own env, in both places:
+    // its env.jsonc, and via bit deps set, with different versions.
+    // before this fix the env.jsonc version was taken, and the deps set version was ignored for - bit show and
+    // package.json
+    // but it was taken into account for the actual dependency installation.
+    // now we take the version from the deps set in both cases.
+    // It make more sense to have it here before manually add dependencies, but the reason it wasn't like this is
+    // because (pasting the original comment here):
+    // ------ORIGINAL COMMENT------
     // Doing this here (after manuallyAddDependencies) because usually the env of the env is adding dependencies as peer of the env
     // which will make this not work if it come before
     // example:
     // custom react has peers with react 16.4.0.
     // the custom react uses the "teambit.envs/env" env, which will add react ^17.0.0 to every component that uses it
     // we want to make sure that the custom react is using 16.4.0 not 17.
+    // ------END OF ORIGINAL COMMENT------
+    // Since we did a massive refactor to the way we handle dependencies, we can now move it here now, as the original
+    // issue doesn't seems like an issue any more.
     await this.applyAutoDetectedPeersFromEnvOnEnvItSelf();
+    this.manuallyAddDependencies();
+    // Ensuring component dependencies are not part of the package dependencies to prevent duplications
+    this.removeCompDepsFromPackages();
+    // Doing this here (after manuallyAddDependencies) because usually the env of the env is adding dependencies as peer of the env
+    // which will make this not work if it come before
+    // example:
+    // custom react has peers with react 16.4.0.
+    // the custom react uses the "teambit.envs/env" env, which will add react ^17.0.0 to every component that uses it
+    // we want to make sure that the custom react is using 16.4.0 not 17.
     this.coreAspects = uniq(this.coreAspects);
   }
 
@@ -165,7 +209,8 @@ export class ApplyOverrides {
     this.autoDetectOverrides = await this.workspace?.getAutoDetectOverrides(
       this.component.extensions,
       this.component.id,
-      this.component.files
+      this.component.files,
+      this.getEnvExtendsDeps()
     );
   }
 
@@ -226,6 +271,12 @@ export class ApplyOverrides {
         const dependencyValue = overrides[depField][dependency];
         const componentData = this._getComponentIdToAdd(dependency, dependencyValue);
         if (componentData?.componentId) {
+          if (componentData.componentId.isEqualWithoutVersion(this.componentId)) {
+            this.logger.warn(
+              `component ${this.componentId.toString()} depends on itself ${componentData.componentId.toString()}. ignoring it.`
+            );
+            return;
+          }
           const dependencyExist = existingDependencies[depField].find((d) =>
             d.id.isEqualWithoutVersion(componentData.componentId)
           );
@@ -259,11 +310,11 @@ export class ApplyOverrides {
     const { components, packages } = dependencies;
     DEPENDENCIES_FIELDS.forEach((depField) => {
       if (components[depField] && components[depField].length) {
-        components[depField].forEach((depData) =>
+        components[depField].forEach((depData) => {
           this.allDependencies[depField].push(
             new Dependency(depData.componentId, [], depData.packageName, depData.versionRange)
-          )
-        );
+          );
+        });
       }
       if (packages[depField] && !isEmpty(packages[depField])) {
         Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], packages[depField]);
@@ -287,6 +338,33 @@ export class ApplyOverrides {
         (dep) => !dep.packageName || !componentPeers.has(dep.packageName)
       );
     }
+  }
+
+  /**
+   * The function `removeCompDepsFromPackages` removes component dependencies from different package dependency fields
+   * based on certain conditions.
+   */
+  private removeCompDepsFromPackages() {
+    const currPackagesKeys = ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].reduce(
+      (acc, field) => {
+        acc[field] = Object.keys(this.allPackagesDependencies[field]);
+        return acc;
+      },
+      {}
+    );
+
+    DEPENDENCIES_FIELDS.forEach((depField) => {
+      if (this.allDependencies[depField].length) {
+        this.allDependencies[depField].forEach((dep) => {
+          ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((field) => {
+            const keys = currPackagesKeys[field];
+            if (keys.includes(dep.packageName)) {
+              delete this.allPackagesDependencies[field][dep.packageName];
+            }
+          });
+        });
+      }
+    });
   }
 
   /**
@@ -526,7 +604,11 @@ export class ApplyOverrides {
   }
 
   private async applyAutoDetectedPeersFromEnvOnEnvItSelf(): Promise<void> {
-    const envPolicy = await this.depsResolver.getEnvPolicyFromEnvId(this.component.id, this.component.files);
+    const envPolicy = await this.depsResolver.getEnvPolicyFromEnvId(
+      this.component.id,
+      this.component.files,
+      this.getEnvExtendsDeps()
+    );
     if (!envPolicy) return;
     const envPolicyManifest = envPolicy.selfPolicy.toVersionManifest();
 

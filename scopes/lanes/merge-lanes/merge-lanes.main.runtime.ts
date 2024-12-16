@@ -9,26 +9,25 @@ import {
   ComponentMergeStatus,
   ApplyVersionResults,
   compIsAlreadyMergedMsg,
+  FileStatus,
+  MergeStrategy,
 } from '@teambit/merging';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { getBasicLog } from '@teambit/legacy/dist/utils/bit/basic-log';
+import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Log } from '@teambit/legacy/dist/scope/models/version';
+import { Ref, Lane, Version, Log } from '@teambit/scope.objects';
 import pMapSeries from 'p-map-series';
-import { Scope as LegacyScope } from '@teambit/legacy/dist/scope';
-import { FileStatus, MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
+import { Scope as LegacyScope } from '@teambit/legacy.scope';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { ConfigMergeResult } from '@teambit/config-merger';
-import { Lane, Version } from '@teambit/legacy/dist/scope/models';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { CheckoutAspect, CheckoutMain, CheckoutProps, throwForFailures } from '@teambit/checkout';
-import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
+import { SnapsDistance } from '@teambit/component.snap-distance';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { compact, uniq } from 'lodash';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { MergeLanesAspect } from './merge-lanes.aspect';
 import { MergeLaneCmd } from './merge-lane.cmd';
 import { MergeLaneFromScopeCmd } from './merge-lane-from-scope.cmd';
@@ -41,13 +40,14 @@ export type MergeLaneOptions = {
   mergeStrategy: MergeStrategy;
   ours?: boolean;
   theirs?: boolean;
-  noSnap: boolean;
-  snapMessage: string;
-  existingOnWorkspaceOnly: boolean;
-  build: boolean;
-  keepReadme: boolean;
+  noAutoSnap?: boolean;
+  noSnap?: boolean;
+  snapMessage?: string;
+  existingOnWorkspaceOnly?: boolean;
+  build?: boolean;
+  keepReadme?: boolean;
   squash?: boolean;
-  noSquash: boolean;
+  noSquash?: boolean;
   tag?: boolean;
   pattern?: string;
   includeDeps?: boolean;
@@ -109,6 +109,7 @@ export class MergeLanesMain {
 
     const {
       mergeStrategy,
+      noAutoSnap,
       noSnap,
       tag,
       snapMessage,
@@ -203,6 +204,7 @@ export class MergeLanesMain {
         ignoreConfigChanges,
         shouldSquash,
         mergeStrategy,
+        handleTargetAheadAsDiverged: noSnap,
       },
       currentLane,
       otherLane
@@ -274,6 +276,7 @@ export class MergeLanesMain {
       allComponentsStatus,
       otherLaneId,
       currentLane,
+      noAutoSnap,
       noSnap,
       tag,
       snapMessage,
@@ -401,7 +404,6 @@ export class MergeLanesMain {
       const { exported } = await this.exporter.exportMany({
         scope: this.scope.legacyScope,
         ids: compIdsList,
-        idsWithFutureScope: compIdsList,
         laneObject: laneToExport,
         allVersions: false,
         // no need to export anything else other than the head. the normal calculation of what to export won't apply here
@@ -517,7 +519,7 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
     ExportMain,
     ImporterMain,
     CheckoutMain,
-    GlobalConfigMain
+    GlobalConfigMain,
   ]) {
     const logger = loggerMain.createLogger(MergeLanesAspect.id);
     const lanesCommand = cli.getCommand('lane');

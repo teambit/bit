@@ -16,7 +16,10 @@ export type AddComponentsIssues = (components: Component[], issuesToIgnore: stri
 export type AddComponentsIssuesSlot = SlotRegistry<AddComponentsIssues>;
 
 export class IssuesMain {
-  constructor(private config: IssuesConfig, private addComponentsIssuesSlot: AddComponentsIssuesSlot) {}
+  constructor(
+    private config: IssuesConfig,
+    private addComponentsIssuesSlot: AddComponentsIssuesSlot
+  ) {}
 
   getIssuesToIgnoreGlobally(): string[] {
     const issuesToIgnore = this.config.ignoreIssues || [];

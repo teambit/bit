@@ -16,7 +16,10 @@ export class TesterUI {
 
   stageKey?: string;
 
-  constructor(private component: ComponentUI, private emptyStateSlot: EmptyStateSlot) {}
+  constructor(
+    private component: ComponentUI,
+    private emptyStateSlot: EmptyStateSlot
+  ) {}
 
   /**
    * register a new tester empty state. this allows to register a different empty state from each environment for example.

@@ -50,8 +50,8 @@ export function VariableNodeSummary({
 
   return (
     <TableRow
-      {...rest}
       key={`${__schema}-${name}`}
+      {...rest}
       className={classnames(className, styles.row)}
       headings={headings}
       colNumber={headings.length as any}
@@ -65,7 +65,7 @@ export function VariableNodeSummary({
       }}
       row={{
         name: sanitizedName,
-        description: doc?.comment || '',
+        description: doc?.comment || doc?.tags?.join() || '',
         required: isOptional !== undefined && !isOptional,
         type: '',
         default:

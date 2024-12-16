@@ -7,18 +7,18 @@ import { ScopeAspect, ScopeMain, ComponentNotFound } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { Component, ComponentID } from '@teambit/component';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { BuildStatus, LATEST } from '@teambit/legacy.constants';
 import { ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
-import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
+import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { LanesAspect, Lane, LanesMain } from '@teambit/lanes';
-import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { UpdateDependenciesCmd } from './update-dependencies.cmd';
 import { UpdateDependenciesAspect } from './update-dependencies.aspect';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { Ref } from '@teambit/scope.objects';
 import { isSnap } from '@teambit/component-version';
 
 export type UpdateDepsOptions = {
@@ -96,6 +96,9 @@ export class UpdateDependenciesMain {
     // an error saying "the extension ${extensionId.toString()} is missing from the flattenedDependencies"
     // if (!updateDepsOptions.simulation) {
     await this.snapping._addFlattenedDependenciesToComponents(this.legacyComponents);
+    await Promise.all(
+      this.legacyComponents.map((component) => this.scope.legacyScope.loadDependenciesGraphForComponent(component))
+    );
     // }
     this.addBuildStatus();
     await this.addComponentsToScope();
@@ -108,7 +111,7 @@ export class UpdateDependenciesMain {
     );
     const legacyBuildResults = this.scope.builderDataMapToLegacyOnTagResults(builderDataMap);
     this.snapping._updateComponentsByTagResult(this.legacyComponents, legacyBuildResults);
-    const publishedPackages = this.snapping._getPublishedPackages(this.legacyComponents);
+    const publishedPackages = Array.from(this.snapping._getPublishedPackages(this.legacyComponents).keys());
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     await this.saveDataIntoLocalScope(buildStatus);
@@ -244,6 +247,12 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       // exact version, expect the entered version to be okay.
       return compId;
     }
+    if (this.laneObj) {
+      // for "update-dependents" feature, we need the components from update-dependents prop of the lane to have get
+      // the updated versions of the dependencies from the lane.
+      const fromLane = this.laneObj.getCompHeadIncludeUpdateDependents(compId);
+      if (fromLane) return compId.changeVersion(fromLane.toString());
+    }
     return this.snapping.getCompIdWithExactVersionAccordingToSemver(compId);
   }
 
@@ -310,7 +319,6 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     await this.exporter.exportMany({
       scope: this.scope.legacyScope,
       ids,
-      idsWithFutureScope: ids,
       laneObject: this.laneObj,
       allVersions: false,
       exportOrigin: 'update-dependencies',
@@ -341,7 +349,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
       DependencyResolverMain,
       SnappingMain,
       LanesMain,
-      ExportMain
+      ExportMain,
     ],
     _,
     [onPostUpdateDependenciesSlot]: [OnPostUpdateDependenciesSlot]

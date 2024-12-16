@@ -5,7 +5,7 @@ export class WatchQueue {
   constructor(concurrency = 1) {
     this.queue = new PQueue({ concurrency, autoStart: true });
   }
-  getQueue() {
+  getQueue(): PQueue {
     return this.queue;
   }
   add<T>(fn: () => T, priority?: number): Promise<T> {

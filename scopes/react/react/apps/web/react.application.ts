@@ -12,13 +12,13 @@ import { BitError } from '@teambit/bit-error';
 import { ReactEnv } from '../../react.env';
 import { prerenderPlugin } from './plugins';
 import { ReactAppBuildResult } from './react-build-result';
-import { ReactAppPrerenderOptions } from './react-app-options';
 import { html } from '../../webpack';
 import { ReactDeployContext } from './deploy-context';
 import { computeResults } from './compute-results';
 import { clientConfig, ssrConfig, calcOutputPath, ssrBuildConfig, buildConfig } from './webpack/webpack.app.ssr.config';
-import { addDevServer, setOutput, replaceTerserPlugin } from './webpack/mutators';
+import { addDevServer, setOutput, replaceTerserPlugin, setDevServerClient } from './webpack/mutators';
 import { createExpressSsr, loadSsrApp, parseAssets } from './ssr/ssr-express';
+import { WebpackPrerenderSPAOptions } from './plugins/prerender';
 
 export class ReactApp implements Application {
   constructor(
@@ -29,7 +29,7 @@ export class ReactApp implements Application {
     private reactEnv: ReactEnv,
     private logger: Logger,
     private dependencyResolver: DependencyResolverMain,
-    readonly prerender?: ReactAppPrerenderOptions,
+    readonly prerender?: WebpackPrerenderSPAOptions,
     readonly bundler?: Bundler,
     readonly ssrBundler?: Bundler,
     readonly devServer?: DevServer,
@@ -60,7 +60,7 @@ export class ReactApp implements Application {
     const devServerContext = await this.getDevServerContext(context);
     const devServer = this.reactEnv.getDevServer(
       devServerContext,
-      [addDevServer, setOutput, ...this.transformers],
+      [addDevServer, setOutput, setDevServerClient, ...this.transformers],
       this.webpackModulePath,
       this.webpackDevServerModulePath
     );

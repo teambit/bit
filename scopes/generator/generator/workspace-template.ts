@@ -132,7 +132,7 @@ export interface ImportComponentInfo {
   path?: string;
 }
 
-export interface WorkspaceTemplate {
+export interface WorkspaceTemplateOptions {
   /**
    * name of the workspace starter. for example: `react-workspace`.
    */
@@ -153,7 +153,9 @@ export interface WorkspaceTemplate {
    * hide this starter so that it is not listed with `bit starter`
    */
   hidden?: boolean;
+}
 
+export interface WorkspaceTemplate extends WorkspaceTemplateOptions {
   /**
    * starter function for generating the template files,
    */

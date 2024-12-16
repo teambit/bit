@@ -25,7 +25,7 @@ function _mkdirpSync(p: string, mode?: number): void {
         if (!stat.isDirectory()) {
           throw err0;
         }
-      } catch (err1) {
+      } catch {
         throw err0;
       }
     }
@@ -65,7 +65,7 @@ export class FileSystemBlobStore {
     try {
       this._storedBlob = readFileSync(this._blobFilename);
       this._storedMap = JSON.parse(readFileSync(this._mapFilename, { encoding: 'utf8' }));
-    } catch (e) {
+    } catch {
       this._storedBlob = Buffer.alloc(0);
       this._storedMap = {};
     }
@@ -125,18 +125,20 @@ export class FileSystemBlobStore {
 
   save(): boolean {
     const dump = this._getDump();
+    // @ts-ignore should be fixed after upgrading @types/node from '12.20.4' to > 20
     const blobToStore = Buffer.concat(dump[0]);
     const mapToStore = JSON.stringify(dump[1]);
 
     try {
       mkdirpSync(this._directory);
       writeFileSync(this._lockFilename, 'LOCK', { flag: 'wx' });
-    } catch (error) {
+    } catch {
       // Swallow the exception if we fail to acquire the lock.
       return false;
     }
 
     try {
+      // @ts-ignore should be fixed after upgrading @types/node from '12.20.4' to > 20
       writeFileSync(this._blobFilename, blobToStore);
       writeFileSync(this._mapFilename, mapToStore);
     } finally {

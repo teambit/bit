@@ -1,11 +1,10 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { HASH_SIZE, AUTO_SNAPPED_MSG, FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
-import ComponentsPendingMerge from '../../src/consumer/component-ops/exceptions/components-pending-merge';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../src/fixtures/fixtures';
-import { MergeConflictOnRemote } from '../../src/scope/exceptions';
+import { HASH_SIZE, AUTO_SNAPPED_MSG, FILE_CHANGES_CHECKOUT_MSG } from '@teambit/legacy.constants';
+import { ComponentsPendingMerge } from '@teambit/legacy.consumer';
+import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
+import { MergeConflictOnRemote } from '@teambit/legacy.scope';
 
 chai.use(require('chai-fs'));
 

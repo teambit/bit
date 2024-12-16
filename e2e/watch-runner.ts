@@ -5,8 +5,8 @@ import childProcess, { ChildProcess } from 'child_process';
 import rightpad from 'pad-right';
 
 // @todo: move this file to the watch extension and then move the following constants to the extension
-import { STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '../src/constants';
-import Helper from '../src/e2e-helper/e2e-helper';
+import { STARTED_WATCHING_MSG, WATCHER_COMPLETED_MSG } from '@teambit/legacy.constants';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 const WATCH_TIMEOUT_FOR_MSG = 60000; // 1 min
 
@@ -15,7 +15,10 @@ const WATCHER_COMPLETED_MSG_HARMONY = 'Watching for component changes';
 
 export default class WatchRunner {
   watchProcess: ChildProcess;
-  constructor(private helper: Helper, private isHarmony: boolean) {}
+  constructor(
+    private helper: Helper,
+    private isHarmony: boolean
+  ) {}
   watch(): Promise<void> {
     const cmd = `${this.helper.command.bitBin} watch --verbose`;
     if (this.helper.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line

@@ -5,7 +5,7 @@ import { generateCoreAspectsBarrelFile } from './generate-core-aspects-exports';
 import { generateCoreAspectsModules } from './generate-core-aspects-modules';
 import { generatePackageJson } from './create-package-json';
 import { generateNpmrc } from './generate-npmrc';
-import { runTsup } from './tsup';
+// import { runTsup } from './tsup';
 import { copyFilesOfCoreAspects } from './copy-files-of-core-aspects';
 import { copyOtherFiles } from './copy-other-files';
 import { generateSeaConfig } from './generate-sea-config';

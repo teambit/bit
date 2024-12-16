@@ -1,7 +1,6 @@
 import { expect } from 'chai';
-
-import { DIAGNOSIS_NAME } from '../../src/doctor/core-diagnoses/validate-git-exec';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { DIAGNOSIS_NAME_VALIDATE_GIT_EXEC } from '@teambit/doctor';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('bit doctor - git exec validation', function () {
   this.timeout(0);
@@ -22,11 +21,11 @@ describe('bit doctor - git exec validation', function () {
   describe('without configuration changes', () => {
     let parsedOutput;
     before(() => {
-      const output = helper.command.doctorOne(DIAGNOSIS_NAME, { j: '' });
+      const output = helper.command.doctorOne(DIAGNOSIS_NAME_VALIDATE_GIT_EXEC, { j: '' });
       parsedOutput = JSON.parse(output);
     });
     it('should run the correct diagnosis', () => {
-      expect(parsedOutput.examineResult.diagnosisMetaData.name).to.equal(DIAGNOSIS_NAME);
+      expect(parsedOutput.examineResult.diagnosisMetaData.name).to.equal(DIAGNOSIS_NAME_VALIDATE_GIT_EXEC);
     });
     it('should pass the diagnosis', () => {
       expect(parsedOutput.examineResult.bareResult.valid).to.be.true;
@@ -48,13 +47,13 @@ describe('bit doctor - git exec validation', function () {
       }
       // Set the git path to a place where there is no git (the local scope)
       helper.config.setGitPath(helper.scopes.localPath);
-      const output = helper.command.doctorOne(DIAGNOSIS_NAME, { j: '' });
+      const output = helper.command.doctorOne(DIAGNOSIS_NAME_VALIDATE_GIT_EXEC, { j: '' });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       helper.config.restoreGitPath(oldGitPath);
       parsedOutput = JSON.parse(output);
     });
     it('should run the correct diagnosis', () => {
-      expect(parsedOutput.examineResult.diagnosisMetaData.name).to.equal(DIAGNOSIS_NAME);
+      expect(parsedOutput.examineResult.diagnosisMetaData.name).to.equal(DIAGNOSIS_NAME_VALIDATE_GIT_EXEC);
     });
     it('should fail the diagnosis', () => {
       expect(parsedOutput.examineResult.bareResult.valid).to.be.false;

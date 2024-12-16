@@ -4,7 +4,11 @@ import { SchemaRegistry } from '../schema-registry';
 export class TemplateLiteralTypeSpanSchema extends SchemaNode {
   type: SchemaNode;
 
-  constructor(readonly location: SchemaLocation, readonly literal: string, type: SchemaNode) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly literal: string,
+    type: SchemaNode
+  ) {
     super();
     this.type = type;
   }
@@ -13,8 +17,12 @@ export class TemplateLiteralTypeSpanSchema extends SchemaNode {
     return [this.type];
   }
 
-  toString() {
-    return `${this.type.toString()} ${this.literal}`;
+  toString(options?: { color?: boolean }) {
+    return `${this.type.toString(options)} ${this.literal}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    return `${this.type.toFullSignature(options)} ${this.literal}`;
   }
 
   toObject() {

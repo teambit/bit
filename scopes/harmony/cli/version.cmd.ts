@@ -1,6 +1,5 @@
-import type { Command } from '@teambit/legacy/dist/cli/command';
-import type { CommandOptions } from '@teambit/legacy/dist/cli/legacy-command';
-import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+import type { CommandOptions, Command } from './command';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 
 export class VersionCmd implements Command {
   name = 'version';
@@ -16,7 +15,7 @@ export class VersionCmd implements Command {
   }
 
   async json() {
-    const bit = getHarmonyVersion(true);
+    const bit = getBitVersion();
     return { bit };
   }
 }

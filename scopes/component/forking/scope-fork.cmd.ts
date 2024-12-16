@@ -1,5 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
 import { ForkingMain } from './forking.main.runtime';
 
@@ -26,7 +26,7 @@ export class ScopeForkCmd implements Command {
   description = 'fork all components of the original-scope and refactor the source-code to use the new scope name';
   extendedDescription = 'optionally, provide [pattern] to limit the fork to specific components';
   options = [
-    ['', 'ast', 'EXPERIMENTAL. use ast to transform files instead of regex'],
+    ['', 'ast', 'use ast to transform files instead of regex'],
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
   ] as CommandOptions;
   group = 'development';

@@ -4,7 +4,10 @@ import { SchemaLocation, SchemaNode } from '../schema-node';
  * e.g. const a: 'a';
  */
 export class LiteralTypeSchema extends SchemaNode {
-  constructor(readonly location: SchemaLocation, readonly name: string) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly name: string
+  ) {
     super();
   }
 
@@ -17,6 +20,10 @@ export class LiteralTypeSchema extends SchemaNode {
 
   toString() {
     return this.name;
+  }
+
+  toFullSignature(): string {
+    return this.toString();
   }
 
   static fromObject(obj: Record<string, any>): LiteralTypeSchema {

@@ -14,10 +14,12 @@ import { useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 import { useComponent as useComponentQuery, UseComponentType, Filters } from '../use-component';
 import { CollapsibleMenuNav } from './menu-nav';
 import { OrderedNavigationSlot, ConsumeMethodSlot, ConsumePluginProps } from './nav-plugin';
 import { useIdFromLocation } from '../use-component-from-location';
+
 import styles from './menu.module.scss';
 
 export type RightSideMenuItem = { item: ReactNode; order: number };
@@ -69,6 +71,8 @@ export type MenuProps = {
   };
 
   path?: string;
+
+  authToken?: string;
 };
 function getComponentIdStr(componentIdStr?: string | (() => string | undefined)): string | undefined {
   if (isFunction(componentIdStr)) return componentIdStr();
@@ -91,7 +95,9 @@ export function ComponentMenu({
   useComponent,
   path,
   useComponentFilters,
+  authToken,
 }: MenuProps) {
+  const { isMinimal } = useWorkspaceMode();
   const idFromLocation = useIdFromLocation();
   const componentIdStrWithScopeFromLocation = useIdFromLocation(undefined, true);
   const _componentIdStr = getComponentIdStr(componentIdStr);
@@ -117,10 +123,11 @@ export function ComponentMenu({
             componentId={componentId?.toString() || idFromLocation}
             useComponent={useComponentVersions}
             componentFilters={componentFilters}
+            authToken={authToken}
             // loading={loading}
           />
           {rightSideItems.map(({ item }) => item)}
-          <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />
+          {!isMinimal && <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />}
         </>
       )}
     </div>
@@ -159,6 +166,7 @@ export type VersionRelatedDropdownsProps = {
     showVersionDetails?: boolean;
     getActiveTabIndex?: GetActiveTabIndex;
   };
+  authToken?: string;
 };
 export type UseComponentVersionsProps = {
   skip?: boolean;
@@ -292,7 +300,9 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
   const localVersion = isWorkspace && !isNew && (!viewedLane || lanesModel?.isViewingCurrentLane());
 
   const currentVersion =
-    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : _currentVersion ?? '';
+    isWorkspace && !isNew && !location?.search.includes('version') ? 'workspace' : (_currentVersion ?? '');
+
+  const authToken = props.authToken;
 
   const consumeMethodProps: ConsumePluginProps | undefined = React.useMemo(() => {
     return id
@@ -301,10 +311,10 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
           packageName: packageName ?? '',
           latest,
           options: { viewedLane, disableInstall: !packageName },
+          authToken,
         }
       : undefined;
-  }, [id, packageName, latest, viewedLane]);
-
+  }, [id, packageName, latest, viewedLane, authToken]);
   const methods = useConsumeMethods(consumeMethods, consumeMethodProps);
   const hasMethods = methods?.length > 0;
 
@@ -314,6 +324,7 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
         <UseBoxDropdown
           position="bottom-end"
           className={classnames(styles.useBox, styles.hideOnMobile)}
+          dropClass={styles.useBoxContainer}
           Menu={<ConsumeMethodsMenu methods={methods} componentName={id.name} />}
         />
       )}

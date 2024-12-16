@@ -5,7 +5,7 @@ import React, { ReactNode } from 'react';
 import { getMarkupFromTree } from '@apollo/client/react/ssr';
 import ReactDOMServer from 'react-dom/server';
 import type { ApolloClient, NormalizedCacheObject } from '@apollo/client';
-import pick from 'lodash.pick';
+import { pick } from 'lodash';
 
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import type { SSR } from '@teambit/ui';

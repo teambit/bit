@@ -14,11 +14,10 @@ import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { BitError } from '@teambit/bit-error';
 import { snapToSemver } from '@teambit/component-package-version';
 import { IssuesClasses } from '@teambit/component-issues';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
-import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
+import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packer';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
@@ -128,7 +127,7 @@ export class PkgMain {
       BuilderMain,
       DependencyResolverMain,
       ComponentMain,
-      GraphqlMain
+      GraphqlMain,
     ],
     config: PkgExtensionConfig,
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
@@ -207,7 +206,10 @@ export class PkgMain {
    * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
    */
   getRuntimeModulePath(component: Component, options: GetModulePathOptions = {}) {
-    const relativePath = this.dependencyResolver.getRuntimeModulePath(component);
+    const relativePath = this.dependencyResolver.getRuntimeModulePath(component, {
+      workspacePath: this.workspace.path,
+      rootComponentsPath: this.workspace.rootComponentsPath,
+    });
     if (options?.absPath) {
       if (this.workspace) {
         return join(this.workspace.path, relativePath);

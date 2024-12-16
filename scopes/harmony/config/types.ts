@@ -1,5 +1,5 @@
-import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
-import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
+import { PathOsBased, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 
 import { SetExtensionOptions } from './config.main.runtime';
 

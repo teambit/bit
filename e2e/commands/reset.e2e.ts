@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 describe('bit reset command', function () {
   this.timeout(0);
@@ -135,7 +135,7 @@ describe('bit reset command', function () {
         untagOutput = helper.command.resetAll();
       });
       it('should display a descriptive successful message', () => {
-        expect(untagOutput).to.have.string('2 component(s) were untagged');
+        expect(untagOutput).to.have.string('2 component(s) were reset');
       });
       it('should remove only local components from the model', () => {
         const output = helper.command.listLocalScope();
@@ -151,7 +151,7 @@ describe('bit reset command', function () {
         untagOutput = helper.command.resetAll('--head');
       });
       it('should display a descriptive successful message', () => {
-        expect(untagOutput).to.have.string('3 component(s) were untagged');
+        expect(untagOutput).to.have.string('3 component(s) were reset');
       });
       it('should remove only the specified version from the model', () => {
         const output = helper.command.listLocalScope();
@@ -195,7 +195,7 @@ describe('bit reset command', function () {
           untagOutput = helper.command.reset('utils/is-type', undefined, '--force');
         });
         it('should untag successfully', () => {
-          expect(untagOutput).to.have.string('1 component(s) were untagged');
+          expect(untagOutput).to.have.string('1 component(s) were reset');
         });
       });
       describe('after exporting the component and tagging the scope', () => {
@@ -236,7 +236,7 @@ describe('bit reset command', function () {
         untagOutput = helper.command.reset('utils/is-string');
       });
       it('should untag successfully the dependent', () => {
-        expect(untagOutput).to.have.string('1 component(s) were untagged');
+        expect(untagOutput).to.have.string('1 component(s) were reset');
         expect(untagOutput).to.have.string('utils/is-string');
       });
       it('should leave the dependency intact', () => {
@@ -263,7 +263,7 @@ describe('bit reset command', function () {
           output = helper.command.reset('utils/is-string');
         });
         it('should untag successfully', () => {
-          expect(output).to.have.string('1 component(s) were untagged');
+          expect(output).to.have.string('1 component(s) were reset');
           expect(output).to.have.string('utils/is-string');
         });
       });
@@ -303,6 +303,29 @@ describe('bit reset command', function () {
       helper.command.export();
       const stagedConfig = helper.general.getStagedConfig();
       expect(stagedConfig).to.have.lengthOf(0);
+    });
+  });
+  describe('when checked out to a non-head version', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagWithoutBuild();
+      helper.fixtures.populateComponents(1, false, 'version2');
+      helper.command.tagWithoutBuild();
+      helper.fixtures.populateComponents(1, false, 'version3');
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+      helper.command.checkoutVersion('0.0.2', 'comp1', '-x');
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.resetAll();
+    });
+    it('expect .bitmap to point to the same version as it was before the reset, and not the latest', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.2');
+    });
+    it('should not show the component as modified', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(0);
     });
   });
 });

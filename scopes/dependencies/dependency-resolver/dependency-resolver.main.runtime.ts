@@ -1,14 +1,15 @@
 import multimatch from 'multimatch';
 import mapSeries from 'p-map-series';
+import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { MainRuntime } from '@teambit/cli';
-import { getAllCoreAspectsIds } from '@teambit/bit';
-import { getRelativeRootComponentDir } from '@teambit/bit-roots';
+import { getRootComponentDir } from '@teambit/workspace.root-components';
 import { ComponentAspect, Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import type { ConfigMain } from '@teambit/config';
-import { join } from 'path';
-import { compact, get, pick, uniq, omit } from 'lodash';
+import { join, relative } from 'path';
+import { compact, get, pick, uniq, omit, cloneDeep } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
-import { DependenciesEnv, EnvDefinition, EnvsAspect, EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { DependenciesEnv, EnvDefinition, EnvJsonc, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { LoggerMain } from '@teambit/logger';
@@ -20,17 +21,20 @@ import {
   CFG_USER_TOKEN_KEY,
   CFG_ISOLATED_SCOPE_CAPSULES,
   getCloudDomain,
-} from '@teambit/legacy/dist/constants';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
-import { Http, ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
+} from '@teambit/legacy.constants';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
+import { DetectorHook } from '@teambit/dependencies';
+import { Http, ProxyConfig, NetworkConfig } from '@teambit/scope.network';
 import { onTagIdTransformer } from '@teambit/snapping';
-import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import {
+  ConsumerComponent as LegacyComponent,
+  Dependency as LegacyDependency,
+} from '@teambit/legacy.consumer-component';
 import fs from 'fs-extra';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
-import { SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import { SourceFile } from '@teambit/component.sources';
 import { ProjectManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
@@ -91,7 +95,7 @@ import { EnvPolicy } from './policy/env-policy';
 export const BIT_CLOUD_REGISTRY = `https://node-registry.${getCloudDomain()}/`;
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
-export { ProxyConfig, NetworkConfig } from '@teambit/legacy/dist/scope/network/http';
+export { ProxyConfig, NetworkConfig } from '@teambit/scope.network';
 
 export interface DependencyResolverComponentData {
   packageName: string;
@@ -493,6 +497,14 @@ export class DependencyResolverMain {
     return this.getDepResolverData(component)?.packageName ?? this.calcPackageName(component);
   }
 
+  createComponentIdByPkgNameMap(components: Component[]): Map<string, ComponentID> {
+    const componentIdByPkgName = new Map<string, ComponentID>();
+    for (const component of components) {
+      componentIdByPkgName.set(this.getPackageName(component), component.id);
+    }
+    return componentIdByPkgName;
+  }
+
   getDepResolverData(component: Component): DependencyResolverComponentData | undefined {
     return component.state.aspects.get(DependencyResolverAspect.id)?.data as DependencyResolverComponentData;
   }
@@ -505,14 +517,23 @@ export class DependencyResolverMain {
    * Returns the location where the component is installed with its peer dependencies
    * This is used in cases you want to actually run the components and make sure all the dependencies (especially peers) are resolved correctly
    */
-  getRuntimeModulePath(component: Component, isInWorkspace = false) {
+  getRuntimeModulePath(
+    component: Component,
+    options: {
+      workspacePath: string;
+      rootComponentsPath: string;
+      isInWorkspace?: boolean;
+    }
+  ) {
     if (!this.hasRootComponents()) {
       const modulePath = this.getModulePath(component);
       return modulePath;
     }
     const pkgName = this.getPackageName(component);
+    const rootComponentsRelativePath = relative(options.workspacePath, options.rootComponentsPath);
+    const getRelativeRootComponentDir = getRootComponentDir.bind(null, rootComponentsRelativePath ?? '');
     const selfRootDir = getRelativeRootComponentDir(
-      !isInWorkspace ? component.id.toString() : component.id.toStringWithoutVersion()
+      options.isInWorkspace ? component.id.toStringWithoutVersion() : component.id.toString()
     );
     // In case the component is it's own root we want to load it from it's own root folder
     if (fs.pathExistsSync(selfRootDir)) {
@@ -522,10 +543,21 @@ export class DependencyResolverMain {
       // in that case we return the dir from the root node_modules
       return this.getModulePath(component);
     }
-    const envId = this.envs.getEnvId(component);
-    const dirInEnvRoot = join(getRelativeRootComponentDir(envId), 'node_modules', pkgName);
+    const dirInEnvRoot = join(this.getComponentDirInBitRoots(component, options), 'node_modules', pkgName);
     if (fs.pathExistsSync(dirInEnvRoot)) return dirInEnvRoot;
     return this.getModulePath(component);
+  }
+
+  getComponentDirInBitRoots(
+    component: Component,
+    options: {
+      workspacePath: string;
+      rootComponentsPath: string;
+    }
+  ) {
+    const envId = this.envs.getEnvId(component);
+    const rootComponentsRelativePath = relative(options.workspacePath, options.rootComponentsPath);
+    return getRootComponentDir(rootComponentsRelativePath ?? '', envId);
   }
 
   /**
@@ -536,6 +568,36 @@ export class DependencyResolverMain {
     const pkgName = this.getPackageName(component);
     const relativePath = join('node_modules', pkgName);
     return relativePath;
+  }
+
+  async addDependenciesGraph(
+    component: Component,
+    componentRelativeDir: string,
+    options: {
+      rootDir: string;
+      rootComponentsPath?: string;
+      componentIdByPkgName: Map<string, ComponentID>;
+    }
+  ): Promise<void> {
+    try {
+      component.state._consumer.dependenciesGraph = await this.getPackageManager()?.calcDependenciesGraph?.({
+        rootDir: options.rootDir,
+        componentRootDir: options.rootComponentsPath
+          ? this.getComponentDirInBitRoots(component, {
+              workspacePath: options.rootDir,
+              rootComponentsPath: options.rootComponentsPath,
+            })
+          : undefined,
+        pkgName: this.getPackageName(component),
+        componentRelativeDir,
+        componentIdByPkgName: options.componentIdByPkgName,
+      });
+    } catch (err) {
+      // If the dependencies graph feature is disabled, we ignore the error
+      if (isFeatureEnabled(DEPS_GRAPH)) {
+        throw err;
+      }
+    }
   }
 
   /**
@@ -641,7 +703,7 @@ export class DependencyResolverMain {
    * returns component-ids string without a version.
    */
   getCompIdsThatShouldNotBeInPolicy(): string[] {
-    return [...getAllCoreAspectsIds(), 'teambit.harmony/harmony'];
+    return [...this.aspectLoader.getCoreAspectIds(), 'teambit.harmony/harmony'];
   }
 
   /**
@@ -970,8 +1032,12 @@ export class DependencyResolverMain {
     return this.getComponentEnvPolicyFromEnv(env.env, { envId });
   }
 
-  async getEnvPolicyFromEnvId(id: ComponentID, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
-    const fromFile = await this.getEnvPolicyFromFile(id.toString(), legacyFiles);
+  async getEnvPolicyFromEnvId(
+    id: ComponentID,
+    legacyFiles?: SourceFile[],
+    envExtendsDeps?: LegacyDependency[]
+  ): Promise<EnvPolicy | undefined> {
+    const fromFile = await this.getEnvPolicyFromFile(id.toString(), legacyFiles, envExtendsDeps);
     if (fromFile) return fromFile;
     const envDef = this.envs.getEnvDefinitionById(id);
     if (!envDef) return undefined;
@@ -998,14 +1064,25 @@ export class DependencyResolverMain {
     }
     const fromFile = await this.getEnvPolicyFromFile(envId.toString());
     if (fromFile) return fromFile;
+
     this.envsWithoutManifest.add(envId.toString());
     const env = this.envs.getEnv(component).env;
     return this.getComponentEnvPolicyFromEnv(env, { envId: envIdWithoutVersion });
   }
 
-  getEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): EnvPolicy | undefined {
-    const object = this.envs.getEnvManifest(envComponent, legacyFiles) as any;
-    const policy = object?.policy;
+  async getEnvManifest(
+    envComponent?: Component,
+    legacyFiles?: SourceFile[],
+    envExtendsDeps?: LegacyDependency[]
+  ): Promise<EnvPolicy | undefined> {
+    let envManifest;
+    if (envComponent) {
+      envManifest = (await this.envs.getOrCalculateEnvManifest(envComponent, legacyFiles, envExtendsDeps)) as any;
+    }
+    if (!envManifest && legacyFiles) {
+      envManifest = await this.envs.calculateEnvManifest(undefined, legacyFiles, envExtendsDeps);
+    }
+    const policy = envManifest?.policy;
     if (!policy) return undefined;
     const allPoliciesFromEnv = EnvPolicy.fromConfigObject(policy, {
       includeLegacyPeersInSelfPolicy: envComponent && this.envs.isCoreEnv(envComponent.id.toStringWithoutVersion()),
@@ -1013,11 +1090,46 @@ export class DependencyResolverMain {
     return allPoliciesFromEnv;
   }
 
-  private async getEnvPolicyFromFile(envId: string, legacyFiles?: SourceFile[]): Promise<EnvPolicy | undefined> {
+  /**
+   * Merge policy from parent and child env.jsonc files
+   * The rule is that for each type of dependency (dev, runtime, peer) we check each item.
+   * if a dep with a name exists on the child we will take the entire object from the child (including the version,
+   * supported range, force etc')
+   * if a dep exists with a version value "-" we will remove it from the policy
+   */
+  mergeEnvManifestPolicy(parent: EnvJsonc, child: EnvJsonc): object {
+    const policy = {};
+    ['peers', 'dev', 'runtime'].forEach((key) => {
+      policy[key] = cloneDeep(parent.policy?.[key] || []);
+      const childEntries = cloneDeep(child.policy?.[key] || []);
+
+      policy[key] = policy[key].filter((entry) => {
+        const foundChildEntry = childEntries.find((childEntry) => {
+          return childEntry.name === entry.name;
+        });
+        return !foundChildEntry;
+      });
+      policy[key] = policy[key].concat(childEntries);
+      policy[key] = policy[key].filter((entry) => {
+        return entry.version !== '-';
+      });
+    });
+    return { policy };
+  }
+
+  private async getEnvPolicyFromFile(
+    envId: string,
+    legacyFiles?: SourceFile[],
+    envExtendsDeps?: LegacyDependency[]
+  ): Promise<EnvPolicy | undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
     if (isCoreEnv) return undefined;
     if (legacyFiles) {
-      return this.getEnvManifest(undefined, legacyFiles);
+      const envJsonc = legacyFiles.find((file) => file.basename === 'env.jsonc');
+      if (envJsonc) {
+        return this.getEnvManifest(undefined, legacyFiles, envExtendsDeps);
+      }
+      return undefined;
     }
     const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
     return this.getEnvManifest(envComponent);
@@ -1070,7 +1182,8 @@ export class DependencyResolverMain {
   async mergeVariantPolicies(
     configuredExtensions: ExtensionDataList,
     id: ComponentID,
-    legacyFiles?: SourceFile[]
+    legacyFiles?: SourceFile[],
+    envExtendsDeps?: LegacyDependency[]
   ): Promise<VariantPolicy> {
     let policiesFromSlots: VariantPolicy = VariantPolicy.getEmpty();
     let policiesFromConfig: VariantPolicy = VariantPolicy.getEmpty();
@@ -1098,7 +1211,7 @@ export class DependencyResolverMain {
       policiesFromConfig = VariantPolicy.fromConfigObject(currentConfig.policy, { source: 'config' });
     }
     const policiesFromEnvForItself =
-      (await this.getPoliciesFromEnvForItself(id, legacyFiles)) ?? VariantPolicy.getEmpty();
+      (await this.getPoliciesFromEnvForItself(id, legacyFiles, envExtendsDeps)) ?? VariantPolicy.getEmpty();
 
     const result = VariantPolicy.mergePolices([
       policiesFromEnv,
@@ -1113,8 +1226,12 @@ export class DependencyResolverMain {
    * These are the policies that the env itself defines for itself.
    * So policies installed only locally for the env, not to any components that use the env.
    */
-  async getPoliciesFromEnvForItself(id: ComponentID, legacyFiles?: SourceFile[]): Promise<VariantPolicy | undefined> {
-    const envPolicy = await this.getEnvPolicyFromEnvId(id, legacyFiles);
+  async getPoliciesFromEnvForItself(
+    id: ComponentID,
+    legacyFiles?: SourceFile[],
+    envExtendsDeps?: LegacyDependency[]
+  ): Promise<VariantPolicy | undefined> {
+    const envPolicy = await this.getEnvPolicyFromEnvId(id, legacyFiles, envExtendsDeps);
     return envPolicy?.selfPolicy;
   }
 
@@ -1427,7 +1544,7 @@ export class DependencyResolverMain {
       AspectLoaderMain,
       ComponentMain,
       GraphqlMain,
-      GlobalConfigMain
+      GlobalConfigMain,
     ],
     config: DependencyResolverWorkspaceConfig,
     [
@@ -1443,7 +1560,7 @@ export class DependencyResolverMain {
       PackageManagerSlot,
       DependencyFactorySlot,
       PreInstallSlot,
-      PostInstallSlot
+      PostInstallSlot,
     ]
   ) {
     // const packageManager = new PackageManagerLegacy(config.packageManager, logger);
@@ -1464,6 +1581,9 @@ export class DependencyResolverMain {
       postInstallSlot
     );
 
+    const envJsoncDetector = envs.getEnvJsoncDetector();
+    dependencyResolver.registerDetector(envJsoncDetector);
+
     componentAspect.registerShowFragments([
       new DependenciesFragment(dependencyResolver),
       new DevDependenciesFragment(dependencyResolver),
@@ -1475,8 +1595,18 @@ export class DependencyResolverMain {
 
     LegacyComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
-      async (configuredExtensions: ExtensionDataList, id: ComponentID, legacyFiles: SourceFile[]) => {
-        const policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions, id, legacyFiles);
+      async (
+        configuredExtensions: ExtensionDataList,
+        id: ComponentID,
+        legacyFiles: SourceFile[],
+        envExtendsDeps?: LegacyDependency[]
+      ) => {
+        const policy = await dependencyResolver.mergeVariantPolicies(
+          configuredExtensions,
+          id,
+          legacyFiles,
+          envExtendsDeps
+        );
         return policy.toLegacyDepsOverrides();
       }
     );
@@ -1487,6 +1617,7 @@ export class DependencyResolverMain {
 
     graphql.register(dependencyResolverSchema(dependencyResolver));
     envs.registerService(new DependenciesService());
+    envs.registerEnvJsoncMergeCustomizer(dependencyResolver.mergeEnvManifestPolicy.bind(dependencyResolver));
 
     // this is needed because during tag process, the data.dependencies can be loaded and the componentId can become
     // an instance of ComponentID class. it needs to be serialized before saved into objects.

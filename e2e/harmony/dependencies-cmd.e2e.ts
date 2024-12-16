@@ -1,7 +1,7 @@
 import { IssuesClasses } from '@teambit/component-issues';
 import { expect } from 'chai';
-import { Extensions } from '../../src/constants';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Extensions } from '@teambit/legacy.constants';
+import { Helper } from '@teambit/legacy.e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 describe('bit dependencies command', function () {
@@ -110,6 +110,19 @@ describe('bit dependencies command', function () {
       it('should not remove the previously added dependencies', () => {
         const show = helper.command.showComponent('comp1');
         expect(show).to.have.string('lodash');
+      });
+    });
+    describe('adding itself as a dep', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScope();
+        helper.fixtures.populateComponents(1);
+        helper.command.tagAllWithoutBuild();
+        const pkgName = helper.general.getPackageNameByCompName('comp1', false);
+        helper.command.dependenciesSet('comp1', `${pkgName}@0.0.1`);
+      });
+      it('should ignore it and not consider it as a dependency', () => {
+        const deps = helper.command.getCompDepsIdsFromData('comp1');
+        expect(deps).to.not.include(`${helper.scopes.remote}/comp1@0.0.1`);
       });
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('adding component dependency', () => {

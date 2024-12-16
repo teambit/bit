@@ -1,6 +1,6 @@
 import { BitError } from '@teambit/bit-error';
 import { existsSync, pathExists, readdir } from 'fs-extra';
-import { basename, dirname, join, resolve } from 'path';
+import { join, resolve } from 'path';
 import { Config } from '@teambit/bvm.config';
 import { findCurrentBvmDir } from '@teambit/bvm.path';
 import findRoot from 'find-root';
@@ -37,7 +37,7 @@ function resolveFromCurrDir(packageName: string, aspectName: string): string | u
       throw new Error(`unable to find ${aspectName} in ${dirPath}`);
     }
     return dirPath;
-  } catch (err) {
+  } catch {
     return undefined;
   }
 }
@@ -72,7 +72,7 @@ export function getAspectDir(id: string): string {
 
   try {
     dirPath = getAspectDirFromPath(id);
-  } catch (err: any) {
+  } catch {
     dirPath = resolve(__dirname, '../..', aspectName, 'dist');
   }
   if (!existsSync(dirPath)) {
@@ -80,7 +80,7 @@ export function getAspectDir(id: string): string {
     const aspectPackage = getCoreAspectPackageName(id);
     try {
       dirPath = findRoot(require.resolve(aspectPackage));
-    } catch (err: any) {
+    } catch {
       throw new Error(`unable to find ${aspectName}`);
     }
   }
@@ -126,18 +126,18 @@ export function getAspectDirFromBvm(id: string, bvmDirOptions?: BvmDirOptions): 
   return getAspectDirFromPath(id, [versionDir]);
 }
 
-function getCoreAspectDirFromPath(resolvedModulesPath: string): string {
-  if (!resolvedModulesPath.includes('@teambit')) {
-    throw new Error(`unable to find core aspect in ${resolvedModulesPath}`);
-  }
-  let currentDir = resolvedModulesPath;
-  let parentDir = dirname(currentDir);
-  while (basename(parentDir) !== '@teambit') {
-    currentDir = parentDir;
-    parentDir = dirname(currentDir);
-  }
-  return currentDir;
-}
+// function getCoreAspectDirFromPath(resolvedModulesPath: string): string {
+//   if (!resolvedModulesPath.includes('@teambit')) {
+//     throw new Error(`unable to find core aspect in ${resolvedModulesPath}`);
+//   }
+//   let currentDir = resolvedModulesPath;
+//   let parentDir = dirname(currentDir);
+//   while (basename(parentDir) !== '@teambit') {
+//     currentDir = parentDir;
+//     parentDir = dirname(currentDir);
+//   }
+//   return currentDir;
+// }
 
 export function getAspectDistDir(id: string) {
   const aspectDir = getAspectDir(id);

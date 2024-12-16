@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -68,7 +68,7 @@ describe('updates from main and lane', function () {
       before(() => {
         mergeOutput = helper.command.mergeLane(
           'main',
-          '--skip-dependency-installation --no-snap --include-non-lane-comps'
+          '--skip-dependency-installation --no-auto-snap --include-non-lane-comps'
         );
       });
       it('should update not only components belong to the main but also components that are available on the workspace and have updates from main', () => {

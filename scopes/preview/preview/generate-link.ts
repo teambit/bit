@@ -1,6 +1,7 @@
 import type { ComponentMap } from '@teambit/component';
 import { join } from 'path';
 import { outputFileSync } from 'fs-extra';
+import normalizePath from 'normalize-path';
 import objectHash from 'object-hash';
 import camelcase from 'camelcase';
 import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compatible-path';
@@ -42,18 +43,18 @@ export function generateLink(
     componentIdentifier: component.id.fullName,
     modules: modulePath.map((path, pathIdx) => ({
       varName: moduleVarName(compIdx, pathIdx),
-      resolveFrom: toWindowsCompatiblePath(path),
+      resolveFrom: normalizePath(path),
     })),
   }));
 
   const moduleLinks: ModuleLink[] = Object.entries(mainModulesMap || {}).map(([envId, path]) => {
-    const resolveFrom = toWindowsCompatiblePath(path);
+    const resolveFrom = normalizePath(path);
     const varName = getEnvVarName(envId);
     return { envId, varName, resolveFrom };
   });
 
   const contents = `
-import { linkModules } from '${previewDistDir}/preview.preview.runtime.js';
+import { linkModules } from '${normalizePath(join(previewDistDir, 'preview-modules.js'))}';
 
 ${getModuleImports(moduleLinks, tempPackageDir)}
 
@@ -96,12 +97,14 @@ function getEnvVarName(envId: string) {
 function getModuleImports(moduleLinks: ModuleLink[] = [], tempPackageDir?: string): string {
   const hash = objectHash(moduleLinks);
   const tempFileName = `preview-modules-${hash}.mjs`;
-  const tempFilePath = join(tempPackageDir || previewDistDir, tempFileName);
+  const tempFilePath = toWindowsCompatiblePath(join(tempPackageDir || previewDistDir, tempFileName));
   const tempFileContents = moduleLinks
     .map((module) => `export * as ${module.varName} from "${module.resolveFrom}";`)
     .join('\n');
   outputFileSync(tempFilePath, tempFileContents);
-  return `import {${moduleLinks.map((moduleLink) => moduleLink.varName).join(', ')}} from "${tempFilePath}";`;
+  return `import {${moduleLinks.map((moduleLink) => moduleLink.varName).join(', ')}} from "${normalizePath(
+    tempFilePath
+  )}";`;
 }
 
 function getComponentImports(componentLinks: ComponentLink[] = []): string {

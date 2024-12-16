@@ -15,7 +15,10 @@ export class PreBundlePreviewTask implements BuildTask {
   name = BUNDLE_TASK_NAME;
   location: TaskLocation = 'end';
 
-  constructor(private ui: UiMain, private logger: Logger) {}
+  constructor(
+    private ui: UiMain,
+    private logger: Logger
+  ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const capsule: Capsule | undefined = context.capsuleNetwork.seedersCapsules.find(

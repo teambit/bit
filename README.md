@@ -23,21 +23,20 @@
 <a href="https://github.com/prettier/prettier"><img alt ="Styled with Prettier" src="https://img.shields.io/badge/styled_with-prettier-ff69b4.svg">
 <a href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-1vq1vcxxu-CEVobR1p9BurmW8QnQFh1w" ><img alt="Join Slack" src="https://img.shields.io/badge/Slack-Join%20Bit%20Slack-blueviolet"/></a>
 
-Bit is a build system for development of **composable software**. It makes the composition of applications from independently versioned components seamless and fast.
+[Bit](https://bit.dev) is a complete solution for building **composable software**. It simplifies the creation, maintenance and reuse of software using independent and reusable components.
 
-Bit is similar in sense, but stands as the opposite for the "Monorepo" approach, which aims to center all code under a central repository. Instead, Bit is bringing simplicity for distribution of source code into independently versioned components, depending on each other.
+You can use Bit components to build new projects or reuse components to modernize your existing applications. Here are few examples to components people build with Bit:
 
-People often use Bit to run a Monorepo, a Polyrepo or without using repositories at all.
+- [Reusable components](#getting-started)
+- [Backend services](https://bit.dev/docs/quick-start/platforms)
+- [Design systems](https://bit.dev/docs/quick-start/design-system)
+- [Composable platforms](https://bit.dev/docs/composable-platforms)
+- [Shell applications](https://bit.dev/docs/quick-start/react) 
+- [Micro frontends](https://bit.dev/docs/micro-frontends/react-micro-frontends)
 
-The core innovation of Bit is the ["Bit Component"](https://bit.dev/#component), a composable and versioned container for source code, whereas dependencies are first-class citizens. Components can be used as packages, ESM modules, runtime scripts, and any other artifact a build task can generate.
+Bit supports all tooling in the JS ecosystem and comes out of the box with official dev environments for [NodeJS](https://bit.dev/docs/backend-intro), [React](https://bit.dev/docs/react-intro), [Angular](https://bit.dev/docs/angular-introduction), [Vue](https://bit.dev/docs/vue-intro), [React Native](https://bit.dev/docs/react-native-intro), [NextJS](https://bit.dev/docs/quick-start/hello-world-nextjs) and [far more](https://bit.dev/docs). All are native to TypeScript and ESM and equipped with the best dev tooling.
 
-- 📦 **Descriptive module names**. Use components through descriptive package names. No aliases required.
-- 🚀 **Dependency versioning.** Automatic detection and versioning of dependency changes. No more redundant package.json files.
-- ⚓ **Reusable development environments.** Reusable components including all of your dev config. No more duplication of countless `tsconfig.json`, `eslintrc` or `prettierrc` configs.
-- ⚒️ **Build pipelines**. Independently build and store packages, bundles, and binaries.
-- 👓 **Preview and auto-generated docs**. Every component is an asset with auto-generated docs and component previews.
-- 🛫 **Change review**. Use Lanes to propose and preview changes and collaborate on them with others.
-- 🧑‍💻 **Component generators**. Create new components using pre-built or custom templates for any type of component.
+Bit is a fit to every codebase structure. You can use Bit components in a monorepo, polyrepo, or even without repositories at all. 
 
 ## Getting started
 
@@ -49,37 +48,35 @@ Use the Bit installer to install Bit to be available on your PATH.
 npx @teambit/bvm install
 ```
 
-For better VSCode dev experience, install the [Bit VSCode Plugin](https://marketplace.visualstudio.com/items?itemName=bit.vscode-bit).
-
-### Create a new workspace
-
-Run the following to create a workspace with a few components included, using the hello-world starter:
+Initialize Bit on a new folder or in an existing project by running the following command:
 
 ```bash
-bit new hello-world my-hello-world --env teambit.community/starters/hello-world
+bit init --default-scope my-org.my-project
 ```
 
-For the quick start, we use two React components and one Node module, though you can create components using any JS-based framework. You can explore our [official starters](https://bit.dev/docs) for [Vue](https://bit.dev/docs/quick-start/hello-world-vue), [Angular](https://bit.dev/docs/quick-start/hello-world-angular), and other supported tools or [learn how to create your own](https://bit.dev/docs/node-env/set-up-your-env).
-
-### Run the app
-
-Your workspace maintains a number of components. One of these components is also an [app](https://bit.dev/reference/apps/application-types/). Run it using:
-
-```bash
-bit run hello-world-app
-```
-
-You can get any component to become an app by adding a single file to it.
+Make sure to create your scope on the Bit platform and use the right org and project name. After running the command, Bit is initialized on the chosen directory, and ready to be used via Bit commands, your editor or the Bit UI!
 
 ### Create components
 
 Start creating components using the default component generators, or [create your own](https://bit.dev/docs/node-env/generators).
 
 ```bash
-bit create react buttons/button
+bit templates
 ```
 
-You can view other built-in component templates, by running the `bit templates` command.
+The following command uses the React UI component template to create a new reusable React component:
+
+```bash
+bit create react hello-world
+```
+
+You can find simple guides for creating NodeJS modules, UI components and apps, backend services and more on the [Create Component docs](https://bit.dev/docs/getting-started/composing/creating-components/). Run the Bit UI to preview components using the following command:
+
+```
+bit start 
+```
+
+Use `bit run` to preview applications during development. To create an application, follow the [Create App docs section](https://bit.dev/docs/getting-started/composing/create-apps/).
 
 ### Use components
 
@@ -89,9 +86,9 @@ After creating a new component, start using it by adding an import statement in 
 import { Button } from '@org/scope-name.buttons.button';
 ```
 
-Once added, Bit will autodetect the dependency between these components. Use `bit show` or the VSCode plugin to view the list of dependencies Bit detected for your components.
+Once added, Bit will autodetect the dependency between these components. Use `bit show` or the [VSCode plugin](https://bit.dev/docs/getting-started/installing-bit/editor-setup) to view the list of dependencies Bit detected for your components.
 
-### Create a remote scope
+### Release components
 
 You can either use hosted scopes on [Bit Cloud](https://bit.cloud) or by [hosting scopes on your own](https://bit.dev/reference/scope/running-a-scope-server). Use the following command to create your Bit Cloud account and your first scope.
 
@@ -99,36 +96,32 @@ You can either use hosted scopes on [Bit Cloud](https://bit.cloud) or by [hostin
 bit login
 ```
 
-Once done, change to your own owner and scope names using this command:
+Use semantic versioning to version your components:
 
 ```bash
-bit scope rename org.scope-name my-org.my-scope-name --refactor
+bit tag --message "my first release" --major
 ```
 
-This command will refactor your components to use the new owner and scope names.
+By default, Bit uses [Ripple CI](https://bit.cloud/products/ripple-ci) to build components. You can use the `--build` flag to build the components on the local machine. To tag and export from your CI of choice to automate the release process or use [our official CI scripts](https://bit.dev/docs/getting-started/collaborate/exporting-components#ci-scripts).
 
-### Record component and dependency changes
-
-Run `snap` or `tag` to record component changes, and assign a semantic version to them. Bit will version the dependents graph of each modified components.
-
-```bash
-bit snap --message 'initial release'
-```
-
-Snapped components are ready to be built upon 'export' (see next step). The build artifacts will also be stored in the component's new version ('snap').
-
-By default, components are built using bit.cloud's CI platform, Ripple CI. However, you can run the components' build locally by adding the --build flag, or use your own CI platform. [To learn more see Set up CI](https://bit.dev/reference/git/automating-component-releases).
-
-### Export components to a remote scope
-
-Export your staged components from your workspace to their remote scopes. This will make them available to
-be used by components outside of your workspace, and from your other projects.
+After versioning, you can proceed to release your components:
 
 ```bash
 bit export
 ```
 
-Head over to your bit.cloud account to see your components build progress. Once the build process is completed, the components will be available for use in their remote scopes. 🎉🎉🎉
+Head over to your [bit.cloud account](https://bit.cloud) to see your components build progress. Once the build process is completed, the components will be available for use using standard package managers:
+
+```bash
+npm install @my-org/my-project.hello-world
+```
+
+## Next steps
+
+- [Create more components](https://bit.dev/docs/getting-started/composing/creating-components/)
+- [Setup your editor](https://bit.dev/docs/getting-started/installing-bit/editor-setup)
+- [Configure CI of choice](https://bit.dev/docs/getting-started/collaborate/exporting-components/#ci-scripts)
+- [Start from an existing project](https://bit.dev/docs/getting-started/installing-bit/start-from-existing-project)
 
 ## Contributors
 

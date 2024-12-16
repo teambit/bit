@@ -15,7 +15,6 @@ import { Application } from './application';
 import { DeploymentProvider } from './deployment-provider';
 import { AppNotFound } from './exceptions';
 import { ApplicationAspect } from './application.aspect';
-import { AppListCmdDeprecated } from './app-list.cmd';
 import { AppsBuildTask } from './build-application.task';
 import { RunCmd } from './run.cmd';
 import { AppService } from './application.service';
@@ -71,6 +70,11 @@ export type ServeAppOptions = {
    * exact port to run the app
    */
   port?: number;
+
+  /**
+   * arguments passing to the app.
+   */
+  args?: string;
 };
 
 export class ApplicationMain {
@@ -105,6 +109,17 @@ export class ApplicationMain {
     return flatten(this.appSlot.values());
   }
 
+  async listAppsIdsAndNames(): Promise<{ id: string; name: string }[]> {
+    await this.loadAllAppsAsAspects();
+    const appComponents = this.mapApps();
+    return appComponents.flatMap(([id, apps]) => {
+      return apps.map((app) => {
+        if (!app.name) throw new BitError(`app ${id.toString()} is missing a name`);
+        return { id, name: app.name };
+      });
+    });
+  }
+
   /**
    * map all apps by component ID.
    */
@@ -113,7 +128,27 @@ export class ApplicationMain {
   }
 
   /**
+   * instead of adding apps to workspace.jsonc, this method gets all apps components and load them as aspects so then
+   * they could register to the apps slots and be available to list/run etc.
+   * if poolIds is provided, it will load only the apps that are part of the pool.
+   */
+  async loadAllAppsAsAspects(poolIds?: ComponentID[]): Promise<ComponentID[]> {
+    const apps = await this.listAppsComponents(poolIds);
+    // do not load apps that their env was not loaded yet. their package-json may not be up to date. e.g. it could be
+    // cjs, when the env needs it as esm. once it is loaded, node.js saved the package.json in the cache with no way to
+    // refresh it.
+    const appsWithEnvLoaded = apps.filter((app) => !app.state.issues.getIssueByName('NonLoadedEnv'));
+    if (apps.length !== appsWithEnvLoaded.length) {
+      this.logger.warn(`some apps were not loaded as aspects because their env was not loaded yet`);
+    }
+    const appIds = appsWithEnvLoaded.map((app) => app.id);
+    await this.componentAspect.getHost().loadAspects(appIds.map((id) => id.toString()));
+    return appIds;
+  }
+
+  /**
    * list apps by a component id.
+   * make sure to call `this.loadAllAppsAsAspects` before calling this method in case the app is not listed in workspace.jsonc
    */
   listAppsById(id?: ComponentID): Application[] | undefined {
     if (!id) return undefined;
@@ -122,6 +157,7 @@ export class ApplicationMain {
 
   /**
    * get an application by a component id.
+   * make sure to call `this.loadAllAppsAsAspects` before calling this method in case the app is not listed in workspace.jsonc
    */
   async getAppById(id: ComponentID) {
     const apps = await this.listAppsById(id);
@@ -151,8 +187,14 @@ export class ApplicationMain {
     return this.listAppsComponents();
   }
 
-  async listAppsComponents(): Promise<Component[]> {
-    const components = await this.componentAspect.getHost().list();
+  /**
+   * list all components that are apps.
+   * if poolIds is provided, it will load only the apps that are part of the pool.
+   */
+  async listAppsComponents(poolIds?: ComponentID[]): Promise<Component[]> {
+    const components = poolIds
+      ? await this.componentAspect.getHost().getMany(poolIds)
+      : await this.componentAspect.getHost().list();
     const appTypesPatterns = this.getAppPatterns();
     const appsComponents = components.filter((component) => this.hasAppTypePattern(component, appTypesPatterns));
     return appsComponents;
@@ -196,7 +238,7 @@ export class ApplicationMain {
             // eslint-disable-next-line
             const appManifest = require(pluginPath)?.default;
             return appManifest;
-          } catch (err) {
+          } catch {
             this.logger.error(`failed loading app manifest: ${pluginPath}`);
             return undefined;
           }
@@ -232,6 +274,7 @@ export class ApplicationMain {
 
   /**
    * get an app.
+   * make sure to call `this.loadAllAppsAsAspects` before calling this method in case the app is not listed in workspace.jsonc
    */
   getApp(appName: string, id?: ComponentID): Application | undefined {
     const apps = id ? this.listAppsById(id) : this.listApps();
@@ -279,6 +322,7 @@ export class ApplicationMain {
 
   /**
    * get app to throw.
+   * make sure to call `this.loadAllAppsAsAspects` before calling this method in case the app is not listed in workspace.jsonc
    */
   getAppOrThrow(appName: string): Application {
     const app = this.getAppByNameOrId(appName);
@@ -305,6 +349,10 @@ export class ApplicationMain {
     return this;
   }
 
+  /**
+   * run an app.
+   * make sure to call `this.loadAllAppsAsAspects` before calling this method in case the app is not listed in workspace.jsonc
+   */
   async runApp(
     appName: string,
     options?: ServeAppOptions
@@ -316,7 +364,7 @@ export class ApplicationMain {
   }> {
     options = this.computeOptions(options);
     const app = this.getAppOrThrow(appName);
-    const context = await this.createAppContext(app.name, options.port);
+    const context = await this.createAppContext(app.name, options.port, options.args);
     if (!context) throw new AppNotFound(appName);
 
     const instance = await app.run(context);
@@ -352,7 +400,7 @@ export class ApplicationMain {
     return host.resolveComponentId(maybeApp[0]);
   }
 
-  private async createAppContext(appName: string, port?: number): Promise<AppContext> {
+  private async createAppContext(appName: string, port?: number, args?: string): Promise<AppContext> {
     const host = this.componentAspect.getHost();
     // const components = await host.list();
     const id = await this.getAppIdOrThrow(appName);
@@ -376,6 +424,7 @@ export class ApplicationMain {
       context,
       hostRootDir,
       port,
+      args,
       workspaceComponentDir
     );
     return appContext;
@@ -401,6 +450,8 @@ export class ApplicationMain {
       capsuleRootDir,
       context,
       rootDir,
+      undefined,
+      undefined,
       undefined,
       undefined
     );
@@ -436,7 +487,7 @@ export class ApplicationMain {
       AspectLoaderMain,
       Workspace,
       WatcherMain,
-      ScopeMain
+      ScopeMain,
     ],
     config: ApplicationAspectConfig,
     [appTypeSlot, appSlot, deploymentProviderSlot]: [ApplicationTypeSlot, ApplicationSlot, DeploymentProviderSlot],
@@ -467,7 +518,7 @@ export class ApplicationMain {
     builder.registerTagTasks([new DeployTask(application, builder)]);
     envs.registerService(appService);
     cli.registerGroup('apps', 'Applications');
-    cli.register(new RunCmd(application, logger), new AppListCmdDeprecated(application), appCmd);
+    cli.register(new RunCmd(application, logger), appCmd);
     // cli.registerOnStart(async () => {
     //   await application.loadAppsToSlot();
     // });

@@ -52,6 +52,11 @@
   background-color: rgb(97, 82, 207, 0.2) !important; // Ensure that this color is applied to all children as well
 }
 
+.highlightedRow {
+  scroll-margin-bottom: 100px;
+  scroll-margin-top: 50px;
+}
+
 :global {
   // after we set the line number to be inline we need to override the styles to make it look like it used to
   .linenumber {

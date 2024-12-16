@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai';
-import { IS_WINDOWS } from '../../src/constants';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { IS_WINDOWS } from '@teambit/legacy.constants';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -92,15 +92,20 @@ describe('Jest Tester', function () {
     });
   });
   describe('env with an incorrect Jest config', () => {
+    let envName;
+    let envId;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
-      helper.env.setCustomEnv('custom-react-env');
-      helper.fs.outputFile('custom-react-env/jest/jest.config.js', invalidJestConfigFixture());
-      helper.command.compile();
-      helper.command.install();
-      helper.command.setEnv('comp1', 'custom-react-env');
+      envName = helper.env.setCustomNewEnv('invalid-jest-config-env', [
+        '@teambit/react.react-env',
+        '@teambit/typescript.typescript-compiler',
+        '@teambit/defender.jest-tester',
+        '@teambit/defender.testers.multi-tester',
+      ]);
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.setEnv('comp1', envId);
     });
     it('bit test should exit with non-zero code', () => {
       expect(() => helper.command.test()).to.throw();
@@ -117,6 +122,8 @@ describe('Jest Tester', function () {
 
   describe('env with custom spec resolver', () => {
     let compName;
+    let envName;
+    let envId;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       compName = helper.fixtures.populateComponents(1);
@@ -125,10 +132,13 @@ describe('Jest Tester', function () {
         'comp1/comp1.custom-pattern.spec.ts',
         specFilePassingFixture('custom pattern describe text', 'custom pattern it text')
       );
-      helper.env.setCustomEnv('custom-jest-resolve-env');
-      helper.command.compile();
-      helper.command.install();
-      helper.command.setEnv('comp1', 'custom-jest-resolve-env');
+      envName = helper.env.setCustomNewEnv('custom-jest-resolve-env', [
+        '@teambit/react.react-env',
+        '@teambit/typescript.typescript-compiler',
+        '@teambit/defender.jest-tester',
+      ]);
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.setEnv('comp1', envId);
     });
     describe('bit test command', () => {
       let output;
@@ -201,13 +211,4 @@ function specFileErroringFixture() {
   });
 });
 `;
-}
-
-function invalidJestConfigFixture() {
-  return `module.exports = {
-    transformIgnorePatterns: [
-      someUndefinedFunc(),
-    ],
-  };
-  `;
 }

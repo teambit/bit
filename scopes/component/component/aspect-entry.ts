@@ -2,7 +2,7 @@
  * avoid importing any (non-type) legacy code here. otherwise, PreviewTask will throw cryptic errors
  */
 
-import type { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
+import type { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { ComponentID } from '@teambit/component-id';
 import { RawComponentMetadata } from './component-interface';
 
@@ -20,7 +20,10 @@ export type AspectData = {
 
 export type ResolveComponentIdFunc = (id: string) => Promise<ComponentID>;
 export class AspectEntry {
-  constructor(public id: ComponentID, private legacyEntry: ExtensionDataEntry) {}
+  constructor(
+    public id: ComponentID,
+    private legacyEntry: ExtensionDataEntry
+  ) {}
 
   get legacy() {
     return this.legacyEntry;

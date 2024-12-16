@@ -1,7 +1,7 @@
 import { AspectLoaderMain, getCoreAspectPackageName } from '@teambit/aspect-loader';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Component } from '@teambit/component';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { fromPairs, pickBy, mapValues, uniq, difference } from 'lodash';
 import { SemVer } from 'semver';
 import pMapSeries from 'p-map-series';
@@ -42,7 +42,10 @@ const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
   excludeExtensionsDependencies: false,
 };
 export class WorkspaceManifestFactory {
-  constructor(private dependencyResolver: DependencyResolverMain, private aspectLoader: AspectLoaderMain) {}
+  constructor(
+    private dependencyResolver: DependencyResolverMain,
+    private aspectLoader: AspectLoaderMain
+  ) {}
 
   async createFromComponents(
     name: string,

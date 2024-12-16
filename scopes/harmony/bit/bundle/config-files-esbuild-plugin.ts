@@ -29,14 +29,14 @@ function resolveRelativePath(filePath: string) {
   try {
     const resolvedFilePath = require.resolve(filePath);
     return resolvedFilePath;
-  } catch (err) {
+  } catch {
     const resolvedFilePath = require.resolve(`${filePath}.js`);
     return resolvedFilePath;
   }
 }
 
 async function handleRelativePath(args: OnResolveArgs, bundleDir: string) {
-  const parsed = parse(args.path);
+  // const parsed = parse(args.path);
   const { componentName, relativePath, scopeName } = await parseArgs(args);
   // const packageDirName = getPackageDirName(args.resolveDir);
   const packageDirName = `@teambit/${componentName}`;

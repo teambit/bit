@@ -1,6 +1,6 @@
-import { Command } from '@teambit/legacy/dist/cli/command';
+import { Command } from './command';
 import { Arguments, CommandModule, Argv, Options } from 'yargs';
-import { TOKEN_FLAG } from '@teambit/legacy/dist/constants';
+import { TOKEN_FLAG } from '@teambit/legacy.constants';
 import { camelCase } from 'lodash';
 import { CommandRunner } from './command-runner';
 import { OnCommandStartSlot } from './cli.main.runtime';
@@ -12,7 +12,11 @@ export class YargsAdapter implements CommandModule {
   command: string;
   describe?: string;
   aliases?: string;
-  constructor(private commanderCommand: Command, private onCommandStartSlot: OnCommandStartSlot) {
+  commandRunner?: CommandRunner;
+  constructor(
+    private commanderCommand: Command,
+    private onCommandStartSlot: OnCommandStartSlot
+  ) {
     this.command = commanderCommand.name;
     this.describe = commanderCommand.description;
     this.aliases = commanderCommand.alias;
@@ -45,7 +49,7 @@ export class YargsAdapter implements CommandModule {
     this.commanderCommand._packageManagerArgs = (argv['--'] || []) as string[];
 
     const commandRunner = new CommandRunner(this.commanderCommand, argsValues, flags, this.onCommandStartSlot);
-    return commandRunner.runCommand();
+    this.commandRunner = commandRunner;
   }
 
   get positional() {

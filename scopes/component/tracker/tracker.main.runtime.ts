@@ -4,7 +4,7 @@ import { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { AddCmd } from './add-cmd';
 import AddComponents, { AddActionResults, AddContext, AddProps, Warnings } from './add-components';
 import { TrackerAspect } from './tracker.aspect';
@@ -20,7 +20,10 @@ export type TrackData = {
 };
 
 export class TrackerMain {
-  constructor(private workspace: Workspace, private logger: Logger) {}
+  constructor(
+    private workspace: Workspace,
+    private logger: Logger
+  ) {}
 
   /**
    * add a new component to the .bitmap file.
@@ -70,7 +73,7 @@ export class TrackerMain {
     let userEnvIdWithPotentialVersion: string;
     try {
       userEnvIdWithPotentialVersion = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(userEnvId);
-    } catch (err) {
+    } catch {
       // the env needs to be without version
       userEnvIdWithPotentialVersion = userEnvId.toStringWithoutVersion();
     }

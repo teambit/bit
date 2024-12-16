@@ -32,7 +32,10 @@ export class APIReferenceModel {
   taggedAPINodes: APINode<SchemaNode>[] = [];
   componentId: ComponentID;
 
-  constructor(public _api: APISchema, _renderers: APINodeRenderer[]) {
+  constructor(
+    public _api: APISchema,
+    _renderers: APINodeRenderer[]
+  ) {
     this.componentId = _api.componentId as any;
     this.apiNodes = this.mapToAPINode(_api, _renderers, this.componentId);
     this.apiByType = this.groupByType(this.apiNodes);
@@ -87,7 +90,7 @@ export class APIReferenceModel {
               defaultRenderers.find((renderer) =>
                 renderer.predicate(ExportSchema.isExportSchema(schemaNode) ? schemaNode.exportNode : schemaNode)
               ),
-          } as APINode)
+          }) as APINode
       )
       .concat(
         internalSchemaNodes.map(
@@ -99,7 +102,7 @@ export class APIReferenceModel {
               renderer:
                 nonDefaultRenderers.find((renderer) => renderer.predicate(schemaNode)) ||
                 defaultRenderers.find((renderer) => renderer.predicate(schemaNode)),
-            } as APINode)
+            }) as APINode
         )
       )
       .filter((schemaNode) => schemaNode.renderer) as APINode[];
@@ -107,6 +110,11 @@ export class APIReferenceModel {
 
   getByType(type: string): APINode<SchemaNode>[] {
     return this.apiByType.get(type) ?? [];
+  }
+
+  getByName(node: SchemaNode): APINode | undefined {
+    if (!node.name) return undefined;
+    return this.apiByName.get(node.name) ?? this.apiByName.get(this.internalAPIKey(node));
   }
 
   groupByType(apiNodes: APINode[]): Map<string, APINode[]> {
@@ -131,7 +139,7 @@ export class APIReferenceModel {
     try {
       const apiSchema = APISchema.fromObject(result.getHost.getSchema);
       return new APIReferenceModel(apiSchema, renderers);
-    } catch (e) {
+    } catch {
       return new APIReferenceModel(
         APISchema.empty(ComponentID.fromObject((result.getHost.getSchema as any).componentId as ComponentIdObj) as any),
         renderers

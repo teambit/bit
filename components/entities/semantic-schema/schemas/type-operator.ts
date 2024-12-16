@@ -3,7 +3,11 @@ import { SchemaRegistry } from '../schema-registry';
 
 export class TypeOperatorSchema extends SchemaNode {
   type: SchemaNode;
-  constructor(readonly location: SchemaLocation, readonly name: string, type: SchemaNode) {
+  constructor(
+    readonly location: SchemaLocation,
+    readonly name: string,
+    type: SchemaNode
+  ) {
     super();
     this.type = type;
   }
@@ -12,8 +16,12 @@ export class TypeOperatorSchema extends SchemaNode {
     return [this.type];
   }
 
-  toString() {
-    return `${this.name} ${this.type.toString()}`;
+  toString(options?: { color?: boolean }) {
+    return `${this.name} ${this.type.toString(options)}`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    return `${this.name} ${this.type.toFullSignature(options)}`;
   }
 
   toObject() {

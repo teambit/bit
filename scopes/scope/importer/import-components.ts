@@ -1,39 +1,39 @@
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
-import { getRemoteBitIdsByWildcards } from '@teambit/legacy/dist/api/consumer/lib/list-scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Consumer } from '@teambit/legacy/dist/consumer';
-import { BEFORE_IMPORT_ACTION } from '@teambit/legacy/dist/cli/loader/loader-messages';
-import { Scope } from '@teambit/legacy/dist/scope';
-import { Lane, ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
-import { getLatestVersionNumber, pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-import hasWildcard from '@teambit/legacy/dist/utils/string/has-wildcard';
-import Component from '@teambit/legacy/dist/consumer/component';
+import { ComponentsPendingMerge, Consumer } from '@teambit/legacy.consumer';
+import { Lane, ModelComponent, Version } from '@teambit/scope.objects';
+import { getLatestVersionNumber, pathNormalizeToLinux, hasWildcard } from '@teambit/legacy.utils';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { applyModifiedVersion } from '@teambit/checkout';
 import {
   FileStatus,
   getMergeStrategyInteractive,
   MergeOptions,
   threeWayMerge,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version';
-import { MergeStrategy } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
-import { MergeResultsThreeWay } from '@teambit/legacy/dist/consumer/versions-ops/merge-version/three-way-merge';
-import ComponentsPendingMerge from '@teambit/legacy/dist/consumer/component-ops/exceptions/components-pending-merge';
-import ScopeComponentsImporter from '@teambit/legacy/dist/scope/component-ops/scope-components-importer';
-import VersionDependencies, {
+  MergeStrategy,
+  MergeResultsThreeWay,
+  FilesStatus,
+} from '@teambit/merging';
+import {
   multipleVersionDependenciesToConsumer,
-} from '@teambit/legacy/dist/scope/version-dependencies';
+  VersionDependencies,
+  ScopeComponentsImporter,
+  Scope,
+} from '@teambit/legacy.scope';
 import { GraphMain } from '@teambit/graph';
 import { Workspace } from '@teambit/workspace';
 import { ComponentWriterMain, ComponentWriterResults, ManyComponentsWriterParams } from '@teambit/component-writer';
 import { LATEST_VERSION } from '@teambit/component-version';
 import { EnvsMain } from '@teambit/envs';
 import { compact, difference, fromPairs } from 'lodash';
-import { FilesStatus } from '@teambit/merging';
 import { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import { Logger } from '@teambit/logger';
 import { DependentsGetter } from './dependents-getter';
+import { ListerMain, NoIdMatchWildcard } from '@teambit/lister';
+
+const BEFORE_IMPORT_ACTION = 'importing components';
 
 export type ImportOptions = {
   ids: string[]; // array might be empty
@@ -48,6 +48,7 @@ export type ImportOptions = {
   writeConfigFiles: boolean; // default: true
   objectsOnly?: boolean;
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages, not as imported
+  importHeadDependenciesDirectly?: boolean; // default: false, similar to importDependenciesDirectly, but it checks out to their head
   importDependents?: boolean;
   dependentsVia?: string;
   dependentsAll?: boolean;
@@ -105,6 +106,7 @@ export default class ImportComponents {
     private componentWriter: ComponentWriterMain,
     private envs: EnvsMain,
     private logger: Logger,
+    private lister: ListerMain,
     public options: ImportOptions
   ) {
     this.consumer = this.workspace.consumer;
@@ -291,9 +293,8 @@ export default class ImportComponents {
       await Promise.all(
         bitIds.map(async (bitId) => {
           const isOnCurrentLane =
-            (await this.scope.isPartOfLaneHistory(bitId, currentRemoteLane)) ||
-            (currentLane && (await this.scope.isPartOfLaneHistory(bitId, currentLane))) ||
-            (await this.scope.isPartOfMainHistory(bitId));
+            (await this.scope.isPartOfLaneHistoryOrMain(bitId, currentRemoteLane)) ||
+            (currentLane && (await this.scope.isPartOfLaneHistoryOrMain(bitId, currentLane)));
           if (!isOnCurrentLane) idsFromAnotherLane.push(bitId);
         })
       );
@@ -407,7 +408,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
       if (existingOnLanes.length) {
         bitIds.push(...existingOnLanes);
       } else {
-        const idsFromRemote = await getRemoteBitIdsByWildcards(idStr, this.options.includeDeprecated);
+        const idsFromRemote = await this.lister.getRemoteCompIdsByWildcards(idStr, this.options.includeDeprecated);
         bitIds.push(...idsFromRemote);
       }
     });
@@ -425,8 +426,16 @@ if you just want to get a quick look into this snap, create a new workspace and 
     await Promise.all(
       this.options.ids.map(async (idStr: string) => {
         if (hasWildcard(idStr)) {
-          const ids = await getRemoteBitIdsByWildcards(idStr, this.options.includeDeprecated);
-          this.logger.setStatusLine(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
+          let ids: ComponentID[] = [];
+          try {
+            ids = await this.lister.getRemoteCompIdsByWildcards(idStr, this.options.includeDeprecated);
+          } catch (err: any) {
+            if (err instanceof NoIdMatchWildcard) {
+              this.logger.consoleWarning(err.message);
+            } else {
+              throw err;
+            }
+          }
           bitIds.push(...ids);
         } else {
           const id = await this.getIdFromStr(idStr);
@@ -434,6 +443,8 @@ if you just want to get a quick look into this snap, create a new workspace and 
         }
       })
     );
+
+    this.logger.setStatusLine(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST
 
     return bitIds;
   }
@@ -444,8 +455,10 @@ if you just want to get a quick look into this snap, create a new workspace and 
       : await this.getBitIdsForNonLanes();
     const shouldImportDependents =
       this.options.importDependents || this.options.dependentsVia || this.options.dependentsAll;
-    if (this.options.importDependenciesDirectly || shouldImportDependents) {
-      if (this.options.importDependenciesDirectly) {
+    const shouldImportDependencies =
+      this.options.importDependenciesDirectly || this.options.importHeadDependenciesDirectly;
+    if (shouldImportDependencies || shouldImportDependents) {
+      if (shouldImportDependencies) {
         const dependenciesIds = await this.getFlattenedDepsUnique(bitIds);
         bitIds.push(...dependenciesIds);
       }
@@ -467,8 +480,14 @@ if you just want to get a quick look into this snap, create a new workspace and 
       return ComponentIdList.uniqFromArray(flattenedDeps);
     };
     const flattened = getFlattened();
-    const withLatest = this.removeMultipleVersionsKeepLatest(flattened);
-    return withLatest;
+    return this.options.importHeadDependenciesDirectly
+      ? this.uniqWithoutVersions(flattened)
+      : this.removeMultipleVersionsKeepLatest(flattened);
+  }
+
+  private uniqWithoutVersions(flattened: ComponentIdList) {
+    const latest = flattened.toVersionLatest();
+    return ComponentIdList.uniqFromArray(latest);
   }
 
   private removeMultipleVersionsKeepLatest(flattened: ComponentIdList): ComponentID[] {
@@ -476,8 +495,14 @@ if you just want to get a quick look into this snap, create a new workspace and 
     const latestVersions = Object.keys(grouped).map((key) => {
       const ids = grouped[key];
       if (ids.length === 1) return ids[0];
-      const latest = getLatestVersionNumber(ids, ids[0].changeVersion(LATEST_VERSION));
-      return latest;
+      try {
+        const latest = getLatestVersionNumber(ids, ids[0].changeVersion(LATEST_VERSION));
+        return latest;
+      } catch (err: any) {
+        throw new Error(`a dependency "${key}" was found with multiple versions, unable to find which one of them is newer.
+error: ${err.message}
+consider running with "--dependencies-head" flag instead, which checks out to the head of the dependencies`);
+      }
     });
 
     return latestVersions;

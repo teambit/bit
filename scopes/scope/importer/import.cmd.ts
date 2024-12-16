@@ -1,15 +1,17 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { compact, uniq } from 'lodash';
-import { installationErrorOutput, compilationErrorOutput, getWorkspaceConfigUpdateOutput } from '@teambit/merging';
 import {
+  installationErrorOutput,
+  compilationErrorOutput,
+  getWorkspaceConfigUpdateOutput,
   FileStatus,
   MergeOptions,
   MergeStrategy,
-} from '@teambit/legacy/dist/consumer/versions-ops/merge-version/merge-version';
+} from '@teambit/merging';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { immutableUnshift } from '@teambit/legacy/dist/utils';
+import { immutableUnshift } from '@teambit/legacy.utils';
 import { ImporterMain } from './importer.main.runtime';
 import { ImportOptions, ImportDetails, ImportStatus, ImportResult } from './import-components';
 
@@ -27,6 +29,7 @@ type ImportFlags = {
   filterEnvs?: string;
   saveInLane?: boolean;
   dependencies?: boolean;
+  dependenciesHead?: boolean;
   dependents?: boolean;
   dependentsDryRun?: boolean;
   dependentsVia?: string;
@@ -75,6 +78,7 @@ export class ImportCmd implements Command {
       'dependencies',
       'import all dependencies (bit components only) of imported components and write them to the workspace',
     ],
+    ['', 'dependencies-head', 'same as --dependencies, except it imports the dependencies with their head version'],
     [
       '',
       'dependents',
@@ -211,6 +215,7 @@ export class ImportCmd implements Command {
       filterEnvs,
       saveInLane = false,
       dependencies = false,
+      dependenciesHead = false,
       dependents = false,
       dependentsDryRun = false,
       silent,
@@ -233,6 +238,9 @@ export class ImportCmd implements Command {
     }
     if (!ids.length && dependencies) {
       throw new BitError('you have to specify ids to use "--dependencies" flag');
+    }
+    if (!ids.length && dependenciesHead) {
+      throw new BitError('you have to specify ids to use "--dependencies-head" flag');
     }
     if (!ids.length && dependents) {
       throw new BitError('you have to specify ids to use "--dependents" flag');
@@ -268,6 +276,7 @@ export class ImportCmd implements Command {
       writeConfigFiles: !skipWriteConfigFiles,
       saveInLane,
       importDependenciesDirectly: dependencies,
+      importHeadDependenciesDirectly: dependenciesHead,
       importDependents: dependents,
       dependentsVia,
       dependentsAll,
@@ -301,9 +310,14 @@ function formatPlainComponentItem({ scope, name, version, deprecated }: any) {
 function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails: ImportDetails) {
   const status: ImportStatus = importDetails.status;
   const id = bitId.toStringWithoutVersion();
+  let usingLatest = '';
   const getVersionsOutput = () => {
     if (!importDetails.versions.length) return '';
     if (importDetails.latestVersion) {
+      if (importDetails.latestVersion === bitId.version && status === 'added') {
+        usingLatest = ' (latest)';
+        return '';
+      }
       return `${importDetails.versions.length} new version(s) available, latest ${importDetails.latestVersion}`;
     }
     return importDetails.versions.length > 5
@@ -311,7 +325,7 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
       : `new versions: ${importDetails.versions.join(', ')}`;
   };
   const versions = getVersionsOutput();
-  const usedVersion = status === 'added' ? `, currently used version ${bitId.version}` : '';
+  const usedVersion = status === 'added' ? `currently used version ${bitId.version}${usingLatest}` : '';
   const getConflictMessage = () => {
     if (!importDetails.filesStatus) return '';
     const conflictedFiles = Object.keys(importDetails.filesStatus)
@@ -331,9 +345,11 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
   if (status === 'up to date' && !missingDeps && !deprecated && !conflictMessage && !removed) {
     return undefined;
   }
-  return chalk.dim(
-    `- ${chalk.green(status)} ${chalk.cyan(
-      id
-    )} ${versions}${usedVersion} ${conflictMessage}${deprecated}${removed} ${missingDeps}`
-  );
+
+  const statusOutput = `- ${chalk.green(status)}`;
+  const idOutput = chalk.cyan(id);
+  const versionOutput = compact([versions, usedVersion]).join(', ');
+  const stateOutput = `${conflictMessage}${deprecated}${removed}`;
+  const output = compact([statusOutput, idOutput, versionOutput, stateOutput, missingDeps]).join(' ');
+  return chalk.dim(output);
 }

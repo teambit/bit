@@ -1,6 +1,5 @@
 import { IssuesList } from '@teambit/component-issues';
-import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
-import { ManuallyChangedDependencies } from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { Dependency, ManuallyChangedDependencies } from '@teambit/legacy.consumer-component';
 import { AllDependencies, AllPackagesDependencies } from './apply-overrides';
 
 export type OverridesDependenciesData = {

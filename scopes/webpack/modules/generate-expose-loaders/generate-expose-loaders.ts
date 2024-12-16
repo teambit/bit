@@ -20,7 +20,7 @@ export type GenerateExposeLoadersOptions = {
 export function generateExposeLoaders(
   exposedEntries: ExposedEntries,
   options: GenerateExposeLoadersOptions = {}
-): Array<Object> {
+): Array<object> {
   const loaderPath = options.loaderPath || require.resolve('expose-loader');
   const rules = exposedEntries.map((entry) => {
     return {

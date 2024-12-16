@@ -9,7 +9,8 @@ export class InferenceTypeSchema extends SchemaNode {
     readonly type: string,
     readonly name?: string,
     readonly defaultValue?: string,
-    readonly isSpread?: boolean
+    readonly isSpread?: boolean,
+    readonly alias?: string
   ) {
     super();
   }
@@ -21,12 +22,29 @@ export class InferenceTypeSchema extends SchemaNode {
     return this.type;
   }
 
+  toFullSignature(): string {
+    let result = '';
+
+    if (this.name && this.name !== this.type) {
+      result += `${this.name}: `;
+    }
+
+    result += this.type;
+
+    if (this.defaultValue !== undefined) {
+      result += ` = ${this.defaultValue}`;
+    }
+
+    return result;
+  }
+
   toObject() {
     return {
       ...super.toObject(),
       type: this.type,
       defaultValue: this.defaultValue,
       isSpread: this.isSpread,
+      alias: this.alias,
     };
   }
 
@@ -36,6 +54,7 @@ export class InferenceTypeSchema extends SchemaNode {
     const name = obj.name;
     const defaultValue = obj.defaultValue;
     const isSpread = obj.isSpread;
-    return new InferenceTypeSchema(location, type, name, defaultValue, isSpread);
+    const alias = obj.alias;
+    return new InferenceTypeSchema(location, type, name, defaultValue, isSpread, alias);
   }
 }

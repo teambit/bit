@@ -25,11 +25,14 @@ export type InitOptions = {
 };
 
 export class HarmonyWorker<T> {
-  constructor(readonly name: string, readonly workerPath: string) {}
+  constructor(
+    readonly name: string,
+    readonly workerPath: string
+  ) {}
 
-  private remoteWorker: undefined | Remote<T>;
+  protected remoteWorker: undefined | Remote<T>;
 
-  private worker: Worker | undefined;
+  protected worker: Worker | undefined;
 
   get stdout() {
     return this.worker?.stdout;

@@ -1,4 +1,4 @@
-import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy/dist/constants';
+import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy.constants';
 import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import chalk from 'chalk';
 import { uniq } from 'lodash';
@@ -124,7 +124,7 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
       );
       const capsuleNetwork = await this.isolator.isolateComponents(componentIds, isolateOptions);
       capsuleNetwork._originalSeeders = originalSeedersOfThisEnv;
-      const msg = `building ${originalSeedersOfThisEnv.length} components of env "${executionContext.id}"`;
+      const msg = `building ${chalk.cyan(originalSeedersOfThisEnv.length.toString())} components of env ${chalk.cyan(executionContext.id)}`;
       const extraDetails = `original seeders of this env: ${originalSeedersOfThisEnv.length}, graph of this env: ${capsuleNetwork.seedersCapsules.length}, graph total (include other envs): ${capsuleNetwork.graphCapsules.length}`;
       this.logger.console(`${msg}. ${chalk.dim(extraDetails)}`);
       const buildContext = Object.assign(executionContext, {

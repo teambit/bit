@@ -24,9 +24,14 @@ export class CompileCmd implements Command {
     ['v', 'verbose', 'show more data, such as, dist paths'],
     ['j', 'json', 'return the compile results in json format'],
     ['d', 'delete-dist-dir', 'delete existing dist folder before writing new compiled files'],
+    ['', 'generate-types', 'EXPERIMENTAL. generate d.ts files for typescript components (hurts performance)'],
   ] as CommandOptions;
 
-  constructor(private compile: WorkspaceCompiler, private logger: Logger, private pubsub: PubsubMain) {}
+  constructor(
+    private compile: WorkspaceCompiler,
+    private logger: Logger,
+    private pubsub: PubsubMain
+  ) {}
 
   async report([components = []]: [string[]], compilerOptions: CompileOptions) {
     const startTimestamp = process.hrtime();

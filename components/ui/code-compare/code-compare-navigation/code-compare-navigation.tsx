@@ -1,5 +1,6 @@
 /* eslint-disable react/require-default-props */
 import React, { ComponentType, HTMLAttributes, useState } from 'react';
+import { SafeImage } from '@teambit/base-react.content.image';
 import { FileIconMatch, getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
 import { NavPlugin, CollapsibleMenuNav } from '@teambit/component';
 import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
@@ -43,7 +44,7 @@ function CodeCompareNav({
       files.map((file, index) => {
         const isActive = file === selectedFile;
         const href = getHref({ id: file });
-
+        const icon = getFileIcon(fileIconMatchers, file);
         return [
           file,
           {
@@ -55,12 +56,10 @@ function CodeCompareNav({
               className: classNames(styles.compareNavItem, index === 0 && styles.first),
               children: (
                 <div className={styles.codeCompareTab}>
-                  <img src={getFileIcon(fileIconMatchers, file)} alt="file-icon" />
+                  {icon && <SafeImage className={styles.icon} preserveSpace src={icon} alt="file-icon" />}
                   <span>{file}</span>
                   <div className={styles.codeCompareTabRight}>
-                    {widgets?.map((Widget, widgetIndex) => (
-                      <Widget key={widgetIndex} node={{ id: file }} />
-                    ))}
+                    {widgets?.map((Widget, widgetIndex) => <Widget key={widgetIndex} node={{ id: file }} />)}
                   </div>
                 </div>
               ),

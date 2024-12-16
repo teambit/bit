@@ -5,7 +5,11 @@ export class IndexedAccessSchema extends SchemaNode {
   readonly objectType: SchemaNode;
   readonly indexType: SchemaNode;
 
-  constructor(readonly location: SchemaLocation, objectType: SchemaNode, indexType: SchemaNode) {
+  constructor(
+    readonly location: SchemaLocation,
+    objectType: SchemaNode,
+    indexType: SchemaNode
+  ) {
     super();
     this.objectType = objectType;
     this.indexType = indexType;
@@ -17,6 +21,13 @@ export class IndexedAccessSchema extends SchemaNode {
 
   toString() {
     return `${this.objectType.toString()}[${this.indexType.toString()}]`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const objectTypeStr = this.objectType.toFullSignature(options);
+    const indexTypeStr = this.indexType.toFullSignature(options);
+
+    return `${objectTypeStr}[${indexTypeStr}]`;
   }
 
   toObject() {

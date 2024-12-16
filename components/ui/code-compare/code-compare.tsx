@@ -29,6 +29,7 @@ export type CodeCompareProps = {
 
 export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareView }: CodeCompareProps) {
   const componentCompareContext = useComponentCompare();
+
   const query = useQuery();
   const location = useLocation() || { pathname: '/' };
 
@@ -56,7 +57,7 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
       : allFiles.sort((a, b) => {
           const aCompareResult = fileCompareDataByName.get(a);
           const bCompareResult = fileCompareDataByName.get(b);
-          const noStatus = (status) => !status || status === 'UNCHANGED';
+          const noStatus = (status?: string) => !status || status === 'UNCHANGED';
           const aStatus = aCompareResult?.status;
           const bStatus = bCompareResult?.status;
           if (!noStatus(aStatus) && !noStatus(bStatus)) return 0;
@@ -78,7 +79,7 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
   );
 
   const controlledHref = useUpdatedUrlFromQuery({});
-  const getHref = (node) => {
+  const useHref = (node: any) => {
     const hrefFromHook =
       hook?.useUpdatedUrlFromQuery?.(
         { file: node.id },
@@ -130,7 +131,7 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
             currentFile={selectedFile}
             drawerName="FILES"
             widgets={[Widget]}
-            getHref={getHref}
+            getHref={useHref}
             onTreeNodeSelected={hook?.onClick}
             open={isSidebarOpen}
           />
@@ -141,8 +142,9 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
             widgets={[Widget]}
             fileName={selectedFile}
             files={fileTree}
-            getHref={getHref}
+            getHref={useHref}
             onTabClicked={hook?.onClick}
+            fileIconSlot={fileIconSlot}
           />
         </Pane>
       </SplitPane>

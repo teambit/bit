@@ -3,7 +3,7 @@ import { ComponentMain } from '@teambit/component';
 import pMapSeries from 'p-map-series';
 import { Logger } from '@teambit/logger';
 import { APISchema } from '@teambit/semantics.entities.semantic-schema';
-import { PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { PATTERN_HELP } from '@teambit/legacy.constants';
 import type { SchemaMain } from './schema.main.runtime';
 
 export class SchemaCommand implements Command {
@@ -13,7 +13,11 @@ export class SchemaCommand implements Command {
   group = 'development';
   options = [['j', 'json', 'return the component schema in json format']] as CommandOptions;
 
-  constructor(private schema: SchemaMain, private component: ComponentMain, private logger: Logger) {}
+  constructor(
+    private schema: SchemaMain,
+    private component: ComponentMain,
+    private logger: Logger
+  ) {}
 
   async report([pattern]: [string]) {
     const schemas = await this.getSchemas([pattern]);

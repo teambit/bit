@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
 import classNames from 'classnames';
 import { ScopeID } from '@teambit/scopes.scope-id';
@@ -18,6 +18,7 @@ export type WorkspaceComponentCardProps = {
     id: ScopeID;
   };
   className?: string;
+  shouldShowPreviewState?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function WorkspaceComponentCard({
@@ -26,10 +27,14 @@ export function WorkspaceComponentCard({
   scope,
   plugins,
   className,
+  shouldShowPreviewState: shouldShowPreviewStateFromProps,
   ...rest
 }: WorkspaceComponentCardProps) {
-  const [shouldShowPreviewState, togglePreview] = React.useState<boolean>(false);
-  if (component.deprecation?.isDeprecate) return null;
+  const [shouldShowPreviewState, togglePreview] = React.useState<boolean>(Boolean(shouldShowPreviewStateFromProps));
+
+  useEffect(() => {
+    togglePreview(Boolean(shouldShowPreviewStateFromProps));
+  }, [shouldShowPreviewStateFromProps]);
   const showPreview = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
     if (!shouldShowPreviewState) {
@@ -56,7 +61,7 @@ export function WorkspaceComponentCard({
       return plugin;
     });
   }, [shouldShowPreviewState, component.compositions.length]);
-
+  if (component.deprecation?.isDeprecate) return null;
   return (
     <div key={component.id.toString()} className={classNames(styles.cardWrapper, className)} {...rest}>
       {loadPreviewBtnVisible && <LoadPreview className={styles.loadPreview} onClick={showPreview} />}

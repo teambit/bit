@@ -38,7 +38,11 @@ export type DeprecationMetadata = {
 };
 
 export class DeprecationMain {
-  constructor(private scope: ScopeMain, private workspace: Workspace, private depsResolver: DependencyResolverMain) {}
+  constructor(
+    private scope: ScopeMain,
+    private workspace: Workspace,
+    private depsResolver: DependencyResolverMain
+  ) {}
 
   async getDeprecationInfo(component: Component): Promise<DeprecationInfo> {
     const headComponent = await this.getHeadComponent(component);
@@ -91,6 +95,17 @@ export class DeprecationMain {
     await this.workspace.bitMap.write(`deprecate ${componentId.toString()}`);
 
     return results;
+  }
+
+  async deprecateByCLIValues(id: string, newId?: string, range?: string): Promise<boolean> {
+    const componentId = await this.workspace.resolveComponentId(id);
+    const newComponentId = newId ? await this.workspace.resolveComponentId(newId) : undefined;
+    return this.deprecate(componentId, newComponentId, range);
+  }
+
+  async unDeprecateByCLIValues(id: string): Promise<boolean> {
+    const componentId = await this.workspace.resolveComponentId(id);
+    return this.unDeprecate(componentId);
   }
 
   async unDeprecate(componentId: ComponentID) {
@@ -158,11 +173,11 @@ export class DeprecationMain {
     Workspace,
     CLIMain,
     DependencyResolverMain,
-    IssuesMain
+    IssuesMain,
   ]) {
     const deprecation = new DeprecationMain(scope, workspace, depsResolver);
     issues.registerAddComponentsIssues(deprecation.addDeprecatedDependenciesIssues.bind(deprecation));
-    cli.register(new DeprecateCmd(deprecation, workspace), new UndeprecateCmd(deprecation, workspace));
+    cli.register(new DeprecateCmd(deprecation), new UndeprecateCmd(deprecation));
     componentAspect.registerShowFragments([new DeprecationFragment(deprecation)]);
     graphql.register(deprecationSchema(deprecation));
 

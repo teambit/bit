@@ -4,7 +4,10 @@ import { SchemaRegistry } from '../schema-registry';
 export class TypeArraySchema extends SchemaNode {
   readonly type: SchemaNode;
 
-  constructor(readonly location: SchemaLocation, type: SchemaNode) {
+  constructor(
+    readonly location: SchemaLocation,
+    type: SchemaNode
+  ) {
     super();
     this.type = type;
   }
@@ -13,8 +16,12 @@ export class TypeArraySchema extends SchemaNode {
     return [this.type];
   }
 
-  toString() {
-    return `${this.type.toString()}[]`;
+  toString(options?: { color?: boolean }) {
+    return `${this.type.toString(options)}[]`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    return `${this.type.toFullSignature(options)}[]`;
   }
 
   toObject() {

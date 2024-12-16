@@ -6,7 +6,7 @@ import {
   GLOBAL_CONFIG,
   CFG_CAPSULES_ROOT_BASE_DIR,
   GLOBALS_DEFAULT_CAPSULES,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import {
   del,
   delSync,
@@ -17,11 +17,13 @@ import {
   set,
   setSync,
   invalidateCache,
-} from '@teambit/legacy/dist/api/consumer/lib/global-config';
-import { GlobalConfig } from '@teambit/legacy/dist/global-config';
+  GlobalConfig,
+} from '@teambit/legacy.global-config';
 import { GlobalConfigAspect } from './global-config.aspect';
 import { GlobalsCmd } from './globals.cmd';
-import { SystemCmd, SystemLogCmd } from './system.cmd';
+import { SystemCmd, SystemLogCmd, SystemTailLogCmd } from './system.cmd';
+import { ConfigCmd } from './config-cmd';
+import { RemoteCmd } from './remote-cmd';
 
 export class GlobalConfigMain {
   static runtime = MainRuntime;
@@ -88,9 +90,8 @@ export class GlobalConfigMain {
   static async provider([cli]: [CLIMain]) {
     const globalConfig = new GlobalConfigMain();
     const systemCmd = new SystemCmd();
-    const systemLogCmd = new SystemLogCmd();
-    systemCmd.commands = [systemLogCmd];
-    cli.register(new GlobalsCmd(globalConfig), systemCmd);
+    systemCmd.commands = [new SystemLogCmd(), new SystemTailLogCmd()];
+    cli.register(new GlobalsCmd(globalConfig), systemCmd, new ConfigCmd(), new RemoteCmd());
     return globalConfig;
   }
 }

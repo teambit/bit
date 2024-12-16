@@ -1,6 +1,7 @@
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
-import { ComponentMap } from '@teambit/component';
+import { ComponentID, ComponentMap } from '@teambit/component';
+import { type DependenciesGraph } from '@teambit/scope.objects';
 import { Registries } from './registry';
 import { DepsFilterFn } from './manifest';
 import { NetworkConfig, ProxyConfig } from './dependency-resolver.main.runtime';
@@ -29,6 +30,11 @@ export type PackageManagerInstallOptions = {
   overrides?: Record<string, string>;
 
   lockfileOnly?: boolean;
+
+  /**
+   * When false, the package manager will not write the node_modules directory
+   */
+  enableModulesDir?: boolean;
 
   nodeLinker?: 'hoisted' | 'isolated';
 
@@ -120,6 +126,14 @@ export type PackageManagerInstallOptions = {
    * Tells pnpm to automatically install peer dependencies. It is true by default.
    */
   autoInstallPeers?: boolean;
+
+  /**
+   * Tells the package manager to return the list of dependencies that has to be built.
+   * This is used by Ripple CI.
+   */
+  returnListOfDepsRequiringBuild?: boolean;
+
+  dependenciesGraph?: DependenciesGraph;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -195,4 +209,16 @@ export interface PackageManager {
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string>;
 
   findUsages?(depName: string, opts: { lockfileDir: string; depth?: number }): Promise<string>;
+
+  calcDependenciesGraph?(options: CalcDepsGraphOptions): Promise<DependenciesGraph | undefined>;
 }
+
+export interface CalcDepsGraphOptions {
+  componentRelativeDir: string;
+  componentIdByPkgName: ComponentIdByPkgName;
+  rootDir: string;
+  componentRootDir?: string;
+  pkgName?: string;
+}
+
+export type ComponentIdByPkgName = Map<string, ComponentID>;

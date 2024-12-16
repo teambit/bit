@@ -7,3 +7,4 @@ export type { SingletonTooltipProviderProps } from './singleton-instance';
 export { TooltipMountPoint } from './mount-point';
 
 export { useSingleton, tippy } from '@tippyjs/react';
+export type { Placement } from 'tippy.js';

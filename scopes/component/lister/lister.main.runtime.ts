@@ -1,33 +1,64 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { BEFORE_LOCAL_LIST, BEFORE_REMOTE_LIST } from '@teambit/legacy/dist/cli/loader/loader-messages';
 import { ComponentID } from '@teambit/component-id';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
-import { Remote } from '@teambit/legacy/dist/remotes';
-import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
-import ComponentsList, {
-  ListScopeResult as ListScopeResultLegacy,
-} from '@teambit/legacy/dist/consumer/component/components-list';
+import { ConsumerNotFound } from '@teambit/legacy.consumer';
+import { getRemoteByName, Remote } from '@teambit/scope.remotes';
+import { ComponentsList } from '@teambit/legacy.component-list';
+import { BitError } from '@teambit/bit-error';
 import { ListCmd } from './list.cmd';
 import { ListerAspect } from './lister.aspect';
+import { NoIdMatchWildcard } from './no-id-match-wildcard';
+
+const BEFORE_REMOTE_LIST = 'listing remote components';
+const BEFORE_LOCAL_LIST = 'listing components';
 
 export type ListScopeResult = {
   id: ComponentID;
   currentlyUsedVersion?: string | null | undefined;
   remoteVersion?: string;
   deprecated?: boolean;
+  removed?: boolean;
   laneReadmeOf?: string[];
 };
 
 export class ListerMain {
-  constructor(private logger: Logger, private workspace?: Workspace) {}
+  constructor(
+    private logger: Logger,
+    private workspace?: Workspace
+  ) {}
 
-  async remoteList(scopeName: string, namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
+  async remoteList(
+    scopeName: string,
+    {
+      namespacesUsingWildcards,
+      includeDeprecated = true,
+      includeDeleted = false,
+    }: {
+      namespacesUsingWildcards?: string;
+      includeDeprecated?: boolean;
+      includeDeleted?: boolean;
+    }
+  ): Promise<ListScopeResult[]> {
     const remote: Remote = await getRemoteByName(scopeName, this.workspace?.consumer);
     this.logger.setStatusLine(BEFORE_REMOTE_LIST);
-    const legacyListScopeResult = await remote.list(namespacesUsingWildcards);
-    return this.convertListScopeResultsFromLegacy(legacyListScopeResult);
+    const listResult = await remote.list(namespacesUsingWildcards, includeDeleted);
+    const results = includeDeprecated ? listResult : listResult.filter((r) => !r.deprecated);
+    return this.sortListScopeResults(results);
+  }
+
+  async getRemoteCompIdsByWildcards(idStr: string, includeDeprecated = true): Promise<ComponentID[]> {
+    if (!idStr.includes('/')) {
+      throw new BitError(`import with wildcards expects full scope-name before the wildcards, instead, got "${idStr}"`);
+    }
+    const idSplit = idStr.split('/');
+    const [scopeName, ...rest] = idSplit;
+    const namespacesUsingWildcards = rest.join('/');
+    const listResult = await this.remoteList(scopeName, { namespacesUsingWildcards, includeDeprecated });
+    if (!listResult.length) {
+      throw new NoIdMatchWildcard([idStr]);
+    }
+    return listResult.map((result) => result.id);
   }
 
   async localList(
@@ -40,26 +71,12 @@ export class ListerMain {
     }
     this.logger.setStatusLine(BEFORE_LOCAL_LIST);
     const componentsList = new ComponentsList(this.workspace.consumer);
-    const legacyListScopeResult = await componentsList.listAll(showRemoteVersion, showAll, namespacesUsingWildcards);
-    return this.convertListScopeResultsFromLegacy(legacyListScopeResult);
+    const results = await componentsList.listAll(showRemoteVersion, showAll, namespacesUsingWildcards);
+    return this.sortListScopeResults(results);
   }
 
-  private async convertListScopeResultsFromLegacy(
-    legacyListScopeResult: ListScopeResultLegacy[]
-  ): Promise<ListScopeResult[]> {
-    const results = await Promise.all(
-      legacyListScopeResult.map(async (legacyResult) => {
-        const componentId = legacyResult.id;
-        return {
-          id: componentId,
-          currentlyUsedVersion: legacyResult.currentlyUsedVersion,
-          remoteVersion: legacyResult.remoteVersion,
-          deprecated: legacyResult.deprecated,
-          laneReadmeOf: legacyResult.laneReadmeOf,
-        };
-      })
-    );
-    return results.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
+  private sortListScopeResults(listScopeResults: ListScopeResult[]): ListScopeResult[] {
+    return listScopeResults.sort((a, b) => a.id.toString().localeCompare(b.id.toString()));
   }
 
   static slots = [];

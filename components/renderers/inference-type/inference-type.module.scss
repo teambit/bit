@@ -1,5 +1,6 @@
 .inferenceWrapper {
   position: relative;
+
   > pre {
     > code {
       // override syntax highlighter code font size
@@ -12,4 +13,19 @@
   > span {
     font-style: italic;
   }
+}
+
+.syntaxTooltip {
+  background-color: rgb(241, 242, 244);
+}
+
+.infoIcon {
+  font-style: normal;
+  padding-left: 4px;
+}
+
+.infoIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

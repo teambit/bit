@@ -1,7 +1,7 @@
-import { sha1 } from '@teambit/legacy/dist/utils';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { compact, sortBy, uniqWith } from 'lodash';
 import { snapToSemver } from '@teambit/component-package-version';
-import { DependenciesOverridesData } from '@teambit/legacy/dist/consumer/config/component-overrides';
+import { DependenciesOverridesData } from '@teambit/legacy.consumer-config';
 import { Policy, PolicyConfigKeys, PolicyConfigKeysNames, PolicyEntry, SemverVersion } from '../policy';
 import { DependencyLifecycleType, KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME } from '../../dependencies';
 

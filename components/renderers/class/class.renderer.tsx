@@ -49,8 +49,8 @@ function ClassComponent(props: APINodeRenderProps) {
               if (!DecoratorComponent) return null;
               return (
                 <DecoratorComponent
-                  {...props}
                   key={`decorator-${decorator.name}`}
+                  {...props}
                   apiNode={{ ...props.apiNode, renderer: decoratorRenderer, api: decorator }}
                 />
               );
@@ -72,8 +72,7 @@ function ClassOverviewComponent(props: APINodeRenderProps) {
 
   const icon = renderer.icon;
   const description =
-    doc?.comment ??
-    doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n` ?? ''), '');
+    doc?.comment ?? doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n`), '');
   return (
     <SchemaNodesSummary
       name={classNode.name}

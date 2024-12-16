@@ -26,34 +26,30 @@ import {
 } from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain, LongProcessLogger } from '@teambit/logger';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import LegacyScope from '@teambit/legacy/dist/scope/scope';
+import { Scope, Scope as LegacyScope } from '@teambit/legacy.scope';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
+import { DEPENDENCIES_FIELDS, PACKAGE_JSON, CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR } from '@teambit/legacy.constants';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import {
-  DEPENDENCIES_FIELDS,
-  PACKAGE_JSON,
-  CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR,
-} from '@teambit/legacy/dist/constants';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
-import {
+  PackageJsonFile,
   ArtifactFiles,
   deserializeArtifactFiles,
   getArtifactFilesByExtension,
   getArtifactFilesExcludeExtension,
   importMultipleDistsArtifacts,
-} from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
-import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import { Scope } from '@teambit/legacy/dist/scope';
+  AbstractVinyl,
+  ArtifactVinyl,
+  DataToPersist,
+  RemovePath,
+} from '@teambit/component.sources';
+import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
+import { type DependenciesGraph } from '@teambit/scope.objects';
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
 import path, { basename } from 'path';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
-import { concurrentComponentsLimit } from '@teambit/legacy/dist/utils/concurrency';
 import pMap from 'p-map';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
@@ -211,6 +207,13 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   populateArtifactsFrom?: ComponentID[];
 
   /**
+   * relevant when populateArtifactsFrom is set.
+   * by default, it uses the package.json created in the previous snap as a base and make the necessary changes.
+   * if this is set to true, it will ignore the package.json from the previous snap.
+   */
+  populateArtifactsIgnorePkgJson?: boolean;
+
+  /**
    * Force specific host to get the component from.
    */
   host?: ComponentFactory;
@@ -291,7 +294,7 @@ export class IsolatorMain {
       GraphMain,
       GlobalConfigMain,
       AspectLoaderMain,
-      CLIMain
+      CLIMain,
     ],
     _config,
     [capsuleTransferSlot]: [CapsuleTransferSlot]
@@ -586,6 +589,7 @@ export class IsolatorMain {
    * @param opts
    * @param legacyScope
    */
+  /* eslint-disable complexity */
   private async createCapsules(
     components: Component[],
     capsulesDir: string,
@@ -619,6 +623,7 @@ export class IsolatorMain {
       await fs.emptyDir(capsulesDir);
     }
     let capsules = await this.createCapsulesFromComponents(components, capsulesDir, config);
+    this.writeRootPackageJson(capsulesDir, this.getCapsuleDirHash(opts.baseDir || ''));
     const allCapsuleList = CapsuleList.fromArray(capsules);
     let capsuleList = allCapsuleList;
     if (opts.getExistingAsIs) {
@@ -692,13 +697,22 @@ export class IsolatorMain {
           })
         );
       } else {
+        const dependenciesGraph = await legacyScope?.getDependenciesGraphByComponentIds(
+          capsuleList.getAllComponentIDs()
+        );
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
           cachePackagesOnCapsulesRoot,
           linkedDependencies,
           packageManager: opts.packageManager,
+          dependenciesGraph,
         });
+        if (dependenciesGraph == null) {
+          // If the graph was not present in the model, we use the just created lockfile inside the capsules
+          // to populate the graph.
+          await this.addDependenciesGraphToComponents(capsuleList, components, capsulesDir);
+        }
       }
       if (installLongProcessLogger) {
         installLongProcessLogger.end('success');
@@ -728,6 +742,24 @@ export class IsolatorMain {
     }
 
     return allCapsuleList;
+  }
+  /* eslint-enable complexity */
+
+  private async addDependenciesGraphToComponents(
+    capsuleList: CapsuleList,
+    components: Component[],
+    capsulesDir: string
+  ): Promise<void> {
+    const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(components);
+    const opts = {
+      componentIdByPkgName,
+      rootDir: capsulesDir,
+    };
+    await Promise.all(
+      capsuleList.map((capsule) =>
+        this.dependencyResolver.addDependenciesGraph(capsule.component, path.relative(capsulesDir, capsule.path), opts)
+      )
+    );
   }
 
   private async markCapsulesAsReady(capsuleList: CapsuleList): Promise<void> {
@@ -770,6 +802,7 @@ export class IsolatorMain {
       linkedDependencies?: Record<string, Record<string, string>>;
       packageManager?: string;
       nodeLinker?: NodeLinker;
+      dependenciesGraph?: DependenciesGraph;
     }
   ) {
     const installer = this.dependencyResolver.getInstaller({
@@ -791,6 +824,7 @@ export class IsolatorMain {
       forceTeambitHarmonyLink: !this.dependencyResolver.hasHarmonyInRootPolicy(),
       excludeExtensionsDependencies: true,
       dedupeInjectedDeps: true,
+      dependenciesGraph: opts.dependenciesGraph,
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {
@@ -910,6 +944,13 @@ export class IsolatorMain {
     const legacyComponents = [...legacyUnmodifiedComps, ...legacyModifiedComps];
     if (legacyScope && unmodifiedComps.length) await importMultipleDistsArtifacts(legacyScope, legacyUnmodifiedComps);
     const allIds = ComponentIdList.fromArray(legacyComponents.map((c) => c.id));
+    const getParentsComp = () => {
+      const artifactsFrom = opts?.populateArtifactsFrom;
+      if (!artifactsFrom) return undefined;
+      if (!legacyScope) throw new Error('populateArtifactsFrom is set but legacyScope is not defined');
+      return Promise.all(artifactsFrom.map((id) => legacyScope.getConsumerComponent(id)));
+    };
+    const populateArtifactsFromComps = await getParentsComp();
     await Promise.all(
       components.map(async (component) => {
         const capsule = capsuleList.getCapsule(component.id);
@@ -918,7 +959,13 @@ export class IsolatorMain {
           (await CapsuleList.capsuleUsePreviouslySavedDists(component)) || opts?.populateArtifactsFrom
             ? legacyScope
             : undefined;
-        const dataToPersist = await this.populateComponentsFilesToWriteForCapsule(component, allIds, scope, opts);
+        const dataToPersist = await this.populateComponentsFilesToWriteForCapsule(
+          component,
+          allIds,
+          scope,
+          opts,
+          populateArtifactsFromComps
+        );
         await dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
       })
     );
@@ -968,6 +1015,10 @@ export class IsolatorMain {
     };
   }
 
+  private getCapsuleDirHash(baseDir: string): string {
+    return hash(baseDir).substring(0, CAPSULE_DIR_LENGTH);
+  }
+
   /** @deprecated use the new function signature with an object parameter instead */
   getCapsulesRootDir(baseDir: string, rootBaseDir?: string, useHash?: boolean): PathOsBasedAbsolute;
   getCapsulesRootDir(getCapsuleDirOpts: GetCapsuleDirOpts): PathOsBasedAbsolute;
@@ -1008,7 +1059,7 @@ export class IsolatorMain {
       return path.join(capsulesRootBaseDir, datedBaseDir, dateDir, hashDir);
     }
     const dir = getCapsuleDirOptsWithDefaults.useHash
-      ? hash(getCapsuleDirOptsWithDefaults.baseDir).substring(0, CAPSULE_DIR_LENGTH)
+      ? this.getCapsuleDirHash(getCapsuleDirOptsWithDefaults.baseDir)
       : getCapsuleDirOptsWithDefaults.baseDir;
     return path.join(capsulesRootBaseDir, dir);
   }
@@ -1017,6 +1068,17 @@ export class IsolatorMain {
     const dirToDelete = rootDir || this.getRootDirOfAllCapsules();
     await fs.remove(dirToDelete);
     return dirToDelete;
+  }
+
+  private writeRootPackageJson(capsulesDir: string, hashDir: string): void {
+    const rootPackageJson = path.join(capsulesDir, 'package.json');
+    if (!fs.existsSync(rootPackageJson)) {
+      const packageJson = {
+        name: `capsules-${hashDir}`,
+        'bit-capsule': true,
+      };
+      fs.outputJsonSync(rootPackageJson, packageJson);
+    }
   }
 
   private async createCapsulesFromComponents(
@@ -1054,7 +1116,7 @@ export class IsolatorMain {
         try {
           const previousPackageJsonRaw = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
           previousPackageJson = JSON.parse(previousPackageJsonRaw);
-        } catch (e: any) {
+        } catch {
           // package-json doesn't exist in the capsule, that's fine, it'll be considered as a cache miss
         }
         return {
@@ -1097,7 +1159,7 @@ export class IsolatorMain {
         const depCapsule = capsules.getCapsule(dep.componentId);
         let version = dep.version;
         if (depCapsule) {
-          version = getComponentPackageVersion(depCapsule?.component);
+          version = getComponentPackageVersion(depCapsule.component);
         } else {
           version = snapToSemver(version);
         }
@@ -1128,11 +1190,12 @@ export class IsolatorMain {
     return packageJson;
   }
 
-  async populateComponentsFilesToWriteForCapsule(
+  private async populateComponentsFilesToWriteForCapsule(
     component: Component,
     ids: ComponentIdList,
     legacyScope?: Scope,
-    opts?: IsolateComponentsOptions
+    opts?: IsolateComponentsOptions,
+    populateArtifactsFromComps?: ConsumerComponent[]
   ): Promise<DataToPersist> {
     const legacyComp: ConsumerComponent = component.state._consumer;
     const dataToPersist = new DataToPersist();
@@ -1153,10 +1216,53 @@ export class IsolatorMain {
     await PackageJsonTransformer.applyTransformers(component, packageJson);
     const valuesToMerge = legacyComp.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
+    if (populateArtifactsFromComps && !opts?.populateArtifactsIgnorePkgJson) {
+      const compParent = this.getCompForArtifacts(component, populateArtifactsFromComps);
+      this.mergePkgJsonFromLastBuild(compParent, packageJson);
+    }
     dataToPersist.addFile(packageJson.toVinylFile());
-    const artifacts = await this.getArtifacts(component, legacyScope, opts?.populateArtifactsFrom);
+    const artifacts = await this.getArtifacts(component, legacyScope, populateArtifactsFromComps);
     dataToPersist.addManyFiles(artifacts);
     return dataToPersist;
+  }
+
+  private mergePkgJsonFromLastBuild(component: ConsumerComponent, packageJson: PackageJsonFile) {
+    const suffix = `for ${component.id.toString()}. to workaround this, use --ignore-last-pkg-json flag`;
+    const aspectsData = component.extensions.findExtension('teambit.pipelines/builder')?.data?.aspectsData;
+    if (!aspectsData) throw new Error(`getPkgJsonFromLastBuild, unable to find builder aspects data ${suffix}`);
+    const data = aspectsData?.find((aspectData) => aspectData.aspectId === 'teambit.pkg/pkg');
+    if (!data) throw new Error(`getPkgJsonFromLastBuild, unable to find pkg aspect data ${suffix}`);
+    const pkgJsonLastBuild = data?.data?.pkgJson;
+    if (!pkgJsonLastBuild) throw new Error(`getPkgJsonFromLastBuild, unable to find pkgJson of pkg aspect  ${suffix}`);
+    const current = packageJson.packageJsonObject;
+    pkgJsonLastBuild.componentId = current.componentId;
+    pkgJsonLastBuild.version = current.version;
+    const mergeDeps = (currentDeps?: Record<string, string>, depsFromLastBuild?: Record<string, string>) => {
+      if (!depsFromLastBuild) return;
+      if (!currentDeps) return depsFromLastBuild;
+      Object.keys(depsFromLastBuild).forEach((depName) => {
+        if (!currentDeps[depName]) return;
+        depsFromLastBuild[depName] = currentDeps[depName];
+      });
+      return depsFromLastBuild;
+    };
+    pkgJsonLastBuild.dependencies = mergeDeps(current.dependencies, pkgJsonLastBuild.dependencies);
+    pkgJsonLastBuild.devDependencies = mergeDeps(current.devDependencies, pkgJsonLastBuild.devDependencies);
+    pkgJsonLastBuild.peerDependencies = mergeDeps(current.peerDependencies, pkgJsonLastBuild.peerDependencies);
+    packageJson.mergePackageJsonObject(pkgJsonLastBuild);
+  }
+
+  private getCompForArtifacts(
+    component: Component,
+    populateArtifactsFromComps: ConsumerComponent[]
+  ): ConsumerComponent {
+    const compParent = populateArtifactsFromComps.find((comp) =>
+      comp.id.isEqual(component.id, { ignoreVersion: true })
+    );
+    if (!compParent) {
+      throw new Error(`isolator, unable to find where to populate the artifacts from for ${component.id.toString()}`);
+    }
+    return compParent;
   }
 
   private preparePackageJsonToWrite(
@@ -1208,28 +1314,21 @@ export class IsolatorMain {
   private async getArtifacts(
     component: Component,
     legacyScope?: Scope,
-    populateArtifactsFrom?: ComponentID[]
+    populateArtifactsFromComps?: ConsumerComponent[]
   ): Promise<AbstractVinyl[]> {
     const legacyComp: ConsumerComponent = component.state._consumer;
     if (!legacyScope) {
-      if (populateArtifactsFrom) throw new Error(`unable to fetch from parent, the legacyScope was not provided`);
       // when capsules are written via the workspace, do not write artifacts, they get created by
       // build-pipeline. when capsules are written via the scope, we do need the dists.
       return [];
     }
-    if (legacyComp.buildStatus !== 'succeed' && !populateArtifactsFrom) {
+    if (legacyComp.buildStatus !== 'succeed' && !populateArtifactsFromComps) {
       // this is important for "bit sign" when on lane to not go to the original scope
       return [];
     }
     const artifactFilesToFetch = async () => {
-      if (populateArtifactsFrom) {
-        const found = populateArtifactsFrom.find((id) => id.isEqual(component.id, { ignoreVersion: true }));
-        if (!found) {
-          throw new Error(
-            `getArtifacts: unable to find where to populate the artifacts from for ${component.id.toString()}`
-          );
-        }
-        const compParent = await legacyScope.getConsumerComponent(found);
+      if (populateArtifactsFromComps) {
+        const compParent = this.getCompForArtifacts(component, populateArtifactsFromComps);
         return getArtifactFilesExcludeExtension(compParent.extensions, 'teambit.pkg/pkg');
       }
       const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];

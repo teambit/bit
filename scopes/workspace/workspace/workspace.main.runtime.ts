@@ -16,11 +16,14 @@ import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { ComponentMain, Component } from '@teambit/component';
 import type { VariantsMain } from '@teambit/variants';
-import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import type { ComponentConfigLoadOptions } from '@teambit/legacy/dist/consumer/config';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
-import LegacyComponentLoader, { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
+import { Consumer, loadConsumerIfExist } from '@teambit/legacy.consumer';
+import type { ComponentConfigLoadOptions } from '@teambit/legacy.consumer-config';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import {
+  ComponentLoadOptions,
+  ComponentLoader as LegacyComponentLoader,
+  ConsumerComponent,
+} from '@teambit/legacy.consumer-component';
 import { ComponentID } from '@teambit/component-id';
 import { EXT_NAME } from './constants';
 import { OnComponentAdd, OnComponentChange, OnComponentRemove, OnComponentLoad } from './on-component-events';
@@ -39,6 +42,7 @@ import { ScopeSetCmd } from './scope-subcommands/scope-set.cmd';
 import { UseCmd } from './use.cmd';
 import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
 import { UnuseCmd } from './unuse.cmd';
+import { LocalOnlyCmd, LocalOnlyListCmd, LocalOnlySetCmd, LocalOnlyUnsetCmd } from './commands/local-only-cmd';
 
 export type WorkspaceDeps = [
   PubsubMain,
@@ -54,7 +58,7 @@ export type WorkspaceDeps = [
   BundlerMain,
   AspectLoaderMain,
   EnvsMain,
-  GlobalConfigMain
+  GlobalConfigMain,
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -140,10 +144,15 @@ export class WorkspaceMain {
       OnAspectsResolveSlot,
       OnRootAspectAddedSlot,
       OnBitmapChangeSlot,
-      OnWorkspaceConfigChangeSlot
+      OnWorkspaceConfigChangeSlot,
     ],
     harmony: Harmony
   ) {
+    const currentCmd = process.argv[2];
+    if (currentCmd === 'init') {
+      // avoid loading the consumer/workspace for "bit init". otherwise, "bit init --reset" can't fix corrupted .bitmap
+      return undefined;
+    }
     const bitConfig: any = harmony.config.get('teambit.harmony/bit');
     const consumer = await getConsumer(bitConfig.cwd);
     if (!consumer) {
@@ -264,6 +273,13 @@ export class WorkspaceMain {
     ];
 
     commands.push(new PatternCommand(workspace));
+    const localOnlyCmd = new LocalOnlyCmd();
+    localOnlyCmd.commands = [
+      new LocalOnlySetCmd(workspace),
+      new LocalOnlyUnsetCmd(workspace),
+      new LocalOnlyListCmd(workspace),
+    ];
+    commands.push(localOnlyCmd);
     cli.register(...commands);
     component.registerHost(workspace);
 
@@ -301,6 +317,8 @@ export class WorkspaceMain {
     envsCommand?.commands?.push(new EnvsUnsetCmd(workspace)); // bit envs unset
     envsCommand?.commands?.push(new EnvsReplaceCmd(workspace)); // bit envs replace
     envsCommand?.commands?.push(new EnvsUpdateCmd(workspace)); // bit envs replace
+
+    envs.registerEnvJsoncResolver(workspace.resolveEnvManifest.bind(workspace));
 
     // add sub-command "set" to scope command.
     const scopeCommand = cli.getCommand('scope');

@@ -67,7 +67,7 @@ async function resolveFromNodeModules(packageName: string): Promise<string | und
     const pkgJson = require(packageJsonPath);
     if (pkgJson.name !== packageName) return undefined;
     return pkgJson.version;
-  } catch (err) {
+  } catch {
     return undefined;
   }
 }
@@ -104,17 +104,17 @@ const getPackageName = (packageName: string) => {
   return `${parts[0]}/${parts[1]}`;
 };
 
-function getPkgConfig() {
-  const pkgConfig = {
-    scripts: 'build/**/*.js',
-    assets: 'views/**/*',
-    targets: ['latest-macos-arm64'],
-    outputPath: 'pkg-bundle',
-  };
-  return pkgConfig;
-}
+// function getPkgConfig() {
+//   const pkgConfig = {
+//     scripts: 'build/**/*.js',
+//     assets: 'views/**/*',
+//     targets: ['latest-macos-arm64'],
+//     outputPath: 'pkg-bundle',
+//   };
+//   return pkgConfig;
+// }
 
-export async function generatePackageJson(bundleDir: string, bundleDirName: string, jsAppFile: string) {
+export async function generatePackageJson(bundleDir: string, _bundleDirName: string, _jsAppFile: string) {
   const wsRootDir = await getWsRootDir();
   loadPackageJson(wsRootDir);
   loadWsJsonc(wsRootDir);

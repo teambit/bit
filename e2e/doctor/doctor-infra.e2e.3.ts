@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
 
-import DiagnosisNotFound from '../../src/api/consumer/lib/exceptions/diagnosis-not-found';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { DiagnosisNotFound } from '@teambit/doctor';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 

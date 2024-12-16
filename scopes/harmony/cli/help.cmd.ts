@@ -1,5 +1,4 @@
-import type { Command } from '@teambit/legacy/dist/cli/command';
-import type { CommandOptions } from '@teambit/legacy/dist/cli/legacy-command';
+import type { Command, CommandOptions } from './command';
 import { CLIMain } from './cli.main.runtime';
 import { formatHelp } from './help';
 

@@ -1,9 +1,8 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
-import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
+import { SnapsDistance } from '@teambit/component.snap-distance';
 import { IssuesList } from '@teambit/component-issues';
-import { getInvalidComponentLabel } from '@teambit/legacy/dist/cli/templates/component-issues-template';
 import {
   IMPORT_PENDING_MSG,
   statusFailureMsg,
@@ -11,16 +10,22 @@ import {
   statusInvalidComponentsMsg,
   statusWorkspaceIsCleanMsg,
   BASE_DOCS_DOMAIN,
-} from '@teambit/legacy/dist/constants';
+} from '@teambit/legacy.constants';
 import { compact, groupBy, partition } from 'lodash';
 import { isHash } from '@teambit/component-version';
 import { StatusMain, StatusResult } from './status.main.runtime';
 
-const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
-  `learn more at about Bit component: ${BASE_DOCS_DOMAIN}reference/components/component-anatomy/`
-)}`;
+const TROUBLESHOOTING_MESSAGE = chalk.yellow(
+  `learn more about Bit components: ${BASE_DOCS_DOMAIN}reference/components/component-anatomy`
+);
 
-type StatusFlags = { strict?: boolean; verbose?: boolean; lanes?: boolean; ignoreCircularDependencies?: boolean };
+type StatusFlags = {
+  strict?: boolean;
+  verbose?: boolean;
+  lanes?: boolean;
+  ignoreCircularDependencies?: boolean;
+  warnings?: boolean;
+};
 
 type StatusJsonResults = {
   newComponents: string[];
@@ -45,6 +50,7 @@ type StatusJsonResults = {
   componentsDuringMergeState: string[];
   softTaggedComponents: string[];
   snappedComponents: string[];
+  localOnly: string[];
   pendingUpdatesFromMain: Array<{
     id: string;
     divergeData: any;
@@ -66,6 +72,7 @@ export class StatusCmd implements Command {
   alias = 's';
   options = [
     ['j', 'json', 'return a json version of the component'],
+    ['w', 'warnings', 'show warnings. by default, only issues that block tag/snap are shown'],
     ['', 'verbose', 'show extra data: full snap hashes for staged components, and divergence point for lanes'],
     ['l', 'lanes', 'when on a lane, show updates from main and updates from forked lanes'],
     ['', 'strict', 'in case issues found, exit with code 1'],
@@ -97,6 +104,7 @@ export class StatusCmd implements Command {
       currentLaneId,
       forkedLaneId,
       workspaceIssues,
+      localOnly,
     }: StatusResult = await this.status.status({ lanes, ignoreCircularDependencies });
     return {
       newComponents: newComponents.map((c) => c.toStringWithoutVersion()),
@@ -117,6 +125,7 @@ export class StatusCmd implements Command {
       componentsDuringMergeState: componentsDuringMergeState.map((id) => id.toStringWithoutVersion()),
       softTaggedComponents: softTaggedComponents.map((s) => s.toStringWithoutVersion()),
       snappedComponents: snappedComponents.map((s) => s.toStringWithoutVersion()),
+      localOnly: localOnly.map((id) => id.toStringWithoutVersion()),
       pendingUpdatesFromMain: pendingUpdatesFromMain.map((p) => ({
         id: p.id.toStringWithoutVersion(),
         divergeData: p.divergeData,
@@ -132,7 +141,7 @@ export class StatusCmd implements Command {
   }
 
   // eslint-disable-next-line complexity
-  async report(_args, { strict, verbose, lanes, ignoreCircularDependencies }: StatusFlags) {
+  async report(_args, { strict, verbose, lanes, ignoreCircularDependencies, warnings }: StatusFlags) {
     const {
       newComponents,
       modifiedComponents,
@@ -149,6 +158,7 @@ export class StatusCmd implements Command {
       softTaggedComponents,
       snappedComponents,
       pendingUpdatesFromMain,
+      localOnly,
       updatesFromForked,
       unavailableOnMain,
       currentLaneId,
@@ -177,7 +187,7 @@ export class StatusCmd implements Command {
       };
       const getColor = () => {
         if (message) return 'yellow';
-        if (idWithIssues) return 'red';
+        if (idWithIssues) return idWithIssues.issues.hasTagBlockerIssues() ? 'red' : 'yellow';
         return 'green';
       };
       const messageStatusText = getStatusText();
@@ -204,7 +214,8 @@ export class StatusCmd implements Command {
       if (showIssues && idWithIssues) {
         showTroubleshootingLink = true;
         const issuesTxt = idWithIssues.issues.hasTagBlockerIssues() ? statusFailureMsg : statusWarningsMsg;
-        return `${idFormatted} ${chalk.red(issuesTxt)}${formatIssues(idWithIssues.issues)}`;
+        const issuesColor = idWithIssues.issues.hasTagBlockerIssues() ? 'red' : 'yellow';
+        return `${idFormatted} ${chalk[issuesColor](issuesTxt)}${formatIssues(idWithIssues.issues)}`;
       }
       return `${idFormatted}${messageStatus}`;
     }
@@ -277,11 +288,12 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
       autoTagPendingComponents.map((c) => format(c))
     );
 
+    const componentsWithIssuesToPrint = componentsWithIssues.filter((c) => c.issues.hasTagBlockerIssues() || warnings);
     const compWithIssuesDesc = '(fix the issues according to the suggested solution)';
     const compWithIssuesOutput = formatCategory(
       'components with issues',
       compWithIssuesDesc,
-      componentsWithIssues.map((c) => format(c.id, true)).sort()
+      componentsWithIssuesToPrint.map((c) => format(c.id, true)).sort()
     );
 
     const invalidDesc = 'these components failed to load';
@@ -307,6 +319,10 @@ or use "bit merge [component-id] --abort" (for prior "bit merge" command)`;
     const stagedDesc = '(use "bit export" to push these component versions to the remote scope)';
     const stagedComps = stagedComponents.map((c) => format(c.id, false, undefined, c.versions));
     const stagedComponentsOutput = formatCategory('staged components', stagedDesc, stagedComps);
+
+    const localOnlyDesc = '(these components are excluded from tag/snap/export commands)';
+    const localOnlyComps = localOnly.map((c) => format(c)).sort();
+    const localOnlyComponentsOutput = formatCategory('local-only components', localOnlyDesc, localOnlyComps);
 
     const softTaggedDesc = '(use "bit tag --persist" to complete the tag)';
     const softTaggedComps = softTaggedComponents.map((id) => format(id, false, undefined, undefined, false));
@@ -374,6 +390,10 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
     };
 
     const troubleshootingStr = showTroubleshootingLink ? `\n${TROUBLESHOOTING_MESSAGE}` : '';
+    const wereWarningsFilteredOut = componentsWithIssuesToPrint.length < componentsWithIssues.length;
+    const showWarningsStr = wereWarningsFilteredOut
+      ? `\n${chalk.yellow('to view the warnings, use --warnings flag.')}`
+      : '';
 
     const statusMsg =
       importPendingWarning +
@@ -383,6 +403,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
         updatesFromMainOutput,
         updatesFromForkedOutput,
         compDuringMergeStr,
+        localOnlyComponentsOutput,
         newComponentsOutput,
         modifiedComponentOutput,
         snappedComponentsOutput,
@@ -395,6 +416,7 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
         locallySoftRemovedOutput,
         remotelySoftRemovedOutput,
       ]).join(chalk.underline('\n                         \n') + chalk.white('\n')) +
+      showWarningsStr +
       troubleshootingStr;
 
     const results = (statusMsg || chalk.yellow(statusWorkspaceIsCleanMsg)) + getWorkspaceIssuesOutput() + getLaneStr();
@@ -410,4 +432,26 @@ use "bit fetch ${forkedLaneId.toString()} --lanes" to update ${forkedLaneId.name
 
 export function formatIssues(issues: IssuesList) {
   return `       ${issues?.outputForCLI()}\n`;
+}
+
+function getInvalidComponentLabel(error: Error) {
+  switch (error.name) {
+    case 'MainFileRemoved':
+      return 'main-file was removed (use "bit add" with "--main" and "--id" flags to add a main file)';
+    case 'ComponentNotFoundInPath':
+      return 'component files were deleted (use "bit remove [component_id]") or moved (use "bit move <old-dir> <new-dir>"). to restore use "bit checkout reset [component_id]"';
+    case 'ExtensionFileNotFound':
+      // @ts-ignore error.path is set for ExtensionFileNotFound
+      return `extension file is missing at ${chalk.bold(error.path)}`;
+    case 'ComponentsPendingImport':
+      return 'component objects are missing from the scope (use "bit import [component_id] --objects" to get them back)';
+    case 'NoComponentDir':
+      return `component files were added individually without root directory (invalid on Harmony. re-add as a directory or use "bit move --component" to help with the move)`;
+    case 'IgnoredDirectory':
+      return `component files or directory were ignored (probably by .gitignore)`;
+    case 'NoCommonSnap':
+      return `component history is unrelated to main (merge main with --resolve-unrelated flag)`;
+    default:
+      return error.name;
+  }
 }

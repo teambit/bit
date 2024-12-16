@@ -13,11 +13,11 @@ import fs from 'fs-extra';
 import { MainRuntime } from '@teambit/cli';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
-import mergeFiles, { MergeFileParams } from '@teambit/legacy/dist/utils/merge-files';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
+import { MergeStrategy, mergeFiles, MergeFileParams } from '@teambit/merging';
 import { ConfigMergeResult, parseVersionLineWithConflict } from './config-merge-result';
 import { ConfigMergerAspect } from './config-merger.aspect';
 import { AggregatedDeps } from './aggregated-deps';
@@ -262,7 +262,14 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     };
   }
 
-  async updateDepsInWorkspaceConfig(components: ConsumerComponent[]): Promise<WorkspaceConfigUpdateResult | undefined> {
+  async updateDepsInWorkspaceConfig(
+    components: ConsumerComponent[],
+    mergeStrategy?: MergeStrategy
+  ): Promise<WorkspaceConfigUpdateResult | undefined> {
+    if (mergeStrategy === 'ours') {
+      this.logger.debug('mergeStrategy is "ours", skipping the workspace.jsonc update');
+      return undefined;
+    }
     const workspacePolicy = this.depsResolver.getWorkspacePolicyFromConfig();
     const workspacePolicyObj = workspacePolicy.entries.reduce((acc, current) => {
       acc[current.dependencyId] = current.value.version;
@@ -359,6 +366,10 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
         }
       };
       const addToConflict = () => {
+        if (mergeStrategy === 'theirs') {
+          addToUpdate();
+          return;
+        }
         workspaceDepsConflicts[lifeCycle].push({ name: depId, version: `CONFLICT::${depInWsVer}::${depInCompVer}` });
         logs.push(`${depId} - conflict. ours: ${depInWsVer}, theirs: ${depInCompVer}`);
       };
@@ -487,7 +498,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     Workspace,
     ConfigMain,
     LoggerMain,
-    DependencyResolverMain
+    DependencyResolverMain,
   ]) {
     const logger = loggerMain.createLogger(ConfigMergerAspect.id);
     return new ConfigMergerMain(workspace, logger, config, depsResolver);

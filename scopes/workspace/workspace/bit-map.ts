@@ -1,15 +1,13 @@
 import { isEqual, merge } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
-import LegacyBitMap from '@teambit/legacy/dist/consumer/bit-map';
-import { Consumer } from '@teambit/legacy/dist/consumer';
-import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
-import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy/dist/consumer/config';
+import { BitMap as LegacyBitMap, ComponentMap, GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
+import { Consumer } from '@teambit/legacy.consumer';
+import { REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import { EnvsAspect } from '@teambit/envs';
-import { getPathStatIfExist } from '@teambit/legacy/dist/utils/fs/last-modified';
-import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
+import { getPathStatIfExist } from '@teambit/toolbox.fs.last-modified';
 
 export type MergeOptions = {
   mergeStrategy?: 'theirs' | 'ours' | 'manual';
@@ -19,7 +17,10 @@ export type MergeOptions = {
  * (pro: making Workspace aspect smaller. con: it's an implementation details of the workspace)
  */
 export class BitMap {
-  constructor(private legacyBitMap: LegacyBitMap, private consumer: Consumer) {}
+  constructor(
+    private legacyBitMap: LegacyBitMap,
+    private consumer: Consumer
+  ) {}
 
   mergeBitmaps(bitmapContent: string, otherBitmapContent: string, opts: MergeOptions = {}): string {
     return LegacyBitMap.mergeContent(bitmapContent, otherBitmapContent, opts);
@@ -137,6 +138,29 @@ export class BitMap {
     this.legacyBitMap.markAsChanged();
   }
 
+  setLocalOnly(ids: ComponentID[]) {
+    ids.forEach((id) => {
+      const bitMapEntry = this.getBitmapEntry(id);
+      bitMapEntry.localOnly = true;
+    });
+    this.legacyBitMap.markAsChanged();
+  }
+  unsetLocalOnly(ids: ComponentID[]): ComponentID[] {
+    const successfullyUnset: ComponentID[] = [];
+    ids.forEach((id) => {
+      const bitMapEntry = this.getBitmapEntry(id);
+      if (!bitMapEntry.localOnly) return;
+      bitMapEntry.localOnly = false;
+      successfullyUnset.push(id);
+    });
+    this.legacyBitMap.markAsChanged();
+    return successfullyUnset;
+  }
+  listLocalOnly() {
+    const allIds = this.legacyBitMap.getAllBitIds();
+    return allIds.filter((id) => this.getBitmapEntry(id).localOnly);
+  }
+
   /**
    * write .bitmap object to the filesystem
    * optionally pass a reason for the change to be saved in the local scope `bitmap-history-metadata.txt` file.
@@ -221,7 +245,7 @@ export class BitMap {
         }
         if (aspectId === EnvsAspect.id) {
           const envConfig = config[aspectId];
-          if (envConfig !== REMOVE_EXTENSION_SPECIAL_SIGN && envConfig.env === sourceId.toString()) {
+          if (envConfig !== '-' && envConfig.env === sourceId.toString()) {
             envConfig.env = targetId.toString();
             this.markAsChanged();
           }

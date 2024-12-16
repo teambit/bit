@@ -1,4 +1,4 @@
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/component.sources';
 import {
   Formatter,
   FormatterContext,
@@ -40,7 +40,7 @@ export class PrettierFormatter implements Formatter {
 
     if (filePath) {
       const ext = filePath.split('.').pop();
-      const supportInfo = this.prettierModule.getSupportInfo();
+      const supportInfo = await this.prettierModule.getSupportInfo();
       const language = supportInfo.languages.find((lang) => lang.extensions && lang.extensions.includes(`.${ext}`));
 
       if (language) {

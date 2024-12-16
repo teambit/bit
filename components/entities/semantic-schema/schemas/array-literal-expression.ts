@@ -2,7 +2,10 @@ import { SchemaLocation, SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
 
 export class ArrayLiteralExpressionSchema extends SchemaNode {
-  constructor(readonly members: SchemaNode[], readonly location: SchemaLocation) {
+  constructor(
+    readonly members: SchemaNode[],
+    readonly location: SchemaLocation
+  ) {
     super();
   }
 
@@ -21,5 +24,10 @@ export class ArrayLiteralExpressionSchema extends SchemaNode {
 
   toString(): string {
     return `[${this.members.join(', ')}]`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    const membersStr = this.members.map((member) => member.toFullSignature(options)).join(', ');
+    return `[${membersStr}]`;
   }
 }

@@ -1,8 +1,7 @@
 import chai from 'chai';
 import path from 'path';
-import { AddingIndividualFiles } from '../../src/consumer/component-ops/add-components/exceptions/adding-individual-files';
-import { ParentDirTracked } from '../../src/consumer/component-ops/add-components/exceptions/parent-dir-tracked';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { ParentDirTracked, AddingIndividualFiles } from '@teambit/tracker';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 

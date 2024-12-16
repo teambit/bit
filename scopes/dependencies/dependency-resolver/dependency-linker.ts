@@ -7,9 +7,9 @@ import resolveFrom from 'resolve-from';
 import { findCurrentBvmDir } from '@teambit/bvm.path';
 import { ComponentMap, Component, ComponentID, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
-import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathAbsolute } from '@teambit/toolbox.path.path';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { BitError } from '@teambit/bit-error';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 import {
@@ -623,7 +623,7 @@ export class DependencyLinker {
     try {
       targetStat = fs.lstatSync(targetPath);
       // eslint-disable-next-line no-empty
-    } catch (e: any) {}
+    } catch {}
     if (targetStat && !hasLocalInstallation) {
       // Do not override links created by other means
       if (!targetStat.isSymbolicLink()) {
@@ -713,7 +713,7 @@ function isPathSymlink(folderPath: string): boolean | undefined {
   try {
     const stat = fs.lstatSync(folderPath);
     return stat.isSymbolicLink();
-  } catch (e: any) {
+  } catch {
     return undefined;
   }
 }

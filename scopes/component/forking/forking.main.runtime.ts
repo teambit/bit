@@ -11,7 +11,7 @@ import { ComponentID, ComponentIdObj, ComponentIdList } from '@teambit/component
 import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-component-helper';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { RefactoringAspect, MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace, WorkspaceComponentLoadOptions } from '@teambit/workspace';
 import { snapToSemver } from '@teambit/component-package-version';
 import { uniqBy } from 'lodash';
 import pMapSeries from 'p-map-series';
@@ -21,6 +21,7 @@ import { ForkingAspect } from './forking.aspect';
 import { ForkingFragment } from './forking.fragment';
 import { forkingSchema } from './forking.graphql';
 import { ScopeForkCmd, ScopeForkOptions } from './scope-fork.cmd';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
 
 export type ForkInfo = {
   forkedFrom: ComponentID;
@@ -46,11 +47,13 @@ type MultipleForkOptions = {
   scope?: string; // different scope-name than the original components
   install?: boolean; // whether to run "bit install" once done.
   ast?: boolean; // whether to use AST to transform files instead of regex
+  compile?: boolean; // whether to compile the component after forking
 };
 
 export class ForkingMain {
   constructor(
     private workspace: Workspace,
+    private scope: ScopeMain,
     private install: InstallMain,
     private dependencyResolver: DependencyResolverMain,
     private newComponentHelper: NewComponentHelperMain,
@@ -83,7 +86,7 @@ export class ForkingMain {
    */
   getForkInfo(component: Component): ForkInfo | null {
     const forkConfig = component.state.aspects.get(ForkingAspect.id)?.config as ForkConfig | undefined;
-    if (!forkConfig) return null;
+    if (!forkConfig?.forkedFrom) return null;
     return {
       forkedFrom: ComponentID.fromObject(forkConfig.forkedFrom),
     };
@@ -97,6 +100,12 @@ export class ForkingMain {
       async ({ sourceId, targetId, path, env, config, targetScope }) => {
         const sourceCompId = await this.workspace.resolveComponentId(sourceId);
         const sourceIdWithScope = sourceCompId._legacy.scope ? sourceCompId : ComponentID.fromString(sourceId);
+        const loadOptions: WorkspaceComponentLoadOptions = {
+          executeLoadSlot: false,
+          loadExtensions: false,
+          loadSeedersAsAspects: false,
+        };
+
         const { targetCompId, component } = await this.forkRemoteComponent(
           sourceIdWithScope,
           targetId,
@@ -105,6 +114,8 @@ export class ForkingMain {
             path,
             env,
             config,
+            compile: options.compile,
+            loadOptions,
           },
           false
         );
@@ -112,6 +123,7 @@ export class ForkingMain {
       }
     );
     await this.refactorMultipleAndInstall(results, options);
+    return results;
   }
 
   /**
@@ -136,7 +148,11 @@ export class ForkingMain {
         oldPackages.push(oldPackageName);
         const newName = targetCompId.fullName.replace(/\//g, '.');
         const scopeToReplace = targetCompId.scope.replace('.', '/');
-        const newPackageName = `@${scopeToReplace}.${newName}`;
+        // for locally hosted, the scope has no "/", so the package name would be "@scope/name".
+        // for the cloud, the package name would be "@org.scope/name".
+        const newPackageName = scopeToReplace.includes('/')
+          ? `@${scopeToReplace}.${newName}`
+          : `@${scopeToReplace}/${newName}`;
         return [
           { oldStr: oldPackageName, newStr: newPackageName },
           { oldStr: sourceId, newStr: targetCompId.toStringWithoutVersion() },
@@ -253,7 +269,7 @@ export class ForkingMain {
     return targetCompId;
   }
 
-  private async forkRemoteComponent(
+  async forkRemoteComponent(
     sourceId: ComponentID,
     targetId?: string,
     options?: ForkOptions,
@@ -268,7 +284,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
     }
     const targetName = targetId || sourceId.fullName;
     const targetCompId = this.newComponentHelper.getNewComponentId(targetName, undefined, options?.scope);
-    const component = await this.workspace.scope.getRemoteComponent(sourceId);
+    const component = await this.scope.getRemoteComponent(sourceId);
     await this.refactoring.replaceMultipleStrings(
       [component],
       [
@@ -286,7 +302,9 @@ the reason is that the refactor changes the components using ${sourceId.toString
       this.refactoring.refactorFilenames(component, sourceId, targetCompId);
     }
     const config = await this.getConfig(component, options);
-    await this.newComponentHelper.writeAndAddNewComp(component, targetCompId, options, config);
+    if (this.workspace) {
+      await this.newComponentHelper.writeAndAddNewComp(component, targetCompId, options, config);
+    }
 
     return { targetCompId, component };
   }
@@ -353,6 +371,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
   static dependencies = [
     CLIAspect,
     WorkspaceAspect,
+    ScopeAspect,
     DependencyResolverAspect,
     ComponentAspect,
     NewComponentHelperAspect,
@@ -365,6 +384,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
   static async provider([
     cli,
     workspace,
+    scope,
     dependencyResolver,
     componentMain,
     newComponentHelper,
@@ -375,15 +395,24 @@ the reason is that the refactor changes the components using ${sourceId.toString
   ]: [
     CLIMain,
     Workspace,
+    ScopeMain,
     DependencyResolverMain,
     ComponentMain,
     NewComponentHelperMain,
     GraphqlMain,
     RefactoringMain,
     PkgMain,
-    InstallMain
+    InstallMain,
   ]) {
-    const forkingMain = new ForkingMain(workspace, install, dependencyResolver, newComponentHelper, refactoring, pkg);
+    const forkingMain = new ForkingMain(
+      workspace,
+      scope,
+      install,
+      dependencyResolver,
+      newComponentHelper,
+      refactoring,
+      pkg
+    );
     cli.register(new ForkCmd(forkingMain));
     graphql.register(forkingSchema(forkingMain));
     componentMain.registerShowFragments([new ForkingFragment(forkingMain)]);

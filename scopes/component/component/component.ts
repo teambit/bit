@@ -3,8 +3,8 @@ import { capitalize } from '@teambit/toolbox.string.capitalize';
 import { SemVer } from 'semver';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { BuildStatus } from '@teambit/legacy/dist/constants';
-import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import { BuildStatus } from '@teambit/legacy.constants';
+import { ComponentLog } from '@teambit/scope.objects';
 import type { DependencyList } from '@teambit/dependency-resolver';
 import { slice } from 'lodash';
 import { ComponentFactory } from './component-factory';
@@ -91,6 +91,10 @@ export class Component implements IComponent {
    */
   get buildStatus(): BuildStatus {
     return this._state._consumer.buildStatus;
+  }
+
+  get homepage(): string | undefined {
+    return this._state._consumer._getHomepage();
   }
 
   get headTag() {
@@ -221,6 +225,13 @@ export class Component implements IComponent {
    */
   isNew(): Promise<boolean> {
     return Promise.resolve(this.head === null);
+  }
+
+  /**
+   * whether the component exists on the remote.
+   */
+  isExported(): boolean {
+    return this.factory.isExported(this.id);
   }
 
   // TODO: @david after snap we need to make sure to refactor here.

@@ -3,8 +3,9 @@ import path from 'path';
 import fs from 'fs-extra';
 import { MainAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { ComponentMap } from '@teambit/component';
+import { type DependenciesGraph } from '@teambit/scope.objects';
 import { Logger } from '@teambit/logger';
-import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
+import { PathAbsolute } from '@teambit/toolbox.path.path';
 import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
 import { MainAspectNotInstallable, RootDirNotDefined } from './exceptions';
 import { PackageManager, PackageManagerInstallOptions, PackageImportMethod } from './package-manager';
@@ -44,6 +45,7 @@ export type InstallOptions = {
   forceTeambitHarmonyLink?: boolean;
   excludeExtensionsDependencies?: boolean;
   dedupeInjectedDeps?: boolean;
+  dependenciesGraph?: DependenciesGraph;
 };
 
 export type GetComponentManifestsOptions = {
@@ -188,7 +190,9 @@ export class DependencyInstaller {
         };
       });
     }
-    const hidePackageManagerOutput = !!(this.installingContext.inCapsule && process.env.VERBOSE_PM_OUTPUT !== 'true');
+    const isJsonCmd = process.argv.includes('--json') || process.argv.includes('-j');
+    const hidePackageManagerOutput =
+      Boolean(this.installingContext.inCapsule && process.env.VERBOSE_PM_OUTPUT !== 'true') || isJsonCmd;
 
     // Make sure to take other default if passed options with only one option
     const calculatedPmOpts = {
@@ -205,6 +209,7 @@ export class DependencyInstaller {
       neverBuiltDependencies: ['core-js', ...(this.neverBuiltDependencies ?? [])],
       preferOffline: this.preferOffline,
       dedupeInjectedDeps: options.dedupeInjectedDeps,
+      dependenciesGraph: options.dependenciesGraph,
       ...packageManagerOptions,
     };
     if (options.installTeambitBit) {
@@ -222,12 +227,17 @@ export class DependencyInstaller {
     }
 
     if (!packageManagerOptions.rootComponents && !packageManagerOptions.keepExistingModulesDir) {
-      // Remove node modules dir for all components dirs, since it might contain left overs from previous install.
-      //
-      // This is not needed when "rootComponents" are used, as in that case the package manager handles the node_modules
-      // and it never leaves node_modules in a broken state.
-      // Removing node_modules in that case would delete useful state information that is used by Yarn or pnpm.
-      await this.cleanCompsNodeModules(componentDirectoryMap);
+      try {
+        // Remove node modules dir for all components dirs, since it might contain left overs from previous install.
+        //
+        // This is not needed when "rootComponents" are used, as in that case the package manager handles the node_modules
+        // and it never leaves node_modules in a broken state.
+        // Removing node_modules in that case would delete useful state information that is used by Yarn or pnpm.
+        await this.cleanCompsNodeModules(componentDirectoryMap);
+      } catch (err) {
+        this.logger.debug('failed to remove node_modules directories from components', err);
+        // A failure to remove the node_modules directory should not cause the process to fail
+      }
     }
 
     const messagePrefix = 'running package installation';

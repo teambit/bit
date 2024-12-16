@@ -13,13 +13,12 @@ import chalk from 'chalk';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
-import { sha1 } from '@teambit/legacy/dist/utils';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import pMapSeries from 'p-map-series';
 import fs from 'fs-extra';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { createRoot } from '@teambit/harmony.modules.harmony-root-generator';
-import { join, resolve } from 'path';
-import { promisify } from 'util';
+import { join, resolve as pathResolve } from 'path';
 import webpack from 'webpack';
 import { UiServerStartedEvent } from './events';
 import { UnknownUI, UnknownBuildError } from './exceptions';
@@ -119,6 +118,11 @@ export type RuntimeOptions = {
    * skip build the UI before start
    */
   skipUiBuild?: boolean;
+
+  /**
+   * Show the internal urls of the dev servers
+   */
+  showInternalUrls?: boolean;
 };
 
 export class UiMain {
@@ -234,10 +238,14 @@ export class UiMain {
 
     const compiler = webpack(config);
     this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" running webpack`);
-    const compilerRun = promisify(compiler.run.bind(compiler));
-    const results = await compilerRun();
+    const [results, errors] = await this.runWebpackPromise(compiler);
+
     this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}" completed webpack`);
     if (!results) throw new UnknownBuildError();
+    if (errors) {
+      this.clearConsole();
+      throw new Error(errors);
+    }
     if (results?.hasErrors()) {
       this.clearConsole();
       throw new Error(results?.toString());
@@ -249,6 +257,23 @@ export class UiMain {
   registerStartPlugin(startPlugin: StartPlugin) {
     this.startPluginSlot.register(startPlugin);
     return this;
+  }
+
+  private async runWebpackPromise(
+    compiler: webpack.MultiCompiler
+  ): Promise<[webpack.MultiStats | undefined, string | undefined]> {
+    return new Promise((resolve) =>
+      // TODO: split to multiple processes to reduce time and configure concurrent builds.
+      // @see https://github.com/trivago/parallel-webpack
+      compiler.run((err, stats) => {
+        if (err) {
+          this.logger.error('get error from webpack compiler, when bundling ui server, full error:', err);
+
+          return resolve([undefined, `${err.toString()}\n${err.stack}`]);
+        }
+        return resolve([stats, undefined]);
+      })
+    );
   }
 
   private async initiatePlugins(options: StartPluginOptions) {
@@ -264,7 +289,7 @@ export class UiMain {
    */
   async createRuntime(runtimeOptions: RuntimeOptions) {
     this.runtimeOptions = runtimeOptions;
-    const { uiRootName, pattern, dev, port, rebuild, verbose, skipUiBuild } = this.runtimeOptions;
+    const { uiRootName, pattern, dev, port, rebuild, verbose, skipUiBuild, showInternalUrls } = this.runtimeOptions;
     // uiRootName to be deprecated
     const uiRootAspectIdOrName = uiRootName || runtimeOptions.uiRootAspectIdOrName;
     const maybeUiRoot = this.getUi(uiRootAspectIdOrName);
@@ -275,6 +300,7 @@ export class UiMain {
     const plugins = await this.initiatePlugins({
       verbose,
       pattern,
+      showInternalUrls,
     });
 
     if (this.componentExtension.isHost(uiRootAspectId)) this.componentExtension.setHostPriority(uiRootAspectId);
@@ -462,7 +488,7 @@ export class UiMain {
       harmonyPackage,
       shouldRun
     );
-    const filepath = resolve(join(path || __dirname, `${runtimeName}.root${sha1(contents)}.js`));
+    const filepath = pathResolve(join(path || __dirname, `${runtimeName}.root${sha1(contents)}.js`));
     if (fs.existsSync(filepath)) return filepath;
     fs.outputFileSync(filepath, contents);
     return filepath;
@@ -644,7 +670,7 @@ export class UiMain {
       OnStartSlot,
       PublicDirOverwriteSlot,
       BuildMethodOverwriteSlot,
-      StartPluginSlot
+      StartPluginSlot,
     ],
     harmony: Harmony
   ) {

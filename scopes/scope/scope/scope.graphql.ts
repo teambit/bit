@@ -1,8 +1,8 @@
 import { ComponentID } from '@teambit/component';
 import { gql } from 'graphql-tag';
-import { latestVersions } from '@teambit/legacy/dist/api/scope';
+import { latestVersions } from '@teambit/legacy.scope-api';
 import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
-import { getHarmonyVersion } from '@teambit/legacy/dist/bootstrap';
+import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { ScopeMain } from './scope.main.runtime';
 
 export function scopeSchema(scopeMain: ScopeMain) {
@@ -25,7 +25,13 @@ export function scopeSchema(scopeMain: ScopeMain) {
         path: String
 
         # list of components contained in the scope.
-        components(offset: Int, limit: Int, includeCache: Boolean, namespaces: [String!]): [Component]
+        components(
+          offset: Int
+          limit: Int
+          includeCache: Boolean
+          includeDeleted: Boolean
+          namespaces: [String!]
+        ): [Component]
 
         # get a specific component.
         get(id: String!): Component
@@ -83,10 +89,16 @@ export function scopeSchema(scopeMain: ScopeMain) {
         },
         components: (
           scope: ScopeMain,
-          props?: { offset: number; limit: number; includeCache?: boolean; namespaces?: string[] }
+          props?: {
+            offset: number;
+            limit: number;
+            includeCache?: boolean;
+            namespaces?: string[];
+            includeDeleted?: boolean;
+          }
         ) => {
           if (!props) return scope.list();
-          return scope.list({ ...props }, props.includeCache);
+          return scope.list({ ...props }, props.includeCache, undefined, props.includeDeleted);
         },
 
         get: async (scope: ScopeMain, { id }: { id: string }) => {
@@ -117,7 +129,7 @@ export function scopeSchema(scopeMain: ScopeMain) {
         },
 
         getBitVersion: () => {
-          return getHarmonyVersion(true);
+          return getBitVersion();
         },
         // delete: async (scope: ScopeMain, props: {  }) => {
 

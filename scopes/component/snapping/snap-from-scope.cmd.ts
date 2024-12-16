@@ -2,9 +2,11 @@ import chalk from 'chalk';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Command, CommandOptions } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
+import { compact } from 'lodash';
 import { Logger } from '@teambit/logger';
 import { SnappingMain } from './snapping.main.runtime';
 import { BasicTagSnapParams } from './tag-model-component';
+import { NewDependencies } from './generate-comp-from-scope';
 
 export type FileData = { path: string; content: string; delete?: boolean };
 
@@ -16,29 +18,22 @@ export type SnapDataPerCompRaw = {
   files?: FileData[];
   isNew?: boolean;
   mainFile?: string; // relevant when isNew is true. default to "index.ts".
-  newDependencies?: Array<{
-    id: string; // component-id or package-name. e.g. "teambit.react/react" or "lodash".
-    version?: string; // version of the package. e.g. "2.0.3". for packages, it is mandatory.
-    isComponent?: boolean; // default true. if false, it's a package dependency
-    type?: 'runtime' | 'dev' | 'peer'; // default "runtime".
-  }>;
+  newDependencies?: NewDependencies;
   removeDependencies?: string[];
+  forkFrom?: string; // origin id to fork from. the componentId is the new id. (no need to populate isNew prop).
+  version?: string; // relevant when passing "--tag". optionally, specify the semver to tag. default to "patch".
 };
 
-type SnapFromScopeOptions = {
+export type SnapFromScopeOptions = {
   push?: boolean;
   lane?: string;
   ignoreIssues?: string;
   disableSnapPipeline?: boolean;
-  forceDeploy?: boolean;
   updateDependents?: boolean;
+  tag?: boolean;
 } & BasicTagSnapParams;
 
-export class SnapFromScopeCmd implements Command {
-  name = '_snap <data>';
-  description = 'snap components from a bare-scope';
-  extendedDescription = `this command should be running from a new bare scope, it first imports the components it needs and then processes the snap.
-the input data is a stringified JSON of an array of the following object.
+export const inputDataDescription = `the input data is a stringified JSON of an array of the following object.
 {
   componentId: string;     // ids always have scope, so it's safe to parse them from string
   dependencies?: string[]; // dependencies include versions. for components use component-id. e.g. [teambit.compilation/compiler@1.0.0, lodash@4.17.21]
@@ -54,49 +49,101 @@ the input data is a stringified JSON of an array of the following object.
     type?: 'runtime' | 'dev' | 'peer'; // default "runtime".
   }>;
   removeDependencies?: string[]; // component-id (for components) or package-name (for packages) to remove from the dependencies.
+  forkFrom?: string;      // origin id to fork from. the componentId is the new id. (no need to populate isNew prop).
+  version?: string; // relevant when passing "--tag". optionally, specify the semver to tag. default to "patch".
 }
-an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "first snap"}]'
+an example of the final data: '[{"componentId":"ci.remote2/comp-b","message": "first snap"}]'`;
+
+export const snapFromScopeOptions = [
+  ['', 'push', 'export the updated objects to the original scopes once done'],
+  ['m', 'message <message>', 'log message describing the latest changes'],
+  ['', 'lane <lane-id>', 'fetch the components from the given lane'],
+  ['', 'build', 'run the build pipeline'],
+  ['', 'skip-tests', 'skip running component tests during snap process'],
+  ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
+  ['', 'ignore-build-errors', 'run the snap pipeline although the build pipeline failed'],
+  ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
+  [
+    'i',
+    'ignore-issues [issues]',
+    `ignore component issues (shown in "bit status" as "issues found"), issues to ignore:
+[${Object.keys(IssuesClasses).join(', ')}]
+to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
+  ],
+  ['', 'tag', 'make a tag instead of a snap'],
+  ['', 'stream', 'relevant for --json only. stream loader as json strings'],
+  ['j', 'json', 'output as json format'],
+];
+
+export class SnapFromScopeCmd implements Command {
+  name = '_snap <data>';
+  description = 'snap components from a bare-scope';
+  extendedDescription = `this command should be running from a new bare scope, it first imports the components it needs and then processes the snap.
+${inputDataDescription}
 `;
   alias = '';
   options = [
-    ['', 'push', 'export the updated objects to the original scopes once done'],
-    ['m', 'message <message>', 'log message describing the latest changes'],
-    ['', 'lane <lane-id>', 'fetch the components from the given lane'],
-    ['', 'build', 'run the build pipeline'],
-    ['', 'skip-tests', 'skip running component tests during snap process'],
-    ['', 'disable-snap-pipeline', 'skip the snap pipeline'],
-    ['', 'force-deploy', 'DEPRECATED. use --ignore-build-error instead'],
-    ['', 'ignore-build-errors', 'run the snap pipeline although the build pipeline failed'],
-    ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
-    [
-      'i',
-      'ignore-issues [issues]',
-      `ignore component issues (shown in "bit status" as "issues found"), issues to ignore:
-[${Object.keys(IssuesClasses).join(', ')}]
-to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
-    ],
+    ...snapFromScopeOptions,
     [
       '',
       'update-dependents',
-      'EXPERIMENTAL. when snapped on a lane, mark it as update-dependents so it will be skipped from the workspace',
+      'when snapped on a lane, mark it as update-dependents so it will be skipped from the workspace',
     ],
-    ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;
   private = true;
 
-  constructor(private snapping: SnappingMain, private logger: Logger) {}
+  constructor(
+    private snapping: SnappingMain,
+    private logger: Logger
+  ) {}
 
-  async report([data]: [string], options: SnapFromScopeOptions) {
-    const results = await this.json([data], options);
+  async report(
+    [data]: [string],
+    {
+      push = false,
+      message = '',
+      lane,
+      ignoreIssues,
+      build = false,
+      skipTests = false,
+      disableSnapPipeline = false,
+      ignoreBuildErrors = false,
+      rebuildDepsGraph,
+      updateDependents,
+      tag,
+    }: SnapFromScopeOptions
+  ) {
+    const disableTagAndSnapPipelines = disableSnapPipeline;
+    if (disableTagAndSnapPipelines && ignoreBuildErrors) {
+      throw new BitError('you can use either ignore-build-errors or disable-snap-pipeline, but not both');
+    }
+    if (updateDependents && !lane) {
+      throw new BitError('update-dependents flag is only available when snapping from a lane');
+    }
+
+    const snapDataPerCompRaw = this.parseData(data);
+    const results = await this.snapping.snapFromScope(snapDataPerCompRaw, {
+      push,
+      message,
+      lane,
+      ignoreIssues,
+      build,
+      skipTests,
+      disableTagAndSnapPipelines,
+      ignoreBuildErrors,
+      rebuildDepsGraph,
+      updateDependents,
+      tag,
+    });
 
     const { snappedIds, exportedIds } = results;
 
-    const snappedOutput = `${chalk.bold('snapped components')}\n${snappedIds.join('\n')}`;
+    const snappedOutput = snappedIds.length ? `${chalk.bold('snapped components')}\n${snappedIds.join('\n')}` : '';
     const exportedOutput =
-      exportedIds && exportedIds.length ? `\n\n${chalk.bold('exported components')}\n${exportedIds.join('\n')}` : '';
+      exportedIds && exportedIds.length ? `${chalk.bold('exported components')}\n${exportedIds.join('\n')}` : '';
 
-    return `${snappedOutput}${exportedOutput}`;
+    return compact([snappedOutput, exportedOutput]).join('\n\n');
   }
   async json(
     [data]: [string],
@@ -110,14 +157,11 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       disableSnapPipeline = false,
       ignoreBuildErrors = false,
       rebuildDepsGraph,
-      forceDeploy = false,
       updateDependents,
+      tag,
     }: SnapFromScopeOptions
   ) {
     const disableTagAndSnapPipelines = disableSnapPipeline;
-    if (forceDeploy) {
-      ignoreBuildErrors = true;
-    }
     if (disableTagAndSnapPipelines && ignoreBuildErrors) {
       throw new BitError('you can use either ignore-build-errors or disable-snap-pipeline, but not both');
     }
@@ -127,23 +171,36 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
 
     const snapDataPerCompRaw = this.parseData(data);
 
-    const results = await this.snapping.snapFromScope(snapDataPerCompRaw, {
-      push,
-      message,
-      lane,
-      ignoreIssues,
-      build,
-      skipTests,
-      disableTagAndSnapPipelines,
-      ignoreBuildErrors,
-      rebuildDepsGraph,
-      updateDependents,
-    });
+    try {
+      const results = await this.snapping.snapFromScope(snapDataPerCompRaw, {
+        push,
+        message,
+        lane,
+        ignoreIssues,
+        build,
+        skipTests,
+        disableTagAndSnapPipelines,
+        ignoreBuildErrors,
+        rebuildDepsGraph,
+        updateDependents,
+        tag,
+      });
 
-    return {
-      exportedIds: results.exportedIds?.map((id) => id.toString()),
-      snappedIds: results.snappedIds.map((id) => id.toString()),
-    };
+      return {
+        code: 0,
+        data: {
+          exportedIds: results.exportedIds?.map((id) => id.toString()),
+          snappedIds: results.snappedIds.map((id) => id.toString()),
+        },
+      };
+    } catch (err: any) {
+      this.logger.error('snap-from-scope.json, error: ', err);
+      return {
+        code: 1,
+        error: err.message,
+        stack: err.stack,
+      };
+    }
   }
   private parseData(data: string): SnapDataPerCompRaw[] {
     let dataParsed: unknown;

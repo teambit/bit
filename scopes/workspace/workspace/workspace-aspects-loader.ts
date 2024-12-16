@@ -1,9 +1,9 @@
-import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy/dist/constants';
+import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy.constants';
 import { GlobalConfigMain } from '@teambit/global-config';
 import findRoot from 'find-root';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { Graph } from '@teambit/graph.cleargraph';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ExtensionManifest, Harmony, Aspect } from '@teambit/harmony';
 import {
   AspectDefinition,
@@ -17,10 +17,10 @@ import fs from 'fs-extra';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { ComponentID } from '@teambit/component-id';
-import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import { ComponentNotFound } from '@teambit/legacy.scope';
 import pMapSeries from 'p-map-series';
 import { difference, compact, groupBy, partition } from 'lodash';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { Component, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
 import { ScopeMain } from '@teambit/scope';
 import { Logger } from '@teambit/logger';
@@ -92,8 +92,10 @@ export class WorkspaceAspectsLoader {
       runSubscribers: true,
       skipDeps: false,
       hideMissingModuleError: !!this.workspace.inInstallContext,
+      ignoreErrorFunc: this.workspace.inInstallContext ? ignoreAspectLoadingError : () => false,
       ignoreErrors: false,
       resolveEnvsFromRoots: this.resolveEnvsFromRoots,
+      forceLoad: false,
     };
     const mergedOpts: Required<WorkspaceLoadAspectsOptions> = { ...defaultOpts, ...opts };
 
@@ -105,9 +107,13 @@ export class WorkspaceAspectsLoader {
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts, null, 2)}`);
     const [localAspects, nonLocalAspects] = partition(ids, (id) => id.startsWith('file:'));
-    this.workspace.localAspects = localAspects;
-    await this.aspectLoader.loadAspectFromPath(this.workspace.localAspects);
-    const notLoadedIds = nonLocalAspects.filter((id) => !this.aspectLoader.isAspectLoaded(id));
+    const localAspectsMap = await this.aspectLoader.loadAspectFromPath(localAspects);
+    this.workspace.localAspects = { ...this.workspace.localAspects, ...localAspectsMap };
+
+    let notLoadedIds = nonLocalAspects;
+    if (!mergedOpts.forceLoad) {
+      notLoadedIds = nonLocalAspects.filter((id) => !this.aspectLoader.isAspectLoaded(id));
+    }
     if (!notLoadedIds.length) {
       this.logger.profile(`[${callId}] workspace.loadAspects`);
       return [];
@@ -150,6 +156,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       idsWithoutCore,
       mergedOpts.throwOnError,
       mergedOpts.hideMissingModuleError,
+      mergedOpts.ignoreErrorFunc,
       neededFor,
       mergedOpts.runSubscribers
     );
@@ -171,7 +178,6 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       throwOnError,
       opts.runSubscribers
     );
-
     await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, undefined, { throwOnError });
     const manifestIds = manifests.map((manifest) => manifest.id);
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
@@ -216,6 +222,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     seeders: string[],
     throwOnError: boolean,
     hideMissingModuleError: boolean,
+    ignoreErrorFunc?: (err: Error) => boolean,
     neededFor?: string,
     runSubscribers = true
   ): Promise<{ manifests: Array<Aspect | ExtensionManifest>; requireableComponents: RequireableComponent[] }> {
@@ -238,7 +245,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     await this.aspectLoader.loadExtensionsByManifests(
       manifests,
       { seeders, neededFor },
-      { throwOnError, hideMissingModuleError }
+      { throwOnError, hideMissingModuleError, ignoreErrorFunc }
     );
     return { manifests, requireableComponents };
   }
@@ -269,12 +276,21 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       )}`
     );
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
+    const workspaceLocalAspectsIds = Object.keys(this.workspace.localAspects);
+    const [localAspectsIds, nonLocalAspectsIds] = partition(idsToResolve, (id) =>
+      workspaceLocalAspectsIds.includes(id)
+    );
+
+    const localDefs = await this.aspectLoader.resolveLocalAspects(
+      localAspectsIds.map((id) => this.workspace.localAspects[id]),
+      runtimeName
+    );
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const configuredAspects = this.aspectLoader.getConfiguredAspects();
     // it's possible that componentIds are core-aspects that got version for some reason, remove the version to
     // correctly filter them out later.
-    const userAspectsIds: string[] = componentIds
-      ? componentIds.filter((id) => !coreAspectsIds.includes(id.toStringWithoutVersion())).map((id) => id.toString())
+    const userAspectsIds: string[] = nonLocalAspectsIds
+      ? nonLocalAspectsIds.filter((id) => !coreAspectsIds.includes(id.split('@')[0])).map((id) => id.toString())
       : difference(this.harmony.extensionsIds, coreAspectsIds);
     const rootAspectsIds: string[] = difference(configuredAspects, coreAspectsIds);
     const componentIdsToResolve = await this.workspace.resolveMultipleComponentIds(userAspectsIds);
@@ -298,7 +314,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       }
 
       const idsToFilter = idsToResolve.map((idStr) => ComponentID.fromString(idStr));
-      const targetDefs = wsAspectDefs.concat(coreAspectDefs);
+      const targetDefs = wsAspectDefs.concat(coreAspectDefs).concat(localDefs);
       const finalDefs = this.aspectLoader.filterAspectDefs(targetDefs, idsToFilter, runtimeName, mergedOpts);
 
       return finalDefs;
@@ -384,7 +400,10 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
         return coreAspect.runtimePath;
       });
     }
-    const localResolved = await this.aspectLoader.resolveLocalAspects(this.workspace.localAspects, runtimeName);
+    const localResolved = await this.aspectLoader.resolveLocalAspects(
+      Object.keys(this.workspace.localAspects),
+      runtimeName
+    );
     const allDefsExceptLocal = [...wsAspectDefs, ...coreAspectDefs, ...scopeAspectsDefs, ...installedAspectsDefs];
     const withoutLocalAspects = allDefsExceptLocal.filter((aspectId) => {
       return !localResolved.find((localAspect) => {
@@ -456,9 +475,9 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   async getConfiguredUserAspectsPackages(
     options: GetConfiguredUserAspectsPackagesOptions = {}
   ): Promise<AspectPackage[]> {
-    const configuredAspects = this.aspectLoader.getConfiguredAspects();
+    const rawConfiguredAspects = this.workspace.getWorkspaceConfig()?.extensionsIds;
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
-    const userAspectsIds: string[] = difference(configuredAspects, coreAspectsIds);
+    const userAspectsIds: string[] = difference(rawConfiguredAspects, coreAspectsIds);
     const componentIdsToResolve = await this.workspace.resolveMultipleComponentIds(
       userAspectsIds.filter((id) => !id.startsWith('file:'))
     );
@@ -723,6 +742,7 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
       useScopeAspectsCapsule: true,
       throwOnError: false,
       hideMissingModuleError: !!this.workspace.inInstallContext,
+      ignoreErrorFunc: this.workspace.inInstallContext ? ignoreAspectLoadingError : undefined,
       resolveEnvsFromRoots: this.resolveEnvsFromRoots,
     };
     const mergedOpts = { ...defaultOpts, ...opts };
@@ -896,4 +916,13 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
     nonWorkspaceIds = nonWorkspaceComps.map((c) => c.id);
     return { workspaceIds, nonWorkspaceIds };
   }
+}
+
+function ignoreAspectLoadingError(err: Error) {
+  // Ignoring that error as probably we are in the middle of the installation process
+  // so we didn't yet compile the aspect to esm correctly
+  if (err.message.includes(`Cannot use 'import.meta' outside a module`)) {
+    return true;
+  }
+  return false;
 }

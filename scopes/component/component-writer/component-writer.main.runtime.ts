@@ -1,4 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
+import { ComponentID } from '@teambit/component-id';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { InstallAspect, InstallMain } from '@teambit/install';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -9,14 +10,20 @@ import { uniq } from 'lodash';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 import { MoverAspect, MoverMain } from '@teambit/mover';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { isDir, isDirEmptySync } from '@teambit/legacy/dist/utils';
-import { PathLinuxRelative, pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
-import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import {
+  isDir,
+  isDirEmptySync,
+  PathLinuxRelative,
+  pathNormalizeToLinux,
+  PathOsBasedAbsolute,
+} from '@teambit/legacy.utils';
+import { ComponentMap } from '@teambit/legacy.bit-map';
+import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
+import { DataToPersist } from '@teambit/component.sources';
 import { ConfigMergerAspect, ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { MergeStrategy } from '@teambit/merging';
+import { Consumer } from '@teambit/legacy.consumer';
 import ComponentWriter, { ComponentWriterProps } from './component-writer';
 import { ComponentWriterAspect } from './component-writer.aspect';
 
@@ -33,6 +40,7 @@ export interface ManyComponentsWriterParams {
   skipWriteConfigFiles?: boolean;
   reasonForBitmapChange?: string; // optional. will be written in the bitmap-history-metadata
   shouldUpdateWorkspaceConfig?: boolean; // whether it should update dependencies policy (or leave conflicts) in workspace.jsonc
+  mergeStrategy?: MergeStrategy; // needed for workspace.jsonc conflicts
 }
 
 export type ComponentWriterResults = {
@@ -66,10 +74,16 @@ export class ComponentWriterMain {
     let compilationError: Error | undefined;
     let workspaceConfigUpdateResult: WorkspaceConfigUpdateResult | undefined;
     if (opts.shouldUpdateWorkspaceConfig) {
-      workspaceConfigUpdateResult = await this.configMerge.updateDepsInWorkspaceConfig(opts.components);
+      workspaceConfigUpdateResult = await this.configMerge.updateDepsInWorkspaceConfig(
+        opts.components,
+        opts.mergeStrategy
+      );
     }
     if (!opts.skipDependencyInstallation) {
-      installationError = await this.installPackagesGracefully(opts.skipWriteConfigFiles);
+      installationError = await this.installPackagesGracefully(
+        opts.components.map(({ id }) => id),
+        opts.skipWriteConfigFiles
+      );
       // no point to compile if the installation is not running. the environment is not ready.
       compilationError = await this.compileGracefully();
     }
@@ -77,7 +91,10 @@ export class ComponentWriterMain {
     return { installationError, compilationError, workspaceConfigUpdateResult };
   }
 
-  private async installPackagesGracefully(skipWriteConfigFiles = false): Promise<Error | undefined> {
+  private async installPackagesGracefully(
+    componentIds: ComponentID[],
+    skipWriteConfigFiles = false
+  ): Promise<Error | undefined> {
     this.logger.debug('installPackagesGracefully, start installing packages');
     try {
       const installOpts = {
@@ -85,6 +102,7 @@ export class ComponentWriterMain {
         updateExisting: false,
         import: false,
         writeConfigFiles: !skipWriteConfigFiles,
+        dependenciesGraph: await this.workspace.scope.getDependenciesGraphByComponentIds(componentIds),
       };
       await this.installer.install(undefined, installOpts);
       this.logger.debug('installPackagesGracefully, completed installing packages successfully');
@@ -302,7 +320,7 @@ to move all component files to a different directory, run bit remove and then bi
     LoggerMain,
     Workspace,
     MoverMain,
-    ConfigMergerMain
+    ConfigMergerMain,
   ]) {
     const logger = loggerMain.createLogger(ComponentWriterAspect.id);
     return new ComponentWriterMain(install, compiler, workspace, logger, mover, configMerger);

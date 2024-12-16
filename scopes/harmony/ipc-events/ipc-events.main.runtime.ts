@@ -30,7 +30,11 @@ const EVENTS_DIR = 'events';
  * is onPostInstall and then triggers its own OnPostInstall slot.
  */
 export class IpcEventsMain {
-  constructor(private scope: ScopeMain, private gotEventSlot: GotEventSlot, private logger: Logger) {}
+  constructor(
+    private scope: ScopeMain,
+    private gotEventSlot: GotEventSlot,
+    private logger: Logger
+  ) {}
 
   registerGotEventSlot(fn: GotEvent) {
     this.gotEventSlot.register(fn);
@@ -75,7 +79,9 @@ export class IpcEventsMain {
       });
       ipcEventsMain.registerGotEventSlot(async (eventName) => {
         if (eventName === 'onPostObjectsPersist') {
+          logger.debug('got an event onPostObjectsPersist, clearing the cache and reloading staged-snaps');
           scope.legacyScope.objects.clearObjectsFromCache();
+          scope.legacyScope.setStagedSnaps(); // "bit export" deletes the staged-snaps file, so it should be reloaded
         }
       });
     }

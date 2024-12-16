@@ -5,28 +5,34 @@ import { isSnap } from '@teambit/component-version';
 import { ComponentID } from '@teambit/component-id';
 import { uniq, isEmpty, forEach, differenceWith } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
-import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
-import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import logger from '@teambit/legacy/dist/logger/logger';
-import { getExt, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/legacy/dist/utils';
-import { PathLinux, PathLinuxRelative, PathOsBased, removeFileExtension } from '@teambit/legacy/dist/utils/path';
-import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
-import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { RelativePath } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
-import { getDependencyTree } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder';
 import {
-  FileObject,
+  Dependency,
+  RelativePath,
   ImportSpecifier,
-  DependenciesTree,
-} from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
+  ConsumerComponent as Component,
+} from '@teambit/legacy.consumer-component';
+import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
+import { Consumer } from '@teambit/legacy.consumer';
+import { logger } from '@teambit/legacy.logger';
+import { getExt } from '@teambit/toolbox.fs.extension-getter';
+import {
+  pathNormalizeToLinux,
+  pathRelativeLinux,
+  PathLinux,
+  PathLinuxRelative,
+  PathOsBased,
+  removeFileExtension,
+} from '@teambit/legacy.utils';
+import { ResolvedPackageData } from '../resolve-pkg-data';
+import { ComponentMap } from '@teambit/legacy.bit-map';
+import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { getDependencyTree } from '../files-dependency-builder';
+import { FileObject, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
 import { DevFilesMain } from '@teambit/dev-files';
 import { Workspace } from '@teambit/workspace';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
-import { ResolvedPackageData } from '@teambit/legacy/dist/utils/packages';
-import { DependencyDetector } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
+import { DependencyDetector } from '../files-dependency-builder/detector-hook';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 import { DependenciesData } from './dependencies-data';
 import { AllDependencies, AllPackagesDependencies } from './apply-overrides';
@@ -147,7 +153,13 @@ export class AutoDetectDeps {
     // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
     // they are referred as "untracked components" and the user should add them later on in order to tag
     this.setTree(dependenciesTree.tree);
-    const devFiles = await this.devFiles.getDevFilesForConsumerComp(this.component);
+    if (dependenciesTree.tree['env.jsonc']?.components.length > 0) {
+      await this.populateDependencies(['env.jsonc'], []);
+    }
+    const envExtendsDeps = this.allDependencies.dependencies.length
+      ? this.allDependencies.dependencies
+      : this.component.componentFromModel?.dependencies.dependencies;
+    const devFiles = await this.devFiles.getDevFilesForConsumerComp(this.component, envExtendsDeps);
     await this.populateDependencies(allFiles, devFiles);
     return {
       dependenciesData: new DependenciesData(
@@ -384,6 +396,9 @@ export class AutoDetectDeps {
         componentIdResolvedFrom: 'DependencyPkgJson',
         packageName: compDep.name,
       };
+      if (originFile === 'env.jsonc') {
+        depDebug.importSource = 'env.jsonc';
+      }
       const getVersionFromPkgJson = (): string | null => {
         const versionFromDependencyPkgJson = getValidVersion(compDep.concreteVersion);
         if (versionFromDependencyPkgJson) {
@@ -453,7 +468,7 @@ export class AutoDetectDeps {
       // some files such as scss/json are needed to be imported as non-main
       return;
     }
-    const pkgRootDir = dependencyPkgData.packageJsonContent?.componentRootFolder;
+    const pkgRootDir = dependencyPkgData.packageJsonPath && path.dirname(dependencyPkgData.packageJsonPath);
     if (pkgRootDir && !fs.existsSync(path.join(pkgRootDir, DEFAULT_DIST_DIRNAME))) {
       // the dependency wasn't compiled yet. the issue is probably because depMain points to the dist
       // and depFullPath is in the source.

@@ -1,14 +1,14 @@
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ApplyVersionResults } from '@teambit/merging';
-import { Lane } from '@teambit/legacy/dist/scope/models';
+import { Lane } from '@teambit/scope.objects';
 import { CheckoutProps } from '@teambit/checkout';
 import { Workspace } from '@teambit/workspace';
 import { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
+import { throwForStagedComponents } from '@teambit/lanes.modules.create-lane';
 import { LanesMain } from './lanes.main.runtime';
-import { throwForStagedComponents } from './create-lane';
 
 export type SwitchProps = {
   laneName: string;
@@ -70,11 +70,15 @@ export class LaneSwitcher {
 
     const localLane = await this.consumer.scope.loadLane(laneId);
     const getMainIds = async () => {
-      const mainIds = await this.consumer.getIdsOfDefaultLane();
       if (this.switchProps.head) {
-        await this.workspace.scope.legacyScope.scopeImporter.importWithoutDeps(mainIds, { cache: false });
+        const allIds = this.workspace.listIds();
+        await this.workspace.scope.legacyScope.scopeImporter.importWithoutDeps(allIds, {
+          cache: false,
+          ignoreMissingHead: true,
+        });
         return this.consumer.getIdsOfDefaultLane();
       }
+      const mainIds = await this.consumer.getIdsOfDefaultLane();
       return mainIds;
     };
     const mainIds = await getMainIds();
@@ -105,8 +109,7 @@ export class LaneSwitcher {
       throw new BitError('error: use --pattern only when the workspace is empty');
     }
     const allIds = this.switchProps.ids || [];
-    const patternIds = await this.workspace.filterIdsFromPoolIdsByPattern(this.switchProps.pattern, allIds);
-    this.switchProps.ids = patternIds.map((id) => id);
+    this.switchProps.ids = await this.workspace.filterIdsFromPoolIdsByPattern(this.switchProps.pattern, allIds);
   }
 
   private async populatePropsAccordingToRemoteLane(remoteLaneId: LaneId): Promise<ComponentID[]> {

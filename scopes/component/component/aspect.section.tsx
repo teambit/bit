@@ -12,6 +12,7 @@ export class AspectSection implements Section {
     href: '~aspect',
     children: <MenuWidgetIcon icon="configuration" tooltipContent="Configuration" />,
     displayName: 'Configuration',
+    hideInMinimalMode: true,
   };
   order = 50;
 }

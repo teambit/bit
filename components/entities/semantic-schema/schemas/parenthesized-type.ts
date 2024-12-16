@@ -7,7 +7,10 @@ import { SchemaRegistry } from '../schema-registry';
  */
 export class ParenthesizedTypeSchema extends SchemaNode {
   readonly type: SchemaNode;
-  constructor(readonly location: SchemaLocation, type: SchemaNode) {
+  constructor(
+    readonly location: SchemaLocation,
+    type: SchemaNode
+  ) {
     super();
     this.type = type;
   }
@@ -16,8 +19,12 @@ export class ParenthesizedTypeSchema extends SchemaNode {
     return [this.type];
   }
 
-  toString() {
-    return `(${this.type.toString()})`;
+  toString(options?: { color?: boolean }): string {
+    return `(${this.type.toString(options)})`;
+  }
+
+  toFullSignature(options?: { showDocs?: boolean }): string {
+    return `(${this.type.toFullSignature(options)})`;
   }
 
   toObject() {

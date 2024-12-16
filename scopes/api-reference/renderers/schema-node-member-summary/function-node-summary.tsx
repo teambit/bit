@@ -39,7 +39,7 @@ export function FunctionNodeSummary({
   const signature =
     __schema === SetAccessorSchema.name
       ? `(${(node as SetAccessorSchema).param.toString()}) => void`
-      : transformSignature(node)?.split(name)[1] ?? node.signature;
+      : (transformSignature(node)?.split(name)[1] ?? node.signature);
 
   const { renderers } = apiNodeRendererProps;
   const returnTypeRenderer = returnType && renderers.find((renderer) => renderer.predicate(returnType));
@@ -78,8 +78,8 @@ export function FunctionNodeSummary({
             if (paramRenderer?.Component) {
               return (
                 <paramRenderer.Component
-                  {...apiNodeRendererProps}
                   key={`param-${param.name}`}
+                  {...apiNodeRendererProps}
                   depth={(apiNodeRendererProps.depth ?? 0) + 1}
                   apiNode={{ ...apiNodeRendererProps.apiNode, renderer: paramRenderer, api: param }}
                   metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
@@ -88,8 +88,8 @@ export function FunctionNodeSummary({
             }
             return (
               <defaultParamRenderer.Component
-                {...apiNodeRendererProps}
                 key={`param-${param.name}`}
+                {...apiNodeRendererProps}
                 depth={(apiNodeRendererProps.depth ?? 0) + 1}
                 apiNode={{ ...apiNodeRendererProps.apiNode, renderer: defaultParamRenderer, api: param }}
                 metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}

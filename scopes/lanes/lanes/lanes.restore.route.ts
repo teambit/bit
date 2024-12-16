@@ -3,7 +3,10 @@ import { Logger } from '@teambit/logger';
 import { LanesMain } from './lanes.main.runtime';
 
 export class LanesRestoreRoute implements Route {
-  constructor(private lanes: LanesMain, private logger: Logger) {}
+  constructor(
+    private lanes: LanesMain,
+    private logger: Logger
+  ) {}
 
   method = 'post';
   route = this.lanes.restoreRoutePath;

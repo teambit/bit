@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-import Helper from '../../../src/e2e-helper/e2e-helper';
-import { Extensions } from '../../../src/constants';
+import { Helper } from '@teambit/legacy.e2e-helper';
+import { Extensions } from '@teambit/legacy.constants';
 
 chai.use(require('chai-fs'));
 
@@ -174,7 +174,7 @@ describe('bit lane command', function () {
       expect(() => helper.command.export()).to.not.throw();
     });
   });
-  describe('soft-remove main component when on a lane', () => {
+  describe('delete main component when on a lane', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(2);
@@ -183,12 +183,19 @@ describe('bit lane command', function () {
       helper.command.createLane();
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
       helper.command.export();
-      helper.command.softRemoveOnLane('comp2');
     });
-    it('should remove the component from the workspace', () => {
-      const list = helper.command.listParsed();
-      expect(list).to.have.lengthOf(1);
-      expect(list[0].id).to.not.have.string('comp2');
+    it('should throw an error suggesting to switch to main or using --update-main flag', () => {
+      expect(() => helper.command.softRemoveOnLane('comp2')).to.throw('unable to delete');
+    });
+    describe('using --update-main flag', () => {
+      before(() => {
+        helper.command.softRemoveOnLane('comp2', '--update-main');
+      });
+      it('should remove the component from the workspace', () => {
+        const list = helper.command.listParsed();
+        expect(list).to.have.lengthOf(1);
+        expect(list[0].id).to.not.have.string('comp2');
+      });
     });
   });
   describe('soft remove on lane when a forked lane is merging this lane', () => {
@@ -317,10 +324,10 @@ describe('bit lane command', function () {
         expect(staged).to.include(`${helper.scopes.remote}/comp2`);
       });
     });
-    describe('when merging with --no-snap', () => {
+    describe('when merging with --no-auto-snap', () => {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeMerge);
-        output = helper.command.mergeLane('lane-a', '-x --no-snap');
+        output = helper.command.mergeLane('lane-a', '-x --no-auto-snap');
       });
       it('bit status should not show the component as soft-removed from remote', () => {
         const status = helper.command.statusJson();

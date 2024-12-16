@@ -1,11 +1,11 @@
 /* eslint no-console: 0 */
-import { addUser, REGISTRY_MOCK_PORT, start as startRegistryMock } from '@pnpm/registry-mock';
+import { addUser, REGISTRY_MOCK_PORT, start as startRegistryMock, prepare } from '@pnpm/registry-mock';
 import { ChildProcess } from 'child_process';
 import { fetch } from '@pnpm/fetch';
 import execa from 'execa';
 import * as path from 'path';
 
-import Helper from '../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 const skipRegistryTests = process.env.SKIP_REGISTRY_TESTS === 'True' || process.env.SKIP_REGISTRY_TESTS === 'true';
 export const supportNpmCiRegistryTesting = !skipRegistryTests;
@@ -57,16 +57,18 @@ export default class NpmCiRegistry {
 
   _establishRegistry(): Promise<void> {
     return new Promise((resolve, reject) => {
+      prepare({
+        uplinkedRegistry: 'https://node-registry.bit.cloud/',
+      });
       this.registryServer = startRegistryMock({ detached: true });
       let resolved = false;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.registryServer.stdout.on('data', async (data): void => {
-        if (this.helper.debugMode) console.log(`stdout: ${data}`);
         if (!resolved && data.includes(REGISTRY_MOCK_PORT)) {
           resolved = true;
           let fetchResults;
           try {
-            fetchResults = await fetch(`http://localhost:${REGISTRY_MOCK_PORT}`, {
+            fetchResults = await fetch(`http://localhost:${REGISTRY_MOCK_PORT}/is-odd`, {
               retry: {
                 minTimeout: 1000,
                 maxTimeout: 10000,

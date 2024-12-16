@@ -92,6 +92,16 @@ export interface ComponentTemplateOptions {
   name?: string;
 
   /**
+   * display name of the template.
+   */
+  displayName?: string;
+
+  /**
+   * example name for the component template.
+   */
+  exampleComponentName?: string;
+
+  /**
    * short description of the template. shown in the `bit templates` command.
    */
   description?: string;

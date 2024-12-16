@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-import Helper from '../../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -195,6 +195,7 @@ describe('bit lane command', function () {
         helper.command.export();
         helper.command.switchLocalLane('dev', '--skip-dependency-installation');
         helper.fs.deletePath('.bit');
+        helper.command.init();
         helper.scopeHelper.addRemoteScope();
         helper.command.import();
         localScope = helper.scopeHelper.cloneLocalScope();

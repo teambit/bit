@@ -19,7 +19,10 @@ export class MDXCompiler implements Compiler {
 
   distDir = 'dist';
 
-  constructor(readonly id: string, readonly config: MDXCompilerOpts) {}
+  constructor(
+    readonly id: string,
+    readonly config: MDXCompilerOpts
+  ) {}
 
   displayConfig() {
     return JSON.stringify(this.config, null, 2);

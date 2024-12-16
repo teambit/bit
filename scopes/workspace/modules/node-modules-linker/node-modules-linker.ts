@@ -1,27 +1,23 @@
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import * as path from 'path';
-import { linkPkgsToBitRoots } from '@teambit/bit-roots';
+import { linkPkgsToRootComponents } from '@teambit/workspace.root-components';
 import { ComponentID } from '@teambit/component-id';
-import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy/dist/constants';
-import BitMap from '@teambit/legacy/dist/consumer/bit-map/bit-map';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
-import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
-import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import logger from '@teambit/legacy/dist/logger/logger';
-import getNodeModulesPathOfComponent from '@teambit/legacy/dist/utils/bit/component-node-modules-path';
-import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
-import Symlink from '@teambit/legacy/dist/links/symlink';
-import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy.constants';
+import { BitMap } from '@teambit/legacy.bit-map';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { PackageJsonFile, DataToPersist, RemovePath, Symlink } from '@teambit/component.sources';
+import { Consumer } from '@teambit/legacy.consumer';
+import { logger } from '@teambit/legacy.logger';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import { componentIdToPackageName, getNodeModulesPathOfComponent } from '@teambit/pkg.modules.component-package-name';
 import { Workspace } from '@teambit/workspace';
 import { snapToSemver } from '@teambit/component-package-version';
 import { Component } from '@teambit/component';
 import { PackageJsonTransformer } from './package-json-transformer';
 import { changeCodeFromRelativeToModulePaths } from './codemod-components';
 
-type LinkDetail = { from: string; to: string };
+type LinkDetail = { from: string; to: string; existsBefore: boolean };
 export type NodeModulesLinksResult = {
   id: ComponentID;
   bound: LinkDetail[];
@@ -35,33 +31,50 @@ export default class NodeModuleLinker {
   consumer: Consumer;
   bitMap: BitMap; // preparation for the capsule, which is going to have only BitMap with no Consumer
   dataToPersist: DataToPersist;
-  constructor(private components: Component[], private workspace: Workspace) {
+  existingLinks: NodeModulesLinksResult[];
+  packageJsonCreated: boolean;
+
+  constructor(
+    private components: Component[],
+    private workspace: Workspace
+  ) {
     this.consumer = this.workspace.consumer;
     this.bitMap = this.consumer.bitMap;
     this.dataToPersist = new DataToPersist();
+    this.existingLinks = [];
+    this.packageJsonCreated = false;
   }
   async link(): Promise<NodeModulesLinksResult[]> {
     this.components = this.components.filter((component) => this.bitMap.getComponentIfExist(component.id));
     const links = await this.getLinks();
+
     const linksResults = this.getLinksResults();
     if (!linksResults.length) {
       // avoid clearing the cache if it ends up with no links. (e.g. happens when mistakenly generating links for a
       // component not in the workspace)
+      // or when all links are already exist.
       return [];
     }
     const workspacePath = this.workspace.path;
     links.addBasePath(workspacePath);
     await links.persistAllToFS();
-    await Promise.all(
-      this.components.map((component) =>
-        this.consumer?.componentFsCache.deleteDependenciesDataCache(component.id.toString())
-      )
-    );
-    // if this cache is not cleared, then when asking workspace.get again to the same component, it returns it with
-    // component-issues like "MissingLinksFromNodeModulesToSrc" incorrectly.
-    this.workspace.clearAllComponentsCache();
-    await linkPkgsToBitRoots(
-      workspacePath,
+    // Only clear cache if new package.json of components were created
+    if (this.packageJsonCreated) {
+      await Promise.all(
+        this.components.map((component) =>
+          this.consumer?.componentFsCache.deleteDependenciesDataCache(component.id.toString())
+        )
+      );
+      // if this cache is not cleared, then when asking workspace.get again to the same component, it returns it with
+      // component-issues like "MissingLinksFromNodeModulesToSrc" incorrectly.
+      this.workspace.clearAllComponentsCache();
+    }
+
+    await linkPkgsToRootComponents(
+      {
+        rootComponentsPath: this.workspace.rootComponentsPath,
+        workspacePath,
+      },
       this.components.map((comp) => componentIdToPackageName(comp.state._consumer))
     );
     return linksResults;
@@ -76,23 +89,35 @@ export default class NodeModuleLinker {
 
     return this.dataToPersist;
   }
+  private addLinkResult(
+    linksResults: NodeModulesLinksResult[],
+    id: ComponentID | null | undefined,
+    from: string,
+    to: string,
+    existsBefore: boolean
+  ) {
+    if (!id) return;
+    const existingLinkResult = linksResults.find((linkResult) => linkResult.id.isEqual(id));
+    if (existingLinkResult) {
+      existingLinkResult.bound.push({ from, to, existsBefore });
+    } else {
+      linksResults.push({ id, bound: [{ from, to, existsBefore }] });
+    }
+  }
+
   getLinksResults(): NodeModulesLinksResult[] {
     const linksResults: NodeModulesLinksResult[] = [];
-    const getExistingLinkResult = (id: ComponentID) => linksResults.find((linkResult) => linkResult.id.isEqual(id));
-    const addLinkResult = (id: ComponentID | null | undefined, from: string, to: string) => {
-      if (!id) return;
-      const existingLinkResult = getExistingLinkResult(id);
-      if (existingLinkResult) {
-        existingLinkResult.bound.push({ from, to });
-      } else {
-        linksResults.push({ id, bound: [{ from, to }] });
-      }
-    };
     this.dataToPersist.symlinks.forEach((symlink: Symlink) => {
-      addLinkResult(symlink.componentId, symlink.src, symlink.dest);
+      this.addLinkResult(linksResults, symlink.componentId, symlink.src, symlink.dest, false);
+    });
+    this.existingLinks.forEach((link: NodeModulesLinksResult) => {
+      const componentId = link.id;
+      link.bound.forEach((bound) => {
+        this.addLinkResult(linksResults, componentId, bound.from, bound.to, true);
+      });
     });
     this.components.forEach((component) => {
-      const existingLinkResult = getExistingLinkResult(component.id);
+      const existingLinkResult = linksResults.find((linkResult) => linkResult.id.isEqual(component.id));
       if (!existingLinkResult) {
         linksResults.push({ id: component.id, bound: [] });
       }
@@ -117,20 +142,32 @@ export default class NodeModuleLinker {
     const legacyComponent = component.state._consumer as ConsumerComponent;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(legacyComponent);
 
-    this.symlinkComponentDir(component, linkPath);
+    await this.symlinkComponentDir(component, linkPath);
     this._deleteExistingLinksRootIfSymlink(linkPath);
     await this.createPackageJson(component);
   }
 
-  private symlinkComponentDir(component: Component, linkPath: PathOsBasedRelative) {
+  private async symlinkComponentDir(component: Component, linkPath: PathOsBasedRelative) {
     const componentMap = this.bitMap.getComponent(component.id);
 
     const filesToBind = componentMap.getAllFilesPaths();
-    filesToBind.forEach((file) => {
-      const fileWithRootDir = path.join(componentMap.rootDir as string, file);
-      const dest = path.join(linkPath, file);
-      this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, component.id, true));
-    });
+    await Promise.all(
+      filesToBind.map(async (file) => {
+        const fileWithRootDir = path.join(componentMap.rootDir as string, file);
+        const dest = path.join(linkPath, file);
+        let stat;
+        try {
+          stat = await fs.lstat(dest);
+        } catch {
+          // Ignore this error, it's probably because the file doesn't exist
+        }
+        if (stat && stat.isSymbolicLink()) {
+          this.addLinkResult(this.existingLinks, component.id, fileWithRootDir, dest, true);
+        } else {
+          this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, component.id, true));
+        }
+      })
+    );
 
     if (IS_WINDOWS) {
       // symlink the entire source directory into "_src" in node-modules.
@@ -158,7 +195,7 @@ export default class NodeModuleLinker {
         this.dataToPersist.removePath(new RemovePath(linkPath));
       }
       return undefined;
-    } catch (err: any) {
+    } catch {
       return undefined; // probably file does not exist
     }
   }
@@ -180,6 +217,11 @@ export default class NodeModuleLinker {
         id: legacyComp.id,
       })
     );
+    const packageJsonExist = await fs.pathExists(path.join(dest, 'package.json'));
+    if (!packageJsonExist) {
+      this.packageJsonCreated = true;
+    }
+
     const packageJson = PackageJsonFile.createFromComponent(dest, legacyComp, true);
     await this._applyTransformers(component, packageJson);
     if (IS_WINDOWS) {
@@ -262,7 +304,11 @@ export async function linkToNodeModulesByIds(
     if (loadFromScope) {
       return workspace.scope.getMany(componentsIds);
     }
-    return workspace.getMany(componentsIds, { idsToNotLoadAsAspects: componentsIds.map((id) => id.toString()) });
+    return workspace.getMany(componentsIds, {
+      idsToNotLoadAsAspects: componentsIds.map((id) => id.toString()),
+      loadSeedersAsAspects: false,
+      loadExtensions: false,
+    });
   };
   const components = await getComponents();
   const nodeModuleLinker = new NodeModuleLinker(components, workspace);
