@@ -20,7 +20,7 @@ import {
   DEFAULT_BIT_ENV,
 } from '@teambit/legacy.constants';
 import { analyticsPrompt, errorReportingPrompt } from '@teambit/legacy.cli.prompts';
-import { getBitVersion } from '@teambit/bit.get-bit-version';
+import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
 
 const LEVEL = {
   DEBUG: 'debug',
@@ -139,7 +139,7 @@ class Analytics {
     this.anonymous = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
     this.command = command;
     this.flags = this._hashFlags(flags);
-    this.release = getBitVersion();
+    this.release = getBitVersionGracefully() || 'unknown';
     this.args = this._hashArgs(args);
     this.nodeVersion = process.version;
     this.os = process.platform;
