@@ -174,6 +174,8 @@ export class SnappingMain {
     incrementBy = 1,
     disableTagAndSnapPipelines = false,
     failFast = false,
+    detachHead,
+    overrideHead,
   }: {
     ids?: string[];
     all?: boolean | string;
@@ -193,6 +195,7 @@ export class SnappingMain {
     if (editor && message) {
       throw new BitError('you can use either --editor or --message, but not both');
     }
+    ignoreNewestVersion = Boolean(ignoreNewestVersion || detachHead || overrideHead);
 
     const exactVersion = version;
     if (!this.workspace) throw new OutsideWorkspaceError();
@@ -242,6 +245,8 @@ export class SnappingMain {
         incrementBy,
         packageManagerConfigRootDir: this.workspace.path,
         exitOnFirstFailedTask: failFast,
+        detachHead,
+        overrideHead,
       });
 
     const tagResults = {
@@ -280,6 +285,7 @@ export class SnappingMain {
     if (!this.scope) {
       throw new BitError(`please create a new bare-scope and run it from there`);
     }
+    params.ignoreNewestVersion = params.ignoreNewestVersion || params.detachHead || params.overrideHead;
 
     const tagDataPerComp = await Promise.all(
       tagDataPerCompRaw.map(async (tagData) => {
@@ -357,7 +363,7 @@ if you're willing to lose the history from the head to the specified version, us
       persist: true,
       ids: componentIds,
       message: params.message as string,
-      setHeadAsParent: params.ignoreNewestVersion,
+      setHeadAsParent: params.overrideHead,
     });
 
     const { taggedComponents, publishedPackages } = results;

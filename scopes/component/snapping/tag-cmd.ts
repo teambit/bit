@@ -74,7 +74,6 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   ],
   ['b', 'build', 'locally run the build pipeline (i.e. not via rippleCI) and complete the tag'],
   ['', 'detach-head', 'in case a component is checked out to and older version, tag it without changing the head'],
-  ['', 'set-head', 'in case a component is checked out to and older version, change head to the newly created version'],
 ] as CommandOptions;
 
 export type TagParams = {
@@ -140,6 +139,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
       rebuildDepsGraph,
       failFast = false,
       incrementBy = 1,
+      detachHead,
     } = options;
 
     if (!message && !persist && !editor) {
@@ -191,6 +191,7 @@ To undo local tag use the "bit reset" command.`
       incrementBy,
       version: ver,
       failFast,
+      detachHead,
     };
 
     const results = await this.snapping.tag(params);

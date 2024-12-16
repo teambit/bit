@@ -66,6 +66,9 @@ export type AddVersionOpts = {
    * (this prop takes affect only when the component is checked out to an older version)
    */
   setHeadAsParent?: boolean;
+
+  detachHead?: boolean;
+  overrideHead?: boolean;
 };
 
 type Versions = { [version: string]: Ref };
@@ -650,13 +653,17 @@ export default class Component extends BitObject {
     return hasSameVersions;
   }
 
+  // eslint-disable-next-line complexity
   addVersion(
     version: Version,
     versionToAdd: string,
     lane?: Lane,
     previouslyUsedVersion?: string,
-    { addToUpdateDependentsInLane, setHeadAsParent }: AddVersionOpts = {}
+    { addToUpdateDependentsInLane, setHeadAsParent, detachHead, overrideHead }: AddVersionOpts = {}
   ): string {
+    if (detachHead && overrideHead) {
+      throw new Error(`addVersion expects either detachHead or overrideHead to be true, not both`);
+    }
     if (lane) {
       if (isTag(versionToAdd)) {
         throw new BitError(
@@ -707,8 +714,13 @@ export default class Component extends BitObject {
       const parentToSet = setHeadAsParent ? head : parent;
       version.addAsOnlyParent(parentToSet || head);
     }
-    if (parent && head && !parent.isEqual(head)) {
-      this.detachedHeads.setHead(version.hash());
+    if (parent && head && !parent.isEqual(head) && !overrideHead) {
+      if (detachHead) this.detachedHeads.setHead(version.hash());
+      else
+        throw new Error(`unable to add a new version for "${this.id()}" on main.
+this version started from an older version (${previouslyUsedVersion}), and not from the head (${head}).
+if this is done intentionally, please re-run with --detach-head (or --override-head if available).
+otherwise, please run "bit checkout head" to be up to date, then snap/tag your changes.`);
     } else {
       this.setHead(version.hash());
       this.detachedHeads.clearCurrent();

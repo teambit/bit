@@ -34,6 +34,8 @@ export type BasicTagSnapParams = {
   build?: boolean;
   ignoreBuildErrors?: boolean;
   rebuildDepsGraph?: boolean;
+  detachHead?: boolean;
+  overrideHead?: boolean;
 };
 
 export type BasicTagParams = BasicTagSnapParams & {
@@ -196,6 +198,8 @@ export async function tagModelComponent({
   exitOnFirstFailedTask = false,
   updateDependentsOnLane = false, // on lane, adds it into updateDependents prop
   setHeadAsParent, // kind of rebase. in case component is checked out to older version, ignore that version, use head
+  detachHead,
+  overrideHead: setHead,
 }: {
   snapping: SnappingMain;
   components: Component[];
@@ -333,6 +337,8 @@ export async function tagModelComponent({
         addVersionOpts: {
           addToUpdateDependentsInLane: updateDependentsOnLane,
           setHeadAsParent,
+          detachHead,
+          overrideHead: setHead,
         },
       });
       if (workspace) {
