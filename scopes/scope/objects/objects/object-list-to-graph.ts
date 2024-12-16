@@ -4,7 +4,7 @@ import { ComponentID } from '@teambit/component-id';
 import type { ObjectList } from '@teambit/scope.objects';
 import { BitObjectList } from '@teambit/scope.objects';
 import { getAllVersionsInfo } from '@teambit/component.snap-distance';
-import { Dependency } from './model/dependency';
+import { Dependency } from '@teambit/graph';
 
 type BitIdNode = Node<ComponentID>;
 type DependencyEdge = Edge<Dependency>;
