@@ -560,7 +560,13 @@
         "scope": "teambit.harmony",
         "version": "0.0.178",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/doctor"
+        "rootDir": "scopes/harmony/doctor",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@0.0.63": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "e2e-helper": {
         "name": "e2e-helper",
@@ -826,7 +832,13 @@
         "scope": "teambit.harmony",
         "version": "0.0.208",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/host-initializer"
+        "rootDir": "scopes/harmony/host-initializer",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@0.0.63": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "html": {
         "name": "html",
