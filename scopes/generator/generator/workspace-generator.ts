@@ -223,6 +223,7 @@ export class WorkspaceGenerator {
       scope: this.workspace.defaultScope,
       refactor: true,
       install: false,
+      compile: false,
     });
   }
 

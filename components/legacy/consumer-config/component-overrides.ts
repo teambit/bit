@@ -8,9 +8,8 @@ import {
   DEPENDENCIES_FIELDS,
 } from '@teambit/legacy.constants';
 import { SourceFile } from '@teambit/component.sources';
-import { ComponentConfig } from './component-config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
+import { ConsumerComponent, Dependency } from '@teambit/legacy.consumer-component';
 
 export type ConsumerOverridesOfComponent = ComponentOverridesData & {
   extensions?: Record<string, any>;
@@ -44,7 +43,7 @@ export class ComponentOverrides {
     this.overrides = overrides || {};
   }
   static componentOverridesLoadingRegistry: OverridesLoadRegistry = {};
-  static registerOnComponentOverridesLoading(extId, func: (id, config, legacyFiles) => any) {
+  static registerOnComponentOverridesLoading(extId, func: (id, config, legacyFiles, envExtendsDeps) => any) {
     this.componentOverridesLoadingRegistry[extId] = func;
   }
 
@@ -71,17 +70,15 @@ export class ComponentOverrides {
    * use the component-config.
    */
   static async loadFromConsumer(
-    componentId: ComponentID,
-    workspaceConfig: ILegacyWorkspaceConfig,
-    overridesFromModel: ComponentOverridesData | undefined,
-    componentConfig: ComponentConfig,
-    files: SourceFile[]
+    component: ConsumerComponent,
+    envExtendsDeps?: Dependency[]
   ): Promise<ComponentOverrides> {
     const extensionsAddedOverrides = await runOnLoadOverridesEvent(
       this.componentOverridesLoadingRegistry,
-      componentConfig.extensions,
-      componentId,
-      files
+      component.bitJson?.extensions,
+      component.id,
+      component.files,
+      envExtendsDeps
     );
     return new ComponentOverrides(extensionsAddedOverrides);
   }
@@ -92,13 +89,15 @@ export class ComponentOverrides {
   static async loadNewFromScope(
     componentId: ComponentID,
     files: SourceFile[],
-    extensions: ExtensionDataList
+    extensions: ExtensionDataList,
+    envExtendsDeps: Dependency[] = []
   ): Promise<ComponentOverrides> {
     const extensionsAddedOverrides = await runOnLoadOverridesEvent(
       this.componentOverridesLoadingRegistry,
       extensions,
       componentId,
-      files
+      files,
+      envExtendsDeps
     );
     return new ComponentOverrides(extensionsAddedOverrides);
   }
@@ -179,14 +178,15 @@ function mergeExtensionsOverrides(configs: DependenciesOverridesData[]): any {
  */
 async function runOnLoadOverridesEvent(
   configsRegistry: OverridesLoadRegistry,
-  extensions: ExtensionDataList,
+  extensions: ExtensionDataList = new ExtensionDataList(),
   id: ComponentID,
-  files: SourceFile[]
+  files: SourceFile[],
+  envExtendsDeps?: Dependency[]
 ): Promise<DependenciesOverridesData> {
   const extensionsAddedOverridesP = Object.keys(configsRegistry).map((extId) => {
     // TODO: only running func for relevant extensions
     const func = configsRegistry[extId];
-    return func(extensions, id, files);
+    return func(extensions, id, files, envExtendsDeps);
   });
   const extensionsAddedOverrides = await Promise.all(extensionsAddedOverridesP);
   let extensionsConfigModificationsObject = mergeExtensionsOverrides(extensionsAddedOverrides);

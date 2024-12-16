@@ -93,7 +93,7 @@ export class ApplyMain {
       targetId: f.componentId.fullName,
       targetScope: f.componentId.scope,
     }));
-    const forkResults = await this.forking.forkMultipleFromRemote(forkMultipleData, { refactor: true });
+    const forkResults = await this.forking.forkMultipleFromRemote(forkMultipleData, { refactor: true, compile: false });
     const newEnvData: Record<string, ComponentID[]> = {};
     forkedFromData.forEach((f) => {
       const bitmapElem = this.workspace.bitMap.getBitmapEntry(f.componentId);

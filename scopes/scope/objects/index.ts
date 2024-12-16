@@ -28,3 +28,4 @@ export { ScopeIndex } from './objects/scope-index';
 export { VersionHistoryGraph } from './models/version-history';
 export { VersionParents, versionParentsToGraph } from './models/version-history';
 export { HistoryItem } from './models/lane-history';
+export { IdGraph, objectListToGraph, bitObjectListToGraph } from './objects/object-list-to-graph';

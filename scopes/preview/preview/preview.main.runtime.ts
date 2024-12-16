@@ -953,10 +953,9 @@ export class PreviewMain {
   // TODO - executionContext should be responsible for updating components list, and emit 'update' events
   // instead we keep track of changes
   private handleComponentChange = async (c: Component, updater: (currentComponents: ExecutionRef) => void) => {
-    const env = this.envs.getEnv(c);
-    const envId = env.id.toString();
+    const envId = await this.envs.getOrCalculateEnvId(c);
 
-    const executionRef = this.executionRefs.get(envId);
+    const executionRef = this.executionRefs.get(envId.toString());
     if (!executionRef) {
       this.logger.warn(
         `failed to update link file for component "${c.id.toString()}" - could not find execution context for ${envId}`

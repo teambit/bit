@@ -85,21 +85,18 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   }
 
   remove(id: ComponentID) {
-    return ExtensionDataList.fromArray(
-      this.filter((entry) => {
-        return entry.stringId !== id.toString() && entry.stringId !== id.toStringWithoutVersion();
-      })
-    );
+    return this.filter((entry) => {
+      return entry.stringId !== id.toString() && entry.stringId !== id.toStringWithoutVersion();
+    });
   }
 
   /**
    * Filter extension marked to be removed with the special remove sign REMOVE_EXTENSION_SPECIAL_SIGN ("-")
    */
   filterRemovedExtensions(): ExtensionDataList {
-    const filtered = this.filter((entry) => {
+    return this.filter((entry) => {
       return !entry.isRemoved;
     });
-    return ExtensionDataList.fromArray(filtered);
   }
 
   toConfigObject() {
@@ -134,8 +131,13 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     return extensionDataList;
   }
 
+  filter(cb): ExtensionDataList {
+    const filtered = super.filter(cb);
+    return ExtensionDataList.fromArray(filtered);
+  }
+
   _filterLegacy(): ExtensionDataList {
-    return ExtensionDataList.fromArray(this.filter((ext) => !ext.isLegacy));
+    return this.filter((ext) => !ext.isLegacy);
   }
 
   sortById(): ExtensionDataList {

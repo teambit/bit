@@ -2,6 +2,7 @@
 import cjsModule from './index.js';
 
 export const HostInitializerAspect = cjsModule.HostInitializerAspect;
+export const HostInitializerMain = cjsModule.HostInitializerMain;
 
 export default cjsModule;
 

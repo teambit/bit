@@ -12,5 +12,10 @@ export const ConfigMergeResult = cjsModule.ConfigMergeResult;
 export const MergingAspect = cjsModule.MergingAspect;
 export const getWorkspaceConfigUpdateOutput = cjsModule.getWorkspaceConfigUpdateOutput;
 export const compIsAlreadyMergedMsg = cjsModule.compIsAlreadyMergedMsg;
+export const FileStatus = cjsModule.FileStatus;
+export const MergeOptions = cjsModule.MergeOptions;
+export const getMergeStrategyInteractive = cjsModule.getMergeStrategyInteractive;
+export const threeWayMerge = cjsModule.threeWayMerge;
+export const mergeFiles = cjsModule.mergeFiles;
 
 export default cjsModule;

@@ -10,6 +10,7 @@ import {
   ComponentNotFoundInPath,
   ConsumerComponent,
   ComponentLoadOptions as LegacyComponentLoadOptions,
+  Dependencies,
 } from '@teambit/legacy.consumer-component';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { IssuesClasses } from '@teambit/component-issues';
@@ -389,9 +390,14 @@ export class WorkspaceComponentLoader {
     // Ensure we won't load the same extension many times
     // We don't want to ignore version here, as we do want to load different extensions with same id but different versions here
     const mergedExtensions = ExtensionDataList.mergeConfigs(allExtensions, false);
-    this.logger.profile('loadComponentsExtensions');
-    await this.workspace.loadComponentsExtensions(mergedExtensions);
-    this.logger.profile('loadComponentsExtensions');
+    const filteredMergeExtensions = mergedExtensions.filter((ext) => {
+      return !loadOpts.idsToNotLoadAsAspects?.includes(ext.stringId);
+    });
+    if (loadOpts.loadExtensions) {
+      this.logger.profile('loadComponentsExtensions');
+      await this.workspace.loadComponentsExtensions(filteredMergeExtensions);
+      this.logger.profile('loadComponentsExtensions');
+    }
     let wsComponentsWithAspects = workspaceComponents;
     // if (loadOpts.seeders) {
     this.logger.profile('executeLoadSlot');
@@ -888,13 +894,28 @@ export class WorkspaceComponentLoader {
     // TODO: remove this once those extensions dependent on workspace
     const envsData = await this.envs.calcDescriptor(component, { skipWarnings: !!this.workspace.inInstallContext });
 
+    const wsDeps = component.state._consumer.dependencies.dependencies || [];
+    const modelDeps = component.state._consumer.componentFromModel?.dependencies.dependencies || [];
+    const merged = Dependencies.merge([wsDeps, modelDeps]);
+    const envExtendsDeps = merged.get();
+
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const policy = await this.dependencyResolver.mergeVariantPolicies(
       component.config.extensions,
       component.id,
-      component.state._consumer.files
+      component.state._consumer.files,
+      envExtendsDeps
     );
     const dependenciesList = await this.dependencyResolver.extractDepsFromLegacy(component, policy);
+    const resolvedEnvJsonc = await this.envs.calculateEnvManifest(
+      component,
+      component.state._consumer.files,
+      envExtendsDeps
+    );
+    if (resolvedEnvJsonc) {
+      // @ts-ignore
+      envsData.resolvedEnvJsonc = resolvedEnvJsonc;
+    }
 
     const depResolverData = {
       packageName: this.dependencyResolver.calcPackageName(component),
