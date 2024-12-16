@@ -91,7 +91,9 @@ export class PnpmPackageManager implements PackageManager {
         restoredFromModel: true,
       },
     });
-    await writeLockfileFile(join(rootDir, 'pnpm-lock.yaml'), lockfile);
+    const lockfilePath = join(rootDir, 'pnpm-lock.yaml');
+    await writeLockfileFile(lockfilePath, lockfile);
+    this.logger.debug(`generated a lockfile from dependencies graph at ${lockfilePath}`);
   }
 
   async install(
