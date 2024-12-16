@@ -289,7 +289,7 @@ export default class Component extends BitObject {
   }
 
   /**
-   * on main - it checks local-head vs remote-head.
+   * on main - it checks local-head (or .bitmap version if given) vs remote-head.
    * on lane - it checks local-head on lane vs remote-head on lane.
    * however, to get an accurate `divergeData.snapsOnSourceOnly`, the above is not enough.
    * for example, comp-a@snap-x from lane-a is merged into lane-b. we don't want this snap-x to be "local", because
@@ -302,7 +302,9 @@ export default class Component extends BitObject {
   async setDivergeData(repo: Repository, throws = true, fromCache = true, workspaceId?: ComponentID): Promise<void> {
     if (!this.divergeData || !fromCache) {
       const remoteHead = (this.laneId ? this.calculatedRemoteHeadWhenOnLane : this.remoteHead) || null;
-      const workspaceVersion = workspaceId?.hasVersion() ? workspaceId.version : null;
+      // this is for detach-head scenario. it can happen on main only. we want to compare against the .bitmap
+      // version (which is the detached head) and not the actual head.
+      const workspaceVersion = !this.isOnLane() && workspaceId?.hasVersion() ? workspaceId.version : null;
       this.divergeData = await getDivergeData({
         repo,
         modelComponent: this,
@@ -311,6 +313,10 @@ export default class Component extends BitObject {
         throws,
       });
     }
+  }
+
+  isOnLane(): boolean {
+    return Boolean(this.laneHeadLocal || this.laneHeadLocal === null);
   }
 
   /**
