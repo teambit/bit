@@ -190,6 +190,12 @@ export const configFilesEsbuildPlugin = (bundleDir: string) => {
       build.onResolve({ filter: /cjs-transformer$/ }, (args) => {
         return handleConfigFile(args, bundleDir);
       });
+      build.onResolve({ filter: /svg-transformer$/ }, (args) => {
+        return handleConfigFile(args, bundleDir);
+      });
+      build.onResolve({ filter: /file-mock.js$/ }, (args) => {
+        return handleConfigFile(args, bundleDir);
+      });
     },
   };
 };
