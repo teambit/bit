@@ -5,6 +5,7 @@ import { uniq } from 'lodash';
 import { Extensions } from '@teambit/legacy.constants';
 import { SchemaName } from '@teambit/legacy.consumer-component';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import { DETACH_HEAD } from '@teambit/harmony.modules.feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -476,6 +477,7 @@ describe('tag components on Harmony', function () {
     let ver2Head: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.setFeatures(DETACH_HEAD);
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild('--ver 1.0.0');
       helper.fixtures.populateComponents(1, undefined, 'version2');
@@ -486,6 +488,9 @@ describe('tag components on Harmony', function () {
       helper.fixtures.populateComponents(1, undefined, 'version101');
       helper.command.tagAllWithoutBuild('--ver 1.0.1 --detach-head');
       helper.command.export();
+    });
+    after(() => {
+      helper.command.resetFeatures();
     });
     it('should keep the head as 2.x and not change it to 1.0.1', () => {
       const comp = helper.command.catComponent('comp1');

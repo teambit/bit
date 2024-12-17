@@ -24,6 +24,7 @@ import { Workspace, AutoTagResult } from '@teambit/workspace';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 import { LaneId } from '@teambit/lane-id';
+import { DETACH_HEAD, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 
 export type onTagIdTransformer = (id: ComponentID) => ComponentID | null;
 
@@ -269,6 +270,9 @@ export async function tagModelComponent({
   // throwForNewestVersion to suggest using --detach-head instead. also, it the error should not be limited
   // to tags and can be thrown for snaps as well.
   // once --ignore-newest-version is removed, no need for this condition. it's ok to not provide the override-head option.
+  if (detachHead && !isFeatureEnabled(DETACH_HEAD)) {
+    throw new Error('unable to detach head, the feature is not enabled');
+  }
   if (ignoreNewestVersion && !detachHead) overrideHead = true;
   if (!ignoreNewestVersion && !isSnap) {
     await throwForNewestVersion(allComponentsToTag, legacyScope);

@@ -46,6 +46,7 @@ import { ObjectItem } from '../objects/object-list';
 import type { Scope } from '@teambit/legacy.scope';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { DetachedHeads } from './detach-heads';
+import { DETACH_HEAD, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 
 type State = {
   versions?: {
@@ -720,7 +721,7 @@ export default class Component extends BitObject {
       const parentToSet = setHeadAsParent ? head : parent;
       version.addAsOnlyParent(parentToSet || head);
     }
-    if (parent && head && !parent.isEqual(head) && !overrideHead) {
+    if (parent && head && !parent.isEqual(head) && !overrideHead && isFeatureEnabled(DETACH_HEAD)) {
       if (detachHead) this.detachedHeads.setHead(version.hash());
       else
         throw new Error(`unable to add a new version for "${this.id()}" on main.
