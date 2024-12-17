@@ -42,15 +42,17 @@ describe('LanesAspect', function () {
     let lanes: LanesMain;
     let snapping: SnappingMain;
     let workspaceData: WorkspaceData;
+    let harmony: Harmony;
     before(async () => {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
-      snapping = await loadAspect(SnappingAspect, workspacePath);
+      harmony = await loadManyAspects([SnappingAspect, ExportAspect, LanesAspect, WorkspaceAspect], workspacePath);
+      snapping = harmony.get(SnappingAspect.id);
       await snapping.tag({ ids: ['comp1'], build: false, ignoreIssues: 'MissingManuallyConfiguredPackages' });
-      const exporter: ExportMain = await loadAspect(ExportAspect, workspacePath);
+      const exporter: ExportMain = harmony.get(ExportAspect.id);
       await exporter.export();
-      lanes = await loadAspect(LanesAspect, workspacePath);
+      lanes = harmony.get(LanesAspect.id);
       await lanes.createLane('stage');
       await modifyMockedComponents(workspacePath, 'v2');
       const result = await snapping.snap({
@@ -92,6 +94,7 @@ describe('LanesAspect', function () {
   });
 
   describe('laneDiff', () => {
+    let harmony: Harmony;
     let lanes: LanesMain;
     let snapping: SnappingMain;
     let workspaceData: WorkspaceData;
@@ -99,11 +102,12 @@ describe('LanesAspect', function () {
       workspaceData = mockWorkspace();
       const { workspacePath } = workspaceData;
       await mockComponents(workspacePath);
-      snapping = await loadAspect(SnappingAspect, workspacePath);
+      harmony = await loadManyAspects([SnappingAspect, ExportAspect, LanesAspect, WorkspaceAspect], workspacePath);
+      snapping = harmony.get(SnappingAspect.id);
       await snapping.tag({ ids: ['comp1'], build: false });
-      const exporter: ExportMain = await loadAspect(ExportAspect, workspacePath);
+      const exporter: ExportMain = harmony.get(ExportAspect.id);
       await exporter.export();
-      lanes = await loadAspect(LanesAspect, workspacePath);
+      lanes = harmony.get(LanesAspect.id);
       await lanes.createLane('stage');
       const result = await snapping.snap({ pattern: 'comp1', build: false, unmodified: true });
       // intermediate step, make sure it is snapped
