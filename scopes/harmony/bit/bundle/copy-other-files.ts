@@ -1,4 +1,4 @@
-import { getConsumerInfo } from '@teambit/legacy/dist/consumer';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import fs from 'fs-extra';
 import { basename, join } from 'path';
 import globby from 'globby';
@@ -8,7 +8,7 @@ const PATTERNS_TO_COPY = ['node_modules/typescript/lib/*.d.ts'];
 let wsRootDir: string;
 
 async function loadWsRootDir() {
-  const consumerInfo = await getConsumerInfo(process.cwd());
+  const consumerInfo = await getWorkspaceInfo(process.cwd());
   if (!consumerInfo) throw new Error('unable to find consumer');
   wsRootDir = consumerInfo.path;
   return consumerInfo.path;

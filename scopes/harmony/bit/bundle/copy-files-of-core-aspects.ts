@@ -1,4 +1,4 @@
-import { getConsumerInfo } from '@teambit/legacy/dist/consumer';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { getCoreAspectPackageName } from '@teambit/aspect-loader';
 import fs from 'fs-extra';
 import { join } from 'path';
@@ -22,7 +22,7 @@ const FILES_TO_COPY = {
 let wsRootDir: string;
 
 async function loadWsRootDir() {
-  const consumerInfo = await getConsumerInfo(process.cwd());
+  const consumerInfo = await getWorkspaceInfo(process.cwd());
   if (!consumerInfo) throw new Error('unable to find consumer');
   wsRootDir = consumerInfo.path;
   return consumerInfo.path;

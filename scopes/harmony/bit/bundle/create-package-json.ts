@@ -3,14 +3,14 @@ import { join } from 'path';
 import { get } from 'lodash';
 import fs from 'fs-extra';
 import { parse } from 'comment-json';
-import { getConsumerInfo } from '@teambit/legacy/dist/consumer';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { externals } from './externals';
 
 let wsJsonc: any;
 let packageJson: any;
 
 async function getWsRootDir() {
-  const consumerInfo = await getConsumerInfo(process.cwd());
+  const consumerInfo = await getWorkspaceInfo(process.cwd());
   if (!consumerInfo) throw new Error('unable to find consumer');
   return consumerInfo.path;
 }

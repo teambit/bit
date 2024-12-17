@@ -1,4 +1,4 @@
-import { getConsumerInfo } from '@teambit/legacy/dist/consumer';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import camelcase from 'camelcase';
 import { getCoreAspectName, getCoreAspectPackageName } from '@teambit/aspect-loader';
 import fs from 'fs-extra';
@@ -9,7 +9,7 @@ import { coreAspectsIds } from '../core-aspects-ids';
 let wsRootDir: string;
 
 async function loadWsRootDir() {
-  const consumerInfo = await getConsumerInfo(process.cwd());
+  const consumerInfo = await getWorkspaceInfo(process.cwd());
   if (!consumerInfo) throw new Error('unable to find consumer');
   wsRootDir = consumerInfo.path;
   return consumerInfo.path;
