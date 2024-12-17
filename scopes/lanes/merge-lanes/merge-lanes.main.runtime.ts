@@ -752,6 +752,7 @@ async function squashOneComp(
       // nothing to do. current and remote are the same, nothing to merge. (it was probably filtered out already as a "failedComponent")
       return false;
     }
+    return true;
   };
 
   if (!shouldSquash()) {
