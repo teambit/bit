@@ -37,6 +37,7 @@ export const externals = [
   '@teambit/node/jest/jest.config',
   '@typescript-eslint/parser',
   'identity-obj-proxy',
+  'uuid',
   'jest-environment-jsdom',
   'react-app-polyfill/jsdom',
   'assert/',
@@ -108,6 +109,7 @@ export const externals = [
   '@babel/plugin-transform-object-rest-spread',
   '@babel/plugin-transform-class-properties',
   '@bitdev/react.webpack.refresh-overlay',
+  'events',
   // 'esbuild'
   // 'mime'
 ];

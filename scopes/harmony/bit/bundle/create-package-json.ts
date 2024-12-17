@@ -81,6 +81,12 @@ function resolveHardCoded(packageName: string): string | undefined {
     string_decoder: '1.3.0',
     punycode: '2.1.1',
     'react-app-polyfill': '1.0.6',
+    'identity-obj-proxy': '3.0.0',
+    uuid: '^10.0.0',
+    'babel-preset-jest': '29.2.0',
+    espree: '9.6.1',
+    '@bitdev/react.webpack.refresh-overlay': '0.0.2',
+    '@surma/rollup-plugin-off-main-thread': '2.2.3',
   };
   return hardCoded[packageName];
 }
