@@ -38,7 +38,6 @@ export const coreAspectsIds = [
   'teambit.harmony/logger',
   'teambit.pkg/pkg',
   'teambit.react/react',
-  'teambit.react/react-native',
   'teambit.harmony/worker',
   'teambit.scope/scope',
   'teambit.defender/tester',
