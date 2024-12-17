@@ -2,5 +2,6 @@
 import cjsModule from './index.js';
 
 export const ListerAspect = cjsModule.ListerAspect;
+export const NoIdMatchWildcard = cjsModule.NoIdMatchWildcard;
 
 export default cjsModule;
