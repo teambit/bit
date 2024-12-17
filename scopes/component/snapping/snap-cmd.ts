@@ -68,7 +68,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     [
       '',
       'detach-head',
-      'UNSUPPORTED YET. in case a component is checked out to and older version, snap it without changing the head',
+      'UNSUPPORTED YET. in case a component is checked out to an older version, snap it without changing the head',
     ],
   ] as CommandOptions;
   loader = true;

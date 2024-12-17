@@ -62,11 +62,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
 [${Object.keys(IssuesClasses).join(', ')}]
 to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "*".`,
   ],
-  [
-    'I',
-    'ignore-newest-version',
-    'allow tagging even when the component has newer versions e.g. for hotfixes. the new tag will be detached head',
-  ],
+  ['I', 'ignore-newest-version', 'allow tagging even when the component has newer versions e.g. for hotfixes.'],
   [
     '',
     'fail-fast',
@@ -76,7 +72,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   [
     '',
     'detach-head',
-    'UNSUPPORTED YET. in case a component is checked out to and older version, tag it without changing the head',
+    'UNSUPPORTED YET. in case a component is checked out to an older version, tag it without changing the head',
   ],
 ] as CommandOptions;
 

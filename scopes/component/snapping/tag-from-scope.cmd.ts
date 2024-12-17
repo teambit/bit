@@ -41,7 +41,7 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
     [
       '',
       'override-head',
-      'opposite of detach-head. in case a component is checked out to and older version, change head to the newly created version',
+      'opposite of detach-head. in case a component is checked out to an older version, change head to the newly created version',
     ],
     ...tagCmdOptions.filter((o) => !excludeOptions.includes(o[1])),
   ] as CommandOptions;
