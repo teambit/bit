@@ -217,6 +217,7 @@ export class MergingMain {
     snapMessage,
     build,
     skipDependencyInstallation,
+    detachHead,
   }: {
     mergeStrategy: MergeStrategy;
     allComponentsStatus: ComponentMergeStatus[];
@@ -228,6 +229,7 @@ export class MergingMain {
     snapMessage?: string;
     build?: boolean;
     skipDependencyInstallation?: boolean;
+    detachHead?: boolean;
   }): Promise<ApplyVersionResults> {
     const consumer = this.workspace?.consumer;
     const legacyScope = this.scope.legacyScope;
@@ -258,7 +260,8 @@ export class MergingMain {
       succeededComponents,
       otherLaneId,
       mergeStrategy,
-      currentLane
+      currentLane,
+      detachHead
     );
 
     const allConfigMerge = compact(succeededComponents.map((c) => c.configMergeResult));
@@ -397,7 +400,8 @@ export class MergingMain {
     succeededComponents: ComponentMergeStatus[],
     otherLaneId: LaneId,
     mergeStrategy: MergeStrategy,
-    currentLane?: Lane
+    currentLane?: Lane,
+    detachHead?: boolean
   ): Promise<ApplyVersionWithComps[]> {
     const componentsResults = await mapSeries(
       succeededComponents,
@@ -414,6 +418,7 @@ export class MergingMain {
           currentLane,
           resolvedUnrelated,
           configMergeResult,
+          detachHead,
         });
       }
     );
@@ -443,6 +448,7 @@ export class MergingMain {
     currentLane,
     resolvedUnrelated,
     configMergeResult,
+    detachHead,
   }: {
     currentComponent: ConsumerComponent | null | undefined;
     id: ComponentID;
@@ -453,6 +459,7 @@ export class MergingMain {
     currentLane?: Lane;
     resolvedUnrelated?: ResolveUnrelatedData;
     configMergeResult?: ConfigMergeResult;
+    detachHead?: boolean;
   }): Promise<ApplyVersionWithComps> {
     const legacyScope = this.scope.legacyScope;
     let filesStatus = {};
@@ -549,9 +556,13 @@ export class MergingMain {
       addToCurrentLane(remoteHead);
     } else {
       // this is main
-      modelComponent.setHead(remoteHead);
-      // mark it as local, otherwise, when importing this component from a remote, it'll override it.
-      modelComponent.markVersionAsLocal(remoteHead.toString());
+      if (detachHead) {
+        modelComponent.detachedHeads.setHead(remoteHead);
+      } else {
+        modelComponent.setHead(remoteHead);
+        // mark it as local, otherwise, when importing this component from a remote, it'll override it.
+        modelComponent.markVersionAsLocal(remoteHead.toString());
+      }
       legacyScope.objects.add(modelComponent);
     }
 

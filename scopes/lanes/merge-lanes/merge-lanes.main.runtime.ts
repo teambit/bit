@@ -35,6 +35,7 @@ import { MissingCompsToMerge } from './exceptions/missing-comps-to-merge';
 import { MergeAbortLaneCmd, MergeAbortOpts } from './merge-abort.cmd';
 import { LastMerged } from './last-merged';
 import { MergeMoveLaneCmd } from './merge-move.cmd';
+import { DETACH_HEAD, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 
 export type MergeLaneOptions = {
   mergeStrategy: MergeStrategy;
@@ -59,6 +60,7 @@ export type MergeLaneOptions = {
   shouldIncludeUpdateDependents?: boolean;
   throwIfNotUpToDate?: boolean; // relevant when merging from a scope
   fetchCurrent?: boolean; // needed when merging from a bare-scope (because it's empty)
+  detachHead?: boolean;
 };
 export type ConflictPerId = { id: ComponentID; files: string[]; config?: boolean };
 export type MergeFromScopeResult = {
@@ -128,6 +130,7 @@ export class MergeLanesMain {
       shouldIncludeUpdateDependents,
       throwIfNotUpToDate,
       fetchCurrent,
+      detachHead,
     } = options;
     const legacyScope = this.scope.legacyScope;
     if (tag && !currentLaneId.isDefault()) {
@@ -142,6 +145,12 @@ export class MergeLanesMain {
       throw new BitError(
         `unable to resolve unrelated when on main. switch to ${otherLaneId.toString()} and run "bit lane merge main --resolve-unrelated"`
       );
+    }
+    if (detachHead && !isFeatureEnabled(DETACH_HEAD)) {
+      throw new BitError(`unable to detach head. the feature is not enabled`);
+    }
+    if (detachHead && !currentLaneId.isDefault()) {
+      throw new BitError(`unable to detach head. the current lane is not main`);
     }
     if (fetchCurrent && !currentLaneId.isDefault()) {
       // if current is default, it'll be fetch later on
@@ -205,6 +214,7 @@ export class MergeLanesMain {
         shouldSquash,
         mergeStrategy,
         handleTargetAheadAsDiverged: noSnap,
+        detachHead,
       },
       currentLane,
       otherLane
@@ -260,7 +270,10 @@ export class MergeLanesMain {
 
     const succeededComponents = allComponentsStatus.filter((c) => !c.unchangedMessage);
     if (shouldSquash) {
-      await squashSnaps(succeededComponents, currentLaneId, otherLaneId, legacyScope, options.snapMessage);
+      await squashSnaps(succeededComponents, currentLaneId, otherLaneId, legacyScope, {
+        messageTitle: options.snapMessage,
+        detachHead,
+      });
     }
 
     if (laneToFetchArtifactsFrom) {
@@ -282,6 +295,7 @@ export class MergeLanesMain {
       snapMessage,
       build,
       skipDependencyInstallation,
+      detachHead,
     });
 
     if (snapshot) await lastMerged?.persistSnapshot(snapshot);
@@ -673,7 +687,7 @@ async function squashSnaps(
   currentLaneId: LaneId,
   otherLaneId: LaneId,
   scope: LegacyScope,
-  messageTitle?: string
+  opts: { messageTitle?: string; detachHead?: boolean } = {}
 ) {
   const currentLaneName = currentLaneId.name;
   const log = await getLogForSquash(otherLaneId);
@@ -692,7 +706,7 @@ async function squashSnaps(
         log,
         scope,
         componentFromModel,
-        messageTitle
+        opts
       );
       if (modifiedComp) {
         scope.objects.add(modifiedComp);
@@ -715,25 +729,35 @@ async function squashOneComp(
   log: Log,
   scope: LegacyScope,
   componentFromModel?: Version,
-  messageTitle?: string
+  opts: { messageTitle?: string; detachHead?: boolean } = {}
 ): Promise<Version | undefined> {
-  if (divergeData.isDiverged()) {
-    throw new BitError(`unable to squash because ${id.toString()} is diverged in history.
-consider switching to "${
-      otherLaneId.name
-    }" first, merging "${currentLaneName}", then switching back to "${currentLaneName}" and merging "${
-      otherLaneId.name
-    }"
-alternatively, use "--no-squash" flag to keep the entire history of "${otherLaneId.name}"`);
-  }
-  if (divergeData.isSourceAhead()) {
-    // nothing to do. current is ahead, nothing to merge. (it was probably filtered out already as a "failedComponent")
+  const { messageTitle, detachHead } = opts;
+  const shouldSquash = () => {
+    if (divergeData.isDiverged()) {
+      if (detachHead) {
+        // for detach head, it's ok to have it as diverged. as long as the target is ahead, we want to squash.
+        return true;
+      }
+      throw new BitError(`unable to squash because ${id.toString()} is diverged in history.
+  consider switching to "${
+    otherLaneId.name
+  }" first, merging "${currentLaneName}", then switching back to "${currentLaneName}" and merging "${otherLaneId.name}"
+  alternatively, use "--no-squash" flag to keep the entire history of "${otherLaneId.name}"`);
+    }
+    if (divergeData.isSourceAhead()) {
+      // nothing to do. current is ahead, nothing to merge. (it was probably filtered out already as a "failedComponent")
+      return false;
+    }
+    if (!divergeData.isTargetAhead()) {
+      // nothing to do. current and remote are the same, nothing to merge. (it was probably filtered out already as a "failedComponent")
+      return false;
+    }
+  };
+
+  if (!shouldSquash()) {
     return undefined;
   }
-  if (!divergeData.isTargetAhead()) {
-    // nothing to do. current and remote are the same, nothing to merge. (it was probably filtered out already as a "failedComponent")
-    return undefined;
-  }
+
   // remote is ahead and was not diverge.
   const remoteSnaps = divergeData.snapsOnTargetOnly;
   if (remoteSnaps.length === 0) {

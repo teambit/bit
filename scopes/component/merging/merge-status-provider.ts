@@ -20,6 +20,7 @@ export type MergeStatusProviderOptions = {
   ignoreConfigChanges?: boolean;
   shouldSquash?: boolean;
   handleTargetAheadAsDiverged?: boolean;
+  detachHead?: boolean;
 };
 
 export const compIsAlreadyMergedMsg = 'component is already merged';
@@ -299,6 +300,17 @@ other:   ${otherLaneHead.toString()}`);
         componentOnOther,
         divergeData
       );
+    }
+    if (this.options.detachHead && divergeData.commonSnapBeforeDiverge) {
+      // just override with the model data
+      const commonSnapId = id.changeVersion(divergeData.commonSnapBeforeDiverge.toString());
+      const commonSnapComp = await this.scope.legacyScope.getConsumerComponent(commonSnapId);
+      return {
+        ...componentStatus,
+        currentComponent: commonSnapComp,
+        componentFromModel: componentOnOther,
+        divergeData,
+      };
     }
     if (!divergeData.isDiverged()) {
       if (divergeData.isSourceAhead()) {
