@@ -1,5 +1,4 @@
 import { join, resolve, extname } from 'path';
-import { NativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 import esmLoader from '@teambit/node.utils.esm-loader';
 // import findRoot from 'find-root';
 import { readdirSync, existsSync } from 'fs-extra';
@@ -511,7 +510,6 @@ export class AspectLoaderMain {
   }
 
   async loadEsm(path: string) {
-    NativeCompileCache.uninstall();
     return esmLoader(path);
   }
 
