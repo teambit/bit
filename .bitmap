@@ -1339,13 +1339,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/path/to-windows-compatible-path"
     },
-    "performance/v8-cache": {
-        "name": "performance/v8-cache",
-        "scope": "teambit.toolbox",
-        "version": "0.0.37",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/performance/v8-cache"
-    },
     "pkg": {
         "name": "pkg",
         "scope": "teambit.pkg",
