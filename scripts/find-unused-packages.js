@@ -27,6 +27,7 @@ const whitelist = [
   'eslint-plugin-promise',
   'eslint-plugin-import',
   'eslint-plugin-react',
+  'eslint-import-resolver-node',
   'lint-staged',
   'mocha-circleci-reporter',
   'mocha-junit-reporter',
@@ -97,14 +98,15 @@ console.log('[-] total packages in package.json not in use:', unused.length);
 console.log('[-] total packages in workspace.jsonc not in use:', unusedWorkspace.length);
 
 function deleteUnusedFromWorkspaceJsonc() {
-  const policy = workspaceJsonParsed['teambit.dependencies/dependency-resolver'].policy;
-  const dependencies = policy.dependencies;
-  const peerDependencies = policy.peerDependencies;
   unusedWorkspace.forEach((dep) => {
-    delete dependencies[dep];
-    delete peerDependencies[dep];
+    delete policy.dependencies[dep];
+    delete policy.peerDependencies[dep];
   });
   fs.writeFileSync(`${__dirname}/../workspace.jsonc`, stringify(workspaceJsonParsed, null, 2));
 }
 
-// deleteUnusedFromWorkspaceJsonc();
+// check whether "delete" was added to the command line arguments
+const deleteUnused = process.argv.includes('delete');
+if (deleteUnused) {
+  deleteUnusedFromWorkspaceJsonc();
+}

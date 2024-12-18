@@ -506,6 +506,7 @@
         "dreidels": "0.6.1",
         "enquirer": "2.3.6",
         "eslint-config-airbnb-typescript": "17.1.0",
+        "eslint-import-resolver-node": "0.3.4",
         "eventemitter2": "6.4.4",
         "events": "^3.3.0",
         "eventsource": "^2.0.2",
