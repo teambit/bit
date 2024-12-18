@@ -2,7 +2,7 @@ import fs from 'fs';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { DEPS_GRAPH } from '@teambit/harmony.modules.feature-toggle';
 import { addDistTag } from '@pnpm/registry-mock';
-import { type LockfileFileV9 } from '@pnpm/lockfile.types';
+import { type LockfileFile } from '@pnpm/lockfile.types';
 import path from 'path';
 import chai, { expect } from 'chai';
 import stripAnsi from 'strip-ansi';
@@ -158,7 +158,7 @@ chai.use(require('chai-fs'));
     });
     describe('sign component and use dependency graph to generate a lockfile', () => {
       let signOutput: string;
-      let lockfile: LockfileFileV9;
+      let lockfile: LockfileFile;
       let signRemote;
       before(async () => {
         helper.command.export();
