@@ -568,7 +568,7 @@ jobs:
       - run:
           name: If no component has changed, exit gracefully
           command: |
-            if bit diff | grep -q "there are no modified components to diff"; then
+            if cd bit && bit diff | grep -q "there are no modified components to diff"; then
               circleci-agent step halt
             fi
       # - run: cd bit && rm -rf node_modules/.bin/bit
