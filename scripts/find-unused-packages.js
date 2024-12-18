@@ -10,7 +10,9 @@ const policy = workspaceJsonParsed['teambit.dependencies/dependency-resolver'].p
 const workspacePackages = [...Object.keys(policy.dependencies), ...Object.keys(policy.peerDependencies)];
 const sourceCode = ['src', 'scopes', 'e2e', 'components'];
 const sourceCodeAbs = sourceCode.map((dir) => `${__dirname}/../${dir}`);
-const sourceFiles = globby.sync(sourceCodeAbs);
+const sourceFiles = globby.sync(sourceCodeAbs, {
+  ignore: ['**/node_modules/**'],
+});
 
 let unused = [...allDeps];
 let unusedWorkspace = [...workspacePackages];
