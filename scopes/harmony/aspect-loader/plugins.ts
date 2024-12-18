@@ -1,6 +1,5 @@
 import { Component } from '@teambit/component';
 import esmLoader from '@teambit/node.utils.esm-loader';
-import { NativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 import { Logger } from '@teambit/logger';
 import pMapSeries from 'p-map-series';
 import { setExitOnUnhandledRejection } from '@teambit/cli';
@@ -55,7 +54,6 @@ export class Plugins {
   }
 
   async loadModule(path: string) {
-    NativeCompileCache.uninstall();
     const module = await esmLoader(path, true);
     const defaultModule = module.default;
     defaultModule.__path = path;
