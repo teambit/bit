@@ -566,10 +566,11 @@ jobs:
       - run: cd bit && bit status
       - run: cd bit && bit diff
       - run:
-          name: If no component has changed, exit gracefully
+          name: If no component has changed, fail the job
           command: |
-            if bit diff | grep -q "there are no modified components to diff"; then
-              circleci-agent step halt
+            if cd bit && bit diff | grep -q "there are no modified components to diff"; then
+              echo "No changes detected, failing job to prevent further workflow execution."
+              exit 1
             fi
       # - run: cd bit && rm -rf node_modules/.bin/bit
       - run: cd bit && npm run generate-cli-reference
