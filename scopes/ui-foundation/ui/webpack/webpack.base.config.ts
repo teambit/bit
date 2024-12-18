@@ -105,6 +105,7 @@ export default function createWebpackConfig(
           '@teambit/component.ui.component-compare.context'
         ),
         '@teambit/base-react.navigation.link': require.resolve('@teambit/base-react.navigation.link'),
+        '@teambit/base-ui.graph.tree.recursive-tree': require.resolve('@teambit/base-ui.graph.tree.recursive-tree'),
       },
       fallback: {
         module: false,
