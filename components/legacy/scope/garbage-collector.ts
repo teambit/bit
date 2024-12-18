@@ -81,6 +81,11 @@ export async function collectGarbage(thisScope: Scope, opts: GarbageCollectorOpt
 
   await pMapSeries(compsOfThisScope, async (comp) => {
     await processComponent(comp, comp.head, true);
+    const detachedHeads = comp.detachedHeads.getAllHeads();
+    if (!detachedHeads.length) return;
+    await pMapSeries(detachedHeads, async (head) => {
+      await processComponent(comp, head, true);
+    });
   });
 
   logger.console(`[*] completed processing local components. total ${refsWhiteList.size} refs in the white list`);

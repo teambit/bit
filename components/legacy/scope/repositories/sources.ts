@@ -422,6 +422,8 @@ please either remove the component (bit remove) or remove the lane.`);
       throw new Error(`fatal: "head" prop was removed from "${component.id()}", although it has versions`);
     }
 
+    component.detachedHeads.removeLocalHeads(versionsRefs);
+
     if (component.versionArray.length || component.hasHead() || component.laneHeadLocal) {
       objectRepo.add(component); // add the modified component object
     } else {
@@ -502,6 +504,7 @@ please either remove the component (bit remove) or remove the lane.`);
     const existingHeadIsMissingInIncomingComponent = Boolean(
       incomingComp.hasHead() &&
         existingComponentHead &&
+        !incomingComp.detachedHeads.getCurrent() &&
         !hashesOfHistoryGraph.find((ref) => ref.isEqual(existingComponentHead))
     );
     // currently it'll always be true. later, we might want to support exporting

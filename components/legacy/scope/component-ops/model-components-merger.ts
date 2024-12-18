@@ -35,8 +35,13 @@ export class ModelComponentMerger {
     this.addOrphanedVersionFromIncoming();
     this.setHead(locallyChanged);
     this.deleteOrphanedVersionsOnExport();
+    this.mergeDetachedHeads();
 
     return { mergedComponent: this.existingComponent, mergedVersions: this.mergedVersions };
+  }
+
+  private mergeDetachedHeads() {
+    this.existingComponent.detachedHeads.merge(this.incomingComponent.detachedHeads, this.isImport);
   }
 
   private deleteOrphanedVersionsOnExport() {

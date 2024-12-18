@@ -95,6 +95,11 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       'exclude-non-lane-comps',
       'when merging main into a lane, exclude workspace components that are not on the lane (by default all workspace components are merged)',
     ],
+    [
+      '',
+      'detach-head',
+      'UNSUPPORTED YET. for each component, find the divergent point from main and merge to that point. do not change the head',
+    ],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -128,6 +133,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       ignoreConfigChanges,
       verbose = false,
       excludeNonLaneComps = false,
+      detachHead,
     }: {
       ours?: boolean;
       theirs?: boolean;
@@ -149,6 +155,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       ignoreConfigChanges?: boolean;
       verbose?: boolean;
       excludeNonLaneComps?: boolean;
+      detachHead?: boolean;
     }
   ): Promise<string> {
     build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
@@ -203,6 +210,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       ignoreConfigChanges,
       includeDeps,
       excludeNonLaneComps,
+      detachHead,
     });
 
     const mergeResult = mergeReport({ ...mergeResults, configMergeResults, verbose });

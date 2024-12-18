@@ -257,7 +257,7 @@ describe('tag components on Harmony', function () {
         },
       ];
       // console.log('data', JSON.stringify(data));
-      helper.command.tagFromScope(bareTag.scopePath, data, '--push --ignore-newest-version');
+      helper.command.tagFromScope(bareTag.scopePath, data, '--push --override-head');
     });
     it('should tag and export with no errors and should set the parent to the previous head', () => {
       const compOnRemote = helper.command.catComponent(

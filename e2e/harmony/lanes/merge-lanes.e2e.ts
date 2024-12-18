@@ -4,6 +4,7 @@ import { uniq } from 'lodash';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { Extensions, statusWorkspaceIsCleanMsg } from '@teambit/legacy.constants';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
+import { DETACH_HEAD } from '@teambit/harmony.modules.feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -1697,6 +1698,53 @@ describe('merge lanes', function () {
     });
     it('should not throw an error', () => {
       expect(() => helper.command.mergeLane('main', '--no-snap -x')).to.not.throw();
+    });
+  });
+  describe('merge with --detach-head', () => {
+    let commonSnap: string;
+    let headOnMain: string;
+    let firstSnapOnLane: string;
+    let headOnLane: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.setFeatures(DETACH_HEAD);
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild('--ver 1.0.0');
+      commonSnap = helper.command.getHead('comp1');
+      helper.command.tagAllWithoutBuild('--unmodified --ver 2.0.0');
+      helper.command.export();
+      headOnMain = helper.command.getHead('comp1');
+      helper.command.checkoutVersion('1.0.0', "'**' -x");
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      firstSnapOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
+      headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
+      helper.command.export();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.mergeLane('dev', '--detach-head -x');
+    });
+    after(() => {
+      helper.command.resetFeatures();
+    });
+    it('should not change the head', () => {
+      const head = helper.command.getHead('comp1');
+      expect(head).to.equal(headOnMain);
+      expect(head).to.not.equal(headOnLane);
+    });
+    it('should save the detached head', () => {
+      const comp = helper.command.catComponent('comp1');
+      expect(comp.detachedHeads.current).to.equal(headOnLane);
+    });
+    it('should continue the history from the common snap, not from the head', () => {
+      const laneHeadVer = helper.command.catObject(headOnLane, true);
+      expect(laneHeadVer.parents).to.have.lengthOf(1);
+      expect(laneHeadVer.parents[0]).to.equal(commonSnap);
+      expect(laneHeadVer.parents[0]).to.not.equal(headOnMain);
+    });
+    it('should squash successfully', () => {
+      const laneHeadVer = helper.command.catObject(headOnLane, true);
+      expect(laneHeadVer.squashed.previousParents[0]).to.equal(firstSnapOnLane);
     });
   });
 });

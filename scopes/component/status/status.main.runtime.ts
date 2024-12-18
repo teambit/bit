@@ -90,9 +90,11 @@ export class StatusMain {
     const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
     await this.addRemovedStagedIfNeeded(stagedComponents);
     const stagedComponentsWithVersions = await pMapSeries(stagedComponents, async (stagedComp) => {
-      const versions = await stagedComp.getLocalTagsOrHashes(consumer.scope.objects);
+      const id = stagedComp.toComponentId();
+      const fromWorkspace = this.workspace.getIdIfExist(id);
+      const versions = await stagedComp.getLocalTagsOrHashes(consumer.scope.objects, fromWorkspace);
       return {
-        id: stagedComp.toComponentId(),
+        id,
         versions,
       };
     });
@@ -212,7 +214,7 @@ export class StatusMain {
       components.map(async (component) => {
         const comp = component.state._consumer as ConsumerComponent;
         if (!comp.modelComponent) return;
-        await comp.modelComponent.setDivergeData(this.workspace.scope.legacyScope.objects, false);
+        await comp.modelComponent.setDivergeData(this.workspace.scope.legacyScope.objects, false, undefined, comp.id);
         const divergeData = comp.modelComponent.getDivergeData();
         if (divergeData.err) {
           invalidComponents.push({ id: component.id, err: divergeData.err });

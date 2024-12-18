@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import { DETACH_HEAD } from '@teambit/harmony.modules.feature-toggle';
 
 describe('bit reset command', function () {
   this.timeout(0);
@@ -305,7 +306,45 @@ describe('bit reset command', function () {
       expect(stagedConfig).to.have.lengthOf(0);
     });
   });
-  describe('when checked out to a non-head version', () => {
+  describe('when checked out to a non-head version with detach-head functionality', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.command.setFeatures(DETACH_HEAD);
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagWithoutBuild();
+      helper.fixtures.populateComponents(1, false, 'version2');
+      helper.command.tagWithoutBuild();
+      helper.fixtures.populateComponents(1, false, 'version3');
+      helper.command.tagWithoutBuild();
+      helper.command.export();
+      helper.command.checkoutVersion('0.0.2', 'comp1', '-x');
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified --detach-head');
+
+      // an intermediate step, make sure the component is detached
+      const comp = helper.command.catComponent('comp1');
+      expect(comp).to.have.property('detachedHeads');
+      expect(comp.detachedHeads.current).to.not.be.undefined;
+
+      helper.command.resetAll();
+    });
+    after(() => {
+      helper.command.resetFeatures();
+    });
+    it('expect .bitmap to point to the same version as it was before the reset, and not the latest', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.2');
+    });
+    it('should not show the component as modified', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(0);
+    });
+    it('should clear the detached head', () => {
+      const comp = helper.command.catComponent('comp1');
+      expect(comp).to.not.have.property('detachedHeads');
+    });
+  });
+  // todo: delete this test once detach-head is not under feature-toggle
+  describe('when checked out to a non-head version without detach-head', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1, false);
@@ -317,6 +356,7 @@ describe('bit reset command', function () {
       helper.command.export();
       helper.command.checkoutVersion('0.0.2', 'comp1', '-x');
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+
       helper.command.resetAll();
     });
     it('expect .bitmap to point to the same version as it was before the reset, and not the latest', () => {
