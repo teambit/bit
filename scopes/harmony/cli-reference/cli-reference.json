@@ -3136,7 +3136,7 @@
       [
         "I",
         "ignore-newest-version",
-        "allow tagging even when the component has newer versions e.g. for hotfixes (default = false)"
+        "allow tagging even when the component has newer versions e.g. for hotfixes."
       ],
       [
         "",
@@ -3147,6 +3147,11 @@
         "b",
         "build",
         "locally run the build pipeline (i.e. not via rippleCI) and complete the tag"
+      ],
+      [
+        "",
+        "detach-head",
+        "UNSUPPORTED YET. in case a component is checked out to an older version, tag it without changing the head"
       ]
     ],
     "description": "create an immutable and exportable component snapshot, tagged with a release version.",
@@ -3235,6 +3240,11 @@
         "",
         "fail-fast",
         "stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)"
+      ],
+      [
+        "",
+        "detach-head",
+        "UNSUPPORTED YET. in case a component is checked out to an older version, snap it without changing the head"
       ]
     ],
     "description": "create an immutable and exportable component snapshot (non-release version)",
@@ -3311,6 +3321,11 @@
         "",
         "ignore-last-pkg-json",
         "ignore the package.json created by the last snap"
+      ],
+      [
+        "",
+        "override-head",
+        "opposite of detach-head. in case a component is checked out to an older version, change head to the newly created version"
       ],
       [
         "m",
@@ -3395,7 +3410,7 @@
       [
         "I",
         "ignore-newest-version",
-        "allow tagging even when the component has newer versions e.g. for hotfixes (default = false)"
+        "allow tagging even when the component has newer versions e.g. for hotfixes."
       ],
       [
         "",
@@ -3406,6 +3421,11 @@
         "b",
         "build",
         "locally run the build pipeline (i.e. not via rippleCI) and complete the tag"
+      ],
+      [
+        "",
+        "detach-head",
+        "UNSUPPORTED YET. in case a component is checked out to an older version, tag it without changing the head"
       ]
     ],
     "description": "tag components from a bare-scope by using build artifacts from previous snap and running the deploy-pipeline only",
@@ -4146,6 +4166,11 @@
             "",
             "exclude-non-lane-comps",
             "when merging main into a lane, exclude workspace components that are not on the lane (by default all workspace components are merged)"
+          ],
+          [
+            "",
+            "detach-head",
+            "UNSUPPORTED YET. for each component, find the divergent point from main and merge to that point. do not change the head"
           ]
         ],
         "description": "merge a local or a remote lane to the current lane",
