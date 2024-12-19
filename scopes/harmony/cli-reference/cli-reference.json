@@ -5081,7 +5081,7 @@
       ]
     ],
     "description": "clears Bit's cache from current working machine",
-    "extendedDescription": "The following gets removed by this command:\n1) V8 compiled code (generated the first time Bit is loaded by v8-compile-cache package)\n2) components cache on the filesystem (mainly the dependencies graph and docs)\n3) scope's index file, which maps the component-id:object-hash",
+    "extendedDescription": "The following gets removed by this command:\n1) components cache on the filesystem (mainly the dependencies graph and docs)\n2) scope's index file, which maps the component-id:object-hash",
     "group": "general",
     "private": false,
     "skipWorkspace": true
