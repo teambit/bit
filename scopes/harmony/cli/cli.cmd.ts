@@ -32,8 +32,7 @@ export class CliGenerateCmd implements Command {
       return `---
 description: 'Bit command synopses. Bit version: ${getBitVersion()}'
 labels: ['cli', 'mdx', 'docs']
----
-      `;
+---`;
     }
     return new GenerateCommandsDoc(this.cliMain.commands, { metadata }).generate();
   }
