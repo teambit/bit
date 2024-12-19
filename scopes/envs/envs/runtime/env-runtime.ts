@@ -26,6 +26,6 @@ export class EnvRuntime {
     /**
      * Aspect definition of the env.
      */
-    readonly envAspectDefinition: AspectDefinition
+    readonly envAspectDefinition?: AspectDefinition
   ) {}
 }

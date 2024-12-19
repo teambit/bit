@@ -63,6 +63,7 @@
     "performance-test:debug": "npm run performance-test --debug --keep-envs",
     "performance-test-circle": "mocha --require ./babel-register --reporter mocha-multi-reporters --reporter-options configFile=mocha-multi-reporters-config.json --colors ./e2e/performance/*.performance*.ts",
     "bit-hub-test-circle": "mocha --require ./babel-register --reporter mocha-multi-reporters --reporter-options configFile=mocha-multi-reporters-config.json --colors ./e2e/bit-hub/*.ts",
+    "bundle": "node node_modules/@teambit/bit/dist/bundle/bundle.js",
     "setup": "bit install &&  bit compile",
     "full-setup": "rm -rf node_modules/.bin/bit && bit install && husky install && bit compile",
     "full-setup:bbit": "rm -rf node_modules/.bin/bbit && bbit install && husky install && bbit compile",

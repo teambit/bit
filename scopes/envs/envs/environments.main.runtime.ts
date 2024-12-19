@@ -1129,7 +1129,8 @@ export class EnvsMain {
     );
   }
 
-  private async getEnvAspectDef(envId: string): Promise<AspectDefinition> {
+  private async getEnvAspectDef(envId: string): Promise<AspectDefinition | undefined> {
+    if (this.isCoreEnv(envId)) return undefined;
     const host = this.componentMain.getHost();
     const id = await host.resolveComponentId(envId);
     // We don't want to filter by runtime here as we want to also get envs that configured as plugins. so they don't
