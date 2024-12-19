@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import React, { useContext, ComponentType, useState } from 'react';
 import classNames from 'classnames';
 import { flatten } from 'lodash';
