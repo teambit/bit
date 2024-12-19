@@ -66,7 +66,7 @@
         "@teambit/base-ui.constants.storage": "1.0.0",
         "@teambit/base-ui.graph.tree.indent": "1.0.0",
         "@teambit/base-ui.graph.tree.inflate-paths": "1.0.0",
-        "@teambit/base-ui.graph.tree.recursive-tree": "1.0.0",
+        "@teambit/base-ui.graph.tree.recursive-tree": "1.0.5",
         "@teambit/base-ui.graph.tree.tree-context": "1.0.5",
         "@teambit/base-ui.layout.breakpoints": "1.0.0",
         "@teambit/base-ui.layout.page-frame": "1.0.0",
