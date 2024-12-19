@@ -1,11 +1,11 @@
 import path from 'path';
 import { DependenciesGraph } from '@teambit/scope.objects';
-import { type LockfileFileV9 } from '@pnpm/lockfile.types';
+import { type LockfileFile } from '@pnpm/lockfile.types';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
 import { expect } from 'chai';
 
 describe('convertLockfileToGraph simple case', () => {
-  const lockfile: LockfileFileV9 = {
+  const lockfile: LockfileFile = {
     importers: {
       '.': {},
       'node_modules/.bit_roots/env': {
