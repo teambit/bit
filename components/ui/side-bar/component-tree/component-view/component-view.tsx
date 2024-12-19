@@ -55,7 +55,7 @@ export function ComponentView(props: ComponentViewProps) {
     ? undefined
     : (isEnvOnCurrentLane &&
         lanesModel?.viewedLane?.id &&
-        `${window.location.origin}${LanesModel.getLaneComponentUrl(envId, lanesModel.viewedLane?.id)}`) ||
+        `${window.location.origin}${LanesModel.getLaneComponentUrl(envId, lanesModel.viewedLane?.id, undefined, lanesModel.viewedLane)}`) ||
       ComponentUrl.toUrl(envId, {
         includeVersion: true,
         useLocationOrigin: !window.location.host.startsWith('localhost'),
@@ -77,7 +77,12 @@ export function ComponentView(props: ComponentViewProps) {
   ) : null;
 
   const href = !isMissingCompOrEnvId
-    ? lanesModel?.getLaneComponentUrlByVersion(component.id as any, lanesModel.viewedLane?.id, !scope.name)
+    ? lanesModel?.getLaneComponentUrlByVersion(
+        component.id as any,
+        lanesModel.viewedLane?.id,
+        !scope.name,
+        lanesModel.viewedLane
+      )
     : undefined;
 
   const viewingMainCompOnLane = React.useMemo(() => {
