@@ -17,7 +17,7 @@ import {
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { Logger } from '@teambit/logger';
-import { type LockfileFileV9 } from '@pnpm/lockfile.types';
+import { type LockfileFile } from '@pnpm/lockfile.types';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
@@ -85,7 +85,7 @@ export class PnpmPackageManager implements PackageManager {
     manifests: Record<string, ProjectManifest>,
     rootDir: string
   ) {
-    const lockfile: LockfileFileV9 = convertGraphToLockfile(dependenciesGraph, manifests, rootDir);
+    const lockfile: LockfileFile = convertGraphToLockfile(dependenciesGraph, manifests, rootDir);
     Object.assign(lockfile, {
       bit: {
         restoredFromModel: true,
@@ -408,8 +408,7 @@ export class PnpmPackageManager implements PackageManager {
         },
         failOnMissingDependencies: false,
         skipped: new Set(),
-      }),
-      { forceSharedFormat: true }
+      })
     );
     const graph = convertLockfileToGraph(partialLockfile, opts);
     return graph;
