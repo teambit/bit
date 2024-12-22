@@ -624,7 +624,7 @@ export class WorkspaceCompiler {
     });
     let depsOfEnvsOfCompIds: string[] = [];
     if (graph) {
-      const otherEnvsIds = groupedByEnvsOfEnvs.otherEnvs.map((c) => c.id.toString());
+      const otherEnvsIds = (groupedByEnvsOfEnvs.otherEnvs || []).map((c) => c.id.toString());
       if (otherEnvsIds.length) {
         const otherEnvsWithoutCoreIds = otherEnvsIds.filter((id) => !this.envs.isCoreEnv(id));
         const subGraph = graph.successorsSubgraph(otherEnvsWithoutCoreIds, {
