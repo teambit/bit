@@ -151,6 +151,7 @@ export class InstallMain {
   async install(packages?: string[], options?: WorkspaceInstallOptions): Promise<ComponentMap<string>> {
     // set workspace in install context
     this.workspace.inInstallContext = true;
+    this.workspace.inInstallAfterPmContext = false;
     if (packages && packages.length) {
       await this._addPackages(packages, options);
     }
@@ -369,6 +370,7 @@ export class InstallMain {
         },
         pmInstallOptions
       );
+      this.workspace.inInstallAfterPmContext = true;
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
       const oldNonLoadedEnvs = this.setOldNonLoadedEnvs();
