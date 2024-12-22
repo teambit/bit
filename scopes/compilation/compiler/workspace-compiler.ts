@@ -603,9 +603,10 @@ export class WorkspaceCompiler {
       if (envsOfEnvsCompIds.includes(component.id.toString())) return 'envsOfEnvs';
       return 'otherEnvs';
     });
+    const envsOfEnvsWithoutCoreCompIds = envsOfEnvsCompIds.filter((id) => !this.envs.isCoreEnv(id));
     let depsOfEnvsOfEnvsCompIds: string[] = [];
     if (graph) {
-      const subGraph = graph.successorsSubgraph(envsOfEnvsCompIds, {
+      const subGraph = graph.successorsSubgraph(envsOfEnvsWithoutCoreCompIds, {
         nodeFilter: (node) => this.workspace.hasId(node.attr),
       });
       depsOfEnvsOfEnvsCompIds = subGraph.nodes.map((n) => n.id);
@@ -625,7 +626,8 @@ export class WorkspaceCompiler {
     if (graph) {
       const otherEnvsIds = groupedByEnvsOfEnvs.otherEnvs.map((c) => c.id.toString());
       if (otherEnvsIds.length) {
-        const subGraph = graph.successorsSubgraph(otherEnvsIds, {
+        const otherEnvsWithoutCoreIds = otherEnvsIds.filter((id) => !this.envs.isCoreEnv(id));
+        const subGraph = graph.successorsSubgraph(otherEnvsWithoutCoreIds, {
           nodeFilter: (node) => this.workspace.hasId(node.attr),
         });
         depsOfEnvsOfCompIds = subGraph.nodes.map((n) => n.id);
