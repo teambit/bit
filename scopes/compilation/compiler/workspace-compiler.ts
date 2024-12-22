@@ -27,6 +27,7 @@ import { readRootComponentsDir } from '@teambit/workspace.root-components';
 import { compact, groupBy, uniq } from 'lodash';
 import type { PreStartOpts } from '@teambit/ui';
 import { MultiCompiler } from '@teambit/multi-compiler';
+import { CompIdGraph } from '@teambit/graph';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent } from './events';
 import { Compiler, CompilationInitiator, TypeGeneratorCompParams } from './types';
@@ -304,25 +305,45 @@ export class WorkspaceCompiler {
   }
 
   async onAspectLoadFail(err: Error & { code?: string }, component: Component): Promise<boolean> {
-    const id = component.id;
-    const deps = this.dependencyResolver.getDependencies(component);
-    const depsIds = deps.getComponentDependencies().map((dep) => {
-      return dep.id.toString();
-    });
+    const inInstallContext = this.workspace.inInstallContext;
+    const inInstallAfterPmContext = this.workspace.inInstallAfterPmContext;
+
     if (
-      ((err.code && (err.code === 'MODULE_NOT_FOUND' || err.code === 'ERR_REQUIRE_ESM')) ||
+      ((err.code &&
+        (err.code === 'MODULE_NOT_FOUND' || err.code === 'ERR_MODULE_NOT_FOUND' || err.code === 'ERR_REQUIRE_ESM')) ||
         err.message.includes('import.meta') ||
         err.message.includes('exports is not defined')) &&
       this.workspace
     ) {
-      await this.compileComponents(
-        [id.toString(), ...depsIds],
-        { initiator: CompilationInitiator.AspectLoadFail },
-        true
-      );
-      return true;
+      // If we are now running install we only want to compile after the package manager is done
+      const shouldCompile = (inInstallContext && inInstallAfterPmContext) || !inInstallContext;
+      if (shouldCompile) {
+        const id = component.id;
+        const { graph, successors } = await this.getEnvDepsGraph(id);
+        // const deps = this.dependencyResolver.getDependencies(component);
+        // const depsIds = deps.getComponentDependencies().map((dep) => {
+        //   return dep.id.toString();
+        // });
+        const depsIds = successors.map((s) => s.id);
+        await this.compileComponents(
+          [id.toString(), ...depsIds],
+          { initiator: CompilationInitiator.AspectLoadFail },
+          true,
+          { loadExtensions: true, executeLoadSlot: true },
+          graph
+        );
+        return true;
+      }
     }
     return false;
+  }
+
+  async getEnvDepsGraph(envComponentId: ComponentID): Promise<{ graph: CompIdGraph; successors: { id: string }[] }> {
+    const graph = await this.workspace.getGraphIds([envComponentId]);
+    const successors = graph.successors(envComponentId.toString(), {
+      nodeFilter: (node) => this.workspace.hasId(node.attr),
+    });
+    return { graph, successors };
   }
 
   async onComponentAdd(component: Component, files: string[], watchOpts: WatchOptions) {
@@ -376,7 +397,8 @@ export class WorkspaceCompiler {
     componentsIds: string[] | ComponentID[] | ComponentID[], // when empty, it compiles new+modified (unless options.all is set),
     options: CompileOptions,
     noThrow?: boolean,
-    componentLoadOptions: WorkspaceComponentLoadOptions = {}
+    componentLoadOptions: WorkspaceComponentLoadOptions = {},
+    graph?: CompIdGraph
   ): Promise<BuildResult[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const componentIds = await this.getIdsToCompile(componentsIds, options.changed);
@@ -384,8 +406,11 @@ export class WorkspaceCompiler {
     if (options.initiator === CompilationInitiator.AspectLoadFail) {
       componentLoadOptions.loadSeedersAsAspects = false;
     }
-    const components = await this.workspace.getMany(componentIds, componentLoadOptions);
-    const grouped = await this.buildGroupsToCompile(components);
+    let components = await this.workspace.getMany(componentIds, componentLoadOptions);
+    await this.loadExternalEnvs(components);
+    // reload components as we might cleared the cache as part of the loadExternalEnvs
+    components = await this.workspace.getMany(componentIds, componentLoadOptions);
+    const grouped = await this.buildGroupsToCompile(components, graph);
 
     const results = await mapSeries(grouped, async (group) => {
       return this.runCompileComponents(group.components, options, noThrow);
@@ -397,6 +422,47 @@ export class WorkspaceCompiler {
     return results.flat();
   }
 
+  /**
+   * This will ensue that the envs of the components are loaded before the compilation starts.
+   * @param components
+   */
+  private async loadExternalEnvs(components: Component[]) {
+    const componentsIdsStr = components.map((c) => c.id.toString());
+    const envIdsCompIdsMap = {};
+    const compsWithWrongEnvId: string[] = [];
+    await Promise.all(
+      components.map(async (component) => {
+        // It's important to use calculate here to get the real id even if it's not loaded
+        const envId = (await this.envs.calculateEnvId(component)).toString();
+        // This might be different from the env id above, because the component might be loaded before the env
+        // in that case we will need to clear the cache of that component
+        const envIdByGet = this.envs.getEnvId(component);
+        if (envId !== envIdByGet) {
+          compsWithWrongEnvId.push(component.id.toString());
+        }
+        // If it's part of the components it will be handled later as it's not external
+        // and might need to be compiled as well
+        if (componentsIdsStr.includes(envId)) return undefined;
+        if (!envIdsCompIdsMap[envId]) envIdsCompIdsMap[envId] = [component.id.toString()];
+        envIdsCompIdsMap[envId].push(component.id.toString());
+      })
+    );
+    const externalEnvsIds = Object.keys(envIdsCompIdsMap);
+
+    if (!externalEnvsIds.length) return;
+    const nonLoadedEnvs = externalEnvsIds.filter((envId) => !this.envs.isEnvRegistered(envId));
+    await this.workspace.loadAspects(nonLoadedEnvs);
+    const idsToClearCache: string[] = uniq(
+      nonLoadedEnvs
+        .reduce((acc, envId) => {
+          const compIds = envIdsCompIdsMap[envId];
+          return [...acc, ...compIds];
+        }, [] as string[])
+        .concat(compsWithWrongEnvId)
+    );
+    this.workspace.clearComponentsCache(idsToClearCache.map((id) => ComponentID.fromString(id)));
+  }
+
   private async runCompileComponents(
     components: Component[],
     options: CompileOptions,
@@ -405,7 +471,7 @@ export class WorkspaceCompiler {
     const componentsCompilers: ComponentCompiler[] = [];
 
     components.forEach((c) => {
-      const env = this.envs.getEnv(c);
+      const env = this.envs.getOrCalculateEnv(c);
       const environment = env.env;
       const compilerInstance = environment.getCompiler?.();
 
@@ -501,7 +567,10 @@ export class WorkspaceCompiler {
    * 5. the rest.
    * @param ids
    */
-  async buildGroupsToCompile(components: Component[]): Promise<
+  async buildGroupsToCompile(
+    components: Component[],
+    graph?: CompIdGraph
+  ): Promise<
     Array<{
       components: Component[];
       envsOfEnvs?: boolean;
@@ -534,22 +603,41 @@ export class WorkspaceCompiler {
       if (envsOfEnvsCompIds.includes(component.id.toString())) return 'envsOfEnvs';
       return 'otherEnvs';
     });
-    const depsOfEnvsOfEnvsCompLists = (groupedByEnvsOfEnvs.envsOfEnvs || []).map((envComp) =>
-      this.dependencyResolver.getDependencies(envComp)
-    );
-    const depsOfEnvsOfEnvsCompIds = DependencyList.merge(depsOfEnvsOfEnvsCompLists)
-      .getComponentDependencies()
-      .map((dep) => dep.id.toString());
+    let depsOfEnvsOfEnvsCompIds: string[] = [];
+    if (graph) {
+      const subGraph = graph.successorsSubgraph(envsOfEnvsCompIds, {
+        nodeFilter: (node) => this.workspace.hasId(node.attr),
+      });
+      depsOfEnvsOfEnvsCompIds = subGraph.nodes.map((n) => n.id);
+    } else {
+      const depsOfEnvsOfEnvsCompLists = (groupedByEnvsOfEnvs.envsOfEnvs || []).map((envComp) =>
+        this.dependencyResolver.getDependencies(envComp)
+      );
+      depsOfEnvsOfEnvsCompIds = DependencyList.merge(depsOfEnvsOfEnvsCompLists)
+        .getComponentDependencies()
+        .map((dep) => dep.id.toString());
+    }
     const groupedByIsDepsOfEnvsOfEnvs = groupBy(groupedByIsEnv.other, (component) => {
       if (depsOfEnvsOfEnvsCompIds.includes(component.id.toString())) return 'depsOfEnvsOfEnvs';
       return 'other';
     });
-    const depsOfEnvsCompLists = (groupedByEnvsOfEnvs.otherEnvs || []).map((envComp) =>
-      this.dependencyResolver.getDependencies(envComp)
-    );
-    const depsOfEnvsOfCompIds = DependencyList.merge(depsOfEnvsCompLists)
-      .getComponentDependencies()
-      .map((dep) => dep.id.toString());
+    let depsOfEnvsOfCompIds: string[] = [];
+    if (graph) {
+      const otherEnvsIds = groupedByEnvsOfEnvs.otherEnvs.map((c) => c.id.toString());
+      if (otherEnvsIds.length) {
+        const subGraph = graph.successorsSubgraph(otherEnvsIds, {
+          nodeFilter: (node) => this.workspace.hasId(node.attr),
+        });
+        depsOfEnvsOfCompIds = subGraph.nodes.map((n) => n.id);
+      }
+    } else {
+      const depsOfEnvsCompLists = (groupedByEnvsOfEnvs.otherEnvs || []).map((envComp) =>
+        this.dependencyResolver.getDependencies(envComp)
+      );
+      depsOfEnvsOfCompIds = DependencyList.merge(depsOfEnvsCompLists)
+        .getComponentDependencies()
+        .map((dep) => dep.id.toString());
+    }
     const groupedByIsDepsOfEnvs = groupBy(groupedByIsDepsOfEnvsOfEnvs.other, (component) => {
       if (depsOfEnvsOfCompIds.includes(component.id.toString())) return 'depsOfEnvs';
       return 'other';
