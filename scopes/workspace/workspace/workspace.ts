@@ -1085,7 +1085,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     }
     if (pattern) {
       const ids = await this.idsByPattern(pattern);
-      return this.getMany(ids);
+      return this.getMany(ids, { loadExtensions: true, loadSeedersAsAspects: true, executeLoadSlot: true });
     }
     const newAndModified = await this.newAndModified();
     if (includeDependents) {
