@@ -112,7 +112,6 @@
         "@teambit/code.ui.queries.get-component-code": "0.0.502",
         "@teambit/code.ui.queries.get-file-content": "0.0.504",
         "@teambit/code.ui.utils.get-file-icon": "0.0.496",
-        "@teambit/community.envs.community-mdx": "^4.0.24",
         "@teambit/community.starters.hello-world": "^0.0.16",
         "@teambit/compilation.babel-compiler": "^1.1.13",
         "@teambit/compilation.content.compiler-overview": "1.95.0",
