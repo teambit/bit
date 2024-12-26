@@ -22,6 +22,7 @@
 <a href="https://circleci.com/gh/teambit/bit/tree/master"><img alt="Circle Status" src="https://circleci.com/gh/teambit/bit/tree/master.svg?style=shield">
 <a href="https://github.com/prettier/prettier"><img alt ="Styled with Prettier" src="https://img.shields.io/badge/styled_with-prettier-ff69b4.svg">
 <a href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-1vq1vcxxu-CEVobR1p9BurmW8QnQFh1w" ><img alt="Join Slack" src="https://img.shields.io/badge/Slack-Join%20Bit%20Slack-blueviolet"/></a>
+<a href="https://gurubase.io/g/bit"><img alt="Gurubase" src="https://img.shields.io/badge/Gurubase-Ask%20Bit%20Guru-006BFF"></a>
 
 [Bit](https://bit.dev) is a complete solution for building **composable software**. It simplifies the creation, maintenance and reuse of software using independent and reusable components.
 
