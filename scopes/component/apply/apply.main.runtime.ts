@@ -50,6 +50,7 @@ export class ApplyMain {
       lane?: string;
       updateDependents?: boolean;
       tag?: boolean;
+      skipDependencyInstallation?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<ApplyResults> {
     const allAreForkedFrom = snapDataPerCompRaw.every((s) => s.forkFrom);
@@ -129,16 +130,18 @@ export class ApplyMain {
       })
     );
     await this.workspace.bitMap.write();
-    // if you don't clear the cache here, the installation assumes all components have the old env.
-    await this.workspace.clearCache();
-    await this.install.install(undefined, {
-      dedupe: true,
-      import: false,
-      copyPeerToRuntimeOnRoot: true,
-      copyPeerToRuntimeOnComponents: false,
-      updateExisting: false,
-      addMissingDeps: true,
-    });
+    if (!params.skipDependencyInstallation) {
+      // if you don't clear the cache here, the installation assumes all components have the old env.
+      await this.workspace.clearCache();
+      await this.install.install(undefined, {
+        dedupe: true,
+        import: false,
+        copyPeerToRuntimeOnRoot: true,
+        copyPeerToRuntimeOnComponents: false,
+        updateExisting: false,
+        addMissingDeps: true,
+      });
+    }
     // if we don't clear the cache here, the "build" process during tag doesn't install the necessary packages
     // on the capsules.
     await this.workspace.clearCache();
@@ -243,6 +246,7 @@ export class ApplyMain {
       updateDependents?: boolean;
       tag?: boolean;
       snap?: boolean;
+      skipDependencyInstallation?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<ApplyResults> {
     const laneIdStr = params.lane;
@@ -311,17 +315,19 @@ export class ApplyMain {
       }
     });
 
-    // without this, when adding new import statements to a component, the installation doesn't pick them up
-    await this.workspace.clearCache();
+    if (!params.skipDependencyInstallation) {
+      // without this, when adding new import statements to a component, the installation doesn't pick them up
+      await this.workspace.clearCache();
 
-    await this.install.install(undefined, {
-      dedupe: true,
-      import: false,
-      copyPeerToRuntimeOnRoot: true,
-      copyPeerToRuntimeOnComponents: false,
-      updateExisting: false,
-      addMissingDeps: true,
-    });
+      await this.install.install(undefined, {
+        dedupe: true,
+        import: false,
+        copyPeerToRuntimeOnRoot: true,
+        copyPeerToRuntimeOnComponents: false,
+        updateExisting: false,
+        addMissingDeps: true,
+      });
+    }
 
     if (!params.snap && !params.tag) {
       return {
