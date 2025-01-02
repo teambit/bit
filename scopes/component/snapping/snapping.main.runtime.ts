@@ -1104,7 +1104,9 @@ another option, in case this dependency is not in main yet is to remove all refe
 
   private async loadComponentsForTagOrSnap(ids: ComponentIdList, shouldClearCacheFirst = true): Promise<Component[]> {
     const idsWithoutVersions = ids.map((id) => id.changeVersion(undefined));
-    const appIds = await this.application.loadAllAppsAsAspects(idsWithoutVersions);
+    // don't pass the idsWithoutVersions to `this.application.loadAllAppsAsAspects()`.
+    // otherwise, the auto-tag components (which are loaded later) won't have the application data.
+    const appIds = await this.application.loadAllAppsAsAspects();
     if (shouldClearCacheFirst) {
       await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
       // don't clear only the cache of these ids. we need also the auto-tag. so it's safer to just clear all.
