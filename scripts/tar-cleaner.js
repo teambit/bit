@@ -24,10 +24,22 @@ export async function FileExplorer({
   const extRes = {};
 
   async function searchFiles(dir) {
-    const files = await readdirAsync(dir);
+    let files;
+    try {
+      files = await readdirAsync(dir);
+    } catch (err) {
+      console.error(`Error reading directory ${dir}:`, err);
+      return;
+    }
     for (const file of files) {
       const filePath = path.join(dir, file);
-      const stats = await statAsync(filePath);
+      let stats;
+      try {
+        stats = await statAsync(filePath);
+      } catch (err) {
+        console.error(`Error reading stats for ${filePath}:`, err);
+        continue;
+      }
       if (stats.isDirectory()) {
         await searchFiles(filePath);
       } else {
@@ -232,5 +244,6 @@ FileExplorer({
   extensions: fileExtensionsLargerThan1mb,
   allExtensions: true,
   folderPath: '/Users/giladshoham/.bvm/versions/1.9.27/bit-1.9.27',
+  // folderPath: '/Users/giladshoham/.bvm/versions/1.9.27/bit-1.9.27/node_modules/@teambit',
   // verbose: true,
 });
