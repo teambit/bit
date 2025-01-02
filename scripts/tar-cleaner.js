@@ -1,7 +1,10 @@
 import path from 'path';
 import fs from 'fs';
 import chalk from 'chalk';
+import _ from 'lodash';
 import { promisify } from 'util';
+
+const { sortBy } = _;
 
 const readdirAsync = promisify(fs.readdir);
 const statAsync = promisify(fs.stat);
@@ -9,7 +12,13 @@ const statAsync = promisify(fs.stat);
 /**
  * Recursively searches for files with specified extensions in a folder and calculates the total size.
  */
-export async function FileExplorer({ extensions, folderPath, verbose = false }) {
+export async function FileExplorer({
+  extensions,
+  folderPath,
+  verbose = false,
+  allExtensions = false,
+  minSizeToPrint = 1,
+}) {
   let totalSize = 0;
   let totalCount = 0;
   const extRes = {};
@@ -23,7 +32,7 @@ export async function FileExplorer({ extensions, folderPath, verbose = false }) 
         await searchFiles(filePath);
       } else {
         const ext = file.endsWith('.d.ts') ? 'd.ts' : path.extname(file).slice(1); // Get extension without leading dot
-        if (extensions.includes(ext)) {
+        if (extensions.includes(ext) || allExtensions) {
           totalSize += stats.size;
           totalCount++;
           if (extRes[ext]) {
@@ -44,10 +53,13 @@ export async function FileExplorer({ extensions, folderPath, verbose = false }) 
   }
 
   await searchFiles(folderPath);
-  Object.keys(extRes).forEach((ext) => {
-    console.log(
-      `${chalk.green(ext)}: ${chalk.cyan(extRes[ext].count)} files, ${chalk.cyan(toMb(extRes[ext].size))} MB`
-    );
+  const sortedExtRes = sortBy(Object.keys(extRes), (ext) => extRes[ext].size).reverse();
+  sortedExtRes.forEach((ext) => {
+    if (toMb(extRes[ext].size) > minSizeToPrint) {
+      console.log(
+        `${chalk.green(ext)}: ${chalk.cyan(extRes[ext].count)} files, ${chalk.cyan(toMb(extRes[ext].size))} MB`
+      );
+    }
   });
 
   console.log(`\nFound ${chalk.cyan(totalCount)} files with extensions ${extensions.join(', ')}.`);
@@ -218,6 +230,7 @@ const _fileExtensionsFull = [
 
 FileExplorer({
   extensions: fileExtensionsLargerThan1mb,
+  allExtensions: true,
   folderPath: '/Users/giladshoham/.bvm/versions/1.9.27/bit-1.9.27',
   // verbose: true,
 });
