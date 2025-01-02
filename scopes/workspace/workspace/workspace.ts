@@ -172,6 +172,11 @@ export class Workspace implements ComponentFactory {
    * This is important to know to ignore missing modules across different places
    */
   inInstallContext = false;
+  /**
+   * Indicate that we done with the package manager installation process
+   * This is important to skip stuff when package manager install is not done yet
+   */
+  inInstallAfterPmContext = false;
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
   private componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized;
@@ -794,6 +799,10 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.componentList = new ComponentsList(this.consumer);
   }
 
+  clearComponentsCache(ids: ComponentID[]) {
+    ids.forEach((id) => this.clearComponentCache(id));
+  }
+
   async warmCache() {
     await this.list();
   }
@@ -1076,7 +1085,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     }
     if (pattern) {
       const ids = await this.idsByPattern(pattern);
-      return this.getMany(ids);
+      return this.getMany(ids, { loadExtensions: true, loadSeedersAsAspects: true, executeLoadSlot: true });
     }
     const newAndModified = await this.newAndModified();
     if (includeDependents) {
