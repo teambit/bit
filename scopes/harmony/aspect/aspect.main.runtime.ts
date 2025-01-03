@@ -22,6 +22,7 @@ import {
   AspectCmd,
   GetAspectCmd,
   ListAspectCmd,
+  ListCoreAspectCmd,
   SetAspectCmd,
   SetAspectOptions,
   UnsetAspectCmd,
@@ -36,7 +37,8 @@ export class AspectMain {
   constructor(
     readonly aspectEnv: AspectEnv,
     private envs: EnvsMain,
-    private workspace: Workspace
+    private workspace: Workspace,
+    private aspectLoader: AspectLoaderMain
   ) {}
 
   /**
@@ -60,6 +62,10 @@ export class AspectMain {
       })
     );
     return results;
+  }
+
+  listCoreAspects(): string[] {
+    return this.aspectLoader.getCoreAspectIds();
   }
 
   get babelConfig() {
@@ -256,10 +262,11 @@ export class AspectMain {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerMain, workerMain, harmony);
       generator.registerComponentTemplate(getTemplates(envContext));
     }
-    const aspectMain = new AspectMain(aspectEnv as AspectEnv, envs, workspace);
+    const aspectMain = new AspectMain(aspectEnv as AspectEnv, envs, workspace, aspectLoader);
     const aspectCmd = new AspectCmd();
     aspectCmd.commands = [
       new ListAspectCmd(aspectMain),
+      new ListCoreAspectCmd(aspectMain),
       new GetAspectCmd(aspectMain),
       new SetAspectCmd(aspectMain),
       new UnsetAspectCmd(aspectMain),

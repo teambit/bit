@@ -2,7 +2,7 @@ import { resolve, join } from 'path';
 import { loadConsumer } from '@teambit/legacy.consumer';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
-import { readdirSync } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
 import { Harmony, Aspect } from '@teambit/harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
 import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
@@ -13,11 +13,18 @@ import { ComponentLoader } from '@teambit/legacy.consumer-component';
 import { LegacyWorkspaceConfig, ComponentOverrides, ComponentConfig } from '@teambit/legacy.consumer-config';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { DependenciesAspect } from '@teambit/dependencies';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 
 function getPackageName(aspect: any, id: ComponentID) {
   return `@teambit/${id.name}`;
   // const [owner, name] = aspect.id.split('.');
   // return `@${owner}/${replaceAll(name, '/', '.')}`;
+}
+
+function getCoreAspectIds() {
+  const aspectIdsFile = join(__dirname, 'core-aspects-ids.json');
+  const file = readFileSync(aspectIdsFile, 'utf8');
+  return JSON.parse(file);
 }
 
 /**
@@ -44,6 +51,9 @@ export async function loadManyAspects(
   runtime = 'main'
 ): Promise<Harmony> {
   clearGlobalsIfNeeded();
+  const coreAspectIds = getCoreAspectIds();
+  ExtensionDataList.registerManyCoreExtensionNames(coreAspectIds);
+
   const config = await getConfig(cwd);
   const configMap = config.toObject();
   configMap['teambit.harmony/bit'] = {
@@ -125,9 +135,7 @@ function clearGlobalsIfNeeded() {
   PackageJsonTransformer.packageJsonTransformersRegistry = [];
   // @ts-ignore
   ComponentLoader.loadDeps = undefined;
-  // don't clear this one. it's a static list of core-ids. if you delete it, you'll have to call
-  // registerCoreExtensions() from @teambit/bit, which as far as I remember should not be a dependency of this aspect.
-  // ExtensionDataList.coreExtensionsNames = new Map();
+  ExtensionDataList.coreExtensionsNames = new Map();
   // @ts-ignore
   LegacyWorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
 }

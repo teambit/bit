@@ -86,6 +86,7 @@
     "generate-cli-reference": "bit cli generate > scopes/harmony/cli-reference/cli-reference.mdx && prettier scopes/harmony/cli-reference/cli-reference.mdx --write",
     "generate-cli-reference-json": "bit cli generate --json > scopes/harmony/cli-reference/cli-reference.json",
     "generate-cli-reference-docs": "bit cli generate --docs > scopes/harmony/cli-reference/cli-reference.docs.mdx",
+    "generate-core-aspects-ids": "bit aspect list-core --json > scopes/harmony/testing/load-aspect/core-aspects-ids.json",
     "lint-staged": "lint-staged"
   },
   "dependencies": {

@@ -115,6 +115,7 @@ describe('Apply aspect', function () {
       const results = await statusMain.status({});
       expect(results.modifiedComponents).to.have.lengthOf(1);
     });
+    // todo: find a way to test this without actually install the package
     // it('should install the new packages according to the added import statement', () => {
     //   expect(output).to.have.string('+ test-dummy-package');
     // });
