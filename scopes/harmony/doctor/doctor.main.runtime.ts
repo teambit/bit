@@ -228,7 +228,10 @@ export class DoctorMain {
       const isGit = fileName.startsWith(`.git${path.sep}`);
       const isLocalScope =
         fileName.startsWith(`.bit${path.sep}`) || fileName.startsWith(`.git${path.sep}bit${path.sep}`);
-      if (excludeLocalScope && isLocalScope) return true;
+      if (excludeLocalScope && isLocalScope) {
+        const scopeDirsToExclude = ['objects', 'cache', 'tmp'];
+        if (scopeDirsToExclude.some((dir) => fileName.includes(`${path.sep}${dir}${path.sep}`))) return true;
+      }
       if (isGit && !isLocalScope) return true;
       return false;
     };
