@@ -21,6 +21,10 @@ function getPackageName(aspect: any, id: ComponentID) {
   // return `@${owner}/${replaceAll(name, '/', '.')}`;
 }
 
+/**
+ * we keep a static list of core-aspect-ids here in this component in order to not depend on bit aspect.
+ * it gets updated during Circle tag process.
+ */
 function getCoreAspectIds() {
   const aspectIdsFile = join(__dirname, 'core-aspects-ids.json');
   const file = readFileSync(aspectIdsFile, 'utf8');
@@ -52,6 +56,8 @@ export async function loadManyAspects(
 ): Promise<Harmony> {
   clearGlobalsIfNeeded();
   const coreAspectIds = getCoreAspectIds();
+  // tried alternative to avoid this. however, in some cases, during build, this component is in a capsule, so the list
+  // of core-aspects registered during load-bit doesn't apply here.
   ExtensionDataList.registerManyCoreExtensionNames(coreAspectIds);
 
   const config = await getConfig(cwd);
