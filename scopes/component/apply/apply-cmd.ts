@@ -13,6 +13,7 @@ import { ApplyMain } from './apply.main.runtime';
 
 type Options = {
   snap?: boolean;
+  skipDependencyInstallation?: boolean;
 } & SnapFromScopeOptions;
 
 export class ApplyCmd implements Command {
@@ -24,6 +25,7 @@ export class ApplyCmd implements Command {
     ...snapFromScopeOptions,
     ['', 'snap', 'snap the components. default to keep them new'],
     ['', 'stream', 'relevant for --json only. stream loader as json strings'],
+    ['x', 'skip-dependency-installation', 'do not auto-install dependencies of the imported components'],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -47,6 +49,7 @@ export class ApplyCmd implements Command {
       rebuildDepsGraph,
       tag,
       snap,
+      skipDependencyInstallation,
     }: Options
   ) {
     const disableTagAndSnapPipelines = disableSnapPipeline;
@@ -68,6 +71,7 @@ export class ApplyCmd implements Command {
       rebuildDepsGraph,
       tag,
       snap,
+      skipDependencyInstallation,
     };
 
     const results = hasForkedFrom

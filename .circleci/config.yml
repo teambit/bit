@@ -577,6 +577,7 @@ jobs:
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
       - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
+      - run: cd bit && npm run generate-core-aspects-ids
       - run: cd bit && bit checkout head teambit.harmony/content/cli-reference --auto-merge-resolve ours --skip-dependency-installation
       - run: cd bit && bit checkout head --skip-dependency-installation
       - run: cd bit && git diff
