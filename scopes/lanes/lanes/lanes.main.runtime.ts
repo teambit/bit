@@ -202,11 +202,13 @@ export class LanesMain {
   async checkoutHistory(historyId: string, options?: LaneCheckoutOpts) {
     const historyItem = await this.getHistoryItemOfCurrentLane(historyId);
     const ids = historyItem.components.map((id) => ComponentID.fromString(id));
+    const lane = await this.getCurrentLane();
     const results = await this.checkout.checkout({
       ids: ids.map((id) => id.changeVersion(undefined)),
       versionPerId: ids,
       allowAddingComponentsFromScope: true,
       skipNpmInstall: options?.skipDependencyInstallation,
+      lane,
     });
     return results;
   }
