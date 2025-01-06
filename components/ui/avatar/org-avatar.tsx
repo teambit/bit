@@ -31,7 +31,7 @@ export function OrgAvatar({
   return (
     <div
       className={classNames(styles.default, styles.avatar, className)}
-      style={{ width: `${size}px`, height: `${size}px` }}
+      style={{ minWidth: `${size}px`, width: `${size}px`, height: `${size}px` }}
       {...rest}
     >
       {profileImageWithParams && (
