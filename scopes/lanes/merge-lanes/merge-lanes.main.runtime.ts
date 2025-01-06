@@ -426,6 +426,13 @@ export class MergeLanesMain {
         // once a change is done in the exporter about this, uncomment the next line.
         // exportHeadsOnly: shouldSquash || fromLaneId.isDefault(),
         exportHeadsOnly: shouldSquash,
+        // when merging main into a lane, because `shouldSquash` is false, we don't export head only, but all the snaps
+        // in between. chances are that a) many of them are already exported, b) those that are not head, are not in
+        // the local bare-scope, so trying to export them result in VersionNotFoundOnFS error.
+        // it's best to filter them out before.
+        // there is no risk of leaving modified Version objects behind, because when merging main into a lane, we don't
+        // squash, so the Version objects are not modified.
+        filterOutExistingVersions: fromLaneId.isDefault(),
         // all artifacts must be pushed. otherwise, they'll be missing from the component-scopes.
         // unless this is a merge from main to a lane, in which case it's not necessary to export the artifacts as
         // the user importing them will get them from main.
