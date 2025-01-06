@@ -1853,7 +1853,7 @@
     "ui/avatar": {
         "name": "ui/avatar",
         "scope": "teambit.design",
-        "version": "1.0.35",
+        "version": "1.1.0",
         "mainFile": "index.ts",
         "rootDir": "components/ui/avatar"
     },
