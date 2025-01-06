@@ -20,6 +20,7 @@ import {
   CFG_REGISTRY_URL_KEY,
   CFG_USER_TOKEN_KEY,
   CFG_ISOLATED_SCOPE_CAPSULES,
+  DEFAULT_HARMONY_PACKAGE_MANAGER,
   getCloudDomain,
 } from '@teambit/legacy.constants';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
@@ -604,12 +605,12 @@ export class DependencyResolverMain {
    * get a component dependency installer.
    */
   getInstaller(options: GetInstallerOptions = {}) {
-    const packageManagerName = options.packageManager || this.config.packageManager;
+    const packageManagerName = options.packageManager || this.config.packageManager || DEFAULT_HARMONY_PACKAGE_MANAGER;
     const packageManager = this.packageManagerSlot.get(packageManagerName);
     const cacheRootDir = options.cacheRootDirectory || this.globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
-      throw new PackageManagerNotFound(this.config.packageManager);
+      throw new PackageManagerNotFound(this.config.packageManager || DEFAULT_HARMONY_PACKAGE_MANAGER);
     }
 
     if (cacheRootDir && !fs.pathExistsSync(cacheRootDir)) {
@@ -671,7 +672,7 @@ export class DependencyResolverMain {
    * @returns The `getPackageManager()` function returns a `PackageManager` object or `undefined`.
    */
   getPackageManager(): PackageManager | undefined {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager ?? DEFAULT_HARMONY_PACKAGE_MANAGER);
     return packageManager;
   }
 
@@ -684,7 +685,7 @@ export class DependencyResolverMain {
     const cacheRootDir = options.cacheRootDirectory || this.globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
-      throw new PackageManagerNotFound(this.config.packageManager);
+      throw new PackageManagerNotFound(this.config.packageManager ?? DEFAULT_HARMONY_PACKAGE_MANAGER);
     }
 
     if (cacheRootDir && !fs.pathExistsSync(cacheRootDir)) {
@@ -710,9 +711,8 @@ export class DependencyResolverMain {
    * return the system configured package manager. by default pnpm.
    */
   getSystemPackageManager(): PackageManager {
-    const defaultPm = 'teambit.dependencies/pnpm';
-    const packageManager = this.packageManagerSlot.get(defaultPm);
-    if (!packageManager) throw new Error(`default package manager: ${defaultPm} was not found`);
+    const packageManager = this.packageManagerSlot.get(DEFAULT_HARMONY_PACKAGE_MANAGER);
+    if (!packageManager) throw new Error(`default package manager: ${DEFAULT_HARMONY_PACKAGE_MANAGER} was not found`);
     return packageManager;
   }
 
@@ -1528,10 +1528,6 @@ export class DependencyResolverMain {
 
   static defaultConfig: DependencyResolverWorkspaceConfig &
     Required<Pick<DependencyResolverWorkspaceConfig, 'linkCoreAspects'>> = {
-    /**
-     * default package manager.
-     */
-    packageManager: 'teambit.dependencies/pnpm',
     policy: {},
     linkCoreAspects: true,
   };

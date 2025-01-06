@@ -11,7 +11,7 @@ export interface DependencyResolverWorkspaceConfig {
    * and 'librarian'. our recommendation is use 'librarian' which reduces package duplicates
    * and totally removes the need of a 'node_modules' directory in your project.
    */
-  packageManager: string;
+  packageManager?: string;
 
   /**
    * A proxy server for out going network requests by the package manager
