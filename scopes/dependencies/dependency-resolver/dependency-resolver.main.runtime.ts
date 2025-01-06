@@ -605,12 +605,12 @@ export class DependencyResolverMain {
    * get a component dependency installer.
    */
   getInstaller(options: GetInstallerOptions = {}) {
-    const packageManagerName = options.packageManager || this.config.packageManager || DEFAULT_HARMONY_PACKAGE_MANAGER;
+    const packageManagerName = options.packageManager || this.getPackageManagerName();
     const packageManager = this.packageManagerSlot.get(packageManagerName);
     const cacheRootDir = options.cacheRootDirectory || this.globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
-      throw new PackageManagerNotFound(this.config.packageManager || DEFAULT_HARMONY_PACKAGE_MANAGER);
+      throw new PackageManagerNotFound(this.getPackageManagerName());
     }
 
     if (cacheRootDir && !fs.pathExistsSync(cacheRootDir)) {
@@ -672,12 +672,12 @@ export class DependencyResolverMain {
    * @returns The `getPackageManager()` function returns a `PackageManager` object or `undefined`.
    */
   getPackageManager(): PackageManager | undefined {
-    const packageManager = this.packageManagerSlot.get(this.config.packageManager ?? DEFAULT_HARMONY_PACKAGE_MANAGER);
+    const packageManager = this.packageManagerSlot.get(this.getPackageManagerName());
     return packageManager;
   }
 
-  getPackageManagerName() {
-    return this.config.packageManager;
+  getPackageManagerName(): string {
+    return this.config.packageManager ?? DEFAULT_HARMONY_PACKAGE_MANAGER;
   }
 
   async getVersionResolver(options: GetVersionResolverOptions = {}) {
@@ -685,7 +685,7 @@ export class DependencyResolverMain {
     const cacheRootDir = options.cacheRootDirectory || this.globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
-      throw new PackageManagerNotFound(this.config.packageManager ?? DEFAULT_HARMONY_PACKAGE_MANAGER);
+      throw new PackageManagerNotFound(this.getPackageManagerName());
     }
 
     if (cacheRootDir && !fs.pathExistsSync(cacheRootDir)) {
@@ -1675,7 +1675,7 @@ export class DependencyResolverMain {
   getWorkspaceDepsOfBitRoots(manifests: ProjectManifest[]): Record<string, string> {
     const packageManager = this.getPackageManager();
     if (!packageManager) {
-      throw new PackageManagerNotFound(this.config.packageManager);
+      throw new PackageManagerNotFound(this.getPackageManagerName());
     }
     return packageManager.getWorkspaceDepsOfBitRoots(manifests);
   }
