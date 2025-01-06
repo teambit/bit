@@ -2211,7 +2211,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async setComponentPathsRegExps() {
     const workspaceComponents = await this.list();
     const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
-    const packageManager = this.dependencyResolver.getPackageManagerName();
+    const packageManager = this.dependencyResolver.packageManagerName;
     const isPnpmEnabled = typeof packageManager === 'undefined' || packageManager.includes('pnpm');
     const pathsExcluding = [
       generateNodeModulesPattern({
