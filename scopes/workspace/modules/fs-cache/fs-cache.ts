@@ -12,7 +12,7 @@ const DEPS = 'deps';
 
 export class FsCache {
   readonly basePath: PathOsBasedAbsolute;
-  private isNoFsCacheFeatureEnabled: boolean;
+  protected isNoFsCacheFeatureEnabled: boolean;
   constructor(private scopePath: string) {
     this.basePath = path.join(this.scopePath, WORKSPACE_CACHE, COMPONENTS_CACHE);
     this.isNoFsCacheFeatureEnabled = isFeatureEnabled(NO_FS_CACHE_FEATURE);
