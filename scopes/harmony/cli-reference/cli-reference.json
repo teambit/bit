@@ -4382,6 +4382,11 @@
         "",
         "stream",
         "relevant for --json only. stream loader as json strings"
+      ],
+      [
+        "x",
+        "skip-dependency-installation",
+        "do not auto-install dependencies of the imported components"
       ]
     ],
     "description": "apply files/config to components",
@@ -5309,6 +5314,27 @@
           ]
         ],
         "description": "list all aspects configured on component(s)",
+        "extendedDescription": "",
+        "group": "development",
+        "private": false,
+        "arguments": [
+          {
+            "name": "pattern",
+            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          }
+        ]
+      },
+      {
+        "name": "list-core",
+        "alias": "",
+        "options": [
+          [
+            "j",
+            "json",
+            "format as json"
+          ]
+        ],
+        "description": "list all core aspects",
         "extendedDescription": "",
         "group": "development",
         "private": false,
