@@ -324,6 +324,10 @@ export default class Repository {
           const indexItem = this.scopeIndex.find(hash);
           if (!indexItem) throw new Error(`_getBitObjectsByHashes failed finding ${hash}`);
           await this.scopeIndex.deleteFile();
+          // Make sure it will be reloaded in bare scopes that are keep running
+          // otherwise it will still be corrupted in the memory
+          // TODO: @davidfirst maybe it should be replaced somehow with scope.watchScopeInternalFiles ?
+          await this.reLoadScopeIndex();
           // @ts-ignore componentId must be set as it was retrieved from indexPath before
           throw new OutdatedIndexJson(indexItem.toIdentifierString(), indexJsonPath);
         }

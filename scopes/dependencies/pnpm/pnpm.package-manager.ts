@@ -104,7 +104,7 @@ export class PnpmPackageManager implements PackageManager {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
 
-    if (installOptions.dependenciesGraph && isFeatureEnabled(DEPS_GRAPH)) {
+    if (installOptions.dependenciesGraph && isFeatureEnabled(DEPS_GRAPH) && installOptions.rootComponents) {
       await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, manifests, rootDir);
     }
 

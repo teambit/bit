@@ -106,6 +106,12 @@ import { DoctorAspect } from '@teambit/doctor';
 import { ApplyAspect } from '@teambit/apply';
 import { BitAspect } from './bit.aspect';
 
+/**
+ * this is the place to register core aspects.
+ * if you modify this list (add/remove), please run `npm run generate-core-aspects-ids` to update
+ * teambit.harmony/testing/load-aspect component, which should not depend on this component.
+ * (it's done automatically by Circle during tag workflow)
+ */
 export const manifestsMap = {
   [AspectLoaderAspect.id]: AspectLoaderAspect,
   [CLIAspect.id]: CLIAspect,
