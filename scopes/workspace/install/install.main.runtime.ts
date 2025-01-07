@@ -294,7 +294,7 @@ export class InstallMain {
     const pm = this.dependencyResolver.getPackageManager();
     this.logger.console(
       `installing dependencies in workspace using ${pm?.name} (${chalk.cyan(
-        this.dependencyResolver.getPackageManagerName()
+        this.dependencyResolver.packageManagerName
       )})`
     );
     this.logger.debug(`installing dependencies in workspace with options`, options);

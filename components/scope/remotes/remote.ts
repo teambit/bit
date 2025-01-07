@@ -27,7 +27,7 @@ export class Remote {
     host: string,
     name?: string,
     primary = false,
-    private localScopeName?: string
+    protected localScopeName?: string
   ) {
     this.name = name || '';
     this.host = host;

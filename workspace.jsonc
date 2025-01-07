@@ -639,7 +639,7 @@
       "encoding": "-"
     },
     "rootComponents": true,
-    "nodeVersion": "22.12.0",
+    "nodeVersion": "23.5.0",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
@@ -721,7 +721,7 @@
         "packageJson": {
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "bvm": {
-            "node": "22.12.0"
+            "node": "23.5.0"
           },
           "bin": {
             "bbit": "bin/bit"
