@@ -866,6 +866,10 @@ export class BitMap {
     return caseSensitive ? this.paths[componentPath] : this.pathsLowerCase[componentPath.toLowerCase()];
   }
 
+  getComponentIdByRootPath(componentPath: PathLinux): ComponentID | undefined {
+    return this.components.find((component) => component.rootDir === componentPath)?.id;
+  }
+
   _populateAllPaths() {
     if (R.isEmpty(this.paths)) {
       this.components.forEach((component) => {
@@ -893,13 +897,12 @@ export class BitMap {
 
   getAllTrackDirs() {
     if (!this.allTrackDirs) {
-      this.allTrackDirs = {};
+      const allTrackDirs = {};
       this.components.forEach((component) => {
         const trackDir = component.getRootDir();
-        if (!trackDir) return;
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.allTrackDirs[trackDir] = component.id;
+        allTrackDirs[trackDir] = component.id;
       });
+      this.allTrackDirs = allTrackDirs;
     }
     return this.allTrackDirs;
   }
