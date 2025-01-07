@@ -37,13 +37,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/application"
     },
-    "apply": {
-        "name": "apply",
-        "scope": "teambit.component",
-        "version": "0.0.50",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/apply"
-    },
     "array/duplications-finder": {
         "name": "array/duplications-finder",
         "scope": "teambit.toolbox",
