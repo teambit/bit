@@ -13,6 +13,7 @@ import {
   ComponentLoadOptions,
 } from '@teambit/legacy.consumer-component';
 import { Consumer } from '@teambit/legacy.consumer';
+import { Workspace } from '@teambit/workspace';
 
 export type ListScopeResult = {
   id: ComponentID;
@@ -26,6 +27,7 @@ export type ListScopeResult = {
 export type OutdatedComponent = { id: ComponentID; headVersion: string; latestVersion?: string };
 
 export class ComponentsList {
+  workspace: Workspace;
   consumer: Consumer;
   scope: Scope;
   bitMap: BitMap;
@@ -34,10 +36,10 @@ export class ComponentsList {
   _modelComponents: ModelComponent[];
   _invalidComponents: InvalidComponent[];
   _removedComponents: Component[];
-  constructor(consumer: Consumer) {
-    this.consumer = consumer;
-    this.scope = consumer.scope;
-    this.bitMap = consumer.bitMap;
+  constructor(workspace: Workspace) {
+    this.consumer = workspace.consumer;
+    this.scope = this.consumer.scope;
+    this.bitMap = this.consumer.bitMap;
   }
 
   async getModelComponents(): Promise<ModelComponent[]> {

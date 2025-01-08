@@ -147,7 +147,7 @@ If you understand the risks and wish to proceed with the removal, please use the
     }
   }
   const idsToRemove = force ? bitIds : nonModifiedComponents;
-  const componentsList = new ComponentsList(consumer);
+  const componentsList = new ComponentsList(workspace);
   const newComponents = (await componentsList.listNewComponents(false)) as ComponentIdList;
   const idsToRemoveFromScope = ComponentIdList.fromArray(
     idsToRemove.filter((id) => !newComponents.hasWithoutVersion(id))

@@ -685,7 +685,7 @@ export class MergingMain {
 
   async listMergePendingComponents(componentsList?: ComponentsList): Promise<DivergedComponent[]> {
     const consumer = this.workspace.consumer;
-    componentsList = componentsList || new ComponentsList(consumer);
+    componentsList = componentsList || new ComponentsList(this.workspace);
     const allIds = consumer.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
     const componentsFromModel = await componentsList.getModelComponents();
     const duringMergeComps = componentsList.listDuringMergeStateComponents();

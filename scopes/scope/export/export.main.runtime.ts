@@ -689,7 +689,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     laneObject?: Lane;
   }> {
     const consumer = this.workspace.consumer;
-    const componentsList = new ComponentsList(consumer);
+    const componentsList = new ComponentsList(this.workspace);
     const idsHaveWildcard = hasWildcard(ids);
     const throwForLocalOnlyIfNeeded = async (
       bitIds: ComponentIdList
@@ -743,7 +743,7 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
       throw new Error(`fatal: unable to load the current lane object (${currentLaneId.toString()})`);
     }
     this.logger.setStatusLine(BEFORE_LOADING_COMPONENTS);
-    const componentsList = new ComponentsList(consumer);
+    const componentsList = new ComponentsList(this.workspace);
     const componentsToExportWithoutRemoved = includeNonStaged
       ? await componentsList.listNonNewComponentsIds()
       : await componentsList.listExportPendingComponentsIds(laneObject);
