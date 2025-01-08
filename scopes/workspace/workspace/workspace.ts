@@ -3,7 +3,6 @@ import memoize from 'memoizee';
 import { parse } from 'comment-json';
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
-import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { generateNodeModulesPattern, PatternTarget } from '@teambit/dependencies.modules.packages-excluder';
@@ -185,14 +184,10 @@ export class Workspace implements ComponentFactory {
    * They are used in webpack configuration to only track changes from these paths inside `node_modules`
    */
   private componentPathsRegExps: RegExp[] = [];
+  private _componentList: ComponentsList;
   localAspects: Record<string, string> = {};
   filter: Filter;
   constructor(
-    /**
-     * private pubsub.
-     */
-    private pubsub: PubsubMain,
-
     private config: WorkspaceExtConfig,
     /**
      * private access to the legacy consumer instance.
@@ -216,8 +211,6 @@ export class Workspace implements ComponentFactory {
     private aspectLoader: AspectLoaderMain,
 
     readonly logger: Logger,
-
-    private componentList: ComponentsList = new ComponentsList(consumer),
 
     /**
      * private reference to the instance of Harmony.
@@ -282,6 +275,13 @@ export class Workspace implements ComponentFactory {
     const defaultScope = this.config.defaultScope;
     if (!defaultScope) throw new BitError('defaultScope is missing');
     if (!isValidScopeName(defaultScope)) throw new InvalidScopeName(defaultScope);
+  }
+
+  get componentList(): ComponentsList {
+    if (!this._componentList) {
+      this._componentList = new ComponentsList(this);
+    }
+    return this._componentList;
   }
 
   /**
@@ -369,7 +369,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async listAutoTagPendingComponentIds(): Promise<ComponentID[]> {
-    const componentsList = new ComponentsList(this.consumer);
+    const componentsList = new ComponentsList(this);
     const modifiedComponents = (await this.modified()).map((c) => c.id);
     const newComponents = (await componentsList.listNewComponents()) as ComponentIdList;
     if (!modifiedComponents || !modifiedComponents.length) return [];
@@ -789,14 +789,14 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.componentLoader.clearCache();
     this.consumer.componentLoader.clearComponentsCache();
     this.componentStatusLoader.clearCache();
-    this.componentList = new ComponentsList(this.consumer);
+    this._componentList = new ComponentsList(this);
   }
 
   clearComponentCache(id: ComponentID) {
     this.componentLoader.clearComponentCache(id);
     this.componentStatusLoader.clearOneComponentCache(id);
     this.consumer.clearOneComponentCache(id);
-    this.componentList = new ComponentsList(this.consumer);
+    this._componentList = new ComponentsList(this);
   }
 
   clearComponentsCache(ids: ComponentID[]) {

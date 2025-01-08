@@ -201,7 +201,7 @@ export class SnappingMain {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const validExactVersion = validateVersion(exactVersion);
     const consumer = this.workspace.consumer;
-    const componentsList = new ComponentsList(consumer);
+    const componentsList = new ComponentsList(this.workspace);
     this.logger.setStatusLine('determine components to tag...');
     const newComponents = await componentsList.listNewComponents();
     const { bitIds, warnings } = await this.getComponentsToTag(
@@ -594,7 +594,7 @@ if you're willing to lose the history from the head to the specified version, us
     if (!this.workspace) throw new OutsideWorkspaceError();
     if (pattern && legacyBitIds) throw new Error(`please pass either pattern or legacyBitIds, not both`);
     const consumer: Consumer = this.workspace.consumer;
-    const componentsList = new ComponentsList(consumer);
+    const componentsList = new ComponentsList(this.workspace);
     const newComponents = (await componentsList.listNewComponents()) as ComponentIdList;
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -690,9 +690,9 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     const currentLane = await consumer.getCurrentLaneObject();
     const untag = async (): Promise<ResetResult[]> => {
       if (!componentPattern) {
-        return removeLocalVersionsForAllComponents(consumer, this.remove, currentLane, head);
+        return removeLocalVersionsForAllComponents(this.workspace, this.remove, currentLane, head);
       }
-      const candidateComponents = await getComponentsWithOptionToUntag(consumer, this.remove);
+      const candidateComponents = await getComponentsWithOptionToUntag(this.workspace, this.remove);
       const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern, true, { includeDeleted: true });
       const idsMatchingPatternBitIds = ComponentIdList.fromArray(idsMatchingPattern);
       const componentsToUntag = candidateComponents.filter((modelComponent) =>
@@ -1282,7 +1282,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     unmerged: boolean
   ): Promise<{ bitIds: ComponentID[]; warnings: string[] }> {
     const warnings: string[] = [];
-    const componentsList = new ComponentsList(this.workspace.consumer);
+    const componentsList = new ComponentsList(this.workspace);
     if (persist) {
       const softTaggedComponents = this.workspace.filter.bySoftTagged();
       return { bitIds: softTaggedComponents, warnings: [] };

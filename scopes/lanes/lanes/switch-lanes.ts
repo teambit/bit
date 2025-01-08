@@ -39,7 +39,7 @@ export class LaneSwitcher {
   async switch(): Promise<ApplyVersionResults> {
     this.logger.setStatusLine(`switching lanes`);
     if (this.workspace.isOnMain()) {
-      await throwForStagedComponents(this.consumer);
+      await throwForStagedComponents(this.workspace);
     }
     await this.populateSwitchProps();
     const bitMapIds = this.workspace.consumer.bitmapIdsFromCurrentLaneIncludeRemoved;
