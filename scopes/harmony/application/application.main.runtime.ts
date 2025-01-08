@@ -517,7 +517,7 @@ export class ApplicationMain {
       harmony
     );
     appService.registerAppType = application.registerAppType.bind(application);
-    const appCmd = new AppCmd();
+    const appCmd = new AppCmd(application);
     appCmd.commands = [new AppListCmd(application), new RunCmd(application, logger)];
     aspectLoader.registerPlugins([new AppPlugin(appSlot)]);
     builder.registerBuildTasks([new AppsBuildTask(application)]);
