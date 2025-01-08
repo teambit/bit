@@ -44,7 +44,7 @@ export class Helper {
   git: GitHelper;
   capsules: CapsulesHelper;
   constructor(helperOptions?: HelperOptions) {
-    this.debugMode = !!process.env.npm_config_debug; // default = false
+    this.debugMode = Boolean(process.env.npm_config_debug) || process.argv.includes('--debug'); // debug mode shows the workspace/scopes dirs and doesn't delete them
     this.scopes = new ScopesData(helperOptions?.scopesOptions); // generates dirs and scope names
     this.scopeJson = new ScopeJsonHelper(this.scopes);
     this.workspaceJsonc = new WorkspaceJsoncHelper(this.scopes);
