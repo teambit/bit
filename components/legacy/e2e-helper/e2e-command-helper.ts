@@ -53,8 +53,8 @@ export default class CommandHelper {
    *
    * Examples:
    *
-   * - npm run e2e-test --bit-bin=bd3 --debug --keep-envs // should use bd3 from the `--bit-bin`
-   * - npm run e2e-test --debug --keep-envs // should use bit (default bvm link)
+   * - npm run e2e-test --bit-bin=bd3 --debug // should use bd3 from the `--bit-bin`
+   * - npm run e2e-test --debug // should use bit (default bvm link)
    * - bit test teambit.semantics/schema // should use bit - the name of the bin name that the user run
    * - bd test teambit.semantics/schema // should use bd - the name of the bin name that the user run
    * (usually point to the repo bin)
