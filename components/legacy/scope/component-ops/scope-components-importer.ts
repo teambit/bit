@@ -172,7 +172,7 @@ export class ScopeComponentsImporter {
     logger.debug('importMany', `total missing externals: ${uniqExternals.length}`);
     const remotes = await getScopeRemotes(this.scope);
     // we don't care about the VersionDeps returned here as it may belong to the dependencies
-    await this.getExternalMany(uniqExternals, remotes, {
+    const importedComps = await this.getExternalMany(uniqExternals, remotes, {
       throwForDependencyNotFound,
       lane,
       throwOnUnavailableScope: throwForSeederNotFound,
@@ -181,6 +181,22 @@ export class ScopeComponentsImporter {
       includeUpdateDependents,
       reason,
     });
+
+    if (lane && importedComps.length < uniqExternals.length) {
+      const missing = uniqExternals.filter((id) => !importedComps.find((i) => i.component.id.isEqual(id)));
+      logger.debug(
+        `importMany, ${missing.length} components are missing from the lane, going to fetch them from the main`
+      );
+      await this.getExternalMany(missing, remotes, {
+        throwForDependencyNotFound: false,
+        throwOnUnavailableScope: false,
+        preferDependencyGraph,
+        includeUnexported,
+        includeUpdateDependents,
+        fromMainOnly: true,
+        reason: `${reason} (retrying from original scope)`,
+      });
+    }
 
     if (shouldRefetchIncompleteHistory) {
       await this.warnForIncompleteVersionHistory(incompleteVersionHistory);
@@ -819,6 +835,7 @@ export class ScopeComponentsImporter {
       preferDependencyGraph = false,
       includeUnexported = false,
       includeUpdateDependents = false,
+      fromMainOnly = false, // this is needed even when "lane" arg is undefined, coz we might use the current lane, see this.getLaneForFetcher
       reason,
     }: {
       throwForDependencyNotFound?: boolean;
@@ -827,13 +844,14 @@ export class ScopeComponentsImporter {
       preferDependencyGraph?: boolean;
       includeUnexported?: boolean;
       includeUpdateDependents?: boolean;
+      fromMainOnly?: boolean;
       reason?: string;
     } = {}
   ): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
-    lane = await this.getLaneForFetcher(lane);
+    lane = fromMainOnly ? undefined : await this.getLaneForFetcher(lane);
     logger.debug(
-      `copeComponentsImporter.getExternalMany, fetching from remote scope. Ids: ${ids.join(', ')}, Lane: ${lane?.id()}`
+      `scopeComponentsImporter.getExternalMany, fetching from remote scope. Ids: ${ids.join(', ')}, Lane: ${lane?.id()}`
     );
     const context = {};
     ids.forEach((id) => {
@@ -901,6 +919,7 @@ export class ScopeComponentsImporter {
       collectParents = false,
       delta = false,
       includeUpdateDependents,
+      fromMainOnly = false,
       reason,
     }: {
       localFetch?: boolean;
@@ -910,6 +929,7 @@ export class ScopeComponentsImporter {
       collectParents?: boolean;
       delta?: boolean;
       includeUpdateDependents?: boolean;
+      fromMainOnly?: boolean;
       reason?: string;
     }
   ): Promise<void> {
@@ -927,7 +947,7 @@ export class ScopeComponentsImporter {
     const leftIdsStr = leftIds.map((id) => id.toString());
     logger.debug(`getExternalManyWithoutDeps, ${left.length} left. Fetching them from a remote. ids: ${leftIdsStr}`);
     const context = { requestedBitIds: leftIds.map((id) => id.toString()) };
-    lane = await this.getLaneForFetcher(lane);
+    lane = fromMainOnly ? undefined : await this.getLaneForFetcher(lane);
     const isUsingImporter = isFeatureEnabled(CLOUD_IMPORTER) || isFeatureEnabled(CLOUD_IMPORTER_V2);
     await new ObjectFetcher(
       this.repo,
