@@ -787,7 +787,7 @@ jobs:
       #     command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin-arm64/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
       - run:
           name: Upload Lockfile
-          command: gsutil cp lockfile/pnpm-lock.yaml gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/pnpm-lock.yaml && sha256sum pnpm-lock.yaml > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/pnpm-lock.checksum.txt
+          command: gsutil cp lockfile/pnpm-lock.yaml gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/pnpm-lock.yaml && sha256sum lockfile/pnpm-lock.yaml > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/pnpm-lock.checksum.txt
       # - run:
           # name: Upload tar file (Linux)
           # command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.tar.gz && mv linux/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-linux-x64.tar.gz && sha256sum bit-${BIT_VERSION}-linux-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.checksum.txt
