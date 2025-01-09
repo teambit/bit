@@ -1838,7 +1838,7 @@
     "scope-api": {
         "name": "scope-api",
         "scope": "teambit.legacy",
-        "version": "0.0.67",
+        "version": "0.0.69",
         "mainFile": "index.ts",
         "rootDir": "components/legacy/scope-api"
     },
