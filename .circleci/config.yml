@@ -1486,11 +1486,11 @@ workflows:
       - checkout_code:
           filters:
             branches:
-              only: zkochan/test-lockfile-upload
+              only: test-lockfile-upload
       - bundle_version_linux:
           filters:
             branches:
-              only: zkochan/test-lockfile-upload
+              only: test-lockfile-upload
       # - bundle_version_macos:
           # filters:
             # branches:
@@ -1502,7 +1502,7 @@ workflows:
       - harmony_publish_to_gcloud:
           filters:
             branches:
-              only: zkochan/test-lockfile-upload
+              only: test-lockfile-upload
           requires:
             - bundle_version_linux
             # - bundle_version_macos
