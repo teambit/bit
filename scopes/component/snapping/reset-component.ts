@@ -6,6 +6,7 @@ import { logger } from '@teambit/legacy.logger';
 import { Lane, ModelComponent } from '@teambit/scope.objects';
 import { RemoveMain } from '@teambit/remove';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
+import { Workspace } from '@teambit/workspace';
 
 export type ResetResult = {
   id: ComponentID;
@@ -74,14 +75,14 @@ export async function removeLocalVersion(
 }
 
 export async function removeLocalVersionsForAllComponents(
-  consumer: Consumer,
+  workspace: Workspace,
   remove: RemoveMain,
   lane?: Lane,
   head?: boolean
 ): Promise<ResetResult[]> {
-  const componentsToUntag = await getComponentsWithOptionToUntag(consumer, remove);
+  const componentsToUntag = await getComponentsWithOptionToUntag(workspace, remove);
   const force = true; // when removing local versions from all components, no need to check if the component is used as a dependency
-  return removeLocalVersionsForMultipleComponents(consumer, componentsToUntag, lane, head, force);
+  return removeLocalVersionsForMultipleComponents(workspace.consumer, componentsToUntag, lane, head, force);
 }
 
 export async function removeLocalVersionsForMultipleComponents(
@@ -126,11 +127,11 @@ export async function removeLocalVersionsForMultipleComponents(
 }
 
 export async function getComponentsWithOptionToUntag(
-  consumer: Consumer,
+  workspace: Workspace,
   remove: RemoveMain
 ): Promise<ModelComponent[]> {
-  const componentList = new ComponentsList(consumer);
-  const laneObj = await consumer.getCurrentLaneObject();
+  const componentList = new ComponentsList(workspace);
+  const laneObj = await workspace.getCurrentLaneObject();
   const components: ModelComponent[] = await componentList.listExportPendingComponents(laneObj);
   const removedStagedIds = await remove.getRemovedStaged();
   if (!removedStagedIds.length) return components;
@@ -139,7 +140,7 @@ export async function getComponentsWithOptionToUntag(
     (id) => !components.find((c) => c.toComponentId().isEqualWithoutVersion(id))
   );
   if (!nonExistsInStaged.length) return components;
-  const modelComps = await Promise.all(nonExistsInStaged.map((id) => consumer.scope.getModelComponent(id)));
+  const modelComps = await Promise.all(nonExistsInStaged.map((id) => workspace.consumer.scope.getModelComponent(id)));
   components.push(...modelComps);
 
   return components;

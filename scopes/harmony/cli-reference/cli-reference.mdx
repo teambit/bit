@@ -43,7 +43,7 @@ Learn the recommended workflow for tracking directories as components, in the li
 **Alias**: `apps`  
 **Description**: Manages apps
 
-`bit app <sub-command>`
+`bit app [sub-command]`
 
 ### app list
 
@@ -1892,24 +1892,6 @@ use `bit pattern --help` to understand patterns better and `bit pattern <pattern
 | `scope-name`        |                                                                                                                                                                                                            name of the scope to set                                                                                                                                                                                                             |
 | `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
 
-### scope fork
-
-**Usage**: `scope fork <original-scope> [new-scope] [pattern]`
-
-**Description**: fork all components of the original-scope and refactor the source-code to use the new scope name  
-optionally, provide [pattern] to limit the fork to specific components
-
-| **Arg**          |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
-| ---------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| `original-scope` |                                                                                                                                                                                                           the original scope to fork                                                                                                                                                                                                            |
-| `new-scope`      |                                                                                                                                                                                     the new scope to fork to, default to the default-scope of the workspace                                                                                                                                                                                     |
-| `pattern`        | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
-
-| **Option**                       | **Option alias** | **Description**                                    |
-| -------------------------------- | :--------------: | -------------------------------------------------- |
-| `--ast`                          |                  | use ast to transform files instead of regex        |
-| `--skip-dependency-installation` |       `-x`       | do not install packages of the imported components |
-
 ### scope rename
 
 **Usage**: `scope rename <current-scope-name> <new-scope-name>`
@@ -1945,6 +1927,24 @@ as a result of this change
 | ------------ | :--------------: | ------------------------------------------------------------------------------------------------------------------- |
 | `--refactor` |       `-r`       | update the import statements in all dependent components to the new package name (that contains the new owner name) |
 | `--ast`      |                  | use ast to transform files instead of regex                                                                         |
+
+### scope fork
+
+**Usage**: `scope fork <original-scope> [new-scope] [pattern]`
+
+**Description**: fork all components of the original-scope and refactor the source-code to use the new scope name  
+optionally, provide [pattern] to limit the fork to specific components
+
+| **Arg**          |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
+| ---------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| `original-scope` |                                                                                                                                                                                                           the original scope to fork                                                                                                                                                                                                            |
+| `new-scope`      |                                                                                                                                                                                     the new scope to fork to, default to the default-scope of the workspace                                                                                                                                                                                     |
+| `pattern`        | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
+
+| **Option**                       | **Option alias** | **Description**                                    |
+| -------------------------------- | :--------------: | -------------------------------------------------- |
+| `--ast`                          |                  | use ast to transform files instead of regex        |
+| `--skip-dependency-installation` |       `-x`       | do not install packages of the imported components |
 
 ---
 

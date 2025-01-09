@@ -31,7 +31,7 @@ export async function createLane(
   if (!isValidScopeName(scopeName)) {
     throw new InvalidScopeName(scopeName);
   }
-  await throwForStagedComponents(consumer);
+  await throwForStagedComponents(workspace);
   const getDataToPopulateLaneObjectIfNeeded = async (): Promise<LaneComponent[]> => {
     if (remoteLane) return remoteLane.components;
     // when branching from one lane to another, copy components from the origin lane
@@ -104,8 +104,8 @@ export function throwForInvalidLaneName(laneName: string) {
   }
 }
 
-export async function throwForStagedComponents(consumer: Consumer) {
-  const componentList = new ComponentsList(consumer);
+export async function throwForStagedComponents(workspace: Workspace) {
+  const componentList = new ComponentsList(workspace);
   const stagedComponents = await componentList.listExportPendingComponentsIds();
   if (stagedComponents.length) {
     throw new BitError(

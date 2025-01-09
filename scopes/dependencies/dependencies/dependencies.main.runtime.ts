@@ -434,7 +434,7 @@ export class DependenciesMain {
       new WhyCmd(depsMain),
       new SetPeerCmd(depsMain),
       new UnsetPeerCmd(depsMain),
-      new DependentsCmd()
+      new DependentsCmd(workspace)
     );
 
     ComponentLoader.loadDeps = depsMain.loadDependencies.bind(depsMain);

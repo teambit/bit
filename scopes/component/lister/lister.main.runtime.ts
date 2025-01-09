@@ -70,7 +70,7 @@ export class ListerMain {
       throw new ConsumerNotFound();
     }
     this.logger.setStatusLine(BEFORE_LOCAL_LIST);
-    const componentsList = new ComponentsList(this.workspace.consumer);
+    const componentsList = new ComponentsList(this.workspace);
     const results = await componentsList.listAll(showRemoteVersion, showAll, namespacesUsingWildcards);
     return this.sortListScopeResults(results);
   }

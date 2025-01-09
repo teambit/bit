@@ -1,4 +1,3 @@
-import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { CLIAspect, MainRuntime, CLIMain, CommandList, Command } from '@teambit/cli';
@@ -45,7 +44,6 @@ import { UnuseCmd } from './unuse.cmd';
 import { LocalOnlyCmd, LocalOnlyListCmd, LocalOnlySetCmd, LocalOnlyUnsetCmd } from './commands/local-only-cmd';
 
 export type WorkspaceDeps = [
-  PubsubMain,
   CLIMain,
   ScopeMain,
   ComponentMain,
@@ -84,7 +82,6 @@ export type OnRootAspectAddedSlot = SlotRegistry<OnRootAspectAdded>;
 export class WorkspaceMain {
   static runtime = MainRuntime;
   static dependencies = [
-    PubsubAspect,
     CLIAspect,
     ScopeAspect,
     ComponentAspect,
@@ -111,7 +108,6 @@ export class WorkspaceMain {
   ];
   static async provider(
     [
-      pubsub,
       cli,
       scope,
       component,
@@ -163,7 +159,6 @@ export class WorkspaceMain {
     // TODO: get the 'workspace' name in a better way
     const logger = loggerExt.createLogger(EXT_NAME);
     const workspace = new Workspace(
-      pubsub,
       config,
       consumer,
       scope,
@@ -172,7 +167,6 @@ export class WorkspaceMain {
       variants,
       aspectLoader,
       logger,
-      undefined,
       harmony,
       onComponentLoadSlot,
       onComponentChangeSlot,

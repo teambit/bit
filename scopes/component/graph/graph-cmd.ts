@@ -5,10 +5,10 @@ import GraphLib from 'graphlib';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
-import { ConsumerNotFound, Consumer, loadConsumerIfExist } from '@teambit/legacy.consumer';
 import { DependencyGraph, VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import { ComponentMain } from '@teambit/component';
+import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 
 type GraphOpt = {
   image?: string;
@@ -40,10 +40,10 @@ export class GraphCmd implements Command {
   constructor(private componentAspect: ComponentMain) {}
 
   async report([id]: [string], { remote, allVersions, layout, image }: GraphOpt): Promise<string> {
-    const consumer = await loadConsumerIfExist();
-    if (!consumer && !remote) throw new ConsumerNotFound();
+    const workspace = this.componentAspect.getHost('teambit.workspace/workspace') as Workspace;
+    if (!workspace && !remote) throw new OutsideWorkspaceError();
 
-    const graph = await this.generateGraph(consumer, id, remote, allVersions);
+    const graph = await this.generateGraph(workspace, id, remote, allVersions);
 
     const config = {};
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -57,12 +57,12 @@ export class GraphCmd implements Command {
   }
 
   private async generateGraph(
-    consumer?: Consumer,
+    workspace?: Workspace,
     id?: string,
     remote?: string,
     allVersions?: boolean
   ): Promise<GraphLib.Graph> {
-    if (!consumer && !remote) throw new ConsumerNotFound();
+    if (!workspace && !remote) throw new OutsideWorkspaceError();
     const getBitId = (): ComponentID | undefined => {
       if (!id) return undefined;
       if (remote) return ComponentID.fromString(id); // user used --remote so we know it has a scope
@@ -74,21 +74,21 @@ export class GraphCmd implements Command {
       if (id) {
         // @ts-ignore scope must be set as it came from a remote
         const scopeName: string = typeof remote === 'string' ? remote : bitId.scope;
-        const remoteScope = await getRemoteByName(scopeName, consumer);
+        const remoteScope = await getRemoteByName(scopeName, workspace?.consumer);
         const componentDepGraph = await remoteScope.graph(bitId);
         return componentDepGraph.graph;
       }
       if (typeof remote !== 'string') {
         throw new Error('please specify remote scope name or enter an id');
       }
-      const remoteScope = await getRemoteByName(remote, consumer);
+      const remoteScope = await getRemoteByName(remote, workspace?.consumer);
       const componentDepGraph = await remoteScope.graph();
       return componentDepGraph.graph;
     }
 
     const onlyLatest = !allVersions;
-    // @ts-ignore consumer must be set here
-    const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(consumer, onlyLatest);
+    // @ts-ignore workspace must be set here
+    const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(workspace, onlyLatest);
     const dependencyGraph = new DependencyGraph(workspaceGraph);
     if (id) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -100,10 +100,10 @@ export class GraphCmd implements Command {
   }
 
   async json([id]: [string], { remote, allVersions }: GraphOpt) {
-    const consumer = await loadConsumerIfExist();
-    if (!consumer && !remote) throw new ConsumerNotFound();
+    const workspace = this.componentAspect.getHost('teambit.workspace/workspace') as Workspace;
+    if (!workspace && !remote) throw new OutsideWorkspaceError();
 
-    const graph = await this.generateGraph(consumer, id, remote, allVersions);
+    const graph = await this.generateGraph(workspace, id, remote, allVersions);
     return GraphLib.json.write(graph);
   }
 }

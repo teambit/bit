@@ -425,10 +425,7 @@ jobs:
       - run:
           name: 'make sure the packages used in legacy are specified in package.json'
           command: 'cd bit && node scripts/validate-pkg-exist-in-pkg-json.js'
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bit/dist
+
 
   setup_harmony:
     resource_class: large
@@ -649,6 +646,9 @@ jobs:
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm add @teambit/bit
+      - run:
+          name: copy lockfile
+          command: mkdir lockfile && cp bit-${BIT_VERSION}/pnpm-lock.yaml lockfile
       - compress_bit
       - run:
           name: move to linux folder
@@ -669,10 +669,13 @@ jobs:
           paths:
             - linux
             - linux-arm64
+            - lockfile
       - store_artifacts:
           path: linux
       - store_artifacts:
           path: linux-arm64
+      - store_artifacts:
+          path: lockfile
 
   bundle_version_macos:
     <<: *defaults
@@ -782,6 +785,9 @@ jobs:
       # - run:
       #     name: Upload tar file (OSX-arm64) to old location
       #     command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin-arm64/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: Upload Lockfile
+          command: gsutil cp lockfile/pnpm-lock.yaml gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/pnpm-lock.yaml && sha256sum lockfile/pnpm-lock.yaml > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/pnpm-lock.checksum.txt
       - run:
           name: Upload tar file (Linux)
           command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.tar.gz && mv linux/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-linux-x64.tar.gz && sha256sum bit-${BIT_VERSION}-linux-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.checksum.txt
