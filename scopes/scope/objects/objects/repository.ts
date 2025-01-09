@@ -216,6 +216,9 @@ export default class Repository {
   async list(types: Types): Promise<BitObject[]> {
     const refs = await this.listRefs();
     const concurrency = concurrentIOLimit();
+    logger.debug(
+      `Repository.list, ${refs.length} refs are going to be loaded, searching for types: ${types.map((t) => t.name).join(', ')}`
+    );
     const objects: BitObject[] = [];
     const loadGracefully = process.argv.includes('--never-exported');
     const isTypeIncluded = (obj: BitObject) => types.some((type) => type.name === obj.constructor.name); // avoid using "obj instanceof type" for Harmony to call this function successfully
@@ -229,7 +232,12 @@ export default class Repository {
         if (loadGracefully && !isTypeIncluded(object)) return;
         objects.push(object);
       },
-      { concurrency }
+      {
+        concurrency,
+        onCompletedChunk: (completed) => {
+          if (completed % 1000 === 0) logger.debug(`Repository.list, completed ${completed} out of ${refs.length}`);
+        },
+      }
     );
     return objects;
   }

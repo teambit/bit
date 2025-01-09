@@ -1379,7 +1379,13 @@
         "scope": "teambit.toolbox",
         "version": "0.0.2",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/promise/map-pool"
+        "rootDir": "scopes/toolbox/promise/map-pool",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@0.0.37": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
     },
     "pubsub": {
         "name": "pubsub",
