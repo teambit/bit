@@ -2133,14 +2133,16 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   async updateEnvForComponents(envIdStr?: string, pattern?: string) {
     const allWsComps = await this.list();
-    const allWsIds = await this.listIds();
+    const allWsIds = this.listIds();
     const isInWs = (envId: ComponentID) => allWsIds.find((id) => id.isEqual(envId, { ignoreVersion: true }));
     const allEnvs = await this.envs.createEnvironment(allWsComps);
     const getEnvWithVersion = async (envId: ComponentID) => {
       if (envId.hasVersion()) return envId;
       if (isInWs(envId)) return envId;
+      const currentLane = await this.getCurrentLaneObject();
+      const isDeletedOnLane = currentLane && currentLane.getComponent(envId)?.isDeleted;
       try {
-        const fromRemote = await this.scope.getRemoteComponent(envId);
+        const fromRemote = await this.scope.getRemoteComponent(envId, isDeletedOnLane);
         return envId.changeVersion(fromRemote.id.version);
       } catch {
         throw new BitError(`unable to find ${envIdStr} in the remote`);
