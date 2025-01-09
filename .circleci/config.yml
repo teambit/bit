@@ -648,7 +648,7 @@ jobs:
             pnpm add @teambit/bit
       - run:
           name: copy lockfile
-          command: mkdir lockfile && cp pnpm-lockfile.yaml lockfile
+          command: mkdir lockfile && cp bit-${BIT_VERSION}/pnpm-lockfile.yaml lockfile
       - compress_bit
       - run:
           name: move to linux folder
