@@ -2,7 +2,6 @@
  * the reason for not using p-map package is because the stacktrace is lost.
  * see here: https://github.com/sindresorhus/p-map/issues/34
  */
-
 import { chunk } from 'lodash';
 
 export async function pMapPool<T, X>(
@@ -20,10 +19,8 @@ export async function pMapPool<T, X>(
 
   const results: X[] = [];
   const chunks = chunk(iterable, concurrency);
-  // console.log("🚀 ~ chunks:", chunks)
 
   for (const currentChunk of chunks) {
-    // console.log("🚀 ~ currentChunk:", currentChunk)
     const batchResults = await Promise.all(currentChunk.map((item) => mapper(item)));
     results.push(...batchResults);
     onCompletedChunk(results.length);
