@@ -226,7 +226,7 @@ export function convertGraphToLockfile(
       for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
         for (const [name, specifier] of Object.entries(manifest[depType] ?? {}) as Array<[string, string]>) {
           if (specifier.startsWith('link:')) {
-            const version = normalizePath(path.relative(projectDir, specifier.substring(5)));
+            const version = `link:${normalizePath(path.relative(projectDir, specifier.substring(5)))}`;
             lockfile.importers![projectId][depType][name] = { version, specifier };
           } else {
             const edgeId = rootEdge.neighbours.find(
