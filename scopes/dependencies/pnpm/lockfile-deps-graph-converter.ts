@@ -1,3 +1,4 @@
+import path from 'path';
 import { type ProjectManifest } from '@pnpm/types';
 import { type LockfileFileV9, type InlineSpecifiersResolvedDependencies } from '@pnpm/lockfile.types';
 import * as dp from '@pnpm/dependency-path';
@@ -11,6 +12,7 @@ import {
 } from '@teambit/scope.objects';
 import { type CalcDepsGraphOptions, type ComponentIdByPkgName } from '@teambit/dependency-resolver';
 import { getLockfileImporterId } from '@pnpm/lockfile.fs';
+import normalizePath from 'normalize-path';
 
 function convertLockfileToGraphFromCapsule(
   lockfile: LockfileFileV9,
@@ -212,24 +214,31 @@ export function convertGraphToLockfile(
     snapshots,
     importers: {},
   };
-  for (const [projectDir, manifest] of Object.entries(manifests)) {
-    const projectId = getLockfileImporterId(rootDir, projectDir);
-    lockfile.importers![projectId] = {
-      dependencies: {},
-      devDependencies: {},
-      optionalDependencies: {},
-    };
-    const rootEdge = graph.findRootEdge();
-    if (rootEdge) {
+  const rootEdge = graph.findRootEdge();
+  if (rootEdge) {
+    for (const [projectDir, manifest] of Object.entries(manifests)) {
+      const projectId = getLockfileImporterId(rootDir, projectDir);
+      lockfile.importers![projectId] = {
+        dependencies: {},
+        devDependencies: {},
+        optionalDependencies: {},
+      };
       for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies']) {
-        for (const [name, specifier] of Object.entries(manifest[depType] ?? {})) {
-          const edgeId = rootEdge.neighbours.find(
-            (directDep) => directDep.name === name && directDep.specifier === specifier
-          )?.id;
-          if (edgeId) {
-            const parsed = dp.parse(edgeId);
-            const ref = depPathToRef(parsed);
-            lockfile.importers![projectId][depType][name] = { version: ref, specifier };
+        for (const [name, specifier] of Object.entries(manifest[depType] ?? {}) as Array<[string, string]>) {
+          if (specifier.startsWith('link:')) {
+            const version = normalizePath(path.relative(projectDir, specifier.substring(5)));
+            lockfile.importers![projectId][depType][name] = { version, specifier };
+          } else {
+            const edgeId = rootEdge.neighbours.find(
+              (directDep) =>
+                directDep.name === name &&
+                (directDep.specifier === specifier || directDep.id === `${name}@${specifier}`)
+            )?.id;
+            if (edgeId) {
+              const parsed = dp.parse(edgeId);
+              const ref = depPathToRef(parsed);
+              lockfile.importers![projectId][depType][name] = { version: ref, specifier };
+            }
           }
         }
       }
