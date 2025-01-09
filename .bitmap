@@ -307,7 +307,7 @@
     "clear-cache": {
         "name": "clear-cache",
         "scope": "teambit.workspace",
-        "version": "0.0.430",
+        "version": "0.0.432",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/clear-cache",
         "config": {
@@ -1647,7 +1647,7 @@
     "remote-actions": {
         "name": "remote-actions",
         "scope": "teambit.scope",
-        "version": "0.0.12",
+        "version": "0.0.14",
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/remote-actions"
     },
