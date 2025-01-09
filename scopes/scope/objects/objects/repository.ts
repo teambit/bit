@@ -21,7 +21,7 @@ import {
   UnmergedComponents,
   RemoteLanes,
 } from '@teambit/legacy.scope';
-import { ScopeIndex, IndexType } from './scope-index';
+import { ScopeIndex, IndexType, IndexItem } from './scope-index';
 import BitObject from './object';
 import { ObjectItem, ObjectList } from './object-list';
 import BitRawObject from './raw-object';
@@ -316,24 +316,25 @@ export default class Repository {
   }
 
   async _getBitObjectsByHashes(hashes: string[]): Promise<BitObject[]> {
+    const missingIndexItems: IndexItem[] = [];
     const bitObjects = await Promise.all(
       hashes.map(async (hash) => {
         const bitObject = await this.load(new Ref(hash));
         if (!bitObject) {
-          const indexJsonPath = this.scopeIndex.getPath();
           const indexItem = this.scopeIndex.find(hash);
           if (!indexItem) throw new Error(`_getBitObjectsByHashes failed finding ${hash}`);
-          await this.scopeIndex.deleteFile();
-          // Make sure it will be reloaded in bare scopes that are keep running
-          // otherwise it will still be corrupted in the memory
-          // TODO: @davidfirst maybe it should be replaced somehow with scope.watchScopeInternalFiles ?
-          await this.reLoadScopeIndex();
-          // @ts-ignore componentId must be set as it was retrieved from indexPath before
-          throw new OutdatedIndexJson(indexItem.toIdentifierString(), indexJsonPath);
+          missingIndexItems.push(indexItem);
+          return;
         }
         return bitObject;
       })
     );
+    if (missingIndexItems.length) {
+      this.scopeIndex.removeMany(missingIndexItems.map((item) => new Ref(item.hash)));
+      await this.scopeIndex.write();
+      const missingStringified = missingIndexItems.map((item) => item.toIdentifierString());
+      throw new OutdatedIndexJson(missingStringified);
+    }
     return compact(bitObjects);
   }
 
