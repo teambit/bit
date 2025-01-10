@@ -230,7 +230,7 @@ commands: # reusable commands
           name: Install pnpm
           command: >
             npm config set prefix '~/.npm-global' &&
-            npm install --global pnpm@9.14.4 &&
+            npm install --global pnpm@10.0.0 &&
             echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
 
   compress_bit:
@@ -438,7 +438,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.63-v1
+          key: core-aspect-env-v0.0.65-v1
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
@@ -468,7 +468,7 @@ jobs:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.0.63-v1
+          key: core-aspect-env-v0.0.65-v1
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a107
       # - run: cd bit && bbit compile
@@ -507,7 +507,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.63-v1
+          key: core-aspect-env-v0.0.65-v1
       # - update_ssh_agent
       # temporary, check if we can remove it
       - run: cd bit && bit cc
@@ -544,7 +544,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.63-v1
+          key: core-aspect-env-v0.0.65-v1
       - bit_config:
           env: "hub"
       - restore_cache:
@@ -875,7 +875,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.63-v1
+          key: core-aspect-env-v0.0.65-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
