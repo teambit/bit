@@ -2265,7 +2265,7 @@
     "ui/docs-app": {
         "name": "ui/docs-app",
         "scope": "teambit.react",
-        "version": "1.0.24",
+        "version": "1.0.25",
         "mainFile": "index.tsx",
         "rootDir": "scopes/react/ui/docs-app"
     },
@@ -2286,14 +2286,14 @@
     "ui/docs/docs-content": {
         "name": "ui/docs/docs-content",
         "scope": "teambit.react",
-        "version": "0.0.32",
+        "version": "0.0.33",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/docs/docs-content"
     },
     "ui/docs/properties-table": {
         "name": "ui/docs/properties-table",
         "scope": "teambit.react",
-        "version": "0.0.25",
+        "version": "0.0.26",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/docs/properties-table"
     },

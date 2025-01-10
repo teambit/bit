@@ -10,7 +10,6 @@
     "resolveEnvsFromRoots": false
   },
   "teambit.dependencies/dependency-resolver": {
-    "packageManager": "teambit.dependencies/pnpm",
     "policy": {
       "dependencies": {
         "@babel/core": "7.19.6",
@@ -204,7 +203,7 @@
         "@teambit/documenter.ui.label": "4.0.3",
         "@teambit/documenter.ui.linked-heading": "4.1.6",
         "@teambit/documenter.ui.paragraph": "^4.1.8",
-        "@teambit/documenter.ui.property-table": "4.1.10",
+        "@teambit/documenter.ui.property-table": "4.1.11",
         "@teambit/documenter.ui.section": "4.1.1",
         "@teambit/documenter.ui.separator": "4.1.1",
         "@teambit/documenter.ui.table-heading-row": "4.0.11",
@@ -235,7 +234,7 @@
         "@teambit/mdx.compilers.mdx-transpiler": "^1.0.8",
         "@teambit/mdx.generator.mdx-templates": "^1.0.11",
         "@teambit/mdx.modules.mdx-loader": "^1.0.14",
-        "@teambit/mdx.ui.mdx-layout": "^1.0.10",
+        "@teambit/mdx.ui.mdx-layout": "^1.0.11",
         "@teambit/mdx.ui.mdx-scope-context": "^1.0.5",
         "@teambit/node.deps-detectors.detective-es6": "~0.0.5",
         "@teambit/node.utils.esm-loader": "^0.0.7",
@@ -622,6 +621,7 @@
       }
     },
     "linkCoreAspects": false,
+    "packageManager": "teambit.dependencies/pnpm",
     "overrides": {
       "@types/fs-capacitor": "2.0.0",
       "signal-exit@4": "^4.0.2",
