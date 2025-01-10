@@ -199,8 +199,8 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
   }
 
   private addBuildStatus() {
-    this.legacyComponents.forEach((c) => {
-      c.buildStatus = BuildStatus.Pending;
+    this.components.forEach((c) => {
+      this.snapping.setBuildStatus(c, BuildStatus.Pending);
     });
   }
 
@@ -301,9 +301,9 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
   }
 
   private async saveDataIntoLocalScope(buildStatus: BuildStatus) {
-    await mapSeries(this.legacyComponents, async (component) => {
-      component.buildStatus = buildStatus;
-      await this.snapping._enrichComp(component);
+    await mapSeries(this.components, async (component) => {
+      this.snapping.setBuildStatus(component, buildStatus);
+      await this.snapping.enrichComp(component);
     });
     if (this.laneObj) {
       const laneHistory = await this.scope.legacyScope.lanes.updateLaneHistory(this.laneObj, 'update-dependencies');

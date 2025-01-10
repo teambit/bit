@@ -1059,8 +1059,13 @@ export class ScopeMain implements ComponentFactory {
     return this.resolveComponentId(id);
   }
 
-  // TODO: add new API for this
+  /**
+   * @deprecated use `this.getRemoteScopes()` instead.
+   */
   async _legacyRemotes(): Promise<Remotes> {
+    return getScopeRemotes(this.legacyScope);
+  }
+  async getRemoteScopes(): Promise<Remotes> {
     return getScopeRemotes(this.legacyScope);
   }
 
@@ -1068,8 +1073,8 @@ export class ScopeMain implements ComponentFactory {
    * list all component ids from a remote-scope
    */
   async listRemoteScope(scopeName: string): Promise<ComponentID[]> {
-    const remotes = await this._legacyRemotes();
-    const remote = await remotes.resolve(scopeName, this.legacyScope);
+    const remotes = await this.getRemoteScopes();
+    const remote = await remotes.resolve(scopeName);
     const results = await remote.list();
     return results.map(({ id }) => id);
   }

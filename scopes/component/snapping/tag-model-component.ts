@@ -371,7 +371,7 @@ export async function tagModelComponent({
 
       addIntegritiesToConsumerComponentsGraphs(packageIntegritiesByPublishedPackages, allComponentsToTag);
       addBuildStatus(componentsToBuild, BuildStatus.Succeed);
-      await mapSeries(componentsToBuild, (consumerComponent) => snapping._enrichComp(consumerComponent));
+      await mapSeries(harmonyComps, (comp) => snapping.enrichComp(comp));
       if (populateArtifactsFrom) await updateHiddenProp(scope, populateArtifactsFrom);
     }
   }

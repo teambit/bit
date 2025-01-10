@@ -31,7 +31,7 @@ async function removeRemoteLanes(consumer: Consumer | undefined, lanes: LaneId[]
   const context = {};
   const groupedLanesByScope = groupArray(lanes, 'scope');
   const removeP = Object.keys(groupedLanesByScope).map(async (key) => {
-    const resolvedRemote = await remotes.resolve(key, consumer?.scope);
+    const resolvedRemote = await remotes.resolve(key);
     const idsStr = groupedLanesByScope[key].map((id) => id.toString());
     return resolvedRemote.deleteMany(idsStr, force, context, true);
   });

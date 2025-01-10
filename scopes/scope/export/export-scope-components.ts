@@ -375,7 +375,7 @@ export async function persistRemotes(manyObjectsPerRemote: RemotesForPersist[], 
 
 export async function resumeExport(scope: Scope, exportId: string, remotes: string[]): Promise<string[]> {
   const scopeRemotes: Remotes = await getScopeRemotes(scope);
-  const remotesObj = await Promise.all(remotes.map((r) => scopeRemotes.resolve(r, scope)));
+  const remotesObj = await Promise.all(remotes.map((r) => scopeRemotes.resolve(r)));
   const remotesForPersist: RemotesForPersist[] = remotesObj.map((remote) => ({ remote }));
   await validateRemotes(remotesObj, exportId);
   await persistRemotes(remotesForPersist, exportId);

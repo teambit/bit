@@ -158,7 +158,7 @@ ${failedScopesErr.join('\n')}`);
     const shouldThrowOnUnavailableScope = this.throwOnUnavailableScope && !this.fetchOptions.withoutDependencies;
     let remote: Remote;
     try {
-      remote = await this.remotes.resolve(scopeName, this.scope);
+      remote = await this.remotes.resolve(scopeName);
     } catch (err: any) {
       if (err instanceof ScopeNotFoundOrDenied) {
         throw new Error(`unable to import the following component(s): ${ids.join(', ')}.
