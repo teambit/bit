@@ -24,14 +24,12 @@ export async function show({
     json,
   }));
 
-  function getComponent(allVersions: boolean | null | undefined) {
+  function getComponent() {
     const params = {
       id,
-      allVersions,
     };
     if (remote) {
       loader.start(BEFORE_SHOW_REMOTE);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return getScopeComponent(params);
     }
     return getConsumerComponent({ ...params, compare });
