@@ -244,14 +244,6 @@ export default class Consumer {
     });
   }
 
-  async loadAllVersionsOfComponentFromModel(id: ComponentID): Promise<Component[]> {
-    const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
-    const componentsP = modelComponent.listVersions().map(async (versionNum) => {
-      return modelComponent.toConsumerComponent(versionNum, this.scope.name, this.scope.objects);
-    });
-    return Promise.all(componentsP);
-  }
-
   async loadComponentFromModelImportIfNeeded(id: ComponentID, throwIfNotExist = true): Promise<Component> {
     const scopeComponentsImporter = this.scope.scopeImporter;
     const getModelComponent = async (): Promise<ModelComponent> => {
