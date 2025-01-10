@@ -44,7 +44,7 @@ const BEFORE_LOADING_COMPONENTS = 'loading components';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 type ObjectListPerName = { [name: string]: ObjectList };
-type ObjectsPerRemote = {
+export type ObjectsPerRemote = {
   remote: Remote;
   objectList: ObjectList;
   exportedIds?: string[];
@@ -300,7 +300,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           return;
         }
         // by getting the remote we also validate that this scope actually exists.
-        const remote = await scopeRemotes.resolve(scopeName, scope);
+        const remote = await scopeRemotes.resolve(scopeName);
         const list = await remote.list();
         const listIds = ComponentIdList.fromArray(list.map((listItem) => listItem.id));
         newIdsGrouped[scopeName].forEach((id) => {
@@ -362,7 +362,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       lane?: Lane
     ): Promise<ObjectsPerRemoteExtended> => {
       bitIds.throwForDuplicationIgnoreVersion();
-      const remote: Remote = await scopeRemotes.resolve(remoteNameStr, scope);
+      const remote: Remote = await scopeRemotes.resolve(remoteNameStr);
       const idsToChangeLocally = ComponentIdList.fromArray(bitIds.filter((id) => !scope.isExported(id)));
       const componentsAndObjects: ModelComponentAndObjects[] = [];
       const objectList = new ObjectList();

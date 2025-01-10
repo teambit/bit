@@ -1067,17 +1067,32 @@ another option, in case this dependency is not in main yet is to remove all refe
     return { component, version, addedVersionStr };
   }
 
-  async _enrichComp(consumerComponent: ConsumerComponent, modifiedLog?: Log) {
-    const objects = await this._getObjectsToEnrichComp(consumerComponent, modifiedLog);
+  /**
+   * for an existing component in the local scope, add the updated Version-object/artifacts to the repository
+   * so the next "persist()" call will save them to the filesystem
+   */
+  async enrichComp(component: Component, modifiedLog?: Log) {
+    const objects = await this.getObjectsToEnrichComp(component, modifiedLog);
     objects.forEach((obj) => this.objectsRepo.add(obj));
-    return consumerComponent;
   }
 
-  async _getObjectsToEnrichComp(consumerComponent: ConsumerComponent, modifiedLog?: Log): Promise<BitObject[]> {
-    const component =
+  /**
+   * needed to be updated after the build-pipeline was running
+   */
+  setBuildStatus(component: Component, buildStatus: BuildStatus) {
+    component.state._consumer.buildStatus = buildStatus;
+  }
+
+  /**
+   * for an existing component in the local scope, update the Version object with the updated data from the
+   * consumer-component and return the objects that need to be saved in the filesystem
+   */
+  async getObjectsToEnrichComp(component: Component, modifiedLog?: Log): Promise<BitObject[]> {
+    const consumerComponent: ConsumerComponent = component.state._consumer;
+    const modelComp =
       consumerComponent.modelComponent || // @todo: fix the ts error here with "source"
       (await this.scope.legacyScope.sources.findOrAddComponent(consumerComponent as any));
-    const version = await component.loadVersion(consumerComponent.id.version as string, this.objectsRepo, true);
+    const version = await modelComp.loadVersion(consumerComponent.id.version as string, this.objectsRepo, true);
     if (modifiedLog) version.addModifiedLog(modifiedLog);
     const artifactFiles = getArtifactsFiles(consumerComponent.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);

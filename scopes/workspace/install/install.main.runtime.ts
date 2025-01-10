@@ -1157,8 +1157,7 @@ export class InstallMain {
    * so no reason to try to install them (it will fail)
    */
   private async generateFilterFnForDepsFromLocalRemote() {
-    // TODO: once scope create a new API for this, replace it with the new one
-    const remotes = await this.workspace.scope._legacyRemotes();
+    const remotes = await this.workspace.scope.getRemoteScopes();
     const reg = await this.dependencyResolver.getRegistries();
     const packageScopes = Object.keys(reg.scopes);
     return (dependencyList: DependencyList): DependencyList => {

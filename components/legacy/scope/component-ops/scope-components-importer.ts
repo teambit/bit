@@ -479,7 +479,7 @@ export class ScopeComponentsImporter {
 
   async importLanes(remoteLaneIds: LaneId[], includeLaneHistory = false): Promise<Lane[]> {
     const remotes = await getScopeRemotes(this.scope);
-    const objectsStreamPerRemote = await remotes.fetch(groupByScopeName(remoteLaneIds), this.scope, {
+    const objectsStreamPerRemote = await remotes.fetch(groupByScopeName(remoteLaneIds), {
       type: 'lane',
       includeLaneHistory,
     });
@@ -540,7 +540,7 @@ export class ScopeComponentsImporter {
     const remotes: Remotes = await getScopeRemotes(this.scope);
     const remote = await remotes.resolve(remoteName);
     const getExistingLegacy = async () => {
-      const multipleStreams = await remotes.fetch({ [remoteName]: hashes }, this.scope, { type: 'object' });
+      const multipleStreams = await remotes.fetch({ [remoteName]: hashes }, { type: 'object' });
       const existing = await this.streamToHashes(remoteName, multipleStreams[remoteName]);
       return existing;
     };
@@ -673,7 +673,7 @@ export class ScopeComponentsImporter {
     const remotes = await getScopeRemotes(this.scope);
     let bitObjectsList: BitObjectList;
     try {
-      const streams = await remotes.fetch({ [id.scope as string]: [id.toString()] }, this.scope);
+      const streams = await remotes.fetch({ [id.scope as string]: [id.toString()] });
       bitObjectsList = await this.multipleStreamsToBitObjects(streams);
     } catch (err: any) {
       logger.error(`getRemoteComponent, failed to get ${id.toString()}`, err);
@@ -695,7 +695,7 @@ export class ScopeComponentsImporter {
     });
     const remotes = await getScopeRemotes(this.scope);
     const grouped = groupByScopeName(ids);
-    const streams = await remotes.fetch(grouped, this.scope);
+    const streams = await remotes.fetch(grouped);
     return this.multipleStreamsToBitObjects(streams);
   }
 
