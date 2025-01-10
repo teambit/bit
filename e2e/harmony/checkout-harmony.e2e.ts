@@ -680,4 +680,19 @@ describe('bit checkout command', function () {
       expect(() => helper.command.status()).to.not.throw();
     });
   });
+  describe('checkout main component when on a lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.createLane('dev');
+      helper.command.checkoutVersion('0.0.1', 'comp1', '-x');
+    });
+    it('should checkout the component successfully', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.1');
+    });
+  });
 });
