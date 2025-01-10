@@ -85,13 +85,16 @@ export class ScopeComponentLoader {
   /**
    * get a component from a remote without importing it
    */
-  async getRemoteComponent(id: ComponentID): Promise<Component> {
+  async getRemoteComponent(id: ComponentID, fromMain = false): Promise<Component> {
     const compImport = this.scope.legacyScope.scopeImporter;
     const objectList = await compImport.getRemoteComponent(id);
     // it's crucial to add all objects to the Repository cache. otherwise, later, when it asks
     // for the consumerComponent from the legacyScope, it won't work.
     objectList?.getAll().forEach((obj) => this.scope.legacyScope.objects.setCache(obj));
-    const consumerComponent = await this.scope.legacyScope.getConsumerComponent(id);
+    const modelComponent = await this.scope.legacyScope.getModelComponent(id);
+    const headAsTag = modelComponent.getHeadAsTagIfExist();
+    const idToLoad = fromMain && headAsTag ? id.changeVersion(headAsTag) : id;
+    const consumerComponent = await this.scope.legacyScope.getConsumerComponent(idToLoad);
     return this.getFromConsumerComponent(consumerComponent);
   }
 

@@ -721,9 +721,10 @@ export class ScopeMain implements ComponentFactory {
 
   /**
    * get a component from a remote without importing it
+   * by default, when on a lane, it loads the component from the lane. unless `fromMain` is set to true.
    */
-  async getRemoteComponent(id: ComponentID): Promise<Component> {
-    return this.componentLoader.getRemoteComponent(id);
+  async getRemoteComponent(id: ComponentID, fromMain = false): Promise<Component> {
+    return this.componentLoader.getRemoteComponent(id, fromMain);
   }
 
   /**
