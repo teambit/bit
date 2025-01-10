@@ -15,7 +15,7 @@ import {
 } from '@teambit/legacy.constants';
 import { Doclet, parser as docsParser } from '@teambit/semantics.doc-parser';
 import { logger } from '@teambit/legacy.logger';
-import { Version, DepEdge, Log, ScopeListItem, DependenciesGraph, ModelComponent } from '@teambit/scope.objects';
+import { Version, DepEdge, Log, ScopeListItem, DependenciesGraph, ModelComponent } from '@teambit/objects';
 import { pathNormalizeToLinux, PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { ComponentMap } from '@teambit/legacy.bit-map';

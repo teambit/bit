@@ -2,7 +2,7 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { DepEdgeType } from '@teambit/graph';
 import { ScopeMain } from '@teambit/scope';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { DepEdge, Lane } from '@teambit/scope.objects';
+import { DepEdge, Lane } from '@teambit/objects';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';

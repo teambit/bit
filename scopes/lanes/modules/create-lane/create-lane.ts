@@ -3,7 +3,7 @@ import { LaneId } from '@teambit/lane-id';
 import { Consumer } from '@teambit/legacy.consumer';
 import { ScopeMain } from '@teambit/scope';
 // import { ComponentIdList } from '@teambit/component-id';
-import { Ref, Lane, LaneComponent } from '@teambit/scope.objects';
+import { Ref, Lane, LaneComponent } from '@teambit/objects';
 import { isSnap } from '@teambit/component-version';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { Workspace } from '@teambit/workspace';

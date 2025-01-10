@@ -3,7 +3,7 @@ import { LaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ComponentsPendingMerge, Consumer } from '@teambit/legacy.consumer';
-import { Lane, ModelComponent, Version } from '@teambit/scope.objects';
+import { Lane, ModelComponent, Version } from '@teambit/objects';
 import { getLatestVersionNumber, pathNormalizeToLinux, hasWildcard } from '@teambit/legacy.utils';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { applyModifiedVersion } from '@teambit/checkout';

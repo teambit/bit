@@ -16,7 +16,7 @@ import { HEAD, LATEST } from '@teambit/legacy.constants';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import mapSeries from 'p-map-series';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import { Version, ModelComponent, Lane } from '@teambit/scope.objects';
+import { Version, ModelComponent, Lane } from '@teambit/objects';
 import { Tmp } from '@teambit/legacy.scope';
 import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 import { CheckoutCmd } from './checkout-cmd';

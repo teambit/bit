@@ -814,9 +814,6 @@
     "scopes/component/snap-distance": {
       "teambit.pkg/pkg": {}
     },
-    "scopes/scope/objects": {
-      "teambit.pkg/pkg": {}
-    },
     "scopes/scope/network": {
       "teambit.pkg/pkg": {}
     },

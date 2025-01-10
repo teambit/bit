@@ -1,5 +1,5 @@
 import { loadScope, Scope } from '@teambit/legacy.scope';
-import { VersionHistory } from '@teambit/scope.objects';
+import { VersionHistory } from '@teambit/objects';
 
 export async function catVersionHistory(id: string) {
   const versionHistory = await getVersionHistory(id);

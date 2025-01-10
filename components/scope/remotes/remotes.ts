@@ -14,7 +14,7 @@ import { PrimaryOverloaded } from './exceptions';
 import { Remote } from './remote';
 import remoteResolver from './remote-resolver/remote-resolver';
 import { UnexpectedNetworkError } from '@teambit/scope.network';
-import { ObjectItemsStream } from '@teambit/scope.objects';
+import { ObjectItemsStream } from '@teambit/objects';
 import { ScopeNotFoundOrDenied } from './exceptions/scope-not-found-or-denied';
 
 export class Remotes extends Map<string, Remote> {

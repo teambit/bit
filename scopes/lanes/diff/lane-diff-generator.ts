@@ -1,6 +1,6 @@
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
-import { HistoryItem, Ref, Lane, LaneHistory, Version } from '@teambit/scope.objects';
+import { HistoryItem, Ref, Lane, LaneHistory, Version } from '@teambit/objects';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DiffResults, DiffOptions, outputDiffResults } from '@teambit/legacy.component-diff';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';

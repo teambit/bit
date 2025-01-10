@@ -9,7 +9,7 @@ import {
   ModelComponent,
   Version,
   VersionHistory,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import { WriteObjectsQueue } from './write-objects-queue';
 import { ComponentsPerRemote } from '../component-ops/multiple-component-merger';
 

@@ -9,7 +9,7 @@ import {
   type PackageAttributes,
   type DependencyEdge,
   type DependencyNeighbour,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import { type CalcDepsGraphOptions, type ComponentIdByPkgName } from '@teambit/dependency-resolver';
 import { getLockfileImporterId } from '@pnpm/lockfile.fs';
 import normalizePath from 'normalize-path';

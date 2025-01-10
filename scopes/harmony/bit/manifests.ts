@@ -103,6 +103,7 @@ import { ConfigMergerAspect } from '@teambit/config-merger';
 import { VersionHistoryAspect } from '@teambit/version-history';
 import { HostInitializerAspect } from '@teambit/host-initializer';
 import { DoctorAspect } from '@teambit/doctor';
+import { ObjectsAspect } from '@teambit/objects';
 import { BitAspect } from './bit.aspect';
 
 /**
@@ -216,6 +217,7 @@ export const manifestsMap = {
   [VersionHistoryAspect.id]: VersionHistoryAspect,
   [HostInitializerAspect.id]: HostInitializerAspect,
   [DoctorAspect.id]: DoctorAspect,
+  [ObjectsAspect.id]: ObjectsAspect,
 };
 
 export function isCoreAspect(id: string) {

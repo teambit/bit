@@ -3,7 +3,7 @@ import { gql } from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
-import { ComponentLog } from '@teambit/scope.objects';
+import { ComponentLog } from '@teambit/objects';
 import { Schema } from '@teambit/graphql';
 import { Component } from './component';
 import { ComponentFactory } from './component-factory';

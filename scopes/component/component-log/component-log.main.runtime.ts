@@ -7,7 +7,7 @@ import pMap from 'p-map';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { compact } from 'lodash';
 import pMapSeries from 'p-map-series';
-import { Ref, Source, Version } from '@teambit/scope.objects';
+import { Ref, Source, Version } from '@teambit/objects';
 import { pathNormalizeToLinux, PathOsBased, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import { getFilesDiff } from '@teambit/legacy.component-diff';
 import chalk from 'chalk';

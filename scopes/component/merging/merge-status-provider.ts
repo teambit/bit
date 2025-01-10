@@ -3,7 +3,7 @@ import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { getDivergeData, SnapsDistance } from '@teambit/component.snap-distance';
-import { Lane, ModelComponent, Version, Ref } from '@teambit/scope.objects';
+import { Lane, ModelComponent, Version, Ref } from '@teambit/objects';
 import { NoCommonSnap, Tmp } from '@teambit/legacy.scope';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ImporterMain } from '@teambit/importer';
