@@ -621,7 +621,6 @@
       }
     },
     "linkCoreAspects": false,
-    "packageManager": "teambit.dependencies/pnpm",
     "overrides": {
       "@types/fs-capacitor": "2.0.0",
       "signal-exit@4": "^4.0.2",
