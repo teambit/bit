@@ -821,13 +821,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/host-initializer"
     },
-    "html": {
-        "name": "html",
-        "scope": "teambit.html",
-        "version": "1.0.509",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/html/html"
-    },
     "importer": {
         "name": "importer",
         "scope": "teambit.scope",
