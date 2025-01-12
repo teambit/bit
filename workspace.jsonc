@@ -578,7 +578,7 @@
         "terser-webpack-plugin": "5.2.0",
         "tippy.js": "6.2.7",
         "type-coverage": "2.15.1",
-        "typescript": "5.3.3",
+        "typescript": "5.5.3",
         "ua-parser-js": "0.7.24",
         "uid-number": "0.0.6",
         "uniqid": "5.3.0",
@@ -758,7 +758,7 @@
             "buffer": "6.0.3",
             "process": "0.11.10",
             "react-router-dom": "6.3.0",
-            "typescript": "5.3.3",
+            "typescript": "5.5.3",
             // @parcel/css, lightningcss, @swc/css are used by css-minimizer-webpack-plugin
             // see this issue https://github.com/webpack-contrib/css-minimizer-webpack-plugin/issues/244
             "@parcel/css": "^1.8.3",
