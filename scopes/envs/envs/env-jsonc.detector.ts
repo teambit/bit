@@ -7,7 +7,7 @@ export class EnvJsoncDetector implements DependencyDetector {
   }
 
   detect(source: string): string[] {
-    const parsed = parse(source);
+    const parsed = parse(source) as Record<string, any>;
     if (!parsed.extends) return [];
     return [parsed.extends];
   }

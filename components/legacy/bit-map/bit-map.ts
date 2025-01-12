@@ -139,7 +139,7 @@ export class BitMap {
   }
 
   static mergeContent(rawContent: string, otherRawContent: string, opts: MergeOptions = {}): string {
-    const parsed = json.parse(rawContent, undefined, true);
+    const parsed = json.parse(rawContent, undefined, true) || {};
     const parsedOther = json.parse(otherRawContent, undefined, true);
     const merged = {};
     if (opts.mergeStrategy === 'ours') {
