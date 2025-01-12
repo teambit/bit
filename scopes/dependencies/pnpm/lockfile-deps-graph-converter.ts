@@ -1,6 +1,6 @@
 import path from 'path';
 import { type ProjectManifest } from '@pnpm/types';
-import { type LockfileFileV9, type InlineSpecifiersResolvedDependencies } from '@pnpm/lockfile.types';
+import { type LockfileFile, type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import * as dp from '@pnpm/dependency-path';
 import { pick, partition } from 'lodash';
 import {
@@ -15,7 +15,7 @@ import { getLockfileImporterId } from '@pnpm/lockfile.fs';
 import normalizePath from 'normalize-path';
 
 function convertLockfileToGraphFromCapsule(
-  lockfile: LockfileFileV9,
+  lockfile: LockfileFile,
   {
     componentRelativeDir,
     componentIdByPkgName,
@@ -34,7 +34,7 @@ function convertLockfileToGraphFromCapsule(
 }
 
 function importerDepsToNeighbours(
-  importerDependencies: InlineSpecifiersResolvedDependencies,
+  importerDependencies: LockfileFileProjectResolvedDependencies,
   lifecycle: 'dev' | 'runtime',
   optional: boolean
 ): DependencyNeighbour[] {
@@ -47,7 +47,7 @@ function importerDepsToNeighbours(
 }
 
 export function convertLockfileToGraph(
-  lockfile: LockfileFileV9,
+  lockfile: LockfileFile,
   { pkgName, componentRootDir, componentRelativeDir, componentIdByPkgName }: Omit<CalcDepsGraphOptions, 'rootDir'>
 ): DependenciesGraph {
   if (componentRootDir == null || pkgName == null) {
@@ -77,7 +77,7 @@ export function convertLockfileToGraph(
 }
 
 function _convertLockfileToGraph(
-  lockfile: LockfileFileV9,
+  lockfile: LockfileFile,
   {
     componentIdByPkgName,
     directDependencies,
@@ -94,7 +94,7 @@ function _convertLockfileToGraph(
 }
 
 function buildEdges(
-  lockfile: LockfileFileV9,
+  lockfile: LockfileFile,
   { directDependencies }: { directDependencies: DependencyNeighbour[] }
 ): DependencyEdge[] {
   const edges: DependencyEdge[] = [];
@@ -144,7 +144,7 @@ function extractDependenciesFromSnapshot(snapshot: any): DependencyNeighbour[] {
 }
 
 function buildPackages(
-  lockfile: LockfileFileV9,
+  lockfile: LockfileFile,
   { componentIdByPkgName }: { componentIdByPkgName: ComponentIdByPkgName }
 ): PackagesMap {
   const packages: PackagesMap = new Map();
@@ -186,7 +186,7 @@ export function convertGraphToLockfile(
   graph: DependenciesGraph,
   manifests: Record<string, ProjectManifest>,
   rootDir: string
-): LockfileFileV9 {
+): LockfileFile {
   const packages = {};
   const snapshots = {};
   const allEdgeIds = new Set(graph.edges.map(({ id }) => id));
