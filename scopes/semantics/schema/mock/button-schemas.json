@@ -229,7 +229,8 @@
                       "character": 3
                     },
                     "raw": "/**\n   * children of the Button.\n   */",
-                    "comment": "children of the Button."
+                    "comment": "children of the Button.",
+                    "tags": []
                   },
                   "signature": "(property) children: ReactNode",
                   "name": "children",
@@ -260,7 +261,8 @@
                       "character": 3
                     },
                     "raw": "/**\n   * link to target page. once href is used, Button is considered an A tag.\n   */",
-                    "comment": "link to target page. once href is used, Button is considered an A tag."
+                    "comment": "link to target page. once href is used, Button is considered an A tag.",
+                    "tags": []
                   },
                   "signature": "(property) href?: string | undefined",
                   "name": "href",
@@ -290,7 +292,8 @@
                       "character": 3
                     },
                     "raw": "/**\n   * class names to inject.\n   */",
-                    "comment": "class names to inject."
+                    "comment": "class names to inject.",
+                    "tags": []
                   },
                   "signature": "(property) className?: string | undefined",
                   "name": "className",
@@ -337,7 +340,7 @@
           "line": 25,
           "character": 1
         },
-        "signature": "function Button(props: ButtonProps): any",
+        "signature": "function Button(props: any): any",
         "name": "Button",
         "params": [
           {
@@ -519,7 +522,8 @@
                 "character": 1
               },
               "raw": "/**\n * example of passing a JSX Element as a parameter\n */",
-              "comment": "example of passing a JSX Element as a parameter"
+              "comment": "example of passing a JSX Element as a parameter",
+              "tags": []
             },
             "signature": "function Footer({ children }: {\n    children?: any;\n}): any",
             "name": "Footer",
@@ -720,6 +724,7 @@
           "line": 50,
           "character": 10
         },
+        "signature": "class ClassSomething",
         "name": "ClassSomething",
         "exportNode": {
           "__schema": "ClassSchema",
@@ -759,7 +764,7 @@
                 "line": 38,
                 "character": 3
               },
-              "signature": "constructor ClassSomething(da: 'dsa'): ClassSomething",
+              "signature": "constructor ClassSomething(da: \"dsa\"): ClassSomething",
               "name": "constructor",
               "params": [
                 {
@@ -1850,7 +1855,8 @@
             "character": 1
           },
           "raw": "/**\n * Conditional Generic Type\n */",
-          "comment": "Conditional Generic Type"
+          "comment": "Conditional Generic Type",
+          "tags": []
         },
         "signature": "type If<T, U, Y, N> = T extends U ? Y : N",
         "name": "If",
@@ -2018,7 +2024,7 @@
           "line": 145,
           "character": 1
         },
-        "signature": "function CustomClassDecorator(config: {\n    name: string;\n    description: string;\n    fn?: (() => string) | undefined;\n    class?: ClassSomething | undefined;\n    arr?: [string, number, boolean, boolean, number | undefined, (a: string) => void, {\n        a: string;\n        b: number;\n    }, ClassSomething] | undefined;\n}): (target: any) => void",
+        "signature": "function CustomClassDecorator(config: {\n    name: string;\n    description: string;\n    fn?: () => string;\n    class?: ClassSomething;\n    arr?: [string, number, boolean, boolean, number | undefined, (a: string) => void, {\n        a: string;\n        b: number;\n    }, ClassSomething];\n}): (target: any) => void",
         "name": "CustomClassDecorator",
         "params": [
           {
@@ -2950,7 +2956,7 @@
               "line": 38,
               "character": 3
             },
-            "signature": "constructor ClassSomething(da: 'dsa'): ClassSomething",
+            "signature": "constructor ClassSomething(da: \"dsa\"): ClassSomething",
             "name": "constructor",
             "params": [
               {
@@ -3422,7 +3428,8 @@
                         "character": 3
                       },
                       "raw": "/**\n   * children of the Button.\n   */",
-                      "comment": "children of the Button."
+                      "comment": "children of the Button.",
+                      "tags": []
                     },
                     "signature": "(property) children: ReactNode",
                     "name": "children",
@@ -3453,7 +3460,8 @@
                         "character": 3
                       },
                       "raw": "/**\n   * link to target page. once href is used, Button is considered an A tag.\n   */",
-                      "comment": "link to target page. once href is used, Button is considered an A tag."
+                      "comment": "link to target page. once href is used, Button is considered an A tag.",
+                      "tags": []
                     },
                     "signature": "(property) href?: string | undefined",
                     "name": "href",
@@ -3483,7 +3491,8 @@
                         "character": 3
                       },
                       "raw": "/**\n   * class names to inject.\n   */",
-                      "comment": "class names to inject."
+                      "comment": "class names to inject.",
+                      "tags": []
                     },
                     "signature": "(property) className?: string | undefined",
                     "name": "className",
@@ -3530,7 +3539,7 @@
             "line": 25,
             "character": 1
           },
-          "signature": "function Button(props: ButtonProps): any",
+          "signature": "function Button(props: any): any",
           "name": "Button",
           "params": [
             {

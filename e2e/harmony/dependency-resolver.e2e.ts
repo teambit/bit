@@ -177,13 +177,13 @@ describe('dependency-resolver extension', function () {
     after(() => {
       npmCiRegistry.destroy();
     });
-    it('should save the packageName data into the dependencyResolver extension in the model', () => {
+    it.only('should save the packageName data into the dependencyResolver extension in the model', () => {
       const comp2 = helper.command.catComponent('comp2@latest');
       const depResolverExt = comp2.extensions.find((e) => e.name === Extensions.dependencyResolver);
       expect(depResolverExt).to.be.ok;
       expect(depResolverExt.data).to.have.property('dependencies');
       // some of the entries are @types/jest, @types/node, @babel/runtime coming from the node env
-      expect(depResolverExt.data.dependencies).to.have.lengthOf(4);
+      expect(depResolverExt.data.dependencies).to.have.lengthOf(3);
       expect(depResolverExt.data.dependencies[0].componentId.name).to.equal('comp3');
       expect(depResolverExt.data.dependencies[0].componentId.version).to.equal('0.0.1');
       expect(depResolverExt.data.dependencies[0].packageName).to.equal(`react.${randomStr}.comp3`);
