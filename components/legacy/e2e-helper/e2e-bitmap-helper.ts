@@ -1,4 +1,4 @@
-import json from 'comment-json';
+import json, { CommentObject } from 'comment-json';
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
@@ -16,14 +16,14 @@ export default class BitMapHelper {
     this.fs = fsHelper;
   }
 
-  read(bitMapPath: string = path.join(this.scopes.localPath, BIT_MAP), withoutComment = true) {
+  read(bitMapPath: string = path.join(this.scopes.localPath, BIT_MAP), withoutComment = true): Record<string, any> {
     const map = fs.readFileSync(bitMapPath) || {};
-    return json.parse(map.toString(), undefined, withoutComment);
+    return json.parse(map.toString(), undefined, withoutComment) as CommentObject;
   }
 
-  readComponentsMapOnly() {
+  readComponentsMapOnly(): Record<string, any> {
     const bitMap = this.read();
-    bitMap[SCHEMA_FIELD] ? delete bitMap[SCHEMA_FIELD] : delete bitMap.version;
+    bitMap[SCHEMA_FIELD] ? delete bitMap[SCHEMA_FIELD] : delete (bitMap as any).version;
     delete bitMap[LANE_KEY];
     return bitMap;
   }
@@ -91,8 +91,8 @@ export default class BitMapHelper {
   expectToHaveId(name: string, version?: string, scope?: string) {
     const bitMap = this.read();
     expect(bitMap).to.have.property(name);
-    if (scope) expect(bitMap[name].scope).to.equal(scope);
-    if (version) expect(bitMap[name].version).to.equal(version);
+    if (scope) expect(bitMap[name]?.scope).to.equal(scope);
+    if (version) expect(bitMap[name]?.version).to.equal(version);
   }
   expectNotToHaveId(name: string) {
     const bitMap = this.read();

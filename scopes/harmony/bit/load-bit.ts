@@ -133,7 +133,7 @@ function attachVersionsFromBitmap(rawConfig: Record<string, any>, consumerInfo: 
   const rawBitmap = BitMap.loadRawSync(consumerInfo.path);
   let parsedBitMap = {};
   try {
-    parsedBitMap = rawBitmap ? json.parse(rawBitmap?.toString('utf8'), undefined, true) : {};
+    parsedBitMap = rawBitmap ? (json.parse(rawBitmap?.toString('utf8'), undefined, true) as Record<string, any>) : {};
     // @todo: remove this if statement once we don't need the migration of the bitmap file for lanes
     // @ts-ignore
     if (parsedBitMap?._bit_lane?.name) {

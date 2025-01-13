@@ -6,7 +6,6 @@ import { BitError } from '@teambit/bit-error';
 import { ComponentID } from '@teambit/component-id';
 import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
-import pMap from 'p-map';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { OBJECTS_DIR } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
@@ -153,7 +152,7 @@ export default class Repository {
 
   async hasMultiple(refs: Ref[]): Promise<Ref[]> {
     const concurrency = concurrentIOLimit();
-    const existingRefs = await pMap(
+    const existingRefs = await pMapPool(
       refs,
       async (ref) => {
         const pathExists = await this.has(ref);
@@ -296,7 +295,7 @@ export default class Repository {
   async listRawObjects(): Promise<any> {
     const refs = await this.listRefs();
     const concurrency = concurrentIOLimit();
-    return pMap(
+    return pMapPool(
       refs,
       async (ref) => {
         try {
@@ -390,12 +389,12 @@ export default class Repository {
   async loadManyRaw(refs: Ref[]): Promise<ObjectItem[]> {
     const concurrency = concurrentIOLimit();
     const uniqRefs = uniqBy(refs, 'hash');
-    return pMap(uniqRefs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency });
+    return pMapPool(uniqRefs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency });
   }
 
   async loadManyRawIgnoreMissing(refs: Ref[]): Promise<ObjectItem[]> {
     const concurrency = concurrentIOLimit();
-    const results = await pMap(
+    const results = await pMapPool(
       refs,
       async (ref) => {
         try {
@@ -570,7 +569,7 @@ export default class Repository {
     const uniqRefs = uniqBy(refs, 'hash');
     logger.debug(`Repository._deleteMany: deleting ${uniqRefs.length} objects`);
     const concurrency = concurrentIOLimit();
-    await pMap(uniqRefs, (ref) => this._deleteOne(ref), { concurrency });
+    await pMapPool(uniqRefs, (ref) => this._deleteOne(ref), { concurrency });
     const removed = this.scopeIndex.removeMany(uniqRefs);
     if (removed) await this.scopeIndex.write();
   }
@@ -580,7 +579,7 @@ export default class Repository {
     const uniqRefs = uniqBy(refs, 'hash');
     logger.debug(`Repository.moveObjectsToDir: ${uniqRefs.length} objects`);
     const concurrency = concurrentIOLimit();
-    await pMap(uniqRefs, (ref) => this.moveOneObjectToDir(ref, dir), { concurrency });
+    await pMapPool(uniqRefs, (ref) => this.moveOneObjectToDir(ref, dir), { concurrency });
     const removed = this.scopeIndex.removeMany(uniqRefs);
     if (removed) await this.scopeIndex.write();
   }
@@ -647,7 +646,7 @@ export default class Repository {
     if (!count) return;
     logger.trace(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
     const concurrency = concurrentIOLimit();
-    await pMap(objects, (obj) => this._writeOne(obj), {
+    await pMapPool(objects, (obj) => this._writeOne(obj), {
       concurrency,
     });
     logger.trace(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);

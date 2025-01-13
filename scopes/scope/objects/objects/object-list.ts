@@ -1,5 +1,5 @@
 import tarStream from 'tar-stream';
-import pMap from 'p-map';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { compact } from 'lodash';
 import { Readable, PassThrough, pipeline } from 'stream';
 import BitObject from './object';
@@ -246,7 +246,7 @@ export class ObjectList {
 
   async toBitObjects(throwForUnknownTypes = false): Promise<BitObjectList> {
     const concurrency = concurrentIOLimit();
-    const bitObjects = await pMap(
+    const bitObjects = await pMapPool(
       this.objects,
       async (object) => {
         try {
@@ -268,7 +268,7 @@ export class ObjectList {
 
   static async fromBitObjects(bitObjects: BitObject[]): Promise<ObjectList> {
     const concurrency = concurrentIOLimit();
-    const objectItems = await pMap(
+    const objectItems = await pMapPool(
       bitObjects,
       async (obj) => ({
         ref: obj.hash(),

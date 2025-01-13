@@ -2094,7 +2094,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (!envJson) {
       throw new BitError(`unable to find env.jsonc file in ${envId}`);
     }
-    const envManifest: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true);
+    const envManifest: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
 
     return envManifest;
   }
