@@ -96,10 +96,11 @@ export function ComponentPreview({
   fullContentHeight = false,
   onLoad,
   style,
+  sandbox,
   ...rest
 }: ComponentPreviewProps) {
-  const host = component.host;
-  const sandbox = host === 'teambit.scope/scope' ? 'allow-scripts allow-same-origin' : undefined;
+  // const host = component.host;
+  // const sandbox = host === 'teambit.scope/scope' ? 'allow-scripts allow-same-origin' : undefined;
   const [heightIframeRef, iframeHeight] = useIframeContentHeight({ skip: false, viewport });
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [width, setWidth] = useState(0);
@@ -165,7 +166,7 @@ export function ComponentPreview({
     <div ref={containerRef} className={classNames(styles.preview, className)} style={{ height: forceHeight }}>
       <iframe
         {...rest}
-        sandbox={sandbox}
+        sandbox={sandbox || undefined}
         ref={currentRef}
         style={{
           ...style,
