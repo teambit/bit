@@ -1,7 +1,7 @@
 import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { ModelComponent, VERSION_ZERO } from '@teambit/scope.objects';
+import { ModelComponent, VERSION_ZERO } from '@teambit/objects';
 import { Consumer, ComponentsPendingImport, ComponentOutOfSync } from '@teambit/legacy.consumer';
 import { LATEST } from '@teambit/legacy.constants';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';

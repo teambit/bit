@@ -8,7 +8,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import { UnmergedComponent } from '@teambit/legacy.scope';
-import { Ref, Lane, ModelComponent } from '@teambit/scope.objects';
+import { Ref, Lane, ModelComponent } from '@teambit/objects';
 import chalk from 'chalk';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
 import { RemoveAspect, RemoveMain, deleteComponentsFiles } from '@teambit/remove';

@@ -5,7 +5,7 @@ import { ComponentIssue } from '@teambit/component-issues';
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { BIT_MAP } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { ModelComponent, VERSION_ZERO } from '@teambit/scope.objects';
+import { ModelComponent, VERSION_ZERO } from '@teambit/objects';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { getLastModifiedPathsTimestampMs } from '@teambit/toolbox.fs.last-modified';

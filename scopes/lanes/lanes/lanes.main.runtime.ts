@@ -17,7 +17,7 @@ import { FetchCmd, ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
-import { Ref, HistoryItem, Lane, LaneHistory, Version } from '@teambit/scope.objects';
+import { Ref, HistoryItem, Lane, LaneHistory, Version } from '@teambit/objects';
 import { SnapsDistance, getDivergeData } from '@teambit/component.snap-distance';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { compact } from 'lodash';

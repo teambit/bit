@@ -22,7 +22,7 @@ import {
   ObjectList,
   Ref,
   Repository,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import SourcesRepository, { ComponentDef } from '../repositories/sources';
 import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
 import { VersionDependencies } from '../version-dependencies';

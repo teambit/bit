@@ -2,7 +2,7 @@ import pFilter from 'p-filter';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import R from 'ramda';
 import { LATEST } from '@teambit/legacy.constants';
-import { ModelComponent, Lane } from '@teambit/scope.objects';
+import { ModelComponent, Lane } from '@teambit/objects';
 import { Scope } from '@teambit/legacy.scope';
 import { fetchRemoteVersions } from '@teambit/scope.remotes';
 import { isBitIdMatchByWildcards } from '@teambit/legacy.utils';

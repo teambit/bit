@@ -3,7 +3,7 @@ import { PushOptions, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ListScopeResult } from '@teambit/legacy.component-list';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import { ComponentLog, ObjectItemsStream, ObjectList } from '@teambit/scope.objects';
+import { ComponentLog, ObjectItemsStream, ObjectList } from '@teambit/objects';
 import { LaneData, ScopeDescriptor, RemovedObjects } from '@teambit/legacy.scope';
 
 export interface Network {

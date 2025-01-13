@@ -47,7 +47,7 @@ import {
   ObjectItem,
   ObjectList,
   DependenciesGraph,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import { RemovedObjects } from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';

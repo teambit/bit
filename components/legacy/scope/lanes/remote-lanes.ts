@@ -7,7 +7,7 @@ import { compact, set } from 'lodash';
 import { Mutex } from 'async-mutex';
 import { PREVIOUS_DEFAULT_LANE, REMOTE_REFS_DIR } from '@teambit/legacy.constants';
 import { glob } from '@teambit/legacy.utils';
-import { Ref, LaneComponent, Lane, ModelComponent } from '@teambit/scope.objects';
+import { Ref, LaneComponent, Lane, ModelComponent } from '@teambit/objects';
 import { logger } from '@teambit/legacy.logger';
 
 type Lanes = { [laneName: string]: LaneComponent[] };

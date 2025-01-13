@@ -1,6 +1,6 @@
 import { GlobalConfigMain } from '@teambit/global-config';
 import mapSeries from 'p-map-series';
-import { Lane } from '@teambit/scope.objects';
+import { Lane } from '@teambit/objects';
 import { existsSync } from 'fs-extra';
 import { join } from 'path';
 import {

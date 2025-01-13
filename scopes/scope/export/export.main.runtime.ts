@@ -21,15 +21,7 @@ import { Http, ExportOrigin } from '@teambit/scope.network';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { persistRemotes, validateRemotes, removePendingDirs } from './export-scope-components';
-import {
-  Lane,
-  ModelComponent,
-  ObjectItem,
-  ObjectList,
-  LaneReadmeComponent,
-  BitObject,
-  Ref,
-} from '@teambit/scope.objects';
+import { Lane, ModelComponent, ObjectItem, ObjectList, LaneReadmeComponent, BitObject, Ref } from '@teambit/objects';
 import { Scope, PersistFailed } from '@teambit/legacy.scope';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
 import { ExportAspect } from './export.aspect';

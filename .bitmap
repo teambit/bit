@@ -1267,7 +1267,13 @@
         "scope": "teambit.scope",
         "version": "0.0.18",
         "mainFile": "index.ts",
-        "rootDir": "scopes/scope/objects"
+        "rootDir": "scopes/scope/objects",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@0.0.65": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "overview/api-reference-table-of-contents": {
         "name": "overview/api-reference-table-of-contents",

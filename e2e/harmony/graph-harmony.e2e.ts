@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { loadBit } from '@teambit/bit';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import { ModelComponent, Version, objectListToGraph, IdGraph } from '@teambit/scope.objects';
+import { ModelComponent, Version, objectListToGraph, IdGraph } from '@teambit/objects';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));

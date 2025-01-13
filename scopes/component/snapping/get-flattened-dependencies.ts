@@ -6,7 +6,7 @@ import { BitIdStr } from '@teambit/legacy-bit-id';
 import { VersionDependencies, Scope } from '@teambit/legacy.scope';
 import { ConsumerComponent as Component, Dependencies } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
-import { Lane } from '@teambit/scope.objects';
+import { Lane } from '@teambit/objects';
 import { compact, tail, uniq } from 'lodash';
 
 export class FlattenedDependenciesGetter {

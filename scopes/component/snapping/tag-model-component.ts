@@ -16,7 +16,7 @@ import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { OnTagOpts } from '@teambit/builder';
-import { ModelComponent, Log, DependenciesGraph } from '@teambit/scope.objects';
+import { ModelComponent, Log, DependenciesGraph } from '@teambit/objects';
 import { MessagePerComponent, MessagePerComponentFetcher } from './message-per-component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
