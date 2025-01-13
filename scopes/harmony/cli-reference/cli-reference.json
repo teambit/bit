@@ -5064,47 +5064,6 @@
     ]
   },
   {
-    "name": "schema <pattern>",
-    "alias": "",
-    "options": [
-      [
-        "j",
-        "json",
-        "return the component schema in json format"
-      ]
-    ],
-    "description": "shows the API schema of the specified component/s.",
-    "extendedDescription": "you can use a `<pattern>` for multiple component ids, such as `bit schema \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
-    "group": "development",
-    "private": false
-  },
-  {
-    "name": "check-types [component-pattern]",
-    "alias": "",
-    "options": [
-      [
-        "a",
-        "all",
-        "check-types for all components, not only modified and new"
-      ],
-      [
-        "",
-        "strict",
-        "in case issues found, exit with code 1"
-      ]
-    ],
-    "description": "check typescript types",
-    "extendedDescription": "",
-    "group": "development",
-    "private": false,
-    "arguments": [
-      {
-        "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      }
-    ]
-  },
-  {
     "name": "update-dependencies <data>",
     "alias": "",
     "options": [
@@ -5208,6 +5167,47 @@
     "extendedDescription": "a new bare-scope needs to be created and it will import the components to this scope first",
     "group": "development",
     "private": true
+  },
+  {
+    "name": "schema <pattern>",
+    "alias": "",
+    "options": [
+      [
+        "j",
+        "json",
+        "return the component schema in json format"
+      ]
+    ],
+    "description": "shows the API schema of the specified component/s.",
+    "extendedDescription": "you can use a `<pattern>` for multiple component ids, such as `bit schema \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
+    "group": "development",
+    "private": false
+  },
+  {
+    "name": "check-types [component-pattern]",
+    "alias": "",
+    "options": [
+      [
+        "a",
+        "all",
+        "check-types for all components, not only modified and new"
+      ],
+      [
+        "",
+        "strict",
+        "in case issues found, exit with code 1"
+      ]
+    ],
+    "description": "check typescript types",
+    "extendedDescription": "",
+    "group": "development",
+    "private": false,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
   },
   {
     "name": "aspect <sub-command>",
