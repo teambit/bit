@@ -97,7 +97,7 @@ describe('Mocha Tester', function () {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.fixtures.populateComponentsTS(1);
-      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env@0.0.42');
+      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env');
       helper.command.install();
       helper.fs.outputFile(
         'comp1/foo.ts',
