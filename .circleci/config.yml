@@ -452,8 +452,8 @@ jobs:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
-      - run: bvm upgrade
-      # - run: bvm install 1.7.41
+      # - run: bvm upgrade
+      - run: bvm install 1.9.35
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
