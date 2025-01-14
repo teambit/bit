@@ -16,7 +16,7 @@ describe('Mocha Tester', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
-      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env@0.0.42');
+      helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env');
       helper.command.install();
     });
     describe('component without any test file', () => {
