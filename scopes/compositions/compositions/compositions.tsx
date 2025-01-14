@@ -60,7 +60,7 @@ export function Compositions({ menuBarWidgets, emptyState, usePreviewSandboxSlot
   selectedRef.current = currentComposition;
 
   const properties = useDocs(component.id);
-  const hooks = usePreviewSandboxSlot?.values() ?? [];
+  const previewSandboxHooks = usePreviewSandboxSlot?.values() ?? [];
   const isMobile = useIsMobile();
   const showSidebar = !isMobile && component.compositions.length > 0;
   const [isSidebarOpen, setSidebarOpenness] = useState(showSidebar);
@@ -97,7 +97,11 @@ export function Compositions({ menuBarWidgets, emptyState, usePreviewSandboxSlot
               </Link>
             </Tooltip>
           </CompositionsMenuBar>
-          <SandboxPermissionsAggregator hooks={hooks} onSandboxChange={setSandboxValue} component={component} />
+          <SandboxPermissionsAggregator
+            hooks={previewSandboxHooks}
+            onSandboxChange={setSandboxValue}
+            component={component}
+          />
           <CompositionContent
             className={styles.compositionPanel}
             emptyState={emptyState}
