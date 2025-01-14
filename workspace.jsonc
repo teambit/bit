@@ -207,7 +207,7 @@
         "@teambit/documenter.ui.section": "4.1.1",
         "@teambit/documenter.ui.separator": "4.1.1",
         "@teambit/documenter.ui.table-heading-row": "4.0.11",
-        "@teambit/documenter.ui.table-row": "4.1.13",
+        "@teambit/documenter.ui.table-row": "4.1.14",
         "@teambit/evangelist.elements.button": "1.0.6",
         "@teambit/evangelist.elements.icon": "1.0.2",
         "@teambit/evangelist.input.checkbox.label": "^1.1.0",

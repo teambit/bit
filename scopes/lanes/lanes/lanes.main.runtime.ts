@@ -4,7 +4,7 @@ import pMap from 'p-map';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { OutsideWorkspaceError, Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import { LaneDiffCmd, LaneDiffGenerator, LaneDiffResults, LaneHistoryDiffCmd } from '@teambit/lanes.modules.diff';
 import { NoCommonSnap, Scope as LegacyScope, TrackLane, LaneData } from '@teambit/legacy.scope';
@@ -579,7 +579,7 @@ please create a new lane instead, which will include all components of this lane
     }: SwitchLaneOptions
   ) {
     if (!this.workspace) {
-      throw new BitError(`unable to switch lanes outside of Bit workspace`);
+      throw new OutsideWorkspaceError();
     }
     this.workspace.inInstallContext = true;
     let mergeStrategy;
