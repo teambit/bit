@@ -13,7 +13,7 @@ import {
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { VersionHistoryGraph, Ref, ModelComponent, VersionHistory } from '@teambit/scope.objects';
+import { VersionHistoryGraph, Ref, ModelComponent, VersionHistory } from '@teambit/objects';
 import { ExternalActions } from '@teambit/legacy.scope-api';
 import { BuildVersionHistoryAction } from './build-version-history-action';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';

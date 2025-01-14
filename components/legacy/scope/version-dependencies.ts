@@ -2,7 +2,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import ComponentWithDependencies from './component-dependencies';
 import { ComponentVersion } from './component-version';
 import { DependenciesNotFound } from './exceptions/dependencies-not-found';
-import { Repository, Version } from '@teambit/scope.objects';
+import { Repository, Version } from '@teambit/objects';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 
 export class VersionDependencies {

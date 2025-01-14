@@ -11,7 +11,7 @@ import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy.constants';
 import { PostSign } from '@teambit/scope.remote-actions';
-import { Version, Log, Lane, ObjectList } from '@teambit/scope.objects';
+import { Version, Log, Lane, ObjectList } from '@teambit/objects';
 import { ComponentIdList } from '@teambit/component-id';
 import { Http } from '@teambit/scope.network';
 import { LanesAspect, LanesMain } from '@teambit/lanes';

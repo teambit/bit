@@ -18,7 +18,7 @@ import { LanesAspect, Lane, LanesMain } from '@teambit/lanes';
 import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { UpdateDependenciesCmd } from './update-dependencies.cmd';
 import { UpdateDependenciesAspect } from './update-dependencies.aspect';
-import { Ref } from '@teambit/scope.objects';
+import { Ref } from '@teambit/objects';
 import { isSnap } from '@teambit/component-version';
 
 export type UpdateDepsOptions = {

@@ -3,7 +3,7 @@ import { ComponentID } from '@teambit/component-id';
 import { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { logger } from '@teambit/legacy.logger';
-import { Lane, ModelComponent } from '@teambit/scope.objects';
+import { Lane, ModelComponent } from '@teambit/objects';
 import { RemoveMain } from '@teambit/remove';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import { Workspace } from '@teambit/workspace';

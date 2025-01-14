@@ -1,6 +1,6 @@
 import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '@teambit/legacy.constants';
 import { loadScope, Scope } from '@teambit/legacy.scope';
-import { Version } from '@teambit/scope.objects';
+import { Version } from '@teambit/objects';
 
 export async function catComponent(id: string): Promise<Record<string, any>> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

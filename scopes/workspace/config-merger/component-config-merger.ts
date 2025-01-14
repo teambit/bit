@@ -9,7 +9,7 @@ import {
   VariantPolicy,
   VariantPolicyEntry,
 } from '@teambit/dependency-resolver';
-import { Lane } from '@teambit/scope.objects';
+import { Lane } from '@teambit/objects';
 import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { MergeStrategy } from '@teambit/merging';

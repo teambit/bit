@@ -21,7 +21,7 @@ import {
   Ref,
   BitObjectList,
   ObjectList,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '@teambit/scope.remote-actions';
 import { loader } from '@teambit/legacy.loader';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';

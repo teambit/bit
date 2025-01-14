@@ -37,7 +37,7 @@ import {
   DepEdgeType,
   Log,
   AddVersionOpts,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { Component } from '@teambit/component';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';

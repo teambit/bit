@@ -28,7 +28,7 @@ import {
   ModelComponent,
   Lane,
   Version,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import { Scope as LegacyScope, LegacyOnTagResult, Scope, Types, loadScopeIfExist } from '@teambit/legacy.scope';
 import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { ExportPersist, PostSign } from '@teambit/scope.remote-actions';

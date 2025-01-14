@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { PromptCanceled } from '@teambit/legacy.cli.prompts';
 import { ScopeMain } from '@teambit/scope';
-import { BitObject, Lane } from '@teambit/scope.objects';
+import { BitObject, Lane } from '@teambit/objects';
 import { StagedSnaps } from '@teambit/legacy.scope';
 import { Consumer } from '@teambit/legacy.consumer';
 import { BitError } from '@teambit/bit-error';

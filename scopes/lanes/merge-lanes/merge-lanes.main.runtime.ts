@@ -15,7 +15,7 @@ import {
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Ref, Lane, Version, Log } from '@teambit/scope.objects';
+import { Ref, Lane, Version, Log } from '@teambit/objects';
 import pMapSeries from 'p-map-series';
 import { Scope as LegacyScope } from '@teambit/legacy.scope';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';

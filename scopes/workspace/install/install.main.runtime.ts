@@ -16,7 +16,7 @@ import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { type DependenciesGraph } from '@teambit/scope.objects';
+import { type DependenciesGraph } from '@teambit/objects';
 import {
   CodemodResult,
   linkToNodeModulesWithCodemod,

@@ -18,7 +18,7 @@ import {
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import { NoHeadNoVersion, Scope, ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
-import { Lane, ModelComponent, Version } from '@teambit/scope.objects';
+import { Lane, ModelComponent, Version } from '@teambit/objects';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import format from 'string-format';
