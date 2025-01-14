@@ -1,5 +1,6 @@
 import React, { ReactNode, useMemo, useCallback, useState, useEffect } from 'react';
-import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { useLocation, Location } from '@teambit/base-react.navigation.link';
 import { LaneId } from '@teambit/lane-id';
@@ -114,6 +115,16 @@ export function LanesProvider({
     setViewedLaneId(lane);
   }, []);
 
+  const addLanes = useCallback(
+    (newLanes: LaneModel[]) => {
+      if (lanesModel) {
+        lanesModel.addLanes(newLanes);
+      }
+      return lanesModel;
+    },
+    [Boolean(lanesModel), lanesModel?.lanes.map((lane) => lane.id.toString()).join(',')]
+  );
+
   const lanesContextModel: LanesContextModel = useMemo(
     () => ({
       lanesModel: lanesState,
@@ -124,6 +135,7 @@ export function LanesProvider({
       options,
       offset,
       limit,
+      addLanes,
     }),
     [
       Boolean(lanesState),
@@ -136,6 +148,7 @@ export function LanesProvider({
       options,
       offset,
       limit,
+      addLanes,
     ]
   );
 
