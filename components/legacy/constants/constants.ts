@@ -290,7 +290,6 @@ export const BITMAP_PREFIX_MESSAGE = `/**
  */
 export const INIT_COMMAND = 'init';
 
-export const ENV_VARIABLE_CONFIG_PREFIX = 'BIT_CONFIG_';
 /**
  * bit global config keys
  */
