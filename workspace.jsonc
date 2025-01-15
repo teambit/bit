@@ -247,7 +247,7 @@
         "@teambit/react.jest.react-jest": "^1.0.33",
         "@teambit/react.rendering.ssr": "0.0.3",
         "@teambit/react.ui.component-highlighter": "0.2.4",
-        "@teambit/react.webpack.react-webpack": "^1.0.37",
+        "@teambit/react.webpack.react-webpack": "^1.0.40",
         "@teambit/scope.content.scope-overview": "1.95.0",
         "@teambit/scope.ui.empty-scope": "^0.0.509",
         "@teambit/scope.ui.hooks.use-scope": "^0.0.455",
