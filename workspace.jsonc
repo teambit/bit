@@ -250,7 +250,7 @@
         "@teambit/react.webpack.react-webpack": "^1.0.37",
         "@teambit/scope.content.scope-overview": "1.95.0",
         "@teambit/scope.ui.empty-scope": "^0.0.509",
-        "@teambit/scope.ui.hooks.use-scope": "^0.0.454",
+        "@teambit/scope.ui.hooks.use-scope": "^0.0.455",
         "@teambit/scope.ui.scope-details": "^0.0.526",
         "@teambit/scope.ui.scope-icon": "0.0.91",
         "@teambit/scopes.scope-descriptor": "^0.0.24",
