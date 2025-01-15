@@ -579,35 +579,6 @@ describe('filing-cabinet', () => {
     });
   });
 
-  // skip temporarily to make PR 9000 pass
-  describe.skip('.scss with a dependency prefix with a tilda', () => {
-    it('should resolve the dependency to a node_module package (using webpack under the hood)', () => {
-      const result = cabinet({
-        dependency: '~bootstrap/index',
-        filename: `${fixtures}/foo.scss`,
-        directory: fixtures,
-      });
-
-      assert.equal(result, path.resolve(`${fixtures}/node_modules/bootstrap/index.scss`));
-    });
-  });
-  // skip temporarily to make PR 9000 pass
-  describe.skip('.scss with a dependency prefix with a tilda and resolve config', () => {
-    describe('when the alias in resolve-config does not match the dependency', () => {
-      it('should fallback to the node-module resolution', () => {
-        const resolveConfig = { aliases: { '~non-exist': 'some-dir' } };
-        const result = cabinet({
-          resolveConfig,
-          dependency: '~bootstrap/index',
-          filename: `${fixtures}/foo.scss`,
-          directory: fixtures,
-        });
-
-        assert.equal(result, path.resolve(`${fixtures}/node_modules/bootstrap/index.scss`));
-      });
-    });
-  });
-
   // @todo: fix.
   describe.skip('webpack', () => {
     let directory;
