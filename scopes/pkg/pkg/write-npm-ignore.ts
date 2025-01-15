@@ -10,9 +10,6 @@ export async function writeNpmIgnore(capsule: Capsule, envs: EnvsMain): Promise<
   const env = envs.getEnv(capsule.component).env as PackageEnv;
   const envIgnoreEntries = env.getNpmIgnore?.({ component: capsule.component, capsule });
   const npmIgnoreEntries = DEFAULT_NPM_IGNORE_ENTRIES.concat(envIgnoreEntries || []);
-  if (!npmIgnoreEntries || !npmIgnoreEntries.length) {
-    return;
-  }
   const NPM_IGNORE_FILE = '.npmignore';
   const npmIgnorePath = join(capsule.path, NPM_IGNORE_FILE);
   const npmIgnoreEntriesStr = `\n${npmIgnoreEntries.join('\n')}`;
