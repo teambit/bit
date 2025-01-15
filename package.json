@@ -62,7 +62,7 @@
     "performance-test:debug": "npm run performance-test --debug",
     "performance-test-circle": "mocha --require ./babel-register --reporter mocha-multi-reporters --reporter-options configFile=mocha-multi-reporters-config.json --colors ./e2e/performance/*.performance*.ts",
     "bit-hub-test-circle": "mocha --require ./babel-register --reporter mocha-multi-reporters --reporter-options configFile=mocha-multi-reporters-config.json --colors ./e2e/bit-hub/*.ts",
-    "clean-node-modules": "find . -type d -name node_modules -prune \\! -path './scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/node_modules' -exec rm -rf '{}' +",
+    "clean-node-modules": "find . -type d -name node_modules -prune -exec rm -rf '{}' +",
     "setup": "bit install &&  bit compile",
     "full-setup": "rm -rf node_modules/.bin/bit && bit install && husky && bit compile",
     "full-setup:bbit": "rm -rf node_modules/.bin/bbit && bbit install && husky && bbit compile",
