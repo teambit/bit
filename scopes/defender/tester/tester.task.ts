@@ -1,4 +1,4 @@
-import { BuildContext, BuiltTaskResult, BuildTask, CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask, CAPSULE_ARTIFACTS_DIR, ArtifactDefinition } from '@teambit/builder';
 import fs from 'fs-extra';
 import { join } from 'path';
 import { Compiler, CompilerAspect } from '@teambit/compiler';
@@ -108,12 +108,11 @@ export function getJUnitArtifactPath() {
   return join(CAPSULE_ARTIFACTS_DIR, '__bit_junit.xml');
 }
 
-export function getArtifactDef() {
+export function getArtifactDef(): ArtifactDefinition[] {
   return [
     {
       name: 'junit',
       globPatterns: [getJUnitArtifactPath()],
-      rootDir: CAPSULE_ARTIFACTS_DIR,
     },
   ];
 }
