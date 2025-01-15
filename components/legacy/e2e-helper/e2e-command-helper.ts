@@ -598,8 +598,8 @@ export default class CommandHelper {
     return output;
   }
 
-  capsuleListParsed() {
-    const capsulesJson = this.runCmd('bit capsule list -j');
+  capsuleListParsed(cwd?: string) {
+    const capsulesJson = this.runCmd('bit capsule list -j', cwd);
     return JSON.parse(capsulesJson);
   }
 
