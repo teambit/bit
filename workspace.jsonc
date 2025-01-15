@@ -120,7 +120,7 @@
         "@teambit/component.ui.artifacts.artifacts-tree": "^0.0.26",
         "@teambit/component.ui.artifacts.models.component-artifacts-model": "^0.0.12",
         "@teambit/component.ui.artifacts.queries.use-component-artifacts": "^0.0.14",
-        "@teambit/component.ui.component-compare.compare-aspects.compare-aspects": "^0.0.147",
+        "@teambit/component.ui.component-compare.compare-aspects.compare-aspects": "^0.0.148",
         "@teambit/component.ui.component-compare.hooks.use-component-compare": "^0.0.113",
         "@teambit/component.ui.component-compare.hooks.use-component-compare-url": "^0.0.9",
         "@teambit/component.ui.component-compare.layouts.compare-split-layout-preset": "^0.0.10",
