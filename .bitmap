@@ -217,7 +217,53 @@
         "scope": "teambit.harmony",
         "version": "1.9.38",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/bit"
+        "rootDir": "scopes/harmony/bit",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@0.0.68": {},
+            "teambit.dependencies/dependency-resolver": {
+                "policy": {
+                    "dependencies": {
+                        "@teambit/base-react.navigation.link": "2.0.31",
+                        "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
+                        "@apollo/client": "3.6.9",
+                        "@yarnpkg/cli": "3.6.1",
+                        "@yarnpkg/core": "3.5.2",
+                        "@yarnpkg/plugin-pack": "3.2.0",
+                        "@types/react": "^17.0.67",
+                        "@types/react-dom": "^17.0.21",
+                        "graphql": "15.8.0",
+                        "browserslist": "4.23.3",
+                        "reflect-metadata": "0.1.13",
+                        "monaco-editor": "0.33.0",
+                        "mz": "2.7.0",
+                        "react": "17.0.2",
+                        "react-dom": "17.0.2",
+                        "core-js": "3.13.0",
+                        "postcss": "8.4.18",
+                        "buffer": "6.0.3",
+                        "process": "0.11.10",
+                        "react-router-dom": "6.3.0",
+                        "typescript": "5.5.3",
+                        "@parcel/css": "^1.8.3",
+                        "lightningcss": "^1.20.0",
+                        "@swc/css": "^0.0.20",
+                        "@teambit/legacy": "2.0.1"
+                    },
+                    "devDependencies": {},
+                    "peerDependencies": {
+                        "@teambit/base-react.navigation.link": "-",
+                        "@teambit/legacy": "-",
+                        "@teambit/ui-foundation.ui.navigation.react-router-adapter": "-",
+                        "browserslist": "-",
+                        "graphql": "-",
+                        "react": "-",
+                        "react-dom": "-",
+                        "react-router-dom": "-",
+                        "core-js": "-"
+                    }
+                }
+            }
+        }
     },
     "bit-map": {
         "name": "bit-map",
