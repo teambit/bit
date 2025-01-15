@@ -177,7 +177,7 @@ describe('dependency-resolver extension', function () {
     after(() => {
       npmCiRegistry.destroy();
     });
-    it.only('should save the packageName data into the dependencyResolver extension in the model', () => {
+    it('should save the packageName data into the dependencyResolver extension in the model', () => {
       const comp2 = helper.command.catComponent('comp2@latest');
       const depResolverExt = comp2.extensions.find((e) => e.name === Extensions.dependencyResolver);
       expect(depResolverExt).to.be.ok;
