@@ -13,4 +13,5 @@ export {
   get,
   list,
   listSync,
+  ENV_VARIABLE_CONFIG_PREFIX,
 } from './global-config';

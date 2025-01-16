@@ -26,9 +26,14 @@ export class PkgService implements EnvService<{}, PkgDescriptor> {
 
   async render(env: EnvDefinition) {
     const descriptor = this.getDescriptor(env);
-    const title = chalk.green('configured package.json properties: ');
-    const config = descriptor?.config ? highlight(descriptor?.config, { language: 'json', ignoreIllegals: true }) : '';
-    return `${title}\n${config}`;
+    const parsed = JSON.parse(descriptor?.config || '{}');
+    const { packageJsonProps, npmIgnore } = parsed;
+    const jsonPropsTitle = chalk.green('configured package.json properties: ');
+    const config = packageJsonProps
+      ? highlight(JSON.stringify(packageJsonProps, null, 2), { language: 'json', ignoreIllegals: true })
+      : '';
+    const npmignoreTitle = chalk.green('configured npm ignore entries: ');
+    return `${jsonPropsTitle}\n${config}\n\n${npmignoreTitle}\n${npmIgnore.join('\n')}`;
   }
 
   transform(env: Env, context: EnvContext): PkgTransformationMap | undefined {
@@ -46,9 +51,15 @@ export class PkgService implements EnvService<{}, PkgDescriptor> {
   getDescriptor(env: EnvDefinition): PkgDescriptor | undefined {
     if (!env.env.getPackageJsonProps) return undefined;
     const props = env.env.getPackageJsonProps();
+    const npmIgnore = env.env.getNpmIgnore();
+    const config = {
+      packageJsonProps: props,
+      npmIgnore: npmIgnore,
+    };
+
     return {
       id: this.name,
-      config: props ? JSON.stringify(props, null, 2) : undefined,
+      config: JSON.stringify(config, null, 2),
       displayName: this.name,
     };
   }
