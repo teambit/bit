@@ -21,13 +21,13 @@ export class TypeSchema extends SchemaNode {
 
   toString(options?: { color?: boolean }) {
     const bold = options?.color ? chalk.bold : (str: string) => str;
-    return `${bold(this.name)}: ${this.type.toString(options)}`;
+    return `type ${bold(this.name)}: ${this.type.toString(options)}`;
   }
 
   toFullSignature(options?: { showDocs?: boolean }): string {
     const typeSignature = this.type.toFullSignature(options);
 
-    let signature = `${this.name}: ${typeSignature}`;
+    let signature = `type ${this.name}: ${typeSignature}`;
 
     if (options?.showDocs && this.doc) {
       const docString = this.doc.toFullSignature();
