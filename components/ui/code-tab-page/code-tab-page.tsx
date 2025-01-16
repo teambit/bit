@@ -56,7 +56,6 @@ export function resolveFilePath(
   if (!requestedPath) return mainFile;
 
   const normalized = path.resolve(requestedPath);
-  console.log('🚀 ~ file: code-tab-page.tsx:61 ~ normalized:', normalized);
 
   if (fileTree.includes(normalized)) return normalized;
 
