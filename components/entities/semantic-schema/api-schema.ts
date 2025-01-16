@@ -77,8 +77,8 @@ export class APISchema extends SchemaNode {
       if (!objects.length) {
         return '';
       }
-      // return `${chalk.green.bold(sectionName)}\n${objects.map((c) => c.toString({ color: true })).join('\n')}\n\n`;
-      return `${chalk.green.bold(sectionName)}\n${objects.map((c) => c.toFullSignature()).join('\n')}\n\n`;
+
+      return `${chalk.green.bold(sectionName)}\n${objects.map((c) => c.toString({ color: true })).join('\n')}\n\n`;
     };
 
     return (
