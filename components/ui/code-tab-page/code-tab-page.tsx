@@ -37,8 +37,14 @@ export type CodePageProps = {
 } & HTMLAttributes<HTMLDivElement>;
 
 /**
- * Resolves a requested file path against a file tree, handling extension mappings and index files.
- * Maintains priority: exact match -> extension variants -> index files -> main file
+ * Resolves a requested file path against a file tree, handling extension mappings,
+ * parent directory traversal, and index files.
+ *
+ * @param requestedPath The path to resolve (can include ./, ../, etc)
+ * @param fileTree Array of available files
+ * @param mainFile Default file to return if no match is found
+ * @param loadingCode Whether code is currently loading
+ * @returns Resolved file path or undefined if loading
  */
 export function resolveFilePath(
   requestedPath: string | undefined,
@@ -49,16 +55,14 @@ export function resolveFilePath(
   if (loadingCode) return undefined;
   if (!requestedPath) return mainFile;
 
-  // Normalize path and remove leading ./
-  const normalized = path.normalize(requestedPath).replace(/^\.\//, '');
+  const normalized = path.resolve(requestedPath);
+  console.log('🚀 ~ file: code-tab-page.tsx:61 ~ normalized:', normalized);
 
-  // First priority: exact match
   if (fileTree.includes(normalized)) return normalized;
 
   const requestedExt = path.extname(normalized);
   const basePathWithoutExt = requestedExt ? normalized.slice(0, -requestedExt.length) : normalized;
 
-  // Handle JS family to TS family mappings including .tsx
   const getTypeScriptVariants = (ext: string): string[] => {
     switch (ext) {
       case '.js':
@@ -74,51 +78,39 @@ export function resolveFilePath(
     }
   };
 
-  // Get possible extensions in priority order
   const possibleExtensions = requestedExt
     ? [requestedExt, ...getTypeScriptVariants(requestedExt)]
     : ['.ts', '.tsx', '.js'];
 
-  // Create all possible paths while maintaining priority
   const possiblePaths = [
     normalized,
-    // Try exact path with different extensions
     ...possibleExtensions.map((ext) => `${basePathWithoutExt}${ext}`),
-    // Try index files with the same extension priority
     ...possibleExtensions.map((ext) => path.join(normalized, `index${ext}`)),
-    // Try directory index with extensions
     ...possibleExtensions.map((ext) => path.join(basePathWithoutExt, `index${ext}`)),
-  ];
+  ].map((p) => path.resolve(p));
 
-  // Find all matching files
-  const matchingFiles = fileTree.filter((file) => possiblePaths.includes(file));
+  const matchingFiles = fileTree.filter((file) => possiblePaths.includes(path.resolve(file)));
 
   if (matchingFiles.length > 0) {
-    // If exact match exists, return it
     if (matchingFiles.includes(normalized)) {
       return normalized;
     }
 
-    // Order by priority
     const ordered = matchingFiles.sort((a, b) => {
       const extA = path.extname(a);
       const extB = path.extname(b);
 
-      // 1. Exact extension match gets highest priority
       if (extA === requestedExt && extB !== requestedExt) return -1;
       if (extB === requestedExt && extA !== requestedExt) return 1;
 
-      // 2. TypeScript variants (.ts/.tsx) over JavaScript
       const isTypeScriptA = ['.ts', '.tsx'].includes(extA);
       const isTypeScriptB = ['.ts', '.tsx'].includes(extB);
       if (isTypeScriptA && !isTypeScriptB) return -1;
       if (isTypeScriptB && !isTypeScriptA) return 1;
 
-      // 3. Between TypeScript variants, prefer .ts over .tsx
       if (extA === '.ts' && extB === '.tsx') return -1;
       if (extA === '.tsx' && extB === '.ts') return 1;
 
-      // 4. Shorter paths (more direct matches) get priority
       return a.length - b.length;
     });
 
