@@ -16,7 +16,7 @@ import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { CompositionGallery, CompositionGallerySkeleton } from '@teambit/compositions.panels.composition-gallery';
 import { useThemePicker } from '@teambit/base-react.themes.theme-switcher';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
-import { UsePreviewSandboxSlot } from '@teambit/compositions/compositions.ui.runtime';
+import { UsePreviewSandboxSlot } from '@teambit/compositions';
 import { ReadmeSkeleton } from './readme-skeleton';
 import styles from './overview.module.scss';
 
