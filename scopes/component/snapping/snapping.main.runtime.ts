@@ -70,6 +70,7 @@ import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 
 export type PackageIntegritiesByPublishedPackages = Map<string, string | undefined>;
 
@@ -777,9 +778,10 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
   }
 
   async _addDependenciesGraphToComponents(components: Component[]): Promise<void> {
-    if (this.workspace == null) {
+    if (!this.workspace) {
       return;
     }
+    this.logger.setStatusLine('adding dependencies graph...');
     this.logger.profile('snap._addDependenciesGraphToComponents');
     const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(components);
     const options = {
@@ -787,8 +789,9 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       rootComponentsPath: this.workspace.rootComponentsPath,
       componentIdByPkgName,
     };
-    await Promise.all(
-      components.map(async (component) => {
+    await pMapPool(
+      components,
+      async (component) => {
         if (component.state._consumer.componentMap?.rootDir) {
           await this.dependencyResolver.addDependenciesGraph(
             component,
@@ -796,8 +799,10 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
             options
           );
         }
-      })
+      },
+      { concurrency: 10 }
     );
+    this.logger.clearStatusLine();
     this.logger.profile('snap._addDependenciesGraphToComponents');
   }
 
