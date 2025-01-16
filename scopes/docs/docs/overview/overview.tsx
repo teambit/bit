@@ -6,12 +6,17 @@ import { flatten } from 'lodash';
 // import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
-import { ComponentPreview, ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
+import {
+  ComponentPreview,
+  ComponentPreviewProps,
+  SandboxPermissionsAggregator,
+} from '@teambit/preview.ui.component-preview';
 // import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { CompositionGallery, CompositionGallerySkeleton } from '@teambit/compositions.panels.composition-gallery';
 import { useThemePicker } from '@teambit/base-react.themes.theme-switcher';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
+import { UsePreviewSandboxSlot } from '@teambit/compositions';
 import { ReadmeSkeleton } from './readme-skeleton';
 import styles from './overview.module.scss';
 
@@ -40,9 +45,17 @@ export type OverviewProps = {
   previewProps?: Partial<ComponentPreviewProps>;
   getEmptyState?: () => ComponentType | undefined;
   TaggedAPI?: React.ComponentType<{ componentId: string }>;
+  usePreviewSandboxSlot?: UsePreviewSandboxSlot;
 };
 
-export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyState, TaggedAPI }: OverviewProps) {
+export function Overview({
+  titleBadges,
+  overviewOptions,
+  previewProps,
+  getEmptyState,
+  TaggedAPI,
+  usePreviewSandboxSlot,
+}: OverviewProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useComponentDescriptor();
   const theme = useThemePicker();
@@ -58,7 +71,8 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
   }, [isScaling, includesEnvTemplate]);
   const { isMinimal } = useWorkspaceMode();
   const [isLoading, setLoading] = useState(defaultLoadingState);
-
+  const previewSandboxHooks = usePreviewSandboxSlot?.values() ?? [];
+  const [sandboxValue, setSandboxValue] = useState('');
   const iframeQueryParams = `onlyOverview=${component.preview?.onlyOverview || 'false'}&skipIncludes=${
     component.preview?.skipIncludes || component.preview?.onlyOverview
   }`;
@@ -88,6 +102,11 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
       className={classNames(styles.overviewWrapper, isLoading && styles.noOverflow)}
       key={`${component.id.toString()}`}
     >
+      <SandboxPermissionsAggregator
+        hooks={previewSandboxHooks}
+        onSandboxChange={setSandboxValue}
+        component={component}
+      />
       {showHeader && (
         <ComponentOverview
           className={classNames(styles.componentOverviewBlock, !isScaling && styles.legacyPreview)}
@@ -118,6 +137,7 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
                 viewport={null}
                 fullContentHeight
                 disableScroll={true}
+                sandbox={sandboxValue}
                 {...rest}
                 component={component}
                 style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
@@ -135,6 +155,7 @@ export function Overview({ titleBadges, overviewOptions, previewProps, getEmptyS
                 viewport={null}
                 fullContentHeight
                 disableScroll={true}
+                sandbox={sandboxValue}
                 {...rest}
                 component={component}
                 style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
