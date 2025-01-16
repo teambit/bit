@@ -1,12 +1,13 @@
-import gitconfig from 'gitconfig';
+import gitconfig from '@teambit/gitconfig';
 import R from 'ramda';
 import { BitError } from '@teambit/bit-error';
-import { BASE_DOCS_DOMAIN, ENV_VARIABLE_CONFIG_PREFIX } from '@teambit/legacy.constants';
 import Config from './config';
+
+export const ENV_VARIABLE_CONFIG_PREFIX = 'BIT_CONFIG_';
 
 export function set(key: string, val: string): Promise<Config> {
   if (!key || !val) {
-    throw new BitError(`missing a configuration key and value. ${BASE_DOCS_DOMAIN}config/bit-config`);
+    throw new BitError(`missing a configuration key and value. https://bit.dev/config/bit-config`);
   }
   return Config.load().then((config) => {
     config.set(key, val);
