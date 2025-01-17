@@ -9,7 +9,7 @@ import { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { TagResults, SnappingMain } from './snapping.main.runtime';
-import { BasicTagParams } from './tag-model-component';
+import { BasicTagParams } from './version-maker';
 
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
 export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
