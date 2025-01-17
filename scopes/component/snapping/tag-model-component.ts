@@ -255,7 +255,7 @@ export async function tagModelComponent({
   const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
   const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
   const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
-  const allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
+  let allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
 
   const messagesFromEditorFetcher = new MessagePerComponentFetcher(idsToTag, autoTagIds);
   const getMessagePerId = async () => {
@@ -344,7 +344,11 @@ export async function tagModelComponent({
   }
 
   const publishedPackages: string[] = [];
-  let harmonyComps: Component[] = [];
+  const harmonyCompsToTag = await (workspace || scope).getManyByLegacy(allComponentsToTag);
+  // this is not necessarily the same as the previous allComponentsToTag. although it should be, because
+  // harmonyCompsToTag is created from allComponentsToTag. however, for aspects, the getMany returns them from cache
+  // and therefore, their instance of ConsumerComponent can be different than the one in allComponentsToTag.
+  allComponentsToTag = harmonyCompsToTag.map((c) => c.state._consumer);
   if (build) {
     const onTagOpts: OnTagOpts = {
       disableTagAndSnapPipelines,
@@ -358,20 +362,25 @@ export async function tagModelComponent({
     const isolateOptions = { packageManagerConfigRootDir, seedersOnly, populateArtifactsIgnorePkgJson };
     const builderOptions = { exitOnFirstFailedTask, skipTests, skipTasks: skipTasksParsed };
 
-    const componentsToBuild = allComponentsToTag.filter((c) => !c.isRemoved());
+    const componentsToBuild = harmonyCompsToTag.filter((c) => !c.isDeleted());
     if (componentsToBuild.length) {
-      await scope.reloadAspectsWithNewVersion(componentsToBuild);
-      harmonyComps = await (workspace || scope).getManyByLegacy(componentsToBuild);
-      const { builderDataMap } = await builder.tagListener(harmonyComps, onTagOpts, isolateOptions, builderOptions);
+      const componentsToBuildLegacy: ConsumerComponent[] = componentsToBuild.map((c) => c.state._consumer);
+      await scope.reloadAspectsWithNewVersion(componentsToBuildLegacy);
+      const { builderDataMap } = await builder.tagListener(
+        componentsToBuild,
+        onTagOpts,
+        isolateOptions,
+        builderOptions
+      );
       const buildResult = scope.builderDataMapToLegacyOnTagResults(builderDataMap);
 
-      snapping._updateComponentsByTagResult(componentsToBuild, buildResult);
-      const packageIntegritiesByPublishedPackages = snapping._getPublishedPackages(componentsToBuild);
+      snapping._updateComponentsByTagResult(componentsToBuildLegacy, buildResult);
+      const packageIntegritiesByPublishedPackages = snapping._getPublishedPackages(componentsToBuildLegacy);
       publishedPackages.push(...Array.from(packageIntegritiesByPublishedPackages.keys()));
 
       addIntegritiesToConsumerComponentsGraphs(packageIntegritiesByPublishedPackages, allComponentsToTag);
-      addBuildStatus(componentsToBuild, BuildStatus.Succeed);
-      await mapSeries(harmonyComps, (comp) => snapping.enrichComp(comp));
+      addBuildStatus(componentsToBuildLegacy, BuildStatus.Succeed);
+      await mapSeries(componentsToBuild, (comp) => snapping.enrichComp(comp));
       if (populateArtifactsFrom) await updateHiddenProp(scope, populateArtifactsFrom);
     }
   }
@@ -387,10 +396,7 @@ export async function tagModelComponent({
     await legacyScope.objects.persist();
     await removeMergeConfigFromComponents(unmergedComps, allComponentsToTag, workspace);
     if (workspace) {
-      await linkToNodeModulesByComponents(
-        harmonyComps.length ? harmonyComps : await workspace.scope.getManyByLegacy(allComponentsToTag),
-        workspace
-      );
+      await linkToNodeModulesByComponents(harmonyCompsToTag, workspace);
     }
   }
 
