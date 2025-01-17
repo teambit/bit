@@ -7,7 +7,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { IpcEventsAspect } from './ipc-events.aspect';
 
-type EventName = 'onPostInstall' | 'onPostObjectsPersist';
+type EventName = 'onPostInstall' | 'onPostObjectsPersist' | 'onNotifySSE';
 
 type GotEvent = (eventName: EventName) => Promise<void>;
 type GotEventSlot = SlotRegistry<GotEvent>;
@@ -57,6 +57,15 @@ export class IpcEventsMain {
     const filename = path.join(this.eventsDir, eventName);
     const content = data ? JSON.stringify(data, undefined, 2) : '';
     await fs.outputFile(filename, content);
+  }
+
+  /**
+   * This is helpful when all we want is to notify the watchers that a new event has been written to the filesystem.
+   * It doesn't require the watchers to register to GotEventSlot. The watchers always listen to this onNotifySSE event,
+   * and once they get it, they simply send a server-send-event to the clients.
+   */
+  async publishIpcOnNotifySseEvent(event: string, data?: Record<string, any>) {
+    await this.publishIpcEvent('onNotifySSE', { event, data });
   }
 
   get eventsDir() {

@@ -26,6 +26,7 @@ import { CheckTypes } from './check-types';
 import { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';
 import { Logger } from '@teambit/logger';
+import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: ComponentID; componentIds: ComponentID[] };
 
@@ -192,10 +193,14 @@ export class Watcher {
       }
       if (dirname(filePath) === this.ipcEventsDir) {
         const eventName = basename(filePath);
-        if (eventName !== 'onPostInstall' && eventName !== 'onPostObjectsPersist') {
-          this.watcherMain.logger.warn(`eventName ${eventName} is not recognized, please handle it`);
+        if (eventName === 'onNotifySSE') {
+          const content = await fs.readFile(filePath, 'utf8');
+          this.logger.debug(`Watcher, onNotifySSE ${content}`);
+          const parsed = JSON.parse(content);
+          sendEventsToClients(parsed.event, parsed);
+        } else {
+          await this.watcherMain.ipcEvents.triggerGotEvent(eventName as any);
         }
-        await this.watcherMain.ipcEvents.triggerGotEvent(eventName as any);
         return { results: [], files: [filePath] };
       }
       if (filePath.endsWith(WORKSPACE_JSONC)) {
