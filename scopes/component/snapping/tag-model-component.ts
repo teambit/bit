@@ -309,38 +309,44 @@ export async function tagModelComponent({
   if (soft) {
     if (!consumer) throw new Error(`unable to soft-tag without consumer`);
     consumer.updateNextVersionOnBitmap(allComponentsToTag, preReleaseId);
-  } else {
-    await snapping._addFlattenedDependenciesToComponents(allComponentsToTag, rebuildDepsGraph);
-    await snapping._addDependenciesGraphToComponents(components);
-    await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
-    if (!build) emptyBuilderData(allComponentsToTag);
-    addBuildStatus(allComponentsToTag, BuildStatus.Pending);
+    return {
+      taggedComponents: componentsToTag,
+      autoTaggedResults: autoTagData,
+      publishedPackages: [],
+      stagedConfig,
+    };
+  }
 
-    const currentLane = consumer ? consumer.getCurrentLaneId() : undefined;
-    await mapSeries(allComponentsToTag, async (component) => {
-      const results = await snapping._addCompToObjects({
-        source: component,
-        lane,
-        shouldValidateVersion: Boolean(build),
-        addVersionOpts: {
-          addToUpdateDependentsInLane: updateDependentsOnLane,
-          setHeadAsParent,
-          detachHead,
-          overrideHead: overrideHead,
-        },
-      });
-      if (workspace) {
-        const modelComponent = component.modelComponent || (await legacyScope.getModelComponent(component.id));
-        await updateVersions(workspace, stagedConfig!, currentLane!, modelComponent, results.addedVersionStr, true);
-      } else {
-        const tagData = tagDataPerComp?.find((t) => t.componentId.isEqualWithoutVersion(component.id));
-        if (tagData?.isNew) results.version.removeAllParents();
-      }
+  await snapping._addFlattenedDependenciesToComponents(allComponentsToTag, rebuildDepsGraph);
+  await snapping._addDependenciesGraphToComponents(components);
+  await snapping.throwForDepsFromAnotherLane(allComponentsToTag);
+  if (!build) emptyBuilderData(allComponentsToTag);
+  addBuildStatus(allComponentsToTag, BuildStatus.Pending);
+
+  const currentLane = consumer ? consumer.getCurrentLaneId() : undefined;
+  await mapSeries(allComponentsToTag, async (component) => {
+    const results = await snapping._addCompToObjects({
+      source: component,
+      lane,
+      shouldValidateVersion: Boolean(build),
+      addVersionOpts: {
+        addToUpdateDependentsInLane: updateDependentsOnLane,
+        setHeadAsParent,
+        detachHead,
+        overrideHead: overrideHead,
+      },
     });
-
     if (workspace) {
-      await workspace.scope.legacyScope.stagedSnaps.write();
+      const modelComponent = component.modelComponent || (await legacyScope.getModelComponent(component.id));
+      await updateVersions(workspace, stagedConfig!, currentLane!, modelComponent, results.addedVersionStr, true);
+    } else {
+      const tagData = tagDataPerComp?.find((t) => t.componentId.isEqualWithoutVersion(component.id));
+      if (tagData?.isNew) results.version.removeAllParents();
     }
+  });
+
+  if (workspace) {
+    await workspace.scope.legacyScope.stagedSnaps.write();
   }
 
   const publishedPackages: string[] = [];
@@ -385,19 +391,16 @@ export async function tagModelComponent({
     }
   }
 
-  let removedComponents: ComponentIdList | undefined;
-  if (!soft) {
-    removedComponents = await removeDeletedComponentsFromBitmap(allComponentsToTag, workspace);
-    if (lane) {
-      const msgStr = message ? ` (${message})` : '';
-      const laneHistory = await legacyScope.lanes.updateLaneHistory(lane, `snap${msgStr}`);
-      legacyScope.objects.add(laneHistory);
-    }
-    await legacyScope.objects.persist();
-    await removeMergeConfigFromComponents(unmergedComps, allComponentsToTag, workspace);
-    if (workspace) {
-      await linkToNodeModulesByComponents(harmonyCompsToTag, workspace);
-    }
+  const removedComponents = await removeDeletedComponentsFromBitmap(allComponentsToTag, workspace);
+  if (lane) {
+    const msgStr = message ? ` (${message})` : '';
+    const laneHistory = await legacyScope.lanes.updateLaneHistory(lane, `snap${msgStr}`);
+    legacyScope.objects.add(laneHistory);
+  }
+  await legacyScope.objects.persist();
+  await removeMergeConfigFromComponents(unmergedComps, allComponentsToTag, workspace);
+  if (workspace) {
+    await linkToNodeModulesByComponents(harmonyCompsToTag, workspace);
   }
 
   // clear all objects. otherwise, ModelComponent has the wrong divergeData
