@@ -205,6 +205,64 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "noProxy": {
+          "type": "string",
+          "description": "A comma-separated string of domain extensions that a proxy should not be used for."
+        },
+        "localAddress": {
+          "type": "string",
+          "description": "The IP address of the local interface to use when making connections to the npm registry."
+        },
+        "maxSockets": {
+          "type": "number",
+          "description": "The maximum number of connections to use per origin (protocol/host/port combination)."
+        },
+        "networkConcurrency": {
+          "type": "number",
+          "description": "Controls the maximum number of HTTP(S) requests to process simultaneously."
+        },
+        "installFromBitDevRegistry": {
+          "type": "boolean",
+          "description": "In case you want to disable this proxy set this config to false."
+        },
+        "packageManagerArgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Map of extra arguments to pass to the configured package manager upon the installation of dependencies."
+        },
+        "sideEffectsCache": {
+          "type": "boolean",
+          "description": "Use and cache the results of (pre/post)install hooks."
+        },
+        "rootComponents": {
+          "type": "boolean",
+          "description": "The list of components that should be installed in isolation from the workspace. The component's package names should be used in this list, not their component IDs."
+        },
+        "nodeVersion": {
+          "type": "string",
+          "description": "The node version to use when checking a package's engines setting."
+        },
+        "engineStrict": {
+          "type": "boolean",
+          "description": "Refuse to install any package that claims to not be compatible with the current Node.js version."
+        },
+        "linkCoreAspects": {
+          "type": "boolean",
+          "description": "This setting is 'true' by default and tells bit to link core aspects to the node_modules of the workspace. It only makes sense to set this to 'false' in a workspace in which core aspects are actually developed."
+        },
+        "isolatedCapsules": {
+          "type": "boolean",
+          "description": "When false, Bit will create a shared node_modules directory for all components in a capsule."
+        },
+        "neverBuiltDependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ignore the builds of specific dependencies. The 'preinstall', 'install', and 'postinstall' scripts of the listed packages will not be executed during installation."
         }
       },
       "required": []
