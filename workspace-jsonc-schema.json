@@ -187,6 +187,24 @@
           "description": "If true, then Bit will add the '--strict-peer-dependencies' option when invoking package managers. This causes 'bit install' to fail if there are unsatisfied peer dependencies, which is an invalid state that can cause build failures or incompatible dependency versions. (For historical reasons, JavaScript package managers generally do not treat this invalid state as an error.) The default value is false to avoid legacy compatibility issues. It is strongly recommended to set strictPeerDependencies=true.",
           "type": "boolean",
           "default": false
+        },
+        "savePrefix": {
+          "type": "string",
+          "description": "Set the prefix to use when adding dependency to workspace.jsonc via bit install. To lock version to exact version you can use an empty string (default)."
+        },
+        "overrides": {
+          "type": "object",
+          "description": "This field allows to instruct the package manager to override any dependency in the dependency graph. This is useful to enforce all your packages to use a single version of a dependency, backport a fix, or replace a dependency with a fork.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "capsulesOverrides": {
+          "type": "object",
+          "description": "This is similar to overrides, but will only affect installation in capsules. In case overrides is configured and this not, the regular overrides will affect capsules as well. In case both configured, capsulesOverrides will be used for capsules, and overrides will affect the workspace.",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "required": []
