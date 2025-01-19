@@ -44,7 +44,7 @@ import {
   CENTRAL_BIT_HUB_URL_IMPORTER_V2,
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { ObjectItemsStream, ObjectList, ComponentLog } from '@teambit/scope.objects';
+import { ObjectItemsStream, ObjectList, ComponentLog } from '@teambit/objects';
 import { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
 import { remoteErrorHandler } from '../remote-error-handler';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
