@@ -308,6 +308,31 @@
       },
       "additionalProperties": true,
       "required": []
+    },
+    "teambit.preview/preview": {
+      "description": "Main configuration for component preview.",
+      "type": "object",
+      "properties": {
+        "bundlingStrategy": {
+          "type": "string",
+          "enum": ["component", "env"],
+          "description": "The strategy to use for bundling components."
+        },
+        "disabled": {
+          "type": "boolean",
+          "description": "Whether the preview is disabled.",
+          "default": false
+        },
+        "maxChunkSize": {
+          "type": "number",
+          "description": "Limit concurrent components when running the bundling step for your bundler during generate components preview task. This helps mitigate large memory consumption for the build pipeline. This may increase the overall time for the generate-preview task, but reduce memory footprint. Default - no limit."
+        },
+        "onlyOverview": {
+          "type": "boolean",
+          "description": "enables the only overview feature flag"
+        }
+      },
+      "required": []
     }
   },
   "required": [
