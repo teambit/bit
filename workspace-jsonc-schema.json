@@ -19,10 +19,6 @@
           "description": "set the icon url to be shown on the Bit server.",
           "type": "string"
         },
-        "defaultOwner": {
-          "description": "applies only on bit.dev. configure the main owner of your workspace.",
-          "type": "string"
-        },
         "defaultScope": {
           "description": "set the default scope when there is no matching for the component in the components array.",
           "type": "string"
@@ -31,9 +27,19 @@
           "description": "set the default directory when there is no matching for the component in the components array.",
           "type": "string"
         },
-        "vendorDirectory": {
-          "description": "",
+        "rootComponentsDirectory": {
+          "description": "sets the location of the root components directory.",
           "type": "string"
+        },
+        "resolveAspectsFromNodeModules": {
+          "description": "Setting this to true enables resolving scope aspects from the workspace's node_modules; otherwise, aspects are resolved only from the scope aspects capsule",
+          "type": "boolean",
+          "default": false
+        },
+        "resolveEnvsFromRoots": {
+          "description": "If true, envs are resolved from the env's root node_modules or workspace node_modules; if false, only from the scope envs capsule",
+          "type": "boolean",
+          "default": false
         }
       },
       "required": [
@@ -48,7 +54,8 @@
           "description": "main configuration for bit's component dependency resolution.",
           "type": "string",
           "examples": [
-            "teambit.dependencies/pnpm"
+            "teambit.dependencies/pnpm",
+            "teambit.dependencies/yarn"
           ]
         },
         "strictPeerDependencies": {
@@ -67,31 +74,10 @@
             "dependencies": {
               "type": "object"
             },
-            "devDependencies": {
-              "type": "object"
-            },
             "peerDependencies": {
               "type": "object"
             }
           }
-        }
-      },
-      "required": [
-        "packageManager"
-      ]
-    },
-    "teambit.react/react": {
-      "description": "apply the react environment on components.",
-      "type": "object",
-      "properties": {
-        "reactVersion": {
-          "description": "sets react version.",
-          "type": "string",
-          "default": ">=16.0.0",
-          "examples": [
-            ">=16.0.0",
-            ">=15.0.0"
-          ]
         }
       }
     },
