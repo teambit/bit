@@ -44,7 +44,7 @@ import {
   CENTRAL_BIT_HUB_URL_IMPORTER_V2,
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { ObjectItemsStream, ObjectList, ComponentLog } from '@teambit/objects';
+import { ObjectItemsStream, ObjectList, ComponentLog } from '@teambit/scope.objects';
 import { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
 import { remoteErrorHandler } from '../remote-error-handler';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
@@ -255,27 +255,39 @@ export class Http implements Network {
     errors: { [scopeName: string]: string };
     metadata?: { jobs?: string[] };
   }> {
-    const route = 'api/put';
-    logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
-    const pack = objectList.toTar();
-    const opts = this.addAgentIfExist({
-      method: 'post',
-      body: pack,
-      headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
-    });
-    const res = await _fetch(`${this.url}/${route}`, opts);
-    logger.debug(
-      `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
-    );
+    const _data = await retry(
+      async () => {
+        const route = 'api/put';
+        logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
+        const pack = objectList.toTar();
+        const opts = this.addAgentIfExist({
+          method: 'post',
+          body: pack,
+          headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
+        });
+        const res = await _fetch(`${this.url}/${route}`, opts);
+        logger.debug(
+          `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
+        );
 
-    // @ts-ignore TODO: need to fix this
-    const results = await this.readPutCentralStream(res.body);
-    if (!results.data) throw new Error(`HTTP results are missing "data" property`);
-    if (results.data.isError) {
-      throw new UnexpectedNetworkError(results.message);
-    }
-    await this.throwForNonOkStatus(res);
-    return results.data;
+        // @ts-ignore TODO: need to fix this
+        const results = await this.readPutCentralStream(res.body);
+        if (!results.data) throw new Error(`HTTP results are missing "data" property`);
+        if (results.data.isError) {
+          throw new UnexpectedNetworkError(results.message);
+        }
+        await this.throwForNonOkStatus(res);
+        return results.data;
+      },
+      {
+        retries: 3,
+        minTimeout: 5000,
+        onRetry: (e: any) => {
+          logger.debug(`failed to export with error: ${e?.message || ''}`);
+        },
+      }
+    );
+    return _data;
   }
 
   async deleteViaCentralHub(
