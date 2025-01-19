@@ -1,5 +1,5 @@
 {
-  "$schema": "",
+  "$schema": "./workspace-jsonc-schema.json",
   "teambit.workspace/workspace": {
     "name": "bit",
     "icon": "https://static.bit.dev/bit-logo.svg",
