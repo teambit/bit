@@ -333,6 +333,37 @@
         }
       },
       "required": []
+    },
+    "teambit.generator/generator": {
+      "description": "Main configuration for component generator.",
+      "type": "object",
+      "properties": {
+        "aspects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of aspects to include in the list of templates."
+        },
+        "hideCoreTemplates": {
+          "type": "boolean",
+          "description": "By default core templates are shown. Use this to hide them unless `--show-all` flag of `bit templates` was used."
+        },
+        "envs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            "bitdev.node/node-env",
+            "bitdev.react/react-env",
+            "bitdev.vue/vue-env",
+            "bitdev.angular/angular-env",
+            "bitdev.symphony/envs/symphony-env"
+          ],
+          "description": "Array of environments to include in the list of templates."
+        }
+      }
     }
   },
   "required": [
