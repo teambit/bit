@@ -364,6 +364,23 @@
           "description": "Array of environments to include in the list of templates."
         }
       }
+    },
+    "teambit.component/issues": {
+      "type": "object",
+      "properties": {
+        "ignoreIssues": {
+          "description": "List of issues to ignore",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": [
+            "CircularDependencies",
+            "DuplicateComponentAndPackage"
+          ]
+        }
+      },
+      "required": ["ignoreIssues"]
     }
   },
   "required": [
