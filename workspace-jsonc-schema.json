@@ -50,36 +50,146 @@
       "description": "Main configuration for component dependency resolution.",
       "type": "object",
       "properties": {
+        "policy": {
+          "type": "object",
+          "description": "Dependency policies for the workspace.",
+          "properties": {
+            "dependencies": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "A map of dependencies and their versions."
+            },
+            "peerDependencies": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "A map of peer dependencies and their versions."
+            }
+          },
+          "required": []
+        },
         "packageManager": {
-          "description": "main configuration for bit's component dependency resolution.",
           "type": "string",
+          "description": "The package manager to use (e.g., yarn, pnpm).",
           "examples": [
             "teambit.dependencies/pnpm",
             "teambit.dependencies/yarn"
           ]
         },
+        "proxy": {
+          "type": "string",
+          "description": "A proxy server for outgoing network requests by the package manager."
+        },
+        "httpsProxy": {
+          "type": "string",
+          "description": "A proxy server for outgoing https requests by the package manager."
+        },
+        "ca": {
+          "type": "string",
+          "description": "A certificate authority for the package manager."
+        },
+        "cert": {
+          "type": "string",
+          "description": "A client certificate for the package manager."
+        },
+        "key": {
+          "type": "string",
+          "description": "A client key for the package manager."
+        },
+        "strictSsl": {
+          "type": "boolean",
+          "description": "Whether to enforce strict SSL for the package manager."
+        },
+        "fetchTimeout": {
+          "type": "number",
+          "description": "The fetch timeout for the package manager."
+        },
+        "fetchRetries": {
+          "type": "number",
+          "description": "The number of fetch retries for the package manager."
+        },
+        "fetchRetryFactor": {
+          "type": "number",
+          "description": "The fetch retry factor for the package manager."
+        },
+        "fetchRetryMintimeout": {
+          "type": "number",
+          "description": "The minimum fetch retry timeout for the package manager."
+        },
+        "fetchRetryMaxtimeout": {
+          "type": "number",
+          "description": "The maximum fetch retry timeout for the package manager."
+        },
+        "nodeLinker": {
+          "type": "string",
+          "enum": ["hoisted", "isolated"],
+          "description": "The node linker to use (hoisted or isolated)."
+        },
+        "packageImportMethod": {
+          "type": "string",
+          "enum": ["auto", "hardlink", "copy", "clone"],
+          "description": "The package import method for the package manager."
+        },
+        "peerDependencyRules": {
+          "type": "object",
+          "description": "Rules for peer dependencies.",
+          "properties": {
+            "ignoreMissing": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "List of peer dependencies to ignore if they are missing."
+            },
+            "allowAny": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "List of peer dependencies that are allowed to have any version."
+            },
+            "allowedVersions": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Map of peer dependencies and their allowed versions."
+            }
+          }
+        },
+        "preferOffline": {
+          "type": "boolean",
+          "description": "If true, prefer to use cached packages when available."
+        },
+        "capsuleSelfReference": {
+          "type": "boolean",
+          "description": "When true, components in capsules are symlinked into their own node_modules."
+        },
+        "hoistPatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Patterns for packages to hoist to node_modules/.pnpm/node_modules."
+        },
+        "hoistInjectedDependencies": {
+          "type": "boolean",
+          "description": "When true, dependencies from the workspace are hoisted to node_modules/.pnpm/node_modules even if they are found in the root node_modules."
+        },
+        "autoInstallPeers": {
+          "type": "boolean",
+          "description": "Tells pnpm to automatically install peer dependencies. It is true by default."
+        },
         "strictPeerDependencies": {
           "description": "If true, then Bit will add the '--strict-peer-dependencies' option when invoking package managers. This causes 'bit install' to fail if there are unsatisfied peer dependencies, which is an invalid state that can cause build failures or incompatible dependency versions. (For historical reasons, JavaScript package managers generally do not treat this invalid state as an error.) The default value is false to avoid legacy compatibility issues. It is strongly recommended to set strictPeerDependencies=true.",
           "type": "boolean",
           "default": false
-        },
-        "extraArgs": {
-          "description": "map of extra arguments to pass to the configured package manager upon the installation of dependencies.",
-          "type": "array"
-        },
-        "policy": {
-          "description": "Dependency type is defined by the file that import it. For example, library will be devDependency when the file that imports it is a test file.",
-          "type": "object",
-          "properties": {
-            "dependencies": {
-              "type": "object"
-            },
-            "peerDependencies": {
-              "type": "object"
-            }
-          }
         }
-      }
+      },
+      "required": []
     },
     "teambit.workspace/variants": {
       "description": "Workspace variants allow to set different subsets of configuration for components in your workspace. This is extremely useful for upgrading, aligning and building components with a new set of dependencies.",
@@ -197,9 +307,7 @@
         }
       },
       "additionalProperties": true,
-      "required": [
-
-      ]
+      "required": []
     }
   },
   "required": [
