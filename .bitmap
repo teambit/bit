@@ -210,7 +210,23 @@
         "scope": "teambit.react",
         "version": "1.0.27",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/bit-react-transformer"
+        "rootDir": "scopes/react/bit-react-transformer",
+        "config": {
+            "teambit.dependencies/dependency-resolver": {
+                "policy": {
+                    "dependencies": {
+                        "@babel/core": "-",
+                        "@babel/types": "-"
+                      },
+                      "devDependencies": {
+                        "@babel/core": "7.19.6",
+                        "@babel/types": "7.22.3",
+                        "@types/mocha": "9.1.0"
+                    },
+                    "peerDependencies": {}
+                }
+            }
+        }
     },
     "bit": {
         "name": "bit",
