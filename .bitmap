@@ -1979,7 +1979,7 @@
     "ui/docs-app": {
         "name": "ui/docs-app",
         "scope": "teambit.react",
-        "version": "1.0.25",
+        "version": "1.0.26",
         "mainFile": "index.tsx",
         "rootDir": "scopes/react/ui/docs-app"
     },
@@ -2000,7 +2000,7 @@
     "ui/docs/docs-content": {
         "name": "ui/docs/docs-content",
         "scope": "teambit.react",
-        "version": "0.0.33",
+        "version": "0.0.34",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/ui/docs/docs-content"
     },
