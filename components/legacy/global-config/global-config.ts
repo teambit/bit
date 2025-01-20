@@ -83,7 +83,7 @@ export function getSync(key: string): string | undefined {
   if (!isNil(val)) return val;
   const gitConfigCache = gitCache().get() || {};
   if (key in gitConfigCache) {
-    return gitConfigCache[val];
+    return gitConfigCache[key];
   }
   try {
     const gitVal = gitconfig.get.sync(key);
