@@ -1,5 +1,4 @@
 import * as path from 'path';
-import R from 'ramda';
 
 const MAX_LENGTH = 4096;
 /**
@@ -16,7 +15,7 @@ const INVALID_CHARS = ['<', '>', '|', '?', '*', ':', '"'];
 export default function isValidPath(pathStr: string): boolean {
   if (
     !pathStr ||
-    !R.is(String, pathStr) ||
+    typeof pathStr !== 'string' ||
     INVALID_CHARS.some((c) => pathStr.includes(c)) ||
     pathStr.length > MAX_LENGTH ||
     path.isAbsolute(pathStr) ||

@@ -1,4 +1,4 @@
-import R from 'ramda';
+import { clone } from 'lodash';
 
 export const systemFields = ['stack', 'code', 'errno', 'syscall'];
 
@@ -11,7 +11,7 @@ export default function cloneErrorObject(error: Error): Error {
     if (error[field]) err[field] = error[field];
   });
   Object.keys(error).forEach((key) => {
-    err[key] = R.clone(error[key]);
+    err[key] = clone(error[key]);
   });
   return err;
 }

@@ -1,5 +1,5 @@
 import gitconfig from '@teambit/gitconfig';
-import R from 'ramda';
+import { isNil } from 'lodash';
 import { BitError } from '@teambit/bit-error';
 import Config from './config';
 
@@ -55,7 +55,7 @@ export async function get(key: string): Promise<string | undefined> {
   }
   const config = await getConfigObject();
   const val = config ? config.get(key) : undefined;
-  if (!R.isNil(val)) return val;
+  if (!isNil(val)) return val;
   try {
     const gitVal = await gitconfig.get(key);
     return gitVal;
@@ -80,7 +80,7 @@ export function getSync(key: string): string | undefined {
   }
   const config = getConfigObject();
   const val = config ? config.get(key) : undefined;
-  if (!R.isNil(val)) return val;
+  if (!isNil(val)) return val;
   const gitConfigCache = gitCache().get() || {};
   if (key in gitConfigCache) {
     return gitConfigCache[val];

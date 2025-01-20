@@ -1,6 +1,5 @@
 import mapSeries from 'p-map-series';
-import { pickBy } from 'lodash';
-import R from 'ramda';
+import { pickBy, isEmpty } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import { logger } from '@teambit/legacy.logger';
 import { ConsumerComponent as Component, ComponentLoadOptions } from '@teambit/legacy.consumer-component';
@@ -43,7 +42,7 @@ export class ComponentConfig extends AbstractConfig {
     const superObject = super.toPlainObject();
     const componentObject = superObject;
     const isPropDefaultOrEmpty = (val, key) => {
-      if (key === 'overrides') return !R.isEmpty(val);
+      if (key === 'overrides') return !isEmpty(val);
       return true;
     };
     return pickBy(componentObject, isPropDefaultOrEmpty);
