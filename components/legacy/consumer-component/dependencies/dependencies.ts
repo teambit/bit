@@ -65,6 +65,7 @@ export default class Dependencies {
   cloneAsString(): Record<string, any>[] {
     return this.dependencies.map((dependency) => {
       const dependencyClone = cloneDeep(dependency);
+      // @ts-expect-error we want to change the type here explicitly
       dependencyClone.id = dependency.id.toString();
       return dependencyClone;
     });
@@ -73,6 +74,7 @@ export default class Dependencies {
   cloneAsObject(): Record<string, any>[] {
     return this.dependencies.map((dependency) => {
       const dependencyClone = cloneDeep(dependency);
+      // @ts-expect-error we want to change the type here explicitly
       dependencyClone.id = dependency.id.serialize();
       return dependencyClone;
     });

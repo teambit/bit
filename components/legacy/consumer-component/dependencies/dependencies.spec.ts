@@ -30,7 +30,9 @@ describe('Dependencies', () => {
     let validateFunc;
     beforeEach(() => {
       const dependenciesFixtureCloned = cloneDeep(dependenciesFixture);
+      // @ts-expect-error we want to change the type here explicitly
       dependenciesFixtureCloned.forEach((d) => (d.id = ComponentID.fromString(d.id)));
+      // @ts-expect-error that's good enough for testing
       dependencies = new Dependencies(dependenciesFixtureCloned);
       validateFunc = () => dependencies.validate();
     });
