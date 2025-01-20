@@ -93,7 +93,9 @@ export function ensureAndWriteJson(filePath: string, fileContent: any) {
 }
 
 export const FileStatusWithoutChalk = fromPairs(
-  Object.keys(FileStatus).map((status) => [status, removeChalkCharacters(FileStatus[status])])
+  Object.entries(FileStatus)
+    .map(([status, value]) => [status, removeChalkCharacters(value)])
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
 );
 
 export { VERSION_DELIMITER };
