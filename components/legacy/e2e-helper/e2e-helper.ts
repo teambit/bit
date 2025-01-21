@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import R from 'ramda';
+import { fromPairs } from 'lodash';
 import { FileStatus } from '@teambit/merging';
 import { VERSION_DELIMITER } from '@teambit/legacy.constants';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
@@ -92,8 +92,10 @@ export function ensureAndWriteJson(filePath: string, fileContent: any) {
   fs.writeJsonSync(filePath, fileContent, { spaces: 2 });
 }
 
-export const FileStatusWithoutChalk = R.fromPairs(
-  Object.keys(FileStatus).map((status) => [status, removeChalkCharacters(FileStatus[status])])
+export const FileStatusWithoutChalk = fromPairs(
+  Object.entries(FileStatus)
+    .map(([status, value]) => [status, removeChalkCharacters(value)])
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
 );
 
 export { VERSION_DELIMITER };

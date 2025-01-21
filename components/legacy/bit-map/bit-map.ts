@@ -2,8 +2,7 @@ import objectHash from 'object-hash';
 import json from 'comment-json';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { compact, uniq } from 'lodash';
-import R from 'ramda';
+import { compact, uniq, differenceWith, isEmpty, isString, unionWith, get } from 'lodash';
 import { LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -135,7 +134,7 @@ export class BitMap {
   }
 
   isEmpty() {
-    return R.isEmpty(this.components);
+    return isEmpty(this.components);
   }
 
   static mergeContent(rawContent: string, otherRawContent: string, opts: MergeOptions = {}): string {
@@ -585,7 +584,7 @@ export class BitMap {
    * search for a similar id in the bitmap and return the full BitId
    */
   getExistingBitId(id: BitIdStr, shouldThrow = true, searchWithoutScopeInProvidedId = false): ComponentID | undefined {
-    if (!R.is(String, id)) {
+    if (!isString(id)) {
       throw new TypeError(`BitMap.getExistingBitId expects id to be a string, instead, got ${typeof id}`);
     }
 
@@ -634,7 +633,7 @@ export class BitMap {
   _areFilesArraysEqual(filesA: ComponentMapFile[], filesB: ComponentMapFile[]): boolean {
     if (filesA.length !== filesB.length) return false;
     const cmp = (x, y) => x.relativePath === y.relativePath;
-    const diff = R.differenceWith(cmp, filesA, filesB);
+    const diff = differenceWith(filesA, filesB, cmp);
     if (!diff.length) return true;
     return false;
   }
@@ -643,7 +642,7 @@ export class BitMap {
    * add files from filesB that are not in filesA
    */
   mergeFilesArray(filesA: ComponentMapFile[], filesB: ComponentMapFile[]): ComponentMapFile[] {
-    return R.unionWith(R.eqBy(R.prop('relativePath')), filesA, filesB);
+    return unionWith(filesA, filesB, (file1, file2) => get(file1, 'relativePath') === get(file2, 'relativePath'));
   }
 
   addComponent({
@@ -871,7 +870,7 @@ export class BitMap {
   }
 
   _populateAllPaths() {
-    if (R.isEmpty(this.paths)) {
+    if (isEmpty(this.paths)) {
       this.components.forEach((component) => {
         component.files.forEach((file) => {
           const relativeToConsumer = component.rootDir

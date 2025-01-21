@@ -1,5 +1,4 @@
-import { groupBy, prop } from 'ramda';
-import { forEach } from 'lodash';
+import { groupBy, forEach, get } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import pMap from 'p-map';
@@ -139,8 +138,8 @@ ${failedScopesErr.join('\n')}`);
   }
 
   _groupByScopeName(ids: ComponentID[]) {
-    const byScope = groupBy(prop('scope'));
-    return byScope(ids) as { [scopeName: string]: ComponentID[] };
+    const byScope = groupBy(ids, (id) => get(id, 'scope'));
+    return byScope as { [scopeName: string]: ComponentID[] };
   }
 
   toPlainObject() {

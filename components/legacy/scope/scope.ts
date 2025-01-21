@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import * as pathLib from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
-import R from 'ramda';
+import { reject, isNil } from 'lodash';
 import { BitIdStr } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
@@ -58,7 +58,7 @@ import { StagedSnaps } from './staged-snaps';
 import { collectGarbage } from './garbage-collector';
 import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
 
-const removeNils = R.reject(R.isNil);
+const removeNils = (array) => reject(array, isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
 
 type HasIdOpts = {

@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 import { PackageJsonValidator as PJV } from '@teambit/pkg.package-json.validator';
-import R from 'ramda';
+import { forEach, isEmpty } from 'lodash';
 import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -54,7 +54,7 @@ export function validateVersionInstance(version: Version): void {
 
   const _validatePackageDependencies = (packageDependencies) => {
     validateType(message, packageDependencies, 'packageDependencies', 'object');
-    R.forEachObjIndexed(_validatePackageDependency, packageDependencies);
+    forEach(packageDependencies, _validatePackageDependency);
   };
   const validateFile = (file, field: 'file' | 'dist-file' | 'artifact') => {
     validateType(message, file, field, 'object');
@@ -202,7 +202,7 @@ export function validateVersionInstance(version: Version): void {
   // be running
   const allDependenciesIds = version.getDependenciesIdsExcludeExtensions();
   const depsDuplications = allDependenciesIds.findDuplicationsIgnoreVersion();
-  if (!R.isEmpty(depsDuplications)) {
+  if (!isEmpty(depsDuplications)) {
     const duplicationStr = Object.keys(depsDuplications)
       .map(
         (id) => `"${id}" shows as the following: ${depsDuplications[id].map((depId) => depId.toString()).join(', ')} `
@@ -298,7 +298,7 @@ ${duplicationStr}`);
       }
     });
     fieldsForSchemaCheckNotEmpty.forEach((field) => {
-      if (version[field] && !R.isEmpty(version[field])) {
+      if (version[field] && !isEmpty(version[field])) {
         throw new VersionInvalid(
           `${message}, the ${field} field is cannot have values according to schema "${schema}"`
         );

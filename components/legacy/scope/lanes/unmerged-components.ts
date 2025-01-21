@@ -1,8 +1,7 @@
 import { LaneId } from '@teambit/lane-id';
 import fs from 'fs-extra';
-import { compact } from 'lodash';
+import { compact, difference, without } from 'lodash';
 import path from 'path';
-import R from 'ramda';
 import { ComponentID } from '@teambit/component-id';
 import { Ref } from '@teambit/objects';
 
@@ -115,7 +114,7 @@ export class UnmergedComponents {
   removeComponent(id: ComponentID): boolean {
     const found = this.getEntry(id);
     if (!found) return false;
-    this.unmerged = R.without([found], this.unmerged);
+    this.unmerged = difference(this.unmerged, [found]);
     this.hasChanged = true;
     return true;
   }
@@ -123,7 +122,7 @@ export class UnmergedComponents {
   removeMultipleComponents(ids: ComponentID[]): boolean {
     const found = compact(ids.map((id) => this.getEntry(id)));
     if (!found.length) return false;
-    this.unmerged = R.without(found, this.unmerged);
+    this.unmerged = without(this.unmerged, ...found);
     this.hasChanged = true;
     return true;
   }

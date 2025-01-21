@@ -1,7 +1,6 @@
 import fs from 'fs-extra';
 import * as path from 'path';
-import R from 'ramda';
-import { compact, isEmpty } from 'lodash';
+import { compact, isEmpty, sortBy } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
@@ -330,8 +329,8 @@ export default class Consumer {
     function sortProperties(version) {
       // sort the files by 'relativePath' because the order can be changed when adding or renaming
       // files in bitmap, which affects later on the model.
-      version.files = R.sortBy(R.prop('relativePath'), version.files);
-      componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+      version.files = sortBy(version.files, 'relativePath');
+      componentFromModel.files = sortBy(componentFromModel.files, 'relativePath');
       version.dependencies.sort();
       version.devDependencies.sort();
       version.packageDependencies = sortObjectByKeys(version.packageDependencies);
@@ -367,8 +366,8 @@ export default class Consumer {
     componentFromFileSystem.log = componentFromModel.log; // in order to convert to Version object
     const { version } = await this.scope.sources.consumerComponentToVersion(componentFromFileSystem);
 
-    version.files = R.sortBy(R.prop('relativePath'), version.files);
-    componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+    version.files = sortBy(version.files, 'relativePath');
+    componentFromModel.files = sortBy(componentFromModel.files, 'relativePath');
     return JSON.stringify(version.files) !== JSON.stringify(componentFromModel.files);
   }
 

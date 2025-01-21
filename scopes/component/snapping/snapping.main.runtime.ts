@@ -54,7 +54,6 @@ import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
 import ResetCmd from './reset-cmd';
-import { tagModelComponent, BasicTagParams, BasicTagSnapParams, updateVersions } from './tag-model-component';
 import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
 import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
 import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
@@ -71,6 +70,7 @@ import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { VersionMaker, BasicTagParams, BasicTagSnapParams, updateVersions } from './version-maker';
 
 export type PackageIntegritiesByPublishedPackages = Map<string, string | undefined>;
 
@@ -222,33 +222,31 @@ export class SnappingMain {
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     await this.throwForVariousIssues(components, ignoreIssues);
 
+    const params = {
+      message,
+      editor,
+      exactVersion: validExactVersion,
+      releaseType,
+      preReleaseId,
+      ignoreNewestVersion,
+      skipTests,
+      skipTasks,
+      skipAutoTag,
+      soft,
+      build,
+      persist,
+      disableTagAndSnapPipelines,
+      ignoreBuildErrors,
+      rebuildDepsGraph,
+      incrementBy,
+      packageManagerConfigRootDir: this.workspace.path,
+      exitOnFirstFailedTask: failFast,
+      detachHead,
+      overrideHead,
+    };
+    const versionMaker = new VersionMaker(this, components, consumerComponents, compIds, params);
     const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig, removedComponents } =
-      await tagModelComponent({
-        snapping: this,
-        components,
-        consumerComponents,
-        ids: compIds,
-        message,
-        editor,
-        exactVersion: validExactVersion,
-        releaseType,
-        preReleaseId,
-        ignoreNewestVersion,
-        skipTests,
-        skipTasks,
-        skipAutoTag,
-        soft,
-        build,
-        persist,
-        disableTagAndSnapPipelines,
-        ignoreBuildErrors,
-        rebuildDepsGraph,
-        incrementBy,
-        packageManagerConfigRootDir: this.workspace.path,
-        exitOnFirstFailedTask: failFast,
-        detachHead,
-        overrideHead,
-      });
+      await versionMaker.makeVersion();
 
     const tagResults = {
       taggedComponents,
@@ -351,21 +349,18 @@ if you're willing to lose the history from the head to the specified version, us
       if (!comp.buildStatus) throw new Error(`tag-from-scope expect ${comp.id.toString()} to have buildStatus`);
       return comp.buildStatus === BuildStatus.Succeed && !params.rebuildArtifacts;
     });
-    const results = await tagModelComponent({
+    const versionMaker = new VersionMaker(this, components, consumerComponents, componentIds, {
       ...params,
-      components,
-      consumerComponents,
       tagDataPerComp,
       populateArtifactsFrom: shouldUsePopulateArtifactsFrom ? components.map((c) => c.id) : undefined,
       populateArtifactsIgnorePkgJson: params.ignoreLastPkgJson,
       copyLogFromPreviousSnap: true,
-      snapping: this,
       skipAutoTag: true,
       persist: true,
-      ids: componentIds,
       message: params.message as string,
       setHeadAsParent: params.overrideHead,
     });
+    const results = await versionMaker.makeVersion();
 
     const { taggedComponents, publishedPackages } = results;
     let exportedIds: ComponentIdList | undefined;
@@ -517,24 +512,21 @@ if you're willing to lose the history from the head to the specified version, us
     const consumerComponents = components.map((c) => c.state._consumer);
     const ids = ComponentIdList.fromArray(allCompIds);
     const shouldTag = Boolean(params.tag);
-    const results = await tagModelComponent({
+    const versionMaker = new VersionMaker(this, components, consumerComponents, ids, {
       ...params,
-      components,
-      consumerComponents,
       tagDataPerComp: snapDataPerComp.map((s) => ({
         componentId: s.componentId,
         message: s.message,
         dependencies: [],
         versionToTag: shouldTag ? s.version || 'patch' : undefined,
       })),
-      snapping: this,
       skipAutoTag: true,
       persist: true,
       isSnap: !shouldTag,
-      ids,
       message: params.message as string,
       updateDependentsOnLane: params.updateDependents,
     });
+    const results = await versionMaker.makeVersion();
 
     const { taggedComponents } = results;
     let exportedIds: ComponentIdList | undefined;
@@ -605,13 +597,8 @@ if you're willing to lose the history from the head to the specified version, us
     const components = await this.loadComponentsForTagOrSnap(ids);
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     await this.throwForVariousIssues(components, ignoreIssues);
-
-    const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await tagModelComponent({
-      snapping: this,
+    const versionMaker = new VersionMaker(this, components, consumerComponents, ids, {
       editor,
-      components,
-      consumerComponents,
-      ids,
       ignoreNewestVersion: false,
       message,
       skipTests,
@@ -628,6 +615,7 @@ if you're willing to lose the history from the head to the specified version, us
       exitOnFirstFailedTask,
       detachHead,
     });
+    const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await versionMaker.makeVersion();
 
     const snapResults: Partial<SnapResults> = {
       snappedComponents: taggedComponents,

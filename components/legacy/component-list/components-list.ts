@@ -1,6 +1,6 @@
 import pFilter from 'p-filter';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import R from 'ramda';
+import { uniqBy } from 'lodash';
 import { LATEST } from '@teambit/legacy.constants';
 import { ModelComponent, Lane } from '@teambit/objects';
 import { Scope } from '@teambit/legacy.scope';
@@ -392,10 +392,13 @@ export class ComponentsList {
   static sortComponentsByName<T>(components: T): T {
     const getName = (component) => {
       let name;
-      if (R.is(ModelComponent, component)) name = component.id();
-      else if (R.is(Component, component)) name = component.componentId.toString();
-      else if (R.is(ComponentID, component)) name = component.toString();
-      else name = component;
+      if (component instanceof ModelComponent) {
+        name = component.id();
+      } else if (component instanceof Component) {
+        name = component.componentId.toString();
+      } else if (component instanceof ComponentID) {
+        name = component.toString();
+      } else name = component;
       if (typeof name !== 'string')
         throw new Error(`sortComponentsByName expects name to be a string, got: ${name}, type: ${typeof name}`);
       return name.toUpperCase(); // ignore upper and lowercase
@@ -418,9 +421,15 @@ export class ComponentsList {
 
   static filterComponentsByWildcard<T>(components: T, idsWithWildcard: string[] | string): T {
     const getBitId = (component): ComponentID => {
-      if (R.is(ModelComponent, component)) return component.toComponentId();
-      if (R.is(Component, component)) return component.componentId;
-      if (R.is(ComponentID, component)) return component;
+      if (component instanceof ModelComponent) {
+        return component.toComponentId();
+      }
+      if (component instanceof Component) {
+        return component.componentId;
+      }
+      if (component instanceof ComponentID) {
+        return component;
+      }
       throw new TypeError(`filterComponentsByWildcard got component with the wrong type: ${typeof component}`);
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -431,6 +440,6 @@ export class ComponentsList {
   }
 
   static getUniqueComponents(components: Component[]): Component[] {
-    return R.uniqBy((component) => JSON.stringify(component.componentId), components);
+    return uniqBy(components, (component) => JSON.stringify(component.componentId));
   }
 }

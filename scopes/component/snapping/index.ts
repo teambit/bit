@@ -1,6 +1,6 @@
 import { SnappingAspect } from './snapping.aspect';
 
-export type { BitCloudUser } from './tag-model-component';
+export type { BitCloudUser } from './version-maker';
 export type {
   SnappingMain,
   TagResults,
@@ -10,7 +10,7 @@ export type {
 } from './snapping.main.runtime';
 export default SnappingAspect;
 export { SnappingAspect };
-export { tagModelComponent, onTagIdTransformer, BasicTagParams } from './tag-model-component';
+export { VersionMaker, onTagIdTransformer, BasicTagParams } from './version-maker';
 export { AUTO_TAGGED_MSG, NOTHING_TO_TAG_MSG } from './tag-cmd';
 export {
   snapFromScopeOptions,
