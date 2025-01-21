@@ -1,4 +1,4 @@
-import { pickBy, keys, filter, isEmpty, cloneDeep, get, merge } from 'lodash';
+import { pickBy, keys, isEmpty, cloneDeep, get, merge } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import {
   MANUALLY_ADD_DEPENDENCY,
@@ -146,7 +146,10 @@ export class ComponentOverrides {
     return ver !== MANUALLY_ADD_DEPENDENCY && ver !== MANUALLY_REMOVE_DEPENDENCY;
   }
   getIgnored(field: string): string[] {
-    return keys(filter((dep) => dep === MANUALLY_REMOVE_DEPENDENCY, this.overrides[field] || {}));
+    const filtered = pickBy(this.overrides[field] || {}, (dep) => {
+      return dep === MANUALLY_REMOVE_DEPENDENCY;
+    });
+    return keys(filtered);
   }
   getIgnoredPackages(field: string): string[] {
     const ignoredRules = this.getIgnored(field);
