@@ -54,7 +54,7 @@ export function validateVersionInstance(version: Version): void {
 
   const _validatePackageDependencies = (packageDependencies) => {
     validateType(message, packageDependencies, 'packageDependencies', 'object');
-    forEach(_validatePackageDependency, packageDependencies);
+    forEach(packageDependencies, _validatePackageDependency);
   };
   const validateFile = (file, field: 'file' | 'dist-file' | 'artifact') => {
     validateType(message, file, field, 'object');
