@@ -1,7 +1,6 @@
-import R from 'ramda';
+import { sortBy, unionWith, isEmpty, cloneDeep, compact } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
-import { compact, isEmpty, cloneDeep } from 'lodash';
 import {
   convertBuildArtifactsFromModelObject,
   convertBuildArtifactsToModelObject,
@@ -141,7 +140,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   }
 
   sortById(): ExtensionDataList {
-    const arr = R.sortBy(R.prop('stringId'), this);
+    const arr = sortBy(this, 'stringId');
     // Also sort the config
     arr.forEach((entry) => {
       entry.config = sortObjectByKeys(entry.config);
@@ -193,7 +192,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
 
 function getMergeReducer(ignoreVersion = true) {
   const predicate = getCompareExtPredicate(ignoreVersion);
-  const mergeReducer = (accumulator, currentValue) => R.unionWith(predicate, accumulator, currentValue);
+  const mergeReducer = (accumulator, currentValue) => unionWith(accumulator, currentValue, predicate);
   return mergeReducer;
 }
 

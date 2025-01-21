@@ -4,9 +4,8 @@ import mapSeries from 'p-map-series';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import groupArray from 'group-array';
-import R from 'ramda';
 import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
-import { compact, flatten, partition, uniq } from 'lodash';
+import { uniq, partition, compact, flatten, isEmpty } from 'lodash';
 import { Scope } from '..';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
@@ -131,7 +130,7 @@ export class ScopeComponentsImporter {
       `importMany, cache ${cache}, preferDependencyGraph: ${preferDependencyGraph}, reFetchUnBuiltVersion: ${reFetchUnBuiltVersion}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: ${ids.toString()}, lane: ${lane?.id()}`
     );
     const idsToImport = compact(ids.filter((id) => (includeUnexported ? id.hasScope() : this.scope.isExported(id))));
-    if (R.isEmpty(idsToImport)) {
+    if (isEmpty(idsToImport)) {
       logger.debug(`importMany, nothing to import`);
       return [];
     }
@@ -264,7 +263,7 @@ export class ScopeComponentsImporter {
   async importManyFromOriginalScopes(ids: ComponentIdList) {
     logger.debugAndAddBreadCrumb('importManyFromOriginalScopes', `ids: {ids}`, { ids: ids.toString() });
     const idsToImport = compact(ids);
-    if (R.isEmpty(idsToImport)) return [];
+    if (isEmpty(idsToImport)) return [];
 
     const externalsToFetch: ComponentID[] = [];
     const defs = await this.sources.getMany(idsToImport);
@@ -505,7 +504,7 @@ export class ScopeComponentsImporter {
       const groupedHashedMissing = {};
       await Promise.all(
         Object.keys(groupedHashes).map(async (scopeName) => {
-          const uniqueHashes: string[] = R.uniq(groupedHashes[scopeName]);
+          const uniqueHashes: string[] = uniq(groupedHashes[scopeName]);
           const missingWithNull = await Promise.all(
             uniqueHashes.map(async (hash) => (!(await this.repo.has(new Ref(hash))) ? hash : null))
           );
@@ -515,7 +514,7 @@ export class ScopeComponentsImporter {
           }
         })
       );
-      if (R.isEmpty(groupedHashedMissing)) return;
+      if (isEmpty(groupedHashedMissing)) return;
 
       const remotes = await getScopeRemotes(this.scope);
       const allObjects = await new ObjectFetcher(

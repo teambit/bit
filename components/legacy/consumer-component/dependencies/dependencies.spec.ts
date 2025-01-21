@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { ComponentID } from '@teambit/component-id';
-import R from 'ramda';
+import { cloneDeep } from 'lodash';
 import { Dependencies } from './';
 
 const dependenciesFixture = [
@@ -29,8 +29,10 @@ describe('Dependencies', () => {
     let dependencies;
     let validateFunc;
     beforeEach(() => {
-      const dependenciesFixtureCloned = R.clone(dependenciesFixture);
+      const dependenciesFixtureCloned = cloneDeep(dependenciesFixture);
+      // @ts-expect-error we want to change the type here explicitly
       dependenciesFixtureCloned.forEach((d) => (d.id = ComponentID.fromString(d.id)));
+      // @ts-expect-error that's good enough for testing
       dependencies = new Dependencies(dependenciesFixtureCloned);
       validateFunc = () => dependencies.validate();
     });
