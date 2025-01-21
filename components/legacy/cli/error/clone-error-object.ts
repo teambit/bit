@@ -1,4 +1,4 @@
-import { clone } from 'lodash';
+import { cloneDeep } from 'lodash';
 
 export const systemFields = ['stack', 'code', 'errno', 'syscall'];
 
@@ -11,7 +11,7 @@ export default function cloneErrorObject(error: Error): Error {
     if (error[field]) err[field] = error[field];
   });
   Object.keys(error).forEach((key) => {
-    err[key] = clone(error[key]);
+    err[key] = cloneDeep(error[key]);
   });
   return err;
 }
