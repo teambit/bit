@@ -98,6 +98,12 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     });
   }
 
+  filterIgnoredFromSpecificExtensions(): ExtensionDataList {
+    return this.filter((entry) => {
+      return !entry.isIgnoredFromSpecific;
+    });
+  }
+
   toConfigObject() {
     const res = {};
     this.forEach((entry) => {
