@@ -768,17 +768,14 @@ export class ScopeMain implements ComponentFactory {
    * @param includeCache whether or not include components that their scope-name is different than the current scope-name
    */
   async listIds(includeCache = false, includeFromLanes = false, patterns?: string[]): Promise<ComponentID[]> {
-    const allModelComponents = await this.legacyScope.list();
+    const localScopeOnly = !includeCache;
+    const allModelComponents = await this.legacyScope.list(localScopeOnly);
     const filterByCacheAndLanes = (modelComponent: ModelComponent) => {
-      const cacheFilter = includeCache ? true : this.exists(modelComponent);
       const lanesFilter = includeFromLanes ? true : modelComponent.hasHead();
-
-      return cacheFilter && lanesFilter;
+      return lanesFilter;
     };
     const modelComponentsToList = allModelComponents.filter(filterByCacheAndLanes);
-    let ids = modelComponentsToList.map((component) =>
-      ComponentID.fromLegacy(component.toBitIdWithLatestVersion(), component.scope || this.name)
-    );
+    let ids = modelComponentsToList.map((component) => component.toComponentIdWithLatestVersion());
     if (patterns && patterns.length > 0) {
       ids = ids.filter((id) =>
         patterns?.some((pattern) => isMatchNamespacePatternItem(id.toStringWithoutVersion(), pattern).match)
