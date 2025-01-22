@@ -613,6 +613,8 @@ jobs:
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
+          path: bit/scopes/harmony/testing/load-aspect/core-aspects-ids.json
+      - store_artifacts:
           path: bit/objects-before-export.tar
 
   # This is a special task that just wait 5 minutes (sleep)
