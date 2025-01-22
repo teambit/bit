@@ -133,7 +133,7 @@
         "@teambit/component.ui.component-compare.utils.sort-logs": "^0.0.8",
         "@teambit/component.ui.component-compare.utils.sort-tabs": "^0.0.102",
         "@teambit/component.ui.component-deprecated": "^0.0.39",
-        "@teambit/component.ui.component-meta": "^0.0.365",
+        "@teambit/component.ui.component-meta": "^0.0.366",
         "@teambit/component.ui.component-size": "^0.0.77",
         "@teambit/component.ui.component-status-resolver": "^0.0.510",
         "@teambit/component.ui.deprecation-icon": "^0.0.509",
@@ -216,6 +216,7 @@
         "@teambit/explorer.ui.component-card": "^0.0.44",
         "@teambit/explorer.ui.gallery.component-grid": "0.0.496",
         "@teambit/git.modules.git-ignore": "^1.0.2",
+        "@teambit/gitconfig": "2.0.10",
         "@teambit/graph.cleargraph": "0.0.11",
         "@teambit/harmony": "0.4.6",
         "@teambit/html.modules.inject-html-element": "0.0.5",
@@ -439,7 +440,6 @@
         "fs-extra": "10.0.0",
         "fuse.js": "6.6.2",
         "get-tsconfig": "4.2.0",
-        "@teambit/gitconfig": "2.0.10",
         "glob": "7.1.6",
         "globby": "11.0.1",
         "graceful-fs": "4.2.10",
@@ -631,8 +631,6 @@
     "rootComponents": true,
     "nodeVersion": "23.5.0",
     "engineStrict": true,
-    // This is a temporary workaround to fix "bit compile" on macOS and Windows.
-    // "bit compile" breaks node_modules when hard links are used.
     "packageImportMethod": "copy",
     "packageManagerArgs": [],
     "devFilePatterns": [
@@ -640,8 +638,6 @@
     ],
     "strictPeerDependencies": true,
     "autoInstallPeers": true,
-    // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
-    // "installFromBitDevRegistry": false,
     "savePrefix": "",
     "extraArgs": [],
     "peerDependencyRules": {
