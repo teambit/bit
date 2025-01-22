@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "types",
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "components",
+    "node_modules",
+    "e2e/fixtures"
+  ]
+}
