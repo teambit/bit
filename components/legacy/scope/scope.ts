@@ -247,9 +247,13 @@ export default class Scope {
     return modelComponent.hasVersion(id.version, this.objects);
   }
 
-  async list(): Promise<ModelComponent[]> {
-    const filter = (comp: ComponentItem) => !comp.isSymlink;
+  async list(localScopeOnly = false): Promise<ModelComponent[]> {
+    const filter = (comp: ComponentItem) => {
+      if (comp.isSymlink) return false;
+      return localScopeOnly ? comp.id.scope === this.name : true;
+    };
     const results = await this.objects.listObjectsFromIndex(IndexType.components, filter);
+    logger.debug(`scope.list found ${results.length} components in the scope`);
     results.forEach((result) => {
       if (!(result instanceof ModelComponent)) {
         throw new Error(
