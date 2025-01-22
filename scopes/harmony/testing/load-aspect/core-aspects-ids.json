@@ -67,7 +67,6 @@
   "teambit.ui-foundation/user-agent",
   "teambit.harmony/application",
   "teambit.workspace/eject",
-  "teambit.html/html",
   "teambit.lanes/lanes",
   "teambit.component/forking",
   "teambit.component/renaming",
@@ -102,7 +101,7 @@
   "teambit.scope/version-history",
   "teambit.harmony/host-initializer",
   "teambit.harmony/doctor",
-  "teambit.component/apply",
+  "teambit.scope/objects",
   "teambit.harmony/bit",
   "teambit.harmony/config"
 ]
