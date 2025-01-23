@@ -264,7 +264,7 @@ export class SnappingMain {
 
   async makeVersion(components: Component[], params: VersionMakerParams) {
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
-    const componentIds = ComponentIdList.fromArray(components.map((c) => c.id));
+    const componentIds = ComponentIdList.fromArray(components.map((c) => c.id.changeVersion(undefined)));
     const versionMaker = new VersionMaker(this, components, consumerComponents, componentIds, params);
     return versionMaker.makeVersion();
   }
