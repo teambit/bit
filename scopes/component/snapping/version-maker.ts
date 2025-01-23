@@ -49,7 +49,7 @@ export type BasicTagParams = BasicTagSnapParams & {
   unmodified?: boolean;
 };
 
-type Params = {
+export type VersionMakerParams = {
   tagDataPerComp?: TagDataPerComp[];
   populateArtifactsFrom?: ComponentID[];
   populateArtifactsIgnorePkgJson?: boolean;
@@ -80,7 +80,7 @@ export class VersionMaker {
     private components: Component[],
     private consumerComponents: ConsumerComponent[],
     private ids: ComponentIdList,
-    private params: Params
+    private params: VersionMakerParams
   ) {
     this.workspace = snapping.workspace;
     this.scope = snapping.scope;

@@ -70,7 +70,7 @@ import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
-import { VersionMaker, BasicTagParams, BasicTagSnapParams, updateVersions } from './version-maker';
+import { VersionMaker, BasicTagParams, BasicTagSnapParams, updateVersions, VersionMakerParams } from './version-maker';
 
 export type PackageIntegritiesByPublishedPackages = Map<string, string | undefined>;
 
@@ -219,7 +219,6 @@ export class SnappingMain {
 
     this.logger.debug(`tagging the following components: ${compIds.toString()}`);
     const components = await this.loadComponentsForTagOrSnap(compIds, !soft);
-    const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     await this.throwForVariousIssues(components, ignoreIssues);
 
     const params = {
@@ -244,9 +243,8 @@ export class SnappingMain {
       detachHead,
       overrideHead,
     };
-    const versionMaker = new VersionMaker(this, components, consumerComponents, compIds, params);
     const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig, removedComponents } =
-      await versionMaker.makeVersion();
+      await this.makeVersion(components, params);
 
     const tagResults = {
       taggedComponents,
@@ -262,6 +260,13 @@ export class SnappingMain {
     await stagedConfig?.write();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return tagResults;
+  }
+
+  async makeVersion(components: Component[], params: VersionMakerParams) {
+    const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
+    const componentIds = ComponentIdList.fromArray(components.map((c) => c.id));
+    const versionMaker = new VersionMaker(this, components, consumerComponents, componentIds, params);
+    return versionMaker.makeVersion();
   }
 
   async tagFromScope(
@@ -344,12 +349,11 @@ if you're willing to lose the history from the head to the specified version, us
 
     await this.scope.loadManyCompsAspects(components);
 
-    const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     const shouldUsePopulateArtifactsFrom = components.every((comp) => {
       if (!comp.buildStatus) throw new Error(`tag-from-scope expect ${comp.id.toString()} to have buildStatus`);
       return comp.buildStatus === BuildStatus.Succeed && !params.rebuildArtifacts;
     });
-    const versionMaker = new VersionMaker(this, components, consumerComponents, componentIds, {
+    const makeVersionParams = {
       ...params,
       tagDataPerComp,
       populateArtifactsFrom: shouldUsePopulateArtifactsFrom ? components.map((c) => c.id) : undefined,
@@ -359,8 +363,8 @@ if you're willing to lose the history from the head to the specified version, us
       persist: true,
       message: params.message as string,
       setHeadAsParent: params.overrideHead,
-    });
-    const results = await versionMaker.makeVersion();
+    };
+    const results = await this.makeVersion(components, makeVersionParams);
 
     const { taggedComponents, publishedPackages } = results;
     let exportedIds: ComponentIdList | undefined;
@@ -509,10 +513,9 @@ if you're willing to lose the history from the head to the specified version, us
     // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
     await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
 
-    const consumerComponents = components.map((c) => c.state._consumer);
     const ids = ComponentIdList.fromArray(allCompIds);
     const shouldTag = Boolean(params.tag);
-    const versionMaker = new VersionMaker(this, components, consumerComponents, ids, {
+    const makeVersionParams = {
       ...params,
       tagDataPerComp: snapDataPerComp.map((s) => ({
         componentId: s.componentId,
@@ -525,8 +528,8 @@ if you're willing to lose the history from the head to the specified version, us
       isSnap: !shouldTag,
       message: params.message as string,
       updateDependentsOnLane: params.updateDependents,
-    });
-    const results = await versionMaker.makeVersion();
+    };
+    const results = await this.makeVersion(components, makeVersionParams);
 
     const { taggedComponents } = results;
     let exportedIds: ComponentIdList | undefined;
@@ -595,9 +598,8 @@ if you're willing to lose the history from the head to the specified version, us
     if (!ids) return null;
     this.logger.debug(`snapping the following components: ${ids.toString()}`);
     const components = await this.loadComponentsForTagOrSnap(ids);
-    const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     await this.throwForVariousIssues(components, ignoreIssues);
-    const versionMaker = new VersionMaker(this, components, consumerComponents, ids, {
+    const makeVersionParams = {
       editor,
       ignoreNewestVersion: false,
       message,
@@ -614,8 +616,11 @@ if you're willing to lose the history from the head to the specified version, us
       packageManagerConfigRootDir: this.workspace.path,
       exitOnFirstFailedTask,
       detachHead,
-    });
-    const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await versionMaker.makeVersion();
+    };
+    const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await this.makeVersion(
+      components,
+      makeVersionParams
+    );
 
     const snapResults: Partial<SnapResults> = {
       snappedComponents: taggedComponents,
