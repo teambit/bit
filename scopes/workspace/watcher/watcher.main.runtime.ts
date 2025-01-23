@@ -1,4 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { WatchOptions as ChokidarWatchOptions } from 'chokidar';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
@@ -6,6 +7,7 @@ import { ComponentID } from '@teambit/component-id';
 import { IpcEventsAspect, IpcEventsMain } from '@teambit/ipc-events';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
+import { CFG_WATCH_USE_POLLING } from '@teambit/legacy.constants';
 import { WorkspaceAspect, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
 import pMapSeries from 'p-map-series';
 import { WatchCommand } from './watch.cmd';
@@ -32,8 +34,19 @@ export class WatcherMain {
     await watcher.watch();
   }
 
+  async getChokidarWatchOptions(): Promise<ChokidarWatchOptions> {
+    const usePollingConf = await this.globalConfig.get(CFG_WATCH_USE_POLLING);
+    const usePolling = usePollingConf === 'true';
+    return {
+      ignoreInitial: true,
+      persistent: true,
+      usePolling,
+    };
+  }
+
   async watchScopeInternalFiles() {
-    await this.scope.watchScopeInternalFiles();
+    const chokidarOpts = await this.getChokidarWatchOptions();
+    await this.scope.watchScopeInternalFiles(chokidarOpts);
   }
 
   async triggerOnPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {

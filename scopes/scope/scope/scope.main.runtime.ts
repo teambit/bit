@@ -36,7 +36,7 @@ import { DependencyResolverAspect, DependencyResolverMain, NodeLinker } from '@t
 import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import chokidar from 'chokidar';
+import chokidar, { WatchOptions } from 'chokidar';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { SnapsDistance, getDivergeData } from '@teambit/component.snap-distance';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/scope.network';
@@ -496,12 +496,12 @@ export class ScopeMain implements ComponentFactory {
    * it's possible that other commands (e.g. `bit import`) modified these files, while these processes are running.
    * Because these data are kept in memory, they're not up to date anymore.
    */
-  async watchScopeInternalFiles() {
+  async watchScopeInternalFiles(watchOptions: WatchOptions = {}) {
     const scopeIndexFile = this.legacyScope.objects.scopeIndex.getPath();
     const remoteLanesDir = this.legacyScope.objects.remoteLanes.basePath;
     const globalConfigFile = getGlobalConfigPath();
     const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile];
-    const watcher = chokidar.watch(pathsToWatch);
+    const watcher = chokidar.watch(pathsToWatch, watchOptions);
     watcher.on('ready', () => {
       this.logger.debug(`watchSystemFiles has started, watching ${pathsToWatch.join(', ')}`);
     });

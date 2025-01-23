@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import { dirname, basename } from 'path';
 import { compact, difference, partition } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BIT_MAP, CFG_WATCH_USE_POLLING, WORKSPACE_JSONC } from '@teambit/legacy.constants';
+import { BIT_MAP, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { Consumer } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
 import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
@@ -100,7 +100,7 @@ export class Watcher {
     const watcher = this.fsWatcher;
     msgs?.onStart(this.workspace);
 
-    await this.workspace.scope.watchScopeInternalFiles();
+    await this.watcherMain.watchScopeInternalFiles();
 
     return new Promise((resolve, reject) => {
       if (this.verbose) {
@@ -448,8 +448,6 @@ export class Watcher {
   }
 
   private async createWatcher() {
-    const usePollingConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_POLLING);
-    const usePolling = usePollingConf === 'true';
     const workspacePathLinux = pathNormalizeToLinux(this.workspace.path);
     const ignoreLocalScope = (pathToCheck: string) => {
       if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
@@ -457,15 +455,11 @@ export class Watcher {
         pathToCheck.startsWith(`${workspacePathLinux}/.git/`) || pathToCheck.startsWith(`${workspacePathLinux}/.bit/`)
       );
     };
-    this.fsWatcher = chokidar.watch(this.workspace.path, {
-      ignoreInitial: true,
-      // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
-      // (windows-style backslashes are converted to forward slashes)
-      ignored: ['**/node_modules/**', '**/package.json', ignoreLocalScope],
-      usePolling,
-      // useFsEvents,
-      persistent: true,
-    });
+    const chokidarOpts = await this.watcherMain.getChokidarWatchOptions();
+    // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
+    // (windows-style backslashes are converted to forward slashes)
+    (chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', ignoreLocalScope]),
+      (this.fsWatcher = chokidar.watch(this.workspace.path, chokidarOpts));
     if (this.verbose) {
       logger.console(`${chalk.bold('chokidar.options:\n')} ${JSON.stringify(this.fsWatcher.options, undefined, 2)}`);
     }
