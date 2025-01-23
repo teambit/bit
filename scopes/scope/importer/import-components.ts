@@ -32,6 +32,7 @@ import { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import { Logger } from '@teambit/logger';
 import { DependentsGetter } from './dependents-getter';
 import { ListerMain, NoIdMatchWildcard } from '@teambit/lister';
+import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 
 const BEFORE_IMPORT_ACTION = 'importing components';
 
@@ -424,8 +425,9 @@ if you just want to get a quick look into this snap, create a new workspace and 
 
   private async getBitIdsForNonLanes() {
     const bitIds: ComponentID[] = [];
-    await Promise.all(
-      this.options.ids.map(async (idStr: string) => {
+    await pMapPool(
+      this.options.ids,
+      async (idStr: string) => {
         if (hasWildcard(idStr)) {
           let ids: ComponentID[] = [];
           try {
@@ -434,6 +436,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
             if (err instanceof NoIdMatchWildcard) {
               this.logger.consoleWarning(err.message);
             } else {
+              this.logger.error(`failed getting the list of components by the wildcard ${idStr}`);
               throw err;
             }
           }
@@ -442,7 +445,8 @@ if you just want to get a quick look into this snap, create a new workspace and 
           const id = await this.getIdFromStr(idStr);
           bitIds.push(id);
         }
-      })
+      },
+      { concurrency: 30 }
     );
 
     this.logger.setStatusLine(BEFORE_IMPORT_ACTION); // it stops the previous loader of BEFORE_REMOTE_LIST

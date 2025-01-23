@@ -133,7 +133,7 @@
         "@teambit/component.ui.component-compare.utils.sort-logs": "^0.0.8",
         "@teambit/component.ui.component-compare.utils.sort-tabs": "^0.0.102",
         "@teambit/component.ui.component-deprecated": "^0.0.39",
-        "@teambit/component.ui.component-meta": "^0.0.365",
+        "@teambit/component.ui.component-meta": "^0.0.366",
         "@teambit/component.ui.component-size": "^0.0.77",
         "@teambit/component.ui.component-status-resolver": "^0.0.510",
         "@teambit/component.ui.deprecation-icon": "^0.0.509",
@@ -732,7 +732,7 @@
             "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.1",
             "@apollo/client": "3.6.9",
             // for backward compatibility only
-            "@teambit/legacy": "2.0.2",
+            "@teambit/legacy": "2.1.0",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
