@@ -138,7 +138,8 @@ export function CodeView({
     if (langFromFileEnding === 'scss' || langFromFileEnding === 'sass') return 'css';
     if (langFromFileEnding === 'mdx') return 'md';
     if (langFromFileEnding === 'vue') return 'html';
-    if (langFromFileEnding === 'cjs') return 'js';
+    if (langFromFileEnding === 'cjs' || langFromFileEnding === 'mjs') return 'js';
+    if (langFromFileEnding === 'cts' || langFromFileEnding === 'mts') return 'ts';
 
     return langFromFileEnding;
   }, [fileContent]);
