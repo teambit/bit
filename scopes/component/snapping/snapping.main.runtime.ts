@@ -244,7 +244,7 @@ export class SnappingMain {
       overrideHead,
     };
     const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig, removedComponents } =
-      await this.makeVersion(components, params);
+      await this.makeVersion(components, compIds, params);
 
     const tagResults = {
       taggedComponents,
@@ -262,9 +262,9 @@ export class SnappingMain {
     return tagResults;
   }
 
-  async makeVersion(components: Component[], params: VersionMakerParams) {
+  async makeVersion(components: Component[], ids: ComponentID[], params: VersionMakerParams) {
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
-    const componentIds = ComponentIdList.fromArray(components.map((c) => c.id.changeVersion(undefined)));
+    const componentIds = ComponentIdList.fromArray(ids);
     const versionMaker = new VersionMaker(this, components, consumerComponents, componentIds, params);
     return versionMaker.makeVersion();
   }
@@ -364,7 +364,7 @@ if you're willing to lose the history from the head to the specified version, us
       message: params.message as string,
       setHeadAsParent: params.overrideHead,
     };
-    const results = await this.makeVersion(components, makeVersionParams);
+    const results = await this.makeVersion(components, componentIds, makeVersionParams);
 
     const { taggedComponents, publishedPackages } = results;
     let exportedIds: ComponentIdList | undefined;
@@ -529,7 +529,7 @@ if you're willing to lose the history from the head to the specified version, us
       message: params.message as string,
       updateDependentsOnLane: params.updateDependents,
     };
-    const results = await this.makeVersion(components, makeVersionParams);
+    const results = await this.makeVersion(components, ids, makeVersionParams);
 
     const { taggedComponents } = results;
     let exportedIds: ComponentIdList | undefined;
@@ -619,6 +619,7 @@ if you're willing to lose the history from the head to the specified version, us
     };
     const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await this.makeVersion(
       components,
+      ids,
       makeVersionParams
     );
 
