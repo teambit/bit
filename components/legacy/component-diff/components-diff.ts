@@ -30,6 +30,7 @@ export type DiffOptions = {
   verbose?: boolean; // whether show internal components diff, such as sourceRelativePath
   formatDepsAsTable?: boolean; // show dependencies output as table
   color?: boolean; // pass this option to git to return a colorful diff, default = true.
+  compareToParent?: boolean; // compare to the parent (previous) version
 };
 
 export async function getOneFileDiff(
