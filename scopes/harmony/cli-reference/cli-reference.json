@@ -3638,6 +3638,11 @@
     "alias": "",
     "options": [
       [
+        "p",
+        "parent",
+        "compare the specified \"version\" to its immediate parent instead of comparing to the current one"
+      ],
+      [
         "v",
         "verbose",
         "show a more verbose output where possible"
@@ -3659,11 +3664,11 @@
       },
       {
         "name": "version",
-        "description": "specific version to compare against"
+        "description": "the base version to compare from. if omitted, compares the workspace's current files to the component's latest version."
       },
       {
         "name": "to-version",
-        "description": "specific version to compare to"
+        "description": "the target version to compare against \"version\".\nif both \"version\" and \"to-version\" are provided, compare those two versions directly (ignoring the workspace)."
       }
     ],
     "examples": [
@@ -3686,6 +3691,10 @@
       {
         "cmd": "diff '$codeModified' ",
         "description": "show diff only for components with modified files. ignore config changes"
+      },
+      {
+        "cmd": "diff foo 0.0.2 --parent",
+        "description": "compare \"foo@0.0.2\" to its parent version. showing what changed in 0.0.2"
       }
     ]
   },

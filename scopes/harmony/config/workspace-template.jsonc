@@ -45,11 +45,11 @@
   **/
   "teambit.generator/generator": {
     "envs": [
-  //  "bitdev.node/node-env",
-  //  "bitdev.react/react-env",
-  //  "bitdev.vue/vue-env",
-  //  "bitdev.angular/angular-env"
-  //  "bitdev.symphony/envs/symphony-env"
+      // "bitdev.node/node-env",
+      // "bitdev.react/react-env",
+      // "bitdev.vue/vue-env",
+      // "bitdev.angular/angular-env"
+      // "bitdev.symphony/envs/symphony-env"
     ]
   },
 

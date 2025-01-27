@@ -94,6 +94,10 @@ export class PnpmPackageManager implements PackageManager {
     const lockfilePath = join(rootDir, 'pnpm-lock.yaml');
     await writeLockfileFile(lockfilePath, lockfile);
     this.logger.debug(`generated a lockfile from dependencies graph at ${lockfilePath}`);
+    if (process.env.DEPS_GRAPH_LOG) {
+      // eslint-disable-next-line no-console
+      console.log(`generated a lockfile from dependencies graph at ${lockfilePath}`);
+    }
   }
 
   async install(
