@@ -22,7 +22,6 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import pMap from 'p-map';
-import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
@@ -38,7 +37,6 @@ import {
   Log,
   AddVersionOpts,
 } from '@teambit/objects';
-import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { Component } from '@teambit/component';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
@@ -71,6 +69,7 @@ import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { VersionMaker, BasicTagParams, BasicTagSnapParams, updateVersions, VersionMakerParams } from './version-maker';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 
 export type PackageIntegritiesByPublishedPackages = Map<string, string | undefined>;
 
@@ -126,13 +125,19 @@ export type BasicTagResults = {
   removedComponents?: ComponentIdList;
 };
 
+export type OnPreSnap = (
+  componentsToSnap: Component[],
+  idsToAutoSnap: ComponentID[],
+  params: VersionMakerParams
+) => Promise<void>;
+
+export type OnPreSnapSlot = SlotRegistry<OnPreSnap>;
+
 export class SnappingMain {
   private objectsRepo: Repository;
   constructor(
     readonly workspace: Workspace,
     private logger: Logger,
-    private issues: IssuesMain,
-    private insights: InsightsMain,
     readonly dependencyResolver: DependencyResolverMain,
     readonly scope: ScopeMain,
     private exporter: ExportMain,
@@ -140,9 +145,14 @@ export class SnappingMain {
     private importer: ImporterMain,
     private deps: DependenciesMain,
     private application: ApplicationMain,
-    private remove: RemoveMain
+    private remove: RemoveMain,
+    readonly onPreSnapSlot: OnPreSnapSlot
   ) {
     this.objectsRepo = this.scope?.legacyScope?.objects;
+  }
+
+  registerOnPreSnap(onPreSnap: OnPreSnap) {
+    this.onPreSnapSlot.register(onPreSnap);
   }
 
   /**
@@ -1368,13 +1378,11 @@ another option, in case this dependency is not in main yet is to remove all refe
     return { bitIds: tagPendingBitIdsIncludeSnapped.map((id) => id.changeVersion(undefined)), warnings };
   }
 
-  static slots = [];
+  static slots = [Slot.withType<OnPreSnap>()];
   static dependencies = [
     WorkspaceAspect,
     CLIAspect,
     LoggerAspect,
-    IssuesAspect,
-    InsightsAspect,
     DependencyResolverAspect,
     ScopeAspect,
     ExportAspect,
@@ -1386,43 +1394,41 @@ another option, in case this dependency is not in main yet is to remove all refe
     RemoveAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([
-    workspace,
-    cli,
-    loggerMain,
-    issues,
-    insights,
-    dependencyResolver,
-    scope,
-    exporter,
-    builder,
-    importer,
-    globalConfig,
-    deps,
-    application,
-    remove,
-  ]: [
-    Workspace,
-    CLIMain,
-    LoggerMain,
-    IssuesMain,
-    InsightsMain,
-    DependencyResolverMain,
-    ScopeMain,
-    ExportMain,
-    BuilderMain,
-    ImporterMain,
-    GlobalConfigMain,
-    DependenciesMain,
-    ApplicationMain,
-    RemoveMain,
-  ]) {
+  static async provider(
+    [
+      workspace,
+      cli,
+      loggerMain,
+      dependencyResolver,
+      scope,
+      exporter,
+      builder,
+      importer,
+      globalConfig,
+      deps,
+      application,
+      remove,
+    ]: [
+      Workspace,
+      CLIMain,
+      LoggerMain,
+      DependencyResolverMain,
+      ScopeMain,
+      ExportMain,
+      BuilderMain,
+      ImporterMain,
+      GlobalConfigMain,
+      DependenciesMain,
+      ApplicationMain,
+      RemoveMain,
+    ],
+    config,
+    [onPreSnapSlot]: [OnPreSnapSlot]
+  ) {
     const logger = loggerMain.createLogger(SnappingAspect.id);
     const snapping = new SnappingMain(
       workspace,
       logger,
-      issues,
-      insights,
       dependencyResolver,
       scope,
       exporter,
@@ -1430,7 +1436,8 @@ another option, in case this dependency is not in main yet is to remove all refe
       importer,
       deps,
       application,
-      remove
+      remove,
+      onPreSnapSlot
     );
     const snapCmd = new SnapCmd(snapping, logger, globalConfig);
     const tagCmd = new TagCmd(snapping, logger, globalConfig);

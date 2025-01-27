@@ -104,6 +104,7 @@ export class VersionMaker {
     const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
     const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
     const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
+    await this.triggerOnPreSnap(autoTagIds);
     this.allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
     const messagePerId = await this.getMessagePerId(idsToTag, autoTagIds);
     await this.checkForNewerVersions();
@@ -194,6 +195,11 @@ export class VersionMaker {
       stagedConfig,
       removedComponents,
     };
+  }
+
+  private async triggerOnPreSnap(autoTagIds: ComponentIdList) {
+    const allFunctions = this.snapping.onPreSnapSlot.values();
+    await mapSeries(allFunctions, (func) => func(this.components, autoTagIds, this.params));
   }
 
   private async addLaneObject(lane?: Lane) {

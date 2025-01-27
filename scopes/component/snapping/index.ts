@@ -10,7 +10,7 @@ export type {
 } from './snapping.main.runtime';
 export default SnappingAspect;
 export { SnappingAspect };
-export { VersionMaker, onTagIdTransformer, BasicTagParams } from './version-maker';
+export { VersionMaker, onTagIdTransformer, BasicTagParams, VersionMakerParams } from './version-maker';
 export { AUTO_TAGGED_MSG, NOTHING_TO_TAG_MSG } from './tag-cmd';
 export {
   snapFromScopeOptions,
