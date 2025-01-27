@@ -63,10 +63,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect",
         "config": {
+            "teambit.node/envs/node-babel-mocha@0.1.0": {},
+            "teambit.harmony/envs/core-aspect-env@0.0.69": {},
             "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.0": {}
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
         }
     },
     "aspect-docs/babel": {
@@ -1771,10 +1772,10 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/panels/composition-gallery",
         "config": {
+            "teambit.react/react": {},
             "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.0": {}
+                "env": "teambit.react/react"
+            }
         }
     },
     "path/is-path-inside": {
@@ -2059,10 +2060,10 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/this",
         "config": {
+            "teambit.react/react": {},
             "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.0": {}
+                "env": "teambit.react/react"
+            }
         }
     },
     "renderers/type": {
