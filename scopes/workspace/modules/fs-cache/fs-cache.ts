@@ -36,7 +36,20 @@ export class FsCache {
   }
 
   async deleteAllDependenciesDataCache() {
-    await cacache.rm.all(this.getCachePath(DEPS));
+    const cacheDir = this.getCachePath(DEPS);
+    try {
+      await cacache.rm.all(cacheDir);
+    } catch (err: any) {
+      if (err.code === 'ENOTEMPTY') {
+        // it happens when one process is deleting the cache and another one is writing to it.
+        // it rarely happens. if it happens, wait for a second and try again.
+        logger.error(`failed deleting the cache directory ${cacheDir}. retrying...`);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await cacache.rm.all(cacheDir);
+      } else {
+        throw err;
+      }
+    }
   }
 
   async deleteDependenciesDataCache(idStr: string) {
