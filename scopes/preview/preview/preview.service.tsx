@@ -109,6 +109,7 @@ export class PreviewService implements EnvService<any> {
       },
     });
 
+    if (!context.env.getBundler) return undefined;
     const bundler: Bundler = await context.env.getBundler(bundlerContext);
     await bundler.run();
     const res = componentIds.reduce((acc, id) => {

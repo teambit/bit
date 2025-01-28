@@ -37,7 +37,7 @@ export class EnvPlugin implements PluginDefinition {
       return { ...acc, ...currTransformer };
     }, {});
 
-    if (!env.preview && !env.compiler) return undefined;
+    // if (!env.preview && !env.compiler) return undefined;
 
     return {
       ...transformers,

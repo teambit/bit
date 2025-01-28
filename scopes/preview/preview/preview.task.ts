@@ -56,6 +56,7 @@ export class PreviewTask implements BuildTask {
       },
     });
 
+    if (!context.env.getBundler) return { componentsResults: [] };
     const bundler: Bundler = await context.env.getBundler(bundlerContext);
     const bundlerResults = await bundler.run();
 
@@ -77,9 +78,9 @@ export class PreviewTask implements BuildTask {
     moduleMap: ComponentMap<AbstractVinyl[]>,
     context: BuildContext
   ): ComponentMap<string[]> {
-    const compiler: Compiler = context.env.getCompiler(context);
+    const compiler: Compiler = context.env.getCompiler?.(context);
     return moduleMap.map((files) => {
-      return files.map((file) => join(capsule.path, compiler.getDistPathBySrcPath(file.relative)));
+      return files.map((file) => join(capsule.path, compiler?.getDistPathBySrcPath(file.relative) || file.relative));
     });
   }
 }

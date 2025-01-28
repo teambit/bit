@@ -110,8 +110,8 @@ export class EnvBundlingStrategy implements BundlingStrategy {
   }
 
   private getPaths(context: ComputeTargetsContext, files: AbstractVinyl[], capsule: Capsule) {
-    const compiler: Compiler = context.env.getCompiler();
-    return files.map((file) => join(capsule.path, compiler.getDistPathBySrcPath(file.relative)));
+    const compiler: Compiler = context.env.getCompiler?.();
+    return files.map((file) => join(capsule.path, compiler?.getDistPathBySrcPath(file.relative) || file.relative));
   }
 
   private async computePaths(
