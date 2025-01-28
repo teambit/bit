@@ -1172,10 +1172,10 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/model/composition-id",
         "config": {
+            "teambit.react/react": {},
             "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+                "env": "teambit.react/react"
+            }
         }
     },
     "model/composition-type": {
