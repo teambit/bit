@@ -2868,31 +2868,6 @@
     ]
   },
   {
-    "name": "insights [names...]",
-    "alias": "",
-    "options": [
-      [
-        "l",
-        "list",
-        "list all insights"
-      ],
-      [
-        "j",
-        "json",
-        "return the insights in json format"
-      ],
-      [
-        "",
-        "include-deps",
-        "include component dependencies that are not in this workspace"
-      ]
-    ],
-    "description": "Insights on component graph",
-    "extendedDescription": "",
-    "group": "development",
-    "private": true
-  },
-  {
     "name": "tag [component-patterns...]",
     "alias": "t",
     "options": [
@@ -4860,6 +4835,31 @@
         "skipWorkspace": false
       }
     ]
+  },
+  {
+    "name": "insights [names...]",
+    "alias": "",
+    "options": [
+      [
+        "l",
+        "list",
+        "list all insights"
+      ],
+      [
+        "j",
+        "json",
+        "return the insights in json format"
+      ],
+      [
+        "",
+        "include-deps",
+        "include component dependencies that are not in this workspace"
+      ]
+    ],
+    "description": "Insights on component graph",
+    "extendedDescription": "",
+    "group": "development",
+    "private": true
   },
   {
     "name": "status",
