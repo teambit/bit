@@ -623,6 +623,14 @@ export default class CommandHelper {
     return this.runCmd(`bit test ${flags}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
   }
 
+  format(pattern = '', flags = '') {
+    return this.runCmd(`bit format ${pattern} ${flags}`);
+  }
+
+  lint(pattern = '', flags = '') {
+    return this.runCmd(`bit lint ${pattern} ${flags}`);
+  }
+
   testComponent(id = '', flags = '') {
     return this.runCmd(`bit test ${id} ${flags}`);
   }

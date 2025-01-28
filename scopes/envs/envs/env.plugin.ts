@@ -37,8 +37,6 @@ export class EnvPlugin implements PluginDefinition {
       return { ...acc, ...currTransformer };
     }, {});
 
-    // if (!env.preview && !env.compiler) return undefined;
-
     return {
       ...transformers,
       name: env.name,
@@ -56,7 +54,6 @@ export class EnvPlugin implements PluginDefinition {
 
   register(object: any, aspect: { id: string }) {
     const env = this.transformToLegacyEnv(aspect.id, object);
-    if (!env) return undefined;
     // This is required when we call it manually and the aspect id fn return the wrong
     // id
     // We call the set directly because when we call it manually during install

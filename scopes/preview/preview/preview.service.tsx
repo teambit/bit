@@ -69,6 +69,10 @@ export class PreviewService implements EnvService<any> {
   }
 
   async run(context: ExecutionContext, options: { name: string }): Promise<any> {
+    if (!context.env.getBundler) {
+      return undefined;
+    }
+
     const defs = this.preview.getDefs();
     const onlyCompositionDef = defs.filter((def) => def.prefix === 'compositions');
     if (!onlyCompositionDef || onlyCompositionDef.length === 0) {
@@ -109,7 +113,6 @@ export class PreviewService implements EnvService<any> {
       },
     });
 
-    if (!context.env.getBundler) return undefined;
     const bundler: Bundler = await context.env.getBundler(bundlerContext);
     await bundler.run();
     const res = componentIds.reduce((acc, id) => {

@@ -578,6 +578,18 @@ export default new EmptyEnv();
       const output = helper.command.build();
       expect(output).to.have.string('build succeeded');
     });
+    it('bit format should not show an error', () => {
+      const output = helper.command.format();
+      expect(output).to.not.have.string('failed');
+    });
+    it('bit lint should not show an error', () => {
+      const output = helper.command.lint();
+      expect(output).to.not.have.string('failed');
+    });
+    it('bit test should not show an error', () => {
+      const output = helper.command.test();
+      expect(output).to.not.have.string('failed');
+    });
   });
 });
 

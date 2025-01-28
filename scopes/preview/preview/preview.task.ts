@@ -34,6 +34,10 @@ export class PreviewTask implements BuildTask {
   // readonly dependencies = [CompilerAspect.id];
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
+    if (!context.env.getBundler) {
+      return { componentsResults: [] };
+    }
+
     const defs = this.preview.getDefs();
     const url = `/preview/${context.envRuntime.id}`;
     const bundlingStrategy = this.preview.getBundlingStrategy(context.env);
@@ -56,7 +60,6 @@ export class PreviewTask implements BuildTask {
       },
     });
 
-    if (!context.env.getBundler) return { componentsResults: [] };
     const bundler: Bundler = await context.env.getBundler(bundlerContext);
     const bundlerResults = await bundler.run();
 
