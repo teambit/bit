@@ -330,6 +330,9 @@ export function createVariantPolicyEntry(
   lifecycleType: DependencyLifecycleType,
   opts: VariantPolicyFromConfigObjectOptions
 ): VariantPolicyEntry {
+  if (!value) {
+    throw new Error(`createVariantPolicyEntry, value is missing for ${depId}`);
+  }
   const version = typeof value === 'string' ? value : value.version;
   const resolveFromEnv = typeof value === 'string' ? false : value.resolveFromEnv;
   const optional = typeof value === 'string' ? undefined : value.optional;
