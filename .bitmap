@@ -48,27 +48,14 @@
         "scope": "teambit.toolbox",
         "version": "0.0.3",
         "mainFile": "find-duplications.ts",
-        "rootDir": "scopes/toolbox/array/duplications-finder",
-        "config": {
-            "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.3": {}
-        }
+        "rootDir": "scopes/toolbox/array/duplications-finder"
     },
     "aspect": {
         "name": "aspect",
         "scope": "teambit.harmony",
         "version": "1.0.529",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/aspect",
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@0.0.69": {},
-            "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.3": {}
-        }
+        "rootDir": "scopes/harmony/aspect"
     },
     "aspect-docs/babel": {
         "name": "aspect-docs/babel",
@@ -321,52 +308,28 @@
         "scope": "teambit.toolbox",
         "version": "0.0.50",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/tables/cli-table",
-        "config": {
-            "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.3": {}
-        }
+        "rootDir": "scopes/toolbox/tables/cli-table"
     },
     "cli/error": {
         "name": "cli/error",
         "scope": "teambit.legacy",
         "version": "0.0.10",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/cli/error",
-        "config": {
-            "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.3": {}
-        }
+        "rootDir": "components/legacy/cli/error"
     },
     "cli/prompts": {
         "name": "cli/prompts",
         "scope": "teambit.legacy",
         "version": "0.0.13",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/cli/prompts",
-        "config": {
-            "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.3": {}
-        }
+        "rootDir": "components/legacy/cli/prompts"
     },
     "cli/webpack-events-listener": {
         "name": "cli/webpack-events-listener",
         "scope": "teambit.preview",
         "version": "0.0.177",
         "mainFile": "index.ts",
-        "rootDir": "scopes/preview/cli/webpack-events-listener",
-        "config": {
-            "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.3": {}
-        }
+        "rootDir": "scopes/preview/cli/webpack-events-listener"
     },
     "cloud": {
         "name": "cloud",
@@ -1243,13 +1206,7 @@
         "scope": "teambit.compilation",
         "version": "0.0.141",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilation/modules/babel-compiler",
-        "config": {
-            "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.3": {}
-        }
+        "rootDir": "scopes/compilation/modules/babel-compiler"
     },
     "modules/component-package-name": {
         "name": "modules/component-package-name",
@@ -1341,13 +1298,7 @@
         "scope": "teambit.harmony",
         "version": "0.0.16",
         "mainFile": "feature-toggle.ts",
-        "rootDir": "scopes/harmony/modules/feature-toggle",
-        "config": {
-            "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.3": {}
-        }
+        "rootDir": "scopes/harmony/modules/feature-toggle"
     },
     "modules/fetch-html-from-url": {
         "name": "modules/fetch-html-from-url",
