@@ -591,6 +591,50 @@ export default new EmptyEnv();
       expect(output).to.not.have.string('failed');
     });
   });
+  describe('custom env with invalid env.jsonc', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.workspaceJsonc.setPackageManager();
+      const envName = helper.env.setCustomEnv();
+      const envId = `${helper.scopes.remote}/${envName}`;
+      helper.fixtures.populateComponents(1);
+      helper.command.setEnv('comp1', envId);
+    });
+    it('should throw a descriptive error when a policy entry is not an object', () => {
+      helper.fs.outputFile(
+        'node-env/env.jsonc',
+        `{
+  "policy": {
+    "dev": [
+      "lodash"
+    ]
+  }
+}`
+      );
+      const output = helper.general.runWithTryCatch('bit status');
+      expect(output).to.have.string(
+        'error: failed validating the env.jsonc file. policy.dev entry must be an object, got type "string" value: "lodash"'
+      );
+    });
+    it('should throw a descriptive error when a policy entry object has no "version" field', () => {
+      helper.fs.outputFile(
+        'node-env/env.jsonc',
+        `{
+  "policy": {
+    "dev": [
+      {
+        "name": "lodash"
+      }
+    ]
+  }
+}`
+      );
+      const output = helper.general.runWithTryCatch('bit status');
+      expect(output).to.have.string(
+        'error: failed validating the env.jsonc file. policy.dev entry must have a "version" property'
+      );
+    });
+  });
 });
 
 function getEnvIdFromModel(compModel: any): string {
