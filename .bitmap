@@ -709,13 +709,7 @@
         "scope": "teambit.envs",
         "version": "1.0.528",
         "mainFile": "index.ts",
-        "rootDir": "scopes/envs/env",
-        "config": {
-            "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
-        }
+        "rootDir": "scopes/envs/env"
     },
     "envs": {
         "name": "envs",
@@ -995,10 +989,10 @@
         "mainFile": "index.ts",
         "rootDir": "components/hooks/use-lane-components",
         "config": {
+            "teambit.react/react": {},
             "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+                "env": "teambit.react/react"
+            }
         }
     },
     "hooks/use-lanes": {
@@ -1745,10 +1739,10 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/overview/api-reference-table-of-contents",
         "config": {
+            "teambit.react/react": {},
             "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+                "env": "teambit.react/react"
+            }
         }
     },
     "overview/renderers/grouped-schema-nodes-overview-summary": {
@@ -2718,10 +2712,10 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/ui/login",
         "config": {
+            "teambit.react/react": {},
             "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+                "env": "teambit.react/react"
+            }
         }
     },
     "ui/menus/use-lanes-menu": {
