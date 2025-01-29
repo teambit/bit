@@ -41,7 +41,7 @@ export class FormatterMain {
     return formatResults;
   }
 
-  getFormatter(context: ExecutionContext, options: FormatterOptions): Formatter {
+  getFormatter(context: ExecutionContext, options: FormatterOptions): Formatter | undefined {
     return this.formatterService.getFormatter(context, options);
   }
 

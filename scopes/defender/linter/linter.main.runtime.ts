@@ -35,7 +35,7 @@ export class LinterMain {
     return lintResults;
   }
 
-  getLinter(context: ExecutionContext, options: LinterOptions): Linter {
+  getLinter(context: ExecutionContext, options: LinterOptions): Linter | undefined {
     return this.linterService.getLinter(context, options);
   }
 
