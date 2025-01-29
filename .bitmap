@@ -19,7 +19,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "api-reference": {
@@ -53,7 +53,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "aspect": {
@@ -67,7 +67,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.harmony/envs/core-aspect-env"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "aspect-docs/babel": {
@@ -234,7 +234,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "bit": {
@@ -251,7 +251,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/bit-map",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "builder": {
@@ -271,7 +271,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "bundler": {
@@ -326,7 +326,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "cli/error": {
@@ -339,7 +339,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "cli/prompts": {
@@ -352,7 +352,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "cli/webpack-events-listener": {
@@ -365,7 +365,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "cloud": {
@@ -434,7 +434,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "component-issues": {
@@ -447,7 +447,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "component-list": {
@@ -457,7 +457,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/component-list",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "component-log": {
@@ -477,7 +477,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "component-sizer": {
@@ -536,7 +536,7 @@
         "mainFile": "constants.ts",
         "rootDir": "components/legacy/constants",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "consumer": {
@@ -546,7 +546,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/consumer",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "consumer-component": {
@@ -556,7 +556,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/consumer-component",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "consumer-config": {
@@ -566,7 +566,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/consumer-config",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "content/cli-reference": {
@@ -586,7 +586,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "dependencies": {
@@ -606,7 +606,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "dependency-resolver": {
@@ -644,7 +644,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/semantics/doc-parser",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "docs": {
@@ -668,7 +668,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/e2e-helper",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "eject": {
@@ -688,7 +688,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "entities/semantic-schema": {
@@ -701,7 +701,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "env": {
@@ -735,7 +735,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "eslint/config-mutator": {
@@ -748,7 +748,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "explorer/api-reference-explorer": {
@@ -779,7 +779,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/extension-data",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "forking": {
@@ -806,7 +806,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "fs/hard-link-directory": {
@@ -826,7 +826,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "fs/last-modified": {
@@ -839,7 +839,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "fs/link-or-symlink": {
@@ -852,7 +852,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "fs/linked-dependencies": {
@@ -865,7 +865,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "fs/remove-empty-dir": {
@@ -878,7 +878,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "generator": {
@@ -898,7 +898,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "git": {
@@ -960,7 +960,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "hooks/use-current-user": {
@@ -973,7 +973,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "hooks/use-lane-components": {
@@ -1006,7 +1006,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "hooks/use-viewed-lane-from-url": {
@@ -1019,7 +1019,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "host-initializer": {
@@ -1095,7 +1095,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "linter": {
@@ -1122,7 +1122,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "mdx": {
@@ -1176,7 +1176,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "models/api-node-renderer": {
@@ -1196,7 +1196,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "models/cloud-scope": {
@@ -1209,7 +1209,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "models/cloud-user": {
@@ -1222,7 +1222,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "models/scope-model": {
@@ -1235,7 +1235,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/babel-compiler": {
@@ -1248,7 +1248,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/component-package-name": {
@@ -1261,7 +1261,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/component-url": {
@@ -1274,7 +1274,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/concurrency": {
@@ -1287,7 +1287,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/config-mutator": {
@@ -1307,7 +1307,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/create-lane": {
@@ -1320,7 +1320,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/diff": {
@@ -1333,7 +1333,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/feature-toggle": {
@@ -1346,7 +1346,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/fetch-html-from-url": {
@@ -1359,7 +1359,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/find-scope-path": {
@@ -1372,7 +1372,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/fs-cache": {
@@ -1385,7 +1385,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/generate-expose-loaders": {
@@ -1398,7 +1398,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/generate-externals": {
@@ -1411,7 +1411,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/generate-style-loaders": {
@@ -1424,7 +1424,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/get-basic-log": {
@@ -1437,7 +1437,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/get-cloud-user": {
@@ -1450,7 +1450,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/git-executable": {
@@ -1463,7 +1463,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/harmony-root-generator": {
@@ -1476,7 +1476,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/ignore-file-reader": {
@@ -1489,7 +1489,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/in-memory-cache": {
@@ -1502,7 +1502,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/match-pattern": {
@@ -1515,7 +1515,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/merge-component-results": {
@@ -1528,7 +1528,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/module-resolver": {
@@ -1541,7 +1541,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/node-modules-linker": {
@@ -1554,7 +1554,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/requireable-component": {
@@ -1567,7 +1567,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/resolved-component": {
@@ -1580,7 +1580,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/semver-helper": {
@@ -1593,7 +1593,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/send-server-sent-events": {
@@ -1606,7 +1606,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/style-regexps": {
@@ -1619,7 +1619,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "modules/ts-config-mutator": {
@@ -1639,7 +1639,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "mover": {
@@ -1670,7 +1670,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/network",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "network/get-port": {
@@ -1683,7 +1683,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "new-component-helper": {
@@ -1764,7 +1764,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "path/match-patterns": {
@@ -1777,7 +1777,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "path/path": {
@@ -1790,7 +1790,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "path/to-windows-compatible-path": {
@@ -1803,7 +1803,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "pkg": {
@@ -1823,7 +1823,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "pnpm": {
@@ -1850,7 +1850,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "preview": {
@@ -1867,7 +1867,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/promise/map-pool",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "pubsub": {
@@ -1915,7 +1915,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "remotes": {
@@ -1928,7 +1928,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "remove": {
@@ -2115,7 +2115,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "sections/api-reference-page": {
@@ -2153,7 +2153,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/snap-distance",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "snapping": {
@@ -2170,7 +2170,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/sources",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "stash": {
@@ -2197,7 +2197,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "string/ellipsis": {
@@ -2210,7 +2210,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "string/eol": {
@@ -2223,7 +2223,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "string/get-initials": {
@@ -2236,7 +2236,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "string/random": {
@@ -2249,7 +2249,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "string/strip-trailing-char": {
@@ -2262,7 +2262,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "tagged-exports": {
@@ -2293,7 +2293,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/global-config",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "teambit.legacy/logger": {
@@ -2303,7 +2303,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/logger",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "teambit.legacy/scope": {
@@ -2313,7 +2313,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/scope",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "teambit.scope/scope": {
@@ -2340,7 +2340,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "testing/mock-components": {
@@ -2353,7 +2353,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "testing/mock-workspace": {
@@ -2366,7 +2366,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "time/time-format": {
@@ -2379,7 +2379,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "time/timer": {
@@ -2392,7 +2392,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "tracker": {
@@ -2412,7 +2412,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "types/serializable": {
@@ -2425,7 +2425,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "typescript": {
@@ -2843,7 +2843,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "url/query-string": {
@@ -2856,7 +2856,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "user-agent": {
@@ -2873,7 +2873,7 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/utils",
         "config": {
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "utils/code-editor-options": {
@@ -2886,7 +2886,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "utils/copy-schema-node": {
@@ -2899,7 +2899,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "utils/custom-prism-syntax-highlighter-theme": {
@@ -2912,7 +2912,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "utils/group-schema-node-by-signature": {
@@ -2925,7 +2925,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "utils/schema-node-signature-transform": {
@@ -2938,7 +2938,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "utils/sort-api-nodes": {
@@ -2951,7 +2951,7 @@
             "teambit.envs/envs": {
                 "env": "teambit.node/envs/node-babel-mocha"
             },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
+            "teambit.node/envs/node-babel-mocha@0.1.3": {}
         }
     },
     "variants": {
