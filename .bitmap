@@ -814,13 +814,7 @@
         "scope": "teambit.toolbox",
         "version": "0.0.23",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/fs/hard-link-directory",
-        "config": {
-            "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
-        }
+        "rootDir": "scopes/toolbox/fs/hard-link-directory"
     },
     "fs/is-dir-empty": {
         "name": "fs/is-dir-empty",
@@ -1301,13 +1295,7 @@
         "scope": "teambit.webpack",
         "version": "0.0.172",
         "mainFile": "index.ts",
-        "rootDir": "scopes/webpack/config-mutator",
-        "config": {
-            "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
-        }
+        "rootDir": "scopes/webpack/config-mutator"
     },
     "modules/create-element-from-string": {
         "name": "modules/create-element-from-string",
@@ -1639,13 +1627,7 @@
         "scope": "teambit.typescript",
         "version": "0.0.85",
         "mainFile": "index.ts",
-        "rootDir": "scopes/typescript/modules/ts-config-mutator",
-        "config": {
-            "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-babel-mocha"
-            },
-            "teambit.node/envs/node-babel-mocha@0.1.2": {}
-        }
+        "rootDir": "scopes/typescript/modules/ts-config-mutator"
     },
     "modules/workspace-locator": {
         "name": "modules/workspace-locator",
