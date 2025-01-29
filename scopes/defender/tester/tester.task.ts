@@ -20,6 +20,9 @@ export class TesterTask implements BuildTask {
   ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
+    if (!context.env.getTester) {
+      return { componentsResults: [] };
+    }
     const components = context.capsuleNetwork.originalSeedersCapsules.getAllComponents();
     const tester: Tester = context.env.getTester();
     const componentsSpecFiles = ComponentMap.as(components, (component) => {
