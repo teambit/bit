@@ -360,8 +360,8 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
   private getPaths(context: ComputeTargetsContext, component: Component, files: AbstractVinyl[]) {
     const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
     if (!capsule) return [];
-    const compiler: Compiler = context.env.getCompiler();
-    return files.map((file) => join(capsule.path, compiler.getDistPathBySrcPath(file.relative)));
+    const compiler: Compiler = context.env.getCompiler?.();
+    return files.map((file) => join(capsule.path, compiler?.getDistPathBySrcPath(file.relative) || file.relative));
   }
 
   private getComponentOutputPath(capsule: Capsule, context: ComputeTargetsContext) {

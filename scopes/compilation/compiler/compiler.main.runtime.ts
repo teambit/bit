@@ -37,7 +37,7 @@ export class CompilerMain {
     private compilerService: CompilerService
   ) {}
 
-  getCompiler(context: ExecutionContext): Compiler {
+  getCompiler(context: ExecutionContext): Compiler | undefined {
     return this.compilerService.getCompiler(context);
   }
 

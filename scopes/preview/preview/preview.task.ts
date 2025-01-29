@@ -34,6 +34,10 @@ export class PreviewTask implements BuildTask {
   // readonly dependencies = [CompilerAspect.id];
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
+    if (!context.env.getBundler) {
+      return { componentsResults: [] };
+    }
+
     const defs = this.preview.getDefs();
     const url = `/preview/${context.envRuntime.id}`;
     const bundlingStrategy = this.preview.getBundlingStrategy(context.env);
@@ -77,9 +81,9 @@ export class PreviewTask implements BuildTask {
     moduleMap: ComponentMap<AbstractVinyl[]>,
     context: BuildContext
   ): ComponentMap<string[]> {
-    const compiler: Compiler = context.env.getCompiler(context);
+    const compiler: Compiler = context.env.getCompiler?.(context);
     return moduleMap.map((files) => {
-      return files.map((file) => join(capsule.path, compiler.getDistPathBySrcPath(file.relative)));
+      return files.map((file) => join(capsule.path, compiler?.getDistPathBySrcPath(file.relative) || file.relative));
     });
   }
 }
