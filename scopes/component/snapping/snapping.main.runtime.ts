@@ -39,7 +39,7 @@ import {
 } from '@teambit/objects';
 import { Component } from '@teambit/component';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { LaneId } from '@teambit/lane-id';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
@@ -400,6 +400,19 @@ if you're willing to lose the history from the head to the specified version, us
     };
   }
 
+  private async addAspectsFromConfigObject(component: Component, configObject: Record<string, any>) {
+    ExtensionDataList.adjustEnvsOnConfigObject(configObject);
+    const extensionsFromConfigObject = ExtensionDataList.fromConfigObject(configObject);
+    const autoDeps = extensionsFromConfigObject.removeAutoDepsFromConfig();
+    const consumerComponent: ConsumerComponent = component.state._consumer;
+    const extensionDataList = ExtensionDataList.mergeConfigs([
+      extensionsFromConfigObject,
+      consumerComponent.extensions,
+    ]).filterRemovedExtensions();
+    consumerComponent.extensions = extensionDataList;
+    await this.deps.loadDependenciesFromScope(consumerComponent, autoDeps as any);
+  }
+
   async snapFromScope(
     snapDataPerCompRaw: SnapDataPerCompRaw[],
     params: {
@@ -507,7 +520,7 @@ if you're willing to lose the history from the head to the specified version, us
     await Promise.all(
       existingComponents.map(async (comp) => {
         const snapData = getSnapData(comp.id);
-        if (snapData.aspects) await this.scope.addAspectsFromConfigObject(comp, snapData.aspects);
+        if (snapData.aspects) await this.addAspectsFromConfigObject(comp, snapData.aspects);
         if (snapData.files?.length) {
           await this.updateSourceFiles(comp, snapData.files);
         }

@@ -32,7 +32,6 @@ export class AspectsMerger {
    * defaults extensions from workspace config
    * extensions from the model.
    */
-  // eslint-disable-next-line complexity
   async merge(
     componentId: ComponentID,
     componentFromScope?: Component,
@@ -62,14 +61,6 @@ export class AspectsMerger {
       errors.push(err);
     }
 
-    const adjustEnvsOnConfigMerge = (conf: Record<string, any>) => {
-      const env = conf[EnvsAspect.id]?.env;
-      if (!env) return;
-      const [id] = env.split('@');
-      conf[EnvsAspect.id] = { env: id };
-      conf[env] = {};
-    };
-
     const unmergedData = this.getUnmergedData(componentId);
     const unmergedDataMergeConf = unmergedData?.mergedConfig;
     const getMergeConfigCombined = () => {
@@ -86,7 +77,7 @@ export class AspectsMerger {
       });
     };
     const mergeConfigCombined = getMergeConfigCombined();
-    adjustEnvsOnConfigMerge(mergeConfigCombined || {});
+    ExtensionDataList.adjustEnvsOnConfigObject(mergeConfigCombined || {});
 
     const configMergeExtensions = mergeConfigCombined
       ? ExtensionDataList.fromConfigObject(mergeConfigCombined)
@@ -214,36 +205,15 @@ export class AspectsMerger {
    */
   private removeAutoDepsFromConfig(componentId: ComponentID, conf?: ExtensionDataList, fromScope = false) {
     if (!conf) return;
-    const policy = conf.findCoreExtension(DependencyResolverAspect.id)?.config.policy;
-    if (!policy) return;
-
-    const mergeConfigObj = {};
-    ['dependencies', 'devDependencies', 'peerDependencies'].forEach((key) => {
-      if (!policy[key]) return;
-      // this is only relevant when it is saved as an array. otherwise, it's always force: true.
-      if (!Array.isArray(policy[key])) return;
-
-      mergeConfigObj[key] = policy[key].filter((dep) => !dep.force);
-      policy[key] = policy[key].filter((dep) => dep.force);
-
-      if (!policy[key].length) {
-        delete policy[key];
-        return;
-      }
-      // convert to object
-      policy[key] = policy[key].reduce((acc, current) => {
-        acc[current.name] = current.version;
-        return acc;
-      }, {});
-    });
-
+    const autoDepsObj = conf.removeAutoDepsFromConfig();
+    if (!autoDepsObj) return;
     if (!fromScope) {
       if (!this.mergeConfigDepsResolverDataCache[componentId.toString()]) {
         this.mergeConfigDepsResolverDataCache[componentId.toString()] = {};
       }
       this.mergeConfigDepsResolverDataCache[componentId.toString()] = merge(
         this.mergeConfigDepsResolverDataCache[componentId.toString()],
-        mergeConfigObj
+        autoDepsObj
       );
     }
   }
