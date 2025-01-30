@@ -374,10 +374,7 @@ export class InstallMain {
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
       const oldNonLoadedEnvs = this.setOldNonLoadedEnvs();
-      // await this.reloadMovedEnvs();
-      // For now changing it from only reloadMovedEnvs to reload all registered envs.
-      // it doesn't take much more time, and it make it more stable.
-      await this.reloadRegisteredEnvs();
+      await this.reloadMovedEnvs();
       await this.reloadNonLoadedEnvs();
 
       const shouldClearCacheOnInstall = this.shouldClearCacheOnInstall();
@@ -425,6 +422,8 @@ export class InstallMain {
       // We clean node_modules only after the last install.
       // Otherwise, we might load an env from a location that we later remove.
       await installer.pruneModules(this.workspace.path);
+      // After pruning we need reload moved envs, as during the pruning the old location might be deleted
+      await this.reloadMovedEnvs();
     }
     // this is now commented out because we assume we don't need it anymore.
     // even when the env was not loaded before and it is loaded now, it should be fine because the dependencies-data
@@ -1311,10 +1310,7 @@ export class InstallMain {
       logger.debug('got onPostInstall event, clear workspace and all components cache');
       await workspace.clearCache();
       await pMapSeries(postInstallSlot.values(), (fn) => fn());
-      // await installExt.reloadMovedEnvs();
-      // For now changing it from only reloadMovedEnvs to reload all registered envs.
-      // it doesn't take much more time, and it make it more stable.
-      await installExt.reloadRegisteredEnvs();
+      await installExt.reloadMovedEnvs();
     });
     if (issues) {
       issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));
