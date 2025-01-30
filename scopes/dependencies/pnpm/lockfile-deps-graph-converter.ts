@@ -232,7 +232,7 @@ export function convertGraphToLockfile(
             const edgeId = rootEdge.neighbours.find(
               (directDep) =>
                 directDep.name === name &&
-                (directDep.specifier === specifier || directDep.id === `${name}@${specifier}`)
+                (directDep.specifier === specifier || dp.removeSuffix(directDep.id) === `${name}@${specifier}`)
             )?.id;
             if (edgeId) {
               const parsed = dp.parse(edgeId);
