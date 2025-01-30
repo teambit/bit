@@ -374,7 +374,10 @@ export class InstallMain {
       let cacheCleared = false;
       await this.linkCodemods(compDirMap);
       const oldNonLoadedEnvs = this.setOldNonLoadedEnvs();
-      await this.reloadMovedEnvs();
+      // await this.reloadMovedEnvs();
+      // For now changing it from only reloadMovedEnvs to reload all registered envs.
+      // it doesn't take much more time, and it make it more stable.
+      await this.reloadRegisteredEnvs();
       await this.reloadNonLoadedEnvs();
 
       const shouldClearCacheOnInstall = this.shouldClearCacheOnInstall();
@@ -474,6 +477,13 @@ export class InstallMain {
       return !regularPathExists || !resolvedPathExists;
     });
     const idsToLoad = movedEnvs.map((env) => env.id);
+    const componentIdsToLoad = idsToLoad.map((id) => ComponentID.fromString(id));
+    await this.reloadEnvs(componentIdsToLoad);
+  }
+
+  private async reloadRegisteredEnvs() {
+    const allEnvs = this.envs.getAllRegisteredEnvs();
+    const idsToLoad = compact(allEnvs.map((env) => env.id));
     const componentIdsToLoad = idsToLoad.map((id) => ComponentID.fromString(id));
     await this.reloadEnvs(componentIdsToLoad);
   }
@@ -1301,7 +1311,10 @@ export class InstallMain {
       logger.debug('got onPostInstall event, clear workspace and all components cache');
       await workspace.clearCache();
       await pMapSeries(postInstallSlot.values(), (fn) => fn());
-      await installExt.reloadMovedEnvs();
+      // await installExt.reloadMovedEnvs();
+      // For now changing it from only reloadMovedEnvs to reload all registered envs.
+      // it doesn't take much more time, and it make it more stable.
+      await installExt.reloadRegisteredEnvs();
     });
     if (issues) {
       issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));
