@@ -3,7 +3,7 @@ import { Component } from '@teambit/component';
 import { UnmergedComponent } from '@teambit/legacy.scope';
 import { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 import { ExtensionDataList, getCompareExtPredicate } from '@teambit/legacy.extension-data';
 import { partition, mergeWith, merge, uniq, uniqWith, compact } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
@@ -12,7 +12,7 @@ import { MergeConflictFile } from './merge-conflict-file';
 
 export class AspectsMerger {
   readonly mergeConflictFile: MergeConflictFile;
-  private mergeConfigDepsResolverDataCache: { [compIdStr: string]: Record<string, any> } = {};
+  private mergeConfigDepsResolverDataCache: { [compIdStr: string]: VariantPolicyConfigArr } = {};
   constructor(
     private workspace: Workspace,
     private harmony: Harmony
@@ -20,7 +20,7 @@ export class AspectsMerger {
     this.mergeConflictFile = new MergeConflictFile(workspace.path);
   }
 
-  getDepsDataOfMergeConfig(id: ComponentID) {
+  getDepsDataOfMergeConfig(id: ComponentID): VariantPolicyConfigArr {
     return this.mergeConfigDepsResolverDataCache[id.toString()];
   }
 
@@ -205,7 +205,7 @@ export class AspectsMerger {
    */
   private removeAutoDepsFromConfig(componentId: ComponentID, conf?: ExtensionDataList, fromScope = false) {
     if (!conf) return;
-    const autoDepsObj = conf.removeAutoDepsFromConfig();
+    const autoDepsObj = conf.extractAutoDepsFromConfig();
     if (!autoDepsObj) return;
     if (!fromScope) {
       if (!this.mergeConfigDepsResolverDataCache[componentId.toString()]) {

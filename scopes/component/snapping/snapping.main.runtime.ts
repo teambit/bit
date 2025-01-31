@@ -38,7 +38,7 @@ import {
   AddVersionOpts,
 } from '@teambit/objects';
 import { Component } from '@teambit/component';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { LaneId } from '@teambit/lane-id';
@@ -400,17 +400,22 @@ if you're willing to lose the history from the head to the specified version, us
     };
   }
 
-  private async addAspectsFromConfigObject(component: Component, configObject: Record<string, any>) {
+  private async addAspectsFromConfigObject(
+    component: Component,
+    configObject?: Record<string, any>
+  ): Promise<VariantPolicyConfigArr | undefined> {
+    if (!configObject) return;
     ExtensionDataList.adjustEnvsOnConfigObject(configObject);
     const extensionsFromConfigObject = ExtensionDataList.fromConfigObject(configObject);
-    const autoDeps = extensionsFromConfigObject.removeAutoDepsFromConfig();
+    const autoDeps = extensionsFromConfigObject.extractAutoDepsFromConfig();
     const consumerComponent: ConsumerComponent = component.state._consumer;
     const extensionDataList = ExtensionDataList.mergeConfigs([
       extensionsFromConfigObject,
       consumerComponent.extensions,
     ]).filterRemovedExtensions();
     consumerComponent.extensions = extensionDataList;
-    await this.deps.loadDependenciesFromScope(consumerComponent, autoDeps as any);
+
+    return autoDeps;
   }
 
   async snapFromScope(
@@ -512,15 +517,16 @@ if you're willing to lose the history from the head to the specified version, us
     // this must be done before we load component aspects later on, because this updated deps may update aspects.
     await pMapSeries(components, async (component) => {
       const snapData = getSnapData(component.id);
+      const autoDeps = await this.addAspectsFromConfigObject(component, snapData.aspects);
+
       // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
-      await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver, this);
+      await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver, this, autoDeps);
     });
 
     // for new components these are not needed. coz when generating them we already add the aspects and the files.
     await Promise.all(
       existingComponents.map(async (comp) => {
         const snapData = getSnapData(comp.id);
-        if (snapData.aspects) await this.addAspectsFromConfigObject(comp, snapData.aspects);
         if (snapData.files?.length) {
           await this.updateSourceFiles(comp, snapData.files);
         }

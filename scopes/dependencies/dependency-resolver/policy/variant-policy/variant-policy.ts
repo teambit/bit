@@ -25,6 +25,9 @@ type VariantPolicyLifecycleConfigEntryObject = {
   optional?: boolean;
 };
 
+export type VariantPolicyConfigArr = Partial<Record<PolicyConfigKeysNames, VariantPolicyLifecycleConfigEntryObject[]>>;
+type VariantPolicyConfigObj = Partial<Record<PolicyConfigKeysNames, Record<string, VariantPolicyConfigEntryValue>>>;
+
 export type VariantPolicyConfigEntryValue = VariantPolicyEntryValue | VariantPolicyEntryVersion;
 
 /**
@@ -229,7 +232,10 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     return res;
   }
 
-  static fromConfigObject(configObject, options: VariantPolicyFromConfigObjectOptions = {}): VariantPolicy {
+  static fromConfigObject(
+    configObject: VariantPolicyConfigArr | VariantPolicyConfigObj,
+    options: VariantPolicyFromConfigObjectOptions = {}
+  ): VariantPolicy {
     const runtimeEntries = entriesFromKey(configObject, 'dependencies', options);
     const devEntries = entriesFromKey(configObject, 'devDependencies', options);
     const peerEntries = entriesFromKey(configObject, 'peerDependencies', options);
@@ -268,7 +274,7 @@ function uniqEntries(entries: Array<VariantPolicyEntry>): Array<VariantPolicyEnt
 }
 
 function entriesFromKey(
-  configObject: VariantPolicyConfigObject,
+  configObject: VariantPolicyConfigArr | VariantPolicyConfigObj,
   keyName: PolicyConfigKeysNames,
   options: VariantPolicyFromConfigObjectOptions
 ): VariantPolicyEntry[] {

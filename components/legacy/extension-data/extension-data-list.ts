@@ -7,8 +7,8 @@ import {
   reStructureBuildArtifacts,
 } from '@teambit/component.sources';
 import { ExtensionDataEntry, REMOVE_EXTENSION_SPECIAL_SIGN } from './extension-data';
-import EnvsAspect from '@teambit/envs';
-import DependencyResolverAspect from '@teambit/dependency-resolver';
+import { EnvsAspect } from '@teambit/envs';
+import { DependencyResolverAspect, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 
 type ExtensionConfig = { [extName: string]: any } | RemoveExtensionSpecialSign;
 type ConfigOnlyEntry = {
@@ -156,11 +156,11 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
    * 1. force: true, which gets saved into the config.
    * 2. force: false, which gets saved into the data.dependencies later on. see the workspace.getAutoDetectOverrides()
    */
-  removeAutoDepsFromConfig() {
+  extractAutoDepsFromConfig(): VariantPolicyConfigArr | undefined {
     const policy = this.findCoreExtension(DependencyResolverAspect.id)?.config.policy;
     if (!policy) return;
 
-    const autoDepsObj = {};
+    const autoDepsObj: VariantPolicyConfigArr = {};
     ['dependencies', 'devDependencies', 'peerDependencies'].forEach((key) => {
       if (!policy[key]) return;
       // this is only relevant when it is saved as an array. otherwise, it's always force: true.
