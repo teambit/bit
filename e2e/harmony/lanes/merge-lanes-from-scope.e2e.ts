@@ -513,13 +513,48 @@ describe('merge lanes from scope', function () {
     });
     it('should update the dependencies according to main', () => {
       const comp1HeadOnLane = helper.command.getHeadOfLane(`${helper.scopes.remote}/dev`, `comp1`, bareMerge.scopePath);
-      const obj = helper.command.catComponent(`comp2@${comp1HeadOnLane}`, bareMerge.scopePath);
+      const obj = helper.command.catComponent(`comp1@${comp1HeadOnLane}`, bareMerge.scopePath);
       expect(obj.dependencies[0].id.name).to.equal('comp2');
       expect(obj.dependencies[0].id.version).to.equal('0.0.2');
       expect(obj.flattenedDependencies[0].version).to.equal('0.0.2');
       const depsResolver = obj.extensions.find((e) => e.name === 'teambit.dependencies/dependency-resolver');
       const comp2 = depsResolver.data.dependencies.find((d) => d.id.includes('comp2'));
       expect(comp2.version).to.equal('0.0.2');
+    });
+  });
+  describe('merge from scope, main to lane when they are diverged with env update', () => {
+    let bareMerge;
+    let envName: string;
+    let envId: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+      helper.command.getHeadOfLane('dev', 'comp1');
+
+      helper.command.switchLocalLane('main', '-x');
+
+      envName = helper.env.setCustomEnv();
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.setEnv('comp1', envId);
+      helper.command.tagAllWithoutBuild('-m "second tag on main"');
+      helper.command.export();
+
+      bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+      helper.command.mergeLaneFromScope(bareMerge.scopePath, 'main', `${helper.scopes.remote}/dev`);
+    });
+    it('should update the env according to main', () => {
+      const comp1HeadOnLane = helper.command.getHeadOfLane(`${helper.scopes.remote}/dev`, `comp1`, bareMerge.scopePath);
+      const obj = helper.command.catComponent(`comp1@${comp1HeadOnLane}`, bareMerge.scopePath);
+      const envExt = obj.extensions.find((e) => e.name === 'teambit.envs/envs');
+      expect(envExt.config.env).to.equal(envId);
+      expect(envExt.data.id).to.equal(envId);
     });
   });
 });
