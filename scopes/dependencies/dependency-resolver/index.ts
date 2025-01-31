@@ -49,6 +49,7 @@ export type {
   SerializedVariantPolicy,
   WorkspacePolicyConfigKeysNames,
   EnvPolicyConfigObject,
+  VariantPolicyConfigArr,
 } from './policy';
 export { DependencyLinker } from './dependency-linker';
 export type {

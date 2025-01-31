@@ -315,6 +315,9 @@ export class MergeLanesMain {
     }
     const configMergeResults = compact(allComponentsStatus.map((c) => c.configMergeResult));
 
+    const mergedSnapIds = ComponentIdList.fromArray(
+      mergeResults.mergeSnapResults?.snappedComponents.map((c) => c.id) || []
+    );
     const componentsWithConfigConflicts = configMergeResults.filter((c) => c.hasConflicts()).map((c) => c.compIdStr);
     const conflicts: ConflictPerId[] = [];
     const mergedSuccessfullyIds: ComponentID[] = [];
@@ -325,7 +328,10 @@ export class MergeLanesMain {
       const config = componentsWithConfigConflicts.includes(c.id.toStringWithoutVersion());
       if (files.length || config) {
         conflicts.push({ id: c.id, files, config });
-      } else mergedSuccessfullyIds.push(c.id);
+      } else {
+        const snappedId = mergedSnapIds.searchWithoutVersion(c.id);
+        mergedSuccessfullyIds.push(snappedId || c.id);
+      }
     });
 
     await this.workspace?.consumer.onDestroy(`lane-merge (${otherLaneId.name})`);

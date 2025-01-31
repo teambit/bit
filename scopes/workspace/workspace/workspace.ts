@@ -22,6 +22,7 @@ import {
   DependencyResolverAspect,
   VariantPolicy,
   DependencyList,
+  VariantPolicyConfigArr,
 } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect, EnvJsonc } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
@@ -1366,7 +1367,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.aspectsMerger.mergeConflictFile;
   }
 
-  getDepsDataOfMergeConfig(id: ComponentID): Record<string, any> | undefined {
+  getDepsDataOfMergeConfig(id: ComponentID): VariantPolicyConfigArr {
     return this.aspectsMerger.getDepsDataOfMergeConfig(id);
   }
 

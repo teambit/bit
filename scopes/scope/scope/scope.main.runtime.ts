@@ -1160,15 +1160,6 @@ export class ScopeMain implements ComponentFactory {
     await this.loadAspects(aspectIds, true, component.id.toString());
   }
 
-  async addAspectsFromConfigObject(component: Component, configObject: Record<string, any>) {
-    const extensionsFromConfigObject = ExtensionDataList.fromConfigObject(configObject);
-    const extensionDataList = ExtensionDataList.mergeConfigs([
-      extensionsFromConfigObject,
-      component.state._consumer.extensions,
-    ]).filterRemovedExtensions();
-    component.state._consumer.extensions = extensionDataList;
-  }
-
   public async createAspectListFromExtensionDataList(extensionDataList: ExtensionDataList) {
     const entries = await Promise.all(extensionDataList.map((entry) => this.extensionDataEntryToAspectEntry(entry)));
     return this.componentExtension.createAspectListFromEntries(entries);

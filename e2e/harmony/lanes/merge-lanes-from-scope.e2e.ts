@@ -481,4 +481,111 @@ describe('merge lanes from scope', function () {
       expect(mergeFunc).to.throw('unable to merge, the following components are not up-to-date');
     });
   });
+  describe('merge from scope, main to lane when they are diverged with dependencies update', () => {
+    let bareMerge;
+    let comp1HeadOnMain: string;
+    let comp1OnLane: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+      comp1OnLane = helper.command.getHeadOfLane('dev', 'comp1');
+
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.tagAllWithoutBuild('--unmodified -m "second tag on main"');
+      helper.command.export();
+      comp1HeadOnMain = helper.command.getHead('comp1');
+
+      bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+      helper.command.mergeLaneFromScope(bareMerge.scopePath, 'main', `${helper.scopes.remote}/dev`);
+    });
+    it('should snap on the lane with two parents: main and lane', () => {
+      const comp1HeadOnLane = helper.command.getHeadOfLane(`${helper.scopes.remote}/dev`, `comp1`, bareMerge.scopePath);
+      const obj = helper.command.catComponent(`comp2@${comp1HeadOnLane}`, bareMerge.scopePath);
+      expect(obj.parents).to.have.lengthOf(2);
+      expect(obj.parents).to.include(comp1HeadOnMain);
+      expect(obj.parents).to.include(comp1OnLane);
+    });
+    it('should update the dependencies according to main', () => {
+      const comp1HeadOnLane = helper.command.getHeadOfLane(`${helper.scopes.remote}/dev`, `comp1`, bareMerge.scopePath);
+      const obj = helper.command.catComponent(`comp1@${comp1HeadOnLane}`, bareMerge.scopePath);
+      expect(obj.dependencies[0].id.name).to.equal('comp2');
+      expect(obj.dependencies[0].id.version).to.equal('0.0.2');
+      expect(obj.flattenedDependencies[0].version).to.equal('0.0.2');
+      const depsResolver = obj.extensions.find((e) => e.name === 'teambit.dependencies/dependency-resolver');
+      const comp2 = depsResolver.data.dependencies.find((d) => d.id.includes('comp2'));
+      expect(comp2.version).to.equal('0.0.2');
+    });
+  });
+  describe('merge from scope, main to lane when they are diverged with env update', () => {
+    let bareMerge;
+    let envName: string;
+    let envId: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+      helper.command.getHeadOfLane('dev', 'comp1');
+
+      helper.command.switchLocalLane('main', '-x');
+
+      envName = helper.env.setCustomEnv();
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.setEnv('comp1', envId);
+      helper.command.tagAllWithoutBuild('-m "second tag on main"');
+      helper.command.export();
+
+      bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+      helper.command.mergeLaneFromScope(bareMerge.scopePath, 'main', `${helper.scopes.remote}/dev`);
+    });
+    it('should update the env according to main', () => {
+      const comp1HeadOnLane = helper.command.getHeadOfLane(`${helper.scopes.remote}/dev`, `comp1`, bareMerge.scopePath);
+      const obj = helper.command.catComponent(`comp1@${comp1HeadOnLane}`, bareMerge.scopePath);
+      const envExt = obj.extensions.find((e) => e.name === 'teambit.envs/envs');
+      expect(envExt.config.env).to.equal(envId);
+      expect(envExt.data.id).to.equal(envId);
+    });
+  });
+  // @todo fix this scenario. it's not easy.
+  // imagine the file is changed on main to remove comp2 dep, and at the same time, another file is added on the lane
+  // with a dependency on comp2. the files are merged without conflicts, but without workspace, we don't know whether
+  // to keep the dependency or not.
+  describe.skip('merge from scope, main to lane when they are diverged with a removal of a dependency', () => {
+    let bareMerge;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+
+      helper.command.switchLocalLane('main', '-x');
+      helper.fs.outputFile('comp1/index.js', 'console.log("hello");');
+      helper.command.install();
+      helper.command.tagAllWithoutBuild('-m "second tag on main"');
+      helper.command.export();
+
+      bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+      helper.command.mergeLaneFromScope(bareMerge.scopePath, 'main', `${helper.scopes.remote}/dev`);
+    });
+    it('should remove the dependency according to main', () => {
+      const comp1HeadOnLane = helper.command.getHeadOfLane(`${helper.scopes.remote}/dev`, `comp1`, bareMerge.scopePath);
+      const obj = helper.command.catComponent(`comp1@${comp1HeadOnLane}`, bareMerge.scopePath);
+      expect(obj.dependencies).to.have.lengthOf(0);
+    });
+  });
 });
