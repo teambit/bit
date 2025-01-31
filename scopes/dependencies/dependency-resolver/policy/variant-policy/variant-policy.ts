@@ -233,7 +233,7 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
   }
 
   static fromConfigObject(
-    configObject: VariantPolicyConfigArr | VariantPolicyConfigObj,
+    configObject: any, // VariantPolicyConfigArr | VariantPolicyConfigObj,
     options: VariantPolicyFromConfigObjectOptions = {}
   ): VariantPolicy {
     const runtimeEntries = entriesFromKey(configObject, 'dependencies', options);
