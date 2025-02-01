@@ -4,7 +4,7 @@ import { capitalize } from 'lodash';
 import * as path from 'path';
 import tar from 'tar';
 
-import * as fixtures from './fixtures/fixtures';
+import * as fixtures from './fixtures';
 import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import NpmHelper from './e2e-npm-helper';
