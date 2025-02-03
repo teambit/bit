@@ -422,6 +422,8 @@ export class InstallMain {
       // We clean node_modules only after the last install.
       // Otherwise, we might load an env from a location that we later remove.
       await installer.pruneModules(this.workspace.path);
+      // After pruning we need reload moved envs, as during the pruning the old location might be deleted
+      await this.reloadMovedEnvs();
     }
     // this is now commented out because we assume we don't need it anymore.
     // even when the env was not loaded before and it is loaded now, it should be fine because the dependencies-data
@@ -474,6 +476,13 @@ export class InstallMain {
       return !regularPathExists || !resolvedPathExists;
     });
     const idsToLoad = movedEnvs.map((env) => env.id);
+    const componentIdsToLoad = idsToLoad.map((id) => ComponentID.fromString(id));
+    await this.reloadEnvs(componentIdsToLoad);
+  }
+
+  private async reloadRegisteredEnvs() {
+    const allEnvs = this.envs.getAllRegisteredEnvs();
+    const idsToLoad = compact(allEnvs.map((env) => env.id));
     const componentIdsToLoad = idsToLoad.map((id) => ComponentID.fromString(id));
     await this.reloadEnvs(componentIdsToLoad);
   }

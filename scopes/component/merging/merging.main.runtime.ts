@@ -626,7 +626,10 @@ export class MergingMain {
     const ids = ComponentIdList.fromArray(unmergedComponents.map((r) => ComponentID.fromObject(r.id)));
     if (!this.workspace) {
       const results = await this.snapping.snapFromScope(
-        ids.map((id) => ({ componentId: id.toString() })),
+        ids.map((id) => ({
+          componentId: id.toString(),
+          aspects: this.scope.legacyScope.objects.unmergedComponents.getEntry(id)?.mergedConfig,
+        })),
         {
           message: snapMessage,
           build,
