@@ -77,7 +77,7 @@ export default class FixtureHelper {
     return this.command.tagWithoutBuild('bar/foo');
   }
   getFixturesDir() {
-    return path.join(__dirname, '../fixtures');
+    return path.join(__dirname, '../excluded-fixtures');
   }
 
   copyFixtureDir(src: string, dest: string) {
