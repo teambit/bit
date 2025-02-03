@@ -12,8 +12,8 @@
     "node": ">=12.22.0"
   },
   "lint-staged": {
-    "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}": "oxlint --deny-warnings",
-    "*.{ts,js,jsx,tsx,css,scss,md,mdx}": [
+    "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}, !excluded-fixtures": "oxlint --deny-warnings",
+    "*.{ts,js,jsx,tsx,css,scss,md,mdx}, !excluded-fixtures": [
       "prettier --write",
       "git add"
     ]

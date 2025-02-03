@@ -94,7 +94,7 @@ function mergeConfigs(
     globalConfig['teambit.dependencies/dependency-resolver'] || {},
     hostConfig['teambit.dependencies/dependency-resolver'] || {}
   );
-  const mergedConfig = json.assign(globalConfig, workspaceConfig);
+  const mergedConfig = json.assign(globalConfig, hostConfig);
   json.assign(mergedConfig, { 'teambit.dependencies/dependency-resolver': depsResolver });
   return mergedConfig;
 }
