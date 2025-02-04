@@ -36,6 +36,7 @@ import { MergeAbortLaneCmd, MergeAbortOpts } from './merge-abort.cmd';
 import { LastMerged } from './last-merged';
 import { MergeMoveLaneCmd } from './merge-move.cmd';
 import { DETACH_HEAD, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
+import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 
 export type MergeLaneOptions = {
   mergeStrategy: MergeStrategy;
@@ -59,6 +60,7 @@ export type MergeLaneOptions = {
   excludeNonLaneComps?: boolean;
   shouldIncludeUpdateDependents?: boolean;
   throwIfNotUpToDate?: boolean; // relevant when merging from a scope
+  throwIfNotUpToDateForCodeChanges?: boolean; // relevant when merging from a scope
   fetchCurrent?: boolean; // needed when merging from a bare-scope (because it's empty)
   detachHead?: boolean;
 };
@@ -129,6 +131,7 @@ export class MergeLanesMain {
       excludeNonLaneComps,
       shouldIncludeUpdateDependents,
       throwIfNotUpToDate,
+      throwIfNotUpToDateForCodeChanges,
       fetchCurrent,
       detachHead,
     } = options;
@@ -201,7 +204,9 @@ export class MergeLanesMain {
     };
     const idsToMerge = await getBitIds();
 
-    if (throwIfNotUpToDate) await this.throwIfNotUpToDate(otherLaneId, currentLaneId);
+    if (throwIfNotUpToDate || throwIfNotUpToDateForCodeChanges) {
+      await this.throwIfNotUpToDate(otherLaneId, currentLaneId, throwIfNotUpToDateForCodeChanges);
+    }
 
     this.logger.debug(`merging the following ids: ${idsToMerge.toString()}`);
 
@@ -498,12 +503,25 @@ export class MergeLanesMain {
       mergeSnapError,
     };
   }
-  private async throwIfNotUpToDate(fromLaneId: LaneId, toLaneId: LaneId) {
-    const status = await this.lanes.diffStatus(fromLaneId, toLaneId, { skipChanges: true });
+  private async throwIfNotUpToDate(fromLaneId: LaneId, toLaneId: LaneId, throwForCodeChangesOnly?: boolean) {
+    // if "throwForCodeChangesOnly" is true, we have to check what type of change is it. if it is a dependency change,
+    // it's fine. if it's a code change, throw.
+    const status = await this.lanes.diffStatus(fromLaneId, toLaneId, { skipChanges: !throwForCodeChangesOnly });
     const compsNotUpToDate = status.componentsStatus.filter((s) => !s.upToDate);
-    if (compsNotUpToDate.length) {
+    if (!compsNotUpToDate.length) {
+      return;
+    }
+    if (!throwForCodeChangesOnly) {
       throw new Error(`unable to merge, the following components are not up-to-date:
 ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
+    }
+    const codeChanges = compsNotUpToDate.filter((s) => {
+      return s.changes?.includes(ChangeType.SOURCE_CODE) || s.changes?.includes(ChangeType.ASPECTS);
+    });
+
+    if (codeChanges.length) {
+      throw new Error(`unable to merge, the following components are not up-to-date and have code/aspects changes:
+${codeChanges.map((s) => s.componentId.toString()).join('\n')}`);
     }
   }
 

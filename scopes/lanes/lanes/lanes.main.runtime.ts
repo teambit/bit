@@ -887,13 +887,14 @@ please create a new lane instead, which will include all components of this lane
         changed.push(ChangeType.SOURCE_CODE);
       }
 
-      if (compare.fields.length > 0) {
-        changed.push(ChangeType.ASPECTS);
-      }
-
       const depsFields = ['dependencies', 'devDependencies', 'extensionDependencies'];
       if (compare.fields.some((field) => depsFields.includes(field.fieldName))) {
         changed.push(ChangeType.DEPENDENCY);
+      }
+
+      const compareFieldsWithoutDeps = compare.fields.filter((field) => !depsFields.includes(field.fieldName));
+      if (compareFieldsWithoutDeps.length > 0) {
+        changed.push(ChangeType.ASPECTS);
       }
 
       return changed;
