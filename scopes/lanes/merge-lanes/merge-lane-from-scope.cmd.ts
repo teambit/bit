@@ -16,6 +16,7 @@ type Flags = {
   title?: string;
   titleBase64?: string;
   reMerge?: boolean;
+  allowOutdatedDeps?: boolean;
 };
 
 /**
@@ -52,6 +53,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     ['', 'no-squash', 'relevant for merging lanes into main, which by default squash.'],
     ['', 'include-deps', 'relevant for "--pattern". merge also dependencies of the given components'],
     ['', 're-merge', 'helpful when last merge failed during export. do not skip components that seemed to be merged'],
+    ['', 'allow-outdated-deps', 'if a component is out of date but has only dependencies changes, allow the merge'],
     ['j', 'json', 'output as json format'],
   ] as CommandOptions;
   loader = true;
@@ -72,6 +74,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
       title,
       titleBase64,
       reMerge,
+      allowOutdatedDeps,
     }: Flags
   ): Promise<string> {
     if (includeDeps && !pattern) {
@@ -95,6 +98,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
         includeDeps,
         snapMessage: titleBase64Decoded || title,
         reMerge,
+        throwIfNotUpToDateForCodeChanges: allowOutdatedDeps
       }
     );
 

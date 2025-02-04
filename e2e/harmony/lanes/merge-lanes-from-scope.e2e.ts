@@ -588,4 +588,43 @@ describe('merge lanes from scope', function () {
       expect(obj.dependencies).to.have.lengthOf(0);
     });
   });
+  describe('merge from scope lane to main when it is not up to date with deps changes', () => {
+    let bareMerge;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fs.outputFile('comp/index.js', `require('@${helper.scopes.remote}/dep1');\nrequire('@${helper.scopes.remote}/dep2');`);
+      helper.fs.outputFile('dep1/index.js', 'console.log("hello");');
+      helper.fs.outputFile('dep2/index.js', 'console.log("hello");');
+      helper.command.addComponent('comp');
+      helper.command.addComponent('dep1');
+      helper.command.addComponent('dep2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane();
+      helper.fs.outputFile('dep1/index.js', 'console.log("hello-from-lane");');
+      helper.command.snapComponentWithoutBuild('dep1');
+      helper.command.export();
+
+      helper.command.switchLocalLane('main', '-x');
+      helper.fs.outputFile('dep2/index.js', 'console.log("hello-from-main");');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+    });
+    it('should throw without --allow-outdated-deps flag', () => {
+      const mergeFunc = () => helper.command.mergeLaneFromScope(bareMerge.scopePath, `${helper.scopes.remote}/dev`);
+      expect(mergeFunc).to.throw('unable to merge, the following components are not up-to-date');
+    });
+    it('should succeed with --allow-outdated-deps flag', () => {
+      const mergeFunc = () => helper.command.mergeLaneFromScope(
+        bareMerge.scopePath,
+        `${helper.scopes.remote}/dev`,
+        '--allow-outdated-deps --no-squash'
+      );
+      expect(mergeFunc).to.not.throw();
+    });
+  });
 });
