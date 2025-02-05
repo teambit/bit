@@ -255,7 +255,7 @@ export class Http implements Network {
     errors: { [scopeName: string]: string };
     metadata?: { jobs?: string[] };
   }> {
-    const _data = await retry(
+    const { results ,res } = await retry(
       async () => {
         const route = 'api/put';
         logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
@@ -272,12 +272,7 @@ export class Http implements Network {
 
         // @ts-ignore TODO: need to fix this
         const results = await this.readPutCentralStream(res.body);
-        if (!results.data) throw new Error(`HTTP results are missing "data" property`);
-        if (results.data.isError) {
-          throw new UnexpectedNetworkError(results.message);
-        }
-        await this.throwForNonOkStatus(res);
-        return results.data;
+        return { results, res };
       },
       {
         retries: 3,
@@ -287,7 +282,13 @@ export class Http implements Network {
         },
       }
     );
-    return _data;
+
+    if (!results.data) throw new Error(`HTTP results are missing "data" property`);
+    if (results.data.isError) {
+      throw new UnexpectedNetworkError(results.message);
+    }
+    await this.throwForNonOkStatus(res);
+    return results.data;
   }
 
   async deleteViaCentralHub(
