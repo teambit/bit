@@ -486,7 +486,7 @@
         "mime": "2.5.2",
         "mini-css-extract-plugin": "2.2.2",
         "minimatch": "3.0.5",
-        "mocha": "9.2.2",
+        "mocha": "11.1.0",
         "mocha-junit-reporter": "2.2.1",
         "mocha-multi-reporters": "1.5.1",
         "module-definition": "3.3.1",
