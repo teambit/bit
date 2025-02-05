@@ -26,7 +26,7 @@
     "api-server": {
         "name": "api-server",
         "scope": "teambit.harmony",
-        "version": "1.0.535",
+        "version": "1.0.536",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/api-server"
     },
@@ -215,7 +215,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "1.9.61",
+        "version": "1.9.62",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -313,7 +313,7 @@
     "cloud": {
         "name": "cloud",
         "scope": "teambit.cloud",
-        "version": "0.0.811",
+        "version": "0.0.812",
         "mainFile": "index.ts",
         "rootDir": "scopes/cloud/cloud"
     },
@@ -481,7 +481,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.547",
+        "version": "2.0.548",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
@@ -873,7 +873,7 @@
     "lanes": {
         "name": "lanes",
         "scope": "teambit.lanes",
-        "version": "1.0.535",
+        "version": "1.0.536",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/lanes"
     },
@@ -915,7 +915,7 @@
     "merge-lanes": {
         "name": "merge-lanes",
         "scope": "teambit.lanes",
-        "version": "1.0.535",
+        "version": "1.0.536",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/merge-lanes"
     },
@@ -1342,7 +1342,7 @@
     "pnpm": {
         "name": "pnpm",
         "scope": "teambit.dependencies",
-        "version": "1.0.536",
+        "version": "1.0.537",
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/pnpm"
     },
@@ -1622,7 +1622,7 @@
     "sign": {
         "name": "sign",
         "scope": "teambit.scope",
-        "version": "1.0.535",
+        "version": "1.0.536",
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/sign"
     },
@@ -1657,7 +1657,7 @@
     "status": {
         "name": "status",
         "scope": "teambit.component",
-        "version": "1.0.535",
+        "version": "1.0.536",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/status"
     },
@@ -2210,7 +2210,7 @@
     "update-dependencies": {
         "name": "update-dependencies",
         "scope": "teambit.scope",
-        "version": "1.0.535",
+        "version": "1.0.536",
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/update-dependencies"
     },

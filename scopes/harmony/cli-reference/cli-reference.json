@@ -4605,6 +4605,11 @@
       ],
       [
         "",
+        "build",
+        "in case of snap during the merge, run the build-pipeline (similar to bit snap --build)"
+      ],
+      [
+        "",
         "keep-readme",
         "skip deleting the lane readme component after merging"
       ],
