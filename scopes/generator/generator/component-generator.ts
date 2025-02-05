@@ -181,7 +181,7 @@ export class ComponentGenerator {
     const userEnv = this.options.env;
 
     if (!config && this.envId && !userEnv) {
-      const isInWorkspace = this.workspace.exists(this.envId);
+      const isInWorkspace = this.workspace.hasId(this.envId, { ignoreVersion: true });
       config = {
         [isInWorkspace ? this.envId.toStringWithoutVersion() : this.envId.toString()]: {},
         'teambit.envs/envs': {
@@ -226,7 +226,7 @@ export class ComponentGenerator {
     // eslint-disable-next-line prefer-const
     let { envId, setBy } = getEnvData();
     if (envId) {
-      const isInWorkspace = this.workspace.exists(envId);
+      const isInWorkspace = this.workspace.hasId(envId, { ignoreVersion: true });
       const isSameAsThisEnvId = envId === this.envId?.toString() || envId === this.envId?.toStringWithoutVersion();
       if (isSameAsThisEnvId && this.envId) {
         envId = isInWorkspace ? this.envId.toStringWithoutVersion() : this.envId.toString();

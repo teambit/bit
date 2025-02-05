@@ -442,22 +442,18 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
-   * Check if a specific id exist in the workspace
-   * @param componentId
+   * whether the given component-id is part of the workspace. default to check for the exact version
    */
-  hasId(componentId: ComponentID): boolean {
-    const ids = this.listIds();
-    const found = ids.find((id) => {
-      return id.isEqual(componentId);
-    });
-    return !!found;
+  hasId(componentId: ComponentID, opts?: { includeDeleted?: boolean, ignoreVersion?: boolean }): boolean {
+    const ids = opts?.includeDeleted ? this.listIdsIncludeRemoved() : this.listIds();
+    return opts?.ignoreVersion ? ids.hasWithoutVersion(componentId) : ids.has(componentId);
   }
 
   /**
    * given component-ids, return the ones that are part of the workspace
    */
   async filterIds(ids: ComponentID[]): Promise<ComponentID[]> {
-    const workspaceIds = await this.listIds();
+    const workspaceIds = this.listIds();
     return ids.filter((id) => workspaceIds.find((wsId) => wsId.isEqual(id, { ignoreVersion: !id.hasVersion() })));
   }
 
@@ -988,7 +984,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     if (!envAspect) return;
     const envExtId = envAspect.id;
     if (!envExtId?.hasVersion()) return;
-    if (!this.exists(envExtId)) return;
+    if (!this.hasId(envExtId, { ignoreVersion: true })) return;
     envAspect.id = envExtId.changeVersion(undefined);
   }
 
@@ -1062,7 +1058,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     if (isId) {
       // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
       const id = await this.resolveComponentId(pattern);
-      if (this.exists(id, { includeDeleted: opts.includeDeleted })) return [id];
+      if (this.hasId(id, { ignoreVersion: true, includeDeleted: opts.includeDeleted })) return [id];
       if (throwForNoMatch) throw new MissingBitMapComponent(pattern);
       return [];
     }
@@ -1136,7 +1132,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   /**
-   * whether a component exists in the workspace
+   * @deprecated use `hasId` with "ignoreVersion: true" instead.
    */
   exists(componentId: ComponentID, opts: { includeDeleted?: boolean } = {}): boolean {
     const allIds = opts.includeDeleted ? this.listIdsIncludeRemoved() : this.consumer.bitmapIdsFromCurrentLane;
