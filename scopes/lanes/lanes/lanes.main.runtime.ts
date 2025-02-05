@@ -481,7 +481,7 @@ please create a new lane instead, which will include all components of this lane
   }
 
   async exportLane(lane: Lane) {
-    await this.exporter.exportMany({
+    await this.exporter.pushToScopes({
       scope: this.scope.legacyScope,
       laneObject: lane,
       ids: new ComponentIdList(),
