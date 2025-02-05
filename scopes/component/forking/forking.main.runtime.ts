@@ -69,7 +69,7 @@ export class ForkingMain {
   async fork(sourceId: string, targetId?: string, options?: ForkOptions): Promise<ComponentID> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const sourceCompId = await this.workspace.resolveComponentId(sourceId);
-    const exists = this.workspace.exists(sourceCompId);
+    const exists = this.workspace.hasId(sourceCompId, { ignoreVersion: true });
     if (exists) {
       const existingInWorkspace = await this.workspace.get(sourceCompId);
       return this.forkExistingInWorkspace(existingInWorkspace, targetId, options);
