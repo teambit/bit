@@ -161,7 +161,7 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
   }
 
   getNpmIgnore() {
-    return [`${CAPSULE_ARTIFACTS_DIR}/`];
+    return [`${CAPSULE_ARTIFACTS_DIR}/*`];
   }
 
   getPreviewConfig() {
