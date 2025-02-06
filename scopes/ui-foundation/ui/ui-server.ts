@@ -184,7 +184,7 @@ export class UIServer {
     const expressAppPort = this._port;
 
     const config = await this.getDevConfig();
-    const compiler = webpack(config);
+    const compiler = webpack(config as any);
     const devServerConfig = await this.getDevServerConfig(devServerPort, expressAppPort, config.devServer);
     // @ts-ignore in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
     const devServer = new WebpackDevServer(devServerConfig, compiler);
