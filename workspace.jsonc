@@ -616,9 +616,14 @@
     "linkCoreAspects": false,
     "overrides": {
       "@types/fs-capacitor": "2.0.0",
+      // @types/node is used as a peer dependency, so to reduce duplication,
+      // we force the version installed in the root.
+      "@types/node": "22.10.5",
       "signal-exit@4": "^4.0.2",
       "@types/react": "^17.0.67",
       "@types/react-dom": "^17.0.21",
+      // Older versions of cross-spawn have a reported security vulnerability.
+      "cross-spawn@7": ">=7.0.5",
       "minio@7.0": "7.1.3",
       // See more info here -
       // https://github.com/garycourt/uri-js/pull/95
