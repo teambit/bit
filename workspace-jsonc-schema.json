@@ -1,0 +1,463 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Configuration file of the Bit workspace.",
+  "description": "This is the main configuration file of your bit workspace. for full documentation, please see: https://docs.bit.dev/configuration",
+  "type": "object",
+  "properties": {
+    "teambit.workspace/workspace": {
+      "description": "Main configuration of the Bit workspace.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "the name of the component workspace. used for development purposes.",
+          "type": "string"
+        },
+        "icon": {
+          "description": "set the icon url to be shown on the Bit server.",
+          "type": "string"
+        },
+        "defaultScope": {
+          "description": "set the default scope when there is no matching for the component in the components array.",
+          "type": "string"
+        },
+        "defaultDirectory": {
+          "description": "set the default directory when there is no matching for the component in the components array.",
+          "type": "string"
+        },
+        "rootComponentsDirectory": {
+          "description": "sets the location of the root components directory.",
+          "type": "string"
+        },
+        "resolveAspectsFromNodeModules": {
+          "description": "Setting this to true enables resolving scope aspects from the workspace's node_modules; otherwise, aspects are resolved only from the scope aspects capsule",
+          "type": "boolean",
+          "default": false
+        },
+        "resolveEnvsFromRoots": {
+          "description": "If true, envs are resolved from the env's root node_modules or workspace node_modules; if false, only from the scope envs capsule",
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "defaultScope"
+      ]
+    },
+    "teambit.dependencies/dependency-resolver": {
+      "description": "Main configuration for component dependency resolution.",
+      "type": "object",
+      "properties": {
+        "policy": {
+          "type": "object",
+          "description": "Dependency policies for the workspace.",
+          "properties": {
+            "dependencies": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "A map of dependencies and their versions."
+            },
+            "peerDependencies": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "A map of peer dependencies and their versions."
+            }
+          },
+          "required": []
+        },
+        "packageManager": {
+          "type": "string",
+          "description": "The package manager to use (e.g., yarn, pnpm).",
+          "examples": [
+            "teambit.dependencies/pnpm",
+            "teambit.dependencies/yarn"
+          ]
+        },
+        "proxy": {
+          "type": "string",
+          "description": "A proxy server for outgoing network requests by the package manager."
+        },
+        "httpsProxy": {
+          "type": "string",
+          "description": "A proxy server for outgoing https requests by the package manager."
+        },
+        "ca": {
+          "type": "string",
+          "description": "A certificate authority for the package manager."
+        },
+        "cert": {
+          "type": "string",
+          "description": "A client certificate for the package manager."
+        },
+        "key": {
+          "type": "string",
+          "description": "A client key for the package manager."
+        },
+        "strictSsl": {
+          "type": "boolean",
+          "description": "Whether to enforce strict SSL for the package manager."
+        },
+        "fetchTimeout": {
+          "type": "number",
+          "description": "The fetch timeout for the package manager."
+        },
+        "fetchRetries": {
+          "type": "number",
+          "description": "The number of fetch retries for the package manager."
+        },
+        "fetchRetryFactor": {
+          "type": "number",
+          "description": "The fetch retry factor for the package manager."
+        },
+        "fetchRetryMintimeout": {
+          "type": "number",
+          "description": "The minimum fetch retry timeout for the package manager."
+        },
+        "fetchRetryMaxtimeout": {
+          "type": "number",
+          "description": "The maximum fetch retry timeout for the package manager."
+        },
+        "nodeLinker": {
+          "type": "string",
+          "enum": ["hoisted", "isolated"],
+          "description": "The node linker to use (hoisted or isolated)."
+        },
+        "packageImportMethod": {
+          "type": "string",
+          "enum": ["auto", "hardlink", "copy", "clone"],
+          "description": "The package import method for the package manager."
+        },
+        "peerDependencyRules": {
+          "type": "object",
+          "description": "Rules for peer dependencies.",
+          "properties": {
+            "ignoreMissing": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "List of peer dependencies to ignore if they are missing."
+            },
+            "allowAny": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "List of peer dependencies that are allowed to have any version."
+            },
+            "allowedVersions": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "Map of peer dependencies and their allowed versions."
+            }
+          }
+        },
+        "preferOffline": {
+          "type": "boolean",
+          "description": "If true, prefer to use cached packages when available."
+        },
+        "capsuleSelfReference": {
+          "type": "boolean",
+          "description": "When true, components in capsules are symlinked into their own node_modules."
+        },
+        "hoistPatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Patterns for packages to hoist to node_modules/.pnpm/node_modules."
+        },
+        "hoistInjectedDependencies": {
+          "type": "boolean",
+          "description": "When true, dependencies from the workspace are hoisted to node_modules/.pnpm/node_modules even if they are found in the root node_modules."
+        },
+        "autoInstallPeers": {
+          "type": "boolean",
+          "description": "Tells pnpm to automatically install peer dependencies. It is true by default."
+        },
+        "strictPeerDependencies": {
+          "description": "If true, then Bit will add the '--strict-peer-dependencies' option when invoking package managers. This causes 'bit install' to fail if there are unsatisfied peer dependencies, which is an invalid state that can cause build failures or incompatible dependency versions. (For historical reasons, JavaScript package managers generally do not treat this invalid state as an error.) The default value is false to avoid legacy compatibility issues. It is strongly recommended to set strictPeerDependencies=true.",
+          "type": "boolean",
+          "default": false
+        },
+        "savePrefix": {
+          "type": "string",
+          "description": "Set the prefix to use when adding dependency to workspace.jsonc via bit install. To lock version to exact version you can use an empty string (default)."
+        },
+        "overrides": {
+          "type": "object",
+          "description": "This field allows to instruct the package manager to override any dependency in the dependency graph. This is useful to enforce all your packages to use a single version of a dependency, backport a fix, or replace a dependency with a fork.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "capsulesOverrides": {
+          "type": "object",
+          "description": "This is similar to overrides, but will only affect installation in capsules. In case overrides is configured and this not, the regular overrides will affect capsules as well. In case both configured, capsulesOverrides will be used for capsules, and overrides will affect the workspace.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "noProxy": {
+          "type": "string",
+          "description": "A comma-separated string of domain extensions that a proxy should not be used for."
+        },
+        "localAddress": {
+          "type": "string",
+          "description": "The IP address of the local interface to use when making connections to the npm registry."
+        },
+        "maxSockets": {
+          "type": "number",
+          "description": "The maximum number of connections to use per origin (protocol/host/port combination)."
+        },
+        "networkConcurrency": {
+          "type": "number",
+          "description": "Controls the maximum number of HTTP(S) requests to process simultaneously."
+        },
+        "installFromBitDevRegistry": {
+          "type": "boolean",
+          "description": "In case you want to disable this proxy set this config to false."
+        },
+        "packageManagerArgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Map of extra arguments to pass to the configured package manager upon the installation of dependencies."
+        },
+        "sideEffectsCache": {
+          "type": "boolean",
+          "description": "Use and cache the results of (pre/post)install hooks."
+        },
+        "rootComponents": {
+          "type": "boolean",
+          "description": "The list of components that should be installed in isolation from the workspace. The component's package names should be used in this list, not their component IDs."
+        },
+        "nodeVersion": {
+          "type": "string",
+          "description": "The node version to use when checking a package's engines setting."
+        },
+        "engineStrict": {
+          "type": "boolean",
+          "description": "Refuse to install any package that claims to not be compatible with the current Node.js version."
+        },
+        "linkCoreAspects": {
+          "type": "boolean",
+          "description": "This setting is 'true' by default and tells bit to link core aspects to the node_modules of the workspace. It only makes sense to set this to 'false' in a workspace in which core aspects are actually developed."
+        },
+        "isolatedCapsules": {
+          "type": "boolean",
+          "description": "When false, Bit will create a shared node_modules directory for all components in a capsule."
+        },
+        "neverBuiltDependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ignore the builds of specific dependencies. The 'preinstall', 'install', and 'postinstall' scripts of the listed packages will not be executed during installation."
+        }
+      },
+      "required": []
+    },
+    "teambit.workspace/variants": {
+      "description": "Workspace variants allow to set different subsets of configuration for components in your workspace. This is extremely useful for upgrading, aligning and building components with a new set of dependencies.",
+      "type": "object",
+      "properties": {
+        "*": {
+          "description": "Any directory of components",
+          "type": "object",
+          "properties": {
+            "propagate": {
+              "description": "",
+              "type": "boolean"
+            },
+            "teambit.react/react": {
+              "description": "apply the react environment on components.",
+              "type": "object",
+              "properties": {
+                "typescript": {
+                  "description": "turn on typescript compiler.",
+                  "type": "boolean"
+                },
+                "root": {
+                  "description": "root component is the one to be deployed and served.",
+                  "type": "string"
+                },
+                "version": {
+                  "description": "sets react version. This will add react and @types/react (in case typescript is turned on) as peer dependencies with this SemVer.",
+                  "type": "string",
+                  "default": ">=16.0.0",
+                  "examples": [
+                    ">=16.0.0",
+                    ">=15.0.0"
+                  ]
+                },
+                "defaultScope": {
+                  "description": "set the collection of these components",
+                  "type": "string"
+                }
+              }
+            },
+            "teambit.harmony/node": {
+              "description": "apply the node environment on components.",
+              "type": "object",
+              "properties": {
+                "defaultScope": {
+                  "description": "set the collection of these components",
+                  "type": "string"
+                }
+              }
+            },
+            "teambit.pipelines/flows": {
+              "description": "main configuration for handling the build process of components.",
+              "type": "object",
+              "properties": {
+                "tasks": {
+                  "description": "configure build tasks. configuration of build tasks is basically a map of `task name` pointed to an array of tasks. each task can be either a bash command or an extension which exposes a task. reserved task names: build, test, runs on pre-tag.",
+                  "type": "object",
+                  "properties": {
+                    "build": {
+                      "type": "array",
+                      "default": [
+                        "teambit.react/react:build",
+                        "mv dist dist-copy"
+                      ],
+                      "examples": [
+                        [
+                          "teambit.react/react:build",
+                          "mv dist dist-copy"
+                        ]
+                      ]
+                    },
+                    "test": {
+                      "type": "array",
+                      "default": [
+                        "mocha ."
+                      ],
+                      "examples": [
+                        [
+                          "mocha ."
+                        ]
+                      ]
+                    },
+                    "deploy": {
+                      "type": "array",
+                      "default": [
+                        "firebase deploy"
+                      ],
+                      "examples": [
+                        [
+                          "firebase deploy"
+                        ]
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "teambit.pkg/pkg": {
+              "description": "",
+              "type": "object",
+              "properties": {
+                "packageJson": {
+                  "description": "",
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "description": "",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": true,
+      "required": []
+    },
+    "teambit.preview/preview": {
+      "description": "Main configuration for component preview.",
+      "type": "object",
+      "properties": {
+        "bundlingStrategy": {
+          "type": "string",
+          "enum": ["component", "env"],
+          "description": "The strategy to use for bundling components."
+        },
+        "disabled": {
+          "type": "boolean",
+          "description": "Whether the preview is disabled.",
+          "default": false
+        },
+        "maxChunkSize": {
+          "type": "number",
+          "description": "Limit concurrent components when running the bundling step for your bundler during generate components preview task. This helps mitigate large memory consumption for the build pipeline. This may increase the overall time for the generate-preview task, but reduce memory footprint. Default - no limit."
+        },
+        "onlyOverview": {
+          "type": "boolean",
+          "description": "enables the only overview feature flag"
+        }
+      },
+      "required": []
+    },
+    "teambit.generator/generator": {
+      "description": "Main configuration for component generator.",
+      "type": "object",
+      "properties": {
+        "aspects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of aspects to include in the list of templates."
+        },
+        "hideCoreTemplates": {
+          "type": "boolean",
+          "description": "By default core templates are shown. Use this to hide them unless `--show-all` flag of `bit templates` was used."
+        },
+        "envs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            "bitdev.node/node-env",
+            "bitdev.react/react-env",
+            "bitdev.vue/vue-env",
+            "bitdev.angular/angular-env",
+            "bitdev.symphony/envs/symphony-env"
+          ],
+          "description": "Array of environments to include in the list of templates."
+        }
+      }
+    },
+    "teambit.component/issues": {
+      "type": "object",
+      "properties": {
+        "ignoreIssues": {
+          "description": "List of issues to ignore",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": [
+            "CircularDependencies",
+            "DuplicateComponentAndPackage"
+          ]
+        }
+      },
+      "required": ["ignoreIssues"]
+    }
+  },
+  "required": [
+    "teambit.workspace/workspace",
+    "teambit.dependencies/dependency-resolver"
+  ]
+}

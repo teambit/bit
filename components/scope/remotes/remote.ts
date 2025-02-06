@@ -7,7 +7,7 @@ import type { Scope } from '@teambit/legacy.scope';
 import { RemovedObjects, LaneData, ComponentObjects } from '@teambit/legacy.scope';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import { Network, connect } from '@teambit/scope.network';
-import { ComponentLog, ObjectItemsStream, ObjectList } from '@teambit/scope.objects';
+import { ComponentLog, ObjectItemsStream, ObjectList } from '@teambit/objects';
 import { isBitUrl } from '@teambit/legacy.utils';
 import { InvalidRemote } from './exceptions';
 
@@ -27,7 +27,7 @@ export class Remote {
     host: string,
     name?: string,
     primary = false,
-    private localScopeName?: string
+    protected localScopeName?: string
   ) {
     this.name = name || '';
     this.host = host;

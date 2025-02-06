@@ -47,7 +47,7 @@ export default class ScopeHelper {
     workspaceJsonc: WorkspaceJsoncHelper
   ) {
     this.debugMode = debugMode;
-    this.keepEnvs = !!process.env.npm_config_keep_envs; // default = false
+    this.keepEnvs = debugMode; // don't delete the workspaces/scopes when in debug mode
     this.scopes = scopes;
     this.command = commandHelper;
     this.fs = fsHelper;

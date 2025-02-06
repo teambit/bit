@@ -1,4 +1,4 @@
-import R from 'ramda';
+import { cloneDeep } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import { PathLinux } from '@teambit/toolbox.path.path';
 
@@ -72,7 +72,7 @@ export default class Dependency {
   static getClone(dependency: Dependency): Record<string, any> {
     return {
       id: dependency.id,
-      relativePaths: R.clone(dependency.relativePaths),
+      relativePaths: cloneDeep(dependency.relativePaths),
       packageName: dependency.packageName,
       versionRange: dependency.versionRange,
     };

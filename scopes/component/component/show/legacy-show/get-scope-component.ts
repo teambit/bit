@@ -8,14 +8,12 @@ import { DependenciesInfo } from '@teambit/legacy.dependency-graph';
 
 export async function getScopeComponent({
   id,
-  allVersions,
   scopePath,
   showDependents,
   showDependencies,
   loadScopeFromCache,
 }: {
   id: string;
-  allVersions?: boolean | null;
   scopePath?: string | null; // used by the api (see /src/api.js)
   showDependents?: boolean;
   showDependencies?: boolean;
@@ -52,9 +50,6 @@ export async function getScopeComponent({
   return { component, dependentsInfo, dependenciesInfo };
 
   async function showComponentUsingScope(scope: Scope) {
-    if (allVersions) {
-      return scope.loadAllVersions(bitId);
-    }
     const scopeComponentsImporter = scope.scopeImporter;
     return scopeComponentsImporter.loadRemoteComponent(bitId);
   }

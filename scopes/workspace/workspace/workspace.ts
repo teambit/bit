@@ -3,7 +3,6 @@ import memoize from 'memoizee';
 import { parse } from 'comment-json';
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
-import type { PubsubMain } from '@teambit/pubsub';
 import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { generateNodeModulesPattern, PatternTarget } from '@teambit/dependencies.modules.packages-excluder';
@@ -23,6 +22,7 @@ import {
   DependencyResolverAspect,
   VariantPolicy,
   DependencyList,
+  VariantPolicyConfigArr,
 } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect, EnvJsonc } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
@@ -58,10 +58,10 @@ import {
 import path from 'path';
 import { ConsumerComponent, Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import { WatchOptions } from '@teambit/watcher';
-import type { ComponentLog } from '@teambit/scope.objects';
+import type { ComponentLog } from '@teambit/objects';
 import { SourceFile, DataToPersist, JsonVinyl } from '@teambit/component.sources';
 import { ScopeComponentsImporter } from '@teambit/legacy.scope';
-import { Lane } from '@teambit/scope.objects';
+import { Lane } from '@teambit/objects';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { isHash } from '@teambit/component-version';
@@ -185,14 +185,10 @@ export class Workspace implements ComponentFactory {
    * They are used in webpack configuration to only track changes from these paths inside `node_modules`
    */
   private componentPathsRegExps: RegExp[] = [];
+  private _componentList: ComponentsList;
   localAspects: Record<string, string> = {};
   filter: Filter;
   constructor(
-    /**
-     * private pubsub.
-     */
-    private pubsub: PubsubMain,
-
     private config: WorkspaceExtConfig,
     /**
      * private access to the legacy consumer instance.
@@ -216,8 +212,6 @@ export class Workspace implements ComponentFactory {
     private aspectLoader: AspectLoaderMain,
 
     readonly logger: Logger,
-
-    private componentList: ComponentsList = new ComponentsList(consumer),
 
     /**
      * private reference to the instance of Harmony.
@@ -282,6 +276,13 @@ export class Workspace implements ComponentFactory {
     const defaultScope = this.config.defaultScope;
     if (!defaultScope) throw new BitError('defaultScope is missing');
     if (!isValidScopeName(defaultScope)) throw new InvalidScopeName(defaultScope);
+  }
+
+  get componentList(): ComponentsList {
+    if (!this._componentList) {
+      this._componentList = new ComponentsList(this);
+    }
+    return this._componentList;
   }
 
   /**
@@ -369,7 +370,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async listAutoTagPendingComponentIds(): Promise<ComponentID[]> {
-    const componentsList = new ComponentsList(this.consumer);
+    const componentsList = new ComponentsList(this);
     const modifiedComponents = (await this.modified()).map((c) => c.id);
     const newComponents = (await componentsList.listNewComponents()) as ComponentIdList;
     if (!modifiedComponents || !modifiedComponents.length) return [];
@@ -441,22 +442,18 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
-   * Check if a specific id exist in the workspace
-   * @param componentId
+   * whether the given component-id is part of the workspace. default to check for the exact version
    */
-  hasId(componentId: ComponentID): boolean {
-    const ids = this.listIds();
-    const found = ids.find((id) => {
-      return id.isEqual(componentId);
-    });
-    return !!found;
+  hasId(componentId: ComponentID, opts?: { includeDeleted?: boolean, ignoreVersion?: boolean }): boolean {
+    const ids = opts?.includeDeleted ? this.listIdsIncludeRemoved() : this.listIds();
+    return opts?.ignoreVersion ? ids.hasWithoutVersion(componentId) : ids.has(componentId);
   }
 
   /**
    * given component-ids, return the ones that are part of the workspace
    */
   async filterIds(ids: ComponentID[]): Promise<ComponentID[]> {
-    const workspaceIds = await this.listIds();
+    const workspaceIds = this.listIds();
     return ids.filter((id) => workspaceIds.find((wsId) => wsId.isEqual(id, { ignoreVersion: !id.hasVersion() })));
   }
 
@@ -789,14 +786,14 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.componentLoader.clearCache();
     this.consumer.componentLoader.clearComponentsCache();
     this.componentStatusLoader.clearCache();
-    this.componentList = new ComponentsList(this.consumer);
+    this._componentList = new ComponentsList(this);
   }
 
   clearComponentCache(id: ComponentID) {
     this.componentLoader.clearComponentCache(id);
     this.componentStatusLoader.clearOneComponentCache(id);
     this.consumer.clearOneComponentCache(id);
-    this.componentList = new ComponentsList(this.consumer);
+    this._componentList = new ComponentsList(this);
   }
 
   clearComponentsCache(ids: ComponentID[]) {
@@ -987,7 +984,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     if (!envAspect) return;
     const envExtId = envAspect.id;
     if (!envExtId?.hasVersion()) return;
-    if (!this.exists(envExtId)) return;
+    if (!this.hasId(envExtId, { ignoreVersion: true })) return;
     envAspect.id = envExtId.changeVersion(undefined);
   }
 
@@ -1061,7 +1058,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     if (isId) {
       // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
       const id = await this.resolveComponentId(pattern);
-      if (this.exists(id, { includeDeleted: opts.includeDeleted })) return [id];
+      if (this.hasId(id, { ignoreVersion: true, includeDeleted: opts.includeDeleted })) return [id];
       if (throwForNoMatch) throw new MissingBitMapComponent(pattern);
       return [];
     }
@@ -1135,7 +1132,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   /**
-   * whether a component exists in the workspace
+   * @deprecated use `hasId` with "ignoreVersion: true" instead.
    */
   exists(componentId: ComponentID, opts: { includeDeleted?: boolean } = {}): boolean {
     const allIds = opts.includeDeleted ? this.listIdsIncludeRemoved() : this.consumer.bitmapIdsFromCurrentLane;
@@ -1366,7 +1363,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return this.aspectsMerger.mergeConflictFile;
   }
 
-  getDepsDataOfMergeConfig(id: ComponentID): Record<string, any> | undefined {
+  getDepsDataOfMergeConfig(id: ComponentID): VariantPolicyConfigArr {
     return this.aspectsMerger.getDepsDataOfMergeConfig(id);
   }
 
@@ -2094,7 +2091,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (!envJson) {
       throw new BitError(`unable to find env.jsonc file in ${envId}`);
     }
-    const envManifest: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true);
+    const envManifest: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
 
     return envManifest;
   }
@@ -2133,14 +2130,16 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   async updateEnvForComponents(envIdStr?: string, pattern?: string) {
     const allWsComps = await this.list();
-    const allWsIds = await this.listIds();
+    const allWsIds = this.listIds();
     const isInWs = (envId: ComponentID) => allWsIds.find((id) => id.isEqual(envId, { ignoreVersion: true }));
     const allEnvs = await this.envs.createEnvironment(allWsComps);
     const getEnvWithVersion = async (envId: ComponentID) => {
       if (envId.hasVersion()) return envId;
       if (isInWs(envId)) return envId;
+      const currentLane = await this.getCurrentLaneObject();
+      const isDeletedOnLane = currentLane && currentLane.getComponent(envId)?.isDeleted;
       try {
-        const fromRemote = await this.scope.getRemoteComponent(envId);
+        const fromRemote = await this.scope.getRemoteComponent(envId, isDeletedOnLane);
         return envId.changeVersion(fromRemote.id.version);
       } catch {
         throw new BitError(`unable to find ${envIdStr} in the remote`);
@@ -2211,7 +2210,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   async setComponentPathsRegExps() {
     const workspaceComponents = await this.list();
     const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
-    const packageManager = this.dependencyResolver.getPackageManagerName();
+    const packageManager = this.dependencyResolver.packageManagerName;
     const isPnpmEnabled = typeof packageManager === 'undefined' || packageManager.includes('pnpm');
     const pathsExcluding = [
       generateNodeModulesPattern({

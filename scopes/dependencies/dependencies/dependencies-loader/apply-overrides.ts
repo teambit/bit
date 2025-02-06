@@ -526,7 +526,6 @@ export class ApplyOverrides {
         const existsInCompsPeerDeps = this.allDependencies.peerDependencies.find((dep) => {
           return dep.packageName === pkgName;
         });
-
         if (
           // We are checking originAllPackagesDependencies instead of allPackagesDependencies
           // as it might be already removed from allPackagesDependencies at this point if it was set with
@@ -557,7 +556,6 @@ export class ApplyOverrides {
         }
         originallyExists.push(pkgName);
         const key = DepsKeysToAllPackagesDepsKeys[field];
-
         delete this.allPackagesDependencies[key][pkgName];
         // When changing peer dependency we want it to be stronger than the other types
         if (field === 'peerDependencies') {

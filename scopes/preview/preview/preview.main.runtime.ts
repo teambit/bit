@@ -330,15 +330,34 @@ export class PreviewMain {
   async serveLocalPreview({ port }: { port: number }): Promise<number> {
     const app = this.express.createApp();
 
-    const getDir = async (comp, msg) => {
+    const getDirAndPath = async (comp, msg) => {
       const componentPreviewIndex = await this.previewService.readComponentsPreview(msg);
-      const componentPreviewFolder = componentPreviewIndex[comp];
+      const compParts = comp.split('/');
+      // go over all combination of parts to find the component
+      let compToCheck;
+      let filePath;
+      for (let i = compParts.length; i > 0; i--) {
+        /**
+         * Joins the component parts up to the specified index into a single string separated by '/'.
+         *
+         * @param compParts - An array of component parts.
+         * @param i - The index up to which the parts should be joined.
+         * @returns A string representing the joined component parts up to the specified index.
+         */
+        const part = compParts.slice(0, i).join('/');
+        if (componentPreviewIndex[part]) {
+          compToCheck = part;
+          filePath = compParts.slice(i).join('/');
+          break;
+        }
+      }
+      const componentPreviewFolder = componentPreviewIndex[compToCheck];
       const envPreviewDir = this.previewService.getEnvLocalPreviewDir(msg, componentPreviewFolder);
       if (!componentPreviewFolder) {
-        return undefined;
+        return [];
       }
       const publicDir = join(envPreviewDir, 'public');
-      return publicDir;
+      return [publicDir, filePath];
     };
 
     // const dynamicRouteRegex = '/?[^/@]+(/[^~]*)?';
@@ -364,14 +383,7 @@ export class PreviewMain {
         comp = comp.slice(0, -1);
       }
 
-      let filePath: string | undefined;
-
-      if (comp.endsWith('.js') || comp.endsWith('.css') || comp.endsWith('.map')) {
-        const splitted = comp.split('/');
-        filePath = splitted.pop();
-        comp = splitted.join('/');
-      }
-      const publicDir = await getDir(comp, msg);
+      const [publicDir, filePath] = await getDirAndPath(comp, msg);
       if (!publicDir) {
         return res.status(404).send('Folder not found.');
       }

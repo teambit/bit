@@ -602,7 +602,7 @@ export class CloudMain {
   static PRESET_ORGS = ['bitdev', 'teambit', 'bitdesign', 'frontend', 'backend'];
 
   async getCloudScopes(scopes: string[]): Promise<ScopeDescriptor[]> {
-    const remotes = await this.scope._legacyRemotes();
+    const remotes = await this.scope.getRemoteScopes();
     const filteredScopesToFetch = scopes.filter((scope) => {
       return ScopeID.isValid(scope) && remotes.isHub(scope);
     });

@@ -5,7 +5,7 @@ import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
 import { Logger } from '@teambit/logger';
 import { SnappingMain } from './snapping.main.runtime';
-import { BasicTagSnapParams } from './tag-model-component';
+import { BasicTagSnapParams } from './version-maker';
 import { NewDependencies } from './generate-comp-from-scope';
 
 export type FileData = { path: string; content: string; delete?: boolean };

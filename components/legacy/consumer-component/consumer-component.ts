@@ -2,7 +2,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import fs from 'fs-extra';
 import { v4 } from 'uuid';
 import * as path from 'path';
-import R from 'ramda';
+import { flatten } from 'lodash';
 import { IssuesList } from '@teambit/component-issues';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
@@ -15,7 +15,7 @@ import {
 } from '@teambit/legacy.constants';
 import { Doclet, parser as docsParser } from '@teambit/semantics.doc-parser';
 import { logger } from '@teambit/legacy.logger';
-import { Version, DepEdge, Log, ScopeListItem, DependenciesGraph, ModelComponent } from '@teambit/scope.objects';
+import { Version, DepEdge, Log, ScopeListItem, DependenciesGraph, ModelComponent } from '@teambit/objects';
 import { pathNormalizeToLinux, PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { ComponentMap } from '@teambit/legacy.bit-map';
@@ -338,7 +338,7 @@ export class Component {
   }
 
   getAllDependenciesIds(): ComponentIdList {
-    const allDependencies = R.flatten(Object.values(this.depsIdsGroupedByType));
+    const allDependencies = flatten(Object.values(this.depsIdsGroupedByType));
     return ComponentIdList.fromArray(allDependencies);
   }
 
@@ -539,7 +539,7 @@ export class Component {
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
     const docsP = _getDocsForFiles(files, consumer.componentFsCache);
     const docs = await Promise.all(docsP);
-    const flattenedDocs = docs ? R.flatten(docs) : [];
+    const flattenedDocs = docs ? flatten(docs) : [];
     // probably componentConfig.defaultScope is not needed. try to remove it.
     // once we changed BitId to ComponentId, the defaultScope is always part of the id.
     const defaultScope = id.hasScope() ? componentConfig.defaultScope : id.scope;

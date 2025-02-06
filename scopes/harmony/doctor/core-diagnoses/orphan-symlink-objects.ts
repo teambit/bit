@@ -1,6 +1,6 @@
 import { ComponentIdList } from '@teambit/component-id';
 import { loadConsumer } from '@teambit/legacy.consumer';
-import { ModelComponent, Symlink } from '@teambit/scope.objects';
+import { ModelComponent, Symlink } from '@teambit/objects';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
 
 export const DIAGNOSIS_NAME = 'check orphan refs';

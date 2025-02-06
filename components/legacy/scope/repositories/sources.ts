@@ -27,7 +27,7 @@ import {
   Ref,
   Lane,
   LaneComponent,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import Scope from '../scope';
 import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';

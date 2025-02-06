@@ -68,7 +68,6 @@ import { ExportAspect } from '@teambit/export';
 import { ImporterAspect } from '@teambit/importer';
 import { EjectAspect } from '@teambit/eject';
 import { UserAgentAspect } from '@teambit/user-agent';
-import { HtmlAspect } from '@teambit/html';
 import { LanesAspect } from '@teambit/lanes';
 import { ForkingAspect } from '@teambit/forking';
 import { RenamingAspect } from '@teambit/renaming';
@@ -103,7 +102,7 @@ import { ConfigMergerAspect } from '@teambit/config-merger';
 import { VersionHistoryAspect } from '@teambit/version-history';
 import { HostInitializerAspect } from '@teambit/host-initializer';
 import { DoctorAspect } from '@teambit/doctor';
-import { ApplyAspect } from '@teambit/apply';
+import { ObjectsAspect } from '@teambit/objects';
 import { BitAspect } from './bit.aspect';
 
 /**
@@ -182,7 +181,6 @@ export const manifestsMap = {
   [UserAgentAspect.id]: UserAgentAspect,
   [ApplicationAspect.id]: ApplicationAspect,
   [EjectAspect.id]: EjectAspect,
-  [HtmlAspect.id]: HtmlAspect,
   [LanesAspect.id]: LanesAspect,
   [ForkingAspect.id]: ForkingAspect,
   [RenamingAspect.id]: RenamingAspect,
@@ -217,7 +215,7 @@ export const manifestsMap = {
   [VersionHistoryAspect.id]: VersionHistoryAspect,
   [HostInitializerAspect.id]: HostInitializerAspect,
   [DoctorAspect.id]: DoctorAspect,
-  [ApplyAspect.id]: ApplyAspect,
+  [ObjectsAspect.id]: ObjectsAspect,
 };
 
 export function isCoreAspect(id: string) {

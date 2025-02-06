@@ -340,7 +340,7 @@ export class EnvsMain {
 
     if (!envJson) return undefined;
 
-    const object: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true);
+    const object: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
     if (!object.extends) return object;
     const resolvedObject = await this.recursivelyMergeWithParentManifest(object, envExtendsDeps);
 

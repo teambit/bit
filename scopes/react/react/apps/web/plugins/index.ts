@@ -1,1 +1,0 @@
-export { prerenderPlugin } from './prerender';

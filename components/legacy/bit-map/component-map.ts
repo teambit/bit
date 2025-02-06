@@ -1,7 +1,7 @@
 import * as path from 'path';
 import globby from 'globby';
 import ignore from 'ignore';
-import R from 'ramda';
+import { pickBy, isNil, sortBy, isEmpty } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '@teambit/legacy.constants';
 import { ValidationError } from '@teambit/legacy.cli.error';
@@ -127,7 +127,7 @@ export class ComponentMap {
   }
 
   toPlainObject(): Record<string, any> {
-    let res = {
+    let res: Record<string, any> = {
       name: this.name,
       scope: this.scope,
       version: this.version,
@@ -144,10 +144,8 @@ export class ComponentMap {
       localOnly: this.localOnly || null, // if false, change to null so it won't be written
       config: this.configToObject(),
     };
-    const notNil = (val) => {
-      return !R.isNil(val);
-    };
-    res = R.filter(notNil, res);
+
+    res = pickBy(res, (value) => !isNil(value));
     return res;
   }
 
@@ -346,7 +344,7 @@ export class ComponentMap {
   }
 
   sort() {
-    this.files = R.sortBy(R.prop('relativePath'), this.files);
+    this.files = sortBy(this.files, 'relativePath');
   }
 
   clone() {
@@ -381,7 +379,7 @@ export class ComponentMap {
       }
     });
     const foundMainFile = this.files.find((file) => file.relativePath === this.mainFile);
-    if (!foundMainFile || R.isEmpty(foundMainFile)) {
+    if (!foundMainFile || isEmpty(foundMainFile)) {
       throw new ValidationError(`${errorMessage} mainFile ${this.mainFile} is not in the files list.
 if you renamed the mainFile, please re-add the component with the "--main" flag pointing to the correct main-file`);
     }

@@ -25,7 +25,6 @@ coverage
 
 # Dependency directories
 node_modules
-!scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/node_modules
 
 # Optional npm cache directory
 .npm

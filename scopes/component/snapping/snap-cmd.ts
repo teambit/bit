@@ -13,7 +13,7 @@ import {
 import { Logger } from '@teambit/logger';
 import { SnappingMain, SnapResults } from './snapping.main.runtime';
 import { outputIdsIfExists } from './tag-cmd';
-import { BasicTagSnapParams } from './tag-model-component';
+import { BasicTagSnapParams } from './version-maker';
 
 export class SnapCmd implements Command {
   name = 'snap [component-pattern]';

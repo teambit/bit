@@ -106,7 +106,7 @@ function getAllCommands(): Cmd[] {
 
 function getCompsFromBitmap(): string[] {
   const bitMap = fs.readFileSync('.bitmap');
-  const componentsJson = json.parse(bitMap.toString('utf8'), undefined, true);
+  const componentsJson = json.parse(bitMap.toString('utf8'), undefined, true) as Record<string, any>;
   const compIds: string[] = [];
   Object.keys(componentsJson).forEach((componentId) => {
     if (componentId === '$schema-version') return;

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import { ModelComponent as Component } from '@teambit/scope.objects';
+import { ModelComponent as Component } from '@teambit/objects';
 import { ModelComponentMerger } from './model-components-merger';
 
 describe('ModelComponentMerger', () => {

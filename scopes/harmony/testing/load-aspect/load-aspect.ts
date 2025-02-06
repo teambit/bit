@@ -3,7 +3,7 @@ import { loadConsumer } from '@teambit/legacy.consumer';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { readdirSync, readFileSync } from 'fs';
-import { Harmony, Aspect } from '@teambit/harmony';
+import { Harmony, Aspect, Extension } from '@teambit/harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
 import { Config, ConfigOptions } from '@teambit/harmony/dist/harmony-config';
 import { ComponentID } from '@teambit/component';
@@ -83,15 +83,30 @@ export async function loadManyAspects(
     if (aspect.manifest._runtimes.length === 0 || targetAspects.includes(aspect.id)) {
       // core-aspects running outside of bit-bin repo end up here. they don't have runtime.
       // this makes sure to load them from the path were they're imported
-      if (!runtimeC.default) {
-        throw new Error(`error: ${aspect.id} does not export its main-runtime as default.
-go to the aspect-main file and add a new line with "export default YourAspectMain"`);
-      }
-      aspect.manifest.addRuntime(runtimeC.default);
+      addRuntimeIfNeeded(runtimeC, aspect);
     }
   });
 
   return harmony;
+}
+
+function addRuntimeIfNeeded(runtimeC: any, aspect: Extension) {
+  if (runtimeC.default) {
+    aspect.manifest.addRuntime(runtimeC.default);
+    return;
+  }
+  const methodsOnResult = Object.keys(runtimeC);
+  if (methodsOnResult.length === 1) {
+    aspect.manifest.addRuntime(runtimeC[methodsOnResult[0]]);
+    return;
+  }
+  const main = methodsOnResult.filter((method) => method.endsWith('Main'));
+  if (main.length === 1) {
+    aspect.manifest.addRuntime(runtimeC[main[0]]);
+    return;
+  }
+  throw new Error(`error: ${aspect.id} does not export its main-runtime as default.
+go to the aspect-main file and add a new line with "export default YourAspectMain"`);
 }
 
 function getMainFilePath(aspect: any, id: ComponentID) {

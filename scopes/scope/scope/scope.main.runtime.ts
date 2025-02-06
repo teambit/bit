@@ -28,7 +28,7 @@ import {
   ModelComponent,
   Lane,
   Version,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import { Scope as LegacyScope, LegacyOnTagResult, Scope, Types, loadScopeIfExist } from '@teambit/legacy.scope';
 import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { ExportPersist, PostSign } from '@teambit/scope.remote-actions';
@@ -36,7 +36,7 @@ import { DependencyResolverAspect, DependencyResolverMain, NodeLinker } from '@t
 import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import chokidar from 'chokidar';
+import chokidar, { WatchOptions } from 'chokidar';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { SnapsDistance, getDivergeData } from '@teambit/component.snap-distance';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/scope.network';
@@ -496,12 +496,12 @@ export class ScopeMain implements ComponentFactory {
    * it's possible that other commands (e.g. `bit import`) modified these files, while these processes are running.
    * Because these data are kept in memory, they're not up to date anymore.
    */
-  async watchScopeInternalFiles() {
+  async watchScopeInternalFiles(watchOptions: WatchOptions = {}) {
     const scopeIndexFile = this.legacyScope.objects.scopeIndex.getPath();
     const remoteLanesDir = this.legacyScope.objects.remoteLanes.basePath;
     const globalConfigFile = getGlobalConfigPath();
     const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile];
-    const watcher = chokidar.watch(pathsToWatch);
+    const watcher = chokidar.watch(pathsToWatch, watchOptions);
     watcher.on('ready', () => {
       this.logger.debug(`watchSystemFiles has started, watching ${pathsToWatch.join(', ')}`);
     });
@@ -721,9 +721,10 @@ export class ScopeMain implements ComponentFactory {
 
   /**
    * get a component from a remote without importing it
+   * by default, when on a lane, it loads the component from the lane. unless `fromMain` is set to true.
    */
-  async getRemoteComponent(id: ComponentID): Promise<Component> {
-    return this.componentLoader.getRemoteComponent(id);
+  async getRemoteComponent(id: ComponentID, fromMain = false): Promise<Component> {
+    return this.componentLoader.getRemoteComponent(id, fromMain);
   }
 
   /**
@@ -767,17 +768,14 @@ export class ScopeMain implements ComponentFactory {
    * @param includeCache whether or not include components that their scope-name is different than the current scope-name
    */
   async listIds(includeCache = false, includeFromLanes = false, patterns?: string[]): Promise<ComponentID[]> {
-    const allModelComponents = await this.legacyScope.list();
+    const localScopeOnly = !includeCache;
+    const allModelComponents = await this.legacyScope.list(localScopeOnly);
     const filterByCacheAndLanes = (modelComponent: ModelComponent) => {
-      const cacheFilter = includeCache ? true : this.exists(modelComponent);
       const lanesFilter = includeFromLanes ? true : modelComponent.hasHead();
-
-      return cacheFilter && lanesFilter;
+      return lanesFilter;
     };
     const modelComponentsToList = allModelComponents.filter(filterByCacheAndLanes);
-    let ids = modelComponentsToList.map((component) =>
-      ComponentID.fromLegacy(component.toBitIdWithLatestVersion(), component.scope || this.name)
-    );
+    let ids = modelComponentsToList.map((component) => component.toComponentIdWithLatestVersion());
     if (patterns && patterns.length > 0) {
       ids = ids.filter((id) =>
         patterns?.some((pattern) => isMatchNamespacePatternItem(id.toStringWithoutVersion(), pattern).match)
@@ -1058,8 +1056,13 @@ export class ScopeMain implements ComponentFactory {
     return this.resolveComponentId(id);
   }
 
-  // TODO: add new API for this
+  /**
+   * @deprecated use `this.getRemoteScopes()` instead.
+   */
   async _legacyRemotes(): Promise<Remotes> {
+    return getScopeRemotes(this.legacyScope);
+  }
+  async getRemoteScopes(): Promise<Remotes> {
     return getScopeRemotes(this.legacyScope);
   }
 
@@ -1067,8 +1070,8 @@ export class ScopeMain implements ComponentFactory {
    * list all component ids from a remote-scope
    */
   async listRemoteScope(scopeName: string): Promise<ComponentID[]> {
-    const remotes = await this._legacyRemotes();
-    const remote = await remotes.resolve(scopeName, this.legacyScope);
+    const remotes = await this.getRemoteScopes();
+    const remote = await remotes.resolve(scopeName);
     const results = await remote.list();
     return results.map(({ id }) => id);
   }
@@ -1155,15 +1158,6 @@ export class ScopeMain implements ComponentFactory {
   async loadComponentsAspect(component: Component) {
     const aspectIds = component.state.aspects.ids;
     await this.loadAspects(aspectIds, true, component.id.toString());
-  }
-
-  async addAspectsFromConfigObject(component: Component, configObject: Record<string, any>) {
-    const extensionsFromConfigObject = ExtensionDataList.fromConfigObject(configObject);
-    const extensionDataList = ExtensionDataList.mergeConfigs([
-      extensionsFromConfigObject,
-      component.state._consumer.extensions,
-    ]).filterRemovedExtensions();
-    component.state._consumer.extensions = extensionDataList;
   }
 
   public async createAspectListFromExtensionDataList(extensionDataList: ExtensionDataList) {

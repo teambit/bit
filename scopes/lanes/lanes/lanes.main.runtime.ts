@@ -4,7 +4,7 @@ import pMap from 'p-map';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { OutsideWorkspaceError, Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import { LaneDiffCmd, LaneDiffGenerator, LaneDiffResults, LaneHistoryDiffCmd } from '@teambit/lanes.modules.diff';
 import { NoCommonSnap, Scope as LegacyScope, TrackLane, LaneData } from '@teambit/legacy.scope';
@@ -17,7 +17,7 @@ import { FetchCmd, ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
-import { Ref, HistoryItem, Lane, LaneHistory, Version } from '@teambit/scope.objects';
+import { Ref, HistoryItem, Lane, LaneHistory, Version } from '@teambit/objects';
 import { SnapsDistance, getDivergeData } from '@teambit/component.snap-distance';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { compact } from 'lodash';
@@ -481,7 +481,7 @@ please create a new lane instead, which will include all components of this lane
   }
 
   async exportLane(lane: Lane) {
-    await this.exporter.exportMany({
+    await this.exporter.pushToScopes({
       scope: this.scope.legacyScope,
       laneObject: lane,
       ids: new ComponentIdList(),
@@ -579,7 +579,7 @@ please create a new lane instead, which will include all components of this lane
     }: SwitchLaneOptions
   ) {
     if (!this.workspace) {
-      throw new BitError(`unable to switch lanes outside of Bit workspace`);
+      throw new OutsideWorkspaceError();
     }
     this.workspace.inInstallContext = true;
     let mergeStrategy;
