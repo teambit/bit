@@ -349,7 +349,7 @@ export class CheckoutMain {
     // when no ids were given and the user is on a lane, return lane-ids only.
     // it's relevant for cases like "bit checkout head" when on a lane to not checkout main components. (see https://github.com/teambit/bit/pull/6853)
     const ids =
-      currentLaneIds && !componentPattern
+      currentLaneIds && !componentPattern && checkoutProps.head
         ? idsOnWorkspace.filter((id) => currentLaneIds.hasWithoutVersion(id))
         : idsOnWorkspace;
     checkoutProps.ids = ids.map((id) => (checkoutProps.head || checkoutProps.latest ? id.changeVersion(LATEST) : id));
