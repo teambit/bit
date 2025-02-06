@@ -96,11 +96,11 @@ export class Watcher {
     await this.setRootDirs();
     const componentIds = Object.values(this.rootDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
+    await this.watcherMain.watchScopeInternalFiles();
+
     await this.createWatcher();
     const watcher = this.fsWatcher;
     msgs?.onStart(this.workspace);
-
-    await this.watcherMain.watchScopeInternalFiles();
 
     return new Promise((resolve, reject) => {
       if (this.verbose) {
@@ -458,8 +458,8 @@ export class Watcher {
     const chokidarOpts = await this.watcherMain.getChokidarWatchOptions();
     // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
     // (windows-style backslashes are converted to forward slashes)
-    (chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', ignoreLocalScope]),
-      (this.fsWatcher = chokidar.watch(this.workspace.path, chokidarOpts));
+    chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', ignoreLocalScope];
+    this.fsWatcher = chokidar.watch(this.workspace.path, chokidarOpts);
     if (this.verbose) {
       logger.console(`${chalk.bold('chokidar.options:\n')} ${JSON.stringify(this.fsWatcher.options, undefined, 2)}`);
     }
