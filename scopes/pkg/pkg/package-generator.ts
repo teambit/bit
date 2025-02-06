@@ -17,9 +17,9 @@ export type PackageGeneratorOptions = {
  */
 export class PackageGenerator {
   constructor(
+    private context: EnvContext,
     private _packageJson: PackageJsonProps = {},
     private _npmIgnore: string[] = [],
-    private context: EnvContext,
     private _modifyPackageJson?: ModifyPackageJsonFunc,
   ) {}
 
@@ -37,7 +37,7 @@ export class PackageGenerator {
 
   static from(options: PackageGeneratorOptions): EnvHandler<PackageGenerator> {
     return (context: EnvContext) => {
-      return new PackageGenerator(options.packageJson, options.npmIgnore, context, options.modifyPackageJson);
+      return new PackageGenerator(context, options.packageJson, options.npmIgnore, options.modifyPackageJson);
     };
   }
 }
