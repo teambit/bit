@@ -12,8 +12,8 @@
     "node": ">=12.22.0"
   },
   "lint-staged": {
-    "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}": "oxlint --deny-warnings",
-    "*.{ts,js,jsx,tsx,css,scss,md,mdx}": [
+    "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}, !excluded-fixtures": "oxlint --deny-warnings",
+    "*.{ts,js,jsx,tsx,css,scss,md,mdx}, !excluded-fixtures": [
       "prettier --write",
       "git add"
     ]
@@ -42,11 +42,10 @@
     "dev-link": "node ./scripts/establish-dev-link.js $1",
     "dev-link:windows": "node ./scripts/establish-dev-link-windows.js $1",
     "ts-coverage": "type-coverage",
-    "check-types": "tsc",
-    "ts-watch": "tsc -w",
+    "check-types": "tsc --noEmit",
     "oxlint": "oxlint --deny-warnings",
     "lint:only": "eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\"",
-    "lint": "tsc && eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\"",
+    "lint": "tsc --noEmit && eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\"",
     "lint:table": "eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\" --format table",
     "lint:html": "eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\" --format html -o eslint-report.html",
     "lint-circle": "eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\" --format junit -o junit/eslint-results.xml",
@@ -57,18 +56,19 @@
     "test:extensions": "mocha --require ./babel-register './scopes/**/*.spec.ts'",
     "mocha-circleci": "cross-env NODE_OPTIONS='--no-warnings --max-old-space-size=5000' registry-mock prepare && mocha --require ./babel-register --reporter mocha-multi-reporters --reporter-options configFile=mocha-multi-reporters-config.json --colors",
     "e2e-test": "registry-mock prepare && cross-env NODE_OPTIONS=--no-warnings mocha --require ./babel-register './e2e/**/*.e2e*.ts'",
-    "e2e-test:debug": "npm run e2e-test --debug --keep-envs",
+    "e2e-test:debug": "npm run e2e-test --debug",
     "e2e-test-circle": "cross-env NODE_OPTIONS='--no-warnings --max-old-space-size=5000' mocha --require ./babel-register --reporter mocha-multi-reporters --reporter-options configFile=mocha-multi-reporters-config.json --colors './e2e/**/*.e2e*.ts'",
     "performance-test": "mocha --require ./babel-register ./e2e/performance/*.performance*.ts",
-    "performance-test:debug": "npm run performance-test --debug --keep-envs",
+    "performance-test:debug": "npm run performance-test --debug",
     "performance-test-circle": "mocha --require ./babel-register --reporter mocha-multi-reporters --reporter-options configFile=mocha-multi-reporters-config.json --colors ./e2e/performance/*.performance*.ts",
     "bit-hub-test-circle": "mocha --require ./babel-register --reporter mocha-multi-reporters --reporter-options configFile=mocha-multi-reporters-config.json --colors ./e2e/bit-hub/*.ts",
+    "clean-node-modules": "find . -type d -name node_modules -prune -exec rm -rf '{}' +",
     "setup": "bit install &&  bit compile",
-    "full-setup": "rm -rf node_modules/.bin/bit && bit install && husky install && bit compile",
-    "full-setup:bbit": "rm -rf node_modules/.bin/bbit && bbit install && husky install && bbit compile",
-    "full-setup:windows": "bit install && husky install && bit compile",
-    "full-setup:windows:bbit": "rm -rf node_modules/.bin && bbit install && npx husky install && echo 'please run `bbit compile`'",
-    "husky:install": "husky install",
+    "full-setup": "rm -rf node_modules/.bin/bit && bit install && husky && bit compile",
+    "full-setup:bbit": "rm -rf node_modules/.bin/bbit && bbit install && husky && bbit compile",
+    "full-setup:windows": "bit install && husky && bit compile",
+    "full-setup:windows:bbit": "rm -rf node_modules/.bin && bbit install && npx husky && echo 'please run `bbit compile`'",
+    "husky:install": "husky",
     "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",
     "build-debian-image": "docker build ./scripts/linux/debian -t debian-deb",
     "doc-gen": "node ./scripts/doc-generator.js",
@@ -90,7 +90,7 @@
     "lint-staged": "lint-staged"
   },
   "dependencies": {
-    "oxlint": "0.15.0",
+    "oxlint": "0.15.8",
     "husky": "9.1.7"
   },
   "devDependencies": {},

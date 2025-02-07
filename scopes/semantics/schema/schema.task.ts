@@ -74,11 +74,10 @@ export function getSchemaArtifactPath() {
   return join(CAPSULE_ARTIFACTS_DIR, 'schema.json');
 }
 
-export function getSchemaArtifactDef() {
+export function getSchemaArtifactDef(): ArtifactDefinition {
   const def: ArtifactDefinition = {
     name: SCHEMA_ARTIFACT_NAME,
-    rootDir: CAPSULE_ARTIFACTS_DIR,
-    globPatterns: ['schema.json'],
+    globPatterns: [getSchemaArtifactPath()],
   };
 
   return def;

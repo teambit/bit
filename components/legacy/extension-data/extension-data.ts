@@ -1,4 +1,4 @@
-import R from 'ramda';
+import { cloneDeep } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 
 type ExtensionConfig = { [extName: string]: any } | RemoveExtensionSpecialSign;
@@ -83,8 +83,8 @@ export class ExtensionDataEntry {
       this.legacyId,
       this.extensionId?.clone(),
       this.name,
-      R.clone(this.rawConfig),
-      R.clone(this.data)
+      cloneDeep(this.rawConfig),
+      cloneDeep(this.data)
     );
   }
 }

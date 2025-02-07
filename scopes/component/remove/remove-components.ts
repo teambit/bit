@@ -8,7 +8,7 @@ import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL, LATEST_BIT_VERSION } from '@
 import { BitError } from '@teambit/bit-error';
 import { logger } from '@teambit/legacy.logger';
 import { Http } from '@teambit/scope.network';
-import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
+import { Remotes } from '@teambit/scope.remotes';
 import { deleteComponentsFiles } from './delete-component-files';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { RemovedObjects } from '@teambit/legacy.scope';
@@ -77,7 +77,7 @@ async function removeRemote(
   force: boolean
 ): Promise<RemovedObjects[]> {
   const groupedBitsByScope = groupArray(bitIds, 'scope');
-  const remotes = workspace ? await getScopeRemotes(workspace.scope.legacyScope) : await Remotes.getGlobalRemotes();
+  const remotes = workspace ? await workspace.scope.getRemoteScopes() : await Remotes.getGlobalRemotes();
   const shouldGoToCentralHub = remotes.shouldGoToCentralHub(Object.keys(groupedBitsByScope));
   if (shouldGoToCentralHub) {
     const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
@@ -88,7 +88,7 @@ async function removeRemote(
   }
   const context = {};
   const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
-    const resolvedRemote = await remotes.resolve(key, workspace?.scope.legacyScope);
+    const resolvedRemote = await remotes.resolve(key);
     const idsStr = groupedBitsByScope[key].map((id) => id.toStringWithoutVersion());
     return resolvedRemote.deleteMany(idsStr, force, context);
   });
@@ -147,7 +147,7 @@ If you understand the risks and wish to proceed with the removal, please use the
     }
   }
   const idsToRemove = force ? bitIds : nonModifiedComponents;
-  const componentsList = new ComponentsList(consumer);
+  const componentsList = new ComponentsList(workspace);
   const newComponents = (await componentsList.listNewComponents(false)) as ComponentIdList;
   const idsToRemoveFromScope = ComponentIdList.fromArray(
     idsToRemove.filter((id) => !newComponents.hasWithoutVersion(id))

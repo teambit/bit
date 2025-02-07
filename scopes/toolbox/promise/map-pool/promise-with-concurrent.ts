@@ -2,26 +2,29 @@
  * the reason for not using p-map package is because the stacktrace is lost.
  * see here: https://github.com/sindresorhus/p-map/issues/34
  */
+import { chunk } from 'lodash';
 
-export async function pMapPool<T, X>(iterable: T[], mapper: (item: T) => Promise<X>, { concurrency = Infinity } = {}) {
+export async function pMapPool<T, X>(
+  iterable: T[],
+  mapper: (item: T) => Promise<X>,
+  {
+    concurrency = Infinity,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onCompletedChunk = (_completed: number) => {},
+  } = {}
+) {
+  if (concurrency === Infinity) {
+    return Promise.all(iterable.map((item) => mapper(item)));
+  }
+
   const results: X[] = [];
-  const iterator = iterable[Symbol.iterator]();
-  let completed = false;
-  const runBatch = async () => {
-    const items: T[] = [];
-    for (let i = 0; i < concurrency; i += 1) {
-      const iterableResult = iterator.next();
-      if (iterableResult.done) {
-        completed = true;
-        break;
-      }
-      items.push(iterableResult.value);
-    }
-    const batchResults = await Promise.all(items.map((item) => mapper(item)));
+  const chunks = chunk(iterable, concurrency);
+
+  for (const currentChunk of chunks) {
+    const batchResults = await Promise.all(currentChunk.map((item) => mapper(item)));
     results.push(...batchResults);
-    if (!completed) await runBatch();
-  };
-  await runBatch();
+    onCompletedChunk(results.length);
+  }
 
   return results;
 }

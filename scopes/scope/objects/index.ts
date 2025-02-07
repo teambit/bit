@@ -29,3 +29,9 @@ export { VersionHistoryGraph } from './models/version-history';
 export { VersionParents, versionParentsToGraph } from './models/version-history';
 export { HistoryItem } from './models/lane-history';
 export { IdGraph, objectListToGraph, bitObjectListToGraph } from './objects/object-list-to-graph';
+
+import { ObjectsAspect } from './objects.aspect';
+
+export type { ObjectsMain } from './objects.main.runtime';
+export default ObjectsAspect;
+export { ObjectsAspect };

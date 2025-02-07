@@ -18,7 +18,7 @@ import { LanesAspect, Lane, LanesMain } from '@teambit/lanes';
 import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { UpdateDependenciesCmd } from './update-dependencies.cmd';
 import { UpdateDependenciesAspect } from './update-dependencies.aspect';
-import { Ref } from '@teambit/scope.objects';
+import { Ref } from '@teambit/objects';
 import { isSnap } from '@teambit/component-version';
 
 export type UpdateDepsOptions = {
@@ -199,8 +199,8 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
   }
 
   private addBuildStatus() {
-    this.legacyComponents.forEach((c) => {
-      c.buildStatus = BuildStatus.Pending;
+    this.components.forEach((c) => {
+      this.snapping.setBuildStatus(c, BuildStatus.Pending);
     });
   }
 
@@ -301,9 +301,9 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
   }
 
   private async saveDataIntoLocalScope(buildStatus: BuildStatus) {
-    await mapSeries(this.legacyComponents, async (component) => {
-      component.buildStatus = buildStatus;
-      await this.snapping._enrichComp(component);
+    await mapSeries(this.components, async (component) => {
+      this.snapping.setBuildStatus(component, buildStatus);
+      await this.snapping.enrichComp(component);
     });
     if (this.laneObj) {
       const laneHistory = await this.scope.legacyScope.lanes.updateLaneHistory(this.laneObj, 'update-dependencies');
@@ -316,7 +316,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     const shouldExport = this.updateDepsOptions.push;
     if (!shouldExport) return;
     const ids = ComponentIdList.fromArray(this.legacyComponents.map((c) => c.id));
-    await this.exporter.exportMany({
+    await this.exporter.pushToScopes({
       scope: this.scope.legacyScope,
       ids,
       laneObject: this.laneObj,

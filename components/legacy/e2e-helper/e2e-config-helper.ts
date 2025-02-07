@@ -1,4 +1,4 @@
-import R from 'ramda';
+import { forEach } from 'lodash';
 
 import { getCloudDomain, CFG_GIT_EXECUTABLE_PATH } from '@teambit/legacy.constants';
 import CommandHelper from './e2e-command-helper';
@@ -41,12 +41,12 @@ export default class ConfigHelper {
   }
 
   restoreConfigs(backupObject: { [key: string]: string }): void {
-    R.forEachObjIndexed((val, key) => {
+    forEach(backupObject, (val, key) => {
       if (val === undefined || val.includes('undefined')) {
         this.command.delConfig(key);
       } else {
         this.command.setConfig(key, val);
       }
-    }, backupObject);
+    });
   }
 }

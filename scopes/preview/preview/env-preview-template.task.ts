@@ -5,6 +5,7 @@ import {
   TaskLocation,
   ComponentResult,
   CAPSULE_ARTIFACTS_DIR,
+  ArtifactDefinition,
 } from '@teambit/builder';
 import { MainRuntime } from '@teambit/cli';
 import mapSeries from 'p-map-series';
@@ -268,12 +269,11 @@ export function getArtifactDirectory() {
   return join(CAPSULE_ARTIFACTS_DIR, 'env-template');
 }
 
-export function getArtifactDef() {
+export function getArtifactDef(): ArtifactDefinition[] {
   return [
     {
       name: 'env-template',
-      globPatterns: ['**'],
-      rootDir: getArtifactDirectory(),
+      globPatterns: [getArtifactDirectory()],
     },
   ];
 }

@@ -1,4 +1,4 @@
-import { Ref } from '@teambit/scope.objects';
+import { Ref } from '@teambit/objects';
 
 export class SnapsDistance {
   constructor(

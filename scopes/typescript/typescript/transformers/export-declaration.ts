@@ -113,10 +113,12 @@ async function exportSpecifierToSchemaNode(
   context: SchemaExtractorContext
 ): Promise<ExportSchema> {
   try {
-    const definitionInfo = await context.definitionInfo(element);
     const name = element.propertyName?.getText() || element.name.getText();
     const alias = element.propertyName ? element.name.getText() : undefined;
     const location = context.getLocation(element.name);
+    const definitionInfo = element.isTypeOnly
+      ? await context.definitionInfo(element.name)
+      : await context.definitionInfo(element);
 
     if (!definitionInfo) {
       const exportNode = new UnresolvedSchema(location, element.name.getText());

@@ -6,7 +6,7 @@ import { flatten, isEmpty, chunk } from 'lodash';
 import { Compiler } from '@teambit/compiler';
 import type { AbstractVinyl } from '@teambit/component.sources';
 import type { Capsule } from '@teambit/isolator';
-import { CAPSULE_ARTIFACTS_DIR, ComponentResult } from '@teambit/builder';
+import { ArtifactDefinition, CAPSULE_ARTIFACTS_DIR, ComponentResult } from '@teambit/builder';
 import { BitError } from '@teambit/bit-error';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
@@ -334,7 +334,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     return componentsResults;
   }
 
-  private getArtifactDef() {
+  private getArtifactDef(): ArtifactDefinition[] {
     // eslint-disable-next-line @typescript-eslint/prefer-as-const
     // const env: 'env' = 'env';
     // const rootDir = this.getDirName(context);
@@ -342,8 +342,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     return [
       {
         name: COMPONENT_STRATEGY_ARTIFACT_NAME,
-        globPatterns: ['**'],
-        rootDir: this.getArtifactDirectory(),
+        globPatterns: [this.getArtifactDirectory()],
         // context: env,
       },
     ];
@@ -361,8 +360,8 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
   private getPaths(context: ComputeTargetsContext, component: Component, files: AbstractVinyl[]) {
     const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
     if (!capsule) return [];
-    const compiler: Compiler = context.env.getCompiler();
-    return files.map((file) => join(capsule.path, compiler.getDistPathBySrcPath(file.relative)));
+    const compiler: Compiler = context.env.getCompiler?.();
+    return files.map((file) => join(capsule.path, compiler?.getDistPathBySrcPath(file.relative) || file.relative));
   }
 
   private getComponentOutputPath(capsule: Capsule, context: ComputeTargetsContext) {

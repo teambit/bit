@@ -10,7 +10,7 @@ import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ComponentsPendingImport } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import { ModelComponent } from '@teambit/scope.objects';
+import { ModelComponent } from '@teambit/objects';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { SnapsDistance } from '@teambit/component.snap-distance';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
@@ -80,8 +80,8 @@ export class StatusMain {
     const { components: allComps, invalidComponents: allInvalidComponents } =
       await this.workspace.listWithInvalid(loadOpts);
     const consumer = this.workspace.consumer;
-    const laneObj = await consumer.getCurrentLaneObject();
-    const componentsList = new ComponentsList(consumer);
+    const laneObj = await this.workspace.getCurrentLaneObject();
+    const componentsList = new ComponentsList(this.workspace);
     const newComponents: ConsumerComponent[] = (await componentsList.listNewComponents(
       true,
       loadOpts

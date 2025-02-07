@@ -1,13 +1,14 @@
-import R from 'ramda';
+import { sortBy, unionWith, isEmpty, cloneDeep, compact } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
-import { compact, isEmpty, cloneDeep } from 'lodash';
 import {
   convertBuildArtifactsFromModelObject,
   convertBuildArtifactsToModelObject,
   reStructureBuildArtifacts,
 } from '@teambit/component.sources';
 import { ExtensionDataEntry, REMOVE_EXTENSION_SPECIAL_SIGN } from './extension-data';
+import { EnvsAspect } from '@teambit/envs';
+import { DependencyResolverAspect, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 
 type ExtensionConfig = { [extName: string]: any } | RemoveExtensionSpecialSign;
 type ConfigOnlyEntry = {
@@ -141,12 +142,45 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   }
 
   sortById(): ExtensionDataList {
-    const arr = R.sortBy(R.prop('stringId'), this);
+    const arr = sortBy(this, 'stringId');
     // Also sort the config
     arr.forEach((entry) => {
       entry.config = sortObjectByKeys(entry.config);
     });
     return ExtensionDataList.fromArray(arr);
+  }
+
+  /**
+   * from the merge-config we get the dep-resolver policy as an array, because it needs to support "force" prop.
+   * however, when we save the config, we want to save it as an object, so we need split the data into two:
+   * 1. force: true, which gets saved into the config.
+   * 2. force: false, which gets saved into the data.dependencies later on. see the workspace.getAutoDetectOverrides()
+   */
+  extractAutoDepsFromConfig(): VariantPolicyConfigArr | undefined {
+    const policy = this.findCoreExtension(DependencyResolverAspect.id)?.config.policy;
+    if (!policy) return;
+
+    const autoDepsObj: VariantPolicyConfigArr = {};
+    ['dependencies', 'devDependencies', 'peerDependencies'].forEach((key) => {
+      if (!policy[key]) return;
+      // this is only relevant when it is saved as an array. otherwise, it's always force: true.
+      if (!Array.isArray(policy[key])) return;
+
+      autoDepsObj[key] = policy[key].filter((dep) => !dep.force);
+      policy[key] = policy[key].filter((dep) => dep.force);
+
+      if (!policy[key].length) {
+        delete policy[key];
+        return;
+      }
+      // convert to object
+      policy[key] = policy[key].reduce((acc, current) => {
+        acc[current.name] = current.version;
+        return acc;
+      }, {});
+    });
+
+    return autoDepsObj;
   }
 
   static fromConfigObject(obj: { [extensionId: string]: any } = {}): ExtensionDataList {
@@ -173,11 +207,6 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
    * Make sure you extension ids are resolved before call this, otherwise you might get unexpected results
    * for example:
    * you might have 2 entries like: default-scope/my-extension and my-extension on the same time
-   *
-   * @static
-   * @param {ExtensionDataList[]} list
-   * @returns {ExtensionDataList}
-   * @memberof ExtensionDataList
    */
   static mergeConfigs(list: ExtensionDataList[], ignoreVersion = true): ExtensionDataList {
     if (list.length === 1) {
@@ -189,11 +218,22 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     const merged = list.reduce(mergeReducer, new ExtensionDataList());
     return ExtensionDataList.fromArray(merged);
   }
+
+  /**
+   * makes sure the "env" prop has the id without a version, and the full env-id is in the root of the object
+   */
+  static adjustEnvsOnConfigObject(conf: Record<string, any>) {
+    const env = conf[EnvsAspect.id]?.env;
+    if (!env) return;
+    const [id] = env.split('@');
+    conf[EnvsAspect.id] = { env: id };
+    conf[env] = {};
+  }
 }
 
 function getMergeReducer(ignoreVersion = true) {
   const predicate = getCompareExtPredicate(ignoreVersion);
-  const mergeReducer = (accumulator, currentValue) => R.unionWith(predicate, accumulator, currentValue);
+  const mergeReducer = (accumulator, currentValue) => unionWith(accumulator, currentValue, predicate);
   return mergeReducer;
 }
 

@@ -16,7 +16,7 @@ import { HEAD, LATEST } from '@teambit/legacy.constants';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import mapSeries from 'p-map-series';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import { Version, ModelComponent, Lane } from '@teambit/scope.objects';
+import { Version, ModelComponent, Lane } from '@teambit/objects';
 import { Tmp } from '@teambit/legacy.scope';
 import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 import { CheckoutCmd } from './checkout-cmd';
@@ -346,7 +346,12 @@ export class CheckoutMain {
 
     const currentLane = await this.workspace.consumer.getCurrentLaneObject();
     const currentLaneIds = currentLane?.toComponentIds();
-    const ids = currentLaneIds ? idsOnWorkspace.filter((id) => currentLaneIds.hasWithoutVersion(id)) : idsOnWorkspace;
+    // when no ids were given and the user is on a lane, return lane-ids only.
+    // it's relevant for cases like "bit checkout head" when on a lane to not checkout main components. (see https://github.com/teambit/bit/pull/6853)
+    const ids =
+      currentLaneIds && !componentPattern && checkoutProps.head
+        ? idsOnWorkspace.filter((id) => currentLaneIds.hasWithoutVersion(id))
+        : idsOnWorkspace;
     checkoutProps.ids = ids.map((id) => (checkoutProps.head || checkoutProps.latest ? id.changeVersion(LATEST) : id));
   }
 

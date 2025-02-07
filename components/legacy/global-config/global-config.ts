@@ -1,12 +1,13 @@
-import gitconfig from 'gitconfig';
-import R from 'ramda';
+import gitconfig from '@teambit/gitconfig';
+import { isNil } from 'lodash';
 import { BitError } from '@teambit/bit-error';
-import { BASE_DOCS_DOMAIN, ENV_VARIABLE_CONFIG_PREFIX } from '@teambit/legacy.constants';
 import Config from './config';
+
+export const ENV_VARIABLE_CONFIG_PREFIX = 'BIT_CONFIG_';
 
 export function set(key: string, val: string): Promise<Config> {
   if (!key || !val) {
-    throw new BitError(`missing a configuration key and value. ${BASE_DOCS_DOMAIN}config/bit-config`);
+    throw new BitError(`missing a configuration key and value. https://bit.dev/config/bit-config`);
   }
   return Config.load().then((config) => {
     config.set(key, val);
@@ -54,7 +55,7 @@ export async function get(key: string): Promise<string | undefined> {
   }
   const config = await getConfigObject();
   const val = config ? config.get(key) : undefined;
-  if (!R.isNil(val)) return val;
+  if (!isNil(val)) return val;
   try {
     const gitVal = await gitconfig.get(key);
     return gitVal;
@@ -79,10 +80,10 @@ export function getSync(key: string): string | undefined {
   }
   const config = getConfigObject();
   const val = config ? config.get(key) : undefined;
-  if (!R.isNil(val)) return val;
+  if (!isNil(val)) return val;
   const gitConfigCache = gitCache().get() || {};
   if (key in gitConfigCache) {
-    return gitConfigCache[val];
+    return gitConfigCache[key];
   }
   try {
     const gitVal = gitconfig.get.sync(key);

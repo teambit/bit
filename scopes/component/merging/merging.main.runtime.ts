@@ -8,7 +8,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import { UnmergedComponent } from '@teambit/legacy.scope';
-import { Ref, Lane, ModelComponent } from '@teambit/scope.objects';
+import { Ref, Lane, ModelComponent } from '@teambit/objects';
 import chalk from 'chalk';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
 import { RemoveAspect, RemoveMain, deleteComponentsFiles } from '@teambit/remove';
@@ -626,7 +626,10 @@ export class MergingMain {
     const ids = ComponentIdList.fromArray(unmergedComponents.map((r) => ComponentID.fromObject(r.id)));
     if (!this.workspace) {
       const results = await this.snapping.snapFromScope(
-        ids.map((id) => ({ componentId: id.toString() })),
+        ids.map((id) => ({
+          componentId: id.toString(),
+          aspects: this.scope.legacyScope.objects.unmergedComponents.getEntry(id)?.mergedConfig,
+        })),
         {
           message: snapMessage,
           build,
@@ -685,7 +688,7 @@ export class MergingMain {
 
   async listMergePendingComponents(componentsList?: ComponentsList): Promise<DivergedComponent[]> {
     const consumer = this.workspace.consumer;
-    componentsList = componentsList || new ComponentsList(consumer);
+    componentsList = componentsList || new ComponentsList(this.workspace);
     const allIds = consumer.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
     const componentsFromModel = await componentsList.getModelComponents();
     const duringMergeComps = componentsList.listDuringMergeStateComponents();

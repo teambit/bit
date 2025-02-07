@@ -4,7 +4,7 @@ import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { logger } from '@teambit/legacy.logger';
 import { Scope, MissingObjects } from '@teambit/legacy.scope';
-import { Ref, Lane, Source } from '@teambit/scope.objects';
+import { Ref, Lane, Source } from '@teambit/objects';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';

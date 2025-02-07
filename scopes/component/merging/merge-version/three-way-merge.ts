@@ -1,5 +1,5 @@
 import { BitError } from '@teambit/bit-error';
-import { Source, Version, SourceFileModel } from '@teambit/scope.objects';
+import { Source, Version, SourceFileModel } from '@teambit/objects';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { PathLinux, pathNormalizeToLinux, PathOsBased } from '@teambit/toolbox.path.path';
 import * as eol from '@teambit/toolbox.string.eol';

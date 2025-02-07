@@ -12,6 +12,9 @@ export class LintTask implements BuildTask {
   ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
+    if (!context.env.getLinter) {
+      return { componentsResults: [] };
+    }
     const linter: Linter = context.env.getLinter();
     const rootDir = context.capsuleNetwork.capsulesRootDir;
     const componentsDirMap = this.getComponentsDirectory(rootDir, context.capsuleNetwork.originalSeedersCapsules);

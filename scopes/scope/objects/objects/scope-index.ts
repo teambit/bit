@@ -13,7 +13,7 @@ import { difference } from 'lodash';
 
 const COMPONENTS_INDEX_FILENAME = 'index.json';
 
-interface IndexItem {
+export interface IndexItem {
   hash: string;
   toIdentifierString(): string;
 }

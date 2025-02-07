@@ -44,7 +44,7 @@ import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
-import { type DependenciesGraph } from '@teambit/scope.objects';
+import { type DependenciesGraph } from '@teambit/objects';
 
 export type { RebuildFn };
 
@@ -94,6 +94,10 @@ export class PnpmPackageManager implements PackageManager {
     const lockfilePath = join(rootDir, 'pnpm-lock.yaml');
     await writeLockfileFile(lockfilePath, lockfile);
     this.logger.debug(`generated a lockfile from dependencies graph at ${lockfilePath}`);
+    if (process.env.DEPS_GRAPH_LOG) {
+      // eslint-disable-next-line no-console
+      console.log(`generated a lockfile from dependencies graph at ${lockfilePath}`);
+    }
   }
 
   async install(
@@ -104,7 +108,11 @@ export class PnpmPackageManager implements PackageManager {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
 
-    if (installOptions.dependenciesGraph && isFeatureEnabled(DEPS_GRAPH) && installOptions.rootComponents) {
+    if (
+      installOptions.dependenciesGraph &&
+      isFeatureEnabled(DEPS_GRAPH) &&
+      (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
+    ) {
       await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, manifests, rootDir);
     }
 

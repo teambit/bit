@@ -9,6 +9,7 @@ import { MergeFromScopeResult, MergeLanesMain } from './merge-lanes.main.runtime
 type Flags = {
   pattern?: string;
   push?: boolean;
+  build?: boolean;
   keepReadme?: boolean;
   noSquash: boolean;
   includeDeps?: boolean;
@@ -46,6 +47,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     ],
     ['', 'title-base64 <string>', 'same as --title flag but the title is base64 encoded'],
     ['', 'push', 'export the updated objects to the original scopes once done'],
+    ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
     ['', 'no-squash', 'relevant for merging lanes into main, which by default squash.'],
     ['', 'include-deps', 'relevant for "--pattern". merge also dependencies of the given components'],
@@ -63,6 +65,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     {
       pattern,
       push = false,
+      build,
       keepReadme = false,
       noSquash = false,
       includeDeps = false,
@@ -80,11 +83,12 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
 
     const titleBase64Decoded = titleBase64 ? fromBase64(titleBase64) : undefined;
 
-    const { mergedNow, unmerged, exportedIds, conflicts, mergeSnapError } = await this.mergeLanes.mergeFromScope(
+    const { mergedNow, unmerged, exportResult, conflicts, mergeSnapError } = await this.mergeLanes.mergeFromScope(
       fromLane,
       toLane || DEFAULT_LANE,
       {
         push,
+        build,
         keepReadme,
         noSquash,
         pattern,
@@ -116,6 +120,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     const mergeSnapErrorTitle = chalk.bold(`the following error was thrown while snapping the components:`);
     const mergeSnapErrorOutput = mergeSnapError ? `${mergeSnapErrorTitle}\n${chalk.red(mergeSnapError.message)}` : '';
 
+    const exportedIds = exportResult?.exported || [];
     const exportedTitle = chalk.bold(`successfully exported ${exportedIds.length} components`);
     const exportedOutput = exportedIds.length ? `${exportedTitle}\n${exportedIds.join('\n')}` : '';
 
@@ -138,13 +143,22 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
         includeDeps,
         reMerge,
       });
+      const exportedIds = results.exportResult?.exported.map((id) => id.toString()) || [];
+      const exportResult = {
+        ...results.exportResult,
+        exported: exportedIds,
+        updatedLocally: results.exportResult?.updatedLocally.map((id) => id.toString()),
+        newIdsOnRemote: results.exportResult?.newIdsOnRemote.map((id) => id.toString()),
+      };
+
       return {
         code: 0,
         data: {
           ...results,
           mergedNow: results.mergedNow.map((id) => id.toString()),
           mergedPreviously: results.mergedPreviously.map((id) => id.toString()),
-          exportedIds: results.exportedIds.map((id) => id.toString()),
+          exportedIds,
+          exportResult,
           unmerged: results.unmerged.map(({ id, reason }) => ({ id: id.toString(), reason })),
           conflicts: results.conflicts?.map(({ id, ...rest }) => ({ id: id.toString(), ...rest })),
           snappedIds: results.snappedIds?.map((id) => id.toString()),

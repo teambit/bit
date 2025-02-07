@@ -459,7 +459,10 @@ export default class Component extends BitObject {
     }
     await this.setDivergeData(repo, false);
     const divergeData = this.getDivergeData();
-    return divergeData.isTargetAhead() ? remoteHead.toString() : latestLocally;
+    if (divergeData.isTargetAhead()) {
+      return this.getTagOfRefIfExists(remoteHead) || remoteHead.toString();
+    }
+    return latestLocally;
   }
 
   async getRefOfAncestor(repo: Repository, generationsToGoBack: number): Promise<Ref> {

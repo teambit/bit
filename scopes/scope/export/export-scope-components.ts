@@ -21,7 +21,7 @@ import {
   Ref,
   BitObjectList,
   ObjectList,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '@teambit/scope.remote-actions';
 import { loader } from '@teambit/legacy.loader';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
@@ -375,7 +375,7 @@ export async function persistRemotes(manyObjectsPerRemote: RemotesForPersist[], 
 
 export async function resumeExport(scope: Scope, exportId: string, remotes: string[]): Promise<string[]> {
   const scopeRemotes: Remotes = await getScopeRemotes(scope);
-  const remotesObj = await Promise.all(remotes.map((r) => scopeRemotes.resolve(r, scope)));
+  const remotesObj = await Promise.all(remotes.map((r) => scopeRemotes.resolve(r)));
   const remotesForPersist: RemotesForPersist[] = remotesObj.map((remote) => ({ remote }));
   await validateRemotes(remotesObj, exportId);
   await persistRemotes(remotesForPersist, exportId);
