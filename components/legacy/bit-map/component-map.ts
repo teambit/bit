@@ -17,13 +17,13 @@ import {
   PathLinux,
   PathLinuxRelative,
   PathOsBased,
+  PathOsBasedAbsolute,
   PathOsBasedRelative,
   pathJoinLinux,
   pathNormalizeToLinux,
   pathRelativeLinux,
 } from '@teambit/toolbox.path.path';
 import { removeInternalConfigFields } from '@teambit/legacy.extension-data';
-import { Consumer } from '@teambit/legacy.consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
 import { IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 
@@ -295,13 +295,13 @@ export class ComponentMap {
    * if the component dir has changed since the last tracking, re-scan the component-dir to get the
    * updated list of the files
    */
-  async trackDirectoryChangesHarmony(consumer: Consumer): Promise<void> {
+  async trackDirectoryChangesHarmony(consumerPath: PathOsBasedAbsolute): Promise<void> {
     const trackDir = this.rootDir;
     if (!trackDir) {
       return;
     }
-    const gitIgnore = await getGitIgnoreHarmony(consumer.getPath());
-    this.files = await getFilesByDir(trackDir, consumer.getPath(), gitIgnore);
+    const gitIgnore = await getGitIgnoreHarmony(consumerPath);
+    this.files = await getFilesByDir(trackDir, consumerPath, gitIgnore);
   }
 
   updateNextVersion(nextVersion: NextVersion) {
