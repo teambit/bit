@@ -30,6 +30,9 @@ export function ComponentComposition({ composition, component, queryParams = [],
       style={{ width: '100%', height: '100%' }}
       previewName="compositions"
       queryParams={compositionParams}
+      loading={'lazy'}
+      includeEnv={false}
+      viewport={1280}
     />
   );
 }
