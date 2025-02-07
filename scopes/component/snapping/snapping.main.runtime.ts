@@ -379,7 +379,7 @@ if you're willing to lose the history from the head to the specified version, us
     const { taggedComponents, publishedPackages } = results;
     let exportedIds: ComponentIdList | undefined;
     if (params.push) {
-      const { exported } = await this.exporter.exportMany({
+      const { exported } = await this.exporter.pushToScopes({
         scope: this.scope.legacyScope,
         ids: componentIds,
         exportHeadsOnly: true,
@@ -564,7 +564,7 @@ if you're willing to lose the history from the head to the specified version, us
     let exportedIds: ComponentIdList | undefined;
     if (params.push) {
       const updatedLane = lane ? await this.scope.legacyScope.loadLane(lane.toLaneId()) : undefined;
-      const { exported } = await this.exporter.exportMany({
+      const { exported } = await this.exporter.pushToScopes({
         scope: this.scope.legacyScope,
         ids,
         allVersions: false,

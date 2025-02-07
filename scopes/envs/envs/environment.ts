@@ -7,7 +7,7 @@ import type { Bundler, BundlerContext, DevServer, DevServerContext } from '@team
 import type { BuildTask } from '@teambit/builder';
 import type { SchemaExtractor } from '@teambit/schema';
 import type { WebpackConfigTransformer } from '@teambit/webpack';
-import type { PackageJsonProps } from '@teambit/pkg';
+import type { ModifyPackageJsonFunc, PackageJsonProps } from '@teambit/pkg';
 import type { DependencyDetector, EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import type { Capsule } from '@teambit/isolator';
 import type { Component } from '@teambit/component';
@@ -119,6 +119,12 @@ export interface PackageEnv extends Environment {
    * return `.npmignore` entries to be written before packing the component
    */
   getNpmIgnore?: (npmIgnoreContext?: GetNpmIgnoreContext) => string[];
+
+  /**
+   * in case the static "getPackageJsonProps" is not enough, and the package.json props need to be modified
+   * per component, use this function.
+   */
+  modifyPackageJson?: ModifyPackageJsonFunc;
 }
 
 export interface LinterEnv extends Environment {
