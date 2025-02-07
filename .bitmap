@@ -2210,7 +2210,7 @@
     "ui/code-compare": {
         "name": "ui/code-compare",
         "scope": "teambit.code",
-        "version": "0.0.319",
+        "version": "0.0.322",
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-compare"
     },
@@ -2252,14 +2252,14 @@
     "ui/component-compare/context": {
         "name": "ui/component-compare/context",
         "scope": "teambit.component",
-        "version": "0.0.120",
+        "version": "0.0.121",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/context"
     },
     "ui/component-compare/models/component-compare-props": {
         "name": "ui/component-compare/models/component-compare-props",
         "scope": "teambit.component",
-        "version": "0.0.114",
+        "version": "0.0.116",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/models/component-compare-props"
     },
@@ -2525,7 +2525,7 @@
     "ui/tooltip": {
         "name": "ui/tooltip",
         "scope": "teambit.design",
-        "version": "0.0.372",
+        "version": "0.0.373",
         "mainFile": "index.ts",
         "rootDir": "components/ui/tooltip"
     },
