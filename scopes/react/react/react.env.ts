@@ -496,7 +496,7 @@ export class ReactEnv
   }
 
   getNpmIgnore() {
-    return [`${CAPSULE_ARTIFACTS_DIR}/`];
+    return [`${CAPSULE_ARTIFACTS_DIR}/*`];
   }
 
   /**

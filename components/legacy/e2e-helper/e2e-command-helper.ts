@@ -72,7 +72,7 @@ export default class CommandHelper {
       const binNameFromBvm = this.getBinFromBvmLinks(binDir);
       if (binNameFromBvm) return binNameFromBvm;
       if (this.isInPath(binDir) || binDir.includes('.bvm')) return binName;
-      if (binName === 'mocha') return 'bit';
+      if (binName === 'mocha' || binName === 'mocha.js') return 'bit';
       return `${processBin} ${processPath}`;
     }
     return 'bit';
