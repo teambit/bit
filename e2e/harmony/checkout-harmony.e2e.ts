@@ -695,4 +695,22 @@ describe('bit checkout command', function () {
       expect(bitmap.comp1.version).to.equal('0.0.1');
     });
   });
+  describe('checkout reset of main component when on a lane and the component-dir is deleted', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('dev');
+      helper.fs.deletePath('comp1');
+      helper.command.checkoutReset('--all');
+    });
+    it('should re-write the component', () => {
+      expect(path.join(helper.scopes.localPath, 'comp1')).to.be.a.directory();
+    });
+    it('status should not have invalid components', () => {
+      const status = helper.command.statusJson();
+      expect(status.invalidComponents).to.have.lengthOf(0);
+    });
+  });
 });
