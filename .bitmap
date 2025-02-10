@@ -796,7 +796,7 @@
     "hooks/use-lanes": {
         "name": "hooks/use-lanes",
         "scope": "teambit.lanes",
-        "version": "0.0.280",
+        "version": "0.0.281",
         "mainFile": "index.ts",
         "rootDir": "components/hooks/use-lanes"
     },
@@ -1853,7 +1853,7 @@
     "ui/code-compare": {
         "name": "ui/code-compare",
         "scope": "teambit.code",
-        "version": "0.0.323",
+        "version": "0.0.325",
         "mainFile": "index.ts",
         "rootDir": "components/ui/code-compare"
     },
@@ -1888,7 +1888,7 @@
     "ui/component-compare/component-compare": {
         "name": "ui/component-compare/component-compare",
         "scope": "teambit.component",
-        "version": "0.0.209",
+        "version": "0.0.212",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/component-compare"
     },
@@ -1902,7 +1902,7 @@
     "ui/component-compare/models/component-compare-props": {
         "name": "ui/component-compare/models/component-compare-props",
         "scope": "teambit.component",
-        "version": "0.0.117",
+        "version": "0.0.118",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/models/component-compare-props"
     },
@@ -1916,7 +1916,7 @@
     "ui/component-compare/version-picker": {
         "name": "ui/component-compare/version-picker",
         "scope": "teambit.component",
-        "version": "0.0.199",
+        "version": "0.0.200",
         "mainFile": "index.ts",
         "rootDir": "components/ui/component-compare/version-picker"
     },
@@ -2056,7 +2056,7 @@
     "ui/inputs/lane-selector": {
         "name": "ui/inputs/lane-selector",
         "scope": "teambit.lanes",
-        "version": "0.0.248",
+        "version": "0.0.249",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inputs/lane-selector_1"
     },
@@ -2126,7 +2126,7 @@
     "ui/react-router/slot-router": {
         "name": "ui/react-router/slot-router",
         "scope": "teambit.ui-foundation",
-        "version": "0.0.513",
+        "version": "0.0.514",
         "mainFile": "index.ts",
         "rootDir": "components/ui/react-router/slot-router"
     },
@@ -2196,7 +2196,7 @@
     "ui/version-dropdown": {
         "name": "ui/version-dropdown",
         "scope": "teambit.component",
-        "version": "0.0.880",
+        "version": "0.0.881",
         "mainFile": "index.ts",
         "rootDir": "components/ui/version-dropdown"
     },
