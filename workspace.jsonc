@@ -57,7 +57,7 @@
         "@pnpm/pick-registry-for-package": "900.0.0",
         "@pnpm/plugin-commands-publishing": "900.0.1",
         "@pnpm/plugin-commands-rebuild": "900.0.1",
-        "@pnpm/registry-mock": "3.44.0",
+        "@pnpm/registry-mock": "4.0.0",
         "@pnpm/reviewing.dependencies-hierarchy": "^900.0.0",
         "@pnpm/semver-diff": "1.1.0",
         "@pnpm/sort-packages": "900.0.0",
@@ -614,6 +614,9 @@
       // @types/node is used as a peer dependency, so to reduce duplication,
       // we force the version installed in the root.
       "@types/node": "22.10.5",
+      // This is needed to update express and request in the dependencies of Verdaccio.
+      "express@4": "4.21.2",
+      "request": "npm:postman-request@2.88.1-postman.40",
       "signal-exit@4": "^4.0.2",
       "@types/react": "^17.0.67",
       "@types/react-dom": "^17.0.21",
