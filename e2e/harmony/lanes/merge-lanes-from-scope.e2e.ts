@@ -588,4 +588,34 @@ describe('merge lanes from scope', function () {
       expect(obj.dependencies).to.have.lengthOf(0);
     });
   });
+  describe('merge from scope, main to lane when they are diverged with files updates', () => {
+    let bareMerge;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+      helper.command.getHeadOfLane('dev', 'comp1');
+
+      helper.command.switchLocalLane('main', '-x');
+      helper.fixtures.populateComponents(1, undefined, 'on-main');
+      helper.command.tagAllWithoutBuild('-m "second tag on main"');
+      helper.command.export();
+
+      bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+      helper.command.mergeLaneFromScope(bareMerge.scopePath, 'main', `${helper.scopes.remote}/dev`);
+    });
+    it('should update the files according to main', () => {
+      const comp1HeadOnLane = helper.command.getHeadOfLane(`${helper.scopes.remote}/dev`, `comp1`, bareMerge.scopePath);
+      const obj = helper.command.catComponent(`comp1@${comp1HeadOnLane}`, bareMerge.scopePath);
+      const fileHash = obj.files[0].file;
+      const fileContent = helper.command.catObject(fileHash, false, bareMerge.scopePath);
+      expect(fileContent).to.include('on-main');
+    });
+  });
 });
