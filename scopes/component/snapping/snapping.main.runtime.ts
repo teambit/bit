@@ -426,6 +426,7 @@ if you're willing to lose the history from the head to the specified version, us
       lane?: string;
       updateDependents?: boolean;
       tag?: boolean;
+      updatedLegacyComponents?: ConsumerComponent[];
     } & Partial<BasicTagParams>
   ): Promise<SnapFromScopeResults> {
     if (this.workspace) {
@@ -496,7 +497,13 @@ if you're willing to lose the history from the head to the specified version, us
       if (!snapData) throw new Error(`unable to find ${id.toString()} in snapDataPerComp`);
       return snapData;
     };
-    const existingComponents = await this.scope.getMany(componentIdsLatest);
+    const updatedLegacyComponents = params.updatedLegacyComponents || [];
+    const updatedComponents =  await this.scope.getManyByLegacy(updatedLegacyComponents);
+
+    const existingComponents = compact(await pMapSeries(componentIdsLatest, async (id) => {
+      const foundInUpdated = updatedComponents.find((c) => c.id.isEqualWithoutVersion(id));
+      return foundInUpdated || this.scope.get(id);
+    }));
 
     // in case of update-dependents, align the dependencies of the dependents according to the lane
     if (params.updateDependents && laneCompIds) {
