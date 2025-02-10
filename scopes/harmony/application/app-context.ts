@@ -3,7 +3,21 @@ import { Harmony } from '@teambit/harmony';
 import { Component } from '@teambit/component';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 
-export class AppContext extends ExecutionContext {
+export interface AppContextOptions {
+  appName: string;
+  harmony: Harmony;
+  dev: boolean;
+  appComponent: Component;
+  workdir: string;
+  execContext: ExecutionContext;
+  hostRootDir?: string;
+  port?: number;
+  args?: string;
+  workspaceComponentPath?: string;
+  envVariables?: Record<string, string>;
+};
+
+export class AppContext extends ExecutionContext implements AppContextOptions {
   constructor(
     /**
      * name of the app
@@ -85,19 +99,23 @@ export class AppContext extends ExecutionContext {
     return this.harmony.get<T>(aspectId);
   }
 
-  static compose(appContext: AppContext, overrides?: Partial<AppContext>) {
+  static fromOptions(appContext: AppContextOptions) {
     return new AppContext(
-      overrides?.appName || appContext?.appName,
-      overrides?.harmony || appContext?.harmony,
-      overrides?.dev || appContext?.dev,
-      overrides?.appComponent || appContext?.appComponent,
-      overrides?.workdir || appContext?.workdir,
-      overrides?.execContext || appContext?.execContext,
-      overrides?.hostRootDir || appContext?.hostRootDir,
-      overrides?.port || appContext?.port,
-      overrides?.args || appContext?.args,
-      overrides?.workspaceComponentPath || appContext?.workspaceComponentPath,
-      overrides?.envVariables || appContext?.envVariables
+      appContext.appName,
+      appContext.harmony,
+      appContext.dev,
+      appContext.appComponent,
+      appContext.workdir,
+      appContext.execContext,
+      appContext.hostRootDir,
+      appContext.port,
+      appContext.args,
+      appContext.workspaceComponentPath,
+      appContext.envVariables
     );
+  }
+
+  static compose(appContext: AppContextOptions, overrides?: Partial<AppContextOptions>) {
+    return AppContext.fromOptions({ ...appContext, ...overrides });
   }
 }
