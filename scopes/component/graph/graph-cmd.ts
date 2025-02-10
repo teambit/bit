@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import GraphLib from 'graphlib';
+import { compact } from 'lodash';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import { GraphConfig, VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
@@ -47,11 +48,20 @@ export class GraphCmd implements Command {
     const getVisualGraph = async (): Promise<VisualDependencyGraph> => {
       if (workspace && !remote) {
         const graph = await this.generateGraphFromWorkspace(workspace, id);
+        const getIdWithVersion = async () => {
+          if (!id) return undefined;
+          const compId = await workspace.resolveComponentId(id);
+          return workspace.getIdIfExist(compId);
+        }
+        const idWithVersion = await getIdWithVersion();
+        const markIds = idWithVersion ? [idWithVersion.toString()] : undefined;
         if (!cycles) {
-          return VisualDependencyGraph.loadFromClearGraph(graph, config);
+          return VisualDependencyGraph.loadFromClearGraph(graph, config, markIds);
         }
         const cyclesGraph = graph.findCycles();
+
         const multipleCycles = cyclesGraph.map((cycle) => {
+          if (idWithVersion && !cycle.includes(idWithVersion.toString())) return undefined;
           return graph.subgraph(cycle,
             {
               nodeFilter: (node) => cycle.includes(node.id),
@@ -59,7 +69,7 @@ export class GraphCmd implements Command {
             },
           );
         });
-        return VisualDependencyGraph.loadFromMultipleClearGraphs(multipleCycles, config);
+        return VisualDependencyGraph.loadFromMultipleClearGraphs(compact(multipleCycles), config, markIds);
       }
       const graph = await this.generateGraphFromRemote(remote!, id, workspace);
       return VisualDependencyGraph.loadFromGraphlib(graph, config);
