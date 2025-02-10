@@ -14,7 +14,7 @@ export async function dependents(id: string, workspace: Workspace): Promise<Depe
   const bitId = await workspace.resolveComponentId(id);
   const scopeDependencyGraph = await DependencyGraph.loadLatest(workspace.consumer.scope);
   const scopeDependents = scopeDependencyGraph.getDependentsInfo(bitId);
-  const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(workspace, true);
+  const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(workspace);
   const workspaceDependencyGraph = new DependencyGraph(workspaceGraph);
   const workspaceDependents = workspaceDependencyGraph.getDependentsInfo(bitId);
   return { scopeDependents, workspaceDependents, id: bitId };
