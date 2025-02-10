@@ -1,10 +1,13 @@
-import { cloneDeep } from 'lodash';
+import { cloneDeep, isObject } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 
-type ExtensionConfig = { [extName: string]: any } | RemoveExtensionSpecialSign;
+type ExtensionConfig = { [extName: string]: any } | RemoveExtensionSpecialSign | IgnoreFromSpecificSpecialSign;
 
 export const REMOVE_EXTENSION_SPECIAL_SIGN = '-';
+export const IGNORE_FROM_SPECIFIC_SPECIAL_SIGN = '--';
+
 type RemoveExtensionSpecialSign = '-';
+type IgnoreFromSpecificSpecialSign = '--';
 
 export class ExtensionDataEntry {
   constructor(
@@ -33,7 +36,7 @@ export class ExtensionDataEntry {
     return '';
   }
 
-  get config(): { [key: string]: any } {
+  get config(): { [key: string]: any } | string {
     if (this.rawConfig === REMOVE_EXTENSION_SPECIAL_SIGN) return {};
     return this.rawConfig;
   }
@@ -43,12 +46,16 @@ export class ExtensionDataEntry {
   }
 
   get isLegacy(): boolean {
-    if (this.config?.__legacy) return true;
+    if (isObject(this.config) && this.config?.__legacy) return true;
     return false;
   }
 
   get isRemoved(): boolean {
     return this.rawConfig === REMOVE_EXTENSION_SPECIAL_SIGN;
+  }
+
+  get isIgnoredFromSpecific(): boolean {
+    return this.rawConfig === IGNORE_FROM_SPECIFIC_SPECIAL_SIGN;
   }
 
   toModelObject() {
