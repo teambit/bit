@@ -426,6 +426,7 @@ if you're willing to lose the history from the head to the specified version, us
       lane?: string;
       updateDependents?: boolean;
       tag?: boolean;
+      // in case of merging lanes, the component files are updated in-memory
       updatedLegacyComponents?: ConsumerComponent[];
     } & Partial<BasicTagParams>
   ): Promise<SnapFromScopeResults> {

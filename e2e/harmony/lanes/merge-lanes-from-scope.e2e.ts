@@ -610,7 +610,7 @@ describe('merge lanes from scope', function () {
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
       helper.command.mergeLaneFromScope(bareMerge.scopePath, 'main', `${helper.scopes.remote}/dev`);
     });
-    it('should update the env according to main', () => {
+    it('should update the files according to main', () => {
       const comp1HeadOnLane = helper.command.getHeadOfLane(`${helper.scopes.remote}/dev`, `comp1`, bareMerge.scopePath);
       const obj = helper.command.catComponent(`comp1@${comp1HeadOnLane}`, bareMerge.scopePath);
       const fileHash = obj.files[0].file;
