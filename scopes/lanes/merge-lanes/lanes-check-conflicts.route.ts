@@ -10,7 +10,7 @@ export class LanesCheckConflictsRoute implements Route {
 
   method = 'post';
   route = '/lanes/check-conflicts';
-  verb = Verb.WRITE;
+  verb = Verb.READ;
 
   middlewares = [
     async (req: Request, res: Response) => {
