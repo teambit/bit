@@ -24,6 +24,7 @@ import { ApplicationMain } from '@teambit/application';
 import { DeprecationMain } from '@teambit/deprecation';
 import { EnvsMain } from '@teambit/envs';
 import fetch from 'node-fetch';
+import { GraphMain } from '@teambit/graph';
 
 const FILES_HISTORY_DIR = 'files-history';
 const ENV_ICONS_DIR = 'env-icons';
@@ -92,7 +93,8 @@ export class APIForIDE {
     private config: ConfigMain,
     private application: ApplicationMain,
     private deprecation: DeprecationMain,
-    private envs: EnvsMain
+    private envs: EnvsMain,
+    private graph: GraphMain,
   ) {}
 
   async logStartCmdHistory(op: string) {
@@ -282,6 +284,14 @@ export class APIForIDE {
     const dirAbs = this.workspace.componentDir(comp.id);
     const filesRelative = comp.state.filesystem.files.map((file) => file.relative);
     return { dirAbs, filesRelative };
+  }
+
+  async getGraphIdsAsSVG(id?: string): Promise<string> {
+    const compId = id ? await this.workspace.resolveComponentId(id) : undefined;
+    const visualGraph = await this.graph.getVisualGraphIds(compId ? [compId] : undefined);
+    const svg = await visualGraph.getAsSVGString();
+    if (!svg) throw new Error('failed to render the graph');
+    return svg;
   }
 
   async getCompFilesDirPathFromLastSnap(id: string): Promise<{ [relativePath: string]: string }> {

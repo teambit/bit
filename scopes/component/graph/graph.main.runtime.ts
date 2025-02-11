@@ -2,12 +2,14 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ComponentMain, ComponentAspect, ComponentID } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { compact, intersection } from "lodash";
 import { GetGraphOpts, GraphBuilder } from './graph-builder';
 import { graphSchema } from './graph.graphql';
 import { GraphAspect } from './graph.aspect';
 import { GraphCmd } from './graph-cmd';
 import { ComponentGraph } from './component-graph';
 import { ComponentIdGraph } from './component-id-graph';
+import { GraphConfig, VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
 
 export class GraphMain {
   constructor(
@@ -28,6 +30,48 @@ export class GraphMain {
     return graphBuilder.getGraphIds(ids, opts);
   }
 
+  /**
+   * this visual graph-ids can render the graph as a SVG/png and other formats.
+   */
+  async getVisualGraphIds(ids?: ComponentID[],
+    opts: GetGraphOpts = {}, graphVizOpts: GraphConfig = {}
+  ): Promise<VisualDependencyGraph> {
+    const graphIds = await this.getGraphIds(ids, opts);
+    const idsWithVersion = await this.getIdsWithVersions();
+    return VisualDependencyGraph.loadFromClearGraph(graphIds, graphVizOpts, idsWithVersion);
+  }
+
+  /**
+   * this visual graph-ids can render the graph as a SVG/png and other formats.
+   */
+  async getVisualCycles(ids?: ComponentID[],
+    opts: GetGraphOpts = {}, graphVizOpts: GraphConfig = {}
+  ): Promise<VisualDependencyGraph> {
+    const graphIds = await this.getGraphIds(ids, opts);
+    const idsWithVersion = await this.getIdsWithVersions();
+
+    const cyclesGraph = graphIds.findCycles();
+    const multipleCycles = cyclesGraph.map((cycle) => {
+
+      if (idsWithVersion && intersection(idsWithVersion, cycle).length < 1) return undefined;
+      return graphIds.subgraph(cycle,
+        {
+          nodeFilter: (node) => cycle.includes(node.id),
+          edgeFilter: (edge) => cycle.includes(edge.targetId)
+        },
+      );
+    });
+    return VisualDependencyGraph.loadFromMultipleClearGraphs(compact(multipleCycles), graphVizOpts, idsWithVersion);
+  }
+
+  private async getIdsWithVersions(ids?: ComponentID[]): Promise<string[] | undefined> {
+    const host = this.componentAspect.getHost();
+    if (!ids) return undefined;
+    const comps = await host.getMany(ids);
+    if (comps.length) return comps.map(comp => comp.id.toString());
+    return undefined;
+  }
+
   static slots = [];
   static dependencies = [GraphqlAspect, ComponentAspect, CLIAspect, LoggerAspect];
   static runtime = MainRuntime;
@@ -43,7 +87,7 @@ export class GraphMain {
     graphql.register(graphSchema(graphBuilder, componentAspect));
 
     const graphMain = new GraphMain(componentAspect, logger);
-    cli.register(new GraphCmd(componentAspect));
+    cli.register(new GraphCmd(componentAspect, graphMain));
 
     return graphMain;
   }
