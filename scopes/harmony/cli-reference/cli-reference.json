@@ -536,19 +536,9 @@
     "alias": "",
     "options": [
       [
-        "i",
-        "image <image>",
-        "image path and format. use one of the following extensions: [gif, png, svg, pdf]"
-      ],
-      [
         "r",
         "remote [remoteName]",
         "remote name (name is optional, leave empty when id is specified)"
-      ],
-      [
-        "",
-        "all-versions",
-        "enter all components versions into the graph, not only latest"
       ],
       [
         "",
@@ -556,12 +546,22 @@
         "GraphVis layout. default to \"dot\". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]"
       ],
       [
+        "",
+        "png",
+        "save the graph as a png file instead of svg. requires \"graphviz\" to be installed"
+      ],
+      [
+        "",
+        "cycles",
+        "show cycles in the graph"
+      ],
+      [
         "j",
         "json",
         "json format"
       ]
     ],
-    "description": "generate an image file with the workspace components' dependencies graph",
+    "description": "generate an SVG image file with the workspace components' dependencies graph",
     "extendedDescription": "",
     "group": "discover",
     "private": false,
