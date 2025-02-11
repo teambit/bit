@@ -121,7 +121,7 @@ describe('cyclic dependencies', function () {
       expect(parsedResults[0].data[0]).to.deep.equal([
         `${helper.scopes.remote}/comp/a1@0.0.1`,
         `${helper.scopes.remote}/comp/b1@0.0.1`,
-        `${helper.scopes.remote}/comp/b1@0.0.1`,
+        `${helper.scopes.remote}/comp/b2@0.0.1`,
         `${helper.scopes.remote}/comp/a1@0.0.1`,
       ]);
     });
