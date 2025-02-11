@@ -33,7 +33,7 @@ import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { DEFAULT_AUTH_TYPE, Http } from '@teambit/scope.network';
 import { getSymphonyUrl } from '@teambit/legacy.constants';
-import GraphAspect, { GraphMain } from '@teambit/graph';
+import { GraphAspect, GraphMain } from '@teambit/graph';
 
 export class ApiServerMain {
   constructor(
