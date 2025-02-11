@@ -1,109 +1,122 @@
 import chalk from 'chalk';
-import os from 'os';
-import * as path from 'path';
 import GraphLib from 'graphlib';
+import { compact } from 'lodash';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
-import { generateRandomStr } from '@teambit/toolbox.string.random';
-import { DependencyGraph, VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
+import { GraphConfig, VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import { ComponentMain } from '@teambit/component';
 import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 
 type GraphOpt = {
-  image?: string;
   remote?: string;
   allVersions?: boolean;
   layout?: string;
+  cycles?: boolean;
+  png?: boolean;
   json?: boolean;
 };
 
 export class GraphCmd implements Command {
   name = 'graph [id]';
-  description = "generate an image file with the workspace components' dependencies graph";
+  description = "generate an SVG image file with the workspace components' dependencies graph";
   extendedDescription: 'black arrow is a runtime dependency. red arrow is either dev or peer';
   group = 'discover';
   alias = '';
   options = [
-    ['i', 'image <image>', 'image path and format. use one of the following extensions: [gif, png, svg, pdf]'],
     ['r', 'remote [remoteName]', 'remote name (name is optional, leave empty when id is specified)'],
-    ['', 'all-versions', 'enter all components versions into the graph, not only latest'],
     [
       '',
       'layout <name>',
       'GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]',
     ],
+    ['', 'png', 'save the graph as a png file instead of svg. requires "graphviz" to be installed'],
+    ['', 'cycles', 'show cycles in the graph'],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
   remoteOp = true;
 
   constructor(private componentAspect: ComponentMain) {}
 
-  async report([id]: [string], { remote, allVersions, layout, image }: GraphOpt): Promise<string> {
+  async report([id]: [string], { remote, layout, png, cycles }: GraphOpt): Promise<string> {
     const workspace = this.componentAspect.getHost('teambit.workspace/workspace') as Workspace;
     if (!workspace && !remote) throw new OutsideWorkspaceError();
 
-    const graph = await this.generateGraph(workspace, id, remote, allVersions);
-
-    const config = {};
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const config: GraphConfig = {};
     if (layout) config.layout = layout;
-    const visualDependencyGraph = await VisualDependencyGraph.loadFromGraphlib(graph, config);
 
-    image = image || path.join(os.tmpdir(), `${generateRandomStr()}.png`);
-    const result = await visualDependencyGraph.image(image);
+    const getVisualGraph = async (): Promise<VisualDependencyGraph> => {
+      if (workspace && !remote) {
+        const graph = await this.generateGraphFromWorkspace(workspace, id);
+        const getIdWithVersion = async () => {
+          if (!id) return undefined;
+          const compId = await workspace.resolveComponentId(id);
+          return workspace.getIdIfExist(compId);
+        }
+        const idWithVersion = await getIdWithVersion();
+        const markIds = idWithVersion ? [idWithVersion.toString()] : undefined;
+        if (!cycles) {
+          return VisualDependencyGraph.loadFromClearGraph(graph, config, markIds);
+        }
+        const cyclesGraph = graph.findCycles();
+
+        const multipleCycles = cyclesGraph.map((cycle) => {
+          if (idWithVersion && !cycle.includes(idWithVersion.toString())) return undefined;
+          return graph.subgraph(cycle,
+            {
+              nodeFilter: (node) => cycle.includes(node.id),
+              edgeFilter: (edge) => cycle.includes(edge.targetId)
+            },
+          );
+        });
+        return VisualDependencyGraph.loadFromMultipleClearGraphs(compact(multipleCycles), config, markIds);
+      }
+      const graph = await this.generateGraphFromRemote(remote!, id, workspace);
+      return VisualDependencyGraph.loadFromGraphlib(graph, config);
+    }
+
+    const visualDependencyGraph = await getVisualGraph();
+    const result = await visualDependencyGraph.render(png ? 'png' : 'svg');
 
     return chalk.green(`image created at ${result}`);
   }
 
-  private async generateGraph(
-    workspace?: Workspace,
-    id?: string,
-    remote?: string,
-    allVersions?: boolean
-  ): Promise<GraphLib.Graph> {
-    if (!workspace && !remote) throw new OutsideWorkspaceError();
-    const getBitId = (): ComponentID | undefined => {
-      if (!id) return undefined;
-      if (remote) return ComponentID.fromString(id); // user used --remote so we know it has a scope
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return consumer.getParsedId(id);
-    };
-    const bitId = getBitId();
-    if (remote) {
-      if (id) {
-        // @ts-ignore scope must be set as it came from a remote
-        const scopeName: string = typeof remote === 'string' ? remote : bitId.scope;
-        const remoteScope = await getRemoteByName(scopeName, workspace?.consumer);
-        const componentDepGraph = await remoteScope.graph(bitId);
-        return componentDepGraph.graph;
-      }
-      if (typeof remote !== 'string') {
-        throw new Error('please specify remote scope name or enter an id');
-      }
-      const remoteScope = await getRemoteByName(remote, workspace?.consumer);
-      const componentDepGraph = await remoteScope.graph();
-      return componentDepGraph.graph;
-    }
-
-    const onlyLatest = !allVersions;
-    // @ts-ignore workspace must be set here
-    const workspaceGraph = await DependencyGraph.buildGraphFromWorkspace(workspace, onlyLatest);
-    const dependencyGraph = new DependencyGraph(workspaceGraph);
-    if (id) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const componentGraph = dependencyGraph.getSubGraphOfConnectedComponents(bitId);
-      const componentDepGraph = new DependencyGraph(componentGraph);
-      return componentDepGraph.graph;
-    }
-    return dependencyGraph.graph;
+  private async generateGraphFromWorkspace(workspace: Workspace, id?: string) {
+    const compIds = id ? [await workspace.resolveComponentId(id)] : undefined;
+    const graph = await workspace.getGraphIds(compIds);
+    return graph;
   }
 
-  async json([id]: [string], { remote, allVersions }: GraphOpt) {
+  private async generateGraphFromRemote(
+    remote: string | boolean,
+    id?: string,
+    workspace?: Workspace,
+  ): Promise<GraphLib.Graph> {
+    const bitId = id ? ComponentID.fromString(id) : undefined;
+    if (id) {
+      // @ts-ignore scope must be set as it came from a remote
+      const scopeName: string = typeof remote === 'string' ? remote : bitId.scope;
+      const remoteScope = await getRemoteByName(scopeName, workspace?.consumer);
+      const componentDepGraph = await remoteScope.graph(bitId);
+      return componentDepGraph.graph;
+    }
+    if (typeof remote !== 'string') {
+      throw new Error('please specify remote scope name or enter an id');
+    }
+    const remoteScope = await getRemoteByName(remote, workspace?.consumer);
+    const componentDepGraph = await remoteScope.graph();
+    return componentDepGraph.graph;
+  }
+
+  async json([id]: [string], { remote }: GraphOpt) {
     const workspace = this.componentAspect.getHost('teambit.workspace/workspace') as Workspace;
     if (!workspace && !remote) throw new OutsideWorkspaceError();
 
-    const graph = await this.generateGraph(workspace, id, remote, allVersions);
+    if (workspace && !remote) {
+      const graph = await this.generateGraphFromWorkspace(workspace, id);
+      return graph.toJson();
+    }
+    const graph = await this.generateGraphFromRemote(remote!, id, workspace);
     return GraphLib.json.write(graph);
   }
 }
