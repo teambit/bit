@@ -286,9 +286,9 @@ export class APIForIDE {
     return { dirAbs, filesRelative };
   }
 
-  async getGraphIdsAsSVG(id?: string): Promise<string> {
+  async getGraphIdsAsSVG(id?: string, opts: { includeLocalOnly?: boolean } = {}): Promise<string> {
     const compId = id ? await this.workspace.resolveComponentId(id) : undefined;
-    const visualGraph = await this.graph.getVisualGraphIds(compId ? [compId] : undefined);
+    const visualGraph = await this.graph.getVisualGraphIds(compId ? [compId] : undefined, opts);
     const svg = await visualGraph.getAsSVGString();
     if (!svg) throw new Error('failed to render the graph');
     return svg;

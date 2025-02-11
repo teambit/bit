@@ -6,7 +6,7 @@ import { compact, intersection } from "lodash";
 import { GetGraphOpts, GraphBuilder } from './graph-builder';
 import { graphSchema } from './graph.graphql';
 import { GraphAspect } from './graph.aspect';
-import { GraphCmd } from './graph-cmd';
+import { GraphCmd, GraphOpt } from './graph-cmd';
 import { ComponentGraph } from './component-graph';
 import { ComponentIdGraph } from './component-id-graph';
 import { GraphConfig, VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
@@ -33,23 +33,31 @@ export class GraphMain {
   /**
    * this visual graph-ids can render the graph as a SVG/png and other formats.
    */
-  async getVisualGraphIds(ids?: ComponentID[],
-    opts: GetGraphOpts = {}, graphVizOpts: GraphConfig = {}
-  ): Promise<VisualDependencyGraph> {
-    const graphIds = await this.getGraphIds(ids, opts);
-    const idsWithVersion = await this.getIdsWithVersions();
+  async getVisualGraphIds(ids?: ComponentID[], opts: GraphOpt = {}): Promise<VisualDependencyGraph> {
+    this.logger.setStatusLine('loading graph');
+    const { layout, includeLocalOnly, cycles } = opts;
+    const graphVizOpts: GraphConfig = {}
+    if (layout) graphVizOpts.layout = layout;
+    const graphIdsAll = await this.getGraphIds(ids);
+
+    const host = this.componentAspect.getHost();
+    const list = await host.listIds();
+    const idsWithVersion = await this.getIdsWithVersions(ids);
+    const listStr = list.map((id) => id.toString());
+    const graphIds = includeLocalOnly ? graphIdsAll.successorsSubgraph(idsWithVersion || listStr, {
+      nodeFilter: (node) => listStr.includes(node.id),
+      edgeFilter: (edge) => listStr.includes(edge.targetId) && listStr.includes(edge.sourceId)
+    }) : graphIdsAll;
+    this.logger.setStatusLine('rendering graph');
+    if (cycles) {
+      return this.getVisualCyclesFromGraph(graphIds, idsWithVersion, graphVizOpts);
+    }
     return VisualDependencyGraph.loadFromClearGraph(graphIds, graphVizOpts, idsWithVersion);
   }
 
-  /**
-   * this visual graph-ids can render the graph as a SVG/png and other formats.
-   */
-  async getVisualCycles(ids?: ComponentID[],
-    opts: GetGraphOpts = {}, graphVizOpts: GraphConfig = {}
+  private async getVisualCyclesFromGraph(graphIds: ComponentIdGraph, idsWithVersion?: string[],
+    graphVizOpts: GraphConfig = {}
   ): Promise<VisualDependencyGraph> {
-    const graphIds = await this.getGraphIds(ids, opts);
-    const idsWithVersion = await this.getIdsWithVersions();
-
     const cyclesGraph = graphIds.findCycles();
     const multipleCycles = cyclesGraph.map((cycle) => {
 

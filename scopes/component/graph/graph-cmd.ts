@@ -8,18 +8,18 @@ import { ComponentMain } from '@teambit/component';
 import type { Workspace } from '@teambit/workspace';
 import { GraphMain } from './graph.main.runtime';
 
-type GraphOpt = {
+export type GraphOpt = {
   remote?: string;
-  allVersions?: boolean;
   layout?: string;
   cycles?: boolean;
   png?: boolean;
   json?: boolean;
+  includeLocalOnly?: boolean;
 };
 
 export class GraphCmd implements Command {
   name = 'graph [id]';
-  description = "generate an SVG image file with the workspace components' dependencies graph";
+  description = "generate an SVG image file with the components' dependencies graph";
   extendedDescription: 'black arrow is a runtime dependency. red arrow is either dev or peer';
   group = 'discover';
   alias = '';
@@ -31,28 +31,28 @@ export class GraphCmd implements Command {
       'GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]',
     ],
     ['', 'png', 'save the graph as a png file instead of svg. requires "graphviz" to be installed'],
-    ['', 'cycles', 'show cycles in the graph'],
+    ['', 'cycles', 'generate a graph of cycles only'],
+    ['', 'include-local-only', 'include only the components in the workspace (or local scope)'],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
   remoteOp = true;
 
   constructor(private componentAspect: ComponentMain, private graph: GraphMain) {}
 
-  async report([id]: [string], { remote, layout, png, cycles }: GraphOpt): Promise<string> {
+  async report([id]: [string], graphOpts: GraphOpt): Promise<string> {
+    const { remote, layout, png } = graphOpts;
     const host = this.componentAspect.getHost();
-    const config: GraphConfig = {};
-    if (layout) config.layout = layout;
 
     const getVisualGraph = async (): Promise<VisualDependencyGraph> => {
       if (remote) {
+        const config: GraphConfig = {};
+        if (layout) config.layout = layout;
         const graph = await this.generateGraphFromRemote(remote, id);
         return VisualDependencyGraph.loadFromGraphlib(graph, config);
       }
       const compId = id ? await host.resolveComponentId(id) : undefined;
       const compIds = compId ? [compId] : undefined
-      return cycles
-        ? this.graph.getVisualCycles(compIds, {}, config)
-        : this.graph.getVisualGraphIds(compIds, {}, config);
+      return this.graph.getVisualGraphIds(compIds, graphOpts);
     }
 
     const visualDependencyGraph = await getVisualGraph();
@@ -84,12 +84,11 @@ export class GraphCmd implements Command {
     id?: string,
   ): Promise<GraphLib.Graph> {
     const workspace = this.getWorkspaceIfExist();
-    const bitId = id ? ComponentID.fromString(id) : undefined;
-    if (id) {
-      // @ts-ignore scope must be set as it came from a remote
-      const scopeName: string = typeof remote === 'string' ? remote : bitId.scope;
+    const compId = id ? ComponentID.fromString(id) : undefined;
+    if (compId) {
+      const scopeName: string = typeof remote === 'string' ? remote : compId.scope;
       const remoteScope = await getRemoteByName(scopeName, workspace?.consumer);
-      const componentDepGraph = await remoteScope.graph(bitId);
+      const componentDepGraph = await remoteScope.graph(compId);
       return componentDepGraph.graph;
     }
     if (typeof remote !== 'string') {
