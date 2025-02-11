@@ -1,7 +1,6 @@
 import { Section } from '@teambit/component';
 import React from 'react';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
-import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 import type { CodeUI } from './code.ui.runtime';
 
 export class CodeSection implements Section {
@@ -12,15 +11,9 @@ export class CodeSection implements Section {
   };
   navigationLink = {
     href: '~code',
-    children: <CodeMenuWidget />,
+    children: <MenuWidgetIcon icon="Code" tooltipContent="Code" />,
     displayName: 'Code',
     hideInMinimalMode: !this.pinned
   };
   order = this.pinned ? 0 : 30;
-}
-
-function CodeMenuWidget() {
-  const { isMinimal } = useWorkspaceMode();
-  if (!isMinimal) return null;
-  return <MenuWidgetIcon icon="Code" tooltipContent="Code" />;
 }
