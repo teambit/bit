@@ -150,7 +150,7 @@ export function ComponentMenu({
             <div className={styles.leftSide}>
               <CollapsibleMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
             </div>
-            {pinnedWidgets.map(pinnedWidget => <PinnedWidgetComponent key={`key-${pinnedWidget.order}`} {...pinnedWidget.props} />)}
+            {isMinimal && pinnedWidgets.map(pinnedWidget => <PinnedWidgetComponent key={`key-${pinnedWidget.order}`} {...pinnedWidget.props} />)}
             {!skipRightSide && <div className={styles.rightSide}>{RightSide}</div>}
           </div>
         }

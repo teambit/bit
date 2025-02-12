@@ -43,7 +43,7 @@ export function Component({
   routeSlot,
   overriddenRoutes,
   containerSlot,
-  host,
+  host: hostFromProps,
   onComponentChange,
   componentIdStr,
   useComponent,
@@ -56,6 +56,7 @@ export function Component({
   const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
   const resolvedComponentIdStr = path || idFromLocation;
   const componentFiltersFromProps = useComponentFilters?.() || {};
+  const host = componentId?.hasVersion() ? hostFromProps : 'teambit.scope/scope'
 
   const useComponentOptions = {
     logFilters: {

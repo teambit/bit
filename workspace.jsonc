@@ -103,8 +103,6 @@
         "@teambit/code.ui.code-tab-tree": "^0.0.615",
         "@teambit/code.ui.hooks.use-code-params": "0.0.496",
         "@teambit/code.ui.object-formatter": "0.0.1",
-        "@teambit/code.ui.queries.get-component-code": "0.0.502",
-        "@teambit/code.ui.queries.get-file-content": "0.0.504",
         "@teambit/code.ui.utils.get-file-icon": "0.0.496",
         "@teambit/community.starters.hello-world": "^0.0.16",
         "@teambit/compilation.babel-compiler": "^1.1.13",
@@ -241,7 +239,6 @@
         "@teambit/react.instructions.react.adding-compositions": "0.0.7",
         "@teambit/react.instructions.react.adding-tests": "0.0.6",
         "@teambit/react.jest.react-jest": "^1.0.33",
-        "@teambit/react.rendering.ssr": "0.0.3",
         "@teambit/react.ui.component-highlighter": "0.2.4",
         "@teambit/react.webpack.react-webpack": "^1.0.42",
         "@teambit/scope.content.scope-overview": "1.95.0",
@@ -270,7 +267,6 @@
         "@teambit/ui-foundation.ui.global-loader": "^0.0.502",
         "@teambit/ui-foundation.ui.hooks.use-data-query": "^0.0.506",
         "@teambit/ui-foundation.ui.hooks.use-is-mobile": "^0.0.198",
-        "@teambit/ui-foundation.ui.hooks.use-user-agent": "^0.0.197",
         "@teambit/ui-foundation.ui.is-browser": "^0.0.500",
         "@teambit/ui-foundation.ui.keycap": "^0.0.500",
         "@teambit/ui-foundation.ui.main-dropdown": "^0.0.502",
@@ -312,7 +308,7 @@
         "@types/diff": "^5.2.3",
         "@types/eslint": "8.56.6",
         "@types/eventsource": "^1.1.15",
-        "@types/express": "4.17.21",
+        "@types/express": "^4.17.21",
         "@types/find-root": "1.1.2",
         "@types/fs-extra": "9.0.7",
         "@types/graphlib": "2.1.7",
@@ -422,7 +418,7 @@
         "eventsource": "^2.0.2",
         "execa": "2.1.0",
         "expose-loader": "3.1.0",
-        "express": "4.21.2",
+        "express": "^4.21.0",
         "express-graphql": "0.12.0",
         "express-history-api-fallback": "2.2.1",
         "filenamify": "4.2.0",
@@ -606,7 +602,6 @@
       }
     },
     "linkCoreAspects": false,
-    // "packageManager": "teambit.fusepm/aspects/fusepm",
     "packageManager": "teambit.dependencies/pnpm",
     "rootComponents": true,
     "overrides": {
@@ -628,8 +623,6 @@
     },
     "nodeVersion": "23.5.0",
     "engineStrict": true,
-    // This is a temporary workaround to fix "bit compile" on macOS and Windows.
-    // "bit compile" breaks node_modules when hard links are used.
     "packageImportMethod": "copy",
     "packageManagerArgs": [],
     "devFilePatterns": [
@@ -637,8 +630,6 @@
     ],
     "strictPeerDependencies": true,
     "autoInstallPeers": true,
-    // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
-    // "installFromBitDevRegistry": false,
     "savePrefix": "",
     "extraArgs": [],
     "peerDependencyRules": {

@@ -32,7 +32,13 @@ export function componentCompareSchema(componentCompareMain: ComponentCompareMai
     resolvers: {
       ComponentHost: {
         compareComponent: async (_, { baseId, compareId }: { baseId: string; compareId: string }) => {
-          return componentCompareMain.compare(baseId, compareId);
+          try {
+          return await componentCompareMain.compare(baseId, compareId);
+          }
+          catch(e) {
+            console.log("🚀 ~ file: component-compare.graphql.ts:40 ~ compareComponent: ~ e:", e)
+            // return await componentCompareMain.compare_bk(baseId, compareId);
+          }
         },
       },
       ComponentCompareResult: {
