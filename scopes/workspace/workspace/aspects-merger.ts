@@ -172,7 +172,8 @@ export class AspectsMerger {
 
     const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
     const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
-    const extensions = ExtensionDataList.fromArray(withoutRemoved);
+    // clone the extension data to avoid mutating the original data (specifically, we don't want to mutate the scope data)
+    const extensions = ExtensionDataList.fromArray(withoutRemoved.map(e => e.clone()));
     return {
       extensions,
       beforeMerge: extensionsToMerge,
