@@ -133,8 +133,9 @@ export function ComponentView(props: ComponentViewProps) {
   const isActive = React.useMemo(() => {
     if (!href || !location || !component?.id) return false;
 
-    const scopeFromQueryParams = location.search.split('scope=')[1];
-
+    const searchParams = new URLSearchParams(location.search);
+    const scopeFromQueryParams = searchParams.get('scope');
+    
     const pathname = location.pathname.substring(1).split('?')[0];
     const compIdStr = component.id.toStringWithoutVersion();
     const compIdName = component.id.fullName;

@@ -94,11 +94,12 @@ export class CompositionsMain {
    * get component compositions.
    */
   getCompositions(component: IComponent): Composition[] {
+    console.log("🚀 ~ CompositionsMain ~ getCompositions ~ component:", component.id.toString())
     const entry = component.get(CompositionsAspect.id);
     if (!entry) return [];
     const compositions = entry.data.compositions;
     if (!compositions) return [];
-
+    console.log("🚀 ~ CompositionsMain ~ getCompositions ~ Composition.fromArray(compositions):", Composition.fromArray(compositions))
     return Composition.fromArray(compositions);
   }
 
