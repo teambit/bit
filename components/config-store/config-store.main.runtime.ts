@@ -1,4 +1,5 @@
-import CLIAspect, { CLIMain, MainRuntime } from '@teambit/cli';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { compact } from 'lodash';
 import { ConfigStoreAspect } from './config-store.aspect';
 import { configGetter, Store } from './config-getter';
 import { ConfigCmd } from './config-cmd';
@@ -19,10 +20,23 @@ export class ConfigStoreMain {
     this.stores[origin] = store;
     configGetter.addStore(store);
   }
-  async invalidateCache() {
+  /**
+   * "global" must be first. the rest doesn't matter. can be scope or workspace.
+   */
+  getStoresOrdered(): Store[] {
+    return compact([this.stores.global, this.stores.workspace, this.stores.scope].filter(Boolean)) as Store[];
+  }
+  invalidateCache() {
     configGetter.invalidateCache();
-    for await (const origin of Object.keys(this.stores)) {
-      const store = this.stores[origin];
+    const stores = this.getStoresOrdered();
+    stores.forEach((store) => {
+      configGetter.addStore(store);
+    });
+  }
+  async invalidateAllStoresCaches() {
+    configGetter.invalidateCache();
+    const stores = this.getStoresOrdered();
+    for await (const store of stores) {
       await store.invalidateCache();
       configGetter.addStore(store);
     };

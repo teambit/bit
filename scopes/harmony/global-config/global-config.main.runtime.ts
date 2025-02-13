@@ -85,7 +85,7 @@ export class GlobalConfigMain {
   }
 
   invalidateCache() {
-    invalidateCache();
+    this.configStore.invalidateCache();
   }
 
   getKnownGlobalDirs() {

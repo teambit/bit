@@ -41,7 +41,7 @@ import { LogoutCmd } from './logout.cmd';
 import { WhoamiCmd } from './whoami.cmd';
 import { NpmrcCmd, NpmrcGenerateCmd } from './npmrc.cmd';
 import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
-import { delSync, invalidateCache, setSync } from '@teambit/legacy.global-config';
+import { delSync, setSync } from '@teambit/legacy.global-config';
 
 export interface CloudWorkspaceConfig {
   cloudDomain: string;
@@ -388,7 +388,7 @@ export class CloudMain {
   }
 
   getAuthToken() {
-    invalidateCache();
+    this.configStore.invalidateCache();
     const processToken = globalFlags.token;
     const token = processToken || this.configStore.getConfig(CFG_USER_TOKEN_KEY);
     if (!token) return null;
