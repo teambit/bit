@@ -84,7 +84,8 @@ export class AspectsMerger {
       : undefined;
 
     this.removeAutoDepsFromConfig(componentId, configMergeExtensions);
-    const scopeExtensions = this.getComponentFromScopeWithoutDuplications(componentFromScope);
+    const scopeExtensionsBeforeClone = this.getComponentFromScopeWithoutDuplications(componentFromScope);
+    const scopeExtensions = ExtensionDataList.fromArray(scopeExtensionsBeforeClone.map((e) => e.clone()));
     // backward compatibility. previously, it was saved as an array into the model (when there was merge-config)
     this.removeAutoDepsFromConfig(componentId, scopeExtensions, true);
     const [specific, nonSpecific] = partition(scopeExtensions, (entry) => entry.config[AspectSpecificField] === true);
@@ -173,7 +174,7 @@ export class AspectsMerger {
     const afterMerge = ExtensionDataList.mergeConfigs(extensionsToMerge.map((ext) => ext.extensions));
     const withoutRemoved = afterMerge.filter((extData) => !removedExtensionIds.includes(extData.stringId));
     // clone the extension data to avoid mutating the original data (specifically, we don't want to mutate the scope data)
-    const extensions = ExtensionDataList.fromArray(withoutRemoved.map(e => e.clone()));
+    const extensions = ExtensionDataList.fromArray(withoutRemoved);
     return {
       extensions,
       beforeMerge: extensionsToMerge,
