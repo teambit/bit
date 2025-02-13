@@ -1,6 +1,5 @@
 import fs, { realpathSync } from 'fs';
 import { ResolverFactory, CachedInputFileSystem } from 'enhanced-resolve';
-import resolve from 'resolve';
 import findRoot from 'find-root';
 import { Logger } from '@teambit/logger';
 
@@ -12,20 +11,16 @@ import { Logger } from '@teambit/logger';
 export function resolvePeerToDirOrFile(peerName: string, logger: Logger, hostRootDir?: string): string | undefined {
   let resolved;
   try {
-    const options: {
-      basedir?: string;
-      paths: string[];
-    } = {
+    const options = {
       // resolve the host root dir to its real location, as require.resolve is preserve symlink, so we get wrong result otherwise
       paths: [process.cwd(), __dirname],
     };
     if (hostRootDir) {
-      options.basedir = hostRootDir;
       // resolve the host root dir to its real location, as require.resolve is preserve symlink, so we get wrong result otherwise
       options.paths.unshift(realpathSync(hostRootDir));
     }
 
-    resolved = resolve.sync(peerName, options);
+    resolved = require.resolve(peerName, options);
     const folder = findRoot(resolved);
     return folder;
   } catch {
