@@ -39,7 +39,6 @@ import { SourceFile } from '@teambit/component.sources';
 import { ProjectManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { Registries, Registry } from './registry';
 import { applyUpdates, UpdatedComponent } from './apply-updates';
@@ -92,6 +91,7 @@ import { dependencyResolverSchema } from './dependency-resolver.graphql';
 import { DependencyDetector } from './dependency-detector';
 import { DependenciesService } from './dependencies.service';
 import { EnvPolicy } from './policy/env-policy';
+import ConfigStoreAspect, { ConfigStoreMain } from '@teambit/config-store';
 
 export const BIT_CLOUD_REGISTRY = `https://node-registry.${getCloudDomain()}/`;
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
@@ -182,7 +182,7 @@ export class DependencyResolverMain {
 
     private aspectLoader: AspectLoaderMain,
 
-    private globalConfig: GlobalConfigMain,
+    private configStore: ConfigStoreMain,
 
     /**
      * component aspect.
@@ -228,7 +228,7 @@ export class DependencyResolverMain {
   }
 
   isolatedCapsules(): boolean {
-    const globalConfig = this.globalConfig.getSync(CFG_ISOLATED_SCOPE_CAPSULES);
+    const globalConfig = this.configStore.getConfig(CFG_ISOLATED_SCOPE_CAPSULES);
     // @ts-ignore
     const defaultVal = globalConfig !== undefined ? globalConfig === true || globalConfig === 'true' : true;
     const res = this.config.isolatedCapsules ?? defaultVal;
@@ -607,7 +607,7 @@ export class DependencyResolverMain {
   getInstaller(options: GetInstallerOptions = {}) {
     const packageManagerName = options.packageManager || this.packageManagerName;
     const packageManager = this.packageManagerSlot.get(packageManagerName);
-    const cacheRootDir = options.cacheRootDirectory || this.globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
+    const cacheRootDir = options.cacheRootDirectory || this.configStore.getConfig(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
       throw new PackageManagerNotFound(this.packageManagerName);
@@ -678,7 +678,7 @@ export class DependencyResolverMain {
 
   async getVersionResolver(options: GetVersionResolverOptions = {}) {
     const packageManager = this.getPackageManager();
-    const cacheRootDir = options.cacheRootDirectory || this.globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
+    const cacheRootDir = options.cacheRootDirectory || this.configStore.getConfig(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
       throw new PackageManagerNotFound(this.packageManagerName);
@@ -877,7 +877,7 @@ export class DependencyResolverMain {
     }
 
     const getDefaultBitRegistry = (): Registry => {
-      const bitGlobalConfigRegistry = this.globalConfig.getSync(CFG_REGISTRY_URL_KEY);
+      const bitGlobalConfigRegistry = this.configStore.getConfig(CFG_REGISTRY_URL_KEY);
       const bitRegistry = bitGlobalConfigRegistry || BIT_CLOUD_REGISTRY;
 
       const { bitOriginalAuthType, bitAuthHeaderValue, bitOriginalAuthValue } = this.getBitAuthConfig();
@@ -944,7 +944,7 @@ export class DependencyResolverMain {
     bitAuthHeaderValue: string;
     bitOriginalAuthValue: string;
   }> {
-    const bitGlobalConfigToken = this.globalConfig.getSync(CFG_USER_TOKEN_KEY);
+    const bitGlobalConfigToken = this.configStore.getConfig(CFG_USER_TOKEN_KEY);
     const res = {
       bitOriginalAuthType: '',
       bitAuthHeaderValue: '',
@@ -1508,7 +1508,7 @@ export class DependencyResolverMain {
     AspectLoaderAspect,
     ComponentAspect,
     GraphqlAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
   ];
 
   static slots = [
@@ -1529,14 +1529,14 @@ export class DependencyResolverMain {
   };
 
   static async provider(
-    [envs, loggerExt, configMain, aspectLoader, componentAspect, graphql, globalConfig]: [
+    [envs, loggerExt, configMain, aspectLoader, componentAspect, graphql, configStore]: [
       EnvsMain,
       LoggerMain,
       ConfigMain,
       AspectLoaderMain,
       ComponentMain,
       GraphqlMain,
-      GlobalConfigMain,
+      ConfigStoreMain,
     ],
     config: DependencyResolverWorkspaceConfig,
     [
@@ -1565,7 +1565,7 @@ export class DependencyResolverMain {
       logger,
       configMain,
       aspectLoader,
-      globalConfig,
+      configStore,
       componentAspect,
       packageManagerSlot,
       dependencyFactorySlot,

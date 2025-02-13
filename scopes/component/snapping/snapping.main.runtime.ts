@@ -24,6 +24,7 @@ import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import pMap from 'p-map';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import {
   BitObject,
@@ -45,7 +46,6 @@ import { LaneId } from '@teambit/lane-id';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { isHash, isTag } from '@teambit/component-version';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { ArtifactFiles, ArtifactSource, getArtifactsFiles, SourceFile } from '@teambit/component.sources';
 import { DependenciesAspect, DependenciesMain } from '@teambit/dependencies';
 import { SnapCmd } from './snap-cmd';
@@ -1415,7 +1415,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     ExportAspect,
     BuilderAspect,
     ImporterAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
     DependenciesAspect,
     ApplicationAspect,
     RemoveAspect,
@@ -1431,7 +1431,7 @@ another option, in case this dependency is not in main yet is to remove all refe
       exporter,
       builder,
       importer,
-      globalConfig,
+      configStore,
       deps,
       application,
       remove,
@@ -1444,7 +1444,7 @@ another option, in case this dependency is not in main yet is to remove all refe
       ExportMain,
       BuilderMain,
       ImporterMain,
-      GlobalConfigMain,
+      ConfigStoreMain,
       DependenciesMain,
       ApplicationMain,
       RemoveMain,
@@ -1466,8 +1466,8 @@ another option, in case this dependency is not in main yet is to remove all refe
       remove,
       onPreSnapSlot
     );
-    const snapCmd = new SnapCmd(snapping, logger, globalConfig);
-    const tagCmd = new TagCmd(snapping, logger, globalConfig);
+    const snapCmd = new SnapCmd(snapping, logger, configStore);
+    const tagCmd = new TagCmd(snapping, logger, configStore);
     const tagFromScopeCmd = new TagFromScopeCmd(snapping, logger);
     const snapFromScopeCmd = new SnapFromScopeCmd(snapping, logger);
     const resetCmd = new ResetCmd(snapping);

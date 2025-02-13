@@ -1,11 +1,11 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { mergeReport, MergeStrategy } from '@teambit/merging';
-import { GlobalConfigMain } from '@teambit/global-config';
 import { COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import { removeTemplate } from '@teambit/remove';
 import { MergeLanesMain } from './merge-lanes.main.runtime';
+import { ConfigStoreMain } from '@teambit/config-store';
 
 export class MergeLaneCmd implements Command {
   name = 'merge <lane> [pattern]';
@@ -107,7 +107,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
 
   constructor(
     private mergeLanes: MergeLanesMain,
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {}
 
   async report(
@@ -158,7 +158,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       detachHead?: boolean;
     }
   ): Promise<string> {
-    build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
+    build = this.configStore.getConfigBoolean(CFG_FORCE_LOCAL_BUILD) || Boolean(build);
     if (ours || theirs) {
       throw new BitError(
         'the "--ours" and "--theirs" flags are deprecated. use "--auto-merge-resolve" instead. see "bit lane merge --help" for more information'

@@ -27,15 +27,21 @@ export class ConfigStoreMain {
       configGetter.addStore(store);
     };
   }
-  async setConfig(key: string, value: string, origin: StoreOrigin) {
+  async setConfig(key: string, value: string, origin: StoreOrigin = 'global') {
     const store = this.stores[origin];
     if (!store) throw new Error(`unable to set config, "${origin}" origin is missing`);
     store.set(key, value);
     await store.write();
     await this.invalidateCache();
   }
-  getConfig(key: string) {
+  getConfig(key: string): string | undefined {
     return configGetter.getConfig(key);
+  }
+  getConfigBoolean(key: string): boolean | undefined {
+    return configGetter.getConfigBoolean(key);
+  }
+  getConfigNumeric(key: string): number | undefined {
+    return configGetter.getConfigNumeric(key);
   }
   async delConfig(key: string, origin?: StoreOrigin) {
     const getOrigin = () => {

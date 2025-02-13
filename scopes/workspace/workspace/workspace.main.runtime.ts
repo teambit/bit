@@ -182,7 +182,8 @@ export class WorkspaceMain {
       onRootAspectAddedSlot,
       graphql,
       onBitmapChangeSlot,
-      onWorkspaceConfigChangeSlot
+      onWorkspaceConfigChangeSlot,
+      configStore
     );
 
     configStore.addStore('workspace', workspace.getConfigStore());

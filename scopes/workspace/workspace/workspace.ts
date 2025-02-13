@@ -115,7 +115,7 @@ import {
   ComponentStatusResult,
 } from './workspace-component/component-status-loader';
 import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
-import { ConfigStoreAspect, Store } from '@teambit/config-store';
+import { ConfigStoreAspect, ConfigStoreMain, Store } from '@teambit/config-store';
 
 export type EjectConfResult = {
   configPath: string;
@@ -248,7 +248,9 @@ export class Workspace implements ComponentFactory {
 
     private onBitmapChangeSlot: OnBitmapChangeSlot,
 
-    private onWorkspaceConfigChangeSlot: OnWorkspaceConfigChangeSlot
+    private onWorkspaceConfigChangeSlot: OnWorkspaceConfigChangeSlot,
+
+    private configStore: ConfigStoreMain
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
@@ -1710,7 +1712,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   getWorkspaceAspectsLoader(): WorkspaceAspectsLoader {
     let resolveEnvsFromRoots = this.config.resolveEnvsFromRoots;
     if (resolveEnvsFromRoots === undefined) {
-      const resolveEnvsFromRootsConfig = this.globalConfig.getSync(CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS);
+      const resolveEnvsFromRootsConfig = this.configStore.getConfig(CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS);
       const defaultResolveEnvsFromRoots: boolean =
         // @ts-ignore
         resolveEnvsFromRootsConfig === 'true' || resolveEnvsFromRootsConfig === true;
@@ -1824,7 +1826,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     errMsgPrefix: string
   ): Promise<ComponentID | undefined> {
     const url = `https://node-registry.bit.cloud/${packageName}`;
-    const token = await this.globalConfig.get(CFG_USER_TOKEN_KEY);
+    const token = this.configStore.getConfig(CFG_USER_TOKEN_KEY);
     const headers = token ? getAuthHeader(token) : {};
     const res = await fetch(url, { headers });
     if (!res.ok) {

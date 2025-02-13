@@ -29,10 +29,16 @@ export class GlobalConfigMain {
   static dependencies = [CLIAspect];
   static slots = [];
 
+  /**
+  * @deprecated use ConfigStore.getConfig instead.
+  */
   async get(key: string): Promise<string | undefined> {
     return get(key);
   }
 
+  /**
+  * @deprecated use ConfigStore.getConfigBoolean instead.
+  */
   async getBool(key: string): Promise<boolean | undefined> {
     const result = await get(key);
     if (result === undefined || result === null) return undefined;
@@ -42,28 +48,46 @@ export class GlobalConfigMain {
     throw new Error(`the configuration "${key}" has an invalid value "${result}". it should be boolean`);
   }
 
+  /**
+  * @deprecated use ConfigStore.getConfig instead.
+  */
   getSync(key: string): string | undefined {
     return getSync(key);
   }
 
+  /**
+  * @deprecated use ConfigStore.listConfig instead.
+  */
   list(): Promise<Record<string, string>> {
     return list();
   }
+  /**
+  * @deprecated use ConfigStore.listConfig instead.
+  */
   listSync(): Record<string, string> {
     return listSync();
   }
-
+  /**
+  * @deprecated use ConfigStore.setConfig instead.
+  */
   async set(key: string, val: string): Promise<GlobalConfig> {
     return set(key, val);
   }
+  /**
+  * @deprecated use ConfigStore.setConfig instead.
+  */
   setSync(key: string, val: string): GlobalConfig {
     return setSync(key, val);
   }
-
+/**
+  * @deprecated use ConfigStore.delConfig instead.
+  */
   async del(key: string): Promise<GlobalConfig> {
     return del(key);
   }
-
+/**
+  * @deprecated use ConfigStore.delConfig instead.
+  */
   delSync(key: string): GlobalConfig {
     return delSync(key);
   }

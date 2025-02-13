@@ -70,6 +70,23 @@ export class ConfigGetter {
     }
     return this.gitStore[key];
   }
+  getConfigNumeric(key: string): number | undefined {
+    const fromConfig = this.getConfig(key);
+    if (isNil(fromConfig)) return undefined;
+    const num = Number(fromConfig);
+    if (Number.isNaN(num)) {
+      throw new Error(`config of "${key}" is invalid. Expected number, got "${fromConfig}"`);
+    }
+    return num;
+  }
+  getConfigBoolean(key: string): boolean | undefined {
+    const result = this.getConfig(key);
+    if (isNil(result)) return undefined;
+    if (typeof result === 'boolean') return result;
+    if (result === 'true') return true;
+    if (result === 'false') return false;
+    throw new Error(`the configuration "${key}" has an invalid value "${result}". it should be boolean`);
+  }
   listConfig() {
     const store = this.store;
     return store;
@@ -93,14 +110,8 @@ export const configGetter = new ConfigGetter();
 export function getConfig(key: string): string | undefined {
   return configGetter.getConfig(key);
 }
-export function getNumberFromConfig(key: string): number | null {
-  const fromConfig = configGetter.getConfig(key);
-  if (!fromConfig) return null;
-  const num = Number(fromConfig);
-  if (Number.isNaN(num)) {
-    throw new Error(`config of "${key}" is invalid. Expected number, got "${fromConfig}"`);
-  }
-  return num;
+export function getNumberFromConfig(key: string): number | undefined {
+  return configGetter.getConfigNumeric(key);
 }
 export function listConfig(): Record<string, string> {
   return configGetter.listConfig();
