@@ -1584,6 +1584,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/renderers/variable"
     },
+    "rendering/ssr": {
+        "name": "rendering/ssr",
+        "scope": "teambit.react",
+        "version": "1.0.2",
+        "mainFile": "index.ts",
+        "rootDir": "components/rendering/ssr"
+    },
     "schema": {
         "name": "schema",
         "scope": "teambit.semantics",
@@ -2053,6 +2060,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/hooks/use-core-aspects"
     },
+    "ui/hooks/use-user-agent": {
+        "name": "ui/hooks/use-user-agent",
+        "scope": "teambit.ui-foundation",
+        "version": "0.0.199",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/hooks/use-user-agent"
+    },
     "ui/inputs/lane-selector": {
         "name": "ui/inputs/lane-selector",
         "scope": "teambit.lanes",
@@ -2116,12 +2130,26 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/ui/preview-placeholder"
     },
+    "ui/queries/get-component-code": {
+        "name": "ui/queries/get-component-code",
+        "scope": "teambit.code",
+        "version": "0.0.502",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/queries/get-component-code"
+    },
     "ui/queries/get-docs": {
         "name": "ui/queries/get-docs",
         "scope": "teambit.docs",
         "version": "0.0.509",
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs"
+    },
+    "ui/queries/get-file-content": {
+        "name": "ui/queries/get-file-content",
+        "scope": "teambit.code",
+        "version": "0.0.504",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/queries/get-file-content"
     },
     "ui/react-router/slot-router": {
         "name": "ui/react-router/slot-router",
