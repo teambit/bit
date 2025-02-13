@@ -52,6 +52,7 @@ class ConfigList implements Command {
   options = [
     ['o', 'origin <origin>', 'list configuration specifically from the following: [scope, workspace, global]'],
     ['d', 'detailed', 'list all configuration(s) with the origin'],
+    ['j', 'json', 'output as JSON'],
   ] as CommandOptions;
 
   constructor(private configStore: ConfigStoreMain) {}
@@ -86,6 +87,21 @@ class ConfigList implements Command {
 
     const conf = this.configStore.listConfig();
     return objToFormattedString(conf);
+  }
+
+  async json(_, { origin, detailed }: { origin?: StoreOrigin, detailed?: boolean }) {
+    if (origin) {
+      return this.configStore.stores[origin].list();
+    }
+    if (detailed) {
+      const allStores = Object.keys(this.configStore.stores).reduce((acc, current) => {
+        acc[current] = this.configStore.stores[current].list();
+        return acc;
+      }, {} as Record<string, Record<string, string>>);
+      allStores.combined = this.configStore.listConfig();
+      return allStores;
+    }
+    return this.configStore.listConfig();
   }
 }
 
