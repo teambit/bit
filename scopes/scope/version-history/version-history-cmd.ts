@@ -113,7 +113,8 @@ export class VersionHistoryGraphCmd implements Command {
     const config: GraphConfig = { colorPerEdgeType };
     if (layout) config.layout = layout;
     const visualDependencyGraph = await VisualDependencyGraph.loadFromClearGraph(graphHistory, config, markIds);
-    return png ? visualDependencyGraph.image() : visualDependencyGraph.renderUsingViz();
+
+    return visualDependencyGraph.render(png ? 'png' : 'svg');
   }
 }
 

@@ -552,13 +552,13 @@ export class Workspace implements ComponentFactory {
   }
 
   async getGraph(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<Graph<Component, string>> {
-    if (!ids || ids.length < 1) ids = await this.listIds();
+    if (!ids || ids.length < 1) ids = this.listIds();
 
     return this.buildOneGraphForComponents(ids, undefined, undefined, shouldThrowOnMissingDep);
   }
 
   async getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<CompIdGraph> {
-    if (!ids || ids.length < 1) ids = await this.listIds();
+    if (!ids || ids.length < 1) ids = this.listIds();
 
     const graphIdsFromFsBuilder = new GraphIdsFromFsBuilder(
       this,

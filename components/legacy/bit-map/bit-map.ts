@@ -8,7 +8,6 @@ import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
-import type { Consumer } from '@teambit/legacy.consumer';
 import {
   AUTO_GENERATED_MSG,
   AUTO_GENERATED_STAMP,
@@ -164,14 +163,12 @@ export class BitMap {
     return result;
   }
 
-  static async load(consumer: Consumer): Promise<BitMap> {
-    const dirPath: PathOsBasedAbsolute = consumer.getPath();
+  static async load(dirPath: PathOsBasedAbsolute, defaultScope: string): Promise<BitMap> {
     const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
     const mapFileContent = BitMap.loadRawSync(dirPath);
     if (!mapFileContent || !currentLocation) {
       return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA);
     }
-    const defaultScope = consumer.config.defaultScope;
     const bitMap = BitMap.loadFromContentWithoutLoadingFiles(mapFileContent, currentLocation, dirPath, defaultScope);
     await bitMap.loadFiles();
 
