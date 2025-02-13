@@ -237,12 +237,11 @@ export class WorkspaceMain {
       const defaultScope = await workspace.componentDefaultScope(componentId);
 
       const extensionsWithLegacyIdsP = extensions.map(async (extension) => {
-        const legacyEntry = extension.clone();
-        if (legacyEntry.extensionId) {
-          legacyEntry.newExtensionId = legacyEntry.extensionId;
+        if (extension.extensionId) {
+          extension.newExtensionId = extension.extensionId;
         }
 
-        return legacyEntry;
+        return extension;
       });
       const extensionsWithLegacyIds = await Promise.all(extensionsWithLegacyIdsP);
 
