@@ -1,4 +1,3 @@
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import mapSeries from 'p-map-series';
 import path from 'path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -172,7 +171,7 @@ export class ScopeMain implements ComponentFactory {
 
     private dependencyResolver: DependencyResolverMain,
 
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {
     this.componentLoader = new ScopeComponentLoader(this, this.logger);
   }
@@ -392,7 +391,7 @@ export class ScopeMain implements ComponentFactory {
       this.envs,
       this.isolator,
       this.logger,
-      this.globalConfig
+      this.configStore
     );
     return scopeAspectsLoader;
   }
@@ -1230,7 +1229,6 @@ export class ScopeMain implements ComponentFactory {
     LoggerAspect,
     EnvsAspect,
     DependencyResolverAspect,
-    GlobalConfigAspect,
     ConfigStoreAspect,
   ];
 
@@ -1239,7 +1237,7 @@ export class ScopeMain implements ComponentFactory {
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver, globalConfig,
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver,
       configStore]: [
       ComponentMain,
       UiMain,
@@ -1251,7 +1249,6 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain,
       EnvsMain,
       DependencyResolverMain,
-      GlobalConfigMain,
       ConfigStoreMain
     ],
     config: ScopeConfig,
@@ -1298,7 +1295,7 @@ export class ScopeMain implements ComponentFactory {
       logger,
       envs,
       depsResolver,
-      globalConfig
+      configStore
     );
     configStore.addStore('scope', scope.getConfigStore());
     cli.register(...allCommands, new ScopeGarbageCollectorCmd(scope));

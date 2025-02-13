@@ -1726,7 +1726,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.envs,
       this.dependencyResolver,
       this.logger,
-      this.globalConfig,
+      this.configStore,
       this.harmony,
       this.onAspectsResolveSlot,
       this.onRootAspectAddedSlot,

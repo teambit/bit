@@ -91,7 +91,7 @@ import { dependencyResolverSchema } from './dependency-resolver.graphql';
 import { DependencyDetector } from './dependency-detector';
 import { DependenciesService } from './dependencies.service';
 import { EnvPolicy } from './policy/env-policy';
-import ConfigStoreAspect, { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 
 export const BIT_CLOUD_REGISTRY = `https://node-registry.${getCloudDomain()}/`;
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';

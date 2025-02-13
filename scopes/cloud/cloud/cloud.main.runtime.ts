@@ -40,7 +40,7 @@ import { LoginCmd } from './login.cmd';
 import { LogoutCmd } from './logout.cmd';
 import { WhoamiCmd } from './whoami.cmd';
 import { NpmrcCmd, NpmrcGenerateCmd } from './npmrc.cmd';
-import ConfigStoreAspect, { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 import { delSync, invalidateCache, setSync } from '@teambit/legacy.global-config';
 
 export interface CloudWorkspaceConfig {

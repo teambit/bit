@@ -4,7 +4,6 @@ import chalk from 'chalk';
 import { uniq } from 'lodash';
 import { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
-import { GlobalConfigMain } from '@teambit/global-config';
 import { Logger } from '@teambit/logger';
 import { IsolatorMain } from '@teambit/isolator';
 import { Component, ComponentID } from '@teambit/component';
@@ -14,6 +13,7 @@ import { TaskSlot } from './builder.main.runtime';
 import { BuildContext, BuildTask, BuildTaskHelper } from './build-task';
 import { ArtifactFactory } from './artifact';
 import { calculatePipelineOrder } from './build-pipeline-order';
+import { ConfigStoreMain } from '@teambit/config-store';
 
 export type BuildServiceResults = {
   id: string;
@@ -83,7 +83,7 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
     private displayPipeName: PipeName,
     private artifactFactory: ArtifactFactory,
     private scope: ScopeMain,
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {}
 
   /**
@@ -156,7 +156,7 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
   }
 
   getComponentsCapsulesBaseDir(): string | undefined {
-    return this.globalConfig.getSync(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR);
+    return this.configStore.getConfig(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR);
   }
 
   render() {

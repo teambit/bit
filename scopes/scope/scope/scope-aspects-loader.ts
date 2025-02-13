@@ -1,4 +1,3 @@
-import { GlobalConfigMain } from '@teambit/global-config';
 import mapSeries from 'p-map-series';
 import { Lane } from '@teambit/objects';
 import { existsSync } from 'fs-extra';
@@ -23,6 +22,7 @@ import { EnvsMain } from '@teambit/envs';
 import { NodeLinker } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import { ScopeMain } from './scope.main.runtime';
+import { ConfigStoreMain } from '@teambit/config-store';
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
 
@@ -39,7 +39,7 @@ export class ScopeAspectsLoader {
     private envs: EnvsMain,
     private isolator: IsolatorMain,
     private logger: Logger,
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {}
 
   async loadAspects(
@@ -354,13 +354,13 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   shouldUseDatedCapsules(): boolean {
-    const globalConfig = this.globalConfig.getSync(CFG_USE_DATED_CAPSULES);
+    const globalConfig = this.configStore.getConfig(CFG_USE_DATED_CAPSULES);
     // @ts-ignore
     return globalConfig === true || globalConfig === 'true';
   }
 
   shouldCacheLockFileOnly(): boolean {
-    const globalConfig = this.globalConfig.getSync(CFG_CACHE_LOCK_ONLY_CAPSULES);
+    const globalConfig = this.configStore.getConfig(CFG_CACHE_LOCK_ONLY_CAPSULES);
     // @ts-ignore
     return globalConfig === true || globalConfig === 'true';
   }
@@ -368,16 +368,16 @@ needed-for: ${neededFor || '<unknown>'}`);
   getAspectCapsulePath() {
     const defaultPath = `${this.scope.path}-aspects`;
     if (this.scope.isGlobalScope) {
-      return this.globalConfig.getSync(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR) || defaultPath;
+      return this.configStore.getConfig(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR) || defaultPath;
     }
-    return this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR) || defaultPath;
+    return this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR) || defaultPath;
   }
 
   shouldUseHashForCapsules(): boolean {
     if (this.scope.isGlobalScope) {
-      return !this.globalConfig.getSync(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR);
+      return !this.configStore.getConfig(CFG_CAPSULES_GLOBAL_SCOPE_ASPECTS_BASE_DIR);
     }
-    return !this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR);
+    return !this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_BASE_DIR);
   }
 
   getAspectsPackageManager(): string | undefined {

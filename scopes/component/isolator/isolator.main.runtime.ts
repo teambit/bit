@@ -56,7 +56,7 @@ import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
-import ConfigStoreAspect, { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 
 export type ListResults = {
   capsules: string[];

@@ -8,13 +8,7 @@ import {
   GLOBALS_DEFAULT_CAPSULES,
 } from '@teambit/legacy.constants';
 import {
-  del,
   delSync,
-  get,
-  getSync,
-  list,
-  listSync,
-  set,
   setSync,
   invalidateCache,
   GlobalConfig,
@@ -23,55 +17,49 @@ import { GlobalConfigAspect } from './global-config.aspect';
 import { GlobalsCmd } from './globals.cmd';
 import { SystemCmd, SystemLogCmd, SystemTailLogCmd } from './system.cmd';
 import { RemoteCmd } from './remote-cmd';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 
 export class GlobalConfigMain {
-  static runtime = MainRuntime;
-  static dependencies = [CLIAspect];
-  static slots = [];
+  constructor(private configStore: ConfigStoreMain) {}
 
   /**
   * @deprecated use ConfigStore.getConfig instead.
   */
   async get(key: string): Promise<string | undefined> {
-    return get(key);
+    return this.configStore.getConfig(key);
   }
 
   /**
   * @deprecated use ConfigStore.getConfigBoolean instead.
   */
   async getBool(key: string): Promise<boolean | undefined> {
-    const result = await get(key);
-    if (result === undefined || result === null) return undefined;
-    if (typeof result === 'boolean') return result;
-    if (result === 'true') return true;
-    if (result === 'false') return false;
-    throw new Error(`the configuration "${key}" has an invalid value "${result}". it should be boolean`);
+    return this.configStore.getConfigBoolean(key);
   }
 
   /**
   * @deprecated use ConfigStore.getConfig instead.
   */
   getSync(key: string): string | undefined {
-    return getSync(key);
+    return this.configStore.getConfig(key);
   }
 
   /**
   * @deprecated use ConfigStore.listConfig instead.
   */
-  list(): Promise<Record<string, string>> {
-    return list();
+  async list(): Promise<Record<string, string>> {
+    return this.configStore.listConfig();
   }
   /**
   * @deprecated use ConfigStore.listConfig instead.
   */
   listSync(): Record<string, string> {
-    return listSync();
+    return this.configStore.listConfig();
   }
   /**
   * @deprecated use ConfigStore.setConfig instead.
   */
-  async set(key: string, val: string): Promise<GlobalConfig> {
-    return set(key, val);
+  async set(key: string, val: string): Promise<void> {
+    await this.configStore.setConfig(key, val);
   }
   /**
   * @deprecated use ConfigStore.setConfig instead.
@@ -82,8 +70,8 @@ export class GlobalConfigMain {
 /**
   * @deprecated use ConfigStore.delConfig instead.
   */
-  async del(key: string): Promise<GlobalConfig> {
-    return del(key);
+  async del(key: string): Promise<void> {
+    await this.configStore.delConfig(key);
   }
 /**
   * @deprecated use ConfigStore.delConfig instead.
@@ -109,9 +97,11 @@ export class GlobalConfigMain {
       'Capsules Dir': this.getGlobalCapsulesBaseDir(),
     };
   }
-
-  static async provider([cli]: [CLIMain]) {
-    const globalConfig = new GlobalConfigMain();
+  static runtime = MainRuntime;
+  static dependencies = [CLIAspect, ConfigStoreAspect];
+  static slots = [];
+  static async provider([cli, configStore]: [CLIMain, ConfigStoreMain]) {
+    const globalConfig = new GlobalConfigMain(configStore);
     const systemCmd = new SystemCmd();
     systemCmd.commands = [new SystemLogCmd(), new SystemTailLogCmd()];
     cli.register(new GlobalsCmd(globalConfig), systemCmd, new RemoteCmd());
