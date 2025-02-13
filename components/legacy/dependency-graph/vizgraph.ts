@@ -175,6 +175,18 @@ export class VisualDependencyGraph {
     return file;
   }
 
+  async getAsSVGString(): Promise<string | undefined> {
+    const dot = this.dot();
+    const viz = await instance();
+    const result = viz.render(dot, { format: 'svg' });
+    if (result.errors.length) {
+      throw new Error(
+        `failed to render the graph, errors:\n${result.errors.map((e) => `${e.level}: ${e.message}`).join('\n')}`
+      );
+    }
+    return result.output;
+  }
+
   async render(format: string = 'svg') {
     return format === 'png' || format === 'gif' ? this.image() : this.renderUsingViz(format);
   }

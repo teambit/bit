@@ -54,12 +54,12 @@ export function ComponentView(props: ComponentViewProps) {
   const envUrl = !envId
     ? undefined
     : (isEnvOnCurrentLane &&
-        lanesModel?.viewedLane?.id &&
-        `${window.location.origin}${LanesModel.getLaneComponentUrl(envId, lanesModel.viewedLane?.id)}`) ||
-      ComponentUrl.toUrl(envId, {
-        includeVersion: true,
-        useLocationOrigin: !window.location.host.startsWith('localhost'),
-      });
+      lanesModel?.viewedLane?.id &&
+      `${window.location.origin}${LanesModel.getLaneComponentUrl(envId, lanesModel.viewedLane?.id)}`) ||
+    ComponentUrl.toUrl(envId, {
+      includeVersion: true,
+      useLocationOrigin: !window.location.host.startsWith('localhost'),
+    });
 
   const envTooltip = envId ? (
     <Link
@@ -135,7 +135,6 @@ export function ComponentView(props: ComponentViewProps) {
 
     const searchParams = new URLSearchParams(location.search);
     const scopeFromQueryParams = searchParams.get('scope');
-    
     const pathname = location.pathname.substring(1).split('?')[0];
     const compIdStr = component.id.toStringWithoutVersion();
     const compIdName = component.id.fullName;
@@ -191,7 +190,7 @@ export function ComponentView(props: ComponentViewProps) {
     return !scopeFromQueryParams
       ? laneCompIdFromUrl?.toString() === compIdStr || laneCompIdFromUrl.fullName === compIdName
       : laneCompIdFromUrl?.toString() === compIdStr ||
-          (laneCompIdFromUrl.fullName === compIdName && componentScope === scopeFromQueryParams);
+      (laneCompIdFromUrl.fullName === compIdName && componentScope === scopeFromQueryParams);
   }, [href, viewingMainCompOnLane, location?.pathname, component?.id.toString(), scope.name]);
 
   if (isMissingCompOrEnvId) return null;

@@ -553,7 +553,12 @@
       [
         "",
         "cycles",
-        "show cycles in the graph"
+        "generate a graph of cycles only"
+      ],
+      [
+        "",
+        "include-local-only",
+        "include only the components in the workspace (or local scope)"
       ],
       [
         "j",
@@ -561,7 +566,7 @@
         "json format"
       ]
     ],
-    "description": "generate an SVG image file with the workspace components' dependencies graph",
+    "description": "generate an SVG image file with the components' dependencies graph",
     "extendedDescription": "",
     "group": "discover",
     "private": false,
