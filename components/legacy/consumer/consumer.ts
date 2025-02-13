@@ -57,11 +57,9 @@ type ConsumerProps = {
 const BITMAP_HISTORY_DIR_NAME = 'bitmap-history';
 const BITMAP_HISTORY_METADATA_FILE_NAME = 'bitmap-history-metadata.txt';
 
-/**
- * @todo: change the class name to Workspace
- */
+
 export default class Consumer {
-  projectPath: PathOsBased;
+  projectPath: PathOsBasedAbsolute;
   created: boolean;
   config: ILegacyWorkspaceConfig;
   scope: Scope;
@@ -84,7 +82,7 @@ export default class Consumer {
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
   async setBitMap() {
-    this.bitMap = await BitMap.load(this);
+    this.bitMap = await BitMap.load(this.getPath(), this.config.defaultScope);
   }
 
   setPackageJson(packageJson: PackageJsonFile) {
@@ -180,7 +178,7 @@ export default class Consumer {
     return this;
   }
 
-  getPath(): PathOsBased {
+  getPath(): PathOsBasedAbsolute {
     return this.projectPath;
   }
 

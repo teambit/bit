@@ -152,7 +152,7 @@ export class DependencyGraph {
   //   );
   // }
 
-  static async buildGraphFromWorkspace(workspace: Workspace, onlyLatest = false, reverse = false): Promise<Graph> {
+  static async buildGraphFromWorkspace(workspace: Workspace): Promise<Graph> {
     const componentsList = new ComponentsList(workspace);
     const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
     const graph = new Graph();
@@ -160,7 +160,7 @@ export class DependencyGraph {
     const buildGraphP = allModelComponents.map(async (modelComponent) => {
       const latestVersion = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
       const buildVersionP = modelComponent.listVersionsIncludeOrphaned().map(async (versionNum) => {
-        if (onlyLatest && latestVersion !== versionNum) return;
+        if (latestVersion !== versionNum) return;
         const id = modelComponent.toComponentId().changeVersion(versionNum);
         const componentFromWorkspace = workspaceComponents.find((comp) => comp.id.isEqual(id));
         // if the same component exists in the workspace, use it as it might be modified
@@ -171,14 +171,14 @@ export class DependencyGraph {
           // a component might be in the scope with only the latest version (happens when it's a nested dep)
           return;
         }
-        this._addDependenciesToGraph(id, graph, version, reverse);
+        this._addDependenciesToGraph(id, graph, version);
       });
       await Promise.all(buildVersionP);
     });
     await Promise.all(buildGraphP);
     workspaceComponents.forEach((component: Component) => {
       const id = component.id;
-      this._addDependenciesToGraph(id, graph, component, reverse);
+      this._addDependenciesToGraph(id, graph, component);
     });
     return graph;
   }
