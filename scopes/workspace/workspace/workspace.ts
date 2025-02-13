@@ -115,7 +115,7 @@ import {
   ComponentStatusResult,
 } from './workspace-component/component-status-loader';
 import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
-import ConfigStoreAspect, { Store } from '@teambit/config-store';
+import { ConfigStoreAspect, Store } from '@teambit/config-store';
 
 export type EjectConfResult = {
   configPath: string;
