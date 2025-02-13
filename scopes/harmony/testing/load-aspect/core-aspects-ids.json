@@ -102,6 +102,7 @@
   "teambit.harmony/host-initializer",
   "teambit.harmony/doctor",
   "teambit.scope/objects",
+  "teambit.harmony/config-store",
   "teambit.harmony/bit",
   "teambit.harmony/config"
 ]

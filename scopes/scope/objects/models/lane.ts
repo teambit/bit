@@ -14,7 +14,7 @@ import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { hasVersionByRef } from '@teambit/component.snap-distance';
 import { BitObject, Ref, Repository } from '../objects';
 import Version from './version';
-import * as globalConfig from '@teambit/legacy.global-config';
+import { getConfig } from '@teambit/config-store';
 
 export type Log = { date: string; username?: string; email?: string; profileImage?: string };
 
@@ -134,8 +134,8 @@ export default class Lane extends BitObject {
   ) {
     const log = {
       date: Date.now().toString(),
-      username: bitCloudUser?.username || globalConfig.getSync(CFG_USER_NAME_KEY),
-      email: bitCloudUser?.email || globalConfig.getSync(CFG_USER_EMAIL_KEY),
+      username: bitCloudUser?.username || getConfig(CFG_USER_NAME_KEY),
+      email: bitCloudUser?.email || getConfig(CFG_USER_EMAIL_KEY),
       profileImage: bitCloudUser?.profileImage,
     };
     const lane = new Lane({ name, scope, hash: sha1(v4()), log, forkedFrom, schema: CURRENT_LANE_SCHEMA });

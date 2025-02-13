@@ -5,6 +5,9 @@ import Config from './config';
 
 export const ENV_VARIABLE_CONFIG_PREFIX = 'BIT_CONFIG_';
 
+/**
+ * @deprecated use ConfigStore "setConfig" API instead
+ */
 export function set(key: string, val: string): Promise<Config> {
   if (!key || !val) {
     throw new BitError(`missing a configuration key and value. https://bit.dev/config/bit-config`);
@@ -16,6 +19,9 @@ export function set(key: string, val: string): Promise<Config> {
   });
 }
 
+/**
+ * @deprecated use ConfigStore "setConfig" API instead
+ */
 export function setSync(key: string, val: string): Config {
   const config = Config.loadSync();
   config.set(key, val);
@@ -24,6 +30,9 @@ export function setSync(key: string, val: string): Config {
   return config;
 }
 
+/**
+ * @deprecated use ConfigStore "delConfig" API instead
+ */
 export function del(key: string): Promise<Config> {
   return Config.load().then((config) => {
     config.delete(key);
@@ -32,6 +41,9 @@ export function del(key: string): Promise<Config> {
   });
 }
 
+/**
+ * @deprecated use ConfigStore "delConfig" API instead
+ */
 export function delSync(key: string): Config {
   const config = Config.loadSync();
   config.delete(key);
@@ -40,6 +52,9 @@ export function delSync(key: string): Config {
   return config;
 }
 
+/**
+ * @deprecated use "getConfig" from '@teambit/config-store';
+ */
 export async function get(key: string): Promise<string | undefined> {
   if (!key) return undefined;
   const getConfigObject = async () => {
@@ -65,6 +80,9 @@ export async function get(key: string): Promise<string | undefined> {
   }
 }
 
+/**
+ * @deprecated use "getConfig" from '@teambit/config-store';
+ */
 export function getSync(key: string): string | undefined {
   if (!key) return undefined;
   const getConfigObject = () => {
@@ -96,15 +114,24 @@ export function getSync(key: string): string | undefined {
   return gitConfigCache[key];
 }
 
+/**
+ * @deprecated use "listConfig" from '@teambit/config-store';
+ */
 export function list(): Promise<any> {
   return Config.load().then((config) => config.toPlainObject());
 }
 
+/**
+ * @deprecated use "listConfig" from '@teambit/config-store';
+ */
 export function listSync(): any {
   const config = Config.loadSync();
   return config.toPlainObject();
 }
 
+/**
+ * @deprecated use "getNumberFromConfig" from '@teambit/config-store';
+ */
 export function getNumberFromConfig(name: string): number | null {
   const fromConfig = getSync(name);
   if (!fromConfig) return null;
@@ -141,6 +168,9 @@ function gitCache() {
   };
 }
 
+/**
+ * @deprecated use ConfigStore "invalidateCache" API instead
+ */
 export function invalidateCache() {
   cache().set(null);
 }

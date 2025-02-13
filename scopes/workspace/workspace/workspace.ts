@@ -115,6 +115,7 @@ import {
   ComponentStatusResult,
 } from './workspace-component/component-status-loader';
 import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
+import ConfigStoreAspect, { Store } from '@teambit/config-store';
 
 export type EjectConfResult = {
   configPath: string;
@@ -363,6 +364,33 @@ export class Workspace implements ComponentFactory {
 
   get icon() {
     return this.config.icon;
+  }
+
+
+  getConfigStore(): Store {
+    return {
+      list: () => this.getWorkspaceConfig().extension(ConfigStoreAspect.id, true) || {},
+      set: (key: string, value: string) => {
+        this.getWorkspaceConfig().setExtension(ConfigStoreAspect.id,
+          { [key]: value },
+          { ignoreVersion: true, mergeIntoExisting: true }
+        );
+      },
+      del: (key: string) => {
+        const current = this.getWorkspaceConfig().extension(ConfigStoreAspect.id, true) || {};
+        delete current[key];
+        this.getWorkspaceConfig().setExtension(ConfigStoreAspect.id, current,
+          { ignoreVersion: true, overrideExisting: true });
+      },
+      write: async () => {
+        await this.getWorkspaceConfig().write({ reasonForChange: 'store-config changes' })
+      },
+      invalidateCache: async () => {
+        // no need to invalidate anything.
+        // if this is the same process, it'll get the updated one already.
+        // if this is another process, it'll react to "this.triggerOnWorkspaceConfigChange()" anyway.
+      }
+    }
   }
 
   async getAutoTagInfo(changedComponents: ComponentIdList) {
