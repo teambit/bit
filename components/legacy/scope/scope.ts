@@ -722,6 +722,16 @@ once done, to continue working, please run "bit cc"`
       logger.debug(`scope.load, found scope at ${scopePath} from cache`);
       return Scope.scopeCache[scopePath];
     }
+    const scopeJson = await Scope.getScopeJson(scopePath);
+    const objects = await Repository.load({ scopePath, scopeJson });
+    const isBare =
+      !scopePath.endsWith(pathLib.join(BIT_HIDDEN_DIR)) && !scopePath.endsWith(pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR));
+    const scope = new Scope({ path: scopePath, scopeJson, objects, isBare });
+    Scope.scopeCache[scopePath] = scope;
+    return scope;
+  }
+
+  static async getScopeJson(scopePath: string): Promise<ScopeJson> {
     const scopeJsonPath = getScopeJsonPath(scopePath);
     const scopeJsonExist = fs.existsSync(scopeJsonPath);
     let scopeJson;
@@ -730,12 +740,13 @@ once done, to continue working, please run "bit cc"`
     } else {
       scopeJson = Scope.ensureScopeJson();
     }
-    const objects = await Repository.load({ scopePath, scopeJson });
-    const isBare =
-      !scopePath.endsWith(pathLib.join(BIT_HIDDEN_DIR)) && !scopePath.endsWith(pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR));
-    const scope = new Scope({ path: scopePath, scopeJson, objects, isBare });
-    Scope.scopeCache[scopePath] = scope;
-    return scope;
+    return scopeJson;
+  }
+
+  async reloadScopeJson() {
+    const scopeJson = await Scope.getScopeJson(this.path);
+    this.scopeJson = scopeJson;
+    this.objects.scopeJson = scopeJson;
   }
 
   public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {

@@ -243,18 +243,25 @@ export default class CommandHelper {
   updateDependencies(data: Record<string, any>, flags = '', cwd = this.scopes.localPath) {
     return this.runCmd(`bit update-dependencies '${JSON.stringify(data)}' ${flags}`, cwd);
   }
-  getConfig(configName: string) {
-    return this.runCmd(`bit config get ${configName}`);
+  getConfig(configName: string, flags = '') {
+    return this.runCmd(`bit config get ${configName} ${flags}`);
   }
-  delConfig(configName: string) {
-    return this.runCmd(`bit config del ${configName}`);
+  delConfig(configName: string, flags = '') {
+    return this.runCmd(`bit config del ${configName} ${flags}`);
+  }
+  /**
+   * don't list the global config to not leak sensitive data, such as user tokens.
+   */
+  listConfigLocally(origin: 'scope' | 'workspace'): Record<string, string> {
+    const result = this.runCmd(`bit config list --origin ${origin} --json`);
+    return JSON.parse(result);
   }
   /**
    * careful! this changes the config globally and will affect all e2e-tests.
    * try to avoid. if not possible, make sure to call `delConfig` in the `after` hook
    */
-  setConfig(configName: string, configVal: string) {
-    return this.runCmd(`bit config set ${configName} ${configVal}`);
+  setConfig(configName: string, configVal: string, flags = '') {
+    return this.runCmd(`bit config set ${configName} ${configVal} ${flags}`);
   }
   setScope(scopeName: string, component: string) {
     return this.runCmd(`bit scope set ${scopeName} ${component}`);

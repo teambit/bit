@@ -1,6 +1,6 @@
 import hash from 'object-hash';
 import yn from 'yn';
-import { getSync } from '@teambit/legacy.global-config';
+import { getConfig } from '@teambit/config-store';
 import { CFG_ANALYTICS_ANONYMOUS_KEY } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import cloneErrorObject, { systemFields } from './clone-error-object';
@@ -13,7 +13,7 @@ export function hashErrorIfNeeded(error: Error) {
     logger.warn('could not clone error', error);
   }
 
-  const shouldHash = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
+  const shouldHash = yn(getConfig(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
   if (!shouldHash) return clonedError;
   const fields = Object.getOwnPropertyNames(clonedError);
   const fieldToHash = fields.filter((field) => !systemFields.includes(field) && field !== 'message');

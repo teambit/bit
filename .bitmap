@@ -450,6 +450,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/config-merger"
     },
+    "config-store": {
+        "name": "config-store",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "components/config-store",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
+    },
     "constants": {
         "name": "constants",
         "scope": "teambit.legacy",

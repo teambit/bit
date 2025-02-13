@@ -26,6 +26,7 @@ export type ScopeJsonProps = {
   groupName: string | null | undefined;
   remotes?: { name: string; url: string };
   lanes?: { current: string; tracking: TrackLane[]; new: string[] };
+  config?: Record<string, string>;
 };
 
 export type TrackLane = { localLane: string; remoteLane: string; remoteScope: string };
@@ -41,8 +42,9 @@ export class ScopeJson {
   groupName: string;
   lanes: { tracking: TrackLane[]; new: string[] };
   hasChanged = false;
+  config?: Record<string, string>;
 
-  constructor({ name, remotes, resolverPath, hooksPath, license, groupName, version, lanes }: ScopeJsonProps) {
+  constructor({ name, remotes, resolverPath, hooksPath, license, groupName, version, lanes, config }: ScopeJsonProps) {
     this.name = name;
     this.version = version;
     this.resolverPath = resolverPath;
@@ -51,6 +53,7 @@ export class ScopeJson {
     this.remotes = remotes || {};
     this.groupName = groupName || '';
     this.lanes = lanes || { current: DEFAULT_LANE, tracking: [], new: [] };
+    this.config = config;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -72,6 +75,7 @@ export class ScopeJson {
       groupName: this.groupName,
       version: this.version,
       lanes: this.lanes,
+      config: this.config,
     });
   }
 
@@ -108,6 +112,17 @@ export class ScopeJson {
     if (!this.remotes[name]) return false;
     delete this.remotes[name];
     return true;
+  }
+
+  setConfig(key: string, value: string) {
+    if (!this.config) this.config = {};
+    this.config[key] = value;
+    this.hasChanged = true;
+  }
+  rmConfig(key: string) {
+    if (!this.config) return;
+    delete this.config[key];
+    this.hasChanged = true;
   }
 
   async write(path: string) {

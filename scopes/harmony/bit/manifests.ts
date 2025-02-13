@@ -104,6 +104,7 @@ import { HostInitializerAspect } from '@teambit/host-initializer';
 import { DoctorAspect } from '@teambit/doctor';
 import { ObjectsAspect } from '@teambit/objects';
 import { BitAspect } from './bit.aspect';
+import { ConfigStoreAspect } from '@teambit/config-store';
 
 /**
  * this is the place to register core aspects.
@@ -216,6 +217,7 @@ export const manifestsMap = {
   [HostInitializerAspect.id]: HostInitializerAspect,
   [DoctorAspect.id]: DoctorAspect,
   [ObjectsAspect.id]: ObjectsAspect,
+  [ConfigStoreAspect.id]: ConfigStoreAspect,
 };
 
 export function isCoreAspect(id: string) {
