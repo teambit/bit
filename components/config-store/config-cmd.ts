@@ -49,18 +49,43 @@ class ConfigList implements Command {
   name = 'list';
   description = 'list all configuration(s)';
   alias = '';
-  options = [] as CommandOptions;
+  options = [
+    ['o', 'origin <origin>', 'list configuration specifically from the following: [scope, workspace, global]'],
+    ['d', 'detailed', 'list all configuration(s) with the origin'],
+  ] as CommandOptions;
 
   constructor(private configStore: ConfigStoreMain) {}
 
-  async report() {
-    const conf: { [key: string]: string } = this.configStore.listConfig();
-    return Object.entries(conf)
+  async report(_, { origin, detailed }: { origin?: StoreOrigin, detailed?: boolean }) {
+
+    const objToFormattedString = (conf: Record<string, string>) => {
+      return Object.entries(conf)
       .map((tuple) => {
         tuple[0] = rightpad(tuple[0], 45, ' ');
         return tuple.join('');
       })
       .join('\n');
+    }
+
+    if (origin) {
+      const conf = this.configStore.stores[origin].list();
+      return objToFormattedString(conf);
+    }
+
+    if (detailed) {
+      const formatTitle = (str: string) => chalk.bold(str.toUpperCase());
+      const origins = Object.keys(this.configStore.stores).map((originName) => {
+        const conf = this.configStore.stores[originName].list();
+        return formatTitle(originName) + '\n' + objToFormattedString(conf);
+      }).join('\n\n');
+      const combined = this.configStore.listConfig();
+
+      const combinedFormatted = objToFormattedString(combined);
+      return `${origins}\n\n${formatTitle('All Combined')}\n${combinedFormatted}`;
+    }
+
+    const conf = this.configStore.listConfig();
+    return objToFormattedString(conf);
   }
 }
 
@@ -69,7 +94,7 @@ class ConfigDel implements Command {
   description = 'delete given key from global configuration';
   alias = '';
   options = [
-    ['o', 'origin <origin>', 'default to delete whenever it found. specify to delete specifically from the following: [scope, workspace, global]'],
+    ['o', 'origin <origin>', 'default to delete whenever it found first. specify to delete specifically from the following: [scope, workspace, global]'],
   ] as CommandOptions;
 
   constructor(private configStore: ConfigStoreMain) {}
@@ -90,13 +115,13 @@ export class ConfigCmd implements Command {
   commands: Command[] = [];
   options = [] as CommandOptions;
 
-  constructor(private configStore: ConfigStoreMain){
+  constructor(private configStore: ConfigStoreMain) {
     this.commands = [
       new ConfigSet(configStore), new ConfigDel(configStore), new ConfigGet(configStore), new ConfigList(configStore)
     ];
   }
 
   async report() {
-    return new ConfigList(this.configStore).report();
+    return new ConfigList(this.configStore).report(undefined, { });
   }
 }
