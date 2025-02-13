@@ -227,11 +227,8 @@ export function componentSchema(componentExtension: ComponentMain): Schema {
       ComponentHost: {
         get: async (host: ComponentFactory, { id }: { id: string }) => {
           try {
-            console.log("🚀 ~ get: ~ host:", host)
-            host.clearCache();
             const componentId = await host.resolveComponentId(id);
             const component = await host.get(componentId);
-            console.log("\n\n\n🚀 ~ get: ~ component consumer:", component?.state._consumer)
             return component;
           } catch {
             return null;

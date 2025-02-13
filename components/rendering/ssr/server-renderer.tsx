@@ -40,11 +40,11 @@ export class ServerRenderer {
 
     // (2) make React dom
     const reactContexts = this.getReactContexts(renderContexts);
-    const MountPoint = this.options.mountPoint;
+    const MountPointComponent = this.options.mountPoint;
     const app = (
-      <MountPoint>
+      <MountPointComponent>
         <Composer components={reactContexts}>{children}</Composer>
-      </MountPoint>
+      </MountPointComponent>
     );
 
     renderContexts = await this.triggerBeforeRender(renderContexts, app);

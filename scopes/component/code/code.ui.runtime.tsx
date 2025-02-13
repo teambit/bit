@@ -36,7 +36,7 @@ export class CodeUI {
   getCodeCompare = (props?: Partial<CodeCompareProps>) => {
     return (
       <CodeCompareEditorProvider>
-        <CodeCompare {...(props || {})} fileIconSlot={this.fileIconSlot} host={this.host} />
+        <CodeCompare {...(props || {})} fileIconSlot={this.fileIconSlot} />
       </CodeCompareEditorProvider>
     );
   };

@@ -263,7 +263,7 @@ export function CodeCompareView({
       <CodeCompareEditor
         DiffEditor={DiffEditor}
         language={language}
-        modifiedPath={`${modifiedPath}${componentCompareContext?.compare?.hasLocalChanges ?? ''}`}
+        modifiedPath={`${modifiedPath}${componentCompareContext?.compare?.hasLocalChanges ? '-local' : ''}`}
         originalPath={originalPath}
         originalFileContent={originalFileContent}
         modifiedFileContent={modifiedFileContent}
