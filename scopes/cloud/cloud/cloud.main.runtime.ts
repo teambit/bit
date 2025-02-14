@@ -388,7 +388,6 @@ export class CloudMain {
   }
 
   getAuthToken() {
-    this.configStore.invalidateCache();
     const processToken = globalFlags.token;
     const token = processToken || this.configStore.getConfig(CFG_USER_TOKEN_KEY);
     if (!token) return null;
