@@ -10,7 +10,6 @@ import {
 import {
   delSync,
   setSync,
-  invalidateCache,
   GlobalConfig,
 } from '@teambit/legacy.global-config';
 import { GlobalConfigAspect } from './global-config.aspect';
