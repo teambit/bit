@@ -792,7 +792,7 @@ export class WorkspaceComponentLoader {
 
     // temporarily mutate consumer component extensions until we remove all direct access from legacy to extensions data
     // TODO: remove this once we remove all direct access from legacy code to extensions data
-    consumerComponent.extensions = ExtensionDataList.fromArray(extensions.map((ext) => ext.clone()));
+    consumerComponent.extensions = extensions;
 
     const state = new State(
       new Config(consumerComponent),
