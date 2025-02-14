@@ -599,8 +599,8 @@
         "mz": "2.7.0",
         "react": "17.0.2",
         "react-dom": "17.0.2",
-        "react-router-dom": "^6.22.3",
-      },
+        "react-router-dom": "^6.22.3"
+      }
     },
     "linkCoreAspects": false,
     // "packageManager": "teambit.fusepm/aspects/fusepm",
@@ -621,7 +621,7 @@
       // https://github.com/garycourt/uri-js/pull/95
       // https://github.com/garycourt/uri-js/issues/97
       "uri-js": "npm:uri-js-replace",
-      "encoding": "-",
+      "encoding": "-"
     },
     "nodeVersion": "23.5.0",
     "engineStrict": true,
@@ -629,7 +629,9 @@
     // "bit compile" breaks node_modules when hard links are used.
     "packageImportMethod": "copy",
     "packageManagerArgs": [],
-    "devFilePatterns": ["**/*.spec.ts"],
+    "devFilePatterns": [
+      "**/*.spec.ts"
+    ],
     "strictPeerDependencies": true,
     "autoInstallPeers": true,
     // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
@@ -637,20 +639,26 @@
     "savePrefix": "",
     "extraArgs": [],
     "peerDependencyRules": {
-      "allowAny": ["react", "react-dom", "@testing-library/react", "@teambit/legacy", "typescript"],
-      "ignoreMissing": [],
+      "allowAny": [
+        "react", 
+        "react-dom", 
+        "@testing-library/react", 
+        "@teambit/legacy", 
+        "typescript"
+      ],
+      "ignoreMissing": []
     },
-    "capsuleSelfReference": true,
+    "capsuleSelfReference": true
   },
   "teambit.preview/preview": {
     "bundlingStrategy": "component",
-    "maxChunkSize": 10,
+    "maxChunkSize": 10
   },
   "teambit.generator/generator": {
-    "aspects": ["teambit.harmony/aspect"],
+    "aspects": ["teambit.harmony/aspect"]
   },
   "teambit.component/issues": {
-    "ignoreIssues": ["CircularDependencies"],
+    "ignoreIssues": ["CircularDependencies"]
   },
   "teambit.workspace/variants": {
     // Only component with no namespace (aka aspects in our workspace)
@@ -658,9 +666,9 @@
       "teambit.pkg/pkg": {
         "packageManagerPublishArgs": ["--access public"],
         "packageJson": {
-          "name": "@teambit/{name}",
-        },
-      },
+          "name": "@teambit/{name}"
+        }
+      }
     },
     // Only component with at least one namespace
     "{*/**}": {
@@ -668,37 +676,37 @@
         "policy": {
           "dependencies": {},
           "devDependencies": {
-            "@types/mocha": "9.1.0",
+            "@types/mocha": "9.1.0"
           },
-          "peerDependencies": {},
-        },
-      },
+          "peerDependencies": {}
+        }
+      }
     },
     // overrides for "@teambit/bit", the root package: (aka "teambit.harmony/bit")
     "scopes/harmony/bit": {
       "teambit.component/issues": {
         // This is here because in load-bit, we have to import harmony config from non main file
         // we can't expose it from the main file, since it's not browser compatible
-        "ignoreIssues": ["ImportNonMainFiles"],
+        "ignoreIssues": ["ImportNonMainFiles"]
       },
       "teambit.pkg/pkg": {
         "packageManagerPublishArgs": ["--access public"],
         "packageJson": {
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "bvm": {
-            "node": "23.5.0",
+            "node": "23.5.0"
           },
           "bin": {
-            "bbit": "bin/bit",
+            "bbit": "bin/bit"
           },
           "engines": {
-            "node": ">=18.12.0",
+            "node": ">=18.12.0"
           },
           "repository": {
             "type": "git",
-            "url": "https://github.com/teambit/bit",
-          },
-        },
+            "url": "https://github.com/teambit/bit"
+          }
+        }
       },
       "teambit.dependencies/dependency-resolver": {
         "policy": {
@@ -733,7 +741,7 @@
             // see this issue https://github.com/webpack-contrib/css-minimizer-webpack-plugin/issues/244
             "@parcel/css": "^1.8.3",
             "lightningcss": "^1.20.0",
-            "@swc/css": "^0.0.20",
+            "@swc/css": "^0.0.20"
           },
           "devDependencies": {
             // "@types/react": "-",
@@ -750,46 +758,46 @@
             "react": "-",
             "react-dom": "-",
             "react-router-dom": "-",
-            "core-js": "-",
-          },
-        },
-      },
+            "core-js": "-"
+          }
+        }
+      }
     },
     "scopes/harmony/node": {
       "teambit.component/issues": {
-        "ignoreIssues": ["ImportNonMainFiles"],
+        "ignoreIssues": ["ImportNonMainFiles"]
       },
       // TODO: remove after next tag
       "teambit.dependencies/dependency-resolver": {
-        "policy": {},
-      },
+        "policy": {}
+      }
     },
     "components/legacy": {
-      "teambit.pkg/pkg": {},
+      "teambit.pkg/pkg": {}
     },
     "components/bit": {
-      "teambit.pkg/pkg": {},
+      "teambit.pkg/pkg": {}
     },
     "components/typescript-compiler": {
-      "teambit.pkg/pkg": {},
+      "teambit.pkg/pkg": {}
     },
     "components/scope/remotes": {
-      "teambit.pkg/pkg": {},
+      "teambit.pkg/pkg": {}
     },
     "scopes/component/sources": {
-      "teambit.pkg/pkg": {},
+      "teambit.pkg/pkg": {}
     },
     "scopes/component/snap-distance": {
-      "teambit.pkg/pkg": {},
+      "teambit.pkg/pkg": {}
     },
     "scopes/scope/network": {
-      "teambit.pkg/pkg": {},
+      "teambit.pkg/pkg": {}
     },
     "scopes/scope/remote-actions": {
-      "teambit.pkg/pkg": {},
+      "teambit.pkg/pkg": {}
     },
     "components/semantics/doc-parser": {
-      "teambit.pkg/pkg": {},
-    },
-  },
+      "teambit.pkg/pkg": {}
+    }
+  }
 }
