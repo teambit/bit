@@ -54,59 +54,6 @@ export class ComponentCompareMain {
     private workspace?: Workspace
   ) { }
 
-  async compare_bk(baseIdStr: string, compareIdStr: string): Promise<ComponentCompareResult> {
-    const host = this.componentAspect.getHost();
-    const [baseCompId, compareCompId] = await host.resolveMultipleComponentIds([baseIdStr, compareIdStr]);
-    const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(compareCompId);
-
-    if (!modelComponent) {
-      throw new BitError(`component ${compareCompId.toString()} doesn't have any version yet`);
-    }
-
-    // import missing components that might be on main
-    await this.importer.importObjectsFromMainIfExist([baseCompId, compareCompId], {
-      cache: true,
-    });
-
-    const baseVersion = baseCompId.version as string;
-    const compareVersion = compareCompId.version as string;
-
-    const repository = this.scope.legacyScope.objects;
-    const baseVersionObject = await modelComponent.loadVersion(baseVersion, repository);
-    const compareVersionObject = await modelComponent.loadVersion(compareVersion, repository);
-
-    const diff: DiffResults = await this.diffBetweenVersionsObjects(
-      modelComponent,
-      baseVersionObject,
-      compareVersionObject,
-      baseVersion,
-      compareVersion,
-      {}
-    );
-
-    const baseComponent = await host.get(baseCompId);
-    const compareComponent = await host.get(compareCompId);
-
-    const baseTestFiles =
-      (baseComponent && (await this.tester.getTestFiles(baseComponent).map((file) => file.relative))) || [];
-    const compareTestFiles =
-      (compareComponent && (await this.tester.getTestFiles(compareComponent).map((file) => file.relative))) || [];
-
-    const allTestFiles = [...baseTestFiles, ...compareTestFiles];
-
-    const testFilesDiff = (diff.filesDiff || []).filter(
-      (fileDiff: FileDiff) => allTestFiles.includes(fileDiff.filePath) && fileDiff.status !== 'UNCHANGED'
-    );
-
-    const compareResult = {
-      id: `${baseCompId}-${compareCompId}`,
-      code: diff.filesDiff || [],
-      fields: diff.fieldsDiff || [],
-      tests: testFilesDiff,
-    };
-
-    return compareResult;
-  }
   async compare(baseIdStr: string, compareIdStr: string): Promise<ComponentCompareResult> {
     const host = this.componentAspect.getHost();
     const [baseCompId, compareCompId] = await host.resolveMultipleComponentIds([baseIdStr, compareIdStr]);
