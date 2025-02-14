@@ -7,7 +7,7 @@
     "defaultDirectory": "components",
     // Setting this to false since the external core aspect env uses the core aspects
     // so we need it to be installed in a capsule
-    "resolveEnvsFromRoots": false,
+    "resolveEnvsFromRoots": false
   },
   "teambit.dependencies/dependency-resolver": {
     "policy": {
@@ -419,7 +419,7 @@
         "eventsource": "^2.0.2",
         "execa": "2.1.0",
         "expose-loader": "3.1.0",
-        "express": "^4.21.0",
+        "express": "4.21.2",
         "express-graphql": "0.12.0",
         "express-history-api-fallback": "2.2.1",
         "filenamify": "4.2.0",
@@ -588,7 +588,7 @@
         "yaml": "1.10.2",
         "yargs": "17.0.1",
         "yesno": "0.4.0",
-        "yn": "2.0.0",
+        "yn": "2.0.0"
       },
       "peerDependencies": {
         "@apollo/client": "^3.6.0",
