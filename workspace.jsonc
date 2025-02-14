@@ -775,7 +775,9 @@
     },
     "scopes/harmony/node": {
       "teambit.component/issues": {
-        "ignoreIssues": ["ImportNonMainFiles"]
+        "ignoreIssues": [
+          "ImportNonMainFiles"
+        ]
       },
       // TODO: remove after next tag
       "teambit.dependencies/dependency-resolver": {
