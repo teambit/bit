@@ -7,17 +7,11 @@ import {
   CFG_CAPSULES_ROOT_BASE_DIR,
   GLOBALS_DEFAULT_CAPSULES,
 } from '@teambit/legacy.constants';
-import {
-  delSync,
-  setSync,
-  invalidateCache,
-  GlobalConfig,
-} from '@teambit/legacy.global-config';
 import { GlobalConfigAspect } from './global-config.aspect';
 import { GlobalsCmd } from './globals.cmd';
 import { SystemCmd, SystemLogCmd, SystemTailLogCmd } from './system.cmd';
 import { RemoteCmd } from './remote-cmd';
-import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect, ConfigStoreMain, setGlobalConfig, delGlobalConfig } from '@teambit/config-store';
 
 export class GlobalConfigMain {
   constructor(private configStore: ConfigStoreMain) {}
@@ -64,8 +58,8 @@ export class GlobalConfigMain {
   /**
   * @deprecated use ConfigStore.setConfig instead.
   */
-  setSync(key: string, val: string): GlobalConfig {
-    return setSync(key, val);
+  setSync(key: string, val: string) {
+    return setGlobalConfig(key, val);
   }
 /**
   * @deprecated use ConfigStore.delConfig instead.
@@ -76,8 +70,8 @@ export class GlobalConfigMain {
 /**
   * @deprecated use ConfigStore.delConfig instead.
   */
-  delSync(key: string): GlobalConfig {
-    return delSync(key);
+  delSync(key: string) {
+    return delGlobalConfig(key);
   }
 
   getGlobalCapsulesBaseDir() {
@@ -85,7 +79,7 @@ export class GlobalConfigMain {
   }
 
   invalidateCache() {
-    invalidateCache();
+    this.configStore.invalidateCache();
   }
 
   getKnownGlobalDirs() {

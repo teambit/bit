@@ -575,7 +575,7 @@ export default class Consumer {
 
   async onDestroy(reasonForBitmapChange?: string) {
     await this.cleanTmpFolder();
-    await this.scope.scopeJson.writeIfChanged(this.scope.path);
+    await this.scope.scopeJson.writeIfChanged();
     await this.writeBitMap(reasonForBitmapChange);
   }
 }

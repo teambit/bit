@@ -7,8 +7,7 @@ import { isNil, isEmpty, filter } from 'lodash';
 import { serializeError } from 'serialize-error';
 import uniqid from 'uniqid';
 import yn from 'yn';
-import { getConfig } from '@teambit/config-store';
-import { setSync } from '@teambit/legacy.global-config';
+import { getConfig, setGlobalConfig } from '@teambit/config-store';
 import { CLIArgs } from '@teambit/cli';
 import {
   CFG_ANALYTICS_ANONYMOUS_KEY,
@@ -65,7 +64,7 @@ class Analytics {
     const id = getConfig(CFG_ANALYTICS_USERID_KEY);
     if (id) return id;
     const newId = uniqid();
-    setSync(CFG_ANALYTICS_USERID_KEY, newId);
+    setGlobalConfig(CFG_ANALYTICS_USERID_KEY, newId);
     return newId;
   }
 
@@ -83,15 +82,15 @@ class Analytics {
 
     if (shouldPromptForAnalytics()) {
       const uniqId = uniqid();
-      if (!getConfig(CFG_ANALYTICS_USERID_KEY)) setSync(CFG_ANALYTICS_USERID_KEY, uniqId);
+      if (!getConfig(CFG_ANALYTICS_USERID_KEY)) setGlobalConfig(CFG_ANALYTICS_USERID_KEY, uniqId);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return analyticsPrompt().then(({ analyticsResponse }) => {
-        setSync(CFG_ANALYTICS_REPORTING_KEY, yn(analyticsResponse));
+        setGlobalConfig(CFG_ANALYTICS_REPORTING_KEY, yn(analyticsResponse));
         if (!yn(analyticsResponse)) {
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           return errorReportingPrompt().then(({ errResponse }) => {
-            return setSync(CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse));
+            return setGlobalConfig(CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse));
           });
         }
         return null;

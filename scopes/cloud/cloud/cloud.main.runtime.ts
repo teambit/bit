@@ -41,7 +41,6 @@ import { LogoutCmd } from './logout.cmd';
 import { WhoamiCmd } from './whoami.cmd';
 import { NpmrcCmd, NpmrcGenerateCmd } from './npmrc.cmd';
 import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
-import { delSync, invalidateCache, setSync } from '@teambit/legacy.global-config';
 
 export interface CloudWorkspaceConfig {
   cloudDomain: string;
@@ -275,7 +274,8 @@ export class CloudMain {
           reject(err);
         });
 
-      expressApp.get('/', (req, res) => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      expressApp.get('/', async (req, res) => {
         this.logger.debug('cloud.authListener', 'received request', req.query);
         try {
           const { clientId: clientIdFromReq, redirectUri, username: usernameFromReq } = req.query;
@@ -288,8 +288,8 @@ export class CloudMain {
             res.status(400).send('Invalid token format');
             return res;
           }
-          setSync(CFG_USER_TOKEN_KEY, token);
-          if (username) setSync(CFG_USER_NAME_KEY, username);
+          await this.configStore.setConfig(CFG_USER_TOKEN_KEY, token);
+          if (username) await this.configStore.setConfig(CFG_USER_NAME_KEY, username);
 
           const existing = this.authListenerByPort.get(port) ?? {};
           this.authListenerByPort.set(port, {
@@ -301,7 +301,7 @@ export class CloudMain {
           });
 
           const onLoggedInFns = this.onSuccessLoginSlot.values();
-          const updatedConfigs = this.updateGlobalConfigOnLogin(cloudDomain);
+          const updatedConfigs = await this.updateGlobalConfigOnLogin(cloudDomain);
 
           if (!skipConfigUpdate) {
             this.updateNpmConfig({ authToken: token as string, username: username as string })
@@ -388,7 +388,6 @@ export class CloudMain {
   }
 
   getAuthToken() {
-    invalidateCache();
     const processToken = globalFlags.token;
     const token = processToken || this.configStore.getConfig(CFG_USER_TOKEN_KEY);
     if (!token) return null;
@@ -481,16 +480,16 @@ export class CloudMain {
     return res;
   }
 
-  private updateGlobalConfigOnLogin(domain?: string) {
+  private async updateGlobalConfigOnLogin(domain?: string) {
     const configsToUpdate = this.globalConfigsToUpdateOnLogin(domain);
 
-    Object.entries(configsToUpdate).forEach(([key, value]) => {
+    for await (const [key, value] of Object.entries(configsToUpdate)) {
       if (value) {
-        setSync(key, value);
+        await this.configStore.setConfig(key, value);
       } else {
-        delSync(key);
+        await this.configStore.delConfig(key);
       }
-    });
+    }
     // Refresh the config after updating
     clearCachedUrls();
     this.config = CloudMain.calculateConfig();

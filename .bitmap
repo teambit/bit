@@ -1731,13 +1731,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/logger"
     },
-    "teambit.legacy/global-config": {
-        "name": "global-config",
-        "scope": "teambit.legacy",
-        "version": "0.0.11",
-        "mainFile": "index.ts",
-        "rootDir": "components/legacy/global-config"
-    },
     "teambit.legacy/logger": {
         "name": "logger",
         "scope": "teambit.legacy",
