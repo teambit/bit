@@ -5,9 +5,8 @@ import { InvalidScopeName } from '@teambit/legacy-bit-id';
 import path from 'path';
 import { AUTO_SNAPPED_MSG, IMPORT_PENDING_MSG } from '@teambit/legacy.constants';
 import { LANE_KEY } from '@teambit/legacy.bit-map';
-import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../../npm-ci-registry';
+import { Helper, fixtures, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import { FetchMissingHistory } from '@teambit/scope.remote-actions';
 
 chai.use(require('chai-fs'));
