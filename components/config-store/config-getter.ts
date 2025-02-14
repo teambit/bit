@@ -1,6 +1,6 @@
 import gitconfig from '@teambit/gitconfig';
 import { isNil } from 'lodash';
-import { getGlobalConfigPath, GlobalConfig } from '@teambit/legacy.global-config';
+import { getGlobalConfigPath, GlobalConfig } from './global-config';
 
 export const ENV_VARIABLE_CONFIG_PREFIX = 'BIT_CONFIG_';
 

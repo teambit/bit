@@ -7,7 +7,7 @@ export function getGlobalConfigPath() {
   return path.join(GLOBAL_CONFIG, GLOBAL_CONFIG_FILE);
 }
 
-export default class Config extends Map<string, string> {
+export class GlobalConfig extends Map<string, string> {
   toPlainObject() {
     return mapToObject(this);
   }
@@ -24,27 +24,27 @@ export default class Config extends Map<string, string> {
     return fs.outputFileSync(getGlobalConfigPath(), this.toJson());
   }
 
-  static loadSync(): Config {
+  static loadSync(): GlobalConfig {
     const configPath = getGlobalConfigPath();
     if (!fs.existsSync(configPath)) {
-      const config = new Config([]);
+      const config = new GlobalConfig([]);
       config.writeSync();
       return config;
     }
     const contents = fs.readFileSync(configPath);
-    return new Config(Object.entries(JSON.parse(contents.toString())));
+    return new GlobalConfig(Object.entries(JSON.parse(contents.toString())));
   }
 
-  static async load(): Promise<Config> {
+  static async load(): Promise<GlobalConfig> {
     const configPath = getGlobalConfigPath();
     const exists = await fs.pathExists(configPath);
     if (!exists) {
-      const config = new Config([]);
+      const config = new GlobalConfig([]);
       await config.write();
       return config;
     }
     const contents = await fs.readFile(configPath);
-    return new Config(Object.entries(JSON.parse(contents.toString())));
+    return new GlobalConfig(Object.entries(JSON.parse(contents.toString())));
   }
 }
 
