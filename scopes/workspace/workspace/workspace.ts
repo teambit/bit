@@ -391,7 +391,8 @@ export class Workspace implements ComponentFactory {
         // no need to invalidate anything.
         // if this is the same process, it'll get the updated one already.
         // if this is another process, it'll react to "this.triggerOnWorkspaceConfigChange()" anyway.
-      }
+      },
+      getPath: () => this.getWorkspaceConfig().path,
     }
   }
 

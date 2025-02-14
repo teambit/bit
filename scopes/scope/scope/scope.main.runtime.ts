@@ -48,7 +48,6 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { compact, slice, difference, partition } from 'lodash';
-import { getGlobalConfigPath } from '@teambit/legacy.global-config';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
@@ -499,8 +498,10 @@ export class ScopeMain implements ComponentFactory {
   async watchScopeInternalFiles(watchOptions: WatchOptions = {}) {
     const scopeIndexFile = this.legacyScope.objects.scopeIndex.getPath();
     const remoteLanesDir = this.legacyScope.objects.remoteLanes.basePath;
-    const globalConfigFile = getGlobalConfigPath();
-    const scopeJsonPath = this.legacyScope.scopeJson.scopeJsonPath;
+    const globalStore = this.configStore.stores.global;
+    const scopeStore = this.configStore.stores.scope;
+    const globalConfigFile = globalStore.getPath();
+    const scopeJsonPath = scopeStore.getPath();
     const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile, scopeJsonPath];
     const watcher = chokidar.watch(pathsToWatch, watchOptions);
     watcher.on('ready', () => {
@@ -515,11 +516,11 @@ export class ScopeMain implements ComponentFactory {
         this.legacyScope.objects.remoteLanes.removeFromCacheByFilePath(filePath);
       } else if (filePath === globalConfigFile) {
         this.logger.debug('global config file has been changed, invalidating its cache');
-        await this.configStore.stores.global.invalidateCache();
+        await globalStore.invalidateCache();
         this.configStore.invalidateCache();
       } else if (filePath === scopeJsonPath) {
         this.logger.debug('scope.json file has been changed, reloading it');
-        await this.configStore.stores.scope.invalidateCache();
+        await scopeStore.invalidateCache();
         this.configStore.invalidateCache();
       } else {
         this.logger.error(
@@ -1193,7 +1194,8 @@ export class ScopeMain implements ComponentFactory {
       },
       invalidateCache: async () => {
         await this.legacyScope.reloadScopeJson();
-      }
+      },
+      getPath: () => this.legacyScope.scopeJson.scopeJsonPath,
     }
   }
 
