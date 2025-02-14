@@ -1,4 +1,3 @@
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import mapSeries from 'p-map-series';
 import path from 'path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -67,6 +66,7 @@ import CatObjectCmd from './debug-commands/cat-object-cmd';
 import CatLaneCmd from './debug-commands/cat-lane-cmd';
 import { RunActionCmd } from './run-action/run-action.cmd';
 import { ScopeGarbageCollectorCmd } from './_scope-garbage-collector.cmd';
+import { ConfigStoreAspect, ConfigStoreMain, Store } from '@teambit/config-store';
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
@@ -171,7 +171,7 @@ export class ScopeMain implements ComponentFactory {
 
     private dependencyResolver: DependencyResolverMain,
 
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {
     this.componentLoader = new ScopeComponentLoader(this, this.logger);
   }
@@ -391,7 +391,7 @@ export class ScopeMain implements ComponentFactory {
       this.envs,
       this.isolator,
       this.logger,
-      this.globalConfig
+      this.configStore
     );
     return scopeAspectsLoader;
   }
@@ -1173,6 +1173,24 @@ export class ScopeMain implements ComponentFactory {
     return path.join(this.path, 'last-merged');
   }
 
+  getConfigStore(): Store {
+    return {
+      list: () => this.legacyScope.scopeJson.config || {},
+      set: (key: string, value: string) => {
+        this.legacyScope.scopeJson.setConfig(key, value);
+      },
+      del: (key: string) => {
+        this.legacyScope.scopeJson.rmConfig(key);
+      },
+      write: async () => {
+        await this.legacyScope.scopeJson.writeIfChanged(this.path);
+      },
+      invalidateCache: async () => {
+        await this.legacyScope.reloadScopeJson();
+      }
+    }
+  }
+
   async isModified(): Promise<boolean> {
     return false;
   }
@@ -1211,7 +1229,7 @@ export class ScopeMain implements ComponentFactory {
     LoggerAspect,
     EnvsAspect,
     DependencyResolverAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
   ];
 
   static defaultConfig: ScopeConfig = {
@@ -1219,7 +1237,8 @@ export class ScopeMain implements ComponentFactory {
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver, globalConfig]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver,
+      configStore]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -1230,7 +1249,7 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain,
       EnvsMain,
       DependencyResolverMain,
-      GlobalConfigMain,
+      ConfigStoreMain
     ],
     config: ScopeConfig,
     [
@@ -1276,8 +1295,9 @@ export class ScopeMain implements ComponentFactory {
       logger,
       envs,
       depsResolver,
-      globalConfig
+      configStore
     );
+    configStore.addStore('scope', scope.getConfigStore());
     cli.register(...allCommands, new ScopeGarbageCollectorCmd(scope));
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;

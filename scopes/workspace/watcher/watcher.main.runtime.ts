@@ -1,7 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { WatchOptions as ChokidarWatchOptions } from 'chokidar';
 import { SlotRegistry, Slot } from '@teambit/harmony';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { ComponentID } from '@teambit/component-id';
 import { IpcEventsAspect, IpcEventsMain } from '@teambit/ipc-events';
@@ -13,6 +12,7 @@ import pMapSeries from 'p-map-series';
 import { WatchCommand } from './watch.cmd';
 import { Watcher, WatchOptions } from './watcher';
 import { WatcherAspect } from './watcher.aspect';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 
 export type OnPreWatch = (componentIds: ComponentID[], watchOpts: WatchOptions) => Promise<void>;
 export type OnPreWatchSlot = SlotRegistry<OnPreWatch>;
@@ -25,7 +25,7 @@ export class WatcherMain {
     private onPreWatchSlot: OnPreWatchSlot,
     readonly ipcEvents: IpcEventsMain,
     readonly logger: Logger,
-    readonly globalConfig: GlobalConfigMain
+    readonly configStore: ConfigStoreMain
   ) {}
 
   async watch(opts: WatchOptions) {
@@ -35,7 +35,7 @@ export class WatcherMain {
   }
 
   async getChokidarWatchOptions(): Promise<ChokidarWatchOptions> {
-    const usePollingConf = await this.globalConfig.get(CFG_WATCH_USE_POLLING);
+    const usePollingConf = this.configStore.getConfig(CFG_WATCH_USE_POLLING);
     const usePolling = usePollingConf === 'true';
     return {
       ignoreInitial: true,
@@ -69,25 +69,25 @@ export class WatcherMain {
     PubsubAspect,
     LoggerAspect,
     IpcEventsAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
   ];
   static runtime = MainRuntime;
 
   static async provider(
-    [cli, workspace, scope, pubsub, loggerMain, ipcEvents, globalConfig]: [
+    [cli, workspace, scope, pubsub, loggerMain, ipcEvents, configStore]: [
       CLIMain,
       Workspace,
       ScopeMain,
       PubsubMain,
       LoggerMain,
       IpcEventsMain,
-      GlobalConfigMain,
+      ConfigStoreMain,
     ],
     _,
     [onPreWatchSlot]: [OnPreWatchSlot]
   ) {
     const logger = loggerMain.createLogger(WatcherAspect.id);
-    const watcherMain = new WatcherMain(workspace, scope, pubsub, onPreWatchSlot, ipcEvents, logger, globalConfig);
+    const watcherMain = new WatcherMain(workspace, scope, pubsub, onPreWatchSlot, ipcEvents, logger, configStore);
     const watchCmd = new WatchCommand(pubsub, logger, watcherMain);
     cli.register(watchCmd);
     return watcherMain;

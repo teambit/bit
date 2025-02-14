@@ -18,7 +18,6 @@ import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-w
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { compact } from 'lodash';
 import {
   ApplyVersionWithComps,
@@ -49,6 +48,7 @@ import {
   MergeResultsThreeWay,
   MergeOptions,
 } from './merge-version';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 
 type ResolveUnrelatedData = {
   strategy: MergeStrategy;
@@ -721,7 +721,7 @@ export class MergingMain {
     ImporterAspect,
     ConfigAspect,
     RemoveAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
     ConfigMergerAspect,
     DependencyResolverAspect,
   ];
@@ -738,7 +738,7 @@ export class MergingMain {
     importer,
     config,
     remove,
-    globalConfig,
+    configStore,
     configMerger,
     depResolver,
   ]: [
@@ -753,7 +753,7 @@ export class MergingMain {
     ImporterMain,
     ConfigMain,
     RemoveMain,
-    GlobalConfigMain,
+    ConfigStoreMain,
     ConfigMergerMain,
     DependencyResolverMain,
   ]) {
@@ -772,7 +772,7 @@ export class MergingMain {
       configMerger,
       depResolver
     );
-    cli.register(new MergeCmd(merging, globalConfig));
+    cli.register(new MergeCmd(merging, configStore));
     return merging;
   }
 }

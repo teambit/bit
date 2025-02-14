@@ -115,6 +115,7 @@ import {
   ComponentStatusResult,
 } from './workspace-component/component-status-loader';
 import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
+import { ConfigStoreAspect, ConfigStoreMain, Store } from '@teambit/config-store';
 
 export type EjectConfResult = {
   configPath: string;
@@ -247,7 +248,9 @@ export class Workspace implements ComponentFactory {
 
     private onBitmapChangeSlot: OnBitmapChangeSlot,
 
-    private onWorkspaceConfigChangeSlot: OnWorkspaceConfigChangeSlot
+    private onWorkspaceConfigChangeSlot: OnWorkspaceConfigChangeSlot,
+
+    private configStore: ConfigStoreMain
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
@@ -363,6 +366,33 @@ export class Workspace implements ComponentFactory {
 
   get icon() {
     return this.config.icon;
+  }
+
+
+  getConfigStore(): Store {
+    return {
+      list: () => this.getWorkspaceConfig().extension(ConfigStoreAspect.id, true) || {},
+      set: (key: string, value: string) => {
+        this.getWorkspaceConfig().setExtension(ConfigStoreAspect.id,
+          { [key]: value },
+          { ignoreVersion: true, mergeIntoExisting: true }
+        );
+      },
+      del: (key: string) => {
+        const current = this.getWorkspaceConfig().extension(ConfigStoreAspect.id, true) || {};
+        delete current[key];
+        this.getWorkspaceConfig().setExtension(ConfigStoreAspect.id, current,
+          { ignoreVersion: true, overrideExisting: true });
+      },
+      write: async () => {
+        await this.getWorkspaceConfig().write({ reasonForChange: 'store-config changes' })
+      },
+      invalidateCache: async () => {
+        // no need to invalidate anything.
+        // if this is the same process, it'll get the updated one already.
+        // if this is another process, it'll react to "this.triggerOnWorkspaceConfigChange()" anyway.
+      }
+    }
   }
 
   async getAutoTagInfo(changedComponents: ComponentIdList) {
@@ -1682,7 +1712,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   getWorkspaceAspectsLoader(): WorkspaceAspectsLoader {
     let resolveEnvsFromRoots = this.config.resolveEnvsFromRoots;
     if (resolveEnvsFromRoots === undefined) {
-      const resolveEnvsFromRootsConfig = this.globalConfig.getSync(CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS);
+      const resolveEnvsFromRootsConfig = this.configStore.getConfig(CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS);
       const defaultResolveEnvsFromRoots: boolean =
         // @ts-ignore
         resolveEnvsFromRootsConfig === 'true' || resolveEnvsFromRootsConfig === true;
@@ -1696,7 +1726,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.envs,
       this.dependencyResolver,
       this.logger,
-      this.globalConfig,
+      this.configStore,
       this.harmony,
       this.onAspectsResolveSlot,
       this.onRootAspectAddedSlot,
@@ -1796,7 +1826,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     errMsgPrefix: string
   ): Promise<ComponentID | undefined> {
     const url = `https://node-registry.bit.cloud/${packageName}`;
-    const token = await this.globalConfig.get(CFG_USER_TOKEN_KEY);
+    const token = this.configStore.getConfig(CFG_USER_TOKEN_KEY);
     const headers = token ? getAuthHeader(token) : {};
     const res = await fetch(url, { headers });
     if (!res.ok) {

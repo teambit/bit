@@ -75,6 +75,87 @@
     "private": false
   },
   {
+    "name": "config",
+    "alias": "",
+    "options": [],
+    "description": "config management",
+    "extendedDescription": "https://bit.dev/reference/config/bit-config",
+    "group": "general",
+    "private": false,
+    "commands": [
+      {
+        "name": "set <key> <val>",
+        "alias": "",
+        "options": [
+          [
+            "l",
+            "local",
+            "set the configuration in the current scope (saved in .bit/scope.json)"
+          ],
+          [
+            "t",
+            "local-track",
+            "set the configuration in the current workspace (saved in workspace.jsonc)"
+          ]
+        ],
+        "description": "set a configuration. default to save it globally",
+        "extendedDescription": "to set temporary configuration by env variable, prefix with \"BIT_CONFIG\", replace \".\" with \"_\" and change to upper case.\nfor example, \"user.token\" becomes \"BIT_CONFIG_USER_TOKEN\"",
+        "group": "ungrouped",
+        "private": false,
+        "skipWorkspace": true
+      },
+      {
+        "name": "del <key>",
+        "alias": "",
+        "options": [
+          [
+            "o",
+            "origin <origin>",
+            "default to delete whenever it found first. specify to delete specifically from the following: [scope, workspace, global]"
+          ]
+        ],
+        "description": "delete given key from global configuration",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false
+      },
+      {
+        "name": "get <key>",
+        "alias": "",
+        "options": [],
+        "description": "get a value from global configuration",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false
+      },
+      {
+        "name": "list",
+        "alias": "",
+        "options": [
+          [
+            "o",
+            "origin <origin>",
+            "list configuration specifically from the following: [scope, workspace, global]"
+          ],
+          [
+            "d",
+            "detailed",
+            "list all configuration(s) with the origin"
+          ],
+          [
+            "j",
+            "json",
+            "output as JSON"
+          ]
+        ],
+        "description": "list all configuration(s)",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false
+      }
+    ]
+  },
+  {
     "name": "doctor [diagnosis-name]",
     "alias": "",
     "options": [
@@ -199,145 +280,6 @@
     "group": "start",
     "private": false,
     "skipWorkspace": true
-  },
-  {
-    "name": "globals",
-    "alias": "",
-    "options": [
-      [
-        "j",
-        "json",
-        "json format"
-      ]
-    ],
-    "description": "list all globals",
-    "extendedDescription": "",
-    "group": "workspace",
-    "private": false
-  },
-  {
-    "name": "system <sub-command>",
-    "alias": "",
-    "options": [],
-    "description": "system operations",
-    "extendedDescription": "",
-    "group": "workspace",
-    "private": false,
-    "commands": [
-      {
-        "name": "log",
-        "alias": "",
-        "options": [],
-        "description": "print debug.log to the screen",
-        "extendedDescription": "",
-        "group": "workspace",
-        "private": false
-      },
-      {
-        "name": "tail-log",
-        "alias": "",
-        "options": [],
-        "description": "print the log file to the screen as it is being written",
-        "extendedDescription": "similar to linux \"tail -f\" command",
-        "group": "workspace",
-        "private": false
-      }
-    ]
-  },
-  {
-    "name": "config",
-    "alias": "",
-    "options": [],
-    "description": "global config management",
-    "extendedDescription": "https://bit.dev/reference/config/bit-config",
-    "group": "general",
-    "private": false,
-    "commands": [
-      {
-        "name": "set <key> <val>",
-        "alias": "",
-        "options": [],
-        "description": "set a global configuration",
-        "extendedDescription": "to set temporary configuration by env variable, prefix with \"BIT_CONFIG\", replace \".\" with \"_\" and change to upper case.\nfor example, \"user.token\" becomes \"BIT_CONFIG_USER_TOKEN\"",
-        "group": "ungrouped",
-        "private": false,
-        "skipWorkspace": true
-      },
-      {
-        "name": "del <key>",
-        "alias": "",
-        "options": [],
-        "description": "delete given key from global configuration",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false
-      },
-      {
-        "name": "get <key>",
-        "alias": "",
-        "options": [],
-        "description": "get a value from global configuration",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false
-      },
-      {
-        "name": "list",
-        "alias": "",
-        "options": [],
-        "description": "list all configuration(s)",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false
-      }
-    ]
-  },
-  {
-    "name": "remote",
-    "alias": "",
-    "options": [
-      [
-        "g",
-        "global",
-        "see globally configured remotes"
-      ]
-    ],
-    "description": "manage set of tracked bit scope(s)",
-    "extendedDescription": "",
-    "group": "collaborate",
-    "private": false,
-    "commands": [
-      {
-        "name": "add <url>",
-        "alias": "",
-        "options": [
-          [
-            "g",
-            "global",
-            "configure a remote bit scope"
-          ]
-        ],
-        "description": "add a bare-scope as a remote",
-        "extendedDescription": "supported protocols are [file, http].\nfor example: \"http://localhost:3000\", \"file:///tmp/local-scope\"",
-        "group": "ungrouped",
-        "private": false
-      },
-      {
-        "name": "del <name>",
-        "alias": "",
-        "options": [
-          [
-            "g",
-            "global",
-            "remove a globally configured remote scope"
-          ]
-        ],
-        "description": "remove a tracked bit remote",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false
-      }
-    ]
   },
   {
     "name": "show <component-name>",
@@ -528,6 +470,97 @@
             "description": "update all components that use scope.org/env to version 2.0.0 (of this env)."
           }
         ]
+      }
+    ]
+  },
+  {
+    "name": "globals",
+    "alias": "",
+    "options": [
+      [
+        "j",
+        "json",
+        "json format"
+      ]
+    ],
+    "description": "list all globals",
+    "extendedDescription": "",
+    "group": "workspace",
+    "private": false
+  },
+  {
+    "name": "system <sub-command>",
+    "alias": "",
+    "options": [],
+    "description": "system operations",
+    "extendedDescription": "",
+    "group": "workspace",
+    "private": false,
+    "commands": [
+      {
+        "name": "log",
+        "alias": "",
+        "options": [],
+        "description": "print debug.log to the screen",
+        "extendedDescription": "",
+        "group": "workspace",
+        "private": false
+      },
+      {
+        "name": "tail-log",
+        "alias": "",
+        "options": [],
+        "description": "print the log file to the screen as it is being written",
+        "extendedDescription": "similar to linux \"tail -f\" command",
+        "group": "workspace",
+        "private": false
+      }
+    ]
+  },
+  {
+    "name": "remote",
+    "alias": "",
+    "options": [
+      [
+        "g",
+        "global",
+        "see globally configured remotes"
+      ]
+    ],
+    "description": "manage set of tracked bit scope(s)",
+    "extendedDescription": "",
+    "group": "collaborate",
+    "private": false,
+    "commands": [
+      {
+        "name": "add <url>",
+        "alias": "",
+        "options": [
+          [
+            "g",
+            "global",
+            "configure a remote bit scope"
+          ]
+        ],
+        "description": "add a bare-scope as a remote",
+        "extendedDescription": "supported protocols are [file, http].\nfor example: \"http://localhost:3000\", \"file:///tmp/local-scope\"",
+        "group": "ungrouped",
+        "private": false
+      },
+      {
+        "name": "del <name>",
+        "alias": "",
+        "options": [
+          [
+            "g",
+            "global",
+            "remove a globally configured remote scope"
+          ]
+        ],
+        "description": "remove a tracked bit remote",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false
       }
     ]
   },
