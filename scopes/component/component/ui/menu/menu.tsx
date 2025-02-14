@@ -1,6 +1,7 @@
 import React, { useMemo, ReactNode } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import classnames from 'classnames';
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { compact, flatten, groupBy, isFunction, orderBy } from 'lodash';
 import * as semver from 'semver';
 import { SlotRegistry } from '@teambit/harmony';
@@ -89,7 +90,7 @@ export function ComponentMenu({
   navigationSlot,
   widgetSlot,
   className,
-  host,
+  host: hostFromProps,
   menuItemSlot,
   consumeMethodSlot,
   rightSideMenuSlot,
@@ -112,8 +113,11 @@ export function ComponentMenu({
   const rightSideItems = useMemo(() => orderBy(flatten(rightSideMenuSlot.values()), 'order'), [rightSideMenuSlot]);
   const pinnedWidgets = useMemo(
     () => flatten(pinnedWidgetSlot.toArray().sort(sortFn).map(([, pinnedWidget]) => pinnedWidget)), [pinnedWidgetSlot]);
-
   const componentFilters = useComponentFilters?.() || {};
+  const query = useQuery();
+  const componentVersion = query.get('version');
+  const host = componentVersion ? 'teambit.scope/scope' : hostFromProps
+
   const useComponentVersions = defaultLoadVersions(
     host,
     componentId?.toString() || componentIdStrWithScopeFromLocation,
@@ -126,7 +130,7 @@ export function ComponentMenu({
       {RightNode || (
         <>
           <VersionRelatedDropdowns
-            host={host}
+            host={hostFromProps}
             consumeMethods={consumeMethodSlot}
             componentId={componentId?.toString() || idFromLocation}
             useComponent={useComponentVersions}
@@ -257,7 +261,7 @@ export function defaultLoadVersions(
         buildStatus: component?.buildStatus,
       };
     },
-    [componentId, loadingFromProps, componentFilters]
+    [componentId, loadingFromProps, componentFilters, host]
   );
 }
 

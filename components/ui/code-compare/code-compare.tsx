@@ -35,21 +35,22 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
 
   // todo - look into this loading flag where it needs to be used
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { base, compare, state: compareState, hooks: compareHooks, hidden, loading } = componentCompareContext || {};
+  const { base, compare, state: compareState, hooks: compareHooks, hidden, loading,  } = componentCompareContext || {};
 
   const state = compareState?.code;
   const hook = compareHooks?.code;
 
   const [isSidebarOpen, setSidebarOpenness] = useState(false);
-
-  const { fileTree: baseFileTree = [], mainFile } = useCode(hidden ? undefined : base?.model.id);
-  const { fileTree: compareFileTree = [] } = useCode(hidden ? undefined : compare?.model.id);
+  const baseHost = 'teambit.scope/scope';
+  const compareHost = compare?.hasLocalChanges ? 'teambit.workspace/workspace' : 'teambit.scope/scope';
+  const { fileTree: baseFileTree = [], mainFile } = useCode(hidden ? undefined : base?.model.id, baseHost);
+  const { fileTree: compareFileTree = [] } = useCode(hidden ? undefined : compare?.model.id, compareHost);
 
   const fileCompareDataByName = componentCompareContext?.fileCompareDataByName;
   const anyFileHasDiffStatus = useRef<boolean>(false);
 
   const fileTree = useMemo(() => {
-    const allFiles = uniq(baseFileTree.concat(compareFileTree));
+    const allFiles = uniq<string>(baseFileTree.concat(compareFileTree));
     anyFileHasDiffStatus.current = false;
     // sort by diff status
     return !fileCompareDataByName

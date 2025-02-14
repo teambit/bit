@@ -44,8 +44,8 @@ export class UiUI {
     const routes = this.router.renderRoutes(uiRoot.routes);
     const hudItems = this.hudSlot.values();
     const lifecyclePlugins = this.getLifecyclePlugins();
-
-    const reactSsr = new BrowserRenderer(lifecyclePlugins);
+    
+    const reactSsr = new BrowserRenderer(lifecyclePlugins, undefined, rootExtension);
     await reactSsr.render(
       <ClientContext>
         {hudItems}
