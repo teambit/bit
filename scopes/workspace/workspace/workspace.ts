@@ -921,6 +921,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     const configOfDepResolverAspect = workspaceConfig.extensions.findExtension(DependencyResolverAspect.id);
     if (configOfDepResolverAspect) this.dependencyResolver.setConfig(configOfDepResolverAspect.config as any);
     this.dependencyResolver.clearCache();
+    this.configStore.invalidateCache();
 
     const onWorkspaceConfigChangeEntries = this.onWorkspaceConfigChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     await mapSeries(onWorkspaceConfigChangeEntries, async ([, onWorkspaceConfigFunc]) => {
