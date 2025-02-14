@@ -56,7 +56,6 @@ import { ComponentTreeAspect } from '@teambit/component-tree';
 import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
 import { PrettierAspect } from '@teambit/prettier';
-import { SignAspect } from '@teambit/sign';
 import { WorkerAspect } from '@teambit/worker';
 import { GlobalConfigAspect } from '@teambit/global-config';
 import { MultiCompilerAspect } from '@teambit/multi-compiler';
@@ -174,7 +173,6 @@ export const manifestsMap = {
   [CommandBarAspect.id]: CommandBarAspect,
   [SidebarAspect.id]: SidebarAspect,
   [ComponentTreeAspect.id]: ComponentTreeAspect,
-  [SignAspect.id]: SignAspect,
   [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
   [ExportAspect.id]: ExportAspect,
   [ImporterAspect.id]: ImporterAspect,

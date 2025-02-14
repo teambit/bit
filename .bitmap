@@ -737,6 +737,13 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/git/git"
     },
+    "global-config": {
+        "name": "global-config",
+        "scope": "teambit.harmony",
+        "version": "0.0.1124",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/global-config"
+    },
     "graph": {
         "name": "graph",
         "scope": "teambit.component",
@@ -1626,13 +1633,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/sidebar"
     },
-    "sign": {
-        "name": "sign",
-        "scope": "teambit.scope",
-        "version": "1.0.545",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/scope/sign"
-    },
     "snap-distance": {
         "name": "snap-distance",
         "scope": "teambit.component",
@@ -1716,13 +1716,6 @@
         "version": "0.0.26",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/tagged-exports"
-    },
-    "teambit.harmony/global-config": {
-        "name": "global-config",
-        "scope": "teambit.harmony",
-        "version": "0.0.1124",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/global-config"
     },
     "teambit.harmony/logger": {
         "name": "logger",
