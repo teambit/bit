@@ -2067,13 +2067,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/hooks/use-core-aspects"
     },
-    "ui/hooks/use-user-agent": {
-        "name": "ui/hooks/use-user-agent",
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.199",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/hooks/use-user-agent"
-    },
     "ui/inputs/lane-selector": {
         "name": "ui/inputs/lane-selector",
         "scope": "teambit.lanes",
