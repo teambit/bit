@@ -10,7 +10,6 @@ import {
 import {
   delSync,
   setSync,
-  invalidateCache,
   GlobalConfig,
 } from '@teambit/legacy.global-config';
 import { GlobalConfigAspect } from './global-config.aspect';
@@ -85,7 +84,7 @@ export class GlobalConfigMain {
   }
 
   invalidateCache() {
-    invalidateCache();
+    this.configStore.invalidateCache();
   }
 
   getKnownGlobalDirs() {

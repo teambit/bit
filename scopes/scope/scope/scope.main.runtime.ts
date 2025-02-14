@@ -48,7 +48,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { compact, slice, difference, partition } from 'lodash';
-import { invalidateCache, getGlobalConfigPath } from '@teambit/legacy.global-config';
+import { getGlobalConfigPath } from '@teambit/legacy.global-config';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
@@ -500,7 +500,8 @@ export class ScopeMain implements ComponentFactory {
     const scopeIndexFile = this.legacyScope.objects.scopeIndex.getPath();
     const remoteLanesDir = this.legacyScope.objects.remoteLanes.basePath;
     const globalConfigFile = getGlobalConfigPath();
-    const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile];
+    const scopeJsonPath = this.legacyScope.scopeJson.scopeJsonPath;
+    const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile, scopeJsonPath];
     const watcher = chokidar.watch(pathsToWatch, watchOptions);
     watcher.on('ready', () => {
       this.logger.debug(`watchSystemFiles has started, watching ${pathsToWatch.join(', ')}`);
@@ -514,7 +515,12 @@ export class ScopeMain implements ComponentFactory {
         this.legacyScope.objects.remoteLanes.removeFromCacheByFilePath(filePath);
       } else if (filePath === globalConfigFile) {
         this.logger.debug('global config file has been changed, invalidating its cache');
-        invalidateCache();
+        await this.configStore.stores.global.invalidateCache();
+        this.configStore.invalidateCache();
+      } else if (filePath === scopeJsonPath) {
+        this.logger.debug('scope.json file has been changed, reloading it');
+        await this.configStore.stores.scope.invalidateCache();
+        this.configStore.invalidateCache();
       } else {
         this.logger.error(
           'unknown file has been changed, please check why it is watched by scope.watchSystemFiles',
@@ -1183,7 +1189,7 @@ export class ScopeMain implements ComponentFactory {
         this.legacyScope.scopeJson.rmConfig(key);
       },
       write: async () => {
-        await this.legacyScope.scopeJson.writeIfChanged(this.path);
+        await this.legacyScope.scopeJson.writeIfChanged();
       },
       invalidateCache: async () => {
         await this.legacyScope.reloadScopeJson();
