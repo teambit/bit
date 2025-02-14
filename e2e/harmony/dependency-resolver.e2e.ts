@@ -4,8 +4,7 @@ import { Modules, readModulesManifest } from '@pnpm/modules-yaml';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import rimraf from 'rimraf';
 import { Extensions } from '@teambit/legacy.constants';
-import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, fixtures, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
