@@ -640,10 +640,10 @@
     "extraArgs": [],
     "peerDependencyRules": {
       "allowAny": [
-        "react", 
-        "react-dom", 
-        "@testing-library/react", 
-        "@teambit/legacy", 
+        "react",
+        "react-dom",
+        "@testing-library/react",
+        "@teambit/legacy",
         "typescript"
       ],
       "ignoreMissing": []
@@ -655,16 +655,22 @@
     "maxChunkSize": 10
   },
   "teambit.generator/generator": {
-    "aspects": ["teambit.harmony/aspect"]
+    "aspects": [
+      "teambit.harmony/aspect"
+    ]
   },
   "teambit.component/issues": {
-    "ignoreIssues": ["CircularDependencies"]
+    "ignoreIssues": [
+      "CircularDependencies"
+    ]
   },
   "teambit.workspace/variants": {
     // Only component with no namespace (aka aspects in our workspace)
     "*,!{*/**}": {
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": ["--access public"],
+        "packageManagerPublishArgs": [
+          "--access public"
+        ],
         "packageJson": {
           "name": "@teambit/{name}"
         }
@@ -687,10 +693,14 @@
       "teambit.component/issues": {
         // This is here because in load-bit, we have to import harmony config from non main file
         // we can't expose it from the main file, since it's not browser compatible
-        "ignoreIssues": ["ImportNonMainFiles"]
+        "ignoreIssues": [
+          "ImportNonMainFiles"
+        ]
       },
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": ["--access public"],
+        "packageManagerPublishArgs": [
+          "--access public"
+        ],
         "packageJson": {
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "bvm": {
