@@ -626,7 +626,7 @@
       "uri-js": "npm:uri-js-replace",
       "encoding": "-"
     },
-    "nodeVersion": "23.5.0",
+    "nodeVersion": "22.14.0",
     "engineStrict": true,
     // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     // "bit compile" breaks node_modules when hard links are used.
@@ -707,7 +707,7 @@
         "packageJson": {
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "bvm": {
-            "node": "23.5.0"
+            "node": "22.14.0"
           },
           "bin": {
             "bbit": "bin/bit"
