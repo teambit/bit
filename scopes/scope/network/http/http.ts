@@ -273,7 +273,7 @@ export class Http implements Network {
         });
         const response = await _fetch(`${this.url}/${route}`, opts);
         logger.debug(
-          `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
+          `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${response.status} statusText ${response.statusText}`
         );
 
         // @ts-ignore TODO: need to fix this
