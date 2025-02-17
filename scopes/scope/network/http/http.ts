@@ -261,7 +261,7 @@ export class Http implements Network {
     errors: { [scopeName: string]: string };
     metadata?: { jobs?: string[] };
   }> {
-    const { results ,res } = await retry(
+    const { results ,response } = await retry(
       async () => {
         const route = 'api/put';
         logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
@@ -271,14 +271,14 @@ export class Http implements Network {
           body: pack,
           headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
         });
-        const res = await _fetch(`${this.url}/${route}`, opts);
+        const response = await _fetch(`${this.url}/${route}`, opts);
         logger.debug(
           `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
         );
 
         // @ts-ignore TODO: need to fix this
         const results = await this.readPutCentralStream(res.body);
-        return { results, res };
+        return { results, response };
       },
       {
         retries: 3,
@@ -293,7 +293,7 @@ export class Http implements Network {
     if (results.data.isError) {
       throw new UnexpectedNetworkError(results.message);
     }
-    await this.throwForNonOkStatus(res);
+    await this.throwForNonOkStatus(response);
     return results.data;
   }
 
