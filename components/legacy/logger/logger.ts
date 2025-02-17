@@ -14,7 +14,7 @@ import yn from 'yn';
 import pMapSeries from 'p-map-series';
 
 import { Analytics } from '@teambit/legacy.analytics';
-import { getSync } from '@teambit/legacy.global-config';
+import { getConfig } from '@teambit/config-store';
 import { defaultErrorHandler } from '@teambit/cli';
 import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS } from '@teambit/legacy.constants';
 import { getWinstonLogger } from './winston-logger';
@@ -25,7 +25,7 @@ import { loader } from '@teambit/legacy.loader';
 export { Level as LoggerLevel };
 
 const jsonFormat =
-  yn(getSync(CFG_LOG_JSON_FORMAT), { default: false }) || yn(process.env.JSON_LOGS, { default: false });
+  yn(getConfig(CFG_LOG_JSON_FORMAT), { default: false }) || yn(process.env.JSON_LOGS, { default: false });
 
 export const shouldDisableLoader = yn(process.env.BIT_DISABLE_SPINNER);
 export const shouldDisableConsole =
@@ -290,7 +290,7 @@ class BitLogger implements IBitLogger {
 const logger = new BitLogger(pinoLogger);
 
 export const printWarning = (msg: string) => {
-  const cfgNoWarnings = getSync(CFG_NO_WARNINGS);
+  const cfgNoWarnings = getConfig(CFG_NO_WARNINGS);
   if (cfgNoWarnings !== 'true') {
     // eslint-disable-next-line no-console
     console.log(chalk.yellow(`Warning: ${msg}`));
@@ -349,7 +349,7 @@ export function getLevelFromArgv(argv: string[]): Level | undefined {
 
 function getLogLevel(): Level {
   const defaultLevel = 'debug';
-  const level = getSync(CFG_LOG_LEVEL) || defaultLevel;
+  const level = getConfig(CFG_LOG_LEVEL) || defaultLevel;
   if (isLevel(level)) return level;
   const levelsStr = LEVELS.join(', ');
   // eslint-disable-next-line no-console

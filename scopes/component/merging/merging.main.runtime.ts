@@ -18,7 +18,6 @@ import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-w
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { compact } from 'lodash';
 import {
   ApplyVersionWithComps,
@@ -49,6 +48,7 @@ import {
   MergeResultsThreeWay,
   MergeOptions,
 } from './merge-version';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 
 type ResolveUnrelatedData = {
   strategy: MergeStrategy;
@@ -311,6 +311,8 @@ export class MergingMain {
       }
     }
 
+    const updatedComponents = compact(componentsResults.map((c) => c.legacyCompToWrite));
+
     const getSnapOrTagResults = async (): Promise<MergeSnapResults> => {
       // if one of the component has conflict, don't snap-merge. otherwise, some of the components would be snap-merged
       // and some not. besides the fact that it could by mistake tag dependent, it's a confusing state. better not snap.
@@ -324,7 +326,7 @@ export class MergingMain {
         const { taggedComponents, autoTaggedResults, removedComponents } = results;
         return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults, removedComponents };
       }
-      return this.snapResolvedComponents(snapMessage, build, currentLane?.toLaneId());
+      return this.snapResolvedComponents(snapMessage, build, currentLane?.toLaneId(), updatedComponents);
     };
     let mergeSnapResults: MergeSnapResults = null;
     let mergeSnapError: Error | undefined;
@@ -618,7 +620,8 @@ export class MergingMain {
   private async snapResolvedComponents(
     snapMessage?: string,
     build?: boolean,
-    laneId?: LaneId
+    laneId?: LaneId,
+    updatedComponents?: ConsumerComponent[]
   ): Promise<MergeSnapResults> {
     const unmergedComponents = this.scope.legacyScope.objects.unmergedComponents.getComponents();
     this.logger.debug(`merge-snaps, snapResolvedComponents, total ${unmergedComponents.length.toString()} components`);
@@ -634,6 +637,7 @@ export class MergingMain {
           message: snapMessage,
           build,
           lane: laneId?.toString(),
+          updatedLegacyComponents: updatedComponents,
         }
       );
       return { ...results, autoSnappedResults: [] };
@@ -717,7 +721,7 @@ export class MergingMain {
     ImporterAspect,
     ConfigAspect,
     RemoveAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
     ConfigMergerAspect,
     DependencyResolverAspect,
   ];
@@ -734,7 +738,7 @@ export class MergingMain {
     importer,
     config,
     remove,
-    globalConfig,
+    configStore,
     configMerger,
     depResolver,
   ]: [
@@ -749,7 +753,7 @@ export class MergingMain {
     ImporterMain,
     ConfigMain,
     RemoveMain,
-    GlobalConfigMain,
+    ConfigStoreMain,
     ConfigMergerMain,
     DependencyResolverMain,
   ]) {
@@ -768,7 +772,7 @@ export class MergingMain {
       configMerger,
       depResolver
     );
-    cli.register(new MergeCmd(merging, globalConfig));
+    cli.register(new MergeCmd(merging, configStore));
     return merging;
   }
 }

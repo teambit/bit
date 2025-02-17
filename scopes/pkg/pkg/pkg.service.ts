@@ -45,6 +45,7 @@ export class PkgService implements EnvService<{}, PkgDescriptor> {
       getPackageJsonProps: () => packageGenerator.packageJsonProps,
       // TODO: somehow handle context here? used in the aspect env
       getNpmIgnore: () => packageGenerator.npmIgnore,
+      modifyPackageJson: packageGenerator.modifyPackageJson,
     };
   }
 

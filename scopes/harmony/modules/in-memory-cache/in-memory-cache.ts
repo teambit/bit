@@ -1,4 +1,4 @@
-import { getNumberFromConfig } from '@teambit/legacy.global-config';
+import { getNumberFromConfig } from '@teambit/config-store';
 import { CFG_CACHE_MAX_ITEMS_COMPONENTS, CFG_CACHE_MAX_ITEMS_OBJECTS } from '@teambit/legacy.constants';
 
 export interface InMemoryCache<T> {

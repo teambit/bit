@@ -598,7 +598,7 @@ once done, to continue working, please run "bit cc"`
     fs.ensureDirSync(this.getComponentsPath());
     return this.tmp
       .ensureDir()
-      .then(() => this.scopeJson.write(this.getPath()))
+      .then(() => this.scopeJson.write())
       .then(() => this.objects.ensureDir())
       .then(() => this);
   }
@@ -683,21 +683,21 @@ once done, to continue working, please run "bit cc"`
     return collectGarbage(this, opts);
   }
 
-  static async ensure(path: PathOsBasedAbsolute, name?: string | null, groupName?: string | null): Promise<Scope> {
+  static async ensure(path: PathOsBasedAbsolute, name?: string, groupName?: string): Promise<Scope> {
     if (pathHasScope(path)) return this.load(path);
-    const scopeJson = Scope.ensureScopeJson(name, groupName);
+    const scopeJson = Scope.ensureScopeJson(path, name, groupName);
     const repository = await Repository.create({ scopePath: path, scopeJson });
     const scope = new Scope({ path, created: true, scopeJson, objects: repository });
     Scope.scopeCache[path] = scope;
     return scope;
   }
 
-  static ensureScopeJson(name?: string | null | undefined, groupName?: string | null | undefined): ScopeJson {
+  static ensureScopeJson(scopePath: PathOsBasedAbsolute, name?: string, groupName?: string): ScopeJson {
     if (!name) name = pathLib.basename(process.cwd());
     if (name === CURRENT_UPSTREAM) {
       throw new BitError(`the name "${CURRENT_UPSTREAM}" is a reserved word, please use another name`);
     }
-    const scopeJson = new ScopeJson({ name, groupName, version: getBitVersionGracefully() || 'unknown' });
+    const scopeJson = new ScopeJson({ name, groupName, version: getBitVersionGracefully() || 'unknown' }, getScopeJsonPath(scopePath));
     return scopeJson;
   }
 
@@ -722,20 +722,31 @@ once done, to continue working, please run "bit cc"`
       logger.debug(`scope.load, found scope at ${scopePath} from cache`);
       return Scope.scopeCache[scopePath];
     }
-    const scopeJsonPath = getScopeJsonPath(scopePath);
-    const scopeJsonExist = fs.existsSync(scopeJsonPath);
-    let scopeJson;
-    if (scopeJsonExist) {
-      scopeJson = await ScopeJson.loadFromFile(scopeJsonPath);
-    } else {
-      scopeJson = Scope.ensureScopeJson();
-    }
+    const scopeJson = await Scope.getScopeJson(scopePath);
     const objects = await Repository.load({ scopePath, scopeJson });
     const isBare =
       !scopePath.endsWith(pathLib.join(BIT_HIDDEN_DIR)) && !scopePath.endsWith(pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR));
     const scope = new Scope({ path: scopePath, scopeJson, objects, isBare });
     Scope.scopeCache[scopePath] = scope;
     return scope;
+  }
+
+  static async getScopeJson(scopePath: string): Promise<ScopeJson> {
+    const scopeJsonPath = getScopeJsonPath(scopePath);
+    const scopeJsonExist = fs.existsSync(scopeJsonPath);
+    let scopeJson;
+    if (scopeJsonExist) {
+      scopeJson = await ScopeJson.loadFromFile(scopeJsonPath);
+    } else {
+      scopeJson = Scope.ensureScopeJson(scopePath);
+    }
+    return scopeJson;
+  }
+
+  async reloadScopeJson() {
+    const scopeJson = await Scope.getScopeJson(this.path);
+    this.scopeJson = scopeJson;
+    this.objects.scopeJson = scopeJson;
   }
 
   public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {

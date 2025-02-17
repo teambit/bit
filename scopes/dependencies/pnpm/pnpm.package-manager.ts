@@ -128,7 +128,7 @@ export class PnpmPackageManager implements PackageManager {
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
-    if (!installOptions.useNesting) {
+    if (!installOptions.useNesting && installOptions.rootComponentsForCapsules) {
       manifests = await extendWithComponentsFromDir(rootDir, manifests);
     }
     if (installOptions.nmSelfReferences) {

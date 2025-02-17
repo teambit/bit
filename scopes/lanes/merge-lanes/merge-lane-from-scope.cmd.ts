@@ -83,7 +83,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
 
     const titleBase64Decoded = titleBase64 ? fromBase64(titleBase64) : undefined;
 
-    const { mergedNow, unmerged, exportedIds, conflicts, mergeSnapError } = await this.mergeLanes.mergeFromScope(
+    const { mergedNow, unmerged, exportResult, conflicts, mergeSnapError } = await this.mergeLanes.mergeFromScope(
       fromLane,
       toLane || DEFAULT_LANE,
       {
@@ -120,6 +120,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     const mergeSnapErrorTitle = chalk.bold(`the following error was thrown while snapping the components:`);
     const mergeSnapErrorOutput = mergeSnapError ? `${mergeSnapErrorTitle}\n${chalk.red(mergeSnapError.message)}` : '';
 
+    const exportedIds = exportResult?.exported || [];
     const exportedTitle = chalk.bold(`successfully exported ${exportedIds.length} components`);
     const exportedOutput = exportedIds.length ? `${exportedTitle}\n${exportedIds.join('\n')}` : '';
 
@@ -142,13 +143,22 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
         includeDeps,
         reMerge,
       });
+      const exportedIds = results.exportResult?.exported.map((id) => id.toString()) || [];
+      const exportResult = {
+        ...results.exportResult,
+        exported: exportedIds,
+        updatedLocally: results.exportResult?.updatedLocally.map((id) => id.toString()),
+        newIdsOnRemote: results.exportResult?.newIdsOnRemote.map((id) => id.toString()),
+      };
+
       return {
         code: 0,
         data: {
           ...results,
           mergedNow: results.mergedNow.map((id) => id.toString()),
           mergedPreviously: results.mergedPreviously.map((id) => id.toString()),
-          exportedIds: results.exportedIds.map((id) => id.toString()),
+          exportedIds,
+          exportResult,
           unmerged: results.unmerged.map(({ id, reason }) => ({ id: id.toString(), reason })),
           conflicts: results.conflicts?.map(({ id, ...rest }) => ({ id: id.toString(), ...rest })),
           snappedIds: results.snappedIds?.map((id) => id.toString()),

@@ -41,6 +41,26 @@ export type ObjectsPerRemote = {
   objectList: ObjectList;
   exportedIds?: string[];
 };
+export type PushToScopesResult = {
+  exported: ComponentIdList;
+  updatedLocally: ComponentIdList;
+  newIdsOnRemote: ComponentID[];
+  rippleJobs: string[];
+};
+export type PushToScopesParams = {
+  scope: Scope;
+  ids: ComponentIdList;
+  laneObject?: Lane;
+  allVersions?: boolean;
+  originDirectly?: boolean;
+  resumeExportId?: string | undefined;
+  throwForMissingArtifacts?: boolean;
+  isOnMain?: boolean;
+  exportHeadsOnly?: boolean;
+  includeParents?: boolean;
+  filterOutExistingVersions?: boolean;
+  exportOrigin?: ExportOrigin;
+};
 type ObjectsPerRemoteExtended = ObjectsPerRemote & {
   objectListPerName: ObjectListPerName;
   idsToChangeLocally: ComponentIdList;
@@ -182,7 +202,7 @@ otherwise, re-run the export with "--fork-lane-new-scope" flag.
 if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
     }
     const isOnMain = consumer.isOnMain();
-    const { exported, updatedLocally, newIdsOnRemote, rippleJobs } = await this.exportMany({
+    const { exported, updatedLocally, newIdsOnRemote, rippleJobs } = await this.pushToScopes({
       ...params,
       exportHeadsOnly: headOnly,
       scope: consumer.scope,
@@ -224,9 +244,16 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
   }
 
   /**
+   * @deprecated use `pushToScopes` instead
+   */
+  async exportMany(params: PushToScopesParams): Promise<PushToScopesResult> {
+    return this.pushToScopes(params);
+  }
+
+  /**
    * the export process uses four steps. read more about it here: https://github.com/teambit/bit/pull/3371
    */
-  async exportMany({
+  async pushToScopes({
     scope,
     ids, // when exporting a lane, the ids are the lane component ids
     laneObject,
@@ -239,25 +266,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     includeParents, // relevant when exportHeadsOnly is used. sometimes the parents head are needed as well
     filterOutExistingVersions, // go to the remote and check whether the version exists there. if so, don't export it
     exportOrigin = 'export',
-  }: {
-    scope: Scope;
-    ids: ComponentIdList;
-    laneObject?: Lane;
-    allVersions?: boolean;
-    originDirectly?: boolean;
-    resumeExportId?: string | undefined;
-    throwForMissingArtifacts?: boolean;
-    isOnMain?: boolean;
-    exportHeadsOnly?: boolean;
-    includeParents?: boolean;
-    filterOutExistingVersions?: boolean;
-    exportOrigin?: ExportOrigin;
-  }): Promise<{
-    exported: ComponentIdList;
-    updatedLocally: ComponentIdList;
-    newIdsOnRemote: ComponentID[];
-    rippleJobs: string[];
-  }> {
+  }: PushToScopesParams): Promise<PushToScopesResult> {
     this.logger.debug(`scope.exportMany, ids: ${ids.toString()}`);
     const scopeRemotes: Remotes = await getScopeRemotes(scope);
 

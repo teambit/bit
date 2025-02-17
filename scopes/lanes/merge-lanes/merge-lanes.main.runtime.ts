@@ -13,6 +13,7 @@ import {
   MergeStrategy,
 } from '@teambit/merging';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Ref, Lane, Version, Log } from '@teambit/objects';
@@ -26,8 +27,7 @@ import { CheckoutAspect, CheckoutMain, CheckoutProps, throwForFailures } from '@
 import { SnapsDistance } from '@teambit/component.snap-distance';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { compact, uniq } from 'lodash';
-import { ExportAspect, ExportMain } from '@teambit/export';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
+import { ExportAspect, ExportMain, PushToScopesResult } from '@teambit/export';
 import { MergeLanesAspect } from './merge-lanes.aspect';
 import { MergeLaneCmd } from './merge-lane.cmd';
 import { MergeLaneFromScopeCmd } from './merge-lane-from-scope.cmd';
@@ -67,7 +67,7 @@ export type MergeLaneOptions = {
 export type ConflictPerId = { id: ComponentID; files: string[]; config?: boolean };
 export type MergeFromScopeResult = {
   mergedNow: ComponentID[];
-  exportedIds: ComponentID[];
+  exportResult?: PushToScopesResult;
   unmerged: { id: ComponentID; reason: string }[]; // reasons currently are: ahead / already-merge / removed
   conflicts?: ConflictPerId[]; // relevant in case of diverge (currently possible only when merging from main to a lane)
   snappedIds?: ComponentID[]; // relevant in case of diverge (currently possible only when merging from main to a lane)
@@ -501,11 +501,10 @@ export class MergeLanesMain {
     const toLaneId = toLane === DEFAULT_LANE ? this.lanes.getDefaultLaneId() : LaneId.parse(toLane);
     const shouldIncludeUpdateDependents = toLaneId.isDefault();
 
-    const exportIfNeeded = async (idsToExport: ComponentID[], laneToExport?: Lane): Promise<ComponentID[]> => {
-      if (!options.push) return [];
+    const pushToScopes = async (idsToExport: ComponentID[], laneToExport?: Lane): Promise<PushToScopesResult> => {
       const shouldSquash = toLaneId.isDefault() && !options.noSquash; // only when merging to main we squash.
       const compIdsList = ComponentIdList.fromArray(idsToExport);
-      const { exported } = await this.exporter.exportMany({
+      const exportResult = await this.exporter.pushToScopes({
         scope: this.scope.legacyScope,
         ids: compIdsList,
         laneObject: laneToExport,
@@ -529,7 +528,7 @@ export class MergeLanesMain {
         throwForMissingArtifacts: !fromLaneId.isDefault(),
         exportOrigin: 'lane-merge',
       });
-      return exported;
+      return exportResult;
     };
 
     // current -> target (to)
@@ -561,10 +560,10 @@ export class MergeLanesMain {
     const snappedIds = mergeSnapResults?.snappedComponents.map((c) => c.id) || [];
 
     const laneToExport = toLaneId.isDefault() ? undefined : await this.lanes.loadLane(toLaneId); // needs to be loaded again after the merge as it changed
-    const exportedIds =
-      conflicts.length || mergeSnapError
-        ? []
-        : await exportIfNeeded(
+    const exportResult =
+      conflicts.length || mergeSnapError || !options.push
+        ? undefined
+        : await pushToScopes(
             mergedSuccessfullyIds.map((id) => id.changeVersion(undefined)),
             laneToExport
           );
@@ -575,7 +574,7 @@ export class MergeLanesMain {
         failedComponents
           ?.filter(({ unchangedMessage }) => unchangedMessage === compIsAlreadyMergedMsg)
           .map((c) => c.id) || [],
-      exportedIds,
+      exportResult,
       unmerged: failedComponents?.map((c) => ({ id: c.id, reason: c.unchangedMessage })) || [],
       conflicts,
       snappedIds,
@@ -603,7 +602,7 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
     ExportAspect,
     ImporterAspect,
     CheckoutAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
     ExpressAspect,
   ];
   static runtime = MainRuntime;
@@ -619,7 +618,7 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
     exporter,
     importer,
     checkout,
-    globalConfig,
+    configStore,
     express,
   ]: [
     LanesMain,
@@ -632,7 +631,7 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
     ExportMain,
     ImporterMain,
     CheckoutMain,
-    GlobalConfigMain,
+    ConfigStoreMain,
     ExpressMain,
   ]) {
     const logger = loggerMain.createLogger(MergeLanesAspect.id);
@@ -648,7 +647,7 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
       importer,
       checkout
     );
-    lanesCommand?.commands?.push(new MergeLaneCmd(mergeLanesMain, globalConfig));
+    lanesCommand?.commands?.push(new MergeLaneCmd(mergeLanesMain, configStore));
     lanesCommand?.commands?.push(new MergeAbortLaneCmd(mergeLanesMain));
     lanesCommand?.commands?.push(new MergeMoveLaneCmd(mergeLanesMain));
     cli.register(new MergeLaneFromScopeCmd(mergeLanesMain));

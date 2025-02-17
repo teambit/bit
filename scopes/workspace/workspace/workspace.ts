@@ -115,6 +115,7 @@ import {
   ComponentStatusResult,
 } from './workspace-component/component-status-loader';
 import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
+import { ConfigStoreAspect, ConfigStoreMain, Store } from '@teambit/config-store';
 
 export type EjectConfResult = {
   configPath: string;
@@ -247,7 +248,9 @@ export class Workspace implements ComponentFactory {
 
     private onBitmapChangeSlot: OnBitmapChangeSlot,
 
-    private onWorkspaceConfigChangeSlot: OnWorkspaceConfigChangeSlot
+    private onWorkspaceConfigChangeSlot: OnWorkspaceConfigChangeSlot,
+
+    private configStore: ConfigStoreMain
   ) {
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
@@ -365,6 +368,34 @@ export class Workspace implements ComponentFactory {
     return this.config.icon;
   }
 
+
+  getConfigStore(): Store {
+    return {
+      list: () => this.getWorkspaceConfig().extension(ConfigStoreAspect.id, true) || {},
+      set: (key: string, value: string) => {
+        this.getWorkspaceConfig().setExtension(ConfigStoreAspect.id,
+          { [key]: value },
+          { ignoreVersion: true, mergeIntoExisting: true }
+        );
+      },
+      del: (key: string) => {
+        const current = this.getWorkspaceConfig().extension(ConfigStoreAspect.id, true) || {};
+        delete current[key];
+        this.getWorkspaceConfig().setExtension(ConfigStoreAspect.id, current,
+          { ignoreVersion: true, overrideExisting: true });
+      },
+      write: async () => {
+        await this.getWorkspaceConfig().write({ reasonForChange: 'store-config changes' })
+      },
+      invalidateCache: async () => {
+        // no need to invalidate anything.
+        // if this is the same process, it'll get the updated one already.
+        // if this is another process, it'll react to "this.triggerOnWorkspaceConfigChange()" anyway.
+      },
+      getPath: () => this.getWorkspaceConfig().path,
+    }
+  }
+
   async getAutoTagInfo(changedComponents: ComponentIdList) {
     return getAutoTagInfo(this.consumer, changedComponents);
   }
@@ -442,22 +473,18 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
-   * Check if a specific id exist in the workspace
-   * @param componentId
+   * whether the given component-id is part of the workspace. default to check for the exact version
    */
-  hasId(componentId: ComponentID): boolean {
-    const ids = this.listIds();
-    const found = ids.find((id) => {
-      return id.isEqual(componentId);
-    });
-    return !!found;
+  hasId(componentId: ComponentID, opts?: { includeDeleted?: boolean, ignoreVersion?: boolean }): boolean {
+    const ids = opts?.includeDeleted ? this.listIdsIncludeRemoved() : this.listIds();
+    return opts?.ignoreVersion ? ids.hasWithoutVersion(componentId) : ids.has(componentId);
   }
 
   /**
    * given component-ids, return the ones that are part of the workspace
    */
   async filterIds(ids: ComponentID[]): Promise<ComponentID[]> {
-    const workspaceIds = await this.listIds();
+    const workspaceIds = this.listIds();
     return ids.filter((id) => workspaceIds.find((wsId) => wsId.isEqual(id, { ignoreVersion: !id.hasVersion() })));
   }
 
@@ -556,13 +583,13 @@ export class Workspace implements ComponentFactory {
   }
 
   async getGraph(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<Graph<Component, string>> {
-    if (!ids || ids.length < 1) ids = await this.listIds();
+    if (!ids || ids.length < 1) ids = this.listIds();
 
     return this.buildOneGraphForComponents(ids, undefined, undefined, shouldThrowOnMissingDep);
   }
 
   async getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<CompIdGraph> {
-    if (!ids || ids.length < 1) ids = await this.listIds();
+    if (!ids || ids.length < 1) ids = this.listIds();
 
     const graphIdsFromFsBuilder = new GraphIdsFromFsBuilder(
       this,
@@ -895,6 +922,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     const configOfDepResolverAspect = workspaceConfig.extensions.findExtension(DependencyResolverAspect.id);
     if (configOfDepResolverAspect) this.dependencyResolver.setConfig(configOfDepResolverAspect.config as any);
     this.dependencyResolver.clearCache();
+    this.configStore.invalidateCache();
 
     const onWorkspaceConfigChangeEntries = this.onWorkspaceConfigChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     await mapSeries(onWorkspaceConfigChangeEntries, async ([, onWorkspaceConfigFunc]) => {
@@ -988,7 +1016,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     if (!envAspect) return;
     const envExtId = envAspect.id;
     if (!envExtId?.hasVersion()) return;
-    if (!this.exists(envExtId)) return;
+    if (!this.hasId(envExtId, { ignoreVersion: true })) return;
     envAspect.id = envExtId.changeVersion(undefined);
   }
 
@@ -1062,7 +1090,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     if (isId) {
       // if it's not a pattern but just id, resolve it without multimatch to support specifying id without scope-name
       const id = await this.resolveComponentId(pattern);
-      if (this.exists(id, { includeDeleted: opts.includeDeleted })) return [id];
+      if (this.hasId(id, { ignoreVersion: true, includeDeleted: opts.includeDeleted })) return [id];
       if (throwForNoMatch) throw new MissingBitMapComponent(pattern);
       return [];
     }
@@ -1136,7 +1164,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   }
 
   /**
-   * whether a component exists in the workspace
+   * @deprecated use `hasId` with "ignoreVersion: true" instead.
    */
   exists(componentId: ComponentID, opts: { includeDeleted?: boolean } = {}): boolean {
     const allIds = opts.includeDeleted ? this.listIdsIncludeRemoved() : this.consumer.bitmapIdsFromCurrentLane;
@@ -1686,7 +1714,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
   getWorkspaceAspectsLoader(): WorkspaceAspectsLoader {
     let resolveEnvsFromRoots = this.config.resolveEnvsFromRoots;
     if (resolveEnvsFromRoots === undefined) {
-      const resolveEnvsFromRootsConfig = this.globalConfig.getSync(CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS);
+      const resolveEnvsFromRootsConfig = this.configStore.getConfig(CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS);
       const defaultResolveEnvsFromRoots: boolean =
         // @ts-ignore
         resolveEnvsFromRootsConfig === 'true' || resolveEnvsFromRootsConfig === true;
@@ -1700,7 +1728,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
       this.envs,
       this.dependencyResolver,
       this.logger,
-      this.globalConfig,
+      this.configStore,
       this.harmony,
       this.onAspectsResolveSlot,
       this.onRootAspectAddedSlot,
@@ -1800,7 +1828,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     errMsgPrefix: string
   ): Promise<ComponentID | undefined> {
     const url = `https://node-registry.bit.cloud/${packageName}`;
-    const token = await this.globalConfig.get(CFG_USER_TOKEN_KEY);
+    const token = this.configStore.getConfig(CFG_USER_TOKEN_KEY);
     const headers = token ? getAuthHeader(token) : {};
     const res = await fetch(url, { headers });
     if (!res.ok) {

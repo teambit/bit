@@ -25,7 +25,7 @@ export async function add(url: string, global: boolean) {
     return loadScope().then((scope) => {
       return scope.scopeJson
         .addRemote(remote)
-        .write(scope.getPath())
+        .write()
         .then(() => remote);
     });
   });
@@ -50,7 +50,7 @@ export async function remove(name: string, global: boolean) {
   if (!hasRemoved) {
     throw new BitError(`remote "${name}" was not found locally, to remove a global remote, please use "--global" flag`);
   }
-  await scope.scopeJson.write(scope.getPath());
+  await scope.scopeJson.write();
   return name;
 }
 

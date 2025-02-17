@@ -316,7 +316,7 @@ to bypass this error, use --skip-new-scope-validation flag (not recommended. it 
     const shouldExport = this.updateDepsOptions.push;
     if (!shouldExport) return;
     const ids = ComponentIdList.fromArray(this.legacyComponents.map((c) => c.id));
-    await this.exporter.exportMany({
+    await this.exporter.pushToScopes({
       scope: this.scope.legacyScope,
       ids,
       laneObject: this.laneObj,

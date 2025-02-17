@@ -1,4 +1,4 @@
-export type { ExportMain, ExportResult, ObjectsPerRemote } from './export.main.runtime';
+export type { ExportMain, ExportResult, ObjectsPerRemote, PushToScopesResult } from './export.main.runtime';
 export { ExportAspect } from './export.aspect';
 export type { Network } from '@teambit/scope.network';
 export type { PushOptions } from '@teambit/legacy.scope-api';
