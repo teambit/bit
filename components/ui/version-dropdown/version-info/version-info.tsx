@@ -14,6 +14,7 @@ export interface VersionInfoProps extends DropdownComponentVersion {
   latestVersion?: string;
   overrideVersionHref?: (version: string) => string;
   showDetails?: boolean;
+  onVersionClicked?: () => void;
 }
 
 export const VersionInfo = React.memo(React.forwardRef<HTMLDivElement, VersionInfoProps>(_VersionInfo));
@@ -31,6 +32,7 @@ function _VersionInfo(
     message,
     tag,
     profileImage,
+    onVersionClicked,
   }: VersionInfoProps,
   ref?: React.ForwardedRef<HTMLDivElement>
 ) {
@@ -62,7 +64,7 @@ function _VersionInfo(
   const isLatest = version === latestVersion;
 
   return (
-    <div ref={ref || currentVersionRef}>
+    <div ref={ref || currentVersionRef} onClick={onVersionClicked}>
       <MenuLinkItem active={isCurrent} href={href} className={styles.versionRow}>
         <div className={styles.version}>
           <UserAvatar size={24} account={author} className={styles.versionUserAvatar} showTooltip={true} />

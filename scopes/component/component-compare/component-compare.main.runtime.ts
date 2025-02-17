@@ -52,12 +52,13 @@ export class ComponentCompareMain {
     private depResolver: DependencyResolverMain,
     private importer: ImporterMain,
     private workspace?: Workspace
-  ) {}
+  ) { }
 
   async compare(baseIdStr: string, compareIdStr: string): Promise<ComponentCompareResult> {
     const host = this.componentAspect.getHost();
     const [baseCompId, compareCompId] = await host.resolveMultipleComponentIds([baseIdStr, compareIdStr]);
     const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(compareCompId);
+    const comparingWithLocalChanges = this.workspace && baseIdStr === compareIdStr;
 
     if (!modelComponent) {
       throw new BitError(`component ${compareCompId.toString()} doesn't have any version yet`);
@@ -71,21 +72,20 @@ export class ComponentCompareMain {
     const baseVersion = baseCompId.version as string;
     const compareVersion = compareCompId.version as string;
 
-    const repository = this.scope.legacyScope.objects;
-    const baseVersionObject = await modelComponent.loadVersion(baseVersion, repository);
-    const compareVersionObject = await modelComponent.loadVersion(compareVersion, repository);
+    const components = await host.getMany([baseCompId, compareCompId])
+    const baseComponent = components?.[0];
+    const compareComponent = components?.[1];
+    const componentWithoutVersion = await host.get((baseCompId || compareCompId).changeVersion(undefined))
 
-    const diff: DiffResults = await this.diffBetweenVersionsObjects(
-      modelComponent,
-      baseVersionObject,
-      compareVersionObject,
-      baseVersion,
-      compareVersion,
-      {}
-    );
-
-    const baseComponent = await host.get(baseCompId);
-    const compareComponent = await host.get(compareCompId);
+    const diff = componentWithoutVersion
+      ? await this.computeDiff(
+        componentWithoutVersion,
+        comparingWithLocalChanges ? undefined : baseVersion,
+        comparingWithLocalChanges ? undefined : compareVersion, {})
+      : {
+        filesDiff: [],
+        fieldsDiff: []
+      };
 
     const baseTestFiles =
       (baseComponent && (await this.tester.getTestFiles(baseComponent).map((file) => file.relative))) || [];
@@ -117,7 +117,7 @@ export class ComponentCompareMain {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const ids = pattern ? await this.workspace.idsByPattern(pattern) : await this.workspace.listTagPendingIds();
     const consumer = this.workspace.consumer;
-    if (!ids.length) {
+  if (!ids.length) {
       return [];
     }
     const diffResults = await this.componentsDiff(ids, version, toVersion, {
@@ -186,13 +186,10 @@ export class ComponentCompareMain {
     toVersion: string | undefined,
     diffOpts: DiffOptions
   ) {
-    if (!this.workspace) throw new OutsideWorkspaceError();
-    const consumer = this.workspace.consumer;
-    // if (!version) throw new Error('getComponentDiffOfVersion expects to get version');
     const consumerComponent = component.state._consumer as ConsumerComponent;
     const diffResult: DiffResults = { id: component.id, hasDiff: false };
     const modelComponent =
-      consumerComponent.modelComponent || (await consumer.scope.getModelComponentIfExist(component.id));
+      consumerComponent.modelComponent || (await this.scope.legacyScope.getModelComponentIfExist(component.id));
 
     if (!modelComponent || !consumerComponent.componentFromModel) {
       if (version || toVersion) {
@@ -213,13 +210,13 @@ export class ComponentCompareMain {
       if (hasDiff(diffResult)) diffResult.hasDiff = true;
       return diffResult;
     }
-    const repository = consumer.scope.objects;
+    const repository = this.scope.legacyScope.objects;
     const idsToImport = compact([
       version ? component.id.changeVersion(version) : undefined,
       toVersion ? component.id.changeVersion(toVersion) : undefined,
     ]);
     const idList = ComponentIdList.fromArray(idsToImport);
-    await consumer.scope.scopeImporter.importWithoutDeps(idList, { cache: true, reason: 'to show diff' });
+    await this.scope.legacyScope.scopeImporter.importWithoutDeps(idList, { cache: true, reason: 'to show diff' });
     if (diffOpts.compareToParent) {
       if (!version) throw new BitError('--parent flag expects to get version');
       if (toVersion) throw new BitError('--parent flag expects to get only one version');
@@ -240,11 +237,11 @@ export class ComponentCompareMain {
 
     diffResult.filesDiff = await getFilesDiff(fromFiles, toFiles, fromVersionLabel, toVersionLabel);
     const fromVersionComponent = version
-      ? await modelComponent.toConsumerComponent(version, consumer.scope.name, repository)
+      ? await modelComponent.toConsumerComponent(version, this.scope.legacyScope.name, repository)
       : consumerComponent.componentFromModel;
 
     const toVersionComponent = toVersion
-      ? await modelComponent.toConsumerComponent(toVersion, consumer.scope.name, repository)
+      ? await modelComponent.toConsumerComponent(toVersion, this.scope.legacyScope.name, repository)
       : consumerComponent;
     await updateFieldsDiff(fromVersionComponent, toVersionComponent, diffResult, diffOpts);
 

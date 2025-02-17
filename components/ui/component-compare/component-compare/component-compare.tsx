@@ -256,7 +256,7 @@ function RenderCompareScreen(
 // eslint-disable-next-line complexity
 export function ComponentCompare(props: ComponentCompareProps) {
   const {
-    host,
+    host: hostFromProps,
     baseId: baseIdFromProps,
     compareId: compareIdFromProps,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -283,13 +283,14 @@ export function ComponentCompare(props: ComponentCompareProps) {
   const component = useContext(ComponentContext);
   const componentDescriptor = useContext(ComponentDescriptorContext);
   const location = useLocation();
-  const isWorkspace = host === 'teambit.workspace/workspace';
-
+  const isWorkspace = hostFromProps === 'teambit.workspace/workspace';
+  const compareHost = isWorkspace && !location?.search.includes('version') && !compareIdFromProps && component.logs?.length === 0 ? hostFromProps : 'teambit.scope/scope';
+  const host = 'teambit.scope/scope';
   const {
     component: compareComponent,
     loading: loadingCompare,
     componentDescriptor: compareComponentDescriptor,
-  } = useComponent(host, compareIdOverride?.toString() || compareIdFromProps?.toString(), {
+  } = useComponent(compareHost, compareIdOverride?.toString() || compareIdFromProps?.toString(), {
     skip: hidden || (!compareIdFromProps && !compareIdOverride),
     customUseComponent,
     logFilters: {
@@ -352,7 +353,7 @@ export function ComponentCompare(props: ComponentCompareProps) {
   }, [compare?.id.toString()]);
 
   const skipComponentCompareQuery =
-    hidden || compareIsLocalChanges || base?.id.version?.toString() === compare?.id.version?.toString();
+    hidden || (base?.id.version?.toString() === compare?.id.version?.toString() && !compareIsLocalChanges);
 
   const { loading: compCompareLoading, componentCompareData } = useComponentCompareQuery(
     base?.id.toString(),

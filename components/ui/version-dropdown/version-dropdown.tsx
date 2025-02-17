@@ -154,6 +154,7 @@ function _VersionDropdown({
           getActiveTabIndex={getActiveTabIndex}
           lanes={lanes}
           useVersions={useComponentVersions}
+          onVersionClicked={() => setOpen(false)}
           open={open}
         />
       </Dropdown>
@@ -173,6 +174,7 @@ type VersionMenuProps = {
   loading?: boolean;
   getActiveTabIndex?: GetActiveTabIndex;
   open?: boolean;
+  onVersionClicked?: () => void;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export type VersionMenuTab =
@@ -208,6 +210,7 @@ function _VersionMenu({
   getActiveTabIndex = defaultActiveTabIndex,
   loading: loadingFromProps,
   open,
+  onVersionClicked,
   ...rest
 }: VersionMenuProps) {
   const { snaps, tags, loading: loadingVersions } = useVersions?.() || {};
@@ -268,6 +271,7 @@ function _VersionMenu({
           latestVersion={latestVersion}
           overrideVersionHref={overrideVersionHref}
           showDetails={showVersionDetails}
+          onVersionClicked={onVersionClicked}
           {...version}
         ></VersionInfo>
       );
@@ -296,6 +300,7 @@ function _VersionMenu({
             href={'?'}
             active={currentVersion === LOCAL_VERSION}
             className={classNames(styles.versionRow, styles.localVersion)}
+            onClick={onVersionClicked}
           >
             <div className={styles.version}>
               <UserAvatar size={24} account={{}} className={styles.versionUserAvatar} />
