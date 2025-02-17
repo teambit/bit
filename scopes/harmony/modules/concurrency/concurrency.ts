@@ -1,4 +1,4 @@
-import { getNumberFromConfig } from '@teambit/legacy.global-config';
+import { getNumberFromConfig } from '@teambit/config-store';
 import { CFG_CONCURRENCY_COMPONENTS, CFG_CONCURRENCY_FETCH, CFG_CONCURRENCY_IO } from '@teambit/legacy.constants';
 
 const CONCURRENT_IO_LIMIT = 100;

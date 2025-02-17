@@ -2,8 +2,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
 import { Extensions } from '@teambit/legacy.constants';
-import { Helper } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import tar from 'tar';
 
 chai.use(require('chai-fs'));

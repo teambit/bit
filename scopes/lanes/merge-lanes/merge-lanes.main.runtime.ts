@@ -13,6 +13,7 @@ import {
   MergeStrategy,
 } from '@teambit/merging';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Ref, Lane, Version, Log } from '@teambit/objects';
@@ -27,7 +28,6 @@ import { SnapsDistance } from '@teambit/component.snap-distance';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { compact, uniq } from 'lodash';
 import { ExportAspect, ExportMain, PushToScopesResult } from '@teambit/export';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { MergeLanesAspect } from './merge-lanes.aspect';
 import { MergeLaneCmd } from './merge-lane.cmd';
 import { MergeLaneFromScopeCmd } from './merge-lane-from-scope.cmd';
@@ -602,7 +602,7 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
     ExportAspect,
     ImporterAspect,
     CheckoutAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
     ExpressAspect,
   ];
   static runtime = MainRuntime;
@@ -618,7 +618,7 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
     exporter,
     importer,
     checkout,
-    globalConfig,
+    configStore,
     express,
   ]: [
     LanesMain,
@@ -631,7 +631,7 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
     ExportMain,
     ImporterMain,
     CheckoutMain,
-    GlobalConfigMain,
+    ConfigStoreMain,
     ExpressMain,
   ]) {
     const logger = loggerMain.createLogger(MergeLanesAspect.id);
@@ -647,7 +647,7 @@ ${compsNotUpToDate.map((s) => s.componentId.toString()).join('\n')}`);
       importer,
       checkout
     );
-    lanesCommand?.commands?.push(new MergeLaneCmd(mergeLanesMain, globalConfig));
+    lanesCommand?.commands?.push(new MergeLaneCmd(mergeLanesMain, configStore));
     lanesCommand?.commands?.push(new MergeAbortLaneCmd(mergeLanesMain));
     lanesCommand?.commands?.push(new MergeMoveLaneCmd(mergeLanesMain));
     cli.register(new MergeLaneFromScopeCmd(mergeLanesMain));

@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
 import fetch from 'node-fetch';
-import { getSync } from '@teambit/legacy.global-config';
 import { CFG_ANALYTICS_DOMAIN_KEY, DEFAULT_ANALYTICS_DOMAIN } from '@teambit/legacy.constants';
+import { getConfig } from '@teambit/config-store';
 
-const ANALYTICS_DOMAIN = getSync(CFG_ANALYTICS_DOMAIN_KEY) || DEFAULT_ANALYTICS_DOMAIN;
+const ANALYTICS_DOMAIN = getConfig(CFG_ANALYTICS_DOMAIN_KEY) || DEFAULT_ANALYTICS_DOMAIN;
 /**
  * to debug errors here, first, change the parent to have { silent: false }, in analytics.js `fork` call.
  */
