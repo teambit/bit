@@ -1,3 +1,4 @@
+import { realpathSync } from 'fs';
 import { Aspect } from '@teambit/harmony';
 import { PluginDefinition } from './plugin-definition';
 
@@ -27,7 +28,9 @@ export class Plugin {
     const mod = require(this.path);
     this._instance = mod.default as any;
     this._instance.__path = this.path;
-    this._instance.__resolvedPath = require.resolve(this.path);
+    const realPath = realpathSync(this.path);
+    const resolvedPathFromRealPath = require.resolve(realPath);
+    this._instance.__resolvedPath = resolvedPathFromRealPath
     return this._instance;
   }
 }
