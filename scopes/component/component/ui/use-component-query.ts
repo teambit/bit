@@ -18,7 +18,7 @@ export function useComponentQuery(
   componentId: string,
   host: string,
   filters?: Filters,
-  skip?: boolean
+  skip?: boolean,
 ): ComponentQueryResult {
   const idRef = useRef(componentId);
   idRef.current = componentId;
