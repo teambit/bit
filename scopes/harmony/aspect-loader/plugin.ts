@@ -1,4 +1,4 @@
-import { realpathSync } from 'fs';
+import { realpathSync, existsSync } from 'fs';
 import { Aspect } from '@teambit/harmony';
 import { PluginDefinition } from './plugin-definition';
 
@@ -28,7 +28,9 @@ export class Plugin {
     const mod = require(this.path);
     this._instance = mod.default as any;
     this._instance.__path = this.path;
-    const realPath = realpathSync(this.path);
+    const exists = existsSync(this.path);
+    // In case the path not exists we don't need to resolve it (it will throw an error)
+    const realPath = exists ? realpathSync(this.path) : this.path;
     const resolvedPathFromRealPath = require.resolve(realPath);
     this._instance.__resolvedPath = resolvedPathFromRealPath
     return this._instance;
