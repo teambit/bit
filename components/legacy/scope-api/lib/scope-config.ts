@@ -4,7 +4,7 @@ export function set(key: string, value: string): Promise<any> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return loadScope().then((scope) => {
     scope.scopeJson.set(key, value);
-    return scope.scopeJson.write(process.cwd()).then(() => ({ key, value }));
+    return scope.scopeJson.write().then(() => ({ key, value }));
   });
 }
 
@@ -17,7 +17,7 @@ export function del(key: string): Promise<any> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return loadScope().then((scope) => {
     scope.scopeJson.del(key);
-    return scope.scopeJson.write(process.cwd());
+    return scope.scopeJson.write();
   });
 }
 

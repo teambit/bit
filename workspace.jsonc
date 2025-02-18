@@ -625,7 +625,7 @@
       "uri-js": "npm:uri-js-replace",
       "encoding": "-"
     },
-    "nodeVersion": "23.5.0",
+    "nodeVersion": "22.14.0",
     "engineStrict": true,
     "packageImportMethod": "copy",
     "packageManagerArgs": [],
@@ -702,7 +702,7 @@
         "packageJson": {
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "bvm": {
-            "node": "23.5.0"
+            "node": "22.14.0"
           },
           "bin": {
             "bbit": "bin/bit"

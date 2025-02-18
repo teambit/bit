@@ -1,6 +1,6 @@
 import gitconfig from '@teambit/gitconfig';
 import { isNil } from 'lodash';
-import { GlobalConfig } from '@teambit/legacy.global-config';
+import { getGlobalConfigPath, GlobalConfig } from './global-config';
 
 export const ENV_VARIABLE_CONFIG_PREFIX = 'BIT_CONFIG_';
 
@@ -9,6 +9,7 @@ export interface Store {
   set(key: string, value: string): void;
   del(key: string): void;
   write(): Promise<void>;
+  getPath(): string;
   invalidateCache(): Promise<void>;
 }
 
@@ -101,6 +102,7 @@ export class ConfigGetter {
       del: (key: string) => this.globalConfig.delete(key),
       write: async () => this.globalConfig.write(),
       invalidateCache: async () => this._globalConfig = undefined,
+      getPath: () => getGlobalConfigPath(),
     };
   }
 }
@@ -115,6 +117,26 @@ export function getNumberFromConfig(key: string): number | undefined {
 }
 export function listConfig(): Record<string, string> {
   return configGetter.listConfig();
+}
+/**
+ * @deprecated use setConfig from the ConfigStore aspect instance
+ */
+export function setGlobalConfig(key: string, val: string) {
+  const globalStore = configGetter.getGlobalStore();
+  globalStore.set(key, val);
+  configGetter.globalConfig.writeSync();
+  globalStore.invalidateCache().catch(() => {});
+  configGetter.invalidateCache();
+}
+/**
+ * @deprecated use delConfig from the ConfigStore aspect instance
+ */
+export function delGlobalConfig(key: string) {
+  const globalStore = configGetter.getGlobalStore();
+  globalStore.del(key);
+  configGetter.globalConfig.writeSync();
+  globalStore.invalidateCache().catch(() => {});
+  configGetter.invalidateCache();
 }
 
 function toEnvVariableName(configName: string): string {

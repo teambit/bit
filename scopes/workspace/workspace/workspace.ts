@@ -391,7 +391,8 @@ export class Workspace implements ComponentFactory {
         // no need to invalidate anything.
         // if this is the same process, it'll get the updated one already.
         // if this is another process, it'll react to "this.triggerOnWorkspaceConfigChange()" anyway.
-      }
+      },
+      getPath: () => this.getWorkspaceConfig().path,
     }
   }
 
@@ -921,6 +922,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     const configOfDepResolverAspect = workspaceConfig.extensions.findExtension(DependencyResolverAspect.id);
     if (configOfDepResolverAspect) this.dependencyResolver.setConfig(configOfDepResolverAspect.config as any);
     this.dependencyResolver.clearCache();
+    this.configStore.invalidateCache();
 
     const onWorkspaceConfigChangeEntries = this.onWorkspaceConfigChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     await mapSeries(onWorkspaceConfigChangeEntries, async ([, onWorkspaceConfigFunc]) => {

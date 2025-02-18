@@ -1,8 +1,7 @@
 import path from 'path';
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-import { Helper } from '@teambit/legacy.e2e-helper';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-string'));
 

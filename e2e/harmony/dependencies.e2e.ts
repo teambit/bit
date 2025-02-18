@@ -1,7 +1,6 @@
 import { IssuesClasses } from '@teambit/component-issues';
 import { expect } from 'chai';
-import { Helper } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 describe('dependencies', function () {
   let helper: Helper;

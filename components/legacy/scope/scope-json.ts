@@ -6,7 +6,7 @@ import { DEFAULT_LANE } from '@teambit/lane-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { SCOPE_JSON, SCOPE_JSONC } from '@teambit/legacy.constants';
 import { Remote } from '@teambit/scope.remotes';
-import { cleanObject, writeFile } from '@teambit/legacy.utils';
+import { cleanObject, PathOsBasedAbsolute, writeFile } from '@teambit/legacy.utils';
 import { ScopeJsonNotFound } from './exceptions';
 
 export function getPath(scopePath: string): string {
@@ -44,7 +44,8 @@ export class ScopeJson {
   hasChanged = false;
   config?: Record<string, string>;
 
-  constructor({ name, remotes, resolverPath, hooksPath, license, groupName, version, lanes, config }: ScopeJsonProps) {
+  constructor({ name, remotes, resolverPath, hooksPath, license, groupName, version, lanes, config }: ScopeJsonProps,
+    readonly scopeJsonPath: PathOsBasedAbsolute) {
     this.name = name;
     this.version = version;
     this.resolverPath = resolverPath;
@@ -125,8 +126,8 @@ export class ScopeJson {
     this.hasChanged = true;
   }
 
-  async write(path: string) {
-    return writeFile(pathlib.join(path, SCOPE_JSON), this.toJson());
+  async write() {
+    return writeFile(this.scopeJsonPath, this.toJson());
   }
 
   trackLane(trackLaneData: TrackLane) {
@@ -159,9 +160,9 @@ export class ScopeJson {
     this.lanes.new = this.lanes.new.filter((l) => l !== laneName);
     this.hasChanged = true;
   }
-  async writeIfChanged(path: string) {
+  async writeIfChanged() {
     if (this.hasChanged) {
-      await this.write(path);
+      await this.write();
     }
   }
 
@@ -173,7 +174,7 @@ export class ScopeJson {
       throw new BitError(`unable to parse the scope.json file located at "${scopeJsonPath}".
 edit the file to fix the error, or delete it and run "bit init" to recreate it`);
     }
-    return new ScopeJson(jsonParsed);
+    return new ScopeJson(jsonParsed, scopeJsonPath);
   }
 
   static async loadFromFile(scopeJsonPath: string): Promise<ScopeJson> {
