@@ -98,7 +98,6 @@ export class CompositionsMain {
     if (!entry) return [];
     const compositions = entry.data.compositions;
     if (!compositions) return [];
-
     return Composition.fromArray(compositions);
   }
 

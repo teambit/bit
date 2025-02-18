@@ -117,7 +117,7 @@ export class ReactRouterUI {
       return { initialLocation };
     },
     serverInit: ({ browser }) => {
-      const initialLocation = browser?.location.url;
+      const initialLocation = `${browser.location.pathname}${browser.location.search}${browser.location.hash}`;
       return { initialLocation };
     },
     reactClientContext: this.RoutingContext,
