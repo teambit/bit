@@ -606,6 +606,7 @@
       }
     },
     "linkCoreAspects": false,
+    // "packageManager": "teambit.fusepm/aspects/fusepm",
     "packageManager": "teambit.dependencies/pnpm",
     "rootComponents": true,
     "overrides": {
@@ -627,6 +628,8 @@
     },
     "nodeVersion": "22.14.0",
     "engineStrict": true,
+    // This is a temporary workaround to fix "bit compile" on macOS and Windows.
+    // "bit compile" breaks node_modules when hard links are used.
     "packageImportMethod": "copy",
     "packageManagerArgs": [],
     "devFilePatterns": [
@@ -634,6 +637,8 @@
     ],
     "strictPeerDependencies": true,
     "autoInstallPeers": true,
+    // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
+    // "installFromBitDevRegistry": false,
     "savePrefix": "",
     "extraArgs": [],
     "peerDependencyRules": {
