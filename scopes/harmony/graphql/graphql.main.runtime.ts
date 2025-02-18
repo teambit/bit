@@ -321,6 +321,7 @@ export class GraphqlMain {
   ) {
     const logger = loggerFactory.createLogger(GraphqlAspect.id);
     const graphqlMain = new GraphqlMain(config, moduleSlot, context, logger, graphQLServerSlot, pubSubSlot);
+    graphqlMain.registerPubSub(new PubSub());
     return graphqlMain;
   }
 }

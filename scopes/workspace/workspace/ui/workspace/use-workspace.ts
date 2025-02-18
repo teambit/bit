@@ -169,7 +169,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
     const unSubCompRemoved = subscribeToMore({
       document: COMPONENT_SUBSCRIPTION_REMOVED,
       updateQuery: (prev, { subscriptionData }) => {
-        const idsToRemove: ComponentIdObj[] | undefined = subscriptionData.data?.componentRemoved?.componentIds;
+        const idsToRemove: ComponentIdObj[] | undefined = subscriptionData?.data?.componentRemoved?.componentIds;
         if (!idsToRemove || idsToRemove.length === 0) return prev;
 
         // side effect - trigger observers
