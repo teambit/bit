@@ -1591,13 +1591,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/renderers/variable"
     },
-    "rendering/ssr": {
-        "name": "rendering/ssr",
-        "scope": "teambit.react",
-        "version": "1.0.2",
-        "mainFile": "index.ts",
-        "rootDir": "components/rendering/ssr"
-    },
     "schema": {
         "name": "schema",
         "scope": "teambit.semantics",
@@ -2130,26 +2123,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/ui/preview-placeholder"
     },
-    "ui/queries/get-component-code": {
-        "name": "ui/queries/get-component-code",
-        "scope": "teambit.code",
-        "version": "0.0.502",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/queries/get-component-code"
-    },
     "ui/queries/get-docs": {
         "name": "ui/queries/get-docs",
         "scope": "teambit.docs",
         "version": "0.0.509",
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs"
-    },
-    "ui/queries/get-file-content": {
-        "name": "ui/queries/get-file-content",
-        "scope": "teambit.code",
-        "version": "0.0.504",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/queries/get-file-content"
     },
     "ui/react-router/slot-router": {
         "name": "ui/react-router/slot-router",

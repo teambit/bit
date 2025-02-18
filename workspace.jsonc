@@ -103,6 +103,8 @@
         "@teambit/code.ui.code-tab-tree": "^0.0.615",
         "@teambit/code.ui.hooks.use-code-params": "0.0.496",
         "@teambit/code.ui.object-formatter": "0.0.1",
+        "@teambit/code.ui.queries.get-component-code": "^0.0.503",
+        "@teambit/code.ui.queries.get-file-content": "^0.0.505",
         "@teambit/code.ui.utils.get-file-icon": "0.0.496",
         "@teambit/community.starters.hello-world": "^0.0.16",
         "@teambit/compilation.babel-compiler": "^1.1.13",
@@ -239,6 +241,7 @@
         "@teambit/react.instructions.react.adding-compositions": "0.0.7",
         "@teambit/react.instructions.react.adding-tests": "0.0.6",
         "@teambit/react.jest.react-jest": "^1.0.33",
+        "@teambit/react.rendering.ssr": "^1.0.3",
         "@teambit/react.ui.component-highlighter": "0.2.4",
         "@teambit/react.webpack.react-webpack": "^1.0.42",
         "@teambit/scope.content.scope-overview": "1.95.0",
@@ -603,7 +606,6 @@
       }
     },
     "linkCoreAspects": false,
-    // "packageManager": "teambit.fusepm/aspects/fusepm",
     "packageManager": "teambit.dependencies/pnpm",
     "rootComponents": true,
     "overrides": {
@@ -625,8 +627,6 @@
     },
     "nodeVersion": "23.5.0",
     "engineStrict": true,
-    // This is a temporary workaround to fix "bit compile" on macOS and Windows.
-    // "bit compile" breaks node_modules when hard links are used.
     "packageImportMethod": "copy",
     "packageManagerArgs": [],
     "devFilePatterns": [
@@ -634,8 +634,6 @@
     ],
     "strictPeerDependencies": true,
     "autoInstallPeers": true,
-    // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
-    // "installFromBitDevRegistry": false,
     "savePrefix": "",
     "extraArgs": [],
     "peerDependencyRules": {
