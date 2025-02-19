@@ -67,7 +67,6 @@ import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { VersionMaker, BasicTagParams, BasicTagSnapParams, updateVersions, VersionMakerParams } from './version-maker';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 
@@ -137,7 +136,7 @@ export class SnappingMain {
   private objectsRepo: Repository;
   constructor(
     readonly workspace: Workspace,
-    private logger: Logger,
+    readonly logger: Logger,
     readonly dependencyResolver: DependencyResolverMain,
     readonly scope: ScopeMain,
     private exporter: ExportMain,
@@ -806,35 +805,6 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       flattenedEdgesGetter.populateFlattenedAndEdgesForComp(component);
     });
     this.logger.profile('snap._addFlattenedDependenciesToComponents');
-  }
-
-  async _addDependenciesGraphToComponents(components: Component[]): Promise<void> {
-    if (!this.workspace) {
-      return;
-    }
-    this.logger.setStatusLine('adding dependencies graph...');
-    this.logger.profile('snap._addDependenciesGraphToComponents');
-    const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(components);
-    const options = {
-      rootDir: this.workspace.path,
-      rootComponentsPath: this.workspace.rootComponentsPath,
-      componentIdByPkgName,
-    };
-    await pMapPool(
-      components,
-      async (component) => {
-        if (component.state._consumer.componentMap?.rootDir) {
-          await this.dependencyResolver.addDependenciesGraph(
-            component,
-            component.state._consumer.componentMap.rootDir,
-            options
-          );
-        }
-      },
-      { concurrency: 10 }
-    );
-    this.logger.clearStatusLine();
-    this.logger.profile('snap._addDependenciesGraphToComponents');
   }
 
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
