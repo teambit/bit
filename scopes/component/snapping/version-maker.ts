@@ -75,6 +75,7 @@ export class VersionMaker {
   private builder: BuilderMain;
   private dependencyResolver: DependencyResolverMain;
   private allComponentsToTag: ConsumerComponent[] = [];
+  private allWorkspaceComps?: Component[];
   constructor(
     private snapping: SnappingMain,
     private components: Component[],
@@ -98,6 +99,7 @@ export class VersionMaker {
     stagedConfig?: StagedConfig;
     removedComponents?: ComponentIdList;
   }> {
+    this.allWorkspaceComps = this.workspace ? await this.workspace.list() : undefined;
     const componentsToTag = this.getUniqCompsToTag();
     const idsToTag = ComponentIdList.fromArray(componentsToTag.map((c) => c.id));
     const autoTagData = await this.getAutoTagData(idsToTag);
@@ -132,7 +134,7 @@ export class VersionMaker {
 
     const { rebuildDepsGraph, build, updateDependentsOnLane, setHeadAsParent, detachHead, overrideHead } = this.params;
     await this.snapping._addFlattenedDependenciesToComponents(this.allComponentsToTag, rebuildDepsGraph);
-    await this.snapping._addDependenciesGraphToComponents(this.components);
+    await this._addDependenciesGraphToComponents(this.components);
     await this.snapping.throwForDepsFromAnotherLane(this.allComponentsToTag);
     if (!build) this.emptyBuilderData();
     this.addBuildStatus(this.allComponentsToTag, BuildStatus.Pending);
@@ -195,6 +197,36 @@ export class VersionMaker {
       stagedConfig,
       removedComponents,
     };
+  }
+
+  private async _addDependenciesGraphToComponents(components: Component[]): Promise<void> {
+    if (!this.workspace) {
+      return;
+    }
+    this.snapping.logger.setStatusLine('adding dependencies graph...');
+    this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
+    if (!this.allWorkspaceComps) throw new Error('please make sure to populate this.allWorkspaceComps before');
+    const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(this.allWorkspaceComps);
+    const options = {
+      rootDir: this.workspace.path,
+      rootComponentsPath: this.workspace.rootComponentsPath,
+      componentIdByPkgName,
+    };
+    await pMapPool(
+      components,
+      async (component) => {
+        if (component.state._consumer.componentMap?.rootDir) {
+          await this.dependencyResolver.addDependenciesGraph(
+            component,
+            component.state._consumer.componentMap.rootDir,
+            options
+          );
+        }
+      },
+      { concurrency: 10 }
+    );
+    this.snapping.logger.clearStatusLine();
+    this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
   }
 
   private async triggerOnPreSnap(autoTagIds: ComponentIdList) {
