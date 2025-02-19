@@ -814,7 +814,8 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     }
     this.logger.setStatusLine('adding dependencies graph...');
     this.logger.profile('snap._addDependenciesGraphToComponents');
-    const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(components);
+    const allComponents = await this.workspace.list();
+    const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(allComponents);
     const options = {
       rootDir: this.workspace.path,
       rootComponentsPath: this.workspace.rootComponentsPath,
