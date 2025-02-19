@@ -549,15 +549,7 @@ describe('custom env', function () {
   describe('an empty env. nothing is configured, not even a compiler', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fs.outputFile(
-        'empty-env/empty-env.bit-env.ts',
-        `export class EmptyEnv {}
-export default new EmptyEnv();
-`
-      );
-      helper.fs.outputFile('empty-env/index.ts', `export { EmptyEnv } from './empty-env.bit-env';`);
-      helper.command.addComponent('empty-env');
-      helper.command.setEnv('empty-env', 'teambit.envs/env');
+      helper.env.setEmptyEnv();
 
       helper.fixtures.populateComponents(1, false);
       helper.command.setEnv('comp1', 'empty-env');
