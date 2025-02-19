@@ -59,7 +59,8 @@ export function resolveFilePath(
 
   if (fileTree.includes(normalized)) return normalized;
 
-  const requestedExt = path.extname(normalized);
+  const extension = path.extname(normalized);
+  const requestedExt = ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs'].includes(extension) ? extension : '';
   const basePathWithoutExt = requestedExt ? normalized.slice(0, -requestedExt.length) : normalized;
 
   const getTypeScriptVariants = (ext: string): string[] => {
