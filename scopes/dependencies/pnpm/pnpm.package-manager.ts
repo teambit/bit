@@ -21,9 +21,10 @@ import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
+import { type ResolveFunction } from '@pnpm/client';
 import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
 import { Config } from '@pnpm/config';
-import { type ProjectId, type ProjectManifest, type DepPath } from '@pnpm/types';
+import { type ProjectId, type ProjectManifest, type DepPath, type Registries as ScopeRegistires } from '@pnpm/types';
 import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
 import {
   buildDependenciesHierarchy,
@@ -43,7 +44,7 @@ import { join } from 'path';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
-import type { RebuildFn } from './lynx';
+import { generateResolverAndFetcher, getRegistriesMap, RebuildFn } from './lynx';
 import { type DependenciesGraph, type DepEdge } from '@teambit/objects';
 
 export type { RebuildFn };
@@ -86,9 +87,11 @@ export class PnpmPackageManager implements PackageManager {
       flattenEdges: DepEdge[];
       manifests: Record<string, ProjectManifest>;
       rootDir: string;
+      resolve: ResolveFunction;
+      registries: ScopeRegistires;
     }
   ) {
-    const lockfile: LockfileFileV9 = convertGraphToLockfile(dependenciesGraph, opts);
+    const lockfile: LockfileFileV9 = await convertGraphToLockfile(dependenciesGraph, opts);
     Object.assign(lockfile, {
       bit: {
         restoredFromModel: true,
@@ -112,16 +115,23 @@ export class PnpmPackageManager implements PackageManager {
     const { install } = require('./lynx');
 
     console.log('fl', installOptions.flattenEdges != null)
+    const registries = await this.depResolver.getRegistries();
+    const proxyConfig = await this.depResolver.getProxyConfig();
+    const networkConfig = await this.depResolver.getNetworkConfig();
+    const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
     if (
       installOptions.dependenciesGraph &&
       installOptions.flattenEdges &&
       isFeatureEnabled(DEPS_GRAPH) &&
       (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
     ) {
+      const { resolve } = await generateResolverAndFetcher(config.cacheDir, registries, proxyConfig, networkConfig);
       await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
         flattenEdges: installOptions.flattenEdges,
         manifests,
         rootDir,
+        registries: getRegistriesMap(registries),
+        resolve,
       });
     }
 
@@ -133,10 +143,6 @@ export class PnpmPackageManager implements PackageManager {
       // this.logger.console('-------------------------PNPM OUTPUT-------------------------');
       this.logger.off();
     }
-    const registries = await this.depResolver.getRegistries();
-    const proxyConfig = await this.depResolver.getProxyConfig();
-    const networkConfig = await this.depResolver.getNetworkConfig();
-    const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
     if (!installOptions.useNesting && installOptions.rootComponentsForCapsules) {
       manifests = await extendWithComponentsFromDir(rootDir, manifests);
     }

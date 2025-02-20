@@ -1,7 +1,9 @@
 import path from 'path';
-import { type ProjectManifest } from '@pnpm/types';
+import { type ProjectManifest, type Registries } from '@pnpm/types';
 import { type LockfileFileV9, type InlineSpecifiersResolvedDependencies } from '@pnpm/lockfile.types';
+import { type ResolveFunction } from '@pnpm/client';
 import * as dp from '@pnpm/dependency-path';
+import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
 import { pick, partition } from 'lodash';
 import {
   type DepEdge,
@@ -183,18 +185,22 @@ function replaceFileVersionsWithPendingVersions<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj).replaceAll(/file:[^'"(]+/g, 'pending:'));
 }
 
-export function convertGraphToLockfile(
+export async function convertGraphToLockfile(
   graph: DependenciesGraph,
   {
     flattenEdges,
     manifests,
     rootDir,
+    resolve,
+    registries,
   }: {
     flattenEdges: DepEdge[];
     manifests: Record<string, ProjectManifest>;
     rootDir: string;
+    resolve: ResolveFunction;
+    registries: Registries;
   }
-): LockfileFileV9 {
+): Promise<LockfileFileV9> {
   const packages = {};
   const snapshots = {};
   const allEdgeIds = new Set(graph.edges.map(({ id }) => id));
@@ -216,7 +222,7 @@ export function convertGraphToLockfile(
       Object.assign(packages[pkgId], convertGraphPackageToLockfilePackage(graphPkg));
     }
   }
-  const lockfile = {
+  let lockfile = {
     lockfileVersion: '9.0',
     packages,
     snapshots,
@@ -270,17 +276,42 @@ export function convertGraphToLockfile(
     }
   });
   let lockfileString = JSON.stringify(lockfile);
+  let pkgsToResolve: Array<{ name: string; version: string; pkgId: string }> = [];
   // console.log(JSON.stringify(graph.packages, null, 2))
   for (const [pkgId, pkg] of graph.packages.entries()) {
     if (pkgId.includes('@pending:') && pkg.component) {
       const compId = `${pkg.component.scope}/${pkg.component.name}`;
       if (componentVersions.get(compId)?.size === 1) {
-        lockfileString = lockfileString.replaceAll(pkgId, pkgId.replace('@pending:', `@${Array.from(componentVersions.get(compId)!)[0]}`));
+        let version = Array.from(componentVersions.get(compId)!)[0];
+        if (!version.includes('.')) {
+          version = `0.0.0-${version}`;
+        }
+        const newPkgId = pkgId.replace('@pending:', `@${version}`);
+        lockfileString = lockfileString.replaceAll(pkgId, newPkgId);
+        const parsed = dp.parse(pkgId);
+        pkgsToResolve.push({ name: parsed.name!, version, pkgId: newPkgId });
       }
     }
   }
-  // console.log(JSON.parse(lockfileString))
-  return JSON.parse(lockfileString);
+  lockfile = JSON.parse(lockfileString);
+  await Promise.all(pkgsToResolve.map(async (pkgToResolve) => {
+    const { resolution } = await resolve({
+      alias: pkgToResolve.name,
+      pref: pkgToResolve.version,
+    }, {
+      lockfileDir: '',
+      projectDir: '',
+      registry: pickRegistryForPackage(registries, pkgToResolve.name),
+      preferredVersions: {},
+    })
+    if (resolution.type == undefined) {
+      console.log('XXXXXXXXXXXXXX', pkgToResolve, resolution.integrity)
+      lockfile.packages[pkgToResolve.pkgId].resolution = {
+        integrity: resolution.integrity,
+      };
+    }
+  }));
+  return lockfile;
 
   function convertToDeps(neighbours: DependencyNeighbour[]) {
     const deps = {};
