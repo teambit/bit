@@ -122,19 +122,6 @@ export function getPinoLoggerWithoutWorkers(
   prettyOptions: PrettyOptions,
   prettyOptionsConsole: PrettyOptions
 ): PinoLoggerResult {
-  const dest = pino.destination({
-    dest: DEBUG_LOG, // omit for stdout
-    sync: true, // no choice here :( otherwise, it looses data especially when an error is thrown (although pino.final is used to flush)
-  });
-
-  const prettyStream = prettifier({
-    ...prettyOptions,
-    destination: dest,
-    sync: true,
-  });
-
-  const fileStream = jsonFormat ? dest : prettyStream;
-
   const destConsole = pino.destination({
     sync: true, // no choice here :( otherwise, it looses data especially when an error is thrown (although pino.final is used to flush)
   });
@@ -154,7 +141,24 @@ export function getPinoLoggerWithoutWorkers(
 
   const consoleStream = jsonFormat ? destConsole : prettyConsoleStream;
 
-  const pinoLogger = pino(loggerOptions, fileStream);
+  const pinoRoll = pino.transport({
+    target: 'pino-roll',
+    options: {
+      file: DEBUG_LOG.replace('.log', ''),
+      size: '6k',
+      sync: true,
+      mkdir: true,
+      extension: '.log',
+      symlink: true,
+      limit: {
+        count: 10
+      }
+    }
+  });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { formatters, ...loggerOptionsWithoutFormatter } = loggerOptions;
+  const fileLoggerOptions = jsonFormat ? loggerOptions : loggerOptionsWithoutFormatter;
+  const pinoLogger = pino(fileLoggerOptions, pinoRoll);
 
   const pinoLoggerConsole = pino(loggerOptions, consoleStream);
 

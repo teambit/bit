@@ -6,6 +6,23 @@ process.on('uncaughtException', (err) => {
 });
 
 import fs from 'fs';
+
+// let numR = 0;
+// const originalReadFile = fs.readFile;
+// const originalReadFileSync = fs.readFileSync;
+// fs.readFile = (...args) => {
+//   numR++;
+//   console.log('reading', numR, args[0]);
+//   return originalReadFile(...args);
+// }
+
+// fs.readFileSync = (...args) => {
+//   numR++;
+//   console.log('reading', numR, args[0]);
+//   return originalReadFileSync(...args);
+// }
+
+
 import gracefulFs from 'graceful-fs';
 // monkey patch fs module to avoid EMFILE error (especially when running watch operation)
 gracefulFs.gracefulify(fs);
