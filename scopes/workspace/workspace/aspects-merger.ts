@@ -5,7 +5,7 @@ import { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
 import { DependencyResolverAspect, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 import { ExtensionDataList, getCompareExtPredicate } from '@teambit/legacy.extension-data';
-import { partition, mergeWith, merge, uniq, uniqWith, compact } from 'lodash';
+import { partition, mergeWith, merge, uniq, uniqWith, compact, isObject } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { AspectSpecificField, ExtensionsOrigin, Workspace } from './workspace';
 import { MergeConflictFile } from './merge-conflict-file';
@@ -112,13 +112,25 @@ export class AspectsMerger {
     const extensionsToMerge: Array<{ origin: ExtensionsOrigin; extensions: ExtensionDataList; extraData: any }> = [];
     let envWasFoundPreviously = false;
     const removedExtensionIds: string[] = [];
+    const ignoredFromSpecificsExtensionIds: string[] = [];
 
     const addExtensionsToMerge = async (extensions: ExtensionDataList, origin: ExtensionsOrigin, extraData?: any) => {
       if (!extensions.length) {
         return;
       }
+
+      const isSpecific = ['BitmapFile', 'ModelSpecific', 'ComponentJsonFile'].includes(origin);
+
       removedExtensionIds.push(...extensions.filter((extData) => extData.isRemoved).map((extData) => extData.stringId));
-      const extsWithoutRemoved = extensions.filterRemovedExtensions();
+      let extsWithoutIgnored = extensions;
+      if (isSpecific) {
+        ignoredFromSpecificsExtensionIds.push(
+          ...extensions.filter((extData) => extData.isIgnoredFromSpecific).map((extData) => extData.stringId)
+        );
+        extsWithoutIgnored = extensions.filter((ext) => !ignoredFromSpecificsExtensionIds.includes(ext.stringId));
+      }
+
+      const extsWithoutRemoved = extsWithoutIgnored.filterRemovedExtensions();
       const selfInMergedExtensions = extsWithoutRemoved.findExtension(componentId.toStringWithoutVersion(), true);
       const extsWithoutSelf = selfInMergedExtensions?.extensionId
         ? extsWithoutRemoved.remove(selfInMergedExtensions.extensionId)
@@ -141,7 +153,11 @@ export class AspectsMerger {
       extensionsToMerge.push({ origin, extensions: extensionDataListFiltered, extraData });
     };
     const setDataListAsSpecific = (extensions: ExtensionDataList) => {
-      extensions.forEach((dataEntry) => (dataEntry.config[AspectSpecificField] = true));
+      extensions.forEach((dataEntry) => {
+        if (isObject(dataEntry.config)) {
+          dataEntry.config[AspectSpecificField] = true;
+        }
+      });
     };
     if (bitMapExtensions && !excludeOrigins.includes('BitmapFile')) {
       const extensionDataList = ExtensionDataList.fromConfigObject(bitMapExtensions);
