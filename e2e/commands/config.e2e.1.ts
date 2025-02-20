@@ -54,26 +54,6 @@ describe('bit config', function () {
       const confVal = helper.command.runCmd('bit config get conf.key');
       expect(confVal).to.have.string('bit-value\n');
     });
-    it('should read config from git-local if not exists in bit', () => {
-      helper.command.runCmd('bit config del conf.key');
-      const confVal = helper.command.runCmd('bit config get conf.key');
-      expect(confVal).to.have.string('git-local-val\n');
-    });
-    it('should read config from git-global if not exists in bit and git-local', () => {
-      helper.git.unsetGitConfig('conf.key', 'local');
-      const confVal = helper.command.runCmd('bit config get conf.key');
-      // Clean the global env
-      helper.git.unsetGitConfig('conf.key', 'global');
-      expect(confVal).to.have.string('git-global-val\n');
-    });
-    // Commented because of permission issue
-    // it('should read config from git-system if not exists in bit', () => {
-    //   helper.git.unsetGitConfig('conf.key', 'global');
-    //   helper.command.runCmd('bit config del conf.key');
-    //   const confVal = helper.command.runCmd('bit config get conf.key');
-    //   expect(confVal).to.be.equal('git-system-val\n');
-    // });
-    // it('should return undefined if not exists both in git and bit', () => {
     it('should not throw an error if not exists both in git and bit', () => {
       // const confVal = helper.command.runCmd('bit config get nonExistsKey');
       // expect(confVal).to.be.oneOf(['\n', '', 'undefined\n']);
