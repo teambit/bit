@@ -414,4 +414,76 @@ chai.use(require('chai-fs'));
       helper.scopeHelper.destroy();
     });
   });
+  describe.only('two components exported with different peer dependencies using the same env', function () {
+    let randomStr: string;
+    before(async () => {
+      randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
+      const name = `@ci/${randomStr}.{name}`;
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
+      await npmCiRegistry.init();
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+      helper.env.setCustomNewEnv(
+        undefined,
+        undefined,
+        {
+          policy: {
+            peers: [
+              {
+                name: '@pnpm.e2e/abc',
+                version: '*',
+                supportedRange: '*',
+              },
+            ],
+          },
+        },
+        false,
+        'custom-env/env',
+        'custom-env/env'
+      );
+      helper.fs.createFile('bar', 'bar.js', 'require("@pnpm.e2e/abc"); // eslint-disable-line');
+      helper.command.addComponent('bar');
+      helper.extensions.addExtensionToVariant('bar', `${helper.scopes.remote}/custom-env/env`, {});
+      await addDistTag({ package: '@pnpm.e2e/abc', version: '1.0.0', distTag: 'latest' });
+      await addDistTag({ package: '@pnpm.e2e/peer-a', version: '1.0.1', distTag: 'latest' });
+      helper.command.install('--add-missing-deps');
+      helper.command.tagAllComponents('--skip-tests');
+      helper.command.export();
+
+      await addDistTag({ package: '@pnpm.e2e/abc', version: '2.0.0', distTag: 'latest' });
+      await addDistTag({ package: '@pnpm.e2e/peer-a', version: '1.0.0', distTag: 'latest' });
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.fs.createFile('foo', 'foo.js', `require("@pnpm.e2e/abc"); require("@ci/${randomStr}.bar");`);
+      helper.command.addComponent('foo');
+      helper.extensions.addExtensionToVariant('foo', `${helper.scopes.remote}/custom-env/env@0.0.1`, {});
+      helper.command.install('--add-missing-deps');
+      helper.command.snapAllComponentsWithoutBuild('--skip-tests');
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.import(`${helper.scopes.remote}/foo@latest ${helper.scopes.remote}/bar@latest`);
+    });
+    let lockfile: any;
+    it('should generate a lockfile', () => {
+      lockfile = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8'));
+      expect(lockfile.bit.restoredFromModel).to.eq(true);
+    });
+    it('should resolve to one version of the peer dependency, the highest one', () => {
+      expect(lockfile.packages).to.not.have.property('@pnpm.e2e/peer-a@1.0.0');
+      expect(lockfile.packages).to.not.have.property('@pnpm.e2e/abc@1.0.0');
+      expect(lockfile.packages).to.have.property('@pnpm.e2e/peer-a@1.0.1');
+      expect(lockfile.packages).to.have.property('@pnpm.e2e/abc@2.0.0');
+    });
+    it('imported component is not installed as a dependency', () => {
+      expect(lockfile.packages).to.not.have.property(`@ci/${randomStr}.bar@0.0.1`);
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.command.delConfig('registry');
+      helper.scopeHelper.destroy();
+    });
+  });
 });

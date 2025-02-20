@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { MainAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { ComponentMap } from '@teambit/component';
-import { type DependenciesGraph } from '@teambit/objects';
+import { DepEdge, type DependenciesGraph } from '@teambit/objects';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from '@teambit/toolbox.path.path';
 import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
@@ -46,6 +46,7 @@ export type InstallOptions = {
   excludeExtensionsDependencies?: boolean;
   dedupeInjectedDeps?: boolean;
   dependenciesGraph?: DependenciesGraph;
+  flattenEdges?: DepEdge[];
 };
 
 export type GetComponentManifestsOptions = {
@@ -210,6 +211,7 @@ export class DependencyInstaller {
       preferOffline: this.preferOffline,
       dedupeInjectedDeps: options.dedupeInjectedDeps,
       dependenciesGraph: options.dependenciesGraph,
+      flattenEdges: options.flattenEdges,
       ...packageManagerOptions,
     };
     if (options.installTeambitBit) {

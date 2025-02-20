@@ -4,6 +4,7 @@ import { type LockfileFileV9, type InlineSpecifiersResolvedDependencies } from '
 import * as dp from '@pnpm/dependency-path';
 import { pick, partition } from 'lodash';
 import {
+  type DepEdge,
   DependenciesGraph,
   type PackagesMap,
   type PackageAttributes,
@@ -184,8 +185,15 @@ function replaceFileVersionsWithPendingVersions<T>(obj: T): T {
 
 export function convertGraphToLockfile(
   graph: DependenciesGraph,
-  manifests: Record<string, ProjectManifest>,
-  rootDir: string
+  {
+    flattenEdges,
+    manifests,
+    rootDir,
+  }: {
+    flattenEdges: DepEdge[];
+    manifests: Record<string, ProjectManifest>;
+    rootDir: string;
+  }
 ): LockfileFileV9 {
   const packages = {};
   const snapshots = {};
@@ -244,7 +252,35 @@ export function convertGraphToLockfile(
       }
     }
   }
-  return lockfile;
+  const componentVersions = new Map<string, Set<string>>();
+  flattenEdges.forEach((edge) => {
+    {
+      const compId = `${edge.source.scope}/${edge.source.name}`;
+      if (!componentVersions.has(compId)) {
+        componentVersions.set(compId, new Set());
+      }
+      componentVersions.get(compId)!.add(edge.source.version);
+    }
+    {
+      const compId = `${edge.target.scope}/${edge.target.name}`;
+      if (!componentVersions.has(compId)) {
+        componentVersions.set(compId, new Set());
+      }
+      componentVersions.get(compId)!.add(edge.target.version);
+    }
+  });
+  let lockfileString = JSON.stringify(lockfile);
+  // console.log(JSON.stringify(graph.packages, null, 2))
+  for (const [pkgId, pkg] of graph.packages.entries()) {
+    if (pkgId.includes('@pending:') && pkg.component) {
+      const compId = `${pkg.component.scope}/${pkg.component.name}`;
+      if (componentVersions.get(compId)?.size === 1) {
+        lockfileString = lockfileString.replaceAll(pkgId, pkgId.replace('@pending:', `@${Array.from(componentVersions.get(compId)!)[0]}`));
+      }
+    }
+  }
+  // console.log(JSON.parse(lockfileString))
+  return JSON.parse(lockfileString);
 
   function convertToDeps(neighbours: DependencyNeighbour[]) {
     const deps = {};
