@@ -107,9 +107,12 @@ export function APINodeDetails({
     const word = model.getWordAtPosition(position);
     const wordApiNode: APINode | undefined = word
       ? apiRefModel?.apiByName?.get(word.word) ||
-        apiRefModel?.apiByName?.get(apiRefModel.generateInternalAPIKey(filePath, word.word))
+      apiRefModel?.apiByName?.get(apiRefModel.generateInternalAPIKey(filePath, word.word))
       : undefined;
-    const wordApiUrl = wordApiNode ? getAPINodeUrl({ selectedAPI: wordApiNode.api.name }) : null;
+    const wordApiUrl = wordApiNode ? getAPINodeUrl({
+      selectedAPI: wordApiNode.exported
+        ? wordApiNode.api.name : apiRefModel.generateInternalAPIKey(filePath, word.word)
+    }) : null;
     apiUrlToRoute.current = wordApiUrl;
     if (!wordApiUrl || wordApiNode?.api.name === name) return undefined;
     const contents = [

@@ -131,7 +131,7 @@ async function exportSpecifierToSchemaNode(
     const definitionNode = await context.definition(definitionInfo);
 
     if (!definitionNode) {
-      const exportNode = await context.resolveType(element, name, false);
+      const exportNode = await context.resolveType(element, name);
       return new ExportSchema(location, name, exportNode, alias);
     }
 

@@ -46,21 +46,23 @@ function TypeRefComponent(props: APINodeRenderProps) {
       <>{children}</>
     );
 
-  const exportedTypeFromSameComp = typeRefNode.isFromThisComponent() ? apiRefModel.getByName(typeRefNode) : undefined;
+  const exportedTypeFromSameComp = typeRefNode.isFromThisComponent()
+    ? apiRefModel.getByName(typeRefNode, typeRefNode.internalFilePath)
+    : undefined;
 
   const exportedTypeUrlFromSameComp =
     exportedTypeFromSameComp &&
     useUpdatedUrlFromQuery({
       selectedAPI: typeRefNode.isInternalReference()
-        ? apiRefModel.internalAPIKey(typeRefNode)
+        ? apiRefModel.internalAPIKey(typeRefNode, typeRefNode.internalFilePath)
         : exportedTypeFromSameComp.api.name,
     });
 
   const exportedTypeUrlFromAnotherComp = typeRefNode.componentId
     ? getExportedTypeUrlFromAnotherComp({
-        componentId: typeRefNode.componentId,
-        selectedAPI: typeRefNode.name,
-      })
+      componentId: typeRefNode.componentId,
+      selectedAPI: typeRefNode.name,
+    })
     : undefined;
 
   const packageUrl = typeRefNode.packageName ? `https://www.npmjs.com/package/${typeRefNode.packageName}` : undefined;
@@ -189,9 +191,8 @@ function getExportedTypeUrlFromAnotherComp({
   const componentUrl = ComponentUrl.toUrl(componentId, { useLocationOrigin: false, includeVersion: true });
   const [componentIdUrl, versionQuery] = componentUrl.split('?');
 
-  const exportedTypeUrl = `${componentIdUrl}/~api-reference?selectedAPI=${encodeURIComponent(selectedAPI)}${
-    versionQuery ? `&${versionQuery}` : ''
-  }`;
+  const exportedTypeUrl = `${componentIdUrl}/~api-reference?selectedAPI=${encodeURIComponent(selectedAPI)}${versionQuery ? `&${versionQuery}` : ''
+    }`;
 
   return exportedTypeUrl;
 }
