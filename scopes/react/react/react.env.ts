@@ -79,7 +79,6 @@ import type { DevFilesMain } from '@teambit/dev-files';
 export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
-const eslintConfig = require('./eslint/eslintrc');
 const prettierConfig = require('./prettier/prettier.config');
 
 // TODO: move to be taken from the key mode of compiler context
@@ -297,6 +296,7 @@ export class ReactEnv
     const tsconfigPath = require.resolve('./typescript/tsconfig.json');
 
     // resolve all plugins from the react environment.
+    const eslintConfig = require('./eslint/eslintrc');
     const mergedOptions = this.getEslintOptions(eslintConfig, __dirname, context);
     const configMutator = new EslintConfigMutator(mergedOptions);
     const transformerContext: EslintConfigTransformContext = { fix: !!context.fix };
