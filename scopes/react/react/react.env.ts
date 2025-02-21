@@ -75,7 +75,6 @@ import componentPreviewProdConfigFactory from './webpack/webpack.config.componen
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
 import type { WorkerMain } from '@teambit/worker';
 import type { DevFilesMain } from '@teambit/dev-files';
-import eslintConfig from './eslint/eslintrc';
 
 export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
@@ -297,6 +296,7 @@ export class ReactEnv
     const tsconfigPath = require.resolve('./typescript/tsconfig.json');
 
     // resolve all plugins from the react environment.
+    const eslintConfig = require('./eslint/eslintrc');
     const mergedOptions = this.getEslintOptions(eslintConfig, __dirname, context);
     const configMutator = new EslintConfigMutator(mergedOptions);
     const transformerContext: EslintConfigTransformContext = { fix: !!context.fix };
