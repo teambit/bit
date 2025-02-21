@@ -40,7 +40,6 @@ export class FunctionLikeTransformer implements SchemaTransformer {
     };
     const info = node.name ? await context.getQuickInfo(node.name) : await getQuickInfoFromDefaultModifier();
     const returnTypeStr = info ? parseTypeFromQuickInfo(info) : 'any';
-    console.log("🚀 ~ FunctionLikeTransformer ~ transform ~ returnTypeStr:", returnTypeStr)
     const displaySig = info?.body?.displayString || '';
     const args = (await pMapSeries(node.parameters, async (param) =>
       context.computeSchema(param)
