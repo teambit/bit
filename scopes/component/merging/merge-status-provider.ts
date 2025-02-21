@@ -185,7 +185,6 @@ other:   ${otherLaneHead.toString()}`);
       }
       const baseExtension = baseExtensions.findExtension(currentExtension.idWithoutVersion , true);
       const otherExtension = otherExtensions.findExtension(currentExtension.idWithoutVersion, true);
-      // console.log('working on ', currentExtension.stringId, baseExtension?.stringId, otherExtension?.stringId);
       if (!otherExtension) {
         conflictedAspects[currentExtension.stringId] = 'missing in other';
         return;
