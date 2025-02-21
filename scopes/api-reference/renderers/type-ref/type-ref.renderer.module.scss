@@ -14,6 +14,8 @@
 .nodeLink {
   color: #4646c6;
   font-size: var(--bit-p-xs);
+  display: flex;
+  gap: 4px;
 }
 // .package {
 // }
@@ -30,4 +32,13 @@
 
 .typeArgNode {
   padding: 1px;
+}
+
+.locationIcon {
+  display: flex;
+  img {
+    margin-right: 2px;
+    height: 12px;
+  }
+
 }

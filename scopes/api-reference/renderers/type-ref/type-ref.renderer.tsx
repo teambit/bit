@@ -165,8 +165,15 @@ export function TypeRefName({
   if (url && !withinLink) {
     return (
       <LinkContext.Provider value={true}>
-        <Link href={url} external={external} className={classnames(className, styles.nodeLink)}>
+        <Link
+          href={url}
+          external={external}
+          className={classnames(className, styles.nodeLink)}
+        >
           {name}
+          {external && <div className={styles.locationIcon}>
+            <img src="https://static.bit.dev/design-system-assets/Icons/external-link.svg"></img>
+          </div>}
           {children}
         </Link>
       </LinkContext.Provider>

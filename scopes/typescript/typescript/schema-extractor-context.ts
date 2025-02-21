@@ -514,6 +514,7 @@ export class SchemaExtractorContext {
    * Create schema for method return type, attempting to get type reference
    */
   private async createMethodReturnSchema(node: Node, location: Location, returnType: string): Promise<SchemaNode> {
+    console.log("🚀 ~ SchemaExtractorContext ~ createMethodReturnSchema ~ returnType:", returnType)
     if (this.isArrayType(returnType)) {
       const baseType = this.getArrayBaseType(returnType);
       const currentFilePath = node.getSourceFile().fileName;
@@ -617,6 +618,7 @@ export class SchemaExtractorContext {
    * Create schema for Promise type, attempting to get type reference for the contained type
    */
   private async createPromiseSchema(node: Node, location: Location, innerType: string): Promise<SchemaNode> {
+    console.log("🚀 ~ createPromiseSchema ~ innerType:", innerType)
     const typeRef = await this.getTypeRef(innerType, this.getIdentifierKeyForNode(node), location);
     return typeRef || new InferenceTypeSchema(location, innerType);
   }

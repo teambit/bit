@@ -1542,6 +1542,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/renderers/this"
     },
+    "renderers/tuple-type": {
+        "name": "renderers/tuple-type",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.api-reference",
+        "mainFile": "index.ts",
+        "rootDir": "components/renderers/tuple-type",
+        "config": {
+            "teambit.react/react": {},
+            "teambit.envs/envs": {
+                "env": "teambit.react/react"
+            }
+        }
+    },
     "renderers/type": {
         "name": "renderers/type",
         "scope": "teambit.api-reference",

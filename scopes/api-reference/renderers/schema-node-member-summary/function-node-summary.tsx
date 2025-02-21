@@ -81,7 +81,7 @@ export function FunctionNodeSummary({
               customStyle={{
                 borderRadius: '8px',
                 marginTop: '4px',
-                padding: '0',
+                padding: '12px',
               }}
               codeTagProps={{ style: { fontSize: '11px' } }}
             >

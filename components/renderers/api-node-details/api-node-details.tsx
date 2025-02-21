@@ -62,23 +62,21 @@ export function APINodeDetails({
   const signatureContainerRef = useRef<HTMLDivElement | null>(null);
   const exampleContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // const [signatureHeight, setSignatureHeight] = useState<string | undefined>();
-  // const [exampleHeight, setExampleHeight] = useState<string | undefined>();
-
   const [containerSize] = useState<{ width?: number; height?: number }>({
     width: undefined,
     height: undefined,
   });
 
   const currentQueryParams = query.toString();
-  // const signatureHeightStyle = (!!signatureHeight && `calc(${signatureHeight} + 16px)`) || '250px';
-  // const exampleHeightStyle = (!!exampleHeight && `calc(${exampleHeight} + 16px)`) || '250px';
 
   const indexHidden = (containerSize.width ?? 0) < INDEX_THRESHOLD_WIDTH;
 
   const example = (doc?.tags || []).find((tag) => tag.tagName === 'example');
-  const comment =
-    doc?.comment ?? doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n`), '');
+  const comment = doc?.comment
+    ?? doc?.tags
+      ?.filter((tag) => tag.comment)
+      .reduce((acc, tag) => acc.concat(`${tag.comment}\n`), '');
+
   const linkComment = doc?.tags?.find((tag) => tag.tagName === 'link')?.comment;
 
   let linkPlaceholder: string | undefined;
