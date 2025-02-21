@@ -75,11 +75,11 @@ import componentPreviewProdConfigFactory from './webpack/webpack.config.componen
 import componentPreviewDevConfigFactory from './webpack/webpack.config.component.dev';
 import type { WorkerMain } from '@teambit/worker';
 import type { DevFilesMain } from '@teambit/dev-files';
+import eslintConfig from './eslint/eslintrc';
 
 export const ReactEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
-const eslintConfig = require('./eslint/eslintrc');
 const prettierConfig = require('./prettier/prettier.config');
 
 // TODO: move to be taken from the key mode of compiler context
