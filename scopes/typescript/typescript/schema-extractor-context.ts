@@ -468,7 +468,7 @@ export class SchemaExtractorContext {
       }
 
       return new InferenceTypeSchema(location, typeStr || 'any');
-    } catch (e) {
+    } catch {
       return new InferenceTypeSchema(location, typeStr || 'any');
     }
   }
