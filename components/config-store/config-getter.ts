@@ -58,7 +58,12 @@ export class ConfigGetter {
     if (!isNil(val)) {
       return val;
     }
-
+    const gitKeys = ['user.name', 'user.email'];
+    if (gitKeys.includes(key)) {
+      return this.getFromGit(key);
+    }
+  }
+  private getFromGit(key: string): string | undefined {
     if (key in this.gitStore) {
       return this.gitStore[key];
     }
