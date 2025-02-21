@@ -62,54 +62,6 @@ export class APIReferenceModel {
       .filter((schemaNode) => schemaNode.renderer) as APINode[];
   }
 
-  mapToAPINode_bk(api: APISchema, renderers: APINodeRenderer[], componentId: ComponentID): APINode[] {
-    const { internals } = api;
-
-    const { exports: exportedSchemaNodes } = api.module;
-    const exportedInternalKeySet = new Set(exportedSchemaNodes.map((schemaNode) => this.internalAPIKey(schemaNode)));
-
-    const internalSchemaNodes = internals
-      .reduce((acc, next) => {
-        return acc.concat([...next.internals]);
-      }, new Array<SchemaNode>())
-      .filter((schemaNode) => !exportedInternalKeySet.has(this.internalAPIKey(schemaNode)));
-
-    const defaultRenderers = renderers.filter((renderer) => renderer.default);
-    const nonDefaultRenderers = renderers.filter((renderer) => !renderer.default);
-
-    return exportedSchemaNodes
-      .map(
-        (schemaNode) =>
-          ({
-            componentId,
-            api: ExportSchema.isExportSchema(schemaNode) ? schemaNode.exportNode : schemaNode,
-            alias: ExportSchema.isExportSchema(schemaNode) ? schemaNode.alias : undefined,
-            exported: true,
-            renderer:
-              nonDefaultRenderers.find((renderer) =>
-                renderer.predicate(ExportSchema.isExportSchema(schemaNode) ? schemaNode.exportNode : schemaNode)
-              ) ||
-              defaultRenderers.find((renderer) =>
-                renderer.predicate(ExportSchema.isExportSchema(schemaNode) ? schemaNode.exportNode : schemaNode)
-              ),
-          }) as APINode
-      )
-      .concat(
-        internalSchemaNodes.map(
-          (schemaNode) =>
-            ({
-              componentId,
-              api: schemaNode,
-              exported: false,
-              renderer:
-                nonDefaultRenderers.find((renderer) => renderer.predicate(schemaNode)) ||
-                defaultRenderers.find((renderer) => renderer.predicate(schemaNode)),
-            }) as APINode
-        )
-      )
-      .filter((schemaNode) => schemaNode.renderer) as APINode[];
-  }
-
   getByType(type: string): APINode<SchemaNode>[] {
     return this.apiByType.get(type) ?? [];
   }
