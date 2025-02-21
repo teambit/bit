@@ -40,7 +40,7 @@ import { InstallMain, InstallAspect } from '@teambit/install';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
-import { MergeStatusProvider, MergeStatusProviderOptions } from './merge-status-provider';
+import { DataMergeResult, MergeStatusProvider, MergeStatusProviderOptions } from './merge-status-provider';
 import {
   MergeStrategy,
   FileStatus,
@@ -64,6 +64,7 @@ export type ComponentMergeStatus = ComponentStatusBase & {
   divergeData?: SnapsDistance;
   resolvedUnrelated?: ResolveUnrelatedData;
   configMergeResult?: ConfigMergeResult;
+  dataMergeResult?: DataMergeResult;
 };
 
 export type ComponentMergeStatusBeforeMergeAttempt = ComponentStatusBase & {
@@ -326,7 +327,8 @@ export class MergingMain {
         const { taggedComponents, autoTaggedResults, removedComponents } = results;
         return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults, removedComponents };
       }
-      return this.snapResolvedComponents(snapMessage, build, currentLane?.toLaneId(), updatedComponents);
+      return this.snapResolvedComponents(allComponentsStatus, snapMessage, build, currentLane?.toLaneId(),
+      updatedComponents);
     };
     let mergeSnapResults: MergeSnapResults = null;
     let mergeSnapError: Error | undefined;
@@ -618,6 +620,7 @@ export class MergingMain {
   }
 
   private async snapResolvedComponents(
+    allComponentsStatus: ComponentMergeStatus[],
     snapMessage?: string,
     build?: boolean,
     laneId?: LaneId,
@@ -628,6 +631,18 @@ export class MergingMain {
     if (!unmergedComponents.length) return null;
     const ids = ComponentIdList.fromArray(unmergedComponents.map((r) => ComponentID.fromObject(r.id)));
     if (!this.workspace) {
+      const getLoadAspectOnlyForIds = (): ComponentIdList | undefined => {
+        if (!allComponentsStatus.length || !allComponentsStatus[0].dataMergeResult) return undefined;
+        const dataConflictedIds = allComponentsStatus
+          .filter((c) => {
+            const conflictedAspects = c.dataMergeResult?.conflictedAspects || {};
+            const aspectIds = Object.keys(conflictedAspects);
+            aspectIds.forEach(aspectId => this.logger.debug(`conflicted-data for "${c.id.toString()}". aspectId: ${aspectId}. reason: ${conflictedAspects[aspectId]}`));
+            return aspectIds.length;
+          })
+          .map((c) => c.id);
+        return ComponentIdList.fromArray(dataConflictedIds);
+      };
       const results = await this.snapping.snapFromScope(
         ids.map((id) => ({
           componentId: id.toString(),
@@ -638,6 +653,7 @@ export class MergingMain {
           build,
           lane: laneId?.toString(),
           updatedLegacyComponents: updatedComponents,
+          loadAspectOnlyForIds: getLoadAspectOnlyForIds(),
         }
       );
       return { ...results, autoSnappedResults: [] };
