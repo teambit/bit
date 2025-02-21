@@ -206,7 +206,13 @@ export class VersionMaker {
     this.snapping.logger.setStatusLine('adding dependencies graph...');
     this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
     if (!this.allWorkspaceComps) throw new Error('please make sure to populate this.allWorkspaceComps before');
-    const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(this.allWorkspaceComps);
+    const comps: Component[] = [...components];
+    for (const otherComp of this.allWorkspaceComps) {
+      if (comps.every((c) => !c.id.isEqualWithoutVersion(otherComp.id))) {
+        comps.push(otherComp);
+      }
+    }
+    const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(comps);
     const options = {
       rootDir: this.workspace.path,
       rootComponentsPath: this.workspace.rootComponentsPath,
