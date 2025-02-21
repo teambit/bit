@@ -70,7 +70,10 @@ import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { VersionMaker, BasicTagParams, BasicTagSnapParams, updateVersions, VersionMakerParams } from './version-maker';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 
-export type PackageIntegritiesByPublishedPackages = Map<string, string | undefined>;
+export type PackageIntegritiesByPublishedPackages = Map<string, {
+  integrity: string | undefined;
+  previouslyUsedVersion: string | undefined;
+}>;
 
 export type TagDataPerComp = {
   componentId: ComponentID;
@@ -977,7 +980,10 @@ another option, in case this dependency is not in main yet is to remove all refe
       const builderExt = comp.extensions.findCoreExtension(Extensions.builder);
       const pkgData = builderExt?.data?.aspectsData?.find((a) => a.aspectId === Extensions.pkg);
       if (pkgData?.data?.publishedPackage != null) {
-        publishedPackages.set(pkgData.data.publishedPackage, pkgData.data.integrity);
+        publishedPackages.set(pkgData.data.publishedPackage, {
+          integrity: pkgData.data.integrity,
+          previouslyUsedVersion: comp.previouslyUsedVersion,
+        });
       }
     }
     return publishedPackages;

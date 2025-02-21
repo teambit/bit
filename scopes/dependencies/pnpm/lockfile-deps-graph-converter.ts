@@ -5,6 +5,7 @@ import { type ResolveFunction } from '@pnpm/client';
 import * as dp from '@pnpm/dependency-path';
 import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
 import { pick, partition } from 'lodash';
+import { snapToSemver } from '@teambit/component-package-version';
 import {
   type DepEdge,
   DependenciesGraph,
@@ -89,16 +90,16 @@ function _convertLockfileToGraph(
     directDependencies: DependencyNeighbour[];
   }
 ): DependenciesGraph {
-  lockfile = replaceFileVersionsWithPendingVersions(lockfile);
+  lockfile = replaceFileVersionsWithPendingVersions(lockfile, componentIdByPkgName);
   return new DependenciesGraph({
-    edges: buildEdges(lockfile, { directDependencies }),
+    edges: buildEdges(lockfile, { directDependencies, componentIdByPkgName }),
     packages: buildPackages(lockfile, { componentIdByPkgName }),
   });
 }
 
 function buildEdges(
   lockfile: LockfileFileV9,
-  { directDependencies }: { directDependencies: DependencyNeighbour[] }
+  { directDependencies, componentIdByPkgName }: { directDependencies: DependencyNeighbour[]; componentIdByPkgName: ComponentIdByPkgName }
 ): DependencyEdge[] {
   const edges: DependencyEdge[] = [];
   for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
@@ -123,7 +124,7 @@ function buildEdges(
   }
   edges.push({
     id: DependenciesGraph.ROOT_EDGE_ID,
-    neighbours: replaceFileVersionsWithPendingVersions(directDependencies),
+    neighbours: replaceFileVersionsWithPendingVersions(directDependencies, componentIdByPkgName),
   });
   return edges;
 }
@@ -181,12 +182,16 @@ function buildPackages(
   return packages;
 }
 
-function replaceFileVersionsWithPendingVersions<T>(obj: T): T {
-  return JSON.parse(JSON.stringify(obj).replaceAll(/file:[^'"(]+/g, 'pending:'));
+function replaceFileVersionsWithPendingVersions<T>(obj: T, componentIdByPkgName: ComponentIdByPkgName): T {
+  let s = JSON.stringify(obj);
+  for (const [pkgName, componentId] of componentIdByPkgName.entries()) {
+    s = s.replaceAll(new RegExp(`${pkgName}@file:[^'"(]+`, 'g'), `${pkgName}@${snapToSemver(componentId.version)}`);
+  }
+  return JSON.parse(s.replaceAll(/file:[^'"(]+/g, 'pending:'));
 }
 
 export async function convertGraphToLockfile(
-  graph: DependenciesGraph,
+  _graph: DependenciesGraph,
   {
     flattenEdges,
     manifests,
@@ -201,6 +206,45 @@ export async function convertGraphToLockfile(
     registries: Registries;
   }
 ): Promise<LockfileFileV9> {
+  const componentVersions = new Map<string, Set<string>>();
+  console.log(JSON.stringify(manifests, null, 2))
+  console.log(JSON.stringify(flattenEdges, null, 2))
+  flattenEdges.forEach((edge) => {
+    {
+      const compId = `${edge.source.scope}/${edge.source.name}`;
+      if (!componentVersions.has(compId)) {
+        componentVersions.set(compId, new Set());
+      }
+      componentVersions.get(compId)!.add(edge.source.version);
+    }
+    {
+      const compId = `${edge.target.scope}/${edge.target.name}`;
+      if (!componentVersions.has(compId)) {
+        componentVersions.set(compId, new Set());
+      }
+      componentVersions.get(compId)!.add(edge.target.version);
+    }
+  });
+  let graphString = _graph.serialize();
+  let pkgsToResolve: Array<{ name: string; version: string; pkgId: string }> = [];
+  // console.log(JSON.stringify(graph.packages, null, 2))
+  for (const [pkgId, pkg] of _graph.packages.entries()) {
+    if (pkgId.includes('@pending:') && pkg.component) {
+      const compId = `${pkg.component.scope}/${pkg.component.name}`;
+      console.log('>>', pkg, componentVersions.get(compId))
+      if (componentVersions.get(compId)?.size === 1) {
+        let version = Array.from(componentVersions.get(compId)!)[0];
+        if (!version.includes('.')) {
+          version = `0.0.0-${version}`;
+        }
+        const newPkgId = pkgId.replace('@pending:', `@${version}`);
+        graphString = graphString.replaceAll(pkgId, newPkgId);
+        const parsed = dp.parse(pkgId);
+        pkgsToResolve.push({ name: parsed.name!, version, pkgId: newPkgId });
+      }
+    }
+  }
+  const graph = DependenciesGraph.deserialize(graphString)!;
   const packages = {};
   const snapshots = {};
   const allEdgeIds = new Set(graph.edges.map(({ id }) => id));
@@ -230,6 +274,7 @@ export async function convertGraphToLockfile(
   };
   const rootEdge = graph.findRootEdge();
   if (rootEdge) {
+    console.log(rootEdge.neighbours)
     for (const [projectDir, manifest] of Object.entries(manifests)) {
       const projectId = getLockfileImporterId(rootDir, projectDir);
       lockfile.importers![projectId] = {
@@ -246,7 +291,7 @@ export async function convertGraphToLockfile(
             const edgeId = rootEdge.neighbours.find(
               (directDep) =>
                 directDep.name === name &&
-                (directDep.specifier === specifier || dp.removeSuffix(directDep.id) === `${name}@${specifier}`)
+                (directDep.specifier === specifier || specifier === '*' || dp.removeSuffix(directDep.id) === `${name}@${specifier}`)
             )?.id;
             if (edgeId) {
               const parsed = dp.parse(edgeId);
@@ -258,42 +303,6 @@ export async function convertGraphToLockfile(
       }
     }
   }
-  const componentVersions = new Map<string, Set<string>>();
-  flattenEdges.forEach((edge) => {
-    {
-      const compId = `${edge.source.scope}/${edge.source.name}`;
-      if (!componentVersions.has(compId)) {
-        componentVersions.set(compId, new Set());
-      }
-      componentVersions.get(compId)!.add(edge.source.version);
-    }
-    {
-      const compId = `${edge.target.scope}/${edge.target.name}`;
-      if (!componentVersions.has(compId)) {
-        componentVersions.set(compId, new Set());
-      }
-      componentVersions.get(compId)!.add(edge.target.version);
-    }
-  });
-  let lockfileString = JSON.stringify(lockfile);
-  let pkgsToResolve: Array<{ name: string; version: string; pkgId: string }> = [];
-  // console.log(JSON.stringify(graph.packages, null, 2))
-  for (const [pkgId, pkg] of graph.packages.entries()) {
-    if (pkgId.includes('@pending:') && pkg.component) {
-      const compId = `${pkg.component.scope}/${pkg.component.name}`;
-      if (componentVersions.get(compId)?.size === 1) {
-        let version = Array.from(componentVersions.get(compId)!)[0];
-        if (!version.includes('.')) {
-          version = `0.0.0-${version}`;
-        }
-        const newPkgId = pkgId.replace('@pending:', `@${version}`);
-        lockfileString = lockfileString.replaceAll(pkgId, newPkgId);
-        const parsed = dp.parse(pkgId);
-        pkgsToResolve.push({ name: parsed.name!, version, pkgId: newPkgId });
-      }
-    }
-  }
-  lockfile = JSON.parse(lockfileString);
   await Promise.all(pkgsToResolve.map(async (pkgToResolve) => {
     const { resolution } = await resolve({
       alias: pkgToResolve.name,

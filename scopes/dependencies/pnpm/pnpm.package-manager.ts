@@ -166,6 +166,7 @@ export class PnpmPackageManager implements PackageManager {
       proxyConfig,
       networkConfig,
       {
+        frozenLockfile: true,
         autoInstallPeers: installOptions.autoInstallPeers ?? true,
         enableModulesDir: installOptions.enableModulesDir,
         engineStrict: installOptions.engineStrict ?? config.engineStrict,

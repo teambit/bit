@@ -578,16 +578,16 @@ function addIntegritiesToDependenciesGraph(
   packageIntegritiesByPublishedPackages: PackageIntegritiesByPublishedPackages,
   dependenciesGraph: DependenciesGraph
 ): DependenciesGraph {
-  const resolvedVersions: Array<{ name: string; version: string }> = [];
-  for (const [selector, integrity] of packageIntegritiesByPublishedPackages.entries()) {
+  const resolvedVersions: Array<{ name: string; version: string; previouslyUsedVersion?: string; }> = [];
+  for (const [selector, { integrity, previouslyUsedVersion }] of packageIntegritiesByPublishedPackages.entries()) {
     if (integrity == null) continue;
     const index = selector.indexOf('@', 1);
     const name = selector.substring(0, index);
     const version = selector.substring(index + 1);
-    const pendingPkg = dependenciesGraph.packages.get(`${name}@pending:`);
+    const pendingPkg = dependenciesGraph.packages.get(`${name}@pending:`) ?? dependenciesGraph.packages.get(`${name}@${previouslyUsedVersion}`);
     if (pendingPkg) {
       pendingPkg.resolution = { integrity };
-      resolvedVersions.push({ name, version });
+      resolvedVersions.push({ name, version, previouslyUsedVersion });
     }
   }
   return replacePendingVersions(dependenciesGraph, resolvedVersions) as DependenciesGraph;
@@ -696,11 +696,14 @@ export async function updateVersions(
 
 function replacePendingVersions(
   graph: DependenciesGraph,
-  resolvedVersions: Array<{ name: string; version: string }>
+  resolvedVersions: Array<{ name: string; version: string; previouslyUsedVersion?: string; }>
 ): DependenciesGraph {
   let s = graph.serialize();
-  for (const { name, version } of resolvedVersions) {
+  for (const { name, version, previouslyUsedVersion } of resolvedVersions) {
     s = s.replaceAll(`${name}@pending:`, `${name}@${version}`);
+    if (previouslyUsedVersion) {
+      s = s.replaceAll(`${name}@${previouslyUsedVersion}:`, `${name}@${version}`);
+    }
   }
   const updatedDependenciesGraph = DependenciesGraph.deserialize(s);
   // This should never happen as we know at this point that the schema version is supported
