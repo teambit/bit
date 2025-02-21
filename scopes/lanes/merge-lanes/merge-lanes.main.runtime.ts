@@ -154,6 +154,7 @@ export class MergeLanesMain {
         mergeStrategy,
         handleTargetAheadAsDiverged: noSnap,
         detachHead,
+        shouldMergeAspectsData: true,
       },
       currentLane,
       otherLane
