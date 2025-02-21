@@ -83,7 +83,7 @@ export function PreviewPlaceholder({
 
   return (
     <>
-      <ComponentComposition component={component} composition={selectedPreview} pubsub={false} />
+      <ComponentComposition component={component} composition={selectedPreview} pubsub={false} includeEnv={false} loading={'lazy'} viewport={1280}/>
       <div className={styles.previewOverlay} />
     </>
   );
