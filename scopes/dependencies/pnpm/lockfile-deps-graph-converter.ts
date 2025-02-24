@@ -7,7 +7,6 @@ import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
 import { pick, partition } from 'lodash';
 import { snapToSemver } from '@teambit/component-package-version';
 import {
-  type DepEdge,
   DependenciesGraph,
   type PackagesMap,
   type PackageAttributes,
@@ -167,6 +166,9 @@ function buildPackages(
       'resolution',
       'version',
     ]) as any;
+    if (graphPkg.resolution.type === 'directory') {
+      delete graphPkg.resolution;
+    }
     if (pkgId.includes('@pending:')) {
       const parsed = dp.parse(pkgId);
       if (parsed.name && componentIdByPkgName.has(parsed.name)) {
@@ -206,7 +208,6 @@ export async function convertGraphToLockfile(
 ): Promise<LockfileFileV9> {
   console.log(JSON.stringify(manifests, null, 2))
   let graphString = _graph.serialize();
-  let pkgsToResolve: Array<{ name: string; version: string; pkgId: string }> = [];
   // console.log(JSON.stringify(graph.packages, null, 2))
   const graph = DependenciesGraph.deserialize(graphString)!;
   const packages = {};
@@ -230,7 +231,7 @@ export async function convertGraphToLockfile(
       Object.assign(packages[pkgId], convertGraphPackageToLockfilePackage(graphPkg));
     }
   }
-  let lockfile = {
+  const lockfile: LockfileFileV9 & Required<Pick<LockfileFileV9, 'packages'>> = {
     lockfileVersion: '9.0',
     packages,
     snapshots,
@@ -264,6 +265,19 @@ export async function convertGraphToLockfile(
             }
           }
         }
+      }
+    }
+  }
+  const pkgsToResolve: Array<{ name: string; version: string; pkgId: string }> = [];
+  for (const [pkgId, pkg] of Object.entries(lockfile.packages)) {
+    if (pkg.resolution == null || 'type' in pkg.resolution && pkg.resolution.type === 'directory') {
+      const parsed = dp.parse(pkgId)
+      if (parsed.name && parsed.version) {
+        pkgsToResolve.push({
+          name: parsed.name,
+          version: parsed.version,
+          pkgId,
+        })
       }
     }
   }
