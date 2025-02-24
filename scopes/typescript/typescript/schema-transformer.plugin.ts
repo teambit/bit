@@ -9,6 +9,6 @@ export class SchemaTransformerPlugin implements PluginDefinition {
   runtimes = ['main'];
 
   register(object: any) {
-    return this.schemaTransformerSlot.register([object]);
+    return this.schemaTransformerSlot.register(() => [object]);
   }
 }
