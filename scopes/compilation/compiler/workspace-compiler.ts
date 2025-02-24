@@ -305,9 +305,6 @@ export class WorkspaceCompiler {
   }
 
   async onAspectLoadFail(err: Error & { code?: string }, component: Component): Promise<boolean> {
-    const inInstallContext = this.workspace.inInstallContext;
-    const inInstallAfterPmContext = this.workspace.inInstallAfterPmContext;
-
     if (
       ((err.code &&
         (err.code === 'MODULE_NOT_FOUND' || err.code === 'ERR_MODULE_NOT_FOUND' || err.code === 'ERR_REQUIRE_ESM')) ||
@@ -315,6 +312,8 @@ export class WorkspaceCompiler {
         err.message.includes('exports is not defined')) &&
       this.workspace
     ) {
+      const inInstallContext = this.workspace.inInstallContext;
+      const inInstallAfterPmContext = this.workspace.inInstallAfterPmContext;
       // If we are now running install we only want to compile after the package manager is done
       const shouldCompile = (inInstallContext && inInstallAfterPmContext) || !inInstallContext;
       if (shouldCompile) {
