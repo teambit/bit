@@ -702,8 +702,9 @@ export class IsolatorMain {
           })
         );
       } else {
-        const allComponentIds = capsuleList.getAllComponentIDs();
-        const dependenciesGraph = await legacyScope?.getDependenciesGraphByComponentIds(allComponentIds);
+        const dependenciesGraph = await legacyScope?.getDependenciesGraphByComponentIds(
+          capsuleList.getAllComponentIDs()
+        );
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
