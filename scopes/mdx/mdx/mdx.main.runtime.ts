@@ -135,7 +135,7 @@ export class MDXMain {
     docs.registerDocReader(new MDXDocReader(config.extensions));
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerAspect, workerMain, harmony);
-      generator.registerComponentTemplate(getTemplates(envContext));
+      generator.registerComponentTemplate(() => getTemplates(envContext));
     }
 
     mdx.mdxEnv = mdxEnv as ReactEnv;

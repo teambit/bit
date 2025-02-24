@@ -260,7 +260,7 @@ export class AspectMain {
     envs.registerEnv(aspectEnv);
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerMain, workerMain, harmony);
-      generator.registerComponentTemplate(getTemplates(envContext));
+      generator.registerComponentTemplate(() => getTemplates(envContext));
     }
     const aspectMain = new AspectMain(aspectEnv as AspectEnv, envs, workspace, aspectLoader);
     const aspectCmd = new AspectCmd();
