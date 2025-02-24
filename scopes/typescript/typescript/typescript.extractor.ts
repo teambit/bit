@@ -42,7 +42,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     private scope: ScopeMain,
     private aspectLoader: AspectLoaderMain,
     private logger: Logger
-  ) {}
+  ) { }
 
   parseSourceFile(file: AbstractVinyl): SourceFile {
     const sourceFile = ts.createSourceFile(
@@ -74,8 +74,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const internalFiles = options.skipInternals
       ? []
       : component.filesystem.files.filter(
-          (file) => compatibleExts.includes(file.extname) && file.path !== mainFile.path
-        );
+        (file) => compatibleExts.includes(file.extname) && file.path !== mainFile.path
+      );
     const allFiles = [mainFile, ...internalFiles];
 
     const context = await this.createContext(tsserver, component, options.formatter);
@@ -100,11 +100,10 @@ export class TypeScriptExtractor implements SchemaExtractor {
 
   async computeInternalModules(context: SchemaExtractorContext, internalFiles: AbstractVinyl[]) {
     if (internalFiles.length === 0) return [];
-
     const internals = compact(
       await Promise.all(
         [...context.internalIdentifiers.entries()].map(async ([filePath]) => {
-          const file = internalFiles.find((internalFile) => internalFile.path === filePath);
+          const file = context.findFileInComponent(filePath);
           if (!file) return undefined;
           const fileAst = this.parseSourceFile(file);
           const moduleSchema = (await this.computeSchema(fileAst, context)) as ModuleSchema;
@@ -242,7 +241,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
       const rootPath = tsMain.workspace?.path || tsMain.scope.path || '';
 
       const schemaTransformersFromOptions = options.schemaTransformers || [];
-      const schemaTransformersFromAspect = flatten(Array.from(tsMain.schemaTransformerSlot.values()));
+      const schemaTransformersFromAspect = tsMain.getAllTransformers();
 
       const apiTransformersFromOptions = options.apiTransformers || [];
       const apiTransformersFromAspect = flatten(Array.from(tsMain.apiTransformerSlot.values()));

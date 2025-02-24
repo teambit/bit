@@ -32,7 +32,6 @@ import { fetchWithAgent as fetch } from '@teambit/scope.network';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { execSync } from 'child_process';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { cloudSchema } from './cloud.graphql';
@@ -41,6 +40,7 @@ import { LoginCmd } from './login.cmd';
 import { LogoutCmd } from './logout.cmd';
 import { WhoamiCmd } from './whoami.cmd';
 import { NpmrcCmd, NpmrcGenerateCmd } from './npmrc.cmd';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 
 export interface CloudWorkspaceConfig {
   cloudDomain: string;
@@ -108,9 +108,9 @@ export class CloudMain {
     public express: ExpressMain,
     public workspace: Workspace,
     public scope: ScopeMain,
-    public globalConfig: GlobalConfigMain,
+    public configStore: ConfigStoreMain,
     public onSuccessLoginSlot: OnSuccessLoginSlot
-  ) {}
+  ) { }
 
   getNpmConfig(): Record<string, string> {
     try {
@@ -274,7 +274,8 @@ export class CloudMain {
           reject(err);
         });
 
-      expressApp.get('/', (req, res) => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      expressApp.get('/', async (req, res) => {
         this.logger.debug('cloud.authListener', 'received request', req.query);
         try {
           const { clientId: clientIdFromReq, redirectUri, username: usernameFromReq } = req.query;
@@ -287,8 +288,8 @@ export class CloudMain {
             res.status(400).send('Invalid token format');
             return res;
           }
-          this.globalConfig.setSync(CFG_USER_TOKEN_KEY, token);
-          if (username) this.globalConfig.setSync(CFG_USER_NAME_KEY, username);
+          await this.configStore.setConfig(CFG_USER_TOKEN_KEY, token);
+          if (username) await this.configStore.setConfig(CFG_USER_NAME_KEY, username);
 
           const existing = this.authListenerByPort.get(port) ?? {};
           this.authListenerByPort.set(port, {
@@ -300,7 +301,7 @@ export class CloudMain {
           });
 
           const onLoggedInFns = this.onSuccessLoginSlot.values();
-          const updatedConfigs = this.updateGlobalConfigOnLogin(cloudDomain);
+          const updatedConfigs = await this.updateGlobalConfigOnLogin(cloudDomain);
 
           if (!skipConfigUpdate) {
             this.updateNpmConfig({ authToken: token as string, username: username as string })
@@ -382,14 +383,14 @@ export class CloudMain {
     return this.config.loginPort || CloudMain.DEFAULT_PORT;
   }
 
-  isLoggedIn(): boolean {
-    return Boolean(this.getAuthToken());
+  async isLoggedIn(): Promise<boolean> {
+    const currentUser = await this.getCurrentUser();
+    return Boolean(currentUser)
   }
 
   getAuthToken() {
-    this.globalConfig.invalidateCache();
     const processToken = globalFlags.token;
-    const token = processToken || this.globalConfig.getSync(CFG_USER_TOKEN_KEY);
+    const token = processToken || this.configStore.getConfig(CFG_USER_TOKEN_KEY);
     if (!token) return null;
 
     return token;
@@ -402,7 +403,7 @@ export class CloudMain {
   }
 
   getUsername(): string | undefined {
-    return this.globalConfig.getSync(CFG_USER_NAME_KEY);
+    return this.configStore.getConfig(CFG_USER_NAME_KEY);
   }
 
   private ensureHttps(url: string): string {
@@ -433,24 +434,22 @@ export class CloudMain {
     }
     const authListenerForPort = this.authListenerByPort.get(port);
     if (authListenerForPort) {
-      return `${loginUrl}?port=${port}&clientId=${authListenerForPort.clientId}&responseType=token&deviceName=${
-        machineName || os.hostname()
-      }&os=${process.platform}`;
+      return `${loginUrl}?port=${port}&clientId=${authListenerForPort.clientId}&responseType=token&deviceName=${machineName || os.hostname()
+        }&os=${process.platform}`;
     }
     const authListener = await this.setupAuthListener({ port });
 
     if (!authListener) return null;
 
     return encodeURI(
-      `${loginUrl}?port=${port}&clientId=${authListener?.clientId}&responseType=token&deviceName=${
-        machineName || os.hostname()
+      `${loginUrl}?port=${port}&clientId=${authListener?.clientId}&responseType=token&deviceName=${machineName || os.hostname()
       }&os=${process.platform}`
     );
   }
 
-  logout() {
-    this.globalConfig.delSync(CFG_USER_TOKEN_KEY);
-    this.globalConfig.delSync(CFG_USER_NAME_KEY);
+  async logout() {
+    await this.configStore.delConfig(CFG_USER_TOKEN_KEY);
+    await this.configStore.delConfig(CFG_USER_NAME_KEY);
   }
 
   setRedirectUrl(redirectUrl: string) {
@@ -466,7 +465,7 @@ export class CloudMain {
   }
 
   private globalConfigsToUpdateOnLogin(domain?: string): Record<string, string | undefined> {
-    const currentCloudDomain = this.globalConfig.getSync(CFG_CLOUD_DOMAIN_KEY);
+    const currentCloudDomain = this.configStore.getConfig(CFG_CLOUD_DOMAIN_KEY);
     const res = {};
     if (!domain || domain === DEFAULT_CLOUD_DOMAIN) {
       if (currentCloudDomain && currentCloudDomain !== DEFAULT_CLOUD_DOMAIN) {
@@ -480,16 +479,16 @@ export class CloudMain {
     return res;
   }
 
-  private updateGlobalConfigOnLogin(domain?: string) {
+  private async updateGlobalConfigOnLogin(domain?: string) {
     const configsToUpdate = this.globalConfigsToUpdateOnLogin(domain);
 
-    Object.entries(configsToUpdate).forEach(([key, value]) => {
+    for await (const [key, value] of Object.entries(configsToUpdate)) {
       if (value) {
-        this.globalConfig.setSync(key, value);
+        await this.configStore.setConfig(key, value);
       } else {
-        this.globalConfig.delSync(key);
+        await this.configStore.delConfig(key);
       }
-    });
+    }
     // Refresh the config after updating
     clearCachedUrls();
     this.config = CloudMain.calculateConfig();
@@ -514,12 +513,13 @@ export class CloudMain {
     if (defaultCloudDomain) {
       cloudDomain = DEFAULT_CLOUD_DOMAIN;
     }
+    const isLoggedIn = await this.isLoggedIn();
     return new Promise((resolve, reject) => {
-      if (this.isLoggedIn()) {
+      if (isLoggedIn) {
         resolve({
           isAlreadyLoggedIn: true,
-          username: this.globalConfig.getSync(CFG_USER_NAME_KEY),
-          token: this.globalConfig.getSync(CFG_USER_TOKEN_KEY),
+          username: this.configStore.getConfig(CFG_USER_NAME_KEY),
+          token: this.configStore.getConfig(CFG_USER_TOKEN_KEY),
         });
         return;
       }
@@ -642,7 +642,6 @@ export class CloudMain {
   }
 
   async fetchFromSymphonyViaGQL<T>(query: string, variables?: Record<string, any>): Promise<T | null> {
-    if (!this.isLoggedIn()) return null;
     const graphqlUrl = `https://${this.getCloudApi()}${CloudMain.GRAPHQL_ENDPOINT}`;
     const body = JSON.stringify({
       query,
@@ -689,7 +688,7 @@ export class CloudMain {
     ExpressAspect,
     WorkspaceAspect,
     ScopeAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
     CLIAspect,
     UIAspect,
   ];
@@ -697,13 +696,13 @@ export class CloudMain {
   static defaultConfig: CloudWorkspaceConfig = CloudMain.calculateConfig();
 
   static async provider(
-    [loggerMain, graphql, express, workspace, scope, globalConfig, cli, ui]: [
+    [loggerMain, graphql, express, workspace, scope, configStore, cli, ui]: [
       LoggerMain,
       GraphqlMain,
       ExpressMain,
       Workspace,
       ScopeMain,
-      GlobalConfigMain,
+      ConfigStoreMain,
       CLIMain,
       UiMain,
     ],
@@ -711,7 +710,7 @@ export class CloudMain {
     [onSuccessLoginSlot]: [OnSuccessLoginSlot]
   ) {
     const logger = loggerMain.createLogger(CloudAspect.id);
-    const cloudMain = new CloudMain(config, logger, express, workspace, scope, globalConfig, onSuccessLoginSlot);
+    const cloudMain = new CloudMain(config, logger, express, workspace, scope, configStore, onSuccessLoginSlot);
     const loginCmd = new LoginCmd(cloudMain, 8889);
     const logoutCmd = new LogoutCmd(cloudMain);
     const whoamiCmd = new WhoamiCmd(cloudMain);

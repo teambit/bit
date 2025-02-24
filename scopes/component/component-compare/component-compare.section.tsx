@@ -2,7 +2,6 @@ import React from 'react';
 import { Section } from '@teambit/component';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import { ComponentCompareUI } from './component-compare.ui.runtime';
-import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 
 export class ComponentCompareSection implements Section {
   constructor(private componentCompare: ComponentCompareUI, private pinned: boolean) { }
@@ -10,7 +9,7 @@ export class ComponentCompareSection implements Section {
   navigationLink = {
     href: '~compare',
     displayName: 'Compare',
-    children: <CodeCompareMenuWidget />,
+    children: <MenuWidgetIcon icon="compare" tooltipContent="Compare" />,
     hideInMinimalMode: !this.pinned,
   };
 
@@ -20,10 +19,4 @@ export class ComponentCompareSection implements Section {
   };
 
   order = this.pinned ? 20 : 35;
-}
-
-function CodeCompareMenuWidget() {
-  const { isMinimal } = useWorkspaceMode();
-  if (!isMinimal) return null;
-  return <MenuWidgetIcon icon="compare" tooltipContent="Compare" />;
 }

@@ -160,3 +160,5 @@ export interface ComponentTemplate extends ComponentTemplateOptions {
    */
   config?: ComponentConfig | ((context: ConfigContext) => ComponentConfig);
 }
+
+export type GetComponentTemplates = () => ComponentTemplate[];

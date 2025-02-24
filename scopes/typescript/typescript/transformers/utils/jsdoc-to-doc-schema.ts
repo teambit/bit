@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 /* eslint-disable no-fallthrough */
 import {
   getTextOfJSDocComment,
@@ -70,12 +71,15 @@ export async function tagParser(
         const comment = getTextOfJSDocComment(tag.comment);
         if (!formatter) return simpleTag(tag, tagName, context);
         try {
-          const formattedComment = comment && (await formatter.formatSnippet(comment));
-          return new TagSchema(context.getLocation(tag), tagName, formattedComment);
+          const extractedSnippetToFormat = comment && extractCodeBlock(comment);
+          const formattedComment = extractedSnippetToFormat 
+          && (await formatter.formatSnippet(extractedSnippetToFormat.code));
+          return new TagSchema(context.getLocation(tag), tagName, formattedComment ?? undefined);
         } catch {
           return simpleTag(tag, tagName, context);
         }
       }
+
       return simpleTag(tag, tagName, context);
     }
   }
@@ -98,4 +102,20 @@ async function propertyLikeTag(tag: JSDocPropertyLikeTag, context: SchemaExtract
     getTextOfJSDocComment(tag.comment),
     type
   );
+}
+
+function extractCodeBlock(text: string): { lang: string; code: string } | null {
+  let processedText = text;
+  if (text.endsWith(';') && !text.endsWith('```')) {
+    processedText = text.slice(0, -1) + '```';
+  }
+  const regex = /```([\w+-]*)\s*([\s\S]*?)```/;
+  const match = processedText.match(regex);
+
+  if (match) {
+    const lang = match[1];
+    const code = match[2];
+    return { lang, code };
+  }
+  return null;
 }

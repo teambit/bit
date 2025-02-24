@@ -143,6 +143,18 @@ export default class EnvHelper {
     return EXTENSIONS_BASE_FOLDER;
   }
 
+  setEmptyEnv() {
+    this.fs.outputFile(
+      'empty-env/empty-env.bit-env.ts',
+      `export class EmptyEnv {}
+export default new EmptyEnv();
+`
+    );
+    this.fs.outputFile('empty-env/index.ts', `export { EmptyEnv } from './empty-env.bit-env';`);
+    this.command.addComponent('empty-env');
+    this.command.setEnv('empty-env', 'teambit.envs/env');
+  }
+
   setCustomEnv(extensionsBaseFolder = 'node-env', options: SetCustomEnvOpts = {}): string {
     this.fixtures.copyFixtureExtensions(extensionsBaseFolder);
     this.command.addComponent(extensionsBaseFolder);

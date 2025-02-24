@@ -117,21 +117,25 @@ export class MDXMain {
           '@mdx-js/react': '1.6.22',
         },
       }),
-      react.overrideCompilerTasks([compiler.createTask('MDXCompiler', mdxCompiler)]),
       envs.override({
         __getDescriptor: async () => {
           return {
             type: 'mdx',
           };
         },
+        // don't use react.overrideCompilerTasks inside envs.compose to not get all babel/core loaded during bit bootstrap.
+        getBuildPipe: () => {
+          return [compiler.createTask('MDXCompiler', mdxCompiler), ...react.reactEnv.createBuildPipeWithoutCompiler()];
+        }
       }),
     ]);
+
     envs.registerEnv(mdxEnv);
     depResolver.registerDetector(new MDXDependencyDetector(config.extensions));
     docs.registerDocReader(new MDXDocReader(config.extensions));
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerAspect, workerMain, harmony);
-      generator.registerComponentTemplate(getTemplates(envContext));
+      generator.registerComponentTemplate(() => getTemplates(envContext));
     }
 
     mdx.mdxEnv = mdxEnv as ReactEnv;

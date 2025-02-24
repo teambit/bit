@@ -7,7 +7,6 @@ import { Component, ComponentMap, IComponent, ComponentAspect, ComponentMain, Co
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { AspectAspect } from '@teambit/aspect';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
@@ -35,6 +34,7 @@ import { ArtifactsCmd } from './artifact/artifacts.cmd';
 import { buildTaskTemplate } from './templates/build-task';
 import { BuilderRoute } from './builder.route';
 import { ComponentsHaveIssues } from './exceptions/components-have-issues';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
 export type OnTagResults = { builderDataMap: ComponentMap<RawBuilderData>; pipeResults: TaskResultsList[] };
@@ -74,7 +74,6 @@ export class BuilderMain {
     private isolator: IsolatorMain,
     private aspectLoader: AspectLoaderMain,
     private componentAspect: ComponentMain,
-    private globalConfig: GlobalConfigMain,
     private buildTaskSlot: TaskSlot,
     private tagTaskSlot: TaskSlot,
     private snapTaskSlot: TaskSlot,
@@ -515,7 +514,7 @@ export class BuilderMain {
     GeneratorAspect,
     ComponentAspect,
     UIAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
     IssuesAspect,
   ];
 
@@ -532,7 +531,7 @@ export class BuilderMain {
       generator,
       component,
       ui,
-      globalConfig,
+      configStore,
       issues,
     ]: [
       CLIMain,
@@ -546,7 +545,7 @@ export class BuilderMain {
       GeneratorMain,
       ComponentMain,
       UiMain,
-      GlobalConfigMain,
+      ConfigStoreMain,
       IssuesMain,
     ],
     config,
@@ -562,7 +561,7 @@ export class BuilderMain {
       'build',
       artifactFactory,
       scope,
-      globalConfig
+      configStore
     );
     envs.registerService(buildService);
     const tagService = new BuilderService(
@@ -573,7 +572,7 @@ export class BuilderMain {
       'tag',
       artifactFactory,
       scope,
-      globalConfig
+      configStore
     );
     const snapService = new BuilderService(
       isolator,
@@ -583,7 +582,7 @@ export class BuilderMain {
       'snap',
       artifactFactory,
       scope,
-      globalConfig
+      configStore
     );
     const builder = new BuilderMain(
       envs,
@@ -595,7 +594,6 @@ export class BuilderMain {
       isolator,
       aspectLoader,
       component,
-      globalConfig,
       buildTaskSlot,
       tagTaskSlot,
       snapTaskSlot,

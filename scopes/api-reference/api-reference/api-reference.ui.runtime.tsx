@@ -20,6 +20,7 @@ import { typeLiteralRenderer } from '@teambit/api-reference.renderers.type-liter
 import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
 import { inferenceTypeRenderer } from '@teambit/api-reference.renderers.inference-type';
 import { typeArrayRenderer } from '@teambit/api-reference.renderers.type-array';
+import { tupleTypeRenderer } from '@teambit/api-reference.renderers.tuple-type';
 import { thisRenderer } from '@teambit/api-reference.renderers.this';
 import { APIRefRenderersProvider } from '@teambit/api-reference.hooks.use-api-renderers';
 import { decoratorRenderer } from '@teambit/api-reference.renderers.decorator';
@@ -37,7 +38,7 @@ export class APIReferenceUI {
     private apiNodeRendererSlot: APINodeRendererSlot,
     private code: CodeUI,
     private workspace: WorkspaceUI
-  ) {}
+  ) { }
 
   static dependencies = [ComponentAspect, CodeAspect, WorkspaceAspect];
   static runtime = UIRuntime;
@@ -89,6 +90,7 @@ export class APIReferenceUI {
     typeArrayRenderer,
     thisRenderer,
     decoratorRenderer,
+    tupleTypeRenderer
   ];
 
   static async provider(

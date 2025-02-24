@@ -7,7 +7,7 @@ import { isNil, isEmpty, filter } from 'lodash';
 import { serializeError } from 'serialize-error';
 import uniqid from 'uniqid';
 import yn from 'yn';
-import { getSync, setSync } from '@teambit/legacy.global-config';
+import { getConfig, setGlobalConfig } from '@teambit/config-store';
 import { CLIArgs } from '@teambit/cli';
 import {
   CFG_ANALYTICS_ANONYMOUS_KEY,
@@ -61,10 +61,10 @@ class Analytics {
   static environment: string;
 
   static getID(): string {
-    const id = getSync(CFG_ANALYTICS_USERID_KEY);
+    const id = getConfig(CFG_ANALYTICS_USERID_KEY);
     if (id) return id;
     const newId = uniqid();
-    setSync(CFG_ANALYTICS_USERID_KEY, newId);
+    setGlobalConfig(CFG_ANALYTICS_USERID_KEY, newId);
     return newId;
   }
 
@@ -73,8 +73,8 @@ class Analytics {
     function shouldPromptForAnalytics() {
       // do not prompt analytics approval for bit config command (so you can configure it in CI envs)
       if (cmd.length && cmd[0] !== 'config' && !process.env.CI) {
-        const analyticsReporting = getSync(CFG_ANALYTICS_REPORTING_KEY);
-        const errorReporting = getSync(CFG_ANALYTICS_ERROR_REPORTS_KEY);
+        const analyticsReporting = getConfig(CFG_ANALYTICS_REPORTING_KEY);
+        const errorReporting = getConfig(CFG_ANALYTICS_ERROR_REPORTS_KEY);
         return isNil(analyticsReporting) && isNil(errorReporting);
       }
       return false;
@@ -82,15 +82,15 @@ class Analytics {
 
     if (shouldPromptForAnalytics()) {
       const uniqId = uniqid();
-      if (!getSync(CFG_ANALYTICS_USERID_KEY)) setSync(CFG_ANALYTICS_USERID_KEY, uniqId);
+      if (!getConfig(CFG_ANALYTICS_USERID_KEY)) setGlobalConfig(CFG_ANALYTICS_USERID_KEY, uniqId);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return analyticsPrompt().then(({ analyticsResponse }) => {
-        setSync(CFG_ANALYTICS_REPORTING_KEY, yn(analyticsResponse));
+        setGlobalConfig(CFG_ANALYTICS_REPORTING_KEY, yn(analyticsResponse));
         if (!yn(analyticsResponse)) {
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           return errorReportingPrompt().then(({ errResponse }) => {
-            return setSync(CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse));
+            return setGlobalConfig(CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse));
           });
         }
         return null;
@@ -133,10 +133,10 @@ class Analytics {
     return args.map((arg) => this._hashLightly(arg));
   }
   static init(command: string, flags: Record<string, any>, args: CLIArgs) {
-    this.analytics_usage = yn(getSync(CFG_ANALYTICS_REPORTING_KEY), { default: false });
+    this.analytics_usage = yn(getConfig(CFG_ANALYTICS_REPORTING_KEY), { default: false });
     // Do not initialize analytics if the user didn't approve it
     if (!this.analytics_usage) return;
-    this.anonymous = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
+    this.anonymous = yn(getConfig(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
     this.command = command;
     this.flags = this._hashFlags(flags);
     this.release = getBitVersionGracefully() || 'unknown';
@@ -145,10 +145,10 @@ class Analytics {
     this.os = process.platform;
     (this.level as any) = LEVEL.INFO;
     this.username = !this.anonymous
-      ? getSync(CFG_USER_EMAIL_KEY) || getSync(CFG_USER_NAME_KEY) || os.hostname() || this.getID()
+      ? getConfig(CFG_USER_EMAIL_KEY) || getConfig(CFG_USER_NAME_KEY) || os.hostname() || this.getID()
       : this.getID();
-    this.error_usage = this.analytics_usage ? true : yn(getSync(CFG_ANALYTICS_ERROR_REPORTS_KEY), { default: false });
-    this.environment = getSync(CFG_ANALYTICS_ENVIRONMENT_KEY) || DEFAULT_BIT_ENV;
+    this.error_usage = this.analytics_usage ? true : yn(getConfig(CFG_ANALYTICS_ERROR_REPORTS_KEY), { default: false });
+    this.environment = getConfig(CFG_ANALYTICS_ENVIRONMENT_KEY) || DEFAULT_BIT_ENV;
   }
 
   static sendData(): Promise<void> {

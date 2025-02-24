@@ -250,8 +250,9 @@ export function componentSchema(componentExtension: ComponentMain): Schema {
             errorMessage: err.message ? stripAnsi(err.message) : err.name,
           }));
         },
-        id: async (host: ComponentFactory) => {
-          return host.name;
+        id: async (host: ComponentFactory, _args, _context, info) => {
+          const extensionId = info.variableValues.extensionId;
+          return extensionId ? `${host.name}/${extensionId}` : host.name;
         },
         name: async (host: ComponentFactory) => {
           return host.name;
