@@ -241,7 +241,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
       const rootPath = tsMain.workspace?.path || tsMain.scope.path || '';
 
       const schemaTransformersFromOptions = options.schemaTransformers || [];
-      const schemaTransformersFromAspect = flatten(Array.from(tsMain.schemaTransformerSlot.values()));
+      const schemaTransformersFromAspect = tsMain.getAllTransformers();
 
       const apiTransformersFromOptions = options.apiTransformers || [];
       const apiTransformersFromAspect = flatten(Array.from(tsMain.apiTransformerSlot.values()));
