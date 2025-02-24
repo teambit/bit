@@ -84,7 +84,6 @@ export class PnpmPackageManager implements PackageManager {
   async dependenciesGraphToLockfile(
     dependenciesGraph: DependenciesGraph,
     opts: {
-      flattenEdges: DepEdge[];
       manifests: Record<string, ProjectManifest>;
       rootDir: string;
       resolve: ResolveFunction;
@@ -114,20 +113,17 @@ export class PnpmPackageManager implements PackageManager {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
 
-    console.log('fl', installOptions.flattenEdges != null)
     const registries = await this.depResolver.getRegistries();
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
     if (
       installOptions.dependenciesGraph &&
-      installOptions.flattenEdges &&
       isFeatureEnabled(DEPS_GRAPH) &&
       (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
     ) {
       const { resolve } = await generateResolverAndFetcher(config.cacheDir, registries, proxyConfig, networkConfig);
       await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
-        flattenEdges: installOptions.flattenEdges,
         manifests,
         rootDir,
         registries: getRegistriesMap(registries),
@@ -166,7 +162,6 @@ export class PnpmPackageManager implements PackageManager {
       proxyConfig,
       networkConfig,
       {
-        frozenLockfile: true,
         autoInstallPeers: installOptions.autoInstallPeers ?? true,
         enableModulesDir: installOptions.enableModulesDir,
         engineStrict: installOptions.engineStrict ?? config.engineStrict,

@@ -193,57 +193,21 @@ function replaceFileVersionsWithPendingVersions<T>(obj: T, componentIdByPkgName:
 export async function convertGraphToLockfile(
   _graph: DependenciesGraph,
   {
-    flattenEdges,
     manifests,
     rootDir,
     resolve,
     registries,
   }: {
-    flattenEdges: DepEdge[];
     manifests: Record<string, ProjectManifest>;
     rootDir: string;
     resolve: ResolveFunction;
     registries: Registries;
   }
 ): Promise<LockfileFileV9> {
-  const componentVersions = new Map<string, Set<string>>();
   console.log(JSON.stringify(manifests, null, 2))
-  console.log(JSON.stringify(flattenEdges, null, 2))
-  flattenEdges.forEach((edge) => {
-    {
-      const compId = `${edge.source.scope}/${edge.source.name}`;
-      if (!componentVersions.has(compId)) {
-        componentVersions.set(compId, new Set());
-      }
-      componentVersions.get(compId)!.add(edge.source.version);
-    }
-    {
-      const compId = `${edge.target.scope}/${edge.target.name}`;
-      if (!componentVersions.has(compId)) {
-        componentVersions.set(compId, new Set());
-      }
-      componentVersions.get(compId)!.add(edge.target.version);
-    }
-  });
   let graphString = _graph.serialize();
   let pkgsToResolve: Array<{ name: string; version: string; pkgId: string }> = [];
   // console.log(JSON.stringify(graph.packages, null, 2))
-  for (const [pkgId, pkg] of _graph.packages.entries()) {
-    if (pkgId.includes('@pending:') && pkg.component) {
-      const compId = `${pkg.component.scope}/${pkg.component.name}`;
-      console.log('>>', pkg, componentVersions.get(compId))
-      if (componentVersions.get(compId)?.size === 1) {
-        let version = Array.from(componentVersions.get(compId)!)[0];
-        if (!version.includes('.')) {
-          version = `0.0.0-${version}`;
-        }
-        const newPkgId = pkgId.replace('@pending:', `@${version}`);
-        graphString = graphString.replaceAll(pkgId, newPkgId);
-        const parsed = dp.parse(pkgId);
-        pkgsToResolve.push({ name: parsed.name!, version, pkgId: newPkgId });
-      }
-    }
-  }
   const graph = DependenciesGraph.deserialize(graphString)!;
   const packages = {};
   const snapshots = {};

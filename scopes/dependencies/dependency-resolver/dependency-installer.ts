@@ -46,7 +46,6 @@ export type InstallOptions = {
   excludeExtensionsDependencies?: boolean;
   dedupeInjectedDeps?: boolean;
   dependenciesGraph?: DependenciesGraph;
-  flattenEdges?: DepEdge[];
 };
 
 export type GetComponentManifestsOptions = {
@@ -211,7 +210,6 @@ export class DependencyInstaller {
       preferOffline: this.preferOffline,
       dedupeInjectedDeps: options.dedupeInjectedDeps,
       dependenciesGraph: options.dependenciesGraph,
-      flattenEdges: options.flattenEdges,
       ...packageManagerOptions,
     };
     if (options.installTeambitBit) {

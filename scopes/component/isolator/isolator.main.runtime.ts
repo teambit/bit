@@ -45,7 +45,7 @@ import {
 import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { DepEdge, type DependenciesGraph } from '@teambit/objects';
+import { type DependenciesGraph } from '@teambit/objects';
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
 import path, { basename } from 'path';
@@ -706,13 +706,11 @@ export class IsolatorMain {
         const dependenciesGraph = await legacyScope?.getDependenciesGraphByComponentIds(allComponentIds);
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
-        const flattenEdges = await legacyScope?.getFlattenedEdgesByComponentIds(allComponentIds);
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
           cachePackagesOnCapsulesRoot,
           linkedDependencies,
           packageManager: opts.packageManager,
           dependenciesGraph,
-          flattenEdges,
         });
         if (dependenciesGraph == null) {
           // If the graph was not present in the model, we use the just created lockfile inside the capsules
@@ -809,7 +807,6 @@ export class IsolatorMain {
       packageManager?: string;
       nodeLinker?: NodeLinker;
       dependenciesGraph?: DependenciesGraph;
-      flattenEdges?: DepEdge[];
     }
   ) {
     const installer = this.dependencyResolver.getInstaller({
@@ -832,7 +829,6 @@ export class IsolatorMain {
       excludeExtensionsDependencies: true,
       dedupeInjectedDeps: true,
       dependenciesGraph: opts.dependenciesGraph,
-      flattenEdges: opts.flattenEdges,
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {

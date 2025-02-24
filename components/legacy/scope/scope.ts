@@ -33,7 +33,6 @@ import { ComponentNotFound, ScopeNotFound } from './exceptions';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import Lanes from './lanes/lanes';
 import {
-  DepEdge,
   ModelComponent,
   Symlink,
   Version,
@@ -775,27 +774,6 @@ once done, to continue working, please run "bit cc"`
       return undefined;
     }
     return versionObj.loadDependenciesGraph(this.objects);
-  }
-
-  public async getFlattenedEdgesByComponentIds(componentIds: ComponentID[]): Promise<DepEdge[] | undefined> {
-    let allFlattenEdges: DepEdge[] = [];
-    if (!isFeatureEnabled(DEPS_GRAPH)) return undefined;
-    await Promise.all(
-      componentIds.map(async (componentId) => {
-        allFlattenEdges.push(...(await this.getFlattenedEdgesByComponentId(componentId) ?? []));
-      })
-    );
-    return allFlattenEdges;
-  }
-
-  public async getFlattenedEdgesByComponentId(id: ComponentID): Promise<DepEdge[] | undefined> {
-    let versionObj: Version;
-    try {
-      versionObj = await this.getVersionInstance(id);
-    } catch {
-      return undefined;
-    }
-    return versionObj.getFlattenedEdges(this.objects);
   }
 
   public async loadDependenciesGraphForComponent(component: Component): Promise<void> {
