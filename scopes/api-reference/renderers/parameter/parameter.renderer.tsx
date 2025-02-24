@@ -75,7 +75,7 @@ function ParameterComponent(props: APINodeRenderProps) {
               className={styles.paramRow}
               row={{
                 name: bindingNode.name || '',
-                description: bindingNode.doc?.comment || bindingNode.doc?.tags?.join() || '',
+                description: bindingNode.doc?.comment || bindingNode.doc?.raw ||  bindingNode.doc?.tags?.join() || '',
                 required:
                   (typeRefCorrespondingNode as any)?.isOptional !== undefined &&
                   !(typeRefCorrespondingNode as any)?.isOptional,
@@ -129,7 +129,7 @@ function ParameterComponent(props: APINodeRenderProps) {
           }}
           row={{
             name: paramNode.name || '',
-            description: paramNode.doc?.comment || paramNode.doc?.tags?.join() || '',
+            description: paramNode.doc?.comment || paramNode.doc?.raw ||  paramNode.doc?.tags?.join() || '',
             required: paramNode.isOptional !== undefined && !paramNode.isOptional,
             type: '',
             default: {

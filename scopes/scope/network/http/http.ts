@@ -1,4 +1,5 @@
 import { ClientError, gql, GraphQLClient } from 'graphql-request';
+import { isNil } from 'lodash';
 import nodeFetch from '@pnpm/node-fetch';
 import retry from 'async-retry';
 import readLine from 'readline';
@@ -16,7 +17,7 @@ import { ConsumerComponent as Component } from '@teambit/legacy.consumer-compone
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import { LaneData, ScopeDescriptor, RemovedObjects } from '@teambit/legacy.scope';
 import { globalFlags } from '@teambit/cli';
-import { getSync, list } from '@teambit/legacy.global-config';
+import { getConfig, listConfig } from '@teambit/config-store';
 import {
   CFG_HTTPS_PROXY,
   CFG_PROXY,
@@ -119,14 +120,14 @@ export class Http implements Network {
 
   static getToken() {
     const processToken = globalFlags.token;
-    const token = processToken || getSync(CFG_USER_TOKEN_KEY);
+    const token = processToken || getConfig(CFG_USER_TOKEN_KEY);
     if (!token) return null;
 
     return token;
   }
 
   static async getProxyConfig(checkProxyUriDefined = true): Promise<ProxyConfig> {
-    const obj = await list();
+    const obj = listConfig();
     const httpProxy = obj[CFG_PROXY];
     const httpsProxy = obj[CFG_HTTPS_PROXY] ?? obj[CFG_PROXY];
 
@@ -143,19 +144,24 @@ export class Http implements Network {
   }
 
   static async getNetworkConfig(): Promise<NetworkConfig> {
-    const obj = await list();
+    const obj = listConfig();
+
+    const getAsNumber = (key: string): number | undefined => {
+      const val = obj[key];
+      return isNil(val) ? undefined : Number(val);
+    }
 
     // Reading strictSSL from both network.strict-ssl and network.strict_ssl for backward compatibility.
     const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj['network.strict_ssl'] ?? obj[CFG_PROXY_STRICT_SSL];
     const networkConfig = {
-      fetchRetries: obj[CFG_FETCH_RETRIES] ?? 5,
-      fetchRetryFactor: obj[CFG_FETCH_RETRY_FACTOR] ?? 10,
-      fetchRetryMintimeout: obj[CFG_FETCH_RETRY_MINTIMEOUT] ?? 1000,
-      fetchRetryMaxtimeout: obj[CFG_FETCH_RETRY_MAXTIMEOUT] ?? 60000,
-      fetchTimeout: obj[CFG_FETCH_TIMEOUT] ?? 60000,
+      fetchRetries: getAsNumber(CFG_FETCH_RETRIES) ?? 5,
+      fetchRetryFactor: getAsNumber(CFG_FETCH_RETRY_FACTOR) ?? 10,
+      fetchRetryMintimeout: getAsNumber(CFG_FETCH_RETRY_MINTIMEOUT) ?? 1000,
+      fetchRetryMaxtimeout: getAsNumber(CFG_FETCH_RETRY_MAXTIMEOUT) ?? 60000,
+      fetchTimeout: getAsNumber(CFG_FETCH_TIMEOUT) ?? 60000,
       localAddress: obj[CFG_LOCAL_ADDRESS],
-      maxSockets: obj[CFG_MAX_SOCKETS] ?? 15,
-      networkConcurrency: obj[CFG_NETWORK_CONCURRENCY] ?? 16,
+      maxSockets: getAsNumber(CFG_MAX_SOCKETS) ?? 15,
+      networkConcurrency: getAsNumber(CFG_NETWORK_CONCURRENCY) ?? 16,
       strictSSL: typeof strictSSL === 'string' ? strictSSL === 'true' : strictSSL,
       ca: obj[CFG_NETWORK_CA] ?? obj[CFG_PROXY_CA],
       cafile: obj[CFG_NETWORK_CA_FILE] ?? obj[CFG_PROXY_CA_FILE],
@@ -255,7 +261,7 @@ export class Http implements Network {
     errors: { [scopeName: string]: string };
     metadata?: { jobs?: string[] };
   }> {
-    const _data = await retry(
+    const { results ,response } = await retry(
       async () => {
         const route = 'api/put';
         logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
@@ -265,19 +271,14 @@ export class Http implements Network {
           body: pack,
           headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
         });
-        const res = await _fetch(`${this.url}/${route}`, opts);
+        const _response = await _fetch(`${this.url}/${route}`, opts);
         logger.debug(
-          `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
+          `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${_response.status} statusText ${_response.statusText}`
         );
 
         // @ts-ignore TODO: need to fix this
-        const results = await this.readPutCentralStream(res.body);
-        if (!results.data) throw new Error(`HTTP results are missing "data" property`);
-        if (results.data.isError) {
-          throw new UnexpectedNetworkError(results.message);
-        }
-        await this.throwForNonOkStatus(res);
-        return results.data;
+        const _results = await this.readPutCentralStream(_response.body);
+        return { results: _results , response: _response };
       },
       {
         retries: 3,
@@ -287,7 +288,13 @@ export class Http implements Network {
         },
       }
     );
-    return _data;
+
+    if (!results.data) throw new Error(`HTTP results are missing "data" property`);
+    if (results.data.isError) {
+      throw new UnexpectedNetworkError(results.message);
+    }
+    await this.throwForNonOkStatus(response);
+    return results.data;
   }
 
   async deleteViaCentralHub(

@@ -15,6 +15,7 @@ export class ChangelogSection implements Section {
     href: '~changelog',
     children: <MenuWidgetIcon icon="changelog" tooltipContent="Change log" />,
     displayName: 'Change log',
+    hideInMinimalMode: true
   };
   order = 40;
 }

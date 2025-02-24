@@ -1,9 +1,7 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-
-import { Helper, DEFAULT_OWNER } from '@teambit/legacy.e2e-helper';
+import { Helper, DEFAULT_OWNER, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import { ComponentNotFound } from '@teambit/legacy.scope';
 
 chai.use(require('chai-fs'));

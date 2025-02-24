@@ -421,7 +421,12 @@ export class InstallMain {
     if (!options?.lockfileOnly && !options?.skipPrune) {
       // We clean node_modules only after the last install.
       // Otherwise, we might load an env from a location that we later remove.
-      await installer.pruneModules(this.workspace.path);
+      try {
+        await installer.pruneModules(this.workspace.path);
+      // Ignoring the error here as it's not critical and we don't want to fail the install process
+      } catch (err: any) {
+        this.logger.error(`failed running pnpm prune with error`, err);
+      }
       // After pruning we need reload moved envs, as during the pruning the old location might be deleted
       await this.reloadMovedEnvs();
     }

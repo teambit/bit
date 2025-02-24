@@ -23,7 +23,7 @@ export class TypeReferenceTransformer implements SchemaTransformer {
 
   async transform(node: TypeReferenceNode, context: SchemaExtractorContext) {
     const name = node.typeName.getText();
-    let type = await context.resolveType(node, name, false);
+    let type = await context.resolveType(node, name);
     if (!(type instanceof TypeRefSchema)) {
       type = new TypeRefSchema(context.getLocation(node), name);
     }

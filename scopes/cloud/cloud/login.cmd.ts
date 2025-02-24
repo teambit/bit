@@ -67,10 +67,10 @@ export class LoginCmd implements Command {
     }
 
     if (refreshToken) {
-      this.cloud.logout();
+      await this.cloud.logout();
     }
 
-    const isLoggedIn = this.cloud.isLoggedIn();
+    const isLoggedIn = await this.cloud.isLoggedIn();
 
     if (isLoggedIn) {
       this.cloud.logger.clearStatusLine();
@@ -81,7 +81,7 @@ export class LoginCmd implements Command {
       if (!ok) {
         return chalk.green(`Logged in as ${this.cloud.getUsername()}`);
       }
-      this.cloud.logout();
+      await this.cloud.logout();
     }
 
     const result = await this.cloud.login(

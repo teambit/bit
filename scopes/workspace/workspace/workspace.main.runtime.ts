@@ -42,6 +42,7 @@ import { UseCmd } from './use.cmd';
 import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
 import { UnuseCmd } from './unuse.cmd';
 import { LocalOnlyCmd, LocalOnlyListCmd, LocalOnlySetCmd, LocalOnlyUnsetCmd } from './commands/local-only-cmd';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 
 export type WorkspaceDeps = [
   CLIMain,
@@ -57,6 +58,7 @@ export type WorkspaceDeps = [
   AspectLoaderMain,
   EnvsMain,
   GlobalConfigMain,
+  ConfigStoreMain
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -95,6 +97,7 @@ export class WorkspaceMain {
     AspectLoaderAspect,
     EnvsAspect,
     GlobalConfigAspect,
+    ConfigStoreAspect,
   ];
   static slots = [
     Slot.withType<OnComponentLoad>(),
@@ -121,6 +124,7 @@ export class WorkspaceMain {
       aspectLoader,
       envs,
       globalConfig,
+      configStore,
     ]: WorkspaceDeps,
     config: WorkspaceExtConfig,
     [
@@ -178,8 +182,11 @@ export class WorkspaceMain {
       onRootAspectAddedSlot,
       graphql,
       onBitmapChangeSlot,
-      onWorkspaceConfigChangeSlot
+      onWorkspaceConfigChangeSlot,
+      configStore
     );
+
+    configStore.addStore('workspace', workspace.getConfigStore());
 
     const configMergeFile = workspace.getConflictMergeFile();
     await configMergeFile.loadIfNeeded();
@@ -237,12 +244,11 @@ export class WorkspaceMain {
       const defaultScope = await workspace.componentDefaultScope(componentId);
 
       const extensionsWithLegacyIdsP = extensions.map(async (extension) => {
-        const legacyEntry = extension.clone();
-        if (legacyEntry.extensionId) {
-          legacyEntry.newExtensionId = legacyEntry.extensionId;
+        if (extension.extensionId) {
+          extension.newExtensionId = extension.extensionId;
         }
 
-        return legacyEntry;
+        return extension;
       });
       const extensionsWithLegacyIds = await Promise.all(extensionsWithLegacyIdsP);
 

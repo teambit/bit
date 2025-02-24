@@ -1,4 +1,3 @@
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import mapSeries from 'p-map-series';
 import path from 'path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -49,7 +48,6 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { compact, slice, difference, partition } from 'lodash';
-import { invalidateCache, getGlobalConfigPath } from '@teambit/legacy.global-config';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
@@ -67,6 +65,7 @@ import CatObjectCmd from './debug-commands/cat-object-cmd';
 import CatLaneCmd from './debug-commands/cat-lane-cmd';
 import { RunActionCmd } from './run-action/run-action.cmd';
 import { ScopeGarbageCollectorCmd } from './_scope-garbage-collector.cmd';
+import { ConfigStoreAspect, ConfigStoreMain, Store } from '@teambit/config-store';
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
@@ -171,7 +170,7 @@ export class ScopeMain implements ComponentFactory {
 
     private dependencyResolver: DependencyResolverMain,
 
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {
     this.componentLoader = new ScopeComponentLoader(this, this.logger);
   }
@@ -391,7 +390,7 @@ export class ScopeMain implements ComponentFactory {
       this.envs,
       this.isolator,
       this.logger,
-      this.globalConfig
+      this.configStore
     );
     return scopeAspectsLoader;
   }
@@ -499,8 +498,11 @@ export class ScopeMain implements ComponentFactory {
   async watchScopeInternalFiles(watchOptions: WatchOptions = {}) {
     const scopeIndexFile = this.legacyScope.objects.scopeIndex.getPath();
     const remoteLanesDir = this.legacyScope.objects.remoteLanes.basePath;
-    const globalConfigFile = getGlobalConfigPath();
-    const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile];
+    const globalStore = this.configStore.stores.global;
+    const scopeStore = this.configStore.stores.scope;
+    const globalConfigFile = globalStore.getPath();
+    const scopeJsonPath = scopeStore.getPath();
+    const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile, scopeJsonPath];
     const watcher = chokidar.watch(pathsToWatch, watchOptions);
     watcher.on('ready', () => {
       this.logger.debug(`watchSystemFiles has started, watching ${pathsToWatch.join(', ')}`);
@@ -514,7 +516,12 @@ export class ScopeMain implements ComponentFactory {
         this.legacyScope.objects.remoteLanes.removeFromCacheByFilePath(filePath);
       } else if (filePath === globalConfigFile) {
         this.logger.debug('global config file has been changed, invalidating its cache');
-        invalidateCache();
+        await globalStore.invalidateCache();
+        this.configStore.invalidateCache();
+      } else if (filePath === scopeJsonPath) {
+        this.logger.debug('scope.json file has been changed, reloading it');
+        await scopeStore.invalidateCache();
+        this.configStore.invalidateCache();
       } else {
         this.logger.error(
           'unknown file has been changed, please check why it is watched by scope.watchSystemFiles',
@@ -1173,6 +1180,25 @@ export class ScopeMain implements ComponentFactory {
     return path.join(this.path, 'last-merged');
   }
 
+  getConfigStore(): Store {
+    return {
+      list: () => this.legacyScope.scopeJson.config || {},
+      set: (key: string, value: string) => {
+        this.legacyScope.scopeJson.setConfig(key, value);
+      },
+      del: (key: string) => {
+        this.legacyScope.scopeJson.rmConfig(key);
+      },
+      write: async () => {
+        await this.legacyScope.scopeJson.writeIfChanged();
+      },
+      invalidateCache: async () => {
+        await this.legacyScope.reloadScopeJson();
+      },
+      getPath: () => this.legacyScope.scopeJson.scopeJsonPath,
+    }
+  }
+
   async isModified(): Promise<boolean> {
     return false;
   }
@@ -1211,7 +1237,7 @@ export class ScopeMain implements ComponentFactory {
     LoggerAspect,
     EnvsAspect,
     DependencyResolverAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
   ];
 
   static defaultConfig: ScopeConfig = {
@@ -1219,7 +1245,8 @@ export class ScopeMain implements ComponentFactory {
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver, globalConfig]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver,
+      configStore]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -1230,7 +1257,7 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain,
       EnvsMain,
       DependencyResolverMain,
-      GlobalConfigMain,
+      ConfigStoreMain
     ],
     config: ScopeConfig,
     [
@@ -1276,8 +1303,9 @@ export class ScopeMain implements ComponentFactory {
       logger,
       envs,
       depsResolver,
-      globalConfig
+      configStore
     );
+    configStore.addStore('scope', scope.getConfigStore());
     cli.register(...allCommands, new ScopeGarbageCollectorCmd(scope));
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;

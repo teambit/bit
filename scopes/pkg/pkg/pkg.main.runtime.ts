@@ -492,7 +492,7 @@ export class PkgMain {
   ): Promise<Record<string, any>> {
     const newProps = this.getPackageJsonModifications(component);
     const pkgJsonObj = Object.assign(packageJsonObject, newProps);
-    const env = this.envs.getEnv(component).env;
+    const env = this.envs.getOrCalculateEnv(component).env;
     if (env.modifyPackageJson) {
       return env.modifyPackageJson(component, pkgJsonObj);
     }

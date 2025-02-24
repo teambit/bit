@@ -409,7 +409,7 @@ The following gets removed by this command:
 
 ## config
 
-**Description**: global config management  
+**Description**: config management  
 https://bit.dev/reference/config/bit-config
 
 `bit config`
@@ -418,15 +418,24 @@ https://bit.dev/reference/config/bit-config
 
 **Usage**: `config set <key> <val>`
 
-**Description**: set a global configuration  
+**Description**: set a configuration. default to save it globally  
 to set temporary configuration by env variable, prefix with "BIT*CONFIG", replace "." with "*" and change to upper case.  
 for example, "user.token" becomes "BIT_CONFIG_USER_TOKEN"
+
+| **Option**      | **Option alias** | **Description**                                                           |
+| --------------- | :--------------: | ------------------------------------------------------------------------- |
+| `--local`       |       `-l`       | set the configuration in the current scope (saved in .bit/scope.json)     |
+| `--local-track` |       `-t`       | set the configuration in the current workspace (saved in workspace.jsonc) |
 
 ### config del
 
 **Usage**: `config del <key>`
 
 **Description**: delete given key from global configuration
+
+| **Option**          | **Option alias** | **Description**                                                                                                          |
+| ------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------------ |
+| `--origin <origin>` |       `-o`       | default to delete whenever it found first. specify to delete specifically from the following: [scope, workspace, global] |
 
 ### config get
 
@@ -439,6 +448,12 @@ for example, "user.token" becomes "BIT_CONFIG_USER_TOKEN"
 **Usage**: `config list`
 
 **Description**: list all configuration(s)
+
+| **Option**          | **Option alias** | **Description**                                                                |
+| ------------------- | :--------------: | ------------------------------------------------------------------------------ |
+| `--origin <origin>` |       `-o`       | list configuration specifically from the following: [scope, workspace, global] |
+| `--detailed`        |       `-d`       | list all configuration(s) with the origin                                      |
+| `--json`            |       `-j`       | output as JSON                                                                 |
 
 ---
 
@@ -926,16 +941,17 @@ bit export => export all staged snaps/tags of components to their remote scope. 
 
 ## graph
 
-**Description**: generate an image file with the workspace components' dependencies graph
+**Description**: generate an SVG image file with the components' dependencies graph
 
 `bit graph [id]`
 
 | **Option**              | **Option alias** | **Description**                                                                                        |
 | ----------------------- | :--------------: | ------------------------------------------------------------------------------------------------------ |
-| `--image <image>`       |       `-i`       | image path and format. use one of the following extensions: [gif, png, svg, pdf]                       |
 | `--remote [remoteName]` |       `-r`       | remote name (name is optional, leave empty when id is specified)                                       |
-| `--all-versions`        |                  | enter all components versions into the graph, not only latest                                          |
 | `--layout <name>`       |                  | GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi] |
+| `--png`                 |                  | save the graph as a png file instead of svg. requires "graphviz" to be installed                       |
+| `--cycles`              |                  | generate a graph of cycles only                                                                        |
+| `--include-local-only`  |                  | include only the components in the workspace (or local scope)                                          |
 | `--json`                |       `-j`       | json format                                                                                            |
 
 ---

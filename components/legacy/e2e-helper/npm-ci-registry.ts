@@ -5,7 +5,7 @@ import { fetch } from '@pnpm/fetch';
 import execa from 'execa';
 import * as path from 'path';
 
-import { Helper } from '@teambit/legacy.e2e-helper';
+import { Helper } from './e2e-helper';
 
 const skipRegistryTests = process.env.SKIP_REGISTRY_TESTS === 'True' || process.env.SKIP_REGISTRY_TESTS === 'true';
 export const supportNpmCiRegistryTesting = !skipRegistryTests;
@@ -33,7 +33,7 @@ export const supportNpmCiRegistryTesting = !skipRegistryTests;
  * an alternative, it's possible to run `npm unpublish package-name --force` to delete the packages.
  * (or just use `this.unpublishComponent()` method)
  */
-export default class NpmCiRegistry {
+export class NpmCiRegistry {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   registryServer: ChildProcess;
   helper: Helper;

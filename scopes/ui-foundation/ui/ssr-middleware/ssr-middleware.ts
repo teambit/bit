@@ -44,8 +44,7 @@ export async function createSsrMiddleware({ root, port, title, logger }: ssrRend
     }
 
     logger.debug(`[ssr] ${request.method} ${url}`);
-    const server = { port, request, response };
-    const props: SsrSession = { assets, browser, request, response, server };
+    const props: SsrSession = { assets, browser, request, response };
 
     try {
       const rendered = await render(props);

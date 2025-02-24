@@ -4,8 +4,7 @@ import chai, { expect } from 'chai';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Extensions, IS_WINDOWS } from '@teambit/legacy.constants';
-import { Helper } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -550,15 +549,7 @@ describe('custom env', function () {
   describe('an empty env. nothing is configured, not even a compiler', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fs.outputFile(
-        'empty-env/empty-env.bit-env.ts',
-        `export class EmptyEnv {}
-export default new EmptyEnv();
-`
-      );
-      helper.fs.outputFile('empty-env/index.ts', `export { EmptyEnv } from './empty-env.bit-env';`);
-      helper.command.addComponent('empty-env');
-      helper.command.setEnv('empty-env', 'teambit.envs/env');
+      helper.env.setEmptyEnv();
 
       helper.fixtures.populateComponents(1, false);
       helper.command.setEnv('comp1', 'empty-env');

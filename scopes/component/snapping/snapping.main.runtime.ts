@@ -24,6 +24,7 @@ import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import pMap from 'p-map';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import {
   BitObject,
@@ -45,7 +46,6 @@ import { LaneId } from '@teambit/lane-id';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { isHash, isTag } from '@teambit/component-version';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { ArtifactFiles, ArtifactSource, getArtifactsFiles, SourceFile } from '@teambit/component.sources';
 import { DependenciesAspect, DependenciesMain } from '@teambit/dependencies';
 import { SnapCmd } from './snap-cmd';
@@ -67,7 +67,6 @@ import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { VersionMaker, BasicTagParams, BasicTagSnapParams, updateVersions, VersionMakerParams } from './version-maker';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 
@@ -137,7 +136,7 @@ export class SnappingMain {
   private objectsRepo: Repository;
   constructor(
     readonly workspace: Workspace,
-    private logger: Logger,
+    readonly logger: Logger,
     readonly dependencyResolver: DependencyResolverMain,
     readonly scope: ScopeMain,
     private exporter: ExportMain,
@@ -407,6 +406,13 @@ if you're willing to lose the history from the head to the specified version, us
     if (!configObject) return;
     ExtensionDataList.adjustEnvsOnConfigObject(configObject);
     const extensionsFromConfigObject = ExtensionDataList.fromConfigObject(configObject);
+    const depsResolverFromConfig = extensionsFromConfigObject.findCoreExtension(DependencyResolverAspect.id);
+    if (depsResolverFromConfig) {
+      // @todo: merge also the scope-specific into the config here. same way we do in "addConfigDepsFromModelToConfigMerge"
+      depsResolverFromConfig.data.policy = component.state._consumer.extensions.findCoreExtension(
+        DependencyResolverAspect.id
+      )?.data.policy;
+    }
     const autoDeps = extensionsFromConfigObject.extractAutoDepsFromConfig();
     const consumerComponent: ConsumerComponent = component.state._consumer;
     const extensionDataList = ExtensionDataList.mergeConfigs([
@@ -414,7 +420,7 @@ if you're willing to lose the history from the head to the specified version, us
       consumerComponent.extensions,
     ]).filterRemovedExtensions();
     consumerComponent.extensions = extensionDataList;
-
+    // @todo: should it be copy to the aspects of the harmony components? seems like they're not in sync.
     return autoDeps;
   }
 
@@ -426,6 +432,9 @@ if you're willing to lose the history from the head to the specified version, us
       lane?: string;
       updateDependents?: boolean;
       tag?: boolean;
+      // in case of merging lanes, the component files are updated in-memory
+      updatedLegacyComponents?: ConsumerComponent[];
+      loadAspectOnlyForIds?: ComponentIdList; // if undefined, load aspects for all components
     } & Partial<BasicTagParams>
   ): Promise<SnapFromScopeResults> {
     if (this.workspace) {
@@ -496,8 +505,13 @@ if you're willing to lose the history from the head to the specified version, us
       if (!snapData) throw new Error(`unable to find ${id.toString()} in snapDataPerComp`);
       return snapData;
     };
-    const existingComponents = await this.scope.getMany(componentIdsLatest);
+    const updatedLegacyComponents = params.updatedLegacyComponents || [];
+    const updatedComponents =  await this.scope.getManyByLegacy(updatedLegacyComponents);
 
+    const existingComponents = compact(await pMapSeries(componentIdsLatest, async (id) => {
+      const foundInUpdated = updatedComponents.find((c) => c.id.isEqualWithoutVersion(id));
+      return foundInUpdated || this.scope.get(id);
+    }));
     // in case of update-dependents, align the dependencies of the dependents according to the lane
     if (params.updateDependents && laneCompIds) {
       existingComponents.forEach((comp) => {
@@ -518,7 +532,6 @@ if you're willing to lose the history from the head to the specified version, us
     await pMapSeries(components, async (component) => {
       const snapData = getSnapData(component.id);
       const autoDeps = await this.addAspectsFromConfigObject(component, snapData.aspects);
-
       // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
       await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver, this, autoDeps);
     });
@@ -537,10 +550,15 @@ if you're willing to lose the history from the head to the specified version, us
     // otherwise, when a user set a custom-env, it won't be loaded and the Version object will leave the
     // teambit.envs/envs in a weird state. the config will be set correctly but the data will be set to the default
     // node env.
-    await this.scope.loadManyCompsAspects(components);
+    const { loadAspectOnlyForIds } = params;
+    const compsToLoadAspects = loadAspectOnlyForIds
+      ? components.filter(c => loadAspectOnlyForIds.hasWithoutVersion(c.id))
+      : components;
+
+    await this.scope.loadManyCompsAspects(compsToLoadAspects);
 
     // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
-    await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
+    await pMapSeries(compsToLoadAspects, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
 
     const ids = ComponentIdList.fromArray(allCompIds);
     const shouldTag = Boolean(params.tag);
@@ -798,35 +816,6 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       flattenedEdgesGetter.populateFlattenedAndEdgesForComp(component);
     });
     this.logger.profile('snap._addFlattenedDependenciesToComponents');
-  }
-
-  async _addDependenciesGraphToComponents(components: Component[]): Promise<void> {
-    if (!this.workspace) {
-      return;
-    }
-    this.logger.setStatusLine('adding dependencies graph...');
-    this.logger.profile('snap._addDependenciesGraphToComponents');
-    const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(components);
-    const options = {
-      rootDir: this.workspace.path,
-      rootComponentsPath: this.workspace.rootComponentsPath,
-      componentIdByPkgName,
-    };
-    await pMapPool(
-      components,
-      async (component) => {
-        if (component.state._consumer.componentMap?.rootDir) {
-          await this.dependencyResolver.addDependenciesGraph(
-            component,
-            component.state._consumer.componentMap.rootDir,
-            options
-          );
-        }
-      },
-      { concurrency: 10 }
-    );
-    this.logger.clearStatusLine();
-    this.logger.profile('snap._addDependenciesGraphToComponents');
   }
 
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
@@ -1407,7 +1396,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     ExportAspect,
     BuilderAspect,
     ImporterAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
     DependenciesAspect,
     ApplicationAspect,
     RemoveAspect,
@@ -1423,7 +1412,7 @@ another option, in case this dependency is not in main yet is to remove all refe
       exporter,
       builder,
       importer,
-      globalConfig,
+      configStore,
       deps,
       application,
       remove,
@@ -1436,7 +1425,7 @@ another option, in case this dependency is not in main yet is to remove all refe
       ExportMain,
       BuilderMain,
       ImporterMain,
-      GlobalConfigMain,
+      ConfigStoreMain,
       DependenciesMain,
       ApplicationMain,
       RemoveMain,
@@ -1458,8 +1447,8 @@ another option, in case this dependency is not in main yet is to remove all refe
       remove,
       onPreSnapSlot
     );
-    const snapCmd = new SnapCmd(snapping, logger, globalConfig);
-    const tagCmd = new TagCmd(snapping, logger, globalConfig);
+    const snapCmd = new SnapCmd(snapping, logger, configStore);
+    const tagCmd = new TagCmd(snapping, logger, configStore);
     const tagFromScopeCmd = new TagFromScopeCmd(snapping, logger);
     const snapFromScopeCmd = new SnapFromScopeCmd(snapping, logger);
     const resetCmd = new ResetCmd(snapping);

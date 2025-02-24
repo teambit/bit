@@ -1,4 +1,4 @@
-import { ComponentContext } from '@teambit/component';
+import { ComponentContext, ComponentID } from '@teambit/component';
 import classNames from 'classnames';
 import React, { useContext, useState, HTMLAttributes, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -59,7 +59,8 @@ export function resolveFilePath(
 
   if (fileTree.includes(normalized)) return normalized;
 
-  const requestedExt = path.extname(normalized);
+  const extension = path.extname(normalized);
+  const requestedExt = ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs'].includes(extension) ? extension : '';
   const basePathWithoutExt = requestedExt ? normalized.slice(0, -requestedExt.length) : normalized;
 
   const getTypeScriptVariants = (ext: string): string[] => {
@@ -119,13 +120,14 @@ export function resolveFilePath(
   return mainFile;
 }
 
-export function CodePage({ className, fileIconSlot, host, codeViewClassName }: CodePageProps) {
+export function CodePage({ className, fileIconSlot, host: hostFromProps, codeViewClassName }: CodePageProps) {
   const urlParams = useCodeParams();
   const [searchParams] = useSearchParams();
   const scopeFromQueryParams = searchParams.get('scope');
   const component = useContext(ComponentContext);
+  const host = useMemo(() => urlParams.version ? 'teambit.scope/scope' : hostFromProps, [urlParams.version, hostFromProps]);
 
-  const { mainFile, fileTree = [], dependencies, devFiles, loading: loadingCode } = useCode(component.id);
+  const { mainFile, fileTree = [], dependencies, devFiles, loading: loadingCode } = useCode(component.id, host);
   const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString());
 
   const currentFile = resolveFilePath(urlParams.file, fileTree, mainFile, loadingCode);
@@ -176,17 +178,19 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
     });
   }, [dependencies?.length]);
 
+  const componentId = urlParams.version ? component.id : ComponentID.fromString(component.id.toStringWithoutVersion());
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.codePage, className)}>
       <Pane className={styles.left}>
         <CodeView
-          componentId={component.id}
+          componentId={componentId}
           currentFile={currentFile}
           icon={icon}
           currentFileContent={currentArtifactFileContent}
           loading={loadingArtifactFileContent || loadingCode}
           codeSnippetClassName={codeViewClassName}
           dependencies={dependencies}
+          host={host}
         />
       </Pane>
       <HoverSplitter className={styles.splitter}>

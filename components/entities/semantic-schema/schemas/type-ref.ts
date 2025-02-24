@@ -47,6 +47,10 @@ export class TypeRefSchema extends SchemaNode {
     this.componentId = componentId;
   }
 
+  getNodes(): SchemaNode[] {
+    return this.typeArgs || [];
+  }
+
   withTypeArgs(typeArgs: SchemaNode[]) {
     this.typeArgs = typeArgs;
     return this;
