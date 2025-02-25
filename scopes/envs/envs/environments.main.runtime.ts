@@ -827,7 +827,7 @@ export class EnvsMain {
     return finalId;
   }
 
-  validateAspect(ext: ExtensionDataEntry) {
+  validateEnvId(ext: ExtensionDataEntry) {
     if (!ext.config?.env || !ext.data?.id || ext.config.env === ext.data.id) return;
     let errorMsg: string;
     if (ext.data.id === DEFAULT_ENV) {

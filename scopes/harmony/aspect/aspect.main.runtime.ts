@@ -220,7 +220,7 @@ export class AspectMain {
   validateAspectsBeforePersist(extensionDataList: ExtensionDataList): ValidateBeforePersistResult {
     const envExt = extensionDataList.findCoreExtension(EnvsAspect.id);
     if (envExt) {
-      const result = this.envs.validateAspect(envExt);
+      const result = this.envs.validateEnvId(envExt);
       if (result) return result;
     }
   }
