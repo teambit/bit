@@ -134,7 +134,7 @@ export class VersionMaker {
 
     const { rebuildDepsGraph, build, updateDependentsOnLane, setHeadAsParent, detachHead, overrideHead } = this.params;
     await this.snapping._addFlattenedDependenciesToComponents(this.allComponentsToTag, rebuildDepsGraph);
-    await this._addDependenciesGraphToComponents(this.components);
+    await this._addDependenciesGraphToComponents(this.components, this.allComponentsToTag);
     await this.snapping.throwForDepsFromAnotherLane(this.allComponentsToTag);
     if (!build) this.emptyBuilderData();
     this.addBuildStatus(this.allComponentsToTag, BuildStatus.Pending);
@@ -199,20 +199,22 @@ export class VersionMaker {
     };
   }
 
-  private async _addDependenciesGraphToComponents(components: Component[]): Promise<void> {
+  private async _addDependenciesGraphToComponents(components: Component[], componentsToTag: ConsumerComponent[]): Promise<void> {
     if (!this.workspace) {
       return;
     }
     this.snapping.logger.setStatusLine('adding dependencies graph...');
     this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
     if (!this.allWorkspaceComps) throw new Error('please make sure to populate this.allWorkspaceComps before');
-    const comps: Component[] = [...components];
+    const componentIdByPkgName = new Map<string, ComponentID>();
+    for (let i = 0; i < components.length; i++) {
+      componentIdByPkgName.set(this.dependencyResolver.getPackageName(components[i]), componentsToTag[i].id);
+    }
     for (const otherComp of this.allWorkspaceComps) {
-      if (comps.every((c) => !c.id.isEqualWithoutVersion(otherComp.id))) {
-        comps.push(otherComp);
+      if (components.every((c) => !c.id.isEqualWithoutVersion(otherComp.id))) {
+        componentIdByPkgName.set(this.dependencyResolver.getPackageName(otherComp), otherComp.id);
       }
     }
-    const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(comps);
     const options = {
       rootDir: this.workspace.path,
       rootComponentsPath: this.workspace.rootComponentsPath,
