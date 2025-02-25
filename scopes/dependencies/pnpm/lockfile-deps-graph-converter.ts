@@ -1,8 +1,11 @@
 import path from 'path';
-import { type ProjectManifest } from '@pnpm/types';
+import { type ProjectManifest, type Registries } from '@pnpm/types';
 import { type LockfileFileV9, type InlineSpecifiersResolvedDependencies } from '@pnpm/lockfile.types';
+import { type ResolveFunction } from '@pnpm/client';
 import * as dp from '@pnpm/dependency-path';
+import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
 import { pick, partition } from 'lodash';
+import { snapToSemver } from '@teambit/component-package-version';
 import {
   DependenciesGraph,
   type PackagesMap,
@@ -86,16 +89,16 @@ function _convertLockfileToGraph(
     directDependencies: DependencyNeighbour[];
   }
 ): DependenciesGraph {
-  lockfile = replaceFileVersionsWithPendingVersions(lockfile);
+  lockfile = replaceFileVersionsWithPendingVersions(lockfile, componentIdByPkgName);
   return new DependenciesGraph({
-    edges: buildEdges(lockfile, { directDependencies }),
+    edges: buildEdges(lockfile, { directDependencies, componentIdByPkgName }),
     packages: buildPackages(lockfile, { componentIdByPkgName }),
   });
 }
 
 function buildEdges(
   lockfile: LockfileFileV9,
-  { directDependencies }: { directDependencies: DependencyNeighbour[] }
+  { directDependencies, componentIdByPkgName }: { directDependencies: DependencyNeighbour[]; componentIdByPkgName: ComponentIdByPkgName }
 ): DependencyEdge[] {
   const edges: DependencyEdge[] = [];
   for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
@@ -120,7 +123,7 @@ function buildEdges(
   }
   edges.push({
     id: DependenciesGraph.ROOT_EDGE_ID,
-    neighbours: replaceFileVersionsWithPendingVersions(directDependencies),
+    neighbours: replaceFileVersionsWithPendingVersions(directDependencies, componentIdByPkgName),
   });
   return edges;
 }
@@ -163,6 +166,9 @@ function buildPackages(
       'resolution',
       'version',
     ]) as any;
+    if (graphPkg.resolution.type === 'directory') {
+      delete graphPkg.resolution;
+    }
     if (pkgId.includes('@pending:')) {
       const parsed = dp.parse(pkgId);
       if (parsed.name && componentIdByPkgName.has(parsed.name)) {
@@ -178,15 +184,32 @@ function buildPackages(
   return packages;
 }
 
-function replaceFileVersionsWithPendingVersions<T>(obj: T): T {
-  return JSON.parse(JSON.stringify(obj).replaceAll(/file:[^'"(]+/g, 'pending:'));
+function replaceFileVersionsWithPendingVersions<T>(obj: T, componentIdByPkgName: ComponentIdByPkgName): T {
+  let s = JSON.stringify(obj);
+  for (const [pkgName, componentId] of componentIdByPkgName.entries()) {
+    s = s.replaceAll(new RegExp(`${pkgName}@file:[^'"(]+`, 'g'), `${pkgName}@${snapToSemver(componentId.version)}`);
+  }
+  return JSON.parse(s.replaceAll(/file:[^'"(]+/g, 'pending:'));
 }
 
-export function convertGraphToLockfile(
-  graph: DependenciesGraph,
-  manifests: Record<string, ProjectManifest>,
-  rootDir: string
-): LockfileFileV9 {
+export async function convertGraphToLockfile(
+  _graph: DependenciesGraph,
+  {
+    manifests,
+    rootDir,
+    resolve,
+    registries,
+  }: {
+    manifests: Record<string, ProjectManifest>;
+    rootDir: string;
+    resolve: ResolveFunction;
+    registries: Registries;
+  }
+): Promise<LockfileFileV9> {
+  console.log(JSON.stringify(manifests, null, 2))
+  let graphString = _graph.serialize();
+  // console.log(JSON.stringify(graph.packages, null, 2))
+  const graph = DependenciesGraph.deserialize(graphString)!;
   const packages = {};
   const snapshots = {};
   const allEdgeIds = new Set(graph.edges.map(({ id }) => id));
@@ -208,7 +231,7 @@ export function convertGraphToLockfile(
       Object.assign(packages[pkgId], convertGraphPackageToLockfilePackage(graphPkg));
     }
   }
-  const lockfile = {
+  const lockfile: LockfileFileV9 & Required<Pick<LockfileFileV9, 'packages'>> = {
     lockfileVersion: '9.0',
     packages,
     snapshots,
@@ -216,6 +239,7 @@ export function convertGraphToLockfile(
   };
   const rootEdge = graph.findRootEdge();
   if (rootEdge) {
+    console.log(rootEdge.neighbours)
     for (const [projectDir, manifest] of Object.entries(manifests)) {
       const projectId = getLockfileImporterId(rootDir, projectDir);
       lockfile.importers![projectId] = {
@@ -232,7 +256,7 @@ export function convertGraphToLockfile(
             const edgeId = rootEdge.neighbours.find(
               (directDep) =>
                 directDep.name === name &&
-                (directDep.specifier === specifier || dp.removeSuffix(directDep.id) === `${name}@${specifier}`)
+                (directDep.specifier === specifier || specifier === '*' || dp.removeSuffix(directDep.id) === `${name}@${specifier}`)
             )?.id;
             if (edgeId) {
               const parsed = dp.parse(edgeId);
@@ -244,6 +268,36 @@ export function convertGraphToLockfile(
       }
     }
   }
+  const pkgsToResolve: Array<{ name: string; version: string; pkgId: string }> = [];
+  for (const [pkgId, pkg] of Object.entries(lockfile.packages)) {
+    if (pkg.resolution == null || 'type' in pkg.resolution && pkg.resolution.type === 'directory') {
+      const parsed = dp.parse(pkgId)
+      if (parsed.name && parsed.version) {
+        pkgsToResolve.push({
+          name: parsed.name,
+          version: parsed.version,
+          pkgId,
+        })
+      }
+    }
+  }
+  await Promise.all(pkgsToResolve.map(async (pkgToResolve) => {
+    const { resolution } = await resolve({
+      alias: pkgToResolve.name,
+      pref: pkgToResolve.version,
+    }, {
+      lockfileDir: '',
+      projectDir: '',
+      registry: pickRegistryForPackage(registries, pkgToResolve.name),
+      preferredVersions: {},
+    })
+    if (resolution.type == undefined) {
+      console.log('XXXXXXXXXXXXXX', pkgToResolve, resolution.integrity)
+      lockfile.packages[pkgToResolve.pkgId].resolution = {
+        integrity: resolution.integrity,
+      };
+    }
+  }));
   return lockfile;
 
   function convertToDeps(neighbours: DependencyNeighbour[]) {

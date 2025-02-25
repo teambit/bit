@@ -134,7 +134,7 @@ export class VersionMaker {
 
     const { rebuildDepsGraph, build, updateDependentsOnLane, setHeadAsParent, detachHead, overrideHead } = this.params;
     await this.snapping._addFlattenedDependenciesToComponents(this.allComponentsToTag, rebuildDepsGraph);
-    await this._addDependenciesGraphToComponents(this.components);
+    await this._addDependenciesGraphToComponents(this.components, this.allComponentsToTag);
     await this.snapping.throwForDepsFromAnotherLane(this.allComponentsToTag);
     if (!build) this.emptyBuilderData();
     this.addBuildStatus(this.allComponentsToTag, BuildStatus.Pending);
@@ -199,14 +199,22 @@ export class VersionMaker {
     };
   }
 
-  private async _addDependenciesGraphToComponents(components: Component[]): Promise<void> {
+  private async _addDependenciesGraphToComponents(components: Component[], componentsToTag: ConsumerComponent[]): Promise<void> {
     if (!this.workspace) {
       return;
     }
     this.snapping.logger.setStatusLine('adding dependencies graph...');
     this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
     if (!this.allWorkspaceComps) throw new Error('please make sure to populate this.allWorkspaceComps before');
-    const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(this.allWorkspaceComps);
+    const componentIdByPkgName = new Map<string, ComponentID>();
+    for (let i = 0; i < components.length; i++) {
+      componentIdByPkgName.set(this.dependencyResolver.getPackageName(components[i]), componentsToTag[i].id);
+    }
+    for (const otherComp of this.allWorkspaceComps) {
+      if (components.every((c) => !c.id.isEqualWithoutVersion(otherComp.id))) {
+        componentIdByPkgName.set(this.dependencyResolver.getPackageName(otherComp), otherComp.id);
+      }
+    }
     const options = {
       rootDir: this.workspace.path,
       rootComponentsPath: this.workspace.rootComponentsPath,
@@ -578,16 +586,16 @@ function addIntegritiesToDependenciesGraph(
   packageIntegritiesByPublishedPackages: PackageIntegritiesByPublishedPackages,
   dependenciesGraph: DependenciesGraph
 ): DependenciesGraph {
-  const resolvedVersions: Array<{ name: string; version: string }> = [];
-  for (const [selector, integrity] of packageIntegritiesByPublishedPackages.entries()) {
+  const resolvedVersions: Array<{ name: string; version: string; previouslyUsedVersion?: string; }> = [];
+  for (const [selector, { integrity, previouslyUsedVersion }] of packageIntegritiesByPublishedPackages.entries()) {
     if (integrity == null) continue;
     const index = selector.indexOf('@', 1);
     const name = selector.substring(0, index);
     const version = selector.substring(index + 1);
-    const pendingPkg = dependenciesGraph.packages.get(`${name}@pending:`);
+    const pendingPkg = dependenciesGraph.packages.get(`${name}@pending:`) ?? dependenciesGraph.packages.get(`${name}@${previouslyUsedVersion}`);
     if (pendingPkg) {
       pendingPkg.resolution = { integrity };
-      resolvedVersions.push({ name, version });
+      resolvedVersions.push({ name, version, previouslyUsedVersion });
     }
   }
   return replacePendingVersions(dependenciesGraph, resolvedVersions) as DependenciesGraph;
@@ -696,11 +704,14 @@ export async function updateVersions(
 
 function replacePendingVersions(
   graph: DependenciesGraph,
-  resolvedVersions: Array<{ name: string; version: string }>
+  resolvedVersions: Array<{ name: string; version: string; previouslyUsedVersion?: string; }>
 ): DependenciesGraph {
   let s = graph.serialize();
-  for (const { name, version } of resolvedVersions) {
+  for (const { name, version, previouslyUsedVersion } of resolvedVersions) {
     s = s.replaceAll(`${name}@pending:`, `${name}@${version}`);
+    if (previouslyUsedVersion) {
+      s = s.replaceAll(`${name}@${previouslyUsedVersion}:`, `${name}@${version}`);
+    }
   }
   const updatedDependenciesGraph = DependenciesGraph.deserialize(s);
   // This should never happen as we know at this point that the schema version is supported

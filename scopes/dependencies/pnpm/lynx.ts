@@ -87,7 +87,7 @@ async function createStoreController(
   return createOrConnectStoreController(opts);
 }
 
-async function generateResolverAndFetcher(
+export async function generateResolverAndFetcher(
   cacheDir: string,
   registries: Registries,
   proxyConfig: PackageManagerProxyConfig = {},
@@ -568,7 +568,7 @@ export async function resolveRemoteVersion(
   }
 }
 
-function getRegistriesMap(registries: Registries): RegistriesMap {
+export function getRegistriesMap(registries: Registries): RegistriesMap {
   const registriesMap = {
     default: registries.defaultRegistry.uri || NPM_REGISTRY,
   };
