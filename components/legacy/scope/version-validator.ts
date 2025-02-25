@@ -126,6 +126,13 @@ export function validateVersionInstance(version: Version): void {
       validateNoDuplicateExtensionEntry(extensions);
       extensions.map(_validateExtension);
       validateArtifacts(extensions);
+      const result = ExtensionDataList.validateBeforePersistHook?.(extensions);
+      if (result) {
+        if (!version.bitVersion || lt(version.bitVersion, result.minBitVersion)) {
+          return;
+        }
+        throw new VersionInvalid(`${message} ${result.errorMsg}`);
+      }
     }
   };
 

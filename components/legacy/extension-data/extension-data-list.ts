@@ -18,11 +18,18 @@ type ConfigOnlyEntry = {
 
 type RemoveExtensionSpecialSign = '-';
 
+export type ValidateBeforePersistResult = undefined | { errorMsg: string; minBitVersion: string };
+
 export const INTERNAL_CONFIG_FIELDS = ['__specific'];
 
 export class ExtensionDataList extends Array<ExtensionDataEntry> {
   static coreExtensionsNames: Map<string, string> = new Map();
   static toModelObjectsHook: ((extDataList: ExtensionDataList) => void)[] = [];
+  /**
+   * the only aspect registered to this hook is the teambit.harmony/aspect. All other aspects that want to validate,
+   * need to register to teambit.harmony/aspect. (currently it doesn't have slots to register, but needs to be added).
+   */
+  static validateBeforePersistHook?: ((extDataList: ExtensionDataList) => ValidateBeforePersistResult);
   static registerCoreExtensionName(name: string) {
     ExtensionDataList.coreExtensionsNames.set(name, '');
   }
