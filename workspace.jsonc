@@ -573,7 +573,7 @@
         "user-home": "^3.0.0",
         "util": "^0.12.5",
         "uuid": "8.3.2",
-        "validate-npm-package-name": "3.0.0",
+        "validate-npm-package-name": "6.0.0",
         "version-selector-type": "3.0.0",
         "vinyl": "2.2.1",
         "vinyl-file": "3.0.0",

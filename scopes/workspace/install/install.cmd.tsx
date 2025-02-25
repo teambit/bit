@@ -1,4 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
+import packageNameValidate from 'validate-npm-package-name';
 import { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
@@ -85,6 +86,11 @@ export default class InstallCmd implements Command {
         `--update-existing is deprecated, please omit it. "bit install" will update existing dependencies by default`
       );
     }
+    packages.forEach((pkg) => {
+      if (!packageNameValidate(pkg).validForNewPackages) {
+        throw new Error(`the package name "${pkg}" is invalid. please provide a valid package name.`);
+      }
+    });
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     const installOpts: WorkspaceInstallOptions = {
       lifecycleType: options.addMissingPeers ? 'peer' : options.type,
