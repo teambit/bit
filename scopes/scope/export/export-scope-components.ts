@@ -226,10 +226,11 @@ export async function mergeObjects(
   ] as ComponentNeedsUpdate[];
   const componentsWithConflicts = errors.filter((result) => result instanceof MergeConflict) as MergeConflict[];
   if (componentsWithConflicts.length || componentsNeedUpdate.length) {
-    const idsAndVersions = componentsWithConflicts.map((c) => ({ id: c.id, versions: c.versions }));
+    const idsAndVersions = componentsWithConflicts.map((c) => ({ id: c.id, versions: c.versions,
+      isDeleted: c.isDeleted }));
     const idsAndVersionsWithConflicts = sortBy(idsAndVersions, property('id'));
     const idsOfNeedUpdateComps = sortBy(
-      componentsNeedUpdate.map((c) => ({ id: c.id, lane: c.lane })),
+      componentsNeedUpdate.map((c) => ({ id: c.id, lane: c.lane, isDeleted: c.isDeleted })),
       property('id')
     );
     scope.objects.clearObjectsFromCache(); // just in case this error is caught. we don't want to persist anything by mistake.

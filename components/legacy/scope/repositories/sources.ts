@@ -515,7 +515,8 @@ please either remove the component (bit remove) or remove the lane.`);
       incomingComp,
       false,
       isIncomingFromOrigin,
-      existingHeadIsMissingInIncomingComponent
+      existingHeadIsMissingInIncomingComponent,
+      this.scope.objects
     );
     const { mergedComponent, mergedVersions } = await modelComponentMerger.merge();
     if (existingComponentHead || mergedComponent.hasHead()) {
