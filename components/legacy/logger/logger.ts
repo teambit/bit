@@ -1,9 +1,3 @@
-/**
- * leave the Winston for now to get the file-rotation we're missing from Pino and the "profile"
- * functionality.
- * also, Winston should start BEFORE Pino. otherwise, Pino starts creating the debug.log file first
- * and it throws an error if the file doesn't exists on Docker/CI.
- */
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
@@ -16,11 +10,11 @@ import pMapSeries from 'p-map-series';
 import { Analytics } from '@teambit/legacy.analytics';
 import { getConfig } from '@teambit/config-store';
 import { defaultErrorHandler } from '@teambit/cli';
-import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS } from '@teambit/legacy.constants';
-import { getWinstonLogger } from './winston-logger';
+import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS, DEBUG_LOG } from '@teambit/legacy.constants';
 import { getPinoLogger } from './pino-logger';
 import { Profiler } from './profiler';
 import { loader } from '@teambit/legacy.loader';
+import { rotateLogIfNeeded } from './rotate-log-file';
 
 export { Level as LoggerLevel };
 
@@ -37,8 +31,7 @@ const DEFAULT_LEVEL = 'debug';
 
 const logLevel = getLogLevel();
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { winstonLogger, createExtensionLogger } = getWinstonLogger(logLevel, jsonFormat);
+rotateLogIfNeeded(DEBUG_LOG);
 
 const { pinoLogger, pinoLoggerConsole, pinoSSELogger } = getPinoLogger(logLevel, jsonFormat);
 
@@ -370,26 +363,6 @@ export function writeLogToScreen(levelOrPrefix = '') {
   if (levelOrPrefix === 'profile') {
     logger.shouldConsoleProfiler = true;
   }
-  // @todo: implement
-  // const prefixes = levelOrPrefix.split(',');
-  // const filterPrefix = winston.format((info) => {
-  //   if (isLevel) return info;
-  //   if (prefixes.some((prefix) => info.message.startsWith(prefix))) return info;
-  //   return false;
-  // });
-  // logger.logger.add(
-  //   new winston.transports.Console({
-  //     level: isLevel ? levelOrPrefix : 'info',
-  //     format: winston.format.combine(
-  //       filterPrefix(),
-  //       winston.format.metadata(),
-  //       winston.format.errors({ stack: true }),
-  //       winston.format.printf((info) => `${info.message} ${getMetadata(info)}`)
-  //     ),
-  //   })
-  // );
 }
-
-export { createExtensionLogger };
 
 export default logger;
