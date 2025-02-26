@@ -592,7 +592,7 @@ function addIntegritiesToDependenciesGraph(
     const index = selector.indexOf('@', 1);
     const name = selector.substring(0, index);
     const version = selector.substring(index + 1);
-    const pendingPkg = dependenciesGraph.packages.get(`${name}@pending:`) ?? dependenciesGraph.packages.get(`${name}@${previouslyUsedVersion}`);
+    const pendingPkg = dependenciesGraph.packages.get(`${name}@pending:`) ?? dependenciesGraph.packages.get(`${name}@${previouslyUsedVersion}`) ?? dependenciesGraph.packages.get(`${name}@${version}`);;
     if (pendingPkg) {
       pendingPkg.resolution = { integrity };
       resolvedVersions.push({ name, version, previouslyUsedVersion });

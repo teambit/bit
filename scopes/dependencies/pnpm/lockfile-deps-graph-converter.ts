@@ -169,16 +169,16 @@ function buildPackages(
     if (graphPkg.resolution.type === 'directory') {
       delete graphPkg.resolution;
     }
-    if (pkgId.includes('@pending:')) {
-      const parsed = dp.parse(pkgId);
-      if (parsed.name && componentIdByPkgName.has(parsed.name)) {
-        const compId = componentIdByPkgName.get(parsed.name)!;
-        graphPkg.component = {
-          name: compId.fullName,
-          scope: compId.scope,
-        };
-      }
+    // if (pkgId.includes('@pending:')) {
+    const parsed = dp.parse(pkgId);
+    if (parsed.name && componentIdByPkgName.has(parsed.name)) {
+      const compId = componentIdByPkgName.get(parsed.name)!;
+      graphPkg.component = {
+        name: compId.fullName,
+        scope: compId.scope,
+      };
     }
+    // }
     packages.set(pkgId, graphPkg);
   }
   return packages;
@@ -281,21 +281,25 @@ export async function convertGraphToLockfile(
       }
     }
   }
+  console.log(JSON.stringify(lockfile, null, 2))
+  console.log(JSON.stringify(pkgsToResolve, null, 2))
   await Promise.all(pkgsToResolve.map(async (pkgToResolve) => {
-    const { resolution } = await resolve({
-      alias: pkgToResolve.name,
-      pref: pkgToResolve.version,
-    }, {
-      lockfileDir: '',
-      projectDir: '',
-      registry: pickRegistryForPackage(registries, pkgToResolve.name),
-      preferredVersions: {},
-    })
-    if (resolution.type == undefined) {
-      console.log('XXXXXXXXXXXXXX', pkgToResolve, resolution.integrity)
-      lockfile.packages[pkgToResolve.pkgId].resolution = {
-        integrity: resolution.integrity,
-      };
+    if (lockfile.packages[pkgToResolve.pkgId].resolution == null) {
+      const { resolution } = await resolve({
+        alias: pkgToResolve.name,
+        pref: pkgToResolve.version,
+      }, {
+        lockfileDir: '',
+        projectDir: '',
+        registry: pickRegistryForPackage(registries, pkgToResolve.name),
+        preferredVersions: {},
+      })
+      if ('integrity' in resolution && resolution.integrity) {
+        console.log('XXXXXXXXXXXXXX', pkgToResolve, resolution.integrity)
+        lockfile.packages[pkgToResolve.pkgId].resolution = {
+          integrity: resolution.integrity,
+        };
+      }
     }
   }));
   return lockfile;
