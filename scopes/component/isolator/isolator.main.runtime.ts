@@ -242,6 +242,8 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * Root dir of capsulse cache (used mostly to copy lock file if used with cache lock file only option)
    */
   cacheCapsulesDir?: string;
+
+  useDependenciesGraph?: boolean;
 };
 
 type GetCapsuleDirOpts = Pick<
@@ -702,9 +704,9 @@ export class IsolatorMain {
           })
         );
       } else {
-        const dependenciesGraph = await legacyScope?.getDependenciesGraphByComponentIds(
+        const dependenciesGraph = opts.useDependenciesGraph ? await legacyScope?.getDependenciesGraphByComponentIds(
           capsuleList.getAllComponentIDs()
-        );
+        ) : undefined;
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
@@ -713,7 +715,7 @@ export class IsolatorMain {
           packageManager: opts.packageManager,
           dependenciesGraph,
         });
-        if (dependenciesGraph == null) {
+        if (opts.useDependenciesGraph && dependenciesGraph == null) {
           // If the graph was not present in the model, we use the just created lockfile inside the capsules
           // to populate the graph.
           await this.addDependenciesGraphToComponents(capsuleList, components, capsulesDir);
