@@ -14,7 +14,7 @@ import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS, DEBUG_LOG } from '
 import { getPinoLogger } from './pino-logger';
 import { Profiler } from './profiler';
 import { loader } from '@teambit/legacy.loader';
-import { rotateLogIfNeeded } from './rotate-log-file';
+import { rotateLogDaily } from './rotate-log-daily';
 
 export { Level as LoggerLevel };
 
@@ -31,7 +31,7 @@ const DEFAULT_LEVEL = 'debug';
 
 const logLevel = getLogLevel();
 
-rotateLogIfNeeded(DEBUG_LOG);
+rotateLogDaily(DEBUG_LOG);
 
 const { pinoLogger, pinoLoggerConsole, pinoSSELogger } = getPinoLogger(logLevel, jsonFormat);
 
