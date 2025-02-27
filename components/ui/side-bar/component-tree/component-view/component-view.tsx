@@ -7,7 +7,7 @@ import classNames from 'classnames';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentModel } from '@teambit/component';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import React, { useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
@@ -31,6 +31,14 @@ export function ComponentView(props: ComponentViewProps) {
   const { onSelect } = useContext(TreeContext);
   const lanesContextModel = useContext(LanesContext);
   const lanesModel = lanesContextModel?.lanesModel;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => {
+      setMounted(false);
+    };
+  }, []);
 
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
@@ -54,12 +62,13 @@ export function ComponentView(props: ComponentViewProps) {
   const envUrl = !envId
     ? undefined
     : (isEnvOnCurrentLane &&
-      lanesModel?.viewedLane?.id &&
-      `${window.location.origin}${LanesModel.getLaneComponentUrl(envId, lanesModel.viewedLane?.id)}`) ||
-    ComponentUrl.toUrl(envId, {
-      includeVersion: true,
-      useLocationOrigin: !window.location.host.startsWith('localhost'),
-    });
+        lanesModel?.viewedLane?.id &&
+        mounted &&
+        `${window.location.origin}${LanesModel.getLaneComponentUrl(envId, lanesModel.viewedLane?.id)}`) ||
+      ComponentUrl.toUrl(envId, {
+        includeVersion: true,
+        useLocationOrigin: mounted ? window.location.host.startsWith('localhost') : false,
+      });
 
   const envTooltip = envId ? (
     <Link
