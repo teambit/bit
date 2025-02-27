@@ -89,12 +89,15 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
       Subscription: {
         componentAdded: {
           subscribe: () => graphql.pubsub.asyncIterator(ComponentAdded),
+          resolve: (payload) => payload.componentAdded
         },
         componentChanged: {
           subscribe: () => graphql.pubsub.asyncIterator(ComponentChanged),
+          resolve: (payload) => payload.componentChanged,
         },
         componentRemoved: {
           subscribe: () => graphql.pubsub.asyncIterator(ComponentRemoved),
+          resolve: (payload) => payload.componentRemoved,
         },
       },
       Component: {
@@ -120,7 +123,7 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
             const componentID = await ws.resolveComponentId(id);
             const component = await ws.get(componentID);
             return component;
-          } catch (error: any) {
+          } catch {
             return null;
           }
         },

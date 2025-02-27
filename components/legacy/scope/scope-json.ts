@@ -6,7 +6,7 @@ import { DEFAULT_LANE } from '@teambit/lane-id';
 import { BitId } from '@teambit/legacy-bit-id';
 import { SCOPE_JSON, SCOPE_JSONC } from '@teambit/legacy.constants';
 import { Remote } from '@teambit/scope.remotes';
-import { cleanObject, writeFile } from '@teambit/legacy.utils';
+import { cleanObject, PathOsBasedAbsolute, writeFile } from '@teambit/legacy.utils';
 import { ScopeJsonNotFound } from './exceptions';
 
 export function getPath(scopePath: string): string {
@@ -26,6 +26,7 @@ export type ScopeJsonProps = {
   groupName: string | null | undefined;
   remotes?: { name: string; url: string };
   lanes?: { current: string; tracking: TrackLane[]; new: string[] };
+  config?: Record<string, string>;
 };
 
 export type TrackLane = { localLane: string; remoteLane: string; remoteScope: string };
@@ -41,8 +42,10 @@ export class ScopeJson {
   groupName: string;
   lanes: { tracking: TrackLane[]; new: string[] };
   hasChanged = false;
+  config?: Record<string, string>;
 
-  constructor({ name, remotes, resolverPath, hooksPath, license, groupName, version, lanes }: ScopeJsonProps) {
+  constructor({ name, remotes, resolverPath, hooksPath, license, groupName, version, lanes, config }: ScopeJsonProps,
+    readonly scopeJsonPath: PathOsBasedAbsolute) {
     this.name = name;
     this.version = version;
     this.resolverPath = resolverPath;
@@ -51,13 +54,12 @@ export class ScopeJson {
     this.remotes = remotes || {};
     this.groupName = groupName || '';
     this.lanes = lanes || { current: DEFAULT_LANE, tracking: [], new: [] };
+    this.config = config;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   set name(suggestedName: string) {
     this._name = BitId.getValidScopeName(suggestedName);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -74,6 +76,7 @@ export class ScopeJson {
       groupName: this.groupName,
       version: this.version,
       lanes: this.lanes,
+      config: this.config,
     });
   }
 
@@ -112,8 +115,19 @@ export class ScopeJson {
     return true;
   }
 
-  async write(path: string) {
-    return writeFile(pathlib.join(path, SCOPE_JSON), this.toJson());
+  setConfig(key: string, value: string) {
+    if (!this.config) this.config = {};
+    this.config[key] = value;
+    this.hasChanged = true;
+  }
+  rmConfig(key: string) {
+    if (!this.config) return;
+    delete this.config[key];
+    this.hasChanged = true;
+  }
+
+  async write() {
+    return writeFile(this.scopeJsonPath, this.toJson());
   }
 
   trackLane(trackLaneData: TrackLane) {
@@ -146,9 +160,9 @@ export class ScopeJson {
     this.lanes.new = this.lanes.new.filter((l) => l !== laneName);
     this.hasChanged = true;
   }
-  async writeIfChanged(path: string) {
+  async writeIfChanged() {
     if (this.hasChanged) {
-      await this.write(path);
+      await this.write();
     }
   }
 
@@ -156,11 +170,11 @@ export class ScopeJson {
     let jsonParsed: ScopeJsonProps;
     try {
       jsonParsed = JSON.parse(json);
-    } catch (err) {
+    } catch {
       throw new BitError(`unable to parse the scope.json file located at "${scopeJsonPath}".
 edit the file to fix the error, or delete it and run "bit init" to recreate it`);
     }
-    return new ScopeJson(jsonParsed);
+    return new ScopeJson(jsonParsed, scopeJsonPath);
   }
 
   static async loadFromFile(scopeJsonPath: string): Promise<ScopeJson> {

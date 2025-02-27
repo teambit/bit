@@ -5,7 +5,7 @@ import { PENDING_OBJECTS_DIR } from '@teambit/legacy.constants';
 import { mergeObjects } from '@teambit/export';
 import { Action } from './action';
 import { logger } from '@teambit/legacy.logger';
-import { BitObjectList } from '@teambit/scope.objects';
+import { BitObjectList } from '@teambit/objects';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
 
 type Options = { clientId: string; isResumingExport: boolean };

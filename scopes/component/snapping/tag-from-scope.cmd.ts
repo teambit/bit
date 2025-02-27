@@ -38,6 +38,11 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
     ['', 'push', 'export the updated objects to the original scopes once done'],
     ['', 'rebuild-artifacts', 'run the full build pipeline. do not use the saved artifacts from the last snap'],
     ['', 'ignore-last-pkg-json', 'ignore the package.json created by the last snap'],
+    [
+      '',
+      'override-head',
+      'opposite of detach-head. in case a component is checked out to an older version, change head to the newly created version',
+    ],
     ...tagCmdOptions.filter((o) => !excludeOptions.includes(o[1])),
   ] as CommandOptions;
   remoteOp = true; // In case a compiler / tester is not installed
@@ -72,6 +77,8 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
       ignoreLastPkgJson,
       rebuildDepsGraph,
       incrementBy = 1,
+      detachHead,
+      overrideHead,
     } = options;
 
     const params = {
@@ -92,6 +99,8 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
       version: ver,
       rebuildArtifacts,
       ignoreLastPkgJson,
+      detachHead,
+      overrideHead,
     };
 
     const tagDataPerCompRaw = this.parseData(data);

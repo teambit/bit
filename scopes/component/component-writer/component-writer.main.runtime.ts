@@ -252,14 +252,13 @@ export class ComponentWriterMain {
       const componentMap = this.consumer.bitMap.getComponentIfExist(component.id, {
         ignoreVersion: true,
       });
-      this.throwErrorWhenDirectoryNotEmpty(this.consumer.toAbsolutePath(componentRootDir), componentMap, opts);
+      this.throwErrorWhenDirectoryNotEmpty(componentRootDir, componentMap, opts);
       return {
         existingComponentMap: componentMap,
       };
     };
     return {
       workspace: this.workspace,
-      // @ts-ignore todo: remove after deleting teambit.legacy
       bitMap: this.consumer.bitMap,
       component,
       writeToPath: componentRootDir,
@@ -289,7 +288,7 @@ to move all component files to a different directory, run bit remove and then bi
     }
   }
   private throwErrorWhenDirectoryNotEmpty(
-    componentDir: PathOsBasedAbsolute,
+    componentDirRelative: PathOsBasedAbsolute,
     componentMap: ComponentMap | null | undefined,
     opts: ManyComponentsWriterParams
   ) {
@@ -300,15 +299,24 @@ to move all component files to a different directory, run bit remove and then bi
     // if writeToPath specified and that directory is already used for that component, it's ok to override
     if (opts.writeToPath && componentMap && componentMap.rootDir && componentMap.rootDir === opts.writeToPath) return;
 
-    if (fs.pathExistsSync(componentDir)) {
-      if (!isDir(componentDir)) {
-        throw new BitError(`unable to import to ${componentDir} because it's a file`);
-      }
-      if (!isDirEmptySync(componentDir) && opts.throwForExistingDir) {
+    const componentDir = this.consumer.toAbsolutePath(componentDirRelative);
+    if (!fs.pathExistsSync(componentDir)) return;
+    if (!componentMap) {
+      const compInTheSameDir = this.consumer.bitMap.getComponentIdByRootPath(componentDirRelative);
+      if (compInTheSameDir) {
         throw new BitError(
-          `unable to import to ${componentDir}, the directory is not empty. use --override flag to delete the directory and then import`
+          `unable to import to ${componentDir}, the directory is already used by ${compInTheSameDir.toString()}.
+either use --path to specify a different directory or modify "defaultDirectory" prop in the workspace.jsonc file to "{scopeId}/{name}"`
         );
       }
+    }
+    if (!isDir(componentDir)) {
+      throw new BitError(`unable to import to ${componentDir} because it's a file`);
+    }
+    if (!isDirEmptySync(componentDir) && opts.throwForExistingDir) {
+      throw new BitError(
+        `unable to import to ${componentDir}, the directory is not empty. use --override flag to delete the directory and then import`
+      );
     }
   }
 

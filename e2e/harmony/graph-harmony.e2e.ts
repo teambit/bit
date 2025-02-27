@@ -1,14 +1,8 @@
 import chai, { expect } from 'chai';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
-import type { IdGraph } from '@teambit/graph';
-// the file extension is required here because we have mapping in the package.json exports of the aspect
-// that replace the import id with the actual path:
-//  "./dist/*": "./dist/*",
-// eslint-disable-next-line import/extensions
-import { objectListToGraph } from '@teambit/graph/dist/object-list-to-graph.js';
 import { loadBit } from '@teambit/bit';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import { ModelComponent, Version } from '@teambit/scope.objects';
+import { ModelComponent, Version, objectListToGraph, IdGraph } from '@teambit/objects';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));

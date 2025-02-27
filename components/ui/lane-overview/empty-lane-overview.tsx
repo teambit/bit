@@ -1,5 +1,6 @@
 import React from 'react';
-import { EmptyComponentGallery, EmptyComponentGalleryProps } from '@teambit/ui-foundation.ui.empty-component-gallery';
+import { EmptyComponentGallery } from '@teambit/ui-foundation.ui.empty-component-gallery';
+import type { EmptyComponentGalleryProps } from '@teambit/ui-foundation.ui.empty-component-gallery';
 import styles from './empty-lane-overview.module.scss';
 
 export type EmptyLaneOverviewProps = {} & EmptyComponentGalleryProps;

@@ -3,7 +3,7 @@ import { fetch, put, remove, action, FETCH_OPTIONS, PushOptions } from '@teambit
 import { ComponentsList, ListScopeResult } from '@teambit/legacy.component-list';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import { ComponentLog, ObjectItemsStream, ObjectList, Ref } from '@teambit/scope.objects';
+import { ComponentLog, ObjectItemsStream, ObjectList, Ref } from '@teambit/objects';
 import { RemovedObjects, LaneData, loadScope, Scope, ScopeDescriptor } from '@teambit/legacy.scope';
 import { FsScopeNotLoaded } from '../exceptions';
 import { Network } from '../network';
@@ -60,7 +60,6 @@ export default class Fs implements Network {
   }
 
   list(namespacesUsingWildcards?: string, includeDeleted = false): Promise<ListScopeResult[]> {
-    // @ts-ignore todo: remove after deleting teambit.legacy
     return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards, includeDeleted);
   }
 
@@ -79,7 +78,6 @@ export default class Fs implements Network {
 
   async graph(bitId?: ComponentID): Promise<DependencyGraph> {
     const scope = this.getScope();
-    // @ts-ignore todo: fix after deleting teambit.legacy
     const dependencyGraph = await DependencyGraph.loadLatest(scope);
     // get as string to mimic the exact steps of using ssh
     const getGraphAsString = (): object => {

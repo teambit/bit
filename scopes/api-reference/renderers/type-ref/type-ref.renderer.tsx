@@ -46,21 +46,23 @@ function TypeRefComponent(props: APINodeRenderProps) {
       <>{children}</>
     );
 
-  const exportedTypeFromSameComp = typeRefNode.isFromThisComponent() ? apiRefModel.getByName(typeRefNode) : undefined;
+  const exportedTypeFromSameComp = typeRefNode.isFromThisComponent()
+    ? apiRefModel.getByName(typeRefNode, typeRefNode.internalFilePath)
+    : undefined;
 
   const exportedTypeUrlFromSameComp =
     exportedTypeFromSameComp &&
     useUpdatedUrlFromQuery({
       selectedAPI: typeRefNode.isInternalReference()
-        ? apiRefModel.internalAPIKey(typeRefNode)
+        ? apiRefModel.internalAPIKey(typeRefNode, typeRefNode.internalFilePath)
         : exportedTypeFromSameComp.api.name,
     });
 
   const exportedTypeUrlFromAnotherComp = typeRefNode.componentId
     ? getExportedTypeUrlFromAnotherComp({
-        componentId: typeRefNode.componentId,
-        selectedAPI: typeRefNode.name,
-      })
+      componentId: typeRefNode.componentId,
+      selectedAPI: typeRefNode.name,
+    })
     : undefined;
 
   const packageUrl = typeRefNode.packageName ? `https://www.npmjs.com/package/${typeRefNode.packageName}` : undefined;
@@ -73,9 +75,9 @@ function TypeRefComponent(props: APINodeRenderProps) {
         return (
           <React.Fragment key={`type-arg-renderer-container-${typeArg.__schema}-${typeArg.toString()}-${index}`}>
             <typeArgRenderer.Component
+              key={`type-arg-${typeArg.__schema}-${typeArg.toString()}-${index}`}
               {...props}
               className={styles.typeArgNode}
-              key={`type-arg-${typeArg.__schema}-${typeArg.toString()}-${index}`}
               apiNode={{ ...props.apiNode, api: typeArg, renderer: typeArgRenderer }}
               depth={(props.depth ?? 0) + 1}
               metadata={{ [typeArg.__schema]: { columnView: true } }}
@@ -163,8 +165,15 @@ export function TypeRefName({
   if (url && !withinLink) {
     return (
       <LinkContext.Provider value={true}>
-        <Link href={url} external={external} className={classnames(className, styles.nodeLink)}>
+        <Link
+          href={url}
+          external={external}
+          className={classnames(className, styles.nodeLink)}
+        >
           {name}
+          {external && <div className={styles.locationIcon}>
+            <img src="https://static.bit.dev/design-system-assets/Icons/external-link.svg"></img>
+          </div>}
           {children}
         </Link>
       </LinkContext.Provider>
@@ -189,9 +198,8 @@ function getExportedTypeUrlFromAnotherComp({
   const componentUrl = ComponentUrl.toUrl(componentId, { useLocationOrigin: false, includeVersion: true });
   const [componentIdUrl, versionQuery] = componentUrl.split('?');
 
-  const exportedTypeUrl = `${componentIdUrl}/~api-reference?selectedAPI=${encodeURIComponent(selectedAPI)}${
-    versionQuery ? `&${versionQuery}` : ''
-  }`;
+  const exportedTypeUrl = `${componentIdUrl}/~api-reference?selectedAPI=${encodeURIComponent(selectedAPI)}${versionQuery ? `&${versionQuery}` : ''
+    }`;
 
   return exportedTypeUrl;
 }

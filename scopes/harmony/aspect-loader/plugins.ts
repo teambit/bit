@@ -1,6 +1,6 @@
+import { realpathSync, existsSync } from 'fs';
 import { Component } from '@teambit/component';
 import esmLoader from '@teambit/node.utils.esm-loader';
-import { NativeCompileCache } from '@teambit/toolbox.performance.v8-cache';
 import { Logger } from '@teambit/logger';
 import pMapSeries from 'p-map-series';
 import { setExitOnUnhandledRejection } from '@teambit/cli';
@@ -55,11 +55,17 @@ export class Plugins {
   }
 
   async loadModule(path: string) {
-    NativeCompileCache.uninstall();
-    const module = await esmLoader(path, true);
+    const exists = existsSync(path);
+    // We manually resolve the path to avoid issues with symlinks
+    // the require.resolve and import inside the esmLoader will sometime uses cached resolved paths
+    // which lead to errors about file not found as it's trying to load the file from the wrong path
+    // In case the path not exists we don't need to resolve it (it will throw an error)
+    const realPath = exists ? realpathSync(path) : path;
+    const resolvedPathFromRealPath = require.resolve(realPath);
+    const module = await esmLoader(realPath, true);
     const defaultModule = module.default;
     defaultModule.__path = path;
-    defaultModule.__resolvedPath = require.resolve(path);
+    defaultModule.__resolvedPath = resolvedPathFromRealPath;
     return defaultModule;
   }
 

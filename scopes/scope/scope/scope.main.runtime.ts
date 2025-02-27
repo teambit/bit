@@ -1,4 +1,3 @@
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import mapSeries from 'p-map-series';
 import path from 'path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -28,7 +27,7 @@ import {
   ModelComponent,
   Lane,
   Version,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import { Scope as LegacyScope, LegacyOnTagResult, Scope, Types, loadScopeIfExist } from '@teambit/legacy.scope';
 import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { ExportPersist, PostSign } from '@teambit/scope.remote-actions';
@@ -36,7 +35,7 @@ import { DependencyResolverAspect, DependencyResolverMain, NodeLinker } from '@t
 import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import chokidar from 'chokidar';
+import chokidar, { WatchOptions } from 'chokidar';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { SnapsDistance, getDivergeData } from '@teambit/component.snap-distance';
 import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/scope.network';
@@ -49,7 +48,6 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { compact, slice, difference, partition } from 'lodash';
-import { invalidateCache, getGlobalConfigPath } from '@teambit/legacy.global-config';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
@@ -67,6 +65,7 @@ import CatObjectCmd from './debug-commands/cat-object-cmd';
 import CatLaneCmd from './debug-commands/cat-lane-cmd';
 import { RunActionCmd } from './run-action/run-action.cmd';
 import { ScopeGarbageCollectorCmd } from './_scope-garbage-collector.cmd';
+import { ConfigStoreAspect, ConfigStoreMain, Store } from '@teambit/config-store';
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
@@ -171,7 +170,7 @@ export class ScopeMain implements ComponentFactory {
 
     private dependencyResolver: DependencyResolverMain,
 
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {
     this.componentLoader = new ScopeComponentLoader(this, this.logger);
   }
@@ -294,7 +293,8 @@ export class ScopeMain implements ComponentFactory {
     const policy = await this.dependencyResolver.mergeVariantPolicies(
       component.config.extensions,
       component.id,
-      component.state._consumer.files
+      component.state._consumer.files,
+      component.state._consumer.dependencies.dependencies
     );
     const dependenciesList = await this.dependencyResolver.extractDepsFromLegacy(component, policy);
 
@@ -303,6 +303,15 @@ export class ScopeMain implements ComponentFactory {
       dependencies: dependenciesList.serialize(),
       policy: policy.serialize(),
     };
+    const resolvedEnvJsonc = await this.envs.calculateEnvManifest(
+      component,
+      component.state._consumer.files,
+      component.state._consumer.dependencies.dependencies
+    );
+    if (resolvedEnvJsonc) {
+      // @ts-ignore
+      envsData.resolvedEnvJsonc = resolvedEnvJsonc;
+    }
     // Make sure we are adding the envs / deps data first because other on load events might depend on it
     await Promise.all([
       this.upsertExtensionData(component, EnvsAspect.id, envsData),
@@ -381,7 +390,7 @@ export class ScopeMain implements ComponentFactory {
       this.envs,
       this.isolator,
       this.logger,
-      this.globalConfig
+      this.configStore
     );
     return scopeAspectsLoader;
   }
@@ -486,12 +495,15 @@ export class ScopeMain implements ComponentFactory {
    * it's possible that other commands (e.g. `bit import`) modified these files, while these processes are running.
    * Because these data are kept in memory, they're not up to date anymore.
    */
-  async watchScopeInternalFiles() {
+  async watchScopeInternalFiles(watchOptions: WatchOptions = {}) {
     const scopeIndexFile = this.legacyScope.objects.scopeIndex.getPath();
     const remoteLanesDir = this.legacyScope.objects.remoteLanes.basePath;
-    const globalConfigFile = getGlobalConfigPath();
-    const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile];
-    const watcher = chokidar.watch(pathsToWatch);
+    const globalStore = this.configStore.stores.global;
+    const scopeStore = this.configStore.stores.scope;
+    const globalConfigFile = globalStore.getPath();
+    const scopeJsonPath = scopeStore.getPath();
+    const pathsToWatch = [scopeIndexFile, remoteLanesDir, globalConfigFile, scopeJsonPath];
+    const watcher = chokidar.watch(pathsToWatch, watchOptions);
     watcher.on('ready', () => {
       this.logger.debug(`watchSystemFiles has started, watching ${pathsToWatch.join(', ')}`);
     });
@@ -504,7 +516,12 @@ export class ScopeMain implements ComponentFactory {
         this.legacyScope.objects.remoteLanes.removeFromCacheByFilePath(filePath);
       } else if (filePath === globalConfigFile) {
         this.logger.debug('global config file has been changed, invalidating its cache');
-        invalidateCache();
+        await globalStore.invalidateCache();
+        this.configStore.invalidateCache();
+      } else if (filePath === scopeJsonPath) {
+        this.logger.debug('scope.json file has been changed, reloading it');
+        await scopeStore.invalidateCache();
+        this.configStore.invalidateCache();
       } else {
         this.logger.error(
           'unknown file has been changed, please check why it is watched by scope.watchSystemFiles',
@@ -611,7 +628,7 @@ export class ScopeMain implements ComponentFactory {
     let versionObj: Version;
     try {
       versionObj = await this.legacyScope.getVersionInstance(id);
-    } catch (err) {
+    } catch {
       return undefined;
     }
 
@@ -711,9 +728,10 @@ export class ScopeMain implements ComponentFactory {
 
   /**
    * get a component from a remote without importing it
+   * by default, when on a lane, it loads the component from the lane. unless `fromMain` is set to true.
    */
-  async getRemoteComponent(id: ComponentID): Promise<Component> {
-    return this.componentLoader.getRemoteComponent(id);
+  async getRemoteComponent(id: ComponentID, fromMain = false): Promise<Component> {
+    return this.componentLoader.getRemoteComponent(id, fromMain);
   }
 
   /**
@@ -757,17 +775,14 @@ export class ScopeMain implements ComponentFactory {
    * @param includeCache whether or not include components that their scope-name is different than the current scope-name
    */
   async listIds(includeCache = false, includeFromLanes = false, patterns?: string[]): Promise<ComponentID[]> {
-    const allModelComponents = await this.legacyScope.list();
+    const localScopeOnly = !includeCache;
+    const allModelComponents = await this.legacyScope.list(localScopeOnly);
     const filterByCacheAndLanes = (modelComponent: ModelComponent) => {
-      const cacheFilter = includeCache ? true : this.exists(modelComponent);
       const lanesFilter = includeFromLanes ? true : modelComponent.hasHead();
-
-      return cacheFilter && lanesFilter;
+      return lanesFilter;
     };
     const modelComponentsToList = allModelComponents.filter(filterByCacheAndLanes);
-    let ids = modelComponentsToList.map((component) =>
-      ComponentID.fromLegacy(component.toBitIdWithLatestVersion(), component.scope || this.name)
-    );
+    let ids = modelComponentsToList.map((component) => component.toComponentIdWithLatestVersion());
     if (patterns && patterns.length > 0) {
       ids = ids.filter((id) =>
         patterns?.some((pattern) => isMatchNamespacePatternItem(id.toStringWithoutVersion(), pattern).match)
@@ -1000,9 +1015,9 @@ export class ScopeMain implements ComponentFactory {
     return allIdsFiltered;
   }
 
-  async getSnapDistance(id: ComponentID, throws = true): Promise<SnapsDistance> {
+  async getSnapDistance(id: ComponentID, throws = true, workspaceId?: ComponentID): Promise<SnapsDistance> {
     const modelComp = await this.legacyScope.getModelComponent(id);
-    await modelComp.setDivergeData(this.legacyScope.objects, throws);
+    await modelComp.setDivergeData(this.legacyScope.objects, throws, undefined, workspaceId);
     return modelComp.getDivergeData();
   }
   /**
@@ -1048,8 +1063,13 @@ export class ScopeMain implements ComponentFactory {
     return this.resolveComponentId(id);
   }
 
-  // TODO: add new API for this
+  /**
+   * @deprecated use `this.getRemoteScopes()` instead.
+   */
   async _legacyRemotes(): Promise<Remotes> {
+    return getScopeRemotes(this.legacyScope);
+  }
+  async getRemoteScopes(): Promise<Remotes> {
     return getScopeRemotes(this.legacyScope);
   }
 
@@ -1057,8 +1077,8 @@ export class ScopeMain implements ComponentFactory {
    * list all component ids from a remote-scope
    */
   async listRemoteScope(scopeName: string): Promise<ComponentID[]> {
-    const remotes = await this._legacyRemotes();
-    const remote = await remotes.resolve(scopeName, this.legacyScope);
+    const remotes = await this.getRemoteScopes();
+    const remote = await remotes.resolve(scopeName);
     const results = await remote.list();
     return results.map(({ id }) => id);
   }
@@ -1066,7 +1086,7 @@ export class ScopeMain implements ComponentFactory {
   async getLegacyMinimal(id: ComponentID): Promise<ConsumerComponent | undefined> {
     try {
       return await this.legacyScope.getConsumerComponent(id);
-    } catch (err) {
+    } catch {
       // in case the component is missing locally, this.get imports it.
       return (await this.get(id))?.state._consumer;
     }
@@ -1147,15 +1167,6 @@ export class ScopeMain implements ComponentFactory {
     await this.loadAspects(aspectIds, true, component.id.toString());
   }
 
-  async addAspectsFromConfigObject(component: Component, configObject: Record<string, any>) {
-    const extensionsFromConfigObject = ExtensionDataList.fromConfigObject(configObject);
-    const extensionDataList = ExtensionDataList.mergeConfigs([
-      extensionsFromConfigObject,
-      component.state._consumer.extensions,
-    ]).filterRemovedExtensions();
-    component.state._consumer.extensions = extensionDataList;
-  }
-
   public async createAspectListFromExtensionDataList(extensionDataList: ExtensionDataList) {
     const entries = await Promise.all(extensionDataList.map((entry) => this.extensionDataEntryToAspectEntry(entry)));
     return this.componentExtension.createAspectListFromEntries(entries);
@@ -1167,6 +1178,25 @@ export class ScopeMain implements ComponentFactory {
 
   getLastMergedPath() {
     return path.join(this.path, 'last-merged');
+  }
+
+  getConfigStore(): Store {
+    return {
+      list: () => this.legacyScope.scopeJson.config || {},
+      set: (key: string, value: string) => {
+        this.legacyScope.scopeJson.setConfig(key, value);
+      },
+      del: (key: string) => {
+        this.legacyScope.scopeJson.rmConfig(key);
+      },
+      write: async () => {
+        await this.legacyScope.scopeJson.writeIfChanged();
+      },
+      invalidateCache: async () => {
+        await this.legacyScope.reloadScopeJson();
+      },
+      getPath: () => this.legacyScope.scopeJson.scopeJsonPath,
+    }
   }
 
   async isModified(): Promise<boolean> {
@@ -1207,7 +1237,7 @@ export class ScopeMain implements ComponentFactory {
     LoggerAspect,
     EnvsAspect,
     DependencyResolverAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
   ];
 
   static defaultConfig: ScopeConfig = {
@@ -1215,7 +1245,8 @@ export class ScopeMain implements ComponentFactory {
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver, globalConfig]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver,
+      configStore]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -1226,7 +1257,7 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain,
       EnvsMain,
       DependencyResolverMain,
-      GlobalConfigMain,
+      ConfigStoreMain
     ],
     config: ScopeConfig,
     [
@@ -1272,8 +1303,9 @@ export class ScopeMain implements ComponentFactory {
       logger,
       envs,
       depsResolver,
-      globalConfig
+      configStore
     );
+    configStore.addStore('scope', scope.getConfigStore());
     cli.register(...allCommands, new ScopeGarbageCollectorCmd(scope));
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;

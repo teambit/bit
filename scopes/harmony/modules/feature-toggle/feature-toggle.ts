@@ -13,7 +13,7 @@
  */
 
 import { CFG_FEATURE_TOGGLE } from '@teambit/legacy.constants';
-import { getSync } from '@teambit/legacy.global-config';
+import { getConfig } from '@teambit/config-store';
 
 export const ENV_VAR_FEATURE_TOGGLE = 'BIT_FEATURES';
 
@@ -24,7 +24,7 @@ class FeatureToggle {
   }
   private setFeatures() {
     if (this.areFeaturesPopulated()) return;
-    const enabledFeatures = process.env[ENV_VAR_FEATURE_TOGGLE] || getSync(CFG_FEATURE_TOGGLE);
+    const enabledFeatures = process.env[ENV_VAR_FEATURE_TOGGLE] || getConfig(CFG_FEATURE_TOGGLE);
     this.features = enabledFeatures ? enabledFeatures.split(',').map((f) => f.trim()) : null;
   }
   public isFeatureEnabled(featureName: string): boolean {
@@ -72,3 +72,5 @@ export const CLOUD_IMPORTER_V2 = 'cloud-importer-v2';
 export const ALLOW_SAME_NAME = 'allow-same-name'; // not in use anymore
 
 export const DEPS_GRAPH = 'deps-graph';
+
+export const DETACH_HEAD = 'detach-head';

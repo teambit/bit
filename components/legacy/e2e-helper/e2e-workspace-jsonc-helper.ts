@@ -15,7 +15,7 @@ export default class WorkspaceJsoncHelper {
     const bitJsoncPath = composePath(bitJsoncDir);
     if (fs.existsSync(bitJsoncPath)) {
       const content = fs.readFileSync(bitJsoncPath).toString();
-      return parse(content);
+      return parse(content) || {};
     }
     return {};
   }

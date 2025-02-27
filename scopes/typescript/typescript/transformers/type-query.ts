@@ -18,7 +18,7 @@ export class TypeQueryTransformer implements SchemaTransformer {
 
   async transform(node: TypeQueryNode, context: SchemaExtractorContext) {
     const displaySig = await context.getQuickInfoDisplayString(node.exprName);
-    const type = await context.resolveType(node.exprName, node.exprName.getText(), false);
+    const type = await context.resolveType(node.exprName, node.exprName.getText());
     const location = context.getLocation(node);
     return new TypeQuerySchema(location, type, displaySig);
   }

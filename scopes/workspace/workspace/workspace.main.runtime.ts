@@ -1,4 +1,3 @@
-import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { CLIAspect, MainRuntime, CLIMain, CommandList, Command } from '@teambit/cli';
@@ -43,9 +42,9 @@ import { UseCmd } from './use.cmd';
 import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
 import { UnuseCmd } from './unuse.cmd';
 import { LocalOnlyCmd, LocalOnlyListCmd, LocalOnlySetCmd, LocalOnlyUnsetCmd } from './commands/local-only-cmd';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 
 export type WorkspaceDeps = [
-  PubsubMain,
   CLIMain,
   ScopeMain,
   ComponentMain,
@@ -59,6 +58,7 @@ export type WorkspaceDeps = [
   AspectLoaderMain,
   EnvsMain,
   GlobalConfigMain,
+  ConfigStoreMain
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -84,7 +84,6 @@ export type OnRootAspectAddedSlot = SlotRegistry<OnRootAspectAdded>;
 export class WorkspaceMain {
   static runtime = MainRuntime;
   static dependencies = [
-    PubsubAspect,
     CLIAspect,
     ScopeAspect,
     ComponentAspect,
@@ -98,6 +97,7 @@ export class WorkspaceMain {
     AspectLoaderAspect,
     EnvsAspect,
     GlobalConfigAspect,
+    ConfigStoreAspect,
   ];
   static slots = [
     Slot.withType<OnComponentLoad>(),
@@ -111,7 +111,6 @@ export class WorkspaceMain {
   ];
   static async provider(
     [
-      pubsub,
       cli,
       scope,
       component,
@@ -125,6 +124,7 @@ export class WorkspaceMain {
       aspectLoader,
       envs,
       globalConfig,
+      configStore,
     ]: WorkspaceDeps,
     config: WorkspaceExtConfig,
     [
@@ -163,7 +163,6 @@ export class WorkspaceMain {
     // TODO: get the 'workspace' name in a better way
     const logger = loggerExt.createLogger(EXT_NAME);
     const workspace = new Workspace(
-      pubsub,
       config,
       consumer,
       scope,
@@ -172,7 +171,6 @@ export class WorkspaceMain {
       variants,
       aspectLoader,
       logger,
-      undefined,
       harmony,
       onComponentLoadSlot,
       onComponentChangeSlot,
@@ -184,8 +182,11 @@ export class WorkspaceMain {
       onRootAspectAddedSlot,
       graphql,
       onBitmapChangeSlot,
-      onWorkspaceConfigChangeSlot
+      onWorkspaceConfigChangeSlot,
+      configStore
     );
+
+    configStore.addStore('workspace', workspace.getConfigStore());
 
     const configMergeFile = workspace.getConflictMergeFile();
     await configMergeFile.loadIfNeeded();
@@ -243,12 +244,11 @@ export class WorkspaceMain {
       const defaultScope = await workspace.componentDefaultScope(componentId);
 
       const extensionsWithLegacyIdsP = extensions.map(async (extension) => {
-        const legacyEntry = extension.clone();
-        if (legacyEntry.extensionId) {
-          legacyEntry.newExtensionId = legacyEntry.extensionId;
+        if (extension.extensionId) {
+          extension.newExtensionId = extension.extensionId;
         }
 
-        return legacyEntry;
+        return extension;
       });
       const extensionsWithLegacyIds = await Promise.all(extensionsWithLegacyIdsP);
 
@@ -317,6 +317,8 @@ export class WorkspaceMain {
     envsCommand?.commands?.push(new EnvsUnsetCmd(workspace)); // bit envs unset
     envsCommand?.commands?.push(new EnvsReplaceCmd(workspace)); // bit envs replace
     envsCommand?.commands?.push(new EnvsUpdateCmd(workspace)); // bit envs replace
+
+    envs.registerEnvJsoncResolver(workspace.resolveEnvManifest.bind(workspace));
 
     // add sub-command "set" to scope command.
     const scopeCommand = cli.getCommand('scope');

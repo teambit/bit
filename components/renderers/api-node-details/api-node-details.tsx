@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { APINode } from '@teambit/api-reference.models.api-reference-model';
 import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
 
+import { extractCodeBlock } from './extract-code-block';
 import styles from './api-node-details.module.scss';
 
 const INDEX_THRESHOLD_WIDTH = 600;
@@ -61,23 +62,21 @@ export function APINodeDetails({
   const signatureContainerRef = useRef<HTMLDivElement | null>(null);
   const exampleContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // const [signatureHeight, setSignatureHeight] = useState<string | undefined>();
-  // const [exampleHeight, setExampleHeight] = useState<string | undefined>();
-
   const [containerSize] = useState<{ width?: number; height?: number }>({
     width: undefined,
     height: undefined,
   });
 
   const currentQueryParams = query.toString();
-  // const signatureHeightStyle = (!!signatureHeight && `calc(${signatureHeight} + 16px)`) || '250px';
-  // const exampleHeightStyle = (!!exampleHeight && `calc(${exampleHeight} + 16px)`) || '250px';
 
   const indexHidden = (containerSize.width ?? 0) < INDEX_THRESHOLD_WIDTH;
 
   const example = (doc?.tags || []).find((tag) => tag.tagName === 'example');
-  const comment =
-    doc?.comment ?? doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n`), '');
+  const comment = doc?.comment
+    ?? doc?.tags
+      ?.filter((tag) => tag.comment)
+      .reduce((acc, tag) => acc.concat(`${tag.comment}\n`), '');
+
   const linkComment = doc?.tags?.find((tag) => tag.tagName === 'link')?.comment;
 
   let linkPlaceholder: string | undefined;
@@ -106,9 +105,12 @@ export function APINodeDetails({
     const word = model.getWordAtPosition(position);
     const wordApiNode: APINode | undefined = word
       ? apiRefModel?.apiByName?.get(word.word) ||
-        apiRefModel?.apiByName?.get(apiRefModel.generateInternalAPIKey(filePath, word.word))
+      apiRefModel?.apiByName?.get(apiRefModel.generateInternalAPIKey(filePath, word.word))
       : undefined;
-    const wordApiUrl = wordApiNode ? getAPINodeUrl({ selectedAPI: wordApiNode.api.name }) : null;
+    const wordApiUrl = wordApiNode ? getAPINodeUrl({
+      selectedAPI: wordApiNode.exported
+        ? wordApiNode.api.name : apiRefModel.generateInternalAPIKey(filePath, word.word)
+    }) : null;
     apiUrlToRoute.current = wordApiUrl;
     if (!wordApiUrl || wordApiNode?.api.name === name) return undefined;
     const contents = [
@@ -332,24 +334,4 @@ export function APINodeDetails({
       )}
     </div>
   );
-}
-
-/**
- * Extracts the code block and its language specifier enclosed between triple backticks (```) from a given text string.
- *
- * @param text - The text string from which to extract the code block.
- *
- * @returns An object containing the extracted code and language specifier, or null if no match is found.
- */
-function extractCodeBlock(text: string): { lang: string; code: string } | null {
-  // The (?<lang>[\w+-]*) captures the optional language specifier (like 'typescript', 'javascript', etc.)
-  // The (?<code>[\s\S]*?) captures the actual code block
-  const regex = /```(?<lang>[\w+-]*)\n(?<code>[\s\S]*?)```/;
-  const match = text.match(regex);
-
-  if (match && match.groups) {
-    const { lang, code } = match.groups;
-    return { lang, code };
-  }
-  return null;
 }

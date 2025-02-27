@@ -3,7 +3,7 @@ import * as path from 'path';
 import Vinyl from 'vinyl';
 
 import { logger } from '@teambit/legacy.logger';
-import { Source } from '@teambit/scope.objects';
+import { Source } from '@teambit/objects';
 import { PathOsBased } from '@teambit/toolbox.path.path';
 import * as eol from '@teambit/toolbox.string.eol';
 import { FileConstructor } from './vinyl-types';
@@ -93,7 +93,7 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
     try {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return await fs.lstat(this.path);
-    } catch (err: any) {
+    } catch {
       return null; // probably file does not exist
     }
   }

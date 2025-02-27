@@ -18,7 +18,7 @@ import { compact } from 'lodash';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
 import { getExt } from '@teambit/toolbox.fs.extension-getter';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
-import * as globalConfig from '@teambit/legacy.global-config';
+import { getConfig } from '@teambit/config-store';
 import { getNpmVersion } from './core-diagnoses/validate-npm-exec';
 import { getYarnVersion } from './core-diagnoses/validate-yarn-exec';
 import { DiagnosisNotFound } from './exceptions/diagnosis-not-found';
@@ -228,7 +228,10 @@ export class DoctorMain {
       const isGit = fileName.startsWith(`.git${path.sep}`);
       const isLocalScope =
         fileName.startsWith(`.bit${path.sep}`) || fileName.startsWith(`.git${path.sep}bit${path.sep}`);
-      if (excludeLocalScope && isLocalScope) return true;
+      if (excludeLocalScope && isLocalScope) {
+        const scopeDirsToExclude = ['objects', 'cache', 'tmp'];
+        if (scopeDirsToExclude.some((dir) => fileName.includes(`${path.sep}${dir}${path.sep}`))) return true;
+      }
       if (isGit && !isLocalScope) return true;
       return false;
     };
@@ -258,8 +261,8 @@ export class DoctorMain {
   }
 
   private _getUserDetails(): string {
-    const name = globalConfig.getSync(CFG_USER_NAME_KEY) || '';
-    const email = globalConfig.getSync(CFG_USER_EMAIL_KEY) || '';
+    const name = getConfig(CFG_USER_NAME_KEY) || '';
+    const email = getConfig(CFG_USER_EMAIL_KEY) || '';
     return `${name}<${email}>`;
   }
 

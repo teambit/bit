@@ -1,6 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentConfig } from '@teambit/generator';
 import chalk from 'chalk';
+import { WorkspaceComponentLoadOptions } from '@teambit/workspace';
 import { ForkingMain } from './forking.main.runtime';
 
 export type ForkOptions = {
@@ -14,6 +15,8 @@ export type ForkOptions = {
   env?: string;
   config?: ComponentConfig;
   ast?: boolean;
+  compile?: boolean;
+  loadOptions?: WorkspaceComponentLoadOptions;
 };
 
 export class ForkCmd implements Command {

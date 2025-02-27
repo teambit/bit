@@ -2,7 +2,7 @@ import { ComponentIdList } from '@teambit/component-id';
 import { Scope } from '@teambit/legacy.scope';
 import { logger } from '@teambit/legacy.logger';
 import { saveObjects } from '@teambit/export';
-import { Lane } from '@teambit/scope.objects';
+import { Lane } from '@teambit/objects';
 import { AuthData } from '@teambit/scope.network';
 import { Action } from './action';
 

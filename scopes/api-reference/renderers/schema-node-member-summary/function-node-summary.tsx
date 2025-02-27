@@ -7,6 +7,7 @@ import { APINodeRenderProps, nodeStyles } from '@teambit/api-reference.models.ap
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
 import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
 import defaultTheme from '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme';
+import { extractCodeBlock } from '@teambit/api-reference.renderers.api-node-details';
 import classNames from 'classnames';
 
 import styles from './function-node-summary.module.scss';
@@ -50,12 +51,14 @@ export function FunctionNodeSummary({
     return langFromFileEnding;
   }, [filePath]);
   const paramTypeHeadings = ['Parameter', 'type', 'default', 'description'];
+  const docs = doc?.comment || doc?.raw;
+  const example = (doc?.tags || []).find((tag) => tag.tagName === 'example');
 
   return (
     <div className={styles.summaryContainer}>
       <div className={styles.signatureTitle}>
         {<div className={classNames(styles.functionName, hideName && styles.hide)}>{hideName ? '' : name}</div>}
-        {doc?.comment && <div className={styles.description}>{doc?.comment || ''}</div>}
+        {docs && <div className={styles.description}>{docs || ''}</div>}
         {signature && (
           <SyntaxHighlighter
             language={lang}
@@ -69,6 +72,23 @@ export function FunctionNodeSummary({
             {signature}
           </SyntaxHighlighter>
         )}
+        {example && example.comment && (
+          <div className={styles.apiNodeDetailsExample}>
+            <div className={styles.apiNodeDetailsExampleTitle}>Example</div>
+            <SyntaxHighlighter
+              language={lang}
+              style={defaultTheme}
+              customStyle={{
+                borderRadius: '8px',
+                marginTop: '4px',
+                padding: '12px',
+              }}
+              codeTagProps={{ style: { fontSize: '11px' } }}
+            >
+              {extractCodeBlock(example.comment)?.code || example.comment}
+            </SyntaxHighlighter>
+          </div>
+        )}
       </div>
       {params.length > 0 && (
         <div className={styles.paramsContainer}>
@@ -78,8 +98,8 @@ export function FunctionNodeSummary({
             if (paramRenderer?.Component) {
               return (
                 <paramRenderer.Component
-                  {...apiNodeRendererProps}
                   key={`param-${param.name}`}
+                  {...apiNodeRendererProps}
                   depth={(apiNodeRendererProps.depth ?? 0) + 1}
                   apiNode={{ ...apiNodeRendererProps.apiNode, renderer: paramRenderer, api: param }}
                   metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
@@ -88,8 +108,8 @@ export function FunctionNodeSummary({
             }
             return (
               <defaultParamRenderer.Component
-                {...apiNodeRendererProps}
                 key={`param-${param.name}`}
+                {...apiNodeRendererProps}
                 depth={(apiNodeRendererProps.depth ?? 0) + 1}
                 apiNode={{ ...apiNodeRendererProps.apiNode, renderer: defaultParamRenderer, api: param }}
                 metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}

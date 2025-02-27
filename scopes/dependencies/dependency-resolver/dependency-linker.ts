@@ -307,6 +307,8 @@ export class DependencyLinker {
     }
 
     if (mainAspectPath) {
+      // the following line links @teambit/legacy to the workspace node_modules. at this point, we removed all
+      // @teambit/legacy occurrences from the repo but others/external repos still have it.
       result.teambitLegacyLink = this.linkNonAspectCorePackages(rootDir, 'legacy', mainAspectPath);
       result.harmonyLink = this.linkNonAspectCorePackages(rootDir, 'harmony', mainAspectPath);
     }
@@ -623,7 +625,7 @@ export class DependencyLinker {
     try {
       targetStat = fs.lstatSync(targetPath);
       // eslint-disable-next-line no-empty
-    } catch (e: any) {}
+    } catch {}
     if (targetStat && !hasLocalInstallation) {
       // Do not override links created by other means
       if (!targetStat.isSymbolicLink()) {
@@ -713,7 +715,7 @@ function isPathSymlink(folderPath: string): boolean | undefined {
   try {
     const stat = fs.lstatSync(folderPath);
     return stat.isSymbolicLink();
-  } catch (e: any) {
+  } catch {
     return undefined;
   }
 }

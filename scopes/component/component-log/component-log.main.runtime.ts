@@ -7,7 +7,7 @@ import pMap from 'p-map';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { compact } from 'lodash';
 import pMapSeries from 'p-map-series';
-import { Ref, Source, Version } from '@teambit/scope.objects';
+import { Ref, Source, Version } from '@teambit/objects';
 import { pathNormalizeToLinux, PathOsBased, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import { getFilesDiff } from '@teambit/legacy.component-diff';
 import chalk from 'chalk';
@@ -74,7 +74,12 @@ export class ComponentLogMain {
     }
     if (!this.workspace) throw new OutsideWorkspaceError();
     const componentId = await this.workspace.resolveComponentId(id);
-    if (!componentId.hasVersion()) return []; // component is new
+    if (!componentId.hasVersion()) {
+      const inWs = this.workspace.getIdIfExist(componentId);
+      if (inWs && !inWs.hasVersion()) {
+        return []; // component is new
+      }
+    }
     const logs = await this.workspace.scope.getLogs(componentId, shortHash, undefined, true);
     logs.forEach((log) => {
       log.date = log.date ? moment(new Date(parseInt(log.date))).format('YYYY-MM-DD HH:mm:ss') : undefined;

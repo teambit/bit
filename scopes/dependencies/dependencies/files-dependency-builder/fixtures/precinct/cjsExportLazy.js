@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // @bit-no-check
 module.exports = function({
   // Just requiring any files that exist
-  amd = require('./amd'),
-  es6 = require('./es6').foo,
-  es7 = require('./es7')
+  _amd = require('./amd'),
+  _es6 = require('./es6').foo,
+  _es7 = require('./es7')
 }) {};

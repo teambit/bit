@@ -22,6 +22,7 @@ export type CodeViewProps = {
   loading?: boolean;
   codeSnippetClassName?: string;
   dependencies?: DependencyType[];
+  host?: string
 } & HTMLAttributes<HTMLDivElement>;
 
 SyntaxHighlighter.registerLanguage('md', markDownSyntax);
@@ -112,6 +113,7 @@ export function CodeView({
   codeSnippetClassName,
   loading: loadingFromProps,
   dependencies,
+  host = 'teambit.scope/scope',
 }: CodeViewProps) {
   const depsByPackageName = new Map<string, DependencyType>(
     (dependencies || []).map((dep) => [(dep.packageName || dep.id).toString(), dep])
@@ -120,7 +122,8 @@ export function CodeView({
   const { fileContent: downloadedFileContent, loading: loadingFileContent } = useFileContent(
     componentId,
     currentFile,
-    !!currentFileContent
+    !!currentFileContent,
+    host,
   );
   const loading = loadingFromProps || loadingFileContent;
   const location = useLocation();
@@ -138,6 +141,8 @@ export function CodeView({
     if (langFromFileEnding === 'scss' || langFromFileEnding === 'sass') return 'css';
     if (langFromFileEnding === 'mdx') return 'md';
     if (langFromFileEnding === 'vue') return 'html';
+    if (langFromFileEnding === 'cjs' || langFromFileEnding === 'mjs') return 'js';
+    if (langFromFileEnding === 'cts' || langFromFileEnding === 'mts') return 'ts';
 
     return langFromFileEnding;
   }, [fileContent]);

@@ -23,13 +23,22 @@ export class LinterService implements EnvService<LintResults> {
   async run(context: ExecutionContext, options: LinterOptions): Promise<LintResults> {
     const mergedOpts = this.optionsWithDefaults(options);
     const linterContext = this.mergeContext(mergedOpts, context);
-    const linter: Linter = this.getLinter(context, options);
+    const linter = this.getLinter(context, options);
+    if (!linter) {
+      return {
+        results: [],
+        errors: [],
+      };
+    }
 
     const results = await linter.lint(linterContext);
     return results;
   }
 
-  getLinter(context: ExecutionContext, options: LinterOptions): Linter {
+  getLinter(context: ExecutionContext, options: LinterOptions): Linter | undefined {
+    if (!context.env.getLinter) {
+      return undefined;
+    }
     const mergedOpts = this.optionsWithDefaults(options);
     const linterContext = this.mergeContext(mergedOpts, context);
     const linter: Linter = context.env.getLinter(linterContext);

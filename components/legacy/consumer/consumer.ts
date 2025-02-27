@@ -1,7 +1,6 @@
 import fs from 'fs-extra';
 import * as path from 'path';
-import R from 'ramda';
-import { compact, isEmpty } from 'lodash';
+import { compact, isEmpty, sortBy } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
@@ -18,7 +17,7 @@ import {
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import { NoHeadNoVersion, Scope, ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
-import { Lane, ModelComponent, Version } from '@teambit/scope.objects';
+import { Lane, ModelComponent, Version } from '@teambit/objects';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import format from 'string-format';
@@ -58,11 +57,9 @@ type ConsumerProps = {
 const BITMAP_HISTORY_DIR_NAME = 'bitmap-history';
 const BITMAP_HISTORY_METADATA_FILE_NAME = 'bitmap-history-metadata.txt';
 
-/**
- * @todo: change the class name to Workspace
- */
+
 export default class Consumer {
-  projectPath: PathOsBased;
+  projectPath: PathOsBasedAbsolute;
   created: boolean;
   config: ILegacyWorkspaceConfig;
   scope: Scope;
@@ -81,13 +78,11 @@ export default class Consumer {
     this.created = created;
     this.isolated = isolated;
     this.scope = scope;
-    // @ts-ignore todo: remove after deleting teambit.legacy
     this.componentLoader = ComponentLoader.getInstance(this);
     this.packageJson = PackageJsonFile.loadSync(projectPath);
   }
   async setBitMap() {
-    // @ts-ignore todo: remove after deleting teambit.legacy
-    this.bitMap = await BitMap.load(this);
+    this.bitMap = await BitMap.load(this.getPath(), this.config.defaultScope);
   }
 
   setPackageJson(packageJson: PackageJsonFile) {
@@ -183,7 +178,7 @@ export default class Consumer {
     return this;
   }
 
-  getPath(): PathOsBased {
+  getPath(): PathOsBasedAbsolute {
     return this.projectPath;
   }
 
@@ -244,14 +239,6 @@ export default class Consumer {
       if (err instanceof ComponentNotFound || err instanceof NoHeadNoVersion) return undefined;
       throw err;
     });
-  }
-
-  async loadAllVersionsOfComponentFromModel(id: ComponentID): Promise<Component[]> {
-    const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
-    const componentsP = modelComponent.listVersions().map(async (versionNum) => {
-      return modelComponent.toConsumerComponent(versionNum, this.scope.name, this.scope.objects);
-    });
-    return Promise.all(componentsP);
   }
 
   async loadComponentFromModelImportIfNeeded(id: ComponentID, throwIfNotExist = true): Promise<Component> {
@@ -340,8 +327,8 @@ export default class Consumer {
     function sortProperties(version) {
       // sort the files by 'relativePath' because the order can be changed when adding or renaming
       // files in bitmap, which affects later on the model.
-      version.files = R.sortBy(R.prop('relativePath'), version.files);
-      componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+      version.files = sortBy(version.files, 'relativePath');
+      componentFromModel.files = sortBy(componentFromModel.files, 'relativePath');
       version.dependencies.sort();
       version.devDependencies.sort();
       version.packageDependencies = sortObjectByKeys(version.packageDependencies);
@@ -377,8 +364,8 @@ export default class Consumer {
     componentFromFileSystem.log = componentFromModel.log; // in order to convert to Version object
     const { version } = await this.scope.sources.consumerComponentToVersion(componentFromFileSystem);
 
-    version.files = R.sortBy(R.prop('relativePath'), version.files);
-    componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+    version.files = sortBy(version.files, 'relativePath');
+    componentFromModel.files = sortBy(componentFromModel.files, 'relativePath');
     return JSON.stringify(version.files) !== JSON.stringify(componentFromModel.files);
   }
 
@@ -588,7 +575,7 @@ export default class Consumer {
 
   async onDestroy(reasonForBitmapChange?: string) {
     await this.cleanTmpFolder();
-    await this.scope.scopeJson.writeIfChanged(this.scope.path);
+    await this.scope.scopeJson.writeIfChanged();
     await this.writeBitMap(reasonForBitmapChange);
   }
 }

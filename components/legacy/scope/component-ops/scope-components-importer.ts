@@ -4,9 +4,8 @@ import mapSeries from 'p-map-series';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import groupArray from 'group-array';
-import R from 'ramda';
 import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
-import { compact, flatten, partition, uniq } from 'lodash';
+import { uniq, partition, compact, flatten, isEmpty } from 'lodash';
 import { Scope } from '..';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
@@ -22,7 +21,7 @@ import {
   ObjectList,
   Ref,
   Repository,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import SourcesRepository, { ComponentDef } from '../repositories/sources';
 import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
 import { VersionDependencies } from '../version-dependencies';
@@ -131,7 +130,7 @@ export class ScopeComponentsImporter {
       `importMany, cache ${cache}, preferDependencyGraph: ${preferDependencyGraph}, reFetchUnBuiltVersion: ${reFetchUnBuiltVersion}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: ${ids.toString()}, lane: ${lane?.id()}`
     );
     const idsToImport = compact(ids.filter((id) => (includeUnexported ? id.hasScope() : this.scope.isExported(id))));
-    if (R.isEmpty(idsToImport)) {
+    if (isEmpty(idsToImport)) {
       logger.debug(`importMany, nothing to import`);
       return [];
     }
@@ -172,7 +171,7 @@ export class ScopeComponentsImporter {
     logger.debug('importMany', `total missing externals: ${uniqExternals.length}`);
     const remotes = await getScopeRemotes(this.scope);
     // we don't care about the VersionDeps returned here as it may belong to the dependencies
-    await this.getExternalMany(uniqExternals, remotes, {
+    const importedComps = await this.getExternalMany(uniqExternals, remotes, {
       throwForDependencyNotFound,
       lane,
       throwOnUnavailableScope: throwForSeederNotFound,
@@ -181,6 +180,22 @@ export class ScopeComponentsImporter {
       includeUpdateDependents,
       reason,
     });
+
+    if (lane && importedComps.length < uniqExternals.length) {
+      const missing = uniqExternals.filter((id) => !importedComps.find((i) => i.component.id.isEqual(id)));
+      logger.debug(
+        `importMany, ${missing.length} components are missing from the lane, going to fetch them from the main`
+      );
+      await this.getExternalMany(missing, remotes, {
+        throwForDependencyNotFound: false,
+        throwOnUnavailableScope: false,
+        preferDependencyGraph,
+        includeUnexported,
+        includeUpdateDependents,
+        fromMainOnly: true,
+        reason: `${reason} (retrying from original scope)`,
+      });
+    }
 
     if (shouldRefetchIncompleteHistory) {
       await this.warnForIncompleteVersionHistory(incompleteVersionHistory);
@@ -248,7 +263,7 @@ export class ScopeComponentsImporter {
   async importManyFromOriginalScopes(ids: ComponentIdList) {
     logger.debugAndAddBreadCrumb('importManyFromOriginalScopes', `ids: {ids}`, { ids: ids.toString() });
     const idsToImport = compact(ids);
-    if (R.isEmpty(idsToImport)) return [];
+    if (isEmpty(idsToImport)) return [];
 
     const externalsToFetch: ComponentID[] = [];
     const defs = await this.sources.getMany(idsToImport);
@@ -463,7 +478,7 @@ export class ScopeComponentsImporter {
 
   async importLanes(remoteLaneIds: LaneId[], includeLaneHistory = false): Promise<Lane[]> {
     const remotes = await getScopeRemotes(this.scope);
-    const objectsStreamPerRemote = await remotes.fetch(groupByScopeName(remoteLaneIds), this.scope, {
+    const objectsStreamPerRemote = await remotes.fetch(groupByScopeName(remoteLaneIds), {
       type: 'lane',
       includeLaneHistory,
     });
@@ -489,7 +504,7 @@ export class ScopeComponentsImporter {
       const groupedHashedMissing = {};
       await Promise.all(
         Object.keys(groupedHashes).map(async (scopeName) => {
-          const uniqueHashes: string[] = R.uniq(groupedHashes[scopeName]);
+          const uniqueHashes: string[] = uniq(groupedHashes[scopeName]);
           const missingWithNull = await Promise.all(
             uniqueHashes.map(async (hash) => (!(await this.repo.has(new Ref(hash))) ? hash : null))
           );
@@ -499,7 +514,7 @@ export class ScopeComponentsImporter {
           }
         })
       );
-      if (R.isEmpty(groupedHashedMissing)) return;
+      if (isEmpty(groupedHashedMissing)) return;
 
       const remotes = await getScopeRemotes(this.scope);
       const allObjects = await new ObjectFetcher(
@@ -524,7 +539,7 @@ export class ScopeComponentsImporter {
     const remotes: Remotes = await getScopeRemotes(this.scope);
     const remote = await remotes.resolve(remoteName);
     const getExistingLegacy = async () => {
-      const multipleStreams = await remotes.fetch({ [remoteName]: hashes }, this.scope, { type: 'object' });
+      const multipleStreams = await remotes.fetch({ [remoteName]: hashes }, { type: 'object' });
       const existing = await this.streamToHashes(remoteName, multipleStreams[remoteName]);
       return existing;
     };
@@ -657,7 +672,7 @@ export class ScopeComponentsImporter {
     const remotes = await getScopeRemotes(this.scope);
     let bitObjectsList: BitObjectList;
     try {
-      const streams = await remotes.fetch({ [id.scope as string]: [id.toString()] }, this.scope);
+      const streams = await remotes.fetch({ [id.scope as string]: [id.toString()] });
       bitObjectsList = await this.multipleStreamsToBitObjects(streams);
     } catch (err: any) {
       logger.error(`getRemoteComponent, failed to get ${id.toString()}`, err);
@@ -679,7 +694,7 @@ export class ScopeComponentsImporter {
     });
     const remotes = await getScopeRemotes(this.scope);
     const grouped = groupByScopeName(ids);
-    const streams = await remotes.fetch(grouped, this.scope);
+    const streams = await remotes.fetch(grouped);
     return this.multipleStreamsToBitObjects(streams);
   }
 
@@ -819,6 +834,7 @@ export class ScopeComponentsImporter {
       preferDependencyGraph = false,
       includeUnexported = false,
       includeUpdateDependents = false,
+      fromMainOnly = false, // this is needed even when "lane" arg is undefined, coz we might use the current lane, see this.getLaneForFetcher
       reason,
     }: {
       throwForDependencyNotFound?: boolean;
@@ -827,13 +843,14 @@ export class ScopeComponentsImporter {
       preferDependencyGraph?: boolean;
       includeUnexported?: boolean;
       includeUpdateDependents?: boolean;
+      fromMainOnly?: boolean;
       reason?: string;
     } = {}
   ): Promise<VersionDependencies[]> {
     if (!ids.length) return [];
-    lane = await this.getLaneForFetcher(lane);
+    lane = fromMainOnly ? undefined : await this.getLaneForFetcher(lane);
     logger.debug(
-      `copeComponentsImporter.getExternalMany, fetching from remote scope. Ids: ${ids.join(', ')}, Lane: ${lane?.id()}`
+      `scopeComponentsImporter.getExternalMany, fetching from remote scope. Ids: ${ids.join(', ')}, Lane: ${lane?.id()}`
     );
     const context = {};
     ids.forEach((id) => {
@@ -901,6 +918,7 @@ export class ScopeComponentsImporter {
       collectParents = false,
       delta = false,
       includeUpdateDependents,
+      fromMainOnly = false,
       reason,
     }: {
       localFetch?: boolean;
@@ -910,6 +928,7 @@ export class ScopeComponentsImporter {
       collectParents?: boolean;
       delta?: boolean;
       includeUpdateDependents?: boolean;
+      fromMainOnly?: boolean;
       reason?: string;
     }
   ): Promise<void> {
@@ -927,7 +946,7 @@ export class ScopeComponentsImporter {
     const leftIdsStr = leftIds.map((id) => id.toString());
     logger.debug(`getExternalManyWithoutDeps, ${left.length} left. Fetching them from a remote. ids: ${leftIdsStr}`);
     const context = { requestedBitIds: leftIds.map((id) => id.toString()) };
-    lane = await this.getLaneForFetcher(lane);
+    lane = fromMainOnly ? undefined : await this.getLaneForFetcher(lane);
     const isUsingImporter = isFeatureEnabled(CLOUD_IMPORTER) || isFeatureEnabled(CLOUD_IMPORTER_V2);
     await new ObjectFetcher(
       this.repo,

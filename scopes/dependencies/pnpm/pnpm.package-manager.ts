@@ -44,7 +44,7 @@ import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import type { RebuildFn } from './lynx';
-import { type DependenciesGraph } from '@teambit/scope.objects';
+import { type DependenciesGraph } from '@teambit/objects';
 
 export type { RebuildFn };
 
@@ -91,7 +91,13 @@ export class PnpmPackageManager implements PackageManager {
         restoredFromModel: true,
       },
     });
-    await writeLockfileFile(join(rootDir, 'pnpm-lock.yaml'), lockfile);
+    const lockfilePath = join(rootDir, 'pnpm-lock.yaml');
+    await writeLockfileFile(lockfilePath, lockfile);
+    this.logger.debug(`generated a lockfile from dependencies graph at ${lockfilePath}`);
+    if (process.env.DEPS_GRAPH_LOG) {
+      // eslint-disable-next-line no-console
+      console.log(`generated a lockfile from dependencies graph at ${lockfilePath}`);
+    }
   }
 
   async install(
@@ -102,7 +108,11 @@ export class PnpmPackageManager implements PackageManager {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
 
-    if (installOptions.dependenciesGraph && isFeatureEnabled(DEPS_GRAPH)) {
+    if (
+      installOptions.dependenciesGraph &&
+      isFeatureEnabled(DEPS_GRAPH) &&
+      (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
+    ) {
       await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, manifests, rootDir);
     }
 
@@ -118,7 +128,7 @@ export class PnpmPackageManager implements PackageManager {
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
-    if (!installOptions.useNesting) {
+    if (!installOptions.useNesting && installOptions.rootComponentsForCapsules) {
       manifests = await extendWithComponentsFromDir(rootDir, manifests);
     }
     if (installOptions.nmSelfReferences) {
@@ -440,7 +450,7 @@ function pkgNamesToComponentIds(
 function tryReadPackageJson(pkgDir: string) {
   try {
     return JSON.parse(fs.readFileSync(join(pkgDir, 'package.json'), 'utf8'));
-  } catch (err) {
+  } catch {
     return undefined;
   }
 }

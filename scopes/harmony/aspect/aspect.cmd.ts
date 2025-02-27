@@ -39,6 +39,28 @@ export class ListAspectCmd implements Command {
   }
 }
 
+export class ListCoreAspectCmd implements Command {
+  name = 'list-core';
+  description = 'list all core aspects';
+  arguments = [
+    {
+      name: 'pattern',
+      description: COMPONENT_PATTERN_HELP,
+    },
+  ];
+  options = [['j', 'json', 'format as json']] as CommandOptions;
+  group = 'development';
+
+  constructor(private aspect: AspectMain) {}
+
+  async report() {
+    return this.aspect.listCoreAspects().join('\n');
+  }
+  async json() {
+    return this.aspect.listCoreAspects();
+  }
+}
+
 export type SetAspectOptions = { merge?: boolean };
 
 export class SetAspectCmd implements Command {

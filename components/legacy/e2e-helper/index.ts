@@ -15,7 +15,7 @@ import ScopeHelper from './e2e-scope-helper';
 import ScopeJsonHelper from './e2e-scope-json-helper';
 import ScopesData, { ScopesOptions, DEFAULT_OWNER } from './e2e-scopes';
 import CapsulesHelper from './e2e-capsules-helper';
-import * as fixtures from './fixtures/fixtures';
+import * as fixtures from './fixtures';
 
 export {
   ScopesData,
@@ -42,3 +42,4 @@ export {
 
 export { Helper, FileStatusWithoutChalk } from './e2e-helper';
 export { ENV_POLICY } from './e2e-env-helper';
+export { NpmCiRegistry, supportNpmCiRegistryTesting } from './npm-ci-registry';

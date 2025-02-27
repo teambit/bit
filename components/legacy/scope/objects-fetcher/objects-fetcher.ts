@@ -10,7 +10,7 @@ import { logger } from '@teambit/legacy.logger';
 import { ScopeNotFound } from '../exceptions';
 import { ErrorFromRemote } from '../exceptions/error-from-remote';
 import { UnexpectedNetworkError } from '@teambit/scope.network';
-import { Repository, ObjectItemsStream, Lane } from '@teambit/scope.objects';
+import { Repository, ObjectItemsStream, Lane } from '@teambit/objects';
 import { ObjectsWritable } from './objects-writable-stream';
 import { WriteObjectsQueue } from './write-objects-queue';
 import { groupByScopeName } from '../component-ops/scope-components-importer';
@@ -158,7 +158,7 @@ ${failedScopesErr.join('\n')}`);
     const shouldThrowOnUnavailableScope = this.throwOnUnavailableScope && !this.fetchOptions.withoutDependencies;
     let remote: Remote;
     try {
-      remote = await this.remotes.resolve(scopeName, this.scope);
+      remote = await this.remotes.resolve(scopeName);
     } catch (err: any) {
       if (err instanceof ScopeNotFoundOrDenied) {
         throw new Error(`unable to import the following component(s): ${ids.join(', ')}.

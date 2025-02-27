@@ -67,10 +67,10 @@ export class LoginCmd implements Command {
     }
 
     if (refreshToken) {
-      this.cloud.logout();
+      await this.cloud.logout();
     }
 
-    const isLoggedIn = this.cloud.isLoggedIn();
+    const isLoggedIn = await this.cloud.isLoggedIn();
 
     if (isLoggedIn) {
       this.cloud.logger.clearStatusLine();
@@ -81,7 +81,7 @@ export class LoginCmd implements Command {
       if (!ok) {
         return chalk.green(`Logged in as ${this.cloud.getUsername()}`);
       }
-      this.cloud.logout();
+      await this.cloud.logout();
     }
 
     const result = await this.cloud.login(
@@ -182,7 +182,7 @@ Modification: ${chalk.green(conflict.modifications)}`
     try {
       await this.cloud.generateNpmrc({ force: true });
       return chalk.green(' and .npmrc updated successfully after resolving conflicts.');
-    } catch (e) {
+    } catch {
       return `${chalk.red(' but failed to update .npmrc after resolving conflicts.')} Visit ${chalk.bold(
         'https://bit.dev/reference/packages/npmrc'
       )} for instructions on how to update it manually.`;

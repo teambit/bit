@@ -35,16 +35,16 @@ function FunctionComponent(props: APINodeRenderProps) {
 
     const ParamComponent = paramRenderer?.Component ? (
       <paramRenderer.Component
-        {...props}
         key={`props-${param.name}`}
+        {...props}
         depth={(props.depth ?? 0) + 1}
         apiNode={{ ...props.apiNode, renderer: paramRenderer, api: param }}
         metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
       />
     ) : (
       <defaultParamRenderer.Component
-        {...props}
         key={`props-${param.name}`}
+        {...props}
         depth={(props.depth ?? 0) + 1}
         apiNode={{ ...props.apiNode, renderer: defaultParamRenderer, api: param }}
         metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}

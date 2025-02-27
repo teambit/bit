@@ -218,7 +218,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
       {} as any,
       {} as any,
       {
-        getSync: () => false,
+        getConfig: () => false,
       } as any,
       {} as any,
       packageManagerSlot as any,

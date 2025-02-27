@@ -4,8 +4,7 @@ import chai, { expect } from 'chai';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Extensions, IS_WINDOWS } from '@teambit/legacy.constants';
-import { Helper } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -545,6 +544,86 @@ describe('custom env', function () {
       const compJson = helper.componentJson.read('comp1');
       expect(compJson.extensions).to.have.property(`${helper.scopes.remote}/node-env`);
       expect(compJson.extensions).to.not.have.property(`${helper.scopes.remote}/node-env@0.0.1`);
+    });
+  });
+  describe('an empty env. nothing is configured, not even a compiler', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.env.setEmptyEnv();
+
+      helper.fixtures.populateComponents(1, false);
+      helper.command.setEnv('comp1', 'empty-env');
+
+      fs.removeSync(path.join(helper.scopes.localPath, 'node_modules'));
+      helper.command.install();
+    });
+    it('bit compile should not compile the component', () => {
+      const output = helper.command.compile();
+      expect(output).to.not.have.string('comp1');
+    });
+    it('should not create dist dir in the node_modules', () => {
+      const dir = path.join(helper.scopes.localPath, 'node_modules', helper.scopes.remote, 'comp1/dist');
+      expect(dir).to.not.be.a.path();
+    });
+    it('bit build should not fail', () => {
+      const output = helper.command.build();
+      expect(output).to.have.string('build succeeded');
+    });
+    it('bit format should not show an error', () => {
+      const output = helper.command.format();
+      expect(output).to.not.have.string('failed');
+    });
+    it('bit lint should not show an error', () => {
+      const output = helper.command.lint();
+      expect(output).to.not.have.string('failed');
+    });
+    it('bit test should not show an error', () => {
+      const output = helper.command.test();
+      expect(output).to.not.have.string('failed');
+    });
+  });
+  describe('custom env with invalid env.jsonc', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.workspaceJsonc.setPackageManager();
+      const envName = helper.env.setCustomEnv();
+      const envId = `${helper.scopes.remote}/${envName}`;
+      helper.fixtures.populateComponents(1);
+      helper.command.setEnv('comp1', envId);
+    });
+    it('should throw a descriptive error when a policy entry is not an object', () => {
+      helper.fs.outputFile(
+        'node-env/env.jsonc',
+        `{
+  "policy": {
+    "dev": [
+      "lodash"
+    ]
+  }
+}`
+      );
+      const output = helper.general.runWithTryCatch('bit status');
+      expect(output).to.have.string(
+        'error: failed validating the env.jsonc file. policy.dev entry must be an object, got type "string" value: "lodash"'
+      );
+    });
+    it('should throw a descriptive error when a policy entry object has no "version" field', () => {
+      helper.fs.outputFile(
+        'node-env/env.jsonc',
+        `{
+  "policy": {
+    "dev": [
+      {
+        "name": "lodash"
+      }
+    ]
+  }
+}`
+      );
+      const output = helper.general.runWithTryCatch('bit status');
+      expect(output).to.have.string(
+        'error: failed validating the env.jsonc file. policy.dev entry must have a "version" property'
+      );
     });
   });
 });

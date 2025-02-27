@@ -73,7 +73,7 @@ export class TrackerMain {
     let userEnvIdWithPotentialVersion: string;
     try {
       userEnvIdWithPotentialVersion = await this.workspace.resolveEnvIdWithPotentialVersionForConfig(userEnvId);
-    } catch (err) {
+    } catch {
       // the env needs to be without version
       userEnvIdWithPotentialVersion = userEnvId.toStringWithoutVersion();
     }
@@ -109,8 +109,7 @@ export class TrackerMain {
    * otherwise, it is self-hosted
    */
   private async isHostedByBit(scopeName: string): Promise<boolean> {
-    // TODO: once scope create a new API for this, replace it with the new one
-    const remotes = await this.workspace.scope._legacyRemotes();
+    const remotes = await this.workspace.scope.getRemoteScopes();
     return remotes.isHub(scopeName);
   }
 

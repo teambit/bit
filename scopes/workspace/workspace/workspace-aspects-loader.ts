@@ -1,5 +1,4 @@
 import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy.constants';
-import { GlobalConfigMain } from '@teambit/global-config';
 import findRoot from 'find-root';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { Graph } from '@teambit/graph.cleargraph';
@@ -37,6 +36,7 @@ import {
   OnRootAspectAddedSlot,
 } from './workspace.main.runtime';
 import { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
+import { ConfigStoreMain } from '@teambit/config-store';
 
 export type GetConfiguredUserAspectsPackagesOptions = {
   externalsOnly?: boolean;
@@ -62,7 +62,7 @@ export class WorkspaceAspectsLoader {
     private envs: EnvsMain,
     private dependencyResolver: DependencyResolverMain,
     private logger: Logger,
-    private globalConfig: GlobalConfigMain,
+    private configStore: ConfigStoreMain,
     private harmony: Harmony,
     private onAspectsResolveSlot: OnAspectsResolveSlot,
     private onRootAspectAddedSlot: OnRootAspectAddedSlot,
@@ -411,12 +411,12 @@ your workspace.jsonc has this component-id set. you might want to remove/change 
   }
 
   shouldUseHashForCapsules(): boolean {
-    return !this.globalConfig.getSync(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR);
+    return !this.configStore.getConfig(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR);
   }
 
   getCapsulePath() {
     const defaultPath = this.workspace.path;
-    return this.globalConfig.getSync(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR) || defaultPath;
+    return this.configStore.getConfig(CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR) || defaultPath;
   }
 
   private logFoundWorkspaceVsScope(loggerPrefix: string, workspaceIds: ComponentID[], nonWorkspaceIds: ComponentID[]) {

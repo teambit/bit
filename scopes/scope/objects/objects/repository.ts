@@ -6,7 +6,6 @@ import { BitError } from '@teambit/bit-error';
 import { ComponentID } from '@teambit/component-id';
 import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
-import pMap from 'p-map';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { OBJECTS_DIR } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
@@ -21,7 +20,7 @@ import {
   UnmergedComponents,
   RemoteLanes,
 } from '@teambit/legacy.scope';
-import { ScopeIndex, IndexType } from './scope-index';
+import { ScopeIndex, IndexType, IndexItem } from './scope-index';
 import BitObject from './object';
 import { ObjectItem, ObjectList } from './object-list';
 import BitRawObject from './raw-object';
@@ -153,7 +152,7 @@ export default class Repository {
 
   async hasMultiple(refs: Ref[]): Promise<Ref[]> {
     const concurrency = concurrentIOLimit();
-    const existingRefs = await pMap(
+    const existingRefs = await pMapPool(
       refs,
       async (ref) => {
         const pathExists = await this.has(ref);
@@ -216,6 +215,9 @@ export default class Repository {
   async list(types: Types): Promise<BitObject[]> {
     const refs = await this.listRefs();
     const concurrency = concurrentIOLimit();
+    logger.debug(
+      `Repository.list, ${refs.length} refs are going to be loaded, searching for types: ${types.map((t) => t.name).join(', ')}`
+    );
     const objects: BitObject[] = [];
     const loadGracefully = process.argv.includes('--never-exported');
     const isTypeIncluded = (obj: BitObject) => types.some((type) => type.name === obj.constructor.name); // avoid using "obj instanceof type" for Harmony to call this function successfully
@@ -229,7 +231,12 @@ export default class Repository {
         if (loadGracefully && !isTypeIncluded(object)) return;
         objects.push(object);
       },
-      { concurrency }
+      {
+        concurrency,
+        onCompletedChunk: (completed) => {
+          if (completed % 1000 === 0) logger.debug(`Repository.list, completed ${completed} out of ${refs.length}`);
+        },
+      }
     );
     return objects;
   }
@@ -288,14 +295,14 @@ export default class Repository {
   async listRawObjects(): Promise<any> {
     const refs = await this.listRefs();
     const concurrency = concurrentIOLimit();
-    return pMap(
+    return pMapPool(
       refs,
       async (ref) => {
         try {
           const buffer = await this.loadRaw(ref);
           const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash);
           return bitRawObject;
-        } catch (err: any) {
+        } catch {
           logger.error(`Couldn't load the ref ${ref} this object is probably corrupted and should be delete`);
           return null;
         }
@@ -316,20 +323,25 @@ export default class Repository {
   }
 
   async _getBitObjectsByHashes(hashes: string[]): Promise<BitObject[]> {
+    const missingIndexItems: IndexItem[] = [];
     const bitObjects = await Promise.all(
       hashes.map(async (hash) => {
         const bitObject = await this.load(new Ref(hash));
         if (!bitObject) {
-          const indexJsonPath = this.scopeIndex.getPath();
           const indexItem = this.scopeIndex.find(hash);
           if (!indexItem) throw new Error(`_getBitObjectsByHashes failed finding ${hash}`);
-          await this.scopeIndex.deleteFile();
-          // @ts-ignore componentId must be set as it was retrieved from indexPath before
-          throw new OutdatedIndexJson(indexItem.toIdentifierString(), indexJsonPath);
+          missingIndexItems.push(indexItem);
+          return;
         }
         return bitObject;
       })
     );
+    if (missingIndexItems.length) {
+      this.scopeIndex.removeMany(missingIndexItems.map((item) => new Ref(item.hash)));
+      await this.scopeIndex.write();
+      const missingStringified = missingIndexItems.map((item) => item.toIdentifierString());
+      throw new OutdatedIndexJson(missingStringified);
+    }
     return compact(bitObjects);
   }
 
@@ -377,12 +389,12 @@ export default class Repository {
   async loadManyRaw(refs: Ref[]): Promise<ObjectItem[]> {
     const concurrency = concurrentIOLimit();
     const uniqRefs = uniqBy(refs, 'hash');
-    return pMap(uniqRefs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency });
+    return pMapPool(uniqRefs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency });
   }
 
   async loadManyRawIgnoreMissing(refs: Ref[]): Promise<ObjectItem[]> {
     const concurrency = concurrentIOLimit();
-    const results = await pMap(
+    const results = await pMapPool(
       refs,
       async (ref) => {
         try {
@@ -413,7 +425,7 @@ export default class Repository {
       // Run hook to transform content pre reading
       const transformedContent = this.onRead(objectFile);
       return BitObject.parseSync(transformedContent);
-    } catch (err: any) {
+    } catch {
       if (throws) {
         throw new HashNotFound(ref.toString());
       }
@@ -557,7 +569,7 @@ export default class Repository {
     const uniqRefs = uniqBy(refs, 'hash');
     logger.debug(`Repository._deleteMany: deleting ${uniqRefs.length} objects`);
     const concurrency = concurrentIOLimit();
-    await pMap(uniqRefs, (ref) => this._deleteOne(ref), { concurrency });
+    await pMapPool(uniqRefs, (ref) => this._deleteOne(ref), { concurrency });
     const removed = this.scopeIndex.removeMany(uniqRefs);
     if (removed) await this.scopeIndex.write();
   }
@@ -567,7 +579,7 @@ export default class Repository {
     const uniqRefs = uniqBy(refs, 'hash');
     logger.debug(`Repository.moveObjectsToDir: ${uniqRefs.length} objects`);
     const concurrency = concurrentIOLimit();
-    await pMap(uniqRefs, (ref) => this.moveOneObjectToDir(ref, dir), { concurrency });
+    await pMapPool(uniqRefs, (ref) => this.moveOneObjectToDir(ref, dir), { concurrency });
     const removed = this.scopeIndex.removeMany(uniqRefs);
     if (removed) await this.scopeIndex.write();
   }
@@ -634,7 +646,7 @@ export default class Repository {
     if (!count) return;
     logger.trace(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
     const concurrency = concurrentIOLimit();
-    await pMap(objects, (obj) => this._writeOne(obj), {
+    await pMapPool(objects, (obj) => this._writeOne(obj), {
       concurrency,
     });
     logger.trace(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);

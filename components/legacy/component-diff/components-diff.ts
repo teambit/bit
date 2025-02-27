@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import tempy from 'tempy';
-import R from 'ramda';
+import { uniq } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import { diffFiles } from './diff-files';
 import { PathOsBased } from '@teambit/toolbox.path.path';
@@ -30,6 +30,7 @@ export type DiffOptions = {
   verbose?: boolean; // whether show internal components diff, such as sourceRelativePath
   formatDepsAsTable?: boolean; // show dependencies output as table
   color?: boolean; // pass this option to git to return a colorful diff, default = true.
+  compareToParent?: boolean; // compare to the parent (previous) version
 };
 
 export async function getOneFileDiff(
@@ -66,7 +67,7 @@ export async function getFilesDiff(
 ): Promise<FileDiff[]> {
   const filesAPaths = filesA.map((f) => f[fileNameAttribute]);
   const filesBPaths = filesB.map((f) => f[fileNameAttribute]);
-  const allPaths = R.uniq(filesAPaths.concat(filesBPaths));
+  const allPaths = uniq(filesAPaths.concat(filesBPaths));
   const fileALabel = filesAVersion === filesBVersion ? `${filesAVersion} original` : filesAVersion;
   const fileBLabel = filesAVersion === filesBVersion ? `${filesBVersion} modified` : filesBVersion;
   const filesDiffP = allPaths.map(async (relativePath) => {
@@ -104,7 +105,7 @@ export function outputDiffResults(diffResults: DiffResults[]): string {
     .map((diffResult) => {
       if (diffResult.hasDiff) {
         const titleStr = `showing diff for ${chalk.bold(diffResult.id.toStringWithoutVersion())}`;
-        const titleSeparator = new Array(titleStr.length).fill('-').join('');
+        const titleSeparator = Array.from({ length: titleStr.length }).fill('-').join('');
         const title = chalk.cyan(`${titleSeparator}\n${titleStr}\n${titleSeparator}`);
         // @ts-ignore since hasDiff is true, filesDiff must be set
         const filesWithDiff = diffResult.filesDiff.filter((file) => file.diffOutput);

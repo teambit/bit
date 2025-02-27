@@ -10,7 +10,7 @@ import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ComponentsPendingImport } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import { ModelComponent } from '@teambit/scope.objects';
+import { ModelComponent } from '@teambit/objects';
 import { InsightsAspect, InsightsMain } from '@teambit/insights';
 import { SnapsDistance } from '@teambit/component.snap-distance';
 import { IssuesAspect, IssuesMain } from '@teambit/issues';
@@ -80,8 +80,8 @@ export class StatusMain {
     const { components: allComps, invalidComponents: allInvalidComponents } =
       await this.workspace.listWithInvalid(loadOpts);
     const consumer = this.workspace.consumer;
-    const laneObj = await consumer.getCurrentLaneObject();
-    const componentsList = new ComponentsList(consumer);
+    const laneObj = await this.workspace.getCurrentLaneObject();
+    const componentsList = new ComponentsList(this.workspace);
     const newComponents: ConsumerComponent[] = (await componentsList.listNewComponents(
       true,
       loadOpts
@@ -90,9 +90,11 @@ export class StatusMain {
     const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
     await this.addRemovedStagedIfNeeded(stagedComponents);
     const stagedComponentsWithVersions = await pMapSeries(stagedComponents, async (stagedComp) => {
-      const versions = await stagedComp.getLocalTagsOrHashes(consumer.scope.objects);
+      const id = stagedComp.toComponentId();
+      const fromWorkspace = this.workspace.getIdIfExist(id);
+      const versions = await stagedComp.getLocalTagsOrHashes(consumer.scope.objects, fromWorkspace);
       return {
-        id: stagedComp.toComponentId(),
+        id,
         versions,
       };
     });
@@ -212,7 +214,7 @@ export class StatusMain {
       components.map(async (component) => {
         const comp = component.state._consumer as ConsumerComponent;
         if (!comp.modelComponent) return;
-        await comp.modelComponent.setDivergeData(this.workspace.scope.legacyScope.objects, false);
+        await comp.modelComponent.setDivergeData(this.workspace.scope.legacyScope.objects, false, undefined, comp.id);
         const divergeData = comp.modelComponent.getDivergeData();
         if (divergeData.err) {
           invalidComponents.push({ id: component.id, err: divergeData.err });

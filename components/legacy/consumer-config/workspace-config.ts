@@ -1,5 +1,4 @@
-import { pickBy } from 'lodash';
-import R from 'ramda';
+import { pickBy, isEmpty } from 'lodash';
 import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_PACKAGE_MANAGER } from '@teambit/legacy.constants';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import AbstractConfig from './abstract-config';
@@ -89,7 +88,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     const isPropDefault = (val, key) => {
       if (key === 'useWorkspaces') return val !== DEFAULT_USE_WORKSPACES;
       if (key === 'manageWorkspaces') return val !== DEFAULT_MANAGE_WORKSPACES;
-      if (key === 'resolveModules') return !R.isEmpty(val);
+      if (key === 'resolveModules') return !isEmpty(val);
       if (key === 'defaultScope') return Boolean(val);
       return true;
     };
@@ -125,7 +124,7 @@ export default class WorkspaceConfig extends AbstractConfig {
     try {
       const file = await AbstractConfig.loadJsonFileIfExist(packageJsonPath);
       return file;
-    } catch (e: any) {
+    } catch {
       throw new InvalidPackageJson(packageJsonPath);
     }
   }

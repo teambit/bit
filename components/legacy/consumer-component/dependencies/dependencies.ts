@@ -1,4 +1,4 @@
-import R from 'ramda';
+import { cloneDeep, uniqBy } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitIdStr } from '@teambit/legacy-bit-id';
 import { ValidationError } from '@teambit/legacy.cli.error';
@@ -64,7 +64,8 @@ export default class Dependencies {
 
   cloneAsString(): Record<string, any>[] {
     return this.dependencies.map((dependency) => {
-      const dependencyClone = R.clone(dependency);
+      const dependencyClone = cloneDeep(dependency);
+      // @ts-expect-error we want to change the type here explicitly
       dependencyClone.id = dependency.id.toString();
       return dependencyClone;
     });
@@ -72,7 +73,8 @@ export default class Dependencies {
 
   cloneAsObject(): Record<string, any>[] {
     return this.dependencies.map((dependency) => {
-      const dependencyClone = R.clone(dependency);
+      const dependencyClone = cloneDeep(dependency);
+      // @ts-expect-error we want to change the type here explicitly
       dependencyClone.id = dependency.id.serialize();
       return dependencyClone;
     });
@@ -205,5 +207,14 @@ export default class Dependencies {
         }
       });
     });
+  }
+
+  static merge(lists: Dependency[][]): Dependencies {
+    const res: Dependency[] = [];
+    const deps = lists.reduce((acc, curr) => {
+      acc = acc.concat(curr);
+      return acc;
+    }, res);
+    return new Dependencies(uniqBy(deps, (dep) => dep.id.toStringWithoutVersion()));
   }
 }

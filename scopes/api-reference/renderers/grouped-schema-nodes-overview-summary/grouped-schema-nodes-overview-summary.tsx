@@ -214,8 +214,8 @@ function SchemaMethodMember({
                 if (paramRenderer?.Component) {
                   return (
                     <paramRenderer.Component
-                      {...apiNodeRendererProps}
                       key={`param-${param.name}`}
+                      {...apiNodeRendererProps}
                       depth={(apiNodeRendererProps.depth ?? 0) + 1}
                       apiNode={{ ...apiNodeRendererProps.apiNode, renderer: paramRenderer, api: param }}
                       metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}
@@ -224,8 +224,8 @@ function SchemaMethodMember({
                 }
                 return (
                   <defaultParamRenderer.Component
-                    {...apiNodeRendererProps}
                     key={`param-${param.name}`}
+                    {...apiNodeRendererProps}
                     depth={(apiNodeRendererProps.depth ?? 0) + 1}
                     apiNode={{ ...apiNodeRendererProps.apiNode, renderer: defaultParamRenderer, api: param }}
                     metadata={{ [param.__schema]: { columnView: true, skipHeadings: true } }}

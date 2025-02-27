@@ -1,5 +1,4 @@
-import R from 'ramda';
-import { pickBy } from 'lodash';
+import { pickBy, keys, isEmpty, cloneDeep, get, merge } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import {
   MANUALLY_ADD_DEPENDENCY,
@@ -8,9 +7,8 @@ import {
   DEPENDENCIES_FIELDS,
 } from '@teambit/legacy.constants';
 import { SourceFile } from '@teambit/component.sources';
-import { ComponentConfig } from './component-config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
+import { ConsumerComponent, Dependency } from '@teambit/legacy.consumer-component';
 
 export type ConsumerOverridesOfComponent = ComponentOverridesData & {
   extensions?: Record<string, any>;
@@ -39,12 +37,12 @@ export type ComponentOverridesData = DependenciesOverridesData & {
 type OverridesLoadRegistry = { [extId: string]: Function };
 
 export class ComponentOverrides {
-  private overrides: ConsumerOverridesOfComponent;
+  protected overrides: ConsumerOverridesOfComponent;
   constructor(overrides: ConsumerOverridesOfComponent | null | undefined) {
     this.overrides = overrides || {};
   }
   static componentOverridesLoadingRegistry: OverridesLoadRegistry = {};
-  static registerOnComponentOverridesLoading(extId, func: (id, config, legacyFiles) => any) {
+  static registerOnComponentOverridesLoading(extId, func: (id, config, legacyFiles, envExtendsDeps) => any) {
     this.componentOverridesLoadingRegistry[extId] = func;
   }
 
@@ -71,17 +69,15 @@ export class ComponentOverrides {
    * use the component-config.
    */
   static async loadFromConsumer(
-    componentId: ComponentID,
-    workspaceConfig: ILegacyWorkspaceConfig,
-    overridesFromModel: ComponentOverridesData | undefined,
-    componentConfig: ComponentConfig,
-    files: SourceFile[]
+    component: ConsumerComponent,
+    envExtendsDeps?: Dependency[]
   ): Promise<ComponentOverrides> {
     const extensionsAddedOverrides = await runOnLoadOverridesEvent(
       this.componentOverridesLoadingRegistry,
-      componentConfig.extensions,
-      componentId,
-      files
+      component.bitJson?.extensions,
+      component.id,
+      component.files,
+      envExtendsDeps
     );
     return new ComponentOverrides(extensionsAddedOverrides);
   }
@@ -92,34 +88,36 @@ export class ComponentOverrides {
   static async loadNewFromScope(
     componentId: ComponentID,
     files: SourceFile[],
-    extensions: ExtensionDataList
+    extensions: ExtensionDataList,
+    envExtendsDeps: Dependency[] = []
   ): Promise<ComponentOverrides> {
     const extensionsAddedOverrides = await runOnLoadOverridesEvent(
       this.componentOverridesLoadingRegistry,
       extensions,
       componentId,
-      files
+      files,
+      envExtendsDeps
     );
     return new ComponentOverrides(extensionsAddedOverrides);
   }
 
   static loadFromScope(overridesFromModel: ComponentOverridesData | null | undefined = {}) {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new ComponentOverrides(R.clone(overridesFromModel), {});
+    return new ComponentOverrides(cloneDeep(overridesFromModel), {});
   }
 
   get componentOverridesData() {
     const isNotSystemField = (val, field) => !overridesBitInternalFields.includes(field);
-    return R.pickBy(isNotSystemField, this.overrides);
+    return pickBy(this.overrides, isNotSystemField);
   }
 
   get componentOverridesPackageJsonData() {
     const isPackageJsonField = (val, field) => !nonPackageJsonFields.includes(field);
-    return R.pickBy(isPackageJsonField, this.overrides);
+    return pickBy(this.overrides, isPackageJsonField);
   }
 
   getEnvByType(envType): string | Record<string, any> | undefined {
-    return R.path(['env', envType], this.overrides);
+    return get(this.overrides, ['env', envType]);
   }
 
   getComponentDependenciesWithVersion(): Record<string, any> {
@@ -148,14 +146,17 @@ export class ComponentOverrides {
     return ver !== MANUALLY_ADD_DEPENDENCY && ver !== MANUALLY_REMOVE_DEPENDENCY;
   }
   getIgnored(field: string): string[] {
-    return R.keys(R.filter((dep) => dep === MANUALLY_REMOVE_DEPENDENCY, this.overrides[field] || {}));
+    const filtered = pickBy(this.overrides[field] || {}, (dep) => {
+      return dep === MANUALLY_REMOVE_DEPENDENCY;
+    });
+    return keys(filtered);
   }
   getIgnoredPackages(field: string): string[] {
     const ignoredRules = this.getIgnored(field);
     return ignoredRules;
   }
   clone(): ComponentOverrides {
-    return new ComponentOverrides(R.clone(this.overrides));
+    return new ComponentOverrides(cloneDeep(this.overrides));
   }
 }
 
@@ -167,7 +168,7 @@ export class ComponentOverrides {
  */
 function mergeExtensionsOverrides(configs: DependenciesOverridesData[]): any {
   return configs.reduce((prev, curr) => {
-    return R.mergeDeepLeft(prev, curr);
+    return merge(cloneDeep(curr), prev);
   }, {});
 }
 
@@ -179,18 +180,19 @@ function mergeExtensionsOverrides(configs: DependenciesOverridesData[]): any {
  */
 async function runOnLoadOverridesEvent(
   configsRegistry: OverridesLoadRegistry,
-  extensions: ExtensionDataList,
+  extensions: ExtensionDataList = new ExtensionDataList(),
   id: ComponentID,
-  files: SourceFile[]
+  files: SourceFile[],
+  envExtendsDeps?: Dependency[]
 ): Promise<DependenciesOverridesData> {
   const extensionsAddedOverridesP = Object.keys(configsRegistry).map((extId) => {
     // TODO: only running func for relevant extensions
     const func = configsRegistry[extId];
-    return func(extensions, id, files);
+    return func(extensions, id, files, envExtendsDeps);
   });
   const extensionsAddedOverrides = await Promise.all(extensionsAddedOverridesP);
   let extensionsConfigModificationsObject = mergeExtensionsOverrides(extensionsAddedOverrides);
-  const filterFunc = (val) => !R.isEmpty(val);
+  const filterFunc = (val) => !isEmpty(val);
   extensionsConfigModificationsObject = pickBy(extensionsConfigModificationsObject, filterFunc);
   return extensionsConfigModificationsObject;
 }

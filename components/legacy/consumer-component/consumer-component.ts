@@ -2,7 +2,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import fs from 'fs-extra';
 import { v4 } from 'uuid';
 import * as path from 'path';
-import R from 'ramda';
+import { flatten } from 'lodash';
 import { IssuesList } from '@teambit/component-issues';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
@@ -15,7 +15,7 @@ import {
 } from '@teambit/legacy.constants';
 import { Doclet, parser as docsParser } from '@teambit/semantics.doc-parser';
 import { logger } from '@teambit/legacy.logger';
-import { Version, DepEdge, Log, ScopeListItem, DependenciesGraph, ModelComponent } from '@teambit/scope.objects';
+import { Version, DepEdge, Log, ScopeListItem, DependenciesGraph, ModelComponent } from '@teambit/objects';
 import { pathNormalizeToLinux, PathLinux, PathOsBased, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { ComponentMap } from '@teambit/legacy.bit-map';
@@ -24,7 +24,6 @@ import { Dist, License, SourceFile, PackageJsonFile, DataToPersist } from '@team
 import {
   ComponentConfig,
   ComponentConfigLoadOptions,
-  ILegacyWorkspaceConfig,
   ComponentOverrides,
   getBindingPrefixByDefaultScope,
 } from '@teambit/legacy.consumer-config';
@@ -88,7 +87,7 @@ export class Component {
     ComponentConfig.registerOnComponentConfigLoading(extId, func);
   }
 
-  static registerOnComponentOverridesLoading(extId, func: (id, config, legacyFiles) => any) {
+  static registerOnComponentOverridesLoading(extId, func: (id, config, legacyFiles, envExtendsDeps) => any) {
     ComponentOverrides.registerOnComponentOverridesLoading(extId, func);
   }
 
@@ -339,7 +338,7 @@ export class Component {
   }
 
   getAllDependenciesIds(): ComponentIdList {
-    const allDependencies = R.flatten(Object.values(this.depsIdsGroupedByType));
+    const allDependencies = flatten(Object.values(this.depsIdsGroupedByType));
     return ComponentIdList.fromArray(allDependencies);
   }
 
@@ -504,7 +503,6 @@ export class Component {
     consumer: Consumer;
     loadOpts?: ComponentLoadOptions;
   }): Promise<Component> {
-    const workspaceConfig: ILegacyWorkspaceConfig = consumer.config;
     const modelComponent = await consumer.scope.getModelComponentIfExist(id);
     const componentFromModel = (await consumer.loadComponentFromModelIfExist(id)) as Component | undefined;
     if (!componentFromModel && id._legacy.hasScope()) {
@@ -529,7 +527,6 @@ export class Component {
     // by default, imported components are not written with bit.json file.
     // use the component from the model to get their bit.json values
     if (componentFromModel) {
-      // @ts-ignore todo: remove after deleting teambit.legacy
       componentConfig.mergeWithComponentData(componentFromModel);
     }
 
@@ -537,22 +534,12 @@ export class Component {
 
     const bindingPrefix = componentFromModel?.bindingPrefix;
 
-    const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : undefined;
     const files = await getLoadedFiles(consumer, componentMap, id, compDirAbs);
-
-    const overrides = await ComponentOverrides.loadFromConsumer(
-      id,
-      workspaceConfig,
-      overridesFromModel,
-      componentConfig,
-      files
-    );
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
-    // @ts-ignore todo: remove after deleting teambit.legacy
     const docsP = _getDocsForFiles(files, consumer.componentFsCache);
     const docs = await Promise.all(docsP);
-    const flattenedDocs = docs ? R.flatten(docs) : [];
+    const flattenedDocs = docs ? flatten(docs) : [];
     // probably componentConfig.defaultScope is not needed. try to remove it.
     // once we changed BitId to ComponentId, the defaultScope is always part of the id.
     const defaultScope = id.hasScope() ? componentConfig.defaultScope : id.scope;
@@ -577,7 +564,6 @@ export class Component {
       componentMap,
       docs: flattenedDocs,
       deprecated,
-      overrides,
       schema: getSchema(),
       defaultScope: defaultScope || null,
       packageJsonFile,
@@ -598,8 +584,7 @@ async function getLoadedFiles(
     logger.error(`rethrowing an error of ${componentMap.noFilesError.message}`);
     throw componentMap.noFilesError;
   }
-  // @ts-ignore todo: remove after deleting teambit.legacy
-  await componentMap.trackDirectoryChangesHarmony(consumer);
+  await componentMap.trackDirectoryChangesHarmony(consumer.getPath());
   const sourceFiles = componentMap.files.map((file) => {
     const filePath = path.join(bitDir, file.relativePath);
     const sourceFile = SourceFile.load(filePath, bitDir, consumer.getPath(), {

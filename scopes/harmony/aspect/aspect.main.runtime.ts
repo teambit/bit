@@ -22,6 +22,7 @@ import {
   AspectCmd,
   GetAspectCmd,
   ListAspectCmd,
+  ListCoreAspectCmd,
   SetAspectCmd,
   SetAspectOptions,
   UnsetAspectCmd,
@@ -29,6 +30,7 @@ import {
 } from './aspect.cmd';
 import { getTemplates } from './aspect.templates';
 import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
+import { ExtensionDataList, ValidateBeforePersistResult } from '@teambit/legacy.extension-data';
 
 export type AspectSource = { aspectName: string; source: string; level: string };
 
@@ -36,7 +38,8 @@ export class AspectMain {
   constructor(
     readonly aspectEnv: AspectEnv,
     private envs: EnvsMain,
-    private workspace: Workspace
+    private workspace: Workspace,
+    private aspectLoader: AspectLoaderMain
   ) {}
 
   /**
@@ -60,6 +63,10 @@ export class AspectMain {
       })
     );
     return results;
+  }
+
+  listCoreAspects(): string[] {
+    return this.aspectLoader.getCoreAspectIds();
   }
 
   get babelConfig() {
@@ -165,7 +172,7 @@ export class AspectMain {
       try {
         const fromRemote = await this.workspace.scope.getRemoteComponent(aspectCompId);
         aspectCompId = aspectCompId.changeVersion(fromRemote.id.version);
-      } catch (err) {
+      } catch {
         throw new BitError(
           `unable to find ${aspectId} in the remote. if this is a local aspect, please provide a version with your aspect (${aspectId}) to update to`
         );
@@ -204,6 +211,18 @@ export class AspectMain {
         return merge(reactDeps, dependencyPolicy);
       },
     });
+  }
+
+  /**
+   * currently, it validates envs/envs only. If needed for other aspects, create a slot, let aspects register to it,
+   * then call the validation of all aspects from here.
+   */
+  validateAspectsBeforePersist(extensionDataList: ExtensionDataList): ValidateBeforePersistResult {
+    const envExt = extensionDataList.findCoreExtension(EnvsAspect.id);
+    if (envExt) {
+      const result = this.envs.validateEnvId(envExt);
+      if (result) return result;
+    }
   }
 
   static runtime = MainRuntime;
@@ -254,18 +273,21 @@ export class AspectMain {
     envs.registerEnv(aspectEnv);
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerMain, workerMain, harmony);
-      generator.registerComponentTemplate(getTemplates(envContext));
+      generator.registerComponentTemplate(() => getTemplates(envContext));
     }
-    const aspectMain = new AspectMain(aspectEnv as AspectEnv, envs, workspace);
+    const aspectMain = new AspectMain(aspectEnv as AspectEnv, envs, workspace, aspectLoader);
     const aspectCmd = new AspectCmd();
     aspectCmd.commands = [
       new ListAspectCmd(aspectMain),
+      new ListCoreAspectCmd(aspectMain),
       new GetAspectCmd(aspectMain),
       new SetAspectCmd(aspectMain),
       new UnsetAspectCmd(aspectMain),
       new UpdateAspectCmd(aspectMain),
     ];
     cli.register(aspectCmd);
+
+    ExtensionDataList.validateBeforePersistHook = aspectMain.validateAspectsBeforePersist.bind(aspectMain);
 
     return aspectMain;
   }

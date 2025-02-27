@@ -2,7 +2,7 @@ import * as path from 'path';
 import { homedir, platform } from 'os';
 
 import type { PathOsBased } from '@teambit/toolbox.path.path';
-import { getSync } from '@teambit/legacy.global-config';
+import { getConfig } from '@teambit/config-store';
 
 export const IS_WINDOWS = platform() === 'win32';
 
@@ -158,7 +158,7 @@ export const DEFAULT_CLOUD_DOMAIN = 'bit.cloud';
 let resolvedCloudDomain;
 export const getCloudDomain = (): string => {
   if (resolvedCloudDomain) return resolvedCloudDomain;
-  resolvedCloudDomain = getSync(CFG_CLOUD_DOMAIN_KEY) || DEFAULT_CLOUD_DOMAIN;
+  resolvedCloudDomain = getConfig(CFG_CLOUD_DOMAIN_KEY) || DEFAULT_CLOUD_DOMAIN;
   return resolvedCloudDomain;
 };
 
@@ -186,7 +186,7 @@ export const clearCachedUrls = () => {
 
 export const getSymphonyUrl = (): string => {
   if (resolvedSymphonyUrl) return resolvedSymphonyUrl;
-  const fromConfig = getSync(CFG_SYMPHONY_URL_KEY);
+  const fromConfig = getConfig(CFG_SYMPHONY_URL_KEY);
   if (fromConfig) {
     resolvedSymphonyUrl = fromConfig;
     return resolvedSymphonyUrl;
@@ -207,13 +207,13 @@ export const CFG_WATCH_USE_FS_EVENTS = 'watch_use_fsevents';
 export const CFG_FORCE_LOCAL_BUILD = 'force_local_build';
 
 export const getLoginUrl = (domain?: string): string => {
-  const finalDomain = domain || getSync(CFG_CLOUD_DOMAIN_LOGIN_KEY) || getCloudDomain();
+  const finalDomain = domain || getConfig(CFG_CLOUD_DOMAIN_LOGIN_KEY) || getCloudDomain();
   const url = `https://${finalDomain}/bit-login`;
   return url;
 };
 
 export const getRegistryUrl = (domain?: string): string => {
-  const fromConfig = getSync(CFG_REGISTRY_URL_KEY);
+  const fromConfig = getConfig(CFG_REGISTRY_URL_KEY);
   if (fromConfig) {
     return fromConfig;
   }
@@ -290,7 +290,6 @@ export const BITMAP_PREFIX_MESSAGE = `/**
  */
 export const INIT_COMMAND = 'init';
 
-export const ENV_VARIABLE_CONFIG_PREFIX = 'BIT_CONFIG_';
 /**
  * bit global config keys
  */

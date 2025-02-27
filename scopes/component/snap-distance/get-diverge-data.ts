@@ -1,7 +1,7 @@
 import { difference } from 'lodash';
 import { Graph } from '@teambit/graph.cleargraph';
 import { UnmergedComponent, NoCommonSnap, VersionNotFoundOnFS } from '@teambit/legacy.scope';
-import { ModelComponent, Ref, Repository, VersionParents, versionParentsToGraph } from '@teambit/scope.objects';
+import { ModelComponent, Ref, Repository, VersionParents, versionParentsToGraph } from '@teambit/objects';
 import { SnapsDistance } from './snaps-distance';
 import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
 
@@ -43,7 +43,7 @@ export async function getDivergeData({
   throwForNoCommonSnap?: boolean;
   versionParentsFromObjects?: VersionParents[];
 }): Promise<SnapsDistance> {
-  const isOnLane = modelComponent.laneHeadLocal || modelComponent.laneHeadLocal === null;
+  const isOnLane = modelComponent.isOnLane();
   const localHead = sourceHead || (isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead());
   // uncomment the following line to debug diverge-data issues.
   // if (modelComponent.name === 'x') console.log('getDivergeData, localHead', localHead, 'targetHead', targetHead);

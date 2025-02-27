@@ -27,7 +27,7 @@ import {
   Ref,
   Lane,
   LaneComponent,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import Scope from '../scope';
 import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
@@ -255,7 +255,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   async findOrAddComponent(consumerComponent: ConsumerComponent): Promise<ModelComponent> {
-    // @ts-ignore todo: remove after deleting teambit.legacy
     if (consumerComponent.modelComponent) return consumerComponent.modelComponent;
     const propsFromComp = this.getPropsFromConsumerComp(consumerComponent);
     const comp = ModelComponent.from(propsFromComp);
@@ -423,6 +422,8 @@ please either remove the component (bit remove) or remove the lane.`);
       throw new Error(`fatal: "head" prop was removed from "${component.id()}", although it has versions`);
     }
 
+    component.detachedHeads.removeLocalHeads(versionsRefs);
+
     if (component.versionArray.length || component.hasHead() || component.laneHeadLocal) {
       objectRepo.add(component); // add the modified component object
     } else {
@@ -503,6 +504,7 @@ please either remove the component (bit remove) or remove the lane.`);
     const existingHeadIsMissingInIncomingComponent = Boolean(
       incomingComp.hasHead() &&
         existingComponentHead &&
+        !incomingComp.detachedHeads.getCurrent() &&
         !hashesOfHistoryGraph.find((ref) => ref.isEqual(existingComponentHead))
     );
     // currently it'll always be true. later, we might want to support exporting
@@ -513,7 +515,8 @@ please either remove the component (bit remove) or remove the lane.`);
       incomingComp,
       false,
       isIncomingFromOrigin,
-      existingHeadIsMissingInIncomingComponent
+      existingHeadIsMissingInIncomingComponent,
+      this.scope.objects
     );
     const { mergedComponent, mergedVersions } = await modelComponentMerger.merge();
     if (existingComponentHead || mergedComponent.hasHead()) {

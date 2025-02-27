@@ -11,7 +11,7 @@ import { ComponentID, ComponentIdObj, ComponentIdList } from '@teambit/component
 import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-component-helper';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { RefactoringAspect, MultipleStringsReplacement, RefactoringMain } from '@teambit/refactoring';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace, WorkspaceComponentLoadOptions } from '@teambit/workspace';
 import { snapToSemver } from '@teambit/component-package-version';
 import { uniqBy } from 'lodash';
 import pMapSeries from 'p-map-series';
@@ -47,6 +47,7 @@ type MultipleForkOptions = {
   scope?: string; // different scope-name than the original components
   install?: boolean; // whether to run "bit install" once done.
   ast?: boolean; // whether to use AST to transform files instead of regex
+  compile?: boolean; // whether to compile the component after forking
 };
 
 export class ForkingMain {
@@ -68,7 +69,7 @@ export class ForkingMain {
   async fork(sourceId: string, targetId?: string, options?: ForkOptions): Promise<ComponentID> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const sourceCompId = await this.workspace.resolveComponentId(sourceId);
-    const exists = this.workspace.exists(sourceCompId);
+    const exists = this.workspace.hasId(sourceCompId, { ignoreVersion: true });
     if (exists) {
       const existingInWorkspace = await this.workspace.get(sourceCompId);
       return this.forkExistingInWorkspace(existingInWorkspace, targetId, options);
@@ -99,6 +100,12 @@ export class ForkingMain {
       async ({ sourceId, targetId, path, env, config, targetScope }) => {
         const sourceCompId = await this.workspace.resolveComponentId(sourceId);
         const sourceIdWithScope = sourceCompId._legacy.scope ? sourceCompId : ComponentID.fromString(sourceId);
+        const loadOptions: WorkspaceComponentLoadOptions = {
+          executeLoadSlot: false,
+          loadExtensions: false,
+          loadSeedersAsAspects: false,
+        };
+
         const { targetCompId, component } = await this.forkRemoteComponent(
           sourceIdWithScope,
           targetId,
@@ -107,6 +114,8 @@ export class ForkingMain {
             path,
             env,
             config,
+            compile: options.compile,
+            loadOptions,
           },
           false
         );

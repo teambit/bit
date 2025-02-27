@@ -3,8 +3,7 @@
  * it returns the provided id if it has a version already
  * if the list contains id without version, it returns the provided id.
  */
-import { compact } from 'lodash';
-import R from 'ramda';
+import { compact, isEmpty } from 'lodash';
 import semver from 'semver';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 
@@ -21,7 +20,7 @@ export default function getLatestVersionNumber(bitIds: ComponentIdList, bitId: C
     .map((id) => id.version);
 
   // A case when the provided bitId doesn't exists in the array
-  if (R.isEmpty(allVersionsForId)) {
+  if (isEmpty(allVersionsForId)) {
     if (similarIds.length === 1) return similarIds[0];
     if (similarIds.length > 1)
       throw new Error(`found multiple snaps for ${bitId.toString()}, unable to figure which one is the latest`);

@@ -11,7 +11,7 @@ import { ExportMain } from '@teambit/export';
 import { CheckoutMain } from '@teambit/checkout';
 import { ApplyVersionResults } from '@teambit/merging';
 import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
-import { LaneLog } from '@teambit/scope.objects';
+import { LaneLog } from '@teambit/objects';
 import { ComponentCompareMain } from '@teambit/component-compare';
 import { GeneratorMain } from '@teambit/generator';
 import { getParsedHistoryMetadata } from '@teambit/legacy.consumer';
@@ -24,6 +24,7 @@ import { ApplicationMain } from '@teambit/application';
 import { DeprecationMain } from '@teambit/deprecation';
 import { EnvsMain } from '@teambit/envs';
 import fetch from 'node-fetch';
+import { GraphMain } from '@teambit/graph';
 
 const FILES_HISTORY_DIR = 'files-history';
 const ENV_ICONS_DIR = 'env-icons';
@@ -92,7 +93,8 @@ export class APIForIDE {
     private config: ConfigMain,
     private application: ApplicationMain,
     private deprecation: DeprecationMain,
-    private envs: EnvsMain
+    private envs: EnvsMain,
+    private graph: GraphMain,
   ) {}
 
   async logStartCmdHistory(op: string) {
@@ -282,6 +284,14 @@ export class APIForIDE {
     const dirAbs = this.workspace.componentDir(comp.id);
     const filesRelative = comp.state.filesystem.files.map((file) => file.relative);
     return { dirAbs, filesRelative };
+  }
+
+  async getGraphIdsAsSVG(id?: string, opts: { includeLocalOnly?: boolean } = {}): Promise<string> {
+    const compId = id ? await this.workspace.resolveComponentId(id) : undefined;
+    const visualGraph = await this.graph.getVisualGraphIds(compId ? [compId] : undefined, opts);
+    const svg = await visualGraph.getAsSVGString();
+    if (!svg) throw new Error('failed to render the graph');
+    return svg;
   }
 
   async getCompFilesDirPathFromLastSnap(id: string): Promise<{ [relativePath: string]: string }> {

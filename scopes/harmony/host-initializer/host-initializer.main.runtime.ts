@@ -4,7 +4,7 @@ import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { Consumer } from '@teambit/legacy.consumer';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { Scope } from '@teambit/legacy.scope';
-import { Repository } from '@teambit/scope.objects';
+import { Repository } from '@teambit/objects';
 import { isDirEmpty } from '@teambit/toolbox.fs.is-dir-empty';
 import { WorkspaceExtensionProps } from '@teambit/config';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
@@ -57,7 +57,7 @@ export class HostInitializerMain {
     let consumer: Consumer | undefined;
     try {
       consumer = await createConsumer(consumerPath, noGit, noPackageJson, workspaceConfigProps, generator);
-    } catch (err) {
+    } catch {
       // it's possible that at this stage the consumer fails to load due to scope issues.
       // still we want to load it to include its instance of "scope.json", so then later when "consumer.write()", we
       // don't lose some scope metadata

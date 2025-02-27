@@ -1,5 +1,6 @@
 import React, { useEffect, ReactNode, useMemo } from 'react';
 import { RouteProps } from 'react-router-dom';
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import flatten from 'lodash.flatten';
 import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
@@ -43,7 +44,7 @@ export function Component({
   routeSlot,
   overriddenRoutes,
   containerSlot,
-  host,
+  host: hostFromProps,
   onComponentChange,
   componentIdStr,
   useComponent,
@@ -56,6 +57,9 @@ export function Component({
   const componentId = _componentIdStr ? ComponentID.fromString(_componentIdStr) : undefined;
   const resolvedComponentIdStr = path || idFromLocation;
   const componentFiltersFromProps = useComponentFilters?.() || {};
+  const query = useQuery();
+  const componentVersion = query.get('version');
+  const host = componentVersion ? 'teambit.scope/scope' : hostFromProps;
 
   const useComponentOptions = {
     logFilters: {
@@ -63,12 +67,12 @@ export function Component({
       ...(componentFiltersFromProps.loading
         ? {}
         : {
-            log: {
-              // @todo - enable this when we have lazy loading of logs
-              // limit: 3,
-              ...componentFiltersFromProps.log,
-            },
-          }),
+          log: {
+            // @todo - enable this when we have lazy loading of logs
+            // limit: 3,
+            ...componentFiltersFromProps.log,
+          },
+        }),
     },
     customUseComponent: useComponent,
   };

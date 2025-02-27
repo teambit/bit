@@ -1,8 +1,8 @@
 import pFilter from 'p-filter';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import R from 'ramda';
+import { uniqBy } from 'lodash';
 import { LATEST } from '@teambit/legacy.constants';
-import { ModelComponent, Lane } from '@teambit/scope.objects';
+import { ModelComponent, Lane } from '@teambit/objects';
 import { Scope } from '@teambit/legacy.scope';
 import { fetchRemoteVersions } from '@teambit/scope.remotes';
 import { isBitIdMatchByWildcards } from '@teambit/legacy.utils';
@@ -13,6 +13,7 @@ import {
   ComponentLoadOptions,
 } from '@teambit/legacy.consumer-component';
 import { Consumer } from '@teambit/legacy.consumer';
+import { Workspace } from '@teambit/workspace';
 
 export type ListScopeResult = {
   id: ComponentID;
@@ -26,6 +27,7 @@ export type ListScopeResult = {
 export type OutdatedComponent = { id: ComponentID; headVersion: string; latestVersion?: string };
 
 export class ComponentsList {
+  workspace: Workspace;
   consumer: Consumer;
   scope: Scope;
   bitMap: BitMap;
@@ -34,11 +36,10 @@ export class ComponentsList {
   _modelComponents: ModelComponent[];
   _invalidComponents: InvalidComponent[];
   _removedComponents: Component[];
-  constructor(consumer: Consumer) {
-    this.consumer = consumer;
-    this.scope = consumer.scope;
-    // @ts-ignore todo: remove after deleting teambit.legacy
-    this.bitMap = consumer.bitMap;
+  constructor(workspace: Workspace) {
+    this.consumer = workspace.consumer;
+    this.scope = this.consumer.scope;
+    this.bitMap = this.consumer.bitMap;
   }
 
   async getModelComponents(): Promise<ModelComponent[]> {
@@ -161,7 +162,8 @@ export class ComponentsList {
     const fromBitMap = this.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
     const modelComponents = await this.getModelComponents();
     const pendingExportComponents = await pFilter(modelComponents, async (component: ModelComponent) => {
-      if (!fromBitMap.searchWithoutVersion(component.toComponentId())) {
+      const foundInBitMap = fromBitMap.searchWithoutVersion(component.toComponentId());
+      if (!foundInBitMap) {
         // it's not on the .bitmap only in the scope, as part of the out-of-sync feature, it should
         // be considered as staged and should be exported. same for soft-removed components, which are on scope only.
         // notice that we use `hasLocalChanges`
@@ -170,8 +172,7 @@ export class ComponentsList {
         // be exported unexpectedly.
         return component.isLocallyChangedRegardlessOfLanes();
       }
-      await component.setDivergeData(this.scope.objects);
-      return component.isLocallyChanged(this.scope.objects, lane);
+      return component.isLocallyChanged(this.scope.objects, lane, foundInBitMap);
     });
     const ids = ComponentIdList.fromArray(pendingExportComponents.map((c) => c.toComponentId()));
     return this.updateIdsFromModelIfTheyOutOfSync(ids);
@@ -391,10 +392,13 @@ export class ComponentsList {
   static sortComponentsByName<T>(components: T): T {
     const getName = (component) => {
       let name;
-      if (R.is(ModelComponent, component)) name = component.id();
-      else if (R.is(Component, component)) name = component.componentId.toString();
-      else if (R.is(ComponentID, component)) name = component.toString();
-      else name = component;
+      if (component instanceof ModelComponent) {
+        name = component.id();
+      } else if (component instanceof Component) {
+        name = component.componentId.toString();
+      } else if (component instanceof ComponentID) {
+        name = component.toString();
+      } else name = component;
       if (typeof name !== 'string')
         throw new Error(`sortComponentsByName expects name to be a string, got: ${name}, type: ${typeof name}`);
       return name.toUpperCase(); // ignore upper and lowercase
@@ -417,9 +421,15 @@ export class ComponentsList {
 
   static filterComponentsByWildcard<T>(components: T, idsWithWildcard: string[] | string): T {
     const getBitId = (component): ComponentID => {
-      if (R.is(ModelComponent, component)) return component.toComponentId();
-      if (R.is(Component, component)) return component.componentId;
-      if (R.is(ComponentID, component)) return component;
+      if (component instanceof ModelComponent) {
+        return component.toComponentId();
+      }
+      if (component instanceof Component) {
+        return component.componentId;
+      }
+      if (component instanceof ComponentID) {
+        return component;
+      }
       throw new TypeError(`filterComponentsByWildcard got component with the wrong type: ${typeof component}`);
     };
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -430,6 +440,6 @@ export class ComponentsList {
   }
 
   static getUniqueComponents(components: Component[]): Component[] {
-    return R.uniqBy((component) => JSON.stringify(component.componentId), components);
+    return uniqBy(components, (component) => JSON.stringify(component.componentId));
   }
 }

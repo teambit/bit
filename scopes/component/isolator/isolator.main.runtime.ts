@@ -45,7 +45,7 @@ import {
 import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { type DependenciesGraph } from '@teambit/scope.objects';
+import { type DependenciesGraph } from '@teambit/objects';
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
 import path, { basename } from 'path';
@@ -56,6 +56,7 @@ import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 
 export type ListResults = {
   capsules: string[];
@@ -279,6 +280,7 @@ export class IsolatorMain {
     GlobalConfigAspect,
     AspectLoaderAspect,
     CLIAspect,
+    ConfigStoreAspect
   ];
   static slots = [Slot.withType<CapsuleTransferFn>()];
   static defaultConfig = {};
@@ -287,7 +289,7 @@ export class IsolatorMain {
   _movedLockFiles = new Set(); // cache moved lock files to avoid show warning about them
 
   static async provider(
-    [dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader, cli]: [
+    [dependencyResolver, loggerExtension, componentAspect, graphMain, globalConfig, aspectLoader, cli, configStore]: [
       DependencyResolverMain,
       LoggerMain,
       ComponentMain,
@@ -295,6 +297,7 @@ export class IsolatorMain {
       GlobalConfigMain,
       AspectLoaderMain,
       CLIMain,
+      ConfigStoreMain
     ],
     _config,
     [capsuleTransferSlot]: [CapsuleTransferSlot]
@@ -308,7 +311,8 @@ export class IsolatorMain {
       cli,
       globalConfig,
       aspectLoader,
-      capsuleTransferSlot
+      capsuleTransferSlot,
+      configStore
     );
     return isolator;
   }
@@ -320,7 +324,8 @@ export class IsolatorMain {
     private cli: CLIMain,
     private globalConfig: GlobalConfigMain,
     private aspectLoader: AspectLoaderMain,
-    private capsuleTransferSlot: CapsuleTransferSlot
+    private capsuleTransferSlot: CapsuleTransferSlot,
+    private configStore: ConfigStoreMain
   ) {}
 
   // TODO: the legacy scope used for the component writer, which then decide if it need to write the artifacts and dists
@@ -1044,7 +1049,7 @@ export class IsolatorMain {
       const month = date.getMonth() < 12 ? date.getMonth() + 1 : 1;
       const dateDir = `${date.getFullYear()}-${month}-${date.getDate()}`;
       const defaultDatedBaseDir = 'dated-capsules';
-      const datedBaseDir = this.globalConfig.getSync(CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR) || defaultDatedBaseDir;
+      const datedBaseDir = this.configStore.getConfig(CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR) || defaultDatedBaseDir;
       let hashDir;
       const finalDatedDirId = getCapsuleDirOpts.datedDirId;
       if (finalDatedDirId && this._datedHashForName.has(finalDatedDirId)) {
@@ -1116,7 +1121,7 @@ export class IsolatorMain {
         try {
           const previousPackageJsonRaw = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
           previousPackageJson = JSON.parse(previousPackageJsonRaw);
-        } catch (e: any) {
+        } catch {
           // package-json doesn't exist in the capsule, that's fine, it'll be considered as a cache miss
         }
         return {

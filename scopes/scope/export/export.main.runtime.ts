@@ -21,15 +21,7 @@ import { Http, ExportOrigin } from '@teambit/scope.network';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { persistRemotes, validateRemotes, removePendingDirs } from './export-scope-components';
-import {
-  Lane,
-  ModelComponent,
-  ObjectItem,
-  ObjectList,
-  LaneReadmeComponent,
-  BitObject,
-  Ref,
-} from '@teambit/scope.objects';
+import { Lane, ModelComponent, ObjectItem, ObjectList, LaneReadmeComponent, BitObject, Ref } from '@teambit/objects';
 import { Scope, PersistFailed } from '@teambit/legacy.scope';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
 import { ExportAspect } from './export.aspect';
@@ -44,10 +36,30 @@ const BEFORE_LOADING_COMPONENTS = 'loading components';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 type ObjectListPerName = { [name: string]: ObjectList };
-type ObjectsPerRemote = {
+export type ObjectsPerRemote = {
   remote: Remote;
   objectList: ObjectList;
   exportedIds?: string[];
+};
+export type PushToScopesResult = {
+  exported: ComponentIdList;
+  updatedLocally: ComponentIdList;
+  newIdsOnRemote: ComponentID[];
+  rippleJobs: string[];
+};
+export type PushToScopesParams = {
+  scope: Scope;
+  ids: ComponentIdList;
+  laneObject?: Lane;
+  allVersions?: boolean;
+  originDirectly?: boolean;
+  resumeExportId?: string | undefined;
+  throwForMissingArtifacts?: boolean;
+  isOnMain?: boolean;
+  exportHeadsOnly?: boolean;
+  includeParents?: boolean;
+  filterOutExistingVersions?: boolean;
+  exportOrigin?: ExportOrigin;
 };
 type ObjectsPerRemoteExtended = ObjectsPerRemote & {
   objectListPerName: ObjectListPerName;
@@ -190,7 +202,7 @@ otherwise, re-run the export with "--fork-lane-new-scope" flag.
 if the export fails with missing objects/versions/components, run "bit fetch --lanes <lane-name> --all-history", to make sure you have the full history locally`);
     }
     const isOnMain = consumer.isOnMain();
-    const { exported, updatedLocally, newIdsOnRemote, rippleJobs } = await this.exportMany({
+    const { exported, updatedLocally, newIdsOnRemote, rippleJobs } = await this.pushToScopes({
       ...params,
       exportHeadsOnly: headOnly,
       scope: consumer.scope,
@@ -206,7 +218,6 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const nonExistOnBitMap = exported.filter(
       (id) => !workspaceIds.hasWithoutVersion(id) && !removedIds.hasWithoutVersion(id)
     );
-    // @ts-ignore todo: remove after deleting teambit.legacy
     const updatedIds = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
     // re-generate the package.json, this way, it has the correct data in the componentId prop.
     await linkToNodeModulesByIds(this.workspace, updatedIds, true);
@@ -233,9 +244,16 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
   }
 
   /**
+   * @deprecated use `pushToScopes` instead
+   */
+  async exportMany(params: PushToScopesParams): Promise<PushToScopesResult> {
+    return this.pushToScopes(params);
+  }
+
+  /**
    * the export process uses four steps. read more about it here: https://github.com/teambit/bit/pull/3371
    */
-  async exportMany({
+  async pushToScopes({
     scope,
     ids, // when exporting a lane, the ids are the lane component ids
     laneObject,
@@ -248,25 +266,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     includeParents, // relevant when exportHeadsOnly is used. sometimes the parents head are needed as well
     filterOutExistingVersions, // go to the remote and check whether the version exists there. if so, don't export it
     exportOrigin = 'export',
-  }: {
-    scope: Scope;
-    ids: ComponentIdList;
-    laneObject?: Lane;
-    allVersions?: boolean;
-    originDirectly?: boolean;
-    resumeExportId?: string | undefined;
-    throwForMissingArtifacts?: boolean;
-    isOnMain?: boolean;
-    exportHeadsOnly?: boolean;
-    includeParents?: boolean;
-    filterOutExistingVersions?: boolean;
-    exportOrigin?: ExportOrigin;
-  }): Promise<{
-    exported: ComponentIdList;
-    updatedLocally: ComponentIdList;
-    newIdsOnRemote: ComponentID[];
-    rippleJobs: string[];
-  }> {
+  }: PushToScopesParams): Promise<PushToScopesResult> {
     this.logger.debug(`scope.exportMany, ids: ${ids.toString()}`);
     const scopeRemotes: Remotes = await getScopeRemotes(scope);
 
@@ -301,7 +301,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
           return;
         }
         // by getting the remote we also validate that this scope actually exists.
-        const remote = await scopeRemotes.resolve(scopeName, scope);
+        const remote = await scopeRemotes.resolve(scopeName);
         const list = await remote.list();
         const listIds = ComponentIdList.fromArray(list.map((listItem) => listItem.id));
         newIdsGrouped[scopeName].forEach((id) => {
@@ -340,7 +340,8 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         }
         return [head];
       }
-      const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects);
+      const fromWorkspace = this.workspace?.getIdIfExist(modelComponent.toComponentId());
+      const localTagsOrHashes = await modelComponent.getLocalHashes(scope.objects, fromWorkspace);
       if (!allVersions) {
         return localTagsOrHashes;
       }
@@ -362,7 +363,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
       lane?: Lane
     ): Promise<ObjectsPerRemoteExtended> => {
       bitIds.throwForDuplicationIgnoreVersion();
-      const remote: Remote = await scopeRemotes.resolve(remoteNameStr, scope);
+      const remote: Remote = await scopeRemotes.resolve(remoteNameStr);
       const idsToChangeLocally = ComponentIdList.fromArray(bitIds.filter((id) => !scope.isExported(id)));
       const componentsAndObjects: ModelComponentAndObjects[] = [];
       const objectList = new ObjectList();
@@ -422,11 +423,13 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
         modelComponent: ModelComponent;
         refs: Ref[];
       }) => {
+        const idFromWorkspace = this.workspace?.getIdIfExist(modelComponent.toComponentId());
         modelComponent.clearStateData();
         const objectItems = await modelComponent.collectVersionsObjects(
           scope.objects,
           refs.map((ref) => ref.toString()),
-          throwForMissingArtifacts
+          throwForMissingArtifacts,
+          idFromWorkspace
         );
         const objectsList = await new ObjectList(objectItems).toBitObjects();
         const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
@@ -687,7 +690,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     laneObject?: Lane;
   }> {
     const consumer = this.workspace.consumer;
-    const componentsList = new ComponentsList(consumer);
+    const componentsList = new ComponentsList(this.workspace);
     const idsHaveWildcard = hasWildcard(ids);
     const throwForLocalOnlyIfNeeded = async (
       bitIds: ComponentIdList
@@ -741,7 +744,7 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
       throw new Error(`fatal: unable to load the current lane object (${currentLaneId.toString()})`);
     }
     this.logger.setStatusLine(BEFORE_LOADING_COMPONENTS);
-    const componentsList = new ComponentsList(consumer);
+    const componentsList = new ComponentsList(this.workspace);
     const componentsToExportWithoutRemoved = includeNonStaged
       ? await componentsList.listNonNewComponentsIds()
       : await componentsList.listExportPendingComponentsIds(laneObject);
@@ -804,7 +807,7 @@ async function getParsedId(consumer: Consumer, id: string): Promise<ComponentID>
   // .bitmap and only in the scope. we support this case and enable to export
   try {
     return consumer.getParsedId(id);
-  } catch (err: any) {
+  } catch {
     return consumer.scope.getParsedId(id);
   }
 }

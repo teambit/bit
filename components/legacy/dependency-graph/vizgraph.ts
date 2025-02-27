@@ -21,19 +21,13 @@ const defaultConfig: GraphConfig = {
 };
 
 export class VisualDependencyGraph {
-  graphlib: Graph;
-  graph: Digraph;
-  config: GraphConfig;
-  constructor(graphlib: Graph, graph: Digraph, config: GraphConfig) {
-    this.graph = graph;
-    this.graphlib = graphlib;
-    this.config = config;
-  }
+
+  constructor(public graph: Digraph, public config: GraphConfig) {}
 
   static async loadFromGraphlib(graphlib: Graph, config: GraphConfig = {}): Promise<VisualDependencyGraph> {
     const mergedConfig = Object.assign({}, defaultConfig, config);
     const graph: Digraph = VisualDependencyGraph.buildDependenciesGraph(graphlib, mergedConfig);
-    return new VisualDependencyGraph(graphlib, graph, mergedConfig);
+    return new VisualDependencyGraph(graph, mergedConfig);
   }
 
   static async loadFromClearGraph(
@@ -47,8 +41,29 @@ export class VisualDependencyGraph {
       mergedConfig,
       markIds
     );
-    // @ts-ignore
-    return new VisualDependencyGraph(clearGraph, graph, mergedConfig);
+    return new VisualDependencyGraph(graph, mergedConfig);
+  }
+
+  static async loadFromMultipleClearGraphs(
+    clearGraphs: ClearGraph<any, any>[],
+    config: GraphConfig = {},
+    markIds?: string[]
+  ): Promise<VisualDependencyGraph> {
+    const mergedConfig = { ...defaultConfig, ...config };
+    const mainGraph = graphviz.digraph('G');
+
+    if (config.graphVizPath) {
+      mainGraph.setGraphVizPath(config.graphVizPath);
+    }
+
+    clearGraphs.forEach((clearGraph, idx) => {
+      const subGraph = mainGraph.addCluster(`cluster_cycle_${idx}`);
+      subGraph.set('label', `Cycle #${idx + 1}`);
+
+      VisualDependencyGraph.loadFromClearGraphIntoGraphViz(clearGraph, subGraph, config, markIds);
+    });
+
+    return new VisualDependencyGraph(mainGraph, mergedConfig);
   }
 
   /**
@@ -89,6 +104,15 @@ export class VisualDependencyGraph {
       graph.setGraphVizPath(config.graphVizPath);
     }
 
+    return VisualDependencyGraph.loadFromClearGraphIntoGraphViz(clearGraph, graph, config, markIds);
+  }
+
+  static loadFromClearGraphIntoGraphViz(
+    clearGraph: ClearGraph<any, any>,
+    graph: Digraph,
+    config: GraphConfig = {},
+    markIds?: string[]
+  ): Digraph {
     const nodes = clearGraph.nodes;
     const edges = clearGraph.edges;
 
@@ -126,6 +150,7 @@ export class VisualDependencyGraph {
     return graph;
   }
 
+
   private getTmpFilename() {
     return path.join(os.tmpdir(), `${generateRandomStr()}.png`);
   }
@@ -148,6 +173,22 @@ export class VisualDependencyGraph {
     const file = tempy.file({ extension: 'svg' });
     await fs.writeFile(file, result.output);
     return file;
+  }
+
+  async getAsSVGString(): Promise<string | undefined> {
+    const dot = this.dot();
+    const viz = await instance();
+    const result = viz.render(dot, { format: 'svg' });
+    if (result.errors.length) {
+      throw new Error(
+        `failed to render the graph, errors:\n${result.errors.map((e) => `${e.level}: ${e.message}`).join('\n')}`
+      );
+    }
+    return result.output;
+  }
+
+  async render(format: string = 'svg') {
+    return format === 'png' || format === 'gif' ? this.image() : this.renderUsingViz(format);
   }
 
   /**

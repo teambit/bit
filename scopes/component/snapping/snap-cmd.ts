@@ -2,7 +2,6 @@ import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
-import { GlobalConfigMain } from '@teambit/global-config';
 import { Command, CommandOptions } from '@teambit/cli';
 import {
   NOTHING_TO_SNAP_MSG,
@@ -13,7 +12,8 @@ import {
 import { Logger } from '@teambit/logger';
 import { SnappingMain, SnapResults } from './snapping.main.runtime';
 import { outputIdsIfExists } from './tag-cmd';
-import { BasicTagSnapParams } from './tag-model-component';
+import { BasicTagSnapParams } from './version-maker';
+import { ConfigStoreMain } from '@teambit/config-store';
 
 export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
@@ -65,13 +65,18 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       'fail-fast',
       'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
     ],
+    [
+      '',
+      'detach-head',
+      'UNSUPPORTED YET. in case a component is checked out to an older version, snap it without changing the head',
+    ],
   ] as CommandOptions;
   loader = true;
 
   constructor(
     private snapping: SnappingMain,
     private logger: Logger,
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {}
 
   async report(
@@ -90,6 +95,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       rebuildDepsGraph,
       unmodified = false,
       failFast = false,
+      detachHead,
     }: {
       unmerged?: boolean;
       editor?: string;
@@ -100,7 +106,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       failFast?: boolean;
     } & BasicTagSnapParams
   ) {
-    build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
+    build = this.configStore.getConfigBoolean(CFG_FORCE_LOCAL_BUILD) || Boolean(build);
     const disableTagAndSnapPipelines = disableSnapPipeline;
     if (!message && !editor) {
       this.logger.consoleWarning(
@@ -123,6 +129,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       rebuildDepsGraph,
       unmodified,
       exitOnFirstFailedTask: failFast,
+      detachHead,
     });
 
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);

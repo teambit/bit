@@ -167,8 +167,8 @@ export class PkgMain {
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher, envs);
     // dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
     builder.registerBuildTasks([preparePackagesTask]);
-    builder.registerTagTasks([packTask, publishTask]);
-    builder.registerSnapTasks([packTask]);
+    builder.registerTagTasks([preparePackagesTask, packTask, publishTask]);
+    builder.registerSnapTasks([preparePackagesTask, packTask]);
 
     const calcPkgOnLoad = async (component: Component) => {
       const data = await pkg.mergePackageJsonProps(component);
@@ -491,7 +491,12 @@ export class PkgMain {
     packageJsonObject: Record<string, any>
   ): Promise<Record<string, any>> {
     const newProps = this.getPackageJsonModifications(component);
-    return Object.assign(packageJsonObject, newProps);
+    const pkgJsonObj = Object.assign(packageJsonObject, newProps);
+    const env = this.envs.getOrCalculateEnv(component).env;
+    if (env.modifyPackageJson) {
+      return env.modifyPackageJson(component, pkgJsonObj);
+    }
+    return pkgJsonObj;
   }
 }
 
