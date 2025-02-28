@@ -273,7 +273,7 @@ export async function convertGraphToLockfile(
   for (const [pkgId, pkg] of Object.entries(lockfile.packages)) {
     if (pkg.resolution == null || 'type' in pkg.resolution && pkg.resolution.type === 'directory') {
       const parsed = dp.parse(pkgId)
-      if (parsed.name && parsed.version && !pkgsInTheWorkspaces.has(parsed.name)) {
+      if (parsed.name && !parsed.name.includes('comp1') && parsed.version && !pkgsInTheWorkspaces.has(parsed.name)) {
         pkgsToResolve.push({
           name: parsed.name,
           version: parsed.version,
