@@ -1607,7 +1607,7 @@ export class DependencyResolverMain {
         dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
       );
 
-    graphql.register(dependencyResolverSchema(dependencyResolver));
+    graphql.register(() => dependencyResolverSchema(dependencyResolver));
     envs.registerService(new DependenciesService());
     envs.registerEnvJsoncMergeCustomizer(dependencyResolver.mergeEnvManifestPolicy.bind(dependencyResolver));
 

@@ -263,7 +263,7 @@ export class WorkspaceMain {
     ui.registerPreStart(async () => {
       return workspace.setComponentPathsRegExps();
     });
-    graphql.register(workspaceSchema);
+    graphql.register(() => workspaceSchema);
     const capsuleCmd = getCapsulesCommands(isolator, scope, workspace);
     const commands: CommandList = [
       new EjectConfCmd(workspace),

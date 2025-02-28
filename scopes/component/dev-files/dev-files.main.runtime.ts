@@ -269,7 +269,7 @@ export class DevFilesMain {
       scope.registerOnCompAspectReCalc(calcDevOnLoad);
     }
 
-    graphql.register(devFilesSchema(devFiles));
+    graphql.register(() => devFilesSchema(devFiles));
     return devFiles;
   }
 }

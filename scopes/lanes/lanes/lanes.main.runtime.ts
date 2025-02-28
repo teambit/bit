@@ -1256,7 +1256,7 @@ please create a new lane instead, which will include all components of this lane
     cli.registerOnStart(async () => {
       await lanesMain.recreateNewLaneIfDeleted();
     });
-    graphql.register(lanesSchema(lanesMain));
+    graphql.register(() => lanesSchema(lanesMain));
     express.register([
       new LanesCreateRoute(lanesMain, logger),
       new LanesDeleteRoute(lanesMain, logger),

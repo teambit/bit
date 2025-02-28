@@ -458,7 +458,7 @@ export class ReactMain {
     );
     const appType = new ReactAppType('react-app', reactEnv, logger, dependencyResolver);
     const react = new ReactMain(reactEnv, envs, application, appType, dependencyResolver, logger);
-    graphql.register(reactSchema(react));
+    graphql.register(() => reactSchema(react));
     envs.registerEnv(reactEnv);
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerMain, workerMain, harmony);

@@ -681,7 +681,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     );
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);
-    graphql.register(generatorSchema(generator));
+    graphql.register(() => generatorSchema(generator));
     aspectLoader.registerPlugins([new StarterPlugin(generator)]);
     envs.registerService(new GeneratorService());
 

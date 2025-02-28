@@ -319,7 +319,7 @@ export class ComponentCompareMain {
       workspace
     );
     cli.register(new DiffCmd(componentCompareMain));
-    graphql.register(componentCompareSchema(componentCompareMain));
+    graphql.register(() => componentCompareSchema(componentCompareMain));
     return componentCompareMain;
   }
 }
