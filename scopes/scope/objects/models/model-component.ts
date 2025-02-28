@@ -745,6 +745,7 @@ otherwise, please run "bit checkout head" to be up to date, then snap/tag your c
   version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1, preReleaseId?: string): string {
     const increment = (ver: string) => {
       try {
+        // don't use "semver.inc" function, it'll swallow the error and return null.
         const incResult = new semver.SemVer(ver).inc(releaseType, preReleaseId)
         return incResult.version;
       } catch (err: any) {
