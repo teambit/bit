@@ -1212,7 +1212,7 @@ if needed, use "bit env set" command to align the env id`;
     const envsCmd = new EnvsCmd(envs, component);
     envsCmd.commands = [new ListEnvsCmd(envs, component), new GetEnvCmd(envs, component)];
     cli.register(envsCmd);
-    graphql.register(environmentsSchema(envs));
+    graphql.register(() => environmentsSchema(envs));
     return envs;
   }
 }

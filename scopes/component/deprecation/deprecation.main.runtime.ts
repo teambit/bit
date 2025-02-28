@@ -179,7 +179,7 @@ export class DeprecationMain {
     issues.registerAddComponentsIssues(deprecation.addDeprecatedDependenciesIssues.bind(deprecation));
     cli.register(new DeprecateCmd(deprecation), new UndeprecateCmd(deprecation));
     componentAspect.registerShowFragments([new DeprecationFragment(deprecation)]);
-    graphql.register(deprecationSchema(deprecation));
+    graphql.register(() => deprecationSchema(deprecation));
 
     return deprecation;
   }

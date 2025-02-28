@@ -414,7 +414,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
       pkg
     );
     cli.register(new ForkCmd(forkingMain));
-    graphql.register(forkingSchema(forkingMain));
+    graphql.register(() => forkingSchema(forkingMain));
     componentMain.registerShowFragments([new ForkingFragment(forkingMain)]);
 
     const scopeCommand = cli.getCommand('scope');

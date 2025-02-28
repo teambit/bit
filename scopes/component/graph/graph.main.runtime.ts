@@ -92,7 +92,7 @@ export class GraphMain {
     const logger = loggerMain.createLogger(GraphAspect.id);
 
     const graphBuilder = new GraphBuilder(componentAspect);
-    graphql.register(graphSchema(graphBuilder, componentAspect));
+    graphql.register(() => graphSchema(graphBuilder, componentAspect));
 
     const graphMain = new GraphMain(componentAspect, logger);
     cli.register(new GraphCmd(componentAspect, graphMain));

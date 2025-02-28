@@ -173,7 +173,7 @@ export class ComponentMain {
       new FilesFragment(),
       new ExtensionsFragment(),
     ]);
-    graphql.register(componentSchema(componentExtension));
+    graphql.register(() => componentSchema(componentExtension));
 
     return componentExtension;
   }

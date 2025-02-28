@@ -155,7 +155,7 @@ export class PkgMain {
     componentAspect.registerShowFragments([new PackageFragment(pkg)]);
     dependencyResolver.registerDependencyFactories([new PackageDependencyFactory()]);
 
-    graphql.register(pkgSchema(pkg));
+    graphql.register(() => pkgSchema(pkg));
     envs.registerService(new PkgService());
 
     componentAspect.registerRoute([new PackageRoute(pkg)]);

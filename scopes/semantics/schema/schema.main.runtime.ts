@@ -240,7 +240,7 @@ export class SchemaMain {
     const schemaTask = new SchemaTask(SchemaAspect.id, schema, logger);
     builder.registerBuildTasks([schemaTask]);
     cli.register(new SchemaCommand(schema, component, logger));
-    graphql.register(schemaSchema(schema));
+    graphql.register(() => schemaSchema(schema));
     envs.registerService(new SchemaService());
     if (workspace) {
       workspace.registerOnComponentLoad(async () => schema.calcSchemaData());

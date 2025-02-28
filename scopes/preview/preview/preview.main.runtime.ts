@@ -1169,7 +1169,7 @@ export class PreviewMain {
     envs.registerService(previewService);
     preview.previewService = previewService;
 
-    graphql.register(previewSchema(preview));
+    graphql.register(() => previewSchema(preview));
 
     return preview;
   }
