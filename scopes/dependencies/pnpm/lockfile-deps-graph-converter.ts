@@ -206,7 +206,7 @@ export async function convertGraphToLockfile(
     registries: Registries;
   }
 ): Promise<LockfileFileV9> {
-  console.log(JSON.stringify(manifests, null, 2))
+  console.log('manifests', JSON.stringify(manifests, null, 2))
   let graphString = _graph.serialize();
   // console.log(JSON.stringify(graph.packages, null, 2))
   const graph = DependenciesGraph.deserialize(graphString)!;
@@ -239,7 +239,7 @@ export async function convertGraphToLockfile(
   };
   const rootEdge = graph.findRootEdge();
   if (rootEdge) {
-    console.log(rootEdge.neighbours)
+    console.log('rootEdge.neighbours', rootEdge.neighbours)
     for (const [projectDir, manifest] of Object.entries(manifests)) {
       const projectId = getLockfileImporterId(rootDir, projectDir);
       lockfile.importers![projectId] = {
@@ -269,10 +269,11 @@ export async function convertGraphToLockfile(
     }
   }
   const pkgsToResolve: Array<{ name: string; version: string; pkgId: string }> = [];
+  const pkgsInTheWorkspaces = new Set(Object.values(manifests).map(({ name }) => name));
   for (const [pkgId, pkg] of Object.entries(lockfile.packages)) {
     if (pkg.resolution == null || 'type' in pkg.resolution && pkg.resolution.type === 'directory') {
       const parsed = dp.parse(pkgId)
-      if (parsed.name && parsed.version) {
+      if (parsed.name && parsed.version && !pkgsInTheWorkspaces.has(parsed.name)) {
         pkgsToResolve.push({
           name: parsed.name,
           version: parsed.version,
@@ -281,8 +282,8 @@ export async function convertGraphToLockfile(
       }
     }
   }
-  console.log(JSON.stringify(lockfile, null, 2))
-  console.log(JSON.stringify(pkgsToResolve, null, 2))
+  console.log('lockfile', JSON.stringify(lockfile, null, 2))
+  console.log('pkgsToResolve', JSON.stringify(pkgsToResolve, null, 2))
   await Promise.all(pkgsToResolve.map(async (pkgToResolve) => {
     if (lockfile.packages[pkgToResolve.pkgId].resolution == null) {
       const { resolution } = await resolve({
