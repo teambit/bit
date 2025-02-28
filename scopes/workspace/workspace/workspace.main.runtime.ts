@@ -258,12 +258,11 @@ export class WorkspaceMain {
       };
     });
 
-    const workspaceSchema = getWorkspaceSchema(workspace, graphql);
     ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
     ui.registerPreStart(async () => {
       return workspace.setComponentPathsRegExps();
     });
-    graphql.register(() => workspaceSchema);
+    graphql.register(() => getWorkspaceSchema(workspace, graphql));
     const capsuleCmd = getCapsulesCommands(isolator, scope, workspace);
     const commands: CommandList = [
       new EjectConfCmd(workspace),
