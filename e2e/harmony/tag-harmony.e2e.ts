@@ -371,7 +371,7 @@ describe('tag components on Harmony', function () {
       result = helper.general.runWithTryCatch(`bit tag --unmodified --pre-release "h?h"`);
     });
     it('should throw an error', () => {
-      expect(result).to.have.string('is not a valid semantic version');
+      expect(result).to.have.string('unable to increment');
     });
     it('should not create a new version', () => {
       const comp = helper.command.catComponent('comp1');
