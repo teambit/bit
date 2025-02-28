@@ -1,4 +1,5 @@
 import { Environment } from '@teambit/envs';
+import { merge } from 'lodash';
 import { ReactMain } from '@teambit/react';
 import { BabelCompiler } from '@teambit/compilation.babel-compiler';
 import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
@@ -51,13 +52,13 @@ export class MdxEnv implements Environment {
   }
 
   async getDependencies() {
-    return {
-      ...this.react.reactEnv.getDependencies(),
+    const mdxDeps = {
       dependencies: {
         '@teambit/mdx.ui.mdx-scope-context': '1.0.0',
         '@mdx-js/react': '1.6.22',
       },
     };
+    return merge(this.react.reactEnv.getDependencies(), mdxDeps);
   }
 
   /**
