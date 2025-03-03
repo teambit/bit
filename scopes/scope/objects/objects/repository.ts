@@ -44,13 +44,20 @@ export default class Repository {
   protected cache: InMemoryCache<BitObject>;
   remoteLanes!: RemoteLanes;
   unmergedComponents!: UnmergedComponents;
-  persistMutex = new Mutex();
+  _persistMutex?:  Mutex;
   constructor(scopePath: string, scopeJson: ScopeJson) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
     this.onRead = onRead(scopePath, scopeJson);
     this.onPersist = onPersist(scopePath, scopeJson);
     this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects() });
+  }
+
+  get persistMutex() {
+    if (!this._persistMutex) {
+      this._persistMutex = new Mutex();
+    }
+    return this._persistMutex;
   }
 
   static async load({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
