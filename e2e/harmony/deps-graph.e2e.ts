@@ -436,8 +436,9 @@ chai.use(require('chai-fs'));
       {
         const { head } = helper.command.catComponent(`${helper.scopes.remote}/comp2`);
         helper.command.sign(
-          [`${helper.scopes.remote}/comp2@${head}`],
-          '--push --log',
+          // [`${helper.scopes.remote}/comp2@${head}`],
+          [`${helper.scopes.remote}/comp2@0.0.1`],
+          '--log',
           signRemote.scopePath
         );
         helper.command.export();
@@ -445,8 +446,9 @@ chai.use(require('chai-fs'));
       {
         const { head } = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
         helper.command.sign(
-          [`${helper.scopes.remote}/comp1@${head}`],
-          '--push --log',
+          // [`${helper.scopes.remote}/comp1@${head}`],
+          [`${helper.scopes.remote}/comp1@0.0.1`],
+          '--log',
           signRemote.scopePath
         );
         helper.command.export();
