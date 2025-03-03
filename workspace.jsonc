@@ -210,7 +210,7 @@
         "@teambit/evangelist.input.checkbox.label": "^1.1.0",
         "@teambit/evangelist.surfaces.dropdown": "1.0.2",
         "@teambit/explorer.ui.command-bar": "2.0.16",
-        "@teambit/explorer.ui.component-card": "^0.0.47",
+        "@teambit/explorer.ui.component-card": "^0.0.48",
         "@teambit/explorer.ui.gallery.component-grid": "0.0.496",
         "@teambit/git.modules.git-ignore": "^1.0.2",
         "@teambit/gitconfig": "2.0.10",
