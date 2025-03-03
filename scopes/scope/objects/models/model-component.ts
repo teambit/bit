@@ -743,9 +743,16 @@ otherwise, please run "bit checkout head" to be up to date, then snap/tag your c
   }
 
   version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1, preReleaseId?: string): string {
-    // if (preRelease) releaseType = 'prerelease';
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const increment = (ver: string) => semver.inc(ver, releaseType, undefined, preReleaseId)!;
+    const increment = (ver: string) => {
+      try {
+        // don't use "semver.inc" function, it'll swallow the error and return null.
+        const incResult = new semver.SemVer(ver).inc(releaseType, preReleaseId)
+        return incResult.version;
+      } catch (err: any) {
+        throw new Error(`unable to increment version "${ver}" with releaseType "${releaseType}" and preReleaseId "${preReleaseId}".
+Error from "semver": ${err.message}`);
+      }
+    };
 
     const latest = this.latestVersion();
     if (!latest) {

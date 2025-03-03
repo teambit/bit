@@ -718,7 +718,7 @@ export class CloudMain {
     const npmrc = new NpmrcCmd();
     npmrc.commands = [npmrcGenerateCmd];
     cli.register(loginCmd, logoutCmd, whoamiCmd, npmrc);
-    graphql.register(cloudSchema(cloudMain));
+    graphql.register(() => cloudSchema(cloudMain));
     if (workspace) {
       ui.registerOnStart(async () => {
         await cloudMain.setupAuthListener();

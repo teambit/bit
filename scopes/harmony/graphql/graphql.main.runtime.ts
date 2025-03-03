@@ -32,7 +32,7 @@ export type GraphQLConfig = {
 
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
 
-export type SchemaSlot = SlotRegistry<Schema>;
+export type SchemaSlot = SlotRegistry<Schema | (() => Schema)>;
 
 export type PubSubSlot = SlotRegistry<PubSubEngine>;
 
@@ -193,8 +193,10 @@ export class GraphqlMain {
 
   /**
    * register a new graphql module.
+   * @param schema a function that returns Schema. avoid passing the Schema directly, it's supported only for backward
+   * compatibility but really bad for performance. it pulls the entire graphql library.
    */
-  register(schema: Schema) {
+  register(schema: Schema | (() => Schema)) {
     // const module = new GraphQLModule(schema);
     this.moduleSlot.register(schema);
     return this;
@@ -263,7 +265,8 @@ export class GraphqlMain {
 
   private buildModules(schemaSlot?: SchemaSlot) {
     const schemaSlots = schemaSlot ? schemaSlot.toArray() : this.moduleSlot.toArray();
-    return schemaSlots.map(([extensionId, schema]) => {
+    return schemaSlots.map(([extensionId, schemaOrFunc]) => {
+      const schema = typeof schemaOrFunc === 'function' ? schemaOrFunc() : schemaOrFunc;
       const moduleDeps = this.getModuleDependencies(extensionId);
 
       const module = new GraphQLModule({

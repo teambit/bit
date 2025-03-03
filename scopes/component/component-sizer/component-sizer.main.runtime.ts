@@ -22,7 +22,7 @@ export class ComponentSizerMain {
   static runtime = MainRuntime;
   static async provider([preview, graphql]: [PreviewMain, GraphqlMain]) {
     const componentSizer = new ComponentSizerMain(preview);
-    graphql.register(componentSizerSchema(componentSizer));
+    graphql.register(() => componentSizerSchema(componentSizer));
     return componentSizer;
   }
 }

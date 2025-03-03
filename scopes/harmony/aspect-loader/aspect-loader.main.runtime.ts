@@ -862,7 +862,7 @@ export class AspectLoaderMain {
       pluginSlot
     );
 
-    graphql.register(aspectLoaderSchema(aspectLoader));
+    graphql.register(() => aspectLoaderSchema(aspectLoader));
     aspectLoader.registerPlugins([envs.getEnvPlugin()]);
 
     return aspectLoader;

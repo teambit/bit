@@ -30,6 +30,7 @@ import {
 } from './aspect.cmd';
 import { getTemplates } from './aspect.templates';
 import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
+import { ExtensionDataList, ValidateBeforePersistResult } from '@teambit/legacy.extension-data';
 
 export type AspectSource = { aspectName: string; source: string; level: string };
 
@@ -212,6 +213,18 @@ export class AspectMain {
     });
   }
 
+  /**
+   * currently, it validates envs/envs only. If needed for other aspects, create a slot, let aspects register to it,
+   * then call the validation of all aspects from here.
+   */
+  validateAspectsBeforePersist(extensionDataList: ExtensionDataList): ValidateBeforePersistResult {
+    const envExt = extensionDataList.findCoreExtension(EnvsAspect.id);
+    if (envExt) {
+      const result = this.envs.validateEnvId(envExt);
+      if (result) return result;
+    }
+  }
+
   static runtime = MainRuntime;
   static dependencies = [
     ReactAspect,
@@ -260,7 +273,7 @@ export class AspectMain {
     envs.registerEnv(aspectEnv);
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerMain, workerMain, harmony);
-      generator.registerComponentTemplate(getTemplates(envContext));
+      generator.registerComponentTemplate(() => getTemplates(envContext));
     }
     const aspectMain = new AspectMain(aspectEnv as AspectEnv, envs, workspace, aspectLoader);
     const aspectCmd = new AspectCmd();
@@ -273,6 +286,8 @@ export class AspectMain {
       new UpdateAspectCmd(aspectMain),
     ];
     cli.register(aspectCmd);
+
+    ExtensionDataList.validateBeforePersistHook = aspectMain.validateAspectsBeforePersist.bind(aspectMain);
 
     return aspectMain;
   }

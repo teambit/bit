@@ -38,6 +38,12 @@ export function APIRefPage({ rendererSlot, className }: APIRefPageProps) {
   const { apiModel, loading } = useAPI(component.id.toString(), renderers);
   const isMobile = useIsMobile();
   const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
   const selectedAPIFromUrl = useAPIRefParam('selectedAPI');
@@ -59,6 +65,11 @@ export function APIRefPage({ rendererSlot, className }: APIRefPageProps) {
 
   const getIcon = (node: TreeNode) => {
     const nodeType = node.id.split('/')[0];
+    if(nodeType === '_Internals') {
+      const apiNode = apiModel?.apiByName.get(node.id.replace('_Internals/', ''));
+      const icon = apiNode?.renderer.icon?.url;
+      return icon || undefined;
+    }
     const icon = apiModel?.apiByType.get(nodeType)?.[0].renderer.icon?.url;
     return icon || undefined;
   };
@@ -98,7 +109,7 @@ export function APIRefPage({ rendererSlot, className }: APIRefPageProps) {
 
   const viewedLaneId = lanes.lanesModel?.viewedLane?.id;
   const laneComponentUrl =
-    viewedLaneId && !viewedLaneId.isDefault()
+    viewedLaneId && !viewedLaneId.isDefault() && mounted
       ? `${window.location.origin}${LanesModel.getLaneComponentUrl(component.id, viewedLaneId)}/~code/${filePath}${
           componentVersionFromUrl ? `?version=${componentVersionFromUrl}` : ''
         }`

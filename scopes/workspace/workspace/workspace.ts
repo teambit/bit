@@ -1,5 +1,4 @@
 /* eslint-disable max-lines */
-import memoize from 'memoizee';
 import { parse } from 'comment-json';
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -180,7 +179,6 @@ export class Workspace implements ComponentFactory {
   inInstallAfterPmContext = false;
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
-  private componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized;
   /**
    * Components paths are calculated from the component package names of the workspace
    * They are used in webpack configuration to only track changes from these paths inside `node_modules`
@@ -256,15 +254,6 @@ export class Workspace implements ComponentFactory {
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
     this.validateConfig();
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
-    // memoize this method to improve performance.
-    this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized = memoize(
-      this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile.bind(this),
-      {
-        primitive: true,
-        promise: true,
-        maxAge: 60 * 1000, // 1 min
-      }
-    );
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
     this.filter = new Filter(this);
     this.componentStatusLoader = new ComponentStatusLoader(this);
@@ -804,7 +793,6 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.aspectLoader.resetFailedLoadAspects();
     if (!options.skipClearFailedToLoadEnvs) this.envs.resetFailedToLoadEnvs();
     await this.scope.clearCache();
-    this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized.clear();
     this.clearAllComponentsCache();
   }
 
@@ -1315,7 +1303,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (bitMapEntry && bitMapEntry.defaultScope) {
       return bitMapEntry.defaultScope;
     }
-    return this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized(relativeComponentDir, name);
+    return this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(relativeComponentDir, name);
   }
 
   get defaultScope() {
@@ -1626,7 +1614,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     if (relativeComponentDir) {
       const absComponentDir = this.componentDirToAbsolute(relativeComponentDir);
       const defaultScopeFromVariantsOrWs =
-        await this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized(relativeComponentDir, name);
+        await this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(relativeComponentDir, name);
       componentConfigFile = await ComponentConfigFile.load(
         absComponentDir,
         this.createAspectList.bind(this),

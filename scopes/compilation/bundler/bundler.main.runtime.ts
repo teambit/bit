@@ -150,7 +150,7 @@ export class BundlerMain {
     const bundler = new BundlerMain(config, pubsub, envs, devServerService, runtimeSlot, devServerTransformerSlot);
     envs.registerService(devServerService, new BundlerService());
 
-    graphql.register(devServerSchema(bundler));
+    graphql.register(() => devServerSchema(bundler));
 
     return bundler;
   }
