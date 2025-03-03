@@ -51,7 +51,6 @@ export class Publisher {
   }
 
   private async publishOneCapsule(capsule: Capsule): Promise<ComponentResult> {
-    throw new Error(1)
     const startTime = Date.now();
     const publishParams = ['publish'];
     const tarFolderPath = join(capsule.path, DEFAULT_TAR_DIR_IN_CAPSULE);

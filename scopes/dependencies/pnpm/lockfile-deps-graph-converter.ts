@@ -89,10 +89,9 @@ function _convertLockfileToGraph(
     directDependencies: DependencyNeighbour[];
   }
 ): DependenciesGraph {
-  lockfile = replaceFileVersionsWithPendingVersions(lockfile, componentIdByPkgName);
   return new DependenciesGraph({
-    edges: buildEdges(lockfile, { directDependencies, componentIdByPkgName }),
-    packages: buildPackages(lockfile, { componentIdByPkgName }),
+    edges: replaceFileVersionsWithPendingVersions(buildEdges(lockfile, { directDependencies, componentIdByPkgName }), componentIdByPkgName),
+    packages: new Map(replaceFileVersionsWithPendingVersions(Array.from(buildPackages(lockfile, { componentIdByPkgName }).entries()), componentIdByPkgName)),
   });
 }
 
@@ -189,7 +188,7 @@ function replaceFileVersionsWithPendingVersions<T>(obj: T, componentIdByPkgName:
   for (const [pkgName, componentId] of componentIdByPkgName.entries()) {
     s = s.replaceAll(new RegExp(`${pkgName}@file:[^'"(]+`, 'g'), `${pkgName}@${snapToSemver(componentId.version)}`);
   }
-  return JSON.parse(s.replaceAll(/file:[^'"(]+/g, 'pending:'));
+  return JSON.parse(s);
 }
 
 export async function convertGraphToLockfile(
@@ -273,7 +272,7 @@ export async function convertGraphToLockfile(
   for (const [pkgId, pkg] of Object.entries(lockfile.packages)) {
     if (pkg.resolution == null || 'type' in pkg.resolution && pkg.resolution.type === 'directory') {
       const parsed = dp.parse(pkgId)
-      if (parsed.name && !parsed.name.includes('comp1') && parsed.version && !pkgsInTheWorkspaces.has(parsed.name)) {
+      if (parsed.name && parsed.version && !pkgsInTheWorkspaces.has(parsed.name)) {
         pkgsToResolve.push({
           name: parsed.name,
           version: parsed.version,
