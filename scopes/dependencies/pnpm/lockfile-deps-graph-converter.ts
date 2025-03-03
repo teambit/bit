@@ -90,8 +90,8 @@ function _convertLockfileToGraph(
   }
 ): DependenciesGraph {
   return new DependenciesGraph({
-    edges: replaceFileVersionsWithPendingVersions(buildEdges(lockfile, { directDependencies, componentIdByPkgName }), componentIdByPkgName),
-    packages: new Map(replaceFileVersionsWithPendingVersions(Array.from(buildPackages(lockfile, { componentIdByPkgName }).entries()), componentIdByPkgName)),
+    edges: buildEdges(lockfile, { directDependencies, componentIdByPkgName }),
+    packages: buildPackages(lockfile, { componentIdByPkgName }),
   });
 }
 
@@ -122,9 +122,9 @@ function buildEdges(
   }
   edges.push({
     id: DependenciesGraph.ROOT_EDGE_ID,
-    neighbours: replaceFileVersionsWithPendingVersions(directDependencies, componentIdByPkgName),
+    neighbours: replaceFileVersions(componentIdByPkgName, directDependencies),
   });
-  return edges;
+  return replaceFileVersions(componentIdByPkgName, edges);
 }
 
 function extractDependenciesFromSnapshot(snapshot: any): DependencyNeighbour[] {
@@ -168,7 +168,6 @@ function buildPackages(
     if (graphPkg.resolution.type === 'directory') {
       delete graphPkg.resolution;
     }
-    // if (pkgId.includes('@pending:')) {
     const parsed = dp.parse(pkgId);
     if (parsed.name && componentIdByPkgName.has(parsed.name)) {
       const compId = componentIdByPkgName.get(parsed.name)!;
@@ -177,13 +176,12 @@ function buildPackages(
         scope: compId.scope,
       };
     }
-    // }
     packages.set(pkgId, graphPkg);
   }
-  return packages;
+  return new Map(replaceFileVersions(componentIdByPkgName, Array.from(packages.entries())));
 }
 
-function replaceFileVersionsWithPendingVersions<T>(obj: T, componentIdByPkgName: ComponentIdByPkgName): T {
+function replaceFileVersions<T>(componentIdByPkgName: ComponentIdByPkgName, obj: T): T {
   let s = JSON.stringify(obj);
   for (const [pkgName, componentId] of componentIdByPkgName.entries()) {
     s = s.replaceAll(new RegExp(`${pkgName}@file:[^'"(]+`, 'g'), `${pkgName}@${snapToSemver(componentId.version)}`);
@@ -205,9 +203,7 @@ export async function convertGraphToLockfile(
     registries: Registries;
   }
 ): Promise<LockfileFileV9> {
-  console.log('manifests', JSON.stringify(manifests, null, 2))
-  let graphString = _graph.serialize();
-  // console.log(JSON.stringify(graph.packages, null, 2))
+  const graphString = _graph.serialize();
   const graph = DependenciesGraph.deserialize(graphString)!;
   const packages = {};
   const snapshots = {};
@@ -238,7 +234,6 @@ export async function convertGraphToLockfile(
   };
   const rootEdge = graph.findRootEdge();
   if (rootEdge) {
-    console.log('rootEdge.neighbours', rootEdge.neighbours)
     for (const [projectDir, manifest] of Object.entries(manifests)) {
       const projectId = getLockfileImporterId(rootDir, projectDir);
       lockfile.importers![projectId] = {
@@ -255,7 +250,7 @@ export async function convertGraphToLockfile(
             const edgeId = rootEdge.neighbours.find(
               (directDep) =>
                 directDep.name === name &&
-                (directDep.specifier === specifier || specifier === '*' || dp.removeSuffix(directDep.id) === `${name}@${specifier}`)
+                (directDep.specifier === specifier || dp.removeSuffix(directDep.id) === `${name}@${specifier}`)
             )?.id;
             if (edgeId) {
               const parsed = dp.parse(edgeId);
@@ -281,8 +276,6 @@ export async function convertGraphToLockfile(
       }
     }
   }
-  console.log('lockfile', JSON.stringify(lockfile, null, 2))
-  console.log('pkgsToResolve', JSON.stringify(pkgsToResolve, null, 2))
   await Promise.all(pkgsToResolve.map(async (pkgToResolve) => {
     if (lockfile.packages[pkgToResolve.pkgId].resolution == null) {
       const { resolution } = await resolve({
@@ -295,7 +288,6 @@ export async function convertGraphToLockfile(
         preferredVersions: {},
       })
       if ('integrity' in resolution && resolution.integrity) {
-        console.log('XXXXXXXXXXXXXX', pkgToResolve, resolution.integrity)
         lockfile.packages[pkgToResolve.pkgId].resolution = {
           integrity: resolution.integrity,
         };

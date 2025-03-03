@@ -414,7 +414,7 @@ chai.use(require('chai-fs'));
       helper.scopeHelper.destroy();
     });
   });
-  describe.only('two components exported then one imported', function () {
+  describe('two components exported then one imported', function () {
     let randomStr: string;
     before(async () => {
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
@@ -429,30 +429,21 @@ chai.use(require('chai-fs'));
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.command.install('--add-missing-deps');
       helper.command.tagAllWithoutBuild('--skip-tests');
-      // helper.command.tagAllComponents();
       helper.command.export();
-      let signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
+      const signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
-      {
-        const { head } = helper.command.catComponent(`${helper.scopes.remote}/comp2`);
-        helper.command.sign(
-          // [`${helper.scopes.remote}/comp2@${head}`],
-          [`${helper.scopes.remote}/comp2@0.0.1`],
-          '--log',
-          signRemote.scopePath
-        );
-        helper.command.export();
-      }
-      {
-        const { head } = helper.command.catComponent(`${helper.scopes.remote}/comp1`);
-        helper.command.sign(
-          // [`${helper.scopes.remote}/comp1@${head}`],
-          [`${helper.scopes.remote}/comp1@0.0.1`],
-          '--log',
-          signRemote.scopePath
-        );
-        helper.command.export();
-      }
+      helper.command.sign(
+        [`${helper.scopes.remote}/comp2@0.0.1`],
+        '--log',
+        signRemote.scopePath
+      );
+      helper.command.export();
+      helper.command.sign(
+        [`${helper.scopes.remote}/comp1@0.0.1`],
+        '--log',
+        signRemote.scopePath
+      );
+      helper.command.export();
     });
     after(() => {
       npmCiRegistry.destroy();
