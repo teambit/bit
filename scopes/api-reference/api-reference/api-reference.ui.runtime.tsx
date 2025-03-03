@@ -61,12 +61,16 @@ export class APIReferenceUI {
     );
   };
 
+   /**
+   * @deprecated use registerSchemaClasses instead
+   * registerSchemaClasses is better for performance as it lazy-loads the schemas.
+   */
   registerSchemaClass(schema: SchemaNodeConstructor) {
     SchemaRegistry.register(schema);
   }
 
-  getSchemaClasses() {
-    return SchemaRegistry.schemas;
+  registerSchemaClasses(getSchemas: () => SchemaNodeConstructor[]) {
+    SchemaRegistry.registerGetSchemas(getSchemas);
   }
 
   registerAPINodeRenderer(apiNodeRenderers: APINodeRenderer[]) {
@@ -107,9 +111,8 @@ export class APIReferenceUI {
     componentUI.registerNavigation(apiReferenceSection.navigationLink, apiReferenceSection.order);
     componentUI.registerRoute(apiReferenceSection.route);
     // register all default schema classes
-    Object.values(Schemas).forEach((Schema) => {
-      apiReferenceUI.registerSchemaClass(Schema);
-    });
+    apiReferenceUI.registerSchemaClasses(() => Object.values(Schemas));
+
     return apiReferenceUI;
   }
 }

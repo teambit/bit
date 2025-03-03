@@ -25,7 +25,7 @@ export class ReactUI {
       return <AddingCompositions />;
     });
 
-    apiUI.registerSchemaClass(ReactSchema);
+    apiUI.registerSchemaClasses(() => [ReactSchema]);
     apiUI.registerAPINodeRenderer([reactRenderer]);
 
     compositionsUI.registerMenuWidget({
