@@ -243,6 +243,10 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    */
   cacheCapsulesDir?: string;
 
+  /**
+   * Generate a lockfile from the dependencies graph stored in the model
+   * and generate a dependency graph from the lockfile in the capsule.
+   */
   useDependenciesGraph?: boolean;
 };
 

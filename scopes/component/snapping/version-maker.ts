@@ -235,9 +235,9 @@ export class VersionMaker {
       const pkgName = this.dependencyResolver.getPackageName(this.components[i]);
       componentIdByPkgName.set(pkgName, this.allComponentsToTag[i].id);
     }
-    for (const otherComp of this.allWorkspaceComps) {
-      if (this.components.every((c) => !c.id.isEqualWithoutVersion(otherComp.id))) {
-        componentIdByPkgName.set(this.dependencyResolver.getPackageName(otherComp), otherComp.id);
+    for (const workspaceComp of this.allWorkspaceComps) {
+      if (this.components.every((snappedComponent) => !snappedComponent.id.isEqualWithoutVersion(workspaceComp.id))) {
+        componentIdByPkgName.set(this.dependencyResolver.getPackageName(workspaceComp), workspaceComp.id);
       }
     }
     return componentIdByPkgName;
@@ -598,7 +598,7 @@ function addIntegritiesToDependenciesGraph(
     const index = selector.indexOf('@', 1);
     const name = selector.substring(0, index);
     const version = selector.substring(index + 1);
-    const pendingPkg = dependenciesGraph.packages.get(`${name}@pending:`) ?? dependenciesGraph.packages.get(`${name}@${previouslyUsedVersion}`) ?? dependenciesGraph.packages.get(`${name}@${version}`);;
+    const pendingPkg = dependenciesGraph.packages.get(`${name}@${previouslyUsedVersion}`) ?? dependenciesGraph.packages.get(`${name}@${version}`);;
     if (pendingPkg) {
       pendingPkg.resolution = { integrity };
       resolvedVersions.push({ name, version, previouslyUsedVersion });
@@ -714,7 +714,6 @@ function replacePendingVersions(
 ): DependenciesGraph {
   let s = graph.serialize();
   for (const { name, version, previouslyUsedVersion } of resolvedVersions) {
-    s = s.replaceAll(`${name}@pending:`, `${name}@${version}`);
     if (previouslyUsedVersion) {
       s = s.replaceAll(`${name}@${previouslyUsedVersion}:`, `${name}@${version}`);
     }
