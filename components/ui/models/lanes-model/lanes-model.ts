@@ -122,14 +122,19 @@ export class LanesModel {
     return undefined;
   };
 
-  static getLaneUrl = (laneId: LaneId, relative?: boolean, lane?: LaneModel) =>
-    `${relative ? '' : '/'}${LanesModel.lanesPrefix}/${laneId.toString()}`;
+  static getLaneUrl = (
+    laneId: LaneId,
+    relative?: boolean,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _lane?: LaneModel
+  ) => `${relative ? '' : '/'}${LanesModel.lanesPrefix}/${laneId.toString()}`;
 
   static getLaneComponentUrl = (
     componentId: ComponentID,
     laneId: LaneId,
     addScopeMetadataInUrl?: boolean,
-    lane?: LaneModel
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _lane?: LaneModel
   ) => {
     const isExternalComponent = componentId.scope !== laneId.scope;
     const laneUrl = LanesModel.getLaneUrl(laneId);
@@ -152,7 +157,8 @@ export class LanesModel {
     componentId: ComponentID,
     laneId?: LaneId,
     addScopeMetadataInUrl?: boolean,
-    lane?: LaneModel
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _lane?: LaneModel
   ) => {
     const componentUrl = componentId.fullName;
     const queryParams = new URLSearchParams();
