@@ -414,4 +414,49 @@ chai.use(require('chai-fs'));
       helper.scopeHelper.destroy();
     });
   });
+  describe('two components exported then one imported', function () {
+    let randomStr: string;
+    before(async () => {
+      randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
+      const name = `@ci/${randomStr}.{name}`;
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
+      await npmCiRegistry.init();
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+
+      helper.fixtures.populateComponents(2);
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+      helper.command.install('--add-missing-deps');
+      helper.command.tagAllWithoutBuild('--skip-tests');
+      helper.command.export();
+      const signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
+      helper.command.sign(
+        [`${helper.scopes.remote}/comp2@0.0.1`],
+        '--log',
+        signRemote.scopePath
+      );
+      helper.command.export();
+      helper.command.sign(
+        [`${helper.scopes.remote}/comp1@0.0.1`],
+        '--log',
+        signRemote.scopePath
+      );
+      helper.command.export();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.command.delConfig('registry');
+      helper.scopeHelper.destroy();
+    });
+    it('should generate a lockfile', () => {
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.import(`${helper.scopes.remote}/comp1@latest`);
+      expect(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8')).to.have.string(
+        'restoredFromModel: true'
+      );
+    });
+  });
 });
