@@ -134,7 +134,7 @@ export class VersionMaker {
 
     const { rebuildDepsGraph, build, updateDependentsOnLane, setHeadAsParent, detachHead, overrideHead } = this.params;
     await this.snapping._addFlattenedDependenciesToComponents(this.allComponentsToTag, rebuildDepsGraph);
-    await this._addDependenciesGraphToComponents(this.components, this.allComponentsToTag);
+    await this._addDependenciesGraphToComponents();
     await this.snapping.throwForDepsFromAnotherLane(this.allComponentsToTag);
     if (!build) this.emptyBuilderData();
     this.addBuildStatus(this.allComponentsToTag, BuildStatus.Pending);
@@ -199,7 +199,7 @@ export class VersionMaker {
     };
   }
 
-  private async _addDependenciesGraphToComponents(components: Component[], componentsToTag: ConsumerComponent[]): Promise<void> {
+  private async _addDependenciesGraphToComponents(): Promise<void> {
     if (!this.workspace) {
       return;
     }
@@ -207,11 +207,11 @@ export class VersionMaker {
     this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
     if (!this.allWorkspaceComps) throw new Error('please make sure to populate this.allWorkspaceComps before');
     const componentIdByPkgName = new Map<string, ComponentID>();
-    for (let i = 0; i < components.length; i++) {
-      componentIdByPkgName.set(this.dependencyResolver.getPackageName(components[i]), componentsToTag[i].id);
+    for (let i = 0; i < this.components.length; i++) {
+      componentIdByPkgName.set(this.dependencyResolver.getPackageName(this.components[i]), this.allComponentsToTag[i].id);
     }
     for (const otherComp of this.allWorkspaceComps) {
-      if (components.every((c) => !c.id.isEqualWithoutVersion(otherComp.id))) {
+      if (this.components.every((c) => !c.id.isEqualWithoutVersion(otherComp.id))) {
         componentIdByPkgName.set(this.dependencyResolver.getPackageName(otherComp), otherComp.id);
       }
     }
@@ -221,7 +221,7 @@ export class VersionMaker {
       componentIdByPkgName,
     };
     await pMapPool(
-      components,
+      this.components,
       async (component) => {
         if (component.state._consumer.componentMap?.rootDir) {
           await this.dependencyResolver.addDependenciesGraph(

@@ -97,7 +97,13 @@ function _convertLockfileToGraph(
 
 function buildEdges(
   lockfile: LockfileFileV9,
-  { directDependencies, componentIdByPkgName }: { directDependencies: DependencyNeighbour[]; componentIdByPkgName: ComponentIdByPkgName }
+  {
+    directDependencies,
+    componentIdByPkgName,
+  }: {
+    directDependencies: DependencyNeighbour[];
+    componentIdByPkgName: ComponentIdByPkgName;
+  }
 ): DependencyEdge[] {
   const edges: DependencyEdge[] = [];
   for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
