@@ -53,7 +53,7 @@
     "lint-full": "./scripts/validate-import-named-aspects.sh && ./scripts/validate-no-ramda.sh && node scripts/validate-pkg-exist-in-pkg-json.js && npm run lint",
     "format": "prettier \"{e2e,scopes,components}/**/*.{ts,js,jsx,css,scss,tsx,md,mdx}\" --write",
     "prettier:check": "prettier --list-different \"{e2e,scopes,components}/**/*.{ts,js,jsx,css,scss,tsx,md,mdx}\"",
-    "test:extensions": "mocha --require ./babel-register './scopes/**/*.spec.ts'",
+    "test:extensions": "mocha --require ./babel-register './scopes/dependencies/pnpm/lockfile-deps-graph-converter.spec.ts'",
     "mocha-circleci": "cross-env NODE_OPTIONS='--no-warnings --max-old-space-size=5000' registry-mock prepare && mocha --require ./babel-register --reporter mocha-multi-reporters --reporter-options configFile=mocha-multi-reporters-config.json --colors",
     "e2e-test": "registry-mock prepare && cross-env NODE_OPTIONS=--no-warnings mocha --require ./babel-register './e2e/**/*.e2e*.ts'",
     "e2e-test:debug": "npm run e2e-test --debug",

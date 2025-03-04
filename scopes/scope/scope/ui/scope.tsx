@@ -80,6 +80,7 @@ export function Scope({
               if (CornerOverride) return <CornerOverride />;
               return <Corner name={scope.name} className={styles.whiteCorner} />;
             }}
+            // @ts-ignore - getting an error of "Types have separate declarations of a private property 'registerFn'." for some reason after upgrading teambit.harmony/harmony from 0.4.6 to 0.4.7
             menu={menuSlot}
           />
 
