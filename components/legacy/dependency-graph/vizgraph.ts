@@ -187,7 +187,10 @@ export class VisualDependencyGraph {
     return result.output;
   }
 
-  async render(format: string = 'svg') {
+  /**
+   * @returns the file path of the rendered image.
+   */
+  async render(format: string = 'svg'): Promise<string> {
     return format === 'png' || format === 'gif' ? this.image() : this.renderUsingViz(format);
   }
 

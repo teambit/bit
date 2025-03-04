@@ -88,6 +88,7 @@ export class VersionHistoryGraphCmd implements Command {
       'layout <name>',
       'GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]',
     ],
+    ['', 'limit <number>', 'limit the number of nodes in the graph (starting from the heads)'],
   ] as CommandOptions;
   group = 'info';
   commands: Command[] = [];
@@ -101,20 +102,29 @@ export class VersionHistoryGraphCmd implements Command {
       mark,
       png,
       layout,
+      limit,
     }: {
       shortHash?: boolean;
       mark?: string;
       png?: boolean;
       layout?: string;
+      limit?: number;
     }
   ) {
-    const graphHistory = await this.versionHistoryMain.generateGraph(id, shortHash);
+    const graphHistory = await this.versionHistoryMain.generateGraph(id, shortHash, limit);
     const markIds = mark ? mark.split(',').map((node) => node.trim()) : undefined;
     const config: GraphConfig = { colorPerEdgeType };
     if (layout) config.layout = layout;
     const visualDependencyGraph = await VisualDependencyGraph.loadFromClearGraph(graphHistory, config, markIds);
 
-    return visualDependencyGraph.render(png ? 'png' : 'svg');
+    try {
+      return await visualDependencyGraph.render(png ? 'png' : 'svg');
+    } catch(err) {
+      if (err instanceof RangeError) {
+        throw new Error('failed to render the graph, the graph is too big. try to limit the number of nodes by using "--limit" flag');
+      }
+      throw err;
+    }
   }
 }
 

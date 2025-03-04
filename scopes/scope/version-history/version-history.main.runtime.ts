@@ -106,7 +106,7 @@ export class VersionHistoryMain {
     return versionHistory;
   }
 
-  async generateGraph(id: string, shortHash?: boolean): Promise<VersionHistoryGraph> {
+  async generateGraph(id: string, shortHash?: boolean, limit?: number): Promise<VersionHistoryGraph> {
     const compId = await this.scope.resolveComponentId(id);
     const modelComponent = (await this.scope.getBitObjectModelComponent(compId, true)) as ModelComponent;
     const repo = this.scope.legacyScope.objects;
@@ -123,7 +123,7 @@ export class VersionHistoryMain {
       laneHeads[hash].push(lane);
     });
 
-    return versionHistory.getGraph(modelComponent, laneHeads, shortHash);
+    return versionHistory.getGraph(modelComponent, laneHeads, shortHash, limit);
   }
 
   async buildOnRemote(
