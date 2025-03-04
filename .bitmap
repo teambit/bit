@@ -455,7 +455,13 @@
         "scope": "teambit.harmony",
         "version": "0.0.16",
         "mainFile": "index.ts",
-        "rootDir": "components/config-store"
+        "rootDir": "components/config-store",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@0.0.69": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "constants": {
         "name": "constants",
