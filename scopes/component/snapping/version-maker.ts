@@ -205,16 +205,7 @@ export class VersionMaker {
     }
     this.snapping.logger.setStatusLine('adding dependencies graph...');
     this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
-    if (!this.allWorkspaceComps) throw new Error('please make sure to populate this.allWorkspaceComps before');
-    const componentIdByPkgName = new Map<string, ComponentID>();
-    for (let i = 0; i < this.components.length; i++) {
-      componentIdByPkgName.set(this.dependencyResolver.getPackageName(this.components[i]), this.allComponentsToTag[i].id);
-    }
-    for (const otherComp of this.allWorkspaceComps) {
-      if (this.components.every((c) => !c.id.isEqualWithoutVersion(otherComp.id))) {
-        componentIdByPkgName.set(this.dependencyResolver.getPackageName(otherComp), otherComp.id);
-      }
-    }
+    const componentIdByPkgName = this._getComponentIdByPkgNameMap();
     const options = {
       rootDir: this.workspace.path,
       rootComponentsPath: this.workspace.rootComponentsPath,
@@ -235,6 +226,21 @@ export class VersionMaker {
     );
     this.snapping.logger.clearStatusLine();
     this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
+  }
+
+  private _getComponentIdByPkgNameMap(): Map<string, ComponentID> {
+    if (!this.allWorkspaceComps) throw new Error('please make sure to populate this.allWorkspaceComps before');
+    const componentIdByPkgName = new Map<string, ComponentID>();
+    for (let i = 0; i < this.components.length; i++) {
+      const pkgName = this.dependencyResolver.getPackageName(this.components[i]);
+      componentIdByPkgName.set(pkgName, this.allComponentsToTag[i].id);
+    }
+    for (const otherComp of this.allWorkspaceComps) {
+      if (this.components.every((c) => !c.id.isEqualWithoutVersion(otherComp.id))) {
+        componentIdByPkgName.set(this.dependencyResolver.getPackageName(otherComp), otherComp.id);
+      }
+    }
+    return componentIdByPkgName;
   }
 
   private async triggerOnPreSnap(autoTagIds: ComponentIdList) {
