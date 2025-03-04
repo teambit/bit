@@ -6,6 +6,8 @@ process.on('uncaughtException', (err) => {
 });
 
 import fs from 'fs';
+consoleFileReadUsages();
+
 import gracefulFs from 'graceful-fs';
 // monkey patch fs module to avoid EMFILE error (especially when running watch operation)
 gracefulFs.gracefulify(fs);
@@ -44,5 +46,32 @@ async function initApp() {
   } catch (err: any) {
     const originalError = err.originalError || err;
     await handleErrorAndExit(originalError, process.argv[2]);
+  }
+}
+
+function consoleFileReadUsages() {
+  if (!process.env.BIT_DEBUG_READ_FILE) {
+    return;
+  }
+  let numR = 0;
+  const print = (filename: string) => {
+    // eslint-disable-next-line no-console
+    console.log(`#${numR}`, filename);
+  }
+  const originalReadFile = fs.readFile;
+  const originalReadFileSync = fs.readFileSync;
+  // @ts-ignore
+  fs.readFile = (...args) => {
+    numR++;
+    print(args[0]);
+    // @ts-ignore
+    return originalReadFile(...args);
+  }
+
+  fs.readFileSync = (...args) => {
+    numR++;
+    print(args[0]);
+    // @ts-ignore
+    return originalReadFileSync(...args);
   }
 }
