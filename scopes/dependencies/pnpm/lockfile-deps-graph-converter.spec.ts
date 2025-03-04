@@ -220,7 +220,12 @@ describe('convertLockfileToGraph simple case', () => {
             },
           },
         },
-        process.cwd()
+        {
+          manifests: {},
+          rootDir: process.cwd(),
+          resolve: () => {},
+          registries: {},
+        }
       )
     ).to.eql({
       importers: {
