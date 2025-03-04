@@ -225,8 +225,10 @@ describe('convertLockfileToGraph simple case', () => {
             },
           },
           rootDir: process.cwd(),
-          resolve: () => ({ resolution: { integrity: '0000' } }),
-          registries: {},
+          resolve: () => ({ resolution: { integrity: '0000' } }) as any,
+          registries: {
+            default: 'https://registry.npmjs.org/',
+          },
         }
       )
     ).to.eql({
