@@ -142,7 +142,7 @@ export default class Component extends BitObject {
   schema: string | undefined;
   detachedHeads: DetachedHeads;
   private divergeData?: SnapsDistance;
-  private populateVersionHistoryMutex = new Mutex();
+  private _populateVersionHistoryMutex?: Mutex;
   constructor(props: ComponentProps) {
     super();
     if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
@@ -161,6 +161,13 @@ export default class Component extends BitObject {
     this.head = props.head;
     this.schema = props.schema;
     this.detachedHeads = props.detachedHeads || new DetachedHeads();
+  }
+
+  private get populateVersionHistoryMutex() {
+    if (!this._populateVersionHistoryMutex) {
+      this._populateVersionHistoryMutex = new Mutex();
+    }
+    return this._populateVersionHistoryMutex;
   }
 
   get versionArray(): Ref[] {
