@@ -13,6 +13,7 @@ export class DeleteCmd implements Command {
   description = 'mark components as deleted on the remote';
   extendedDescription = `to remove components from your local workspace only, use "bit remove" command.
 this command marks the components as deleted, and after snap/tag and export they will be marked as deleted from the remote scope as well.
+unless the '--hard' flag is used (not recommended!), in which case, the component will be deleted from the remote scope immediately.
 `;
   arguments = [
     {
