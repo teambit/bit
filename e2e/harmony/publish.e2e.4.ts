@@ -60,6 +60,32 @@ describe('publish functionality', function () {
           expect(output.trim()).to.be.equal(appOutput.trim());
         });
       });
+      describe('automatically by snap pipeline', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+          helper.command.tagIncludeUnmodified('1.0.5');
+          helper.command.snapAllComponents('--unmodified');
+        });
+        it('should publish them successfully using the 0.0.0-snap version and not changing the "latest" tag', () => {
+          const headSnap = helper.command.getHead('comp1');
+          const comp1Pkg = `@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`;
+          const npmTag = helper.command.runCmd(`npm dist-tags ls ${comp1Pkg}`);
+          expect(npmTag).to.have.string('latest: 1.0.5');
+          expect(npmTag).to.have.string(`snap: 0.0.0-${headSnap}`);
+        });
+        it('should publish them successfully and be able to consume them by installing the packages', () => {
+          const headSnap = helper.command.getHead('comp1');
+          helper.scopeHelper.reInitLocalScope();
+          helper.npm.initNpm();
+          helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, `0.0.0-${headSnap}`);
+          helper.fs.outputFile(
+            'app.js',
+            `const comp1 = require('@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1').default;\nconsole.log(comp1())`
+          );
+          const output = helper.command.runCmd('node app.js');
+          expect(output.trim()).to.be.equal(appOutput.trim());
+        });
+      });
       describe('using "bit publish"', () => {
         before(async () => {
           helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
