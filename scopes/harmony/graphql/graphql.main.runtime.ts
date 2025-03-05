@@ -87,21 +87,24 @@ export class GraphqlMain {
   /**
    * returns the schema for a specific aspect by its id.
    */
-  getSchema(aspectId: string) {
-    return this.moduleSlot.get(aspectId);
+  getSchema(aspectId: string): Schema | undefined {
+    const schemaOrFunc = this.moduleSlot.get(aspectId);
+    if (!schemaOrFunc) return undefined;
+    const schema = typeof schemaOrFunc === 'function' ? schemaOrFunc() : schemaOrFunc;
+    return schema;
   }
 
   /**
    * get multiple schema by aspect ids.
    */
-  getSchemas(aspectIds: string[]) {
+  getSchemas(aspectIds: string[]): Schema[] {
     return this.moduleSlot
       .toArray()
       .filter(([aspectId]) => {
         return aspectIds.includes(aspectId);
       })
-      .map(([, schema]) => {
-        return schema;
+      .map(([, schemaOrFunc]) => {
+        return typeof schemaOrFunc === 'function' ? schemaOrFunc() : schemaOrFunc;
       });
   }
 
