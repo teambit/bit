@@ -26,7 +26,6 @@ describe('update command', function () {
         });
         helper.command.ejectConf('comp2');
         componentJson = helper.componentJson.read('comp2');
-        delete componentJson.componentId.scope;
         componentJson.extensions = {
           'teambit.dependencies/dependency-resolver': {
             policy: {
