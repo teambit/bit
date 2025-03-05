@@ -52,14 +52,14 @@ describe('build command', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fixtures.populateComponents(1);
     });
-    it('should list the publish task in the tagPipeline but not in the snapPipeline', async () => {
+    it('should list the publish task in the tagPipeline and in the snapPipeline', async () => {
       const harmony = await loadBit(helper.scopes.localPath);
       const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
       const compId = await workspace.resolveComponentId('comp1');
       const component = await workspace.get(compId);
       const builder = harmony.get<BuilderMain>(BuilderAspect.id);
       const tasks = builder.listTasks(component);
-      expect(tasks.snapTasks).to.not.include('teambit.pkg/pkg:PublishComponents');
+      expect(tasks.snapTasks).to.include('teambit.pkg/pkg:PublishComponents');
       expect(tasks.tagTasks).to.include('teambit.pkg/pkg:PublishComponents');
     });
   });
