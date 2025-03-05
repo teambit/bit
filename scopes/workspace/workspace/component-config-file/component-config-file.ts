@@ -57,6 +57,9 @@ export class ComponentConfigFile {
     const parsed: ComponentConfigFileJson = parseComponentJsonContent(content, componentDir);
     const indent = detectIndent(content).indent;
     const newLine = detectNewline(content);
+    if (!parsed.componentId.scope) {
+      throw new Error(`component.json file at ${componentDir} is invalid, it must contain 'scope' property in the componentId`);
+    }
     const componentId = ComponentID.fromObject(parsed.componentId);
     const aspects = await aspectListFactory(ExtensionDataList.fromConfigObject(parsed.extensions));
 
