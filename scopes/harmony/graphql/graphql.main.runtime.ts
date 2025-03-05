@@ -96,6 +96,7 @@ export class GraphqlMain {
 
   /**
    * get multiple schema by aspect ids.
+   * used by the cloud.
    */
   getSchemas(aspectIds: string[]): Schema[] {
     return this.moduleSlot
