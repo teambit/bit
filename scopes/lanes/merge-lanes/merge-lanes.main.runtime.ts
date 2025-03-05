@@ -64,7 +64,7 @@ export type MergeLaneOptions = {
   fetchCurrent?: boolean; // needed when merging from a bare-scope (because it's empty)
   detachHead?: boolean;
 };
-export type ConflictPerId = { id: ComponentID; files: string[]; config?: boolean };
+export type ConflictPerId = { id: ComponentID; files: string[]; config?: boolean, configConflict?: string };
 export type MergeFromScopeResult = {
   mergedNow: ComponentID[];
   exportResult?: PushToScopesResult;
@@ -417,7 +417,9 @@ export class MergeLanesMain {
       const files = c.mergeResults?.modifiedFiles.filter((f) => f.conflict || f.isBinaryConflict) || [];
       const config = componentsWithConfigConflicts.includes(c.id.toStringWithoutVersion());
       if (files.length || config) {
-        conflicts.push({ id: c.id, files: files.map(f => f.filePath), config });
+        const configData = configMergeResults.find((co) => co.compIdStr === c.id.toStringWithoutVersion());
+        const configConflict = configData?.generateMergeConflictFile() || undefined;
+        conflicts.push({ id: c.id, files: files.map(f => f.filePath), config, configConflict });
       }
     });
 
