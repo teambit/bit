@@ -135,6 +135,12 @@ export class Component {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist: DataToPersist;
   scopesList: ScopeListItem[] | undefined;
+  /**
+   * important! in case you set this prop after the component was created, make sure to set also the aspects in Harmony component.
+   * e.g.
+   * component.state.aspects = await this.scope.createAspectListFromExtensionDataList(extensions);
+   * component.state.aspects = await this.workspace.createAspectList(extensions);
+   */
   extensions: ExtensionDataList = new ExtensionDataList();
   _capsuleDir?: string; // @todo: remove this. use CapsulePaths once it's public and available
   buildStatus?: BuildStatus;

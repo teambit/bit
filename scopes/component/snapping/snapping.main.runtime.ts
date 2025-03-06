@@ -420,7 +420,8 @@ if you're willing to lose the history from the head to the specified version, us
       consumerComponent.extensions,
     ]).filterRemovedExtensions();
     consumerComponent.extensions = extensionDataList;
-    // @todo: should it be copy to the aspects of the harmony components? seems like they're not in sync.
+    component.state.aspects = await this.scope.createAspectListFromExtensionDataList(extensionDataList);
+
     return autoDeps;
   }
 
