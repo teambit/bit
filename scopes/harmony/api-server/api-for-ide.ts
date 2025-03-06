@@ -13,7 +13,7 @@ import { ApplyVersionResults } from '@teambit/merging';
 import { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
 import { LaneLog } from '@teambit/objects';
 import { ComponentCompareMain } from '@teambit/component-compare';
-import { GeneratorMain } from '@teambit/generator';
+import { GeneratorMain, PromptOption, PromptResults } from '@teambit/generator';
 import { getParsedHistoryMetadata } from '@teambit/legacy.consumer';
 import { RemovedObjects } from '@teambit/legacy.scope';
 import { RemoveMain } from '@teambit/remove';
@@ -423,7 +423,12 @@ export class APIForIDE {
     return templates;
   }
 
-  async createComponent(templateName: string, idIncludeScope: string) {
+  async getPromptOptionsForTemplate(templateName: string): Promise<PromptOption[] | undefined> {
+    const template = await this.generator.getTemplateWithId(templateName);
+    return template.template.promptOptions?.();
+  }
+
+  async createComponent(templateName: string, idIncludeScope: string, promptResults?: PromptResults) {
     if (!idIncludeScope.includes('/')) {
       throw new Error('id should include the scope name');
     }
@@ -432,7 +437,8 @@ export class APIForIDE {
       [nameSplit.join('/')],
       templateName,
       { scope },
-      { optimizeReportForNonTerminal: true }
+      { optimizeReportForNonTerminal: true },
+      promptResults
     );
   }
 

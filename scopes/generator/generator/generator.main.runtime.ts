@@ -20,7 +20,7 @@ import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-c
 import { compact, uniq } from 'lodash';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
-import { ComponentTemplate, GetComponentTemplates } from './component-template';
+import { ComponentTemplate, GetComponentTemplates, PromptResults } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
@@ -355,16 +355,7 @@ export class GeneratorMain {
     return found?.template;
   }
 
-  async generateComponentTemplate(
-    componentNames: string[],
-    templateName: string,
-    options: Partial<CreateOptions>,
-    installOptions?: InstallOptions
-  ): Promise<GenerateResult[]> {
-    if (!this.workspace) throw new OutsideWorkspaceError();
-    await this.loadAspects();
-    const { namespace, aspect } = options;
-
+  async getTemplateWithId(templateName: string, aspect?: string): Promise<ComponentTemplateWithId> {
     const componentConfigLoadingRegistry = ComponentConfig.componentConfigLoadingRegistry;
 
     const templateWithId = await this.getComponentTemplate(templateName, aspect);
@@ -372,6 +363,21 @@ export class GeneratorMain {
     ComponentConfig.componentConfigLoadingRegistry = componentConfigLoadingRegistry;
 
     if (!templateWithId) throw new BitError(`template "${templateName}" was not found`);
+    return templateWithId;
+  }
+
+  async generateComponentTemplate(
+    componentNames: string[],
+    templateName: string,
+    options: Partial<CreateOptions>,
+    installOptions?: InstallOptions,
+    promptResults?: PromptResults
+  ): Promise<GenerateResult[]> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    await this.loadAspects();
+    const { namespace, aspect } = options;
+
+    const templateWithId = await this.getTemplateWithId(templateName, aspect);
 
     const componentIds = componentNames.map((componentName) =>
       this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
@@ -401,7 +407,8 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       this.onComponentCreateSlot,
       templateWithId.id,
       envId,
-      installOptions
+      installOptions,
+      promptResults
     );
     return componentGenerator.generate(options.force);
   }

@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import { prompt } from 'enquirer';
 import pMapSeries from 'p-map-series';
 import path from 'path';
 import { Workspace } from '@teambit/workspace';
@@ -13,7 +14,7 @@ import { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ComponentID } from '@teambit/component-id';
 import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 
-import { ComponentTemplate, ComponentConfig } from './component-template';
+import { ComponentTemplate, ComponentConfig, PromptOption, PromptResults } from './component-template';
 import { CreateOptions } from './create.cmd';
 import { OnComponentCreateSlot } from './generator.main.runtime';
 
@@ -48,7 +49,8 @@ export class ComponentGenerator {
     private onComponentCreateSlot: OnComponentCreateSlot,
     private aspectId: string,
     private envId?: ComponentID,
-    private installOptions: InstallOptions = {}
+    private installOptions: InstallOptions = {},
+    private promptResults?: PromptResults,
   ) {}
 
   async generate(force = false): Promise<GenerateResult[]> {
@@ -144,11 +146,88 @@ export class ComponentGenerator {
     );
   }
 
+  private getOptionResultFromArgs(option: PromptOption): string | boolean | undefined {
+    const args = process.argv.slice(2);
+    const argIndex = args.indexOf(`--${option.name}`);
+    if (argIndex === -1) {
+      return;
+    }
+    if (option.type === 'confirm') {
+      return true;
+    }
+    const argValue = args[argIndex + 1];
+    if (!argValue) {
+      throw new Error(`Missing value for ${option.name}`);
+    }
+    if (option.type === 'select' && !option.choices?.includes(argValue)) {
+      throw new Error(`Invalid value for ${option.name}. Please use one of the following values: ${option.choices?.join(', ')}`);
+    }
+    return argValue;
+  }
+
+  private async getPromptOptionResult(option: PromptOption): Promise<Record<string, string | boolean>> {
+    switch (option.type) {
+      case 'input':
+        return prompt({
+          type: 'input',
+          name: option.name,
+          message: option.message
+        });
+      case 'confirm':
+        return prompt({
+          type: 'confirm',
+          name: option.name,
+          message: option.message,
+        });
+      case 'select':
+        return prompt({
+          type: 'select',
+          name: option.name,
+          message: option.message,
+          choices: option.choices,
+        });
+      default:
+        throw new Error(`unexpected prompt type ${option.type}`);
+    }
+  }
+
+  private async getPromptResults(): Promise<PromptResults | undefined> {
+    if (this.promptResults) {
+      return this.promptResults;
+    }
+    const promptOptions = this.template.promptOptions?.();
+    if (!promptOptions) {
+      return undefined
+    }
+    const promptResults: PromptResults = {};
+    for await (const option of promptOptions) {
+      const fromArg = this.getOptionResultFromArgs(option);
+      if (fromArg) {
+        promptResults[option.name] = fromArg;
+        continue;
+      }
+      if (option.skip && option.skip(promptResults)) {
+        continue;
+      }
+      try {
+        const optionResult = await this.getPromptOptionResult(option);
+        promptResults[option.name] = optionResult[option.name];
+      } catch (err: any) {
+        if (!err) { // for some reason, when the user clicks Ctrl+C, the error is an empty string
+          throw new Error(`The prompt has been canceled`);
+        }
+        throw err;
+      }
+    }
+    return promptResults;
+  }
+
   private async generateOneComponent(componentId: ComponentID, componentPath: string): Promise<GenerateResult> {
     const name = componentId.name;
     const namePascalCase = camelcase(name, { pascalCase: true });
     const nameCamelCase = camelcase(name);
     const aspectId = ComponentID.fromString(this.aspectId);
+    const promptResults = await this.getPromptResults();
 
     const files = await this.template.generateFiles({
       name,
@@ -157,6 +236,7 @@ export class ComponentGenerator {
       componentId,
       aspectId,
       envId: this.envId,
+      promptResults,
     });
     const mainFile = files.find((file) => file.isMain);
     await this.newComponentHelper.writeComponentFiles(
