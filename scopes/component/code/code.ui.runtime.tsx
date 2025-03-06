@@ -27,7 +27,7 @@ export class CodeUI {
      */
     private host: string,
     private fileIconSlot?: FileIconSlot
-  ) {}
+  ) { }
 
   getCodePage = (props?: Partial<CodePageProps>) => {
     return <CodePage {...(props || {})} fileIconSlot={this.fileIconSlot} host={this.host} />;
@@ -64,14 +64,15 @@ export class CodeUI {
     const { config } = harmony;
     const host = String(config.get('teambit.harmony/bit'));
     const ui = new CodeUI(host, fileIconSlot);
-    const section = new CodeSection(ui);
-
+    const section = new CodeSection(ui, false);
+    const pinnedSection = new CodeSection(ui, true);
     // overrides the default tsx react icon with the typescript icon
     ui.registerEnvFileIcon([
       (fileName) => (isTsx.test(fileName) ? `${staticStorageUrl}/file-icons/file_type_typescript.svg` : undefined),
     ]);
     component.registerRoute([section.route]);
     component.registerWidget(section.navigationLink, section.order);
+    component.registerPinnedWidget(pinnedSection.navigationLink, pinnedSection.order);
     const codeCompare = new CodeCompareSection(ui);
     componentCompare.registerNavigation(codeCompare);
     componentCompare.registerRoutes([codeCompare.route]);

@@ -224,7 +224,7 @@ export class DocsMain {
       scope.registerOnCompAspectReCalc(computeDocsOnLoad);
     }
 
-    graphql.register(docsSchema(docs));
+    graphql.register(() => docsSchema(docs));
 
     preview.registerDefinition(new DocsPreviewDefinition(docs));
     return docs;

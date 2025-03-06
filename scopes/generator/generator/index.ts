@@ -3,6 +3,7 @@ export type {
   ComponentContext,
   ComponentTemplate,
   ComponentTemplateOptions,
+  GetComponentTemplates,
   ComponentFile,
   ComponentConfig,
   ConfigContext,

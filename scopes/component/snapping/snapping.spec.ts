@@ -15,7 +15,7 @@ import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { ExportAspect, ExportMain } from '@teambit/export';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { ComponentID } from '@teambit/component-id';
-import { Ref, Version } from '@teambit/scope.objects';
+import { Ref, Version } from '@teambit/objects';
 import { mockComponents } from '@teambit/component.testing.mock-components';
 import { SnappingMain } from './snapping.main.runtime';
 import { SnappingAspect } from './snapping.aspect';

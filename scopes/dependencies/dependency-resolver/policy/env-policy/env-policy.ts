@@ -8,7 +8,7 @@ import {
 } from '../variant-policy';
 import { DependencyLifecycleType } from '../../dependencies';
 
-type EnvJsoncPolicyEntry = {
+export type EnvJsoncPolicyEntry = {
   name: string;
   version: string;
   /**
@@ -130,6 +130,11 @@ function entriesFromKey(
     return [];
   }
   const entries = configEntries.map((entry) => {
+    if (!entry[versionKey]) {
+      throw new Error(
+        `env.jsonc: "policy.${keyName}" entry must be a property with a "${versionKey}" field. got "${entry}"`
+      );
+    }
     return createVariantPolicyEntry(entry.name, entry[versionKey], lifecycleType, {
       ...options,
       source: options.source ?? 'env',

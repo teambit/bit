@@ -45,7 +45,7 @@ export class FunctionLikeTransformer implements SchemaTransformer {
       context.computeSchema(param)
     )) as ParameterSchema[];
 
-    const returnType = await context.resolveType(node, returnTypeStr, Boolean(info));
+    const returnType = await context.resolveType(node, returnTypeStr);
     const modifiers = nodeModifiers?.map((modifier) => modifier.getText()) || [];
     const typeParameters = node.typeParameters?.map((typeParam) => typeParam.name.getText());
     const location = context.getLocation(node);

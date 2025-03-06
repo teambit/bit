@@ -1,5 +1,5 @@
 import { Route, Verb, Request, Response } from '@teambit/express';
-import { ObjectList } from '@teambit/scope.objects';
+import { ObjectList } from '@teambit/objects';
 import { put } from '@teambit/legacy.scope-api';
 import { OnPostPutSlot, ScopeMain } from '../scope.main.runtime';
 

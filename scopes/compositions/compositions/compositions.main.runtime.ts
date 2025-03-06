@@ -98,7 +98,6 @@ export class CompositionsMain {
     if (!entry) return [];
     const compositions = entry.data.compositions;
     if (!compositions) return [];
-
     return Composition.fromArray(compositions);
   }
 
@@ -197,7 +196,7 @@ export class CompositionsMain {
     // TODO: use the docs implementation to allow component specific pattern
     devFiles.registerDevPattern(compositions.getDevPatternToRegister());
 
-    graphql.register(compositionsSchema(compositions));
+    graphql.register(() => compositionsSchema(compositions));
     preview.registerDefinition(new CompositionPreviewDefinition(compositions));
 
     if (workspace) {

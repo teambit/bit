@@ -20,6 +20,7 @@ import { typeLiteralRenderer } from '@teambit/api-reference.renderers.type-liter
 import { parameterRenderer } from '@teambit/api-reference.renderers.parameter';
 import { inferenceTypeRenderer } from '@teambit/api-reference.renderers.inference-type';
 import { typeArrayRenderer } from '@teambit/api-reference.renderers.type-array';
+import { tupleTypeRenderer } from '@teambit/api-reference.renderers.tuple-type';
 import { thisRenderer } from '@teambit/api-reference.renderers.this';
 import { APIRefRenderersProvider } from '@teambit/api-reference.hooks.use-api-renderers';
 import { decoratorRenderer } from '@teambit/api-reference.renderers.decorator';
@@ -37,7 +38,7 @@ export class APIReferenceUI {
     private apiNodeRendererSlot: APINodeRendererSlot,
     private code: CodeUI,
     private workspace: WorkspaceUI
-  ) {}
+  ) { }
 
   static dependencies = [ComponentAspect, CodeAspect, WorkspaceAspect];
   static runtime = UIRuntime;
@@ -60,12 +61,16 @@ export class APIReferenceUI {
     );
   };
 
+   /**
+   * @deprecated use registerSchemaClasses instead
+   * registerSchemaClasses is better for performance as it lazy-loads the schemas.
+   */
   registerSchemaClass(schema: SchemaNodeConstructor) {
     SchemaRegistry.register(schema);
   }
 
-  getSchemaClasses() {
-    return SchemaRegistry.schemas;
+  registerSchemaClasses(getSchemas: () => SchemaNodeConstructor[]) {
+    SchemaRegistry.registerGetSchemas(getSchemas);
   }
 
   registerAPINodeRenderer(apiNodeRenderers: APINodeRenderer[]) {
@@ -89,6 +94,7 @@ export class APIReferenceUI {
     typeArrayRenderer,
     thisRenderer,
     decoratorRenderer,
+    tupleTypeRenderer
   ];
 
   static async provider(
@@ -105,9 +111,8 @@ export class APIReferenceUI {
     componentUI.registerNavigation(apiReferenceSection.navigationLink, apiReferenceSection.order);
     componentUI.registerRoute(apiReferenceSection.route);
     // register all default schema classes
-    Object.values(Schemas).forEach((Schema) => {
-      apiReferenceUI.registerSchemaClass(Schema);
-    });
+    apiReferenceUI.registerSchemaClasses(() => Object.values(Schemas));
+
     return apiReferenceUI;
   }
 }

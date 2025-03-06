@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { BitError } from '@teambit/bit-error';
 import { homedir } from 'os';
 import { join } from 'path';
-import gitconfig from 'gitconfig';
+import gitconfig from '@teambit/gitconfig';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { WorkspaceAspect, Workspace, BitmapMergeOptions } from '@teambit/workspace';
 import { GitAspect } from './git.aspect';

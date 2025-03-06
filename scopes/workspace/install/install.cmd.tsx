@@ -1,4 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
+import packageNameValidate from 'validate-npm-package-name';
 import { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
@@ -85,6 +86,13 @@ export default class InstallCmd implements Command {
         `--update-existing is deprecated, please omit it. "bit install" will update existing dependencies by default`
       );
     }
+
+    packages.forEach((pkg) => {
+      const pkgName = extractPackageName(pkg);
+      if (!packageNameValidate(pkgName).validForNewPackages) {
+        throw new Error(`the package name "${pkgName}" is invalid. please provide a valid package name.`);
+      }
+    });
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     const installOpts: WorkspaceInstallOptions = {
       lifecycleType: options.addMissingPeers ? 'peer' : options.type,
@@ -149,4 +157,27 @@ export function getAnotherInstallRequiredOutput(recurringInstall = false, oldNon
 
   const msg = `${firstPart}${suggestRecurringInstall}\n${envsStr}\n${docsLink}`;
   return chalk.yellow(msg);
+}
+
+function extractPackageName(packageString: string): string {
+  const lastAtIndex = packageString.lastIndexOf('@');
+
+  // If no '@' is present, or it's at the start (meaning it's just a scope),
+  // we can assume there's no separate version part to remove.
+  if (lastAtIndex <= 0) {
+    return packageString;
+  }
+
+  // Get everything after the last '@'
+  const afterLastAt = packageString.slice(lastAtIndex + 1);
+
+  // If the substring after the last '@' contains a slash, it's part of the scoped package name,
+  // not a version. In that case, do not remove anything.
+  if (afterLastAt.includes('/')) {
+    return packageString;
+  }
+
+  // Otherwise, we assume that last '@' starts the version,
+  // so we remove that part.
+  return packageString.slice(0, lastAtIndex);
 }

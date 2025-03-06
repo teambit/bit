@@ -1,4 +1,4 @@
-import R from 'ramda';
+import { cloneDeep } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 
 type ExtensionConfig = { [extName: string]: any } | RemoveExtensionSpecialSign;
@@ -51,6 +51,10 @@ export class ExtensionDataEntry {
     return this.rawConfig === REMOVE_EXTENSION_SPECIAL_SIGN;
   }
 
+  get idWithoutVersion(): string {
+    return this.extensionId?.toStringWithoutVersion() || this.stringId;
+  }
+
   toModelObject() {
     const extensionId =
       this.extensionId && this.extensionId.serialize ? this.extensionId.serialize() : this.extensionId;
@@ -83,8 +87,8 @@ export class ExtensionDataEntry {
       this.legacyId,
       this.extensionId?.clone(),
       this.name,
-      R.clone(this.rawConfig),
-      R.clone(this.data)
+      cloneDeep(this.rawConfig),
+      cloneDeep(this.data)
     );
   }
 }

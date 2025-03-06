@@ -2,7 +2,6 @@ import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
-import { GlobalConfigMain } from '@teambit/global-config';
 import { Command, CommandOptions } from '@teambit/cli';
 import {
   NOTHING_TO_SNAP_MSG,
@@ -13,7 +12,8 @@ import {
 import { Logger } from '@teambit/logger';
 import { SnappingMain, SnapResults } from './snapping.main.runtime';
 import { outputIdsIfExists } from './tag-cmd';
-import { BasicTagSnapParams } from './tag-model-component';
+import { BasicTagSnapParams } from './version-maker';
+import { ConfigStoreMain } from '@teambit/config-store';
 
 export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
@@ -76,7 +76,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
   constructor(
     private snapping: SnappingMain,
     private logger: Logger,
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {}
 
   async report(
@@ -106,7 +106,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       failFast?: boolean;
     } & BasicTagSnapParams
   ) {
-    build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
+    build = this.configStore.getConfigBoolean(CFG_FORCE_LOCAL_BUILD) || Boolean(build);
     const disableTagAndSnapPipelines = disableSnapPipeline;
     if (!message && !editor) {
       this.logger.consoleWarning(

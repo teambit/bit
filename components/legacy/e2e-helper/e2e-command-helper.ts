@@ -53,8 +53,8 @@ export default class CommandHelper {
    *
    * Examples:
    *
-   * - npm run e2e-test --bit-bin=bd3 --debug --keep-envs // should use bd3 from the `--bit-bin`
-   * - npm run e2e-test --debug --keep-envs // should use bit (default bvm link)
+   * - npm run e2e-test --bit-bin=bd3 --debug // should use bd3 from the `--bit-bin`
+   * - npm run e2e-test --debug // should use bit (default bvm link)
    * - bit test teambit.semantics/schema // should use bit - the name of the bin name that the user run
    * - bd test teambit.semantics/schema // should use bd - the name of the bin name that the user run
    * (usually point to the repo bin)
@@ -72,7 +72,7 @@ export default class CommandHelper {
       const binNameFromBvm = this.getBinFromBvmLinks(binDir);
       if (binNameFromBvm) return binNameFromBvm;
       if (this.isInPath(binDir) || binDir.includes('.bvm')) return binName;
-      if (binName === 'mocha') return 'bit';
+      if (binName === 'mocha' || binName === 'mocha.js') return 'bit';
       return `${processBin} ${processPath}`;
     }
     return 'bit';
@@ -107,20 +107,22 @@ export default class CommandHelper {
     cwd: string = this.scopes.localPath,
     stdio: StdioOptions = 'pipe',
     overrideFeatures?: string,
-    getStderrAsPartOfTheOutput = false // needed to get Jest output as they write to the stderr for some reason. see https://github.com/facebook/jest/issues/5064
+    getStderrAsPartOfTheOutput = false, // needed to get Jest output as they write to the stderr for some reason. see https://github.com/facebook/jest/issues/5064
+    envVariables?: Record<string, string>
   ): string {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
     const isBitCommand = cmd.startsWith('bit ');
     if (isBitCommand) cmd = cmd.replace('bit', this.bitBin);
     const featuresTogglePrefix = isBitCommand ? this._getFeatureToggleCmdPrefix(overrideFeatures) : '';
     const cmdWithFeatures = featuresTogglePrefix + cmd;
+    const env = envVariables ? { ...process.env, ...envVariables } : undefined;
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmdWithFeatures); // eslint-disable-line no-console
     // `spawnSync` gets the data from stderr, `shell: true` is needed for Windows to get the output.
     const cmdOutput = getStderrAsPartOfTheOutput
       ? childProcess
-          .spawnSync(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, stdio, shell: true })
+          .spawnSync(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, stdio, shell: true, env })
           .output.toString()
-      : childProcess.execSync(cmdWithFeatures, { cwd, stdio, maxBuffer: EXEC_SYNC_MAX_BUFFER });
+      : childProcess.execSync(cmdWithFeatures, { cwd, stdio, maxBuffer: EXEC_SYNC_MAX_BUFFER, env });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
   }
@@ -243,18 +245,25 @@ export default class CommandHelper {
   updateDependencies(data: Record<string, any>, flags = '', cwd = this.scopes.localPath) {
     return this.runCmd(`bit update-dependencies '${JSON.stringify(data)}' ${flags}`, cwd);
   }
-  getConfig(configName: string) {
-    return this.runCmd(`bit config get ${configName}`);
+  getConfig(configName: string, flags = '') {
+    return this.runCmd(`bit config get ${configName} ${flags}`);
   }
-  delConfig(configName: string) {
-    return this.runCmd(`bit config del ${configName}`);
+  delConfig(configName: string, flags = '') {
+    return this.runCmd(`bit config del ${configName} ${flags}`);
+  }
+  /**
+   * don't list the global config to not leak sensitive data, such as user tokens.
+   */
+  listConfigLocally(origin: 'scope' | 'workspace'): Record<string, string> {
+    const result = this.runCmd(`bit config list --origin ${origin} --json`);
+    return JSON.parse(result);
   }
   /**
    * careful! this changes the config globally and will affect all e2e-tests.
    * try to avoid. if not possible, make sure to call `delConfig` in the `after` hook
    */
-  setConfig(configName: string, configVal: string) {
-    return this.runCmd(`bit config set ${configName} ${configVal}`);
+  setConfig(configName: string, configVal: string, flags = '') {
+    return this.runCmd(`bit config set ${configName} ${configVal} ${flags}`);
   }
   setScope(scopeName: string, component: string) {
     return this.runCmd(`bit scope set ${scopeName} ${component}`);
@@ -598,8 +607,8 @@ export default class CommandHelper {
     return output;
   }
 
-  capsuleListParsed() {
-    const capsulesJson = this.runCmd('bit capsule list -j');
+  capsuleListParsed(cwd?: string) {
+    const capsulesJson = this.runCmd('bit capsule list -j', cwd);
     return JSON.parse(capsulesJson);
   }
 
@@ -621,6 +630,14 @@ export default class CommandHelper {
 
   test(flags = '', getStderrAsPartOfTheOutput = false) {
     return this.runCmd(`bit test ${flags}`, undefined, undefined, undefined, getStderrAsPartOfTheOutput);
+  }
+
+  format(pattern = '', flags = '') {
+    return this.runCmd(`bit format ${pattern} ${flags}`);
+  }
+
+  lint(pattern = '', flags = '') {
+    return this.runCmd(`bit lint ${pattern} ${flags}`);
   }
 
   testComponent(id = '', flags = '') {
@@ -751,6 +768,11 @@ export default class CommandHelper {
   getCompDepsIdsFromData(compId: string): string[] {
     const aspectConf = this.showAspectConfig(compId, Extensions.dependencyResolver);
     return aspectConf.data.dependencies.map((dep) => dep.id);
+  }
+
+  getCompDepsDataFromData(compId: string): {id: string, version: string, lifecycle: string, source: string}[] {
+    const aspectConf = this.showAspectConfig(compId, Extensions.dependencyResolver);
+    return aspectConf.data.dependencies;
   }
 
   showComponentParsedHarmonyByTitle(compId: string, title: string) {

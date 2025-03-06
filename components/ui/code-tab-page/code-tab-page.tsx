@@ -1,4 +1,4 @@
-import { ComponentContext } from '@teambit/component';
+import { ComponentContext, ComponentID } from '@teambit/component';
 import classNames from 'classnames';
 import React, { useContext, useState, HTMLAttributes, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -36,38 +36,98 @@ export type CodePageProps = {
   codeViewClassName?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-const resolveFilePath = (
+/**
+ * Resolves a requested file path against a file tree, handling extension mappings,
+ * parent directory traversal, and index files.
+ *
+ * @param requestedPath The path to resolve (can include ./, ../, etc)
+ * @param fileTree Array of available files
+ * @param mainFile Default file to return if no match is found
+ * @param loadingCode Whether code is currently loading
+ * @returns Resolved file path or undefined if loading
+ */
+export function resolveFilePath(
   requestedPath: string | undefined,
   fileTree: string[],
   mainFile: string,
   loadingCode: boolean
-) => {
+): string | undefined {
   if (loadingCode) return undefined;
   if (!requestedPath) return mainFile;
 
-  const normalized = path.normalize(requestedPath);
+  const normalized = path.resolve(requestedPath);
 
   if (fileTree.includes(normalized)) return normalized;
 
+  const extension = path.extname(normalized);
+  const requestedExt = ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs'].includes(extension) ? extension : '';
+  const basePathWithoutExt = requestedExt ? normalized.slice(0, -requestedExt.length) : normalized;
+
+  const getTypeScriptVariants = (ext: string): string[] => {
+    switch (ext) {
+      case '.js':
+        return ['.ts', '.tsx'];
+      case '.jsx':
+        return ['.tsx'];
+      case '.mjs':
+        return ['.mts'];
+      case '.cjs':
+        return ['.cts'];
+      default:
+        return [];
+    }
+  };
+
+  const possibleExtensions = requestedExt
+    ? [requestedExt, ...getTypeScriptVariants(requestedExt)]
+    : ['.ts', '.tsx', '.js'];
+
   const possiblePaths = [
     normalized,
-    `${normalized}.ts`,
-    `${normalized}.js`,
-    path.join(normalized, 'index.ts'),
-    path.join(normalized, 'index.js'),
-  ];
+    ...possibleExtensions.map((ext) => `${basePathWithoutExt}${ext}`),
+    ...possibleExtensions.map((ext) => path.join(normalized, `index${ext}`)),
+    ...possibleExtensions.map((ext) => path.join(basePathWithoutExt, `index${ext}`)),
+  ].map((p) => path.resolve(p));
 
-  const match = fileTree.find((file) => possiblePaths.includes(file));
-  return match || mainFile;
-};
+  const matchingFiles = fileTree.filter((file) => possiblePaths.includes(path.resolve(file)));
 
-export function CodePage({ className, fileIconSlot, host, codeViewClassName }: CodePageProps) {
+  if (matchingFiles.length > 0) {
+    if (matchingFiles.includes(normalized)) {
+      return normalized;
+    }
+
+    const ordered = matchingFiles.sort((a, b) => {
+      const extA = path.extname(a);
+      const extB = path.extname(b);
+
+      if (extA === requestedExt && extB !== requestedExt) return -1;
+      if (extB === requestedExt && extA !== requestedExt) return 1;
+
+      const isTypeScriptA = ['.ts', '.tsx'].includes(extA);
+      const isTypeScriptB = ['.ts', '.tsx'].includes(extB);
+      if (isTypeScriptA && !isTypeScriptB) return -1;
+      if (isTypeScriptB && !isTypeScriptA) return 1;
+
+      if (extA === '.ts' && extB === '.tsx') return -1;
+      if (extA === '.tsx' && extB === '.ts') return 1;
+
+      return a.length - b.length;
+    });
+
+    return ordered[0];
+  }
+
+  return mainFile;
+}
+
+export function CodePage({ className, fileIconSlot, host: hostFromProps, codeViewClassName }: CodePageProps) {
   const urlParams = useCodeParams();
   const [searchParams] = useSearchParams();
   const scopeFromQueryParams = searchParams.get('scope');
   const component = useContext(ComponentContext);
+  const host = useMemo(() => urlParams.version ? 'teambit.scope/scope' : hostFromProps, [urlParams.version, hostFromProps]);
 
-  const { mainFile, fileTree = [], dependencies, devFiles, loading: loadingCode } = useCode(component.id);
+  const { mainFile, fileTree = [], dependencies, devFiles, loading: loadingCode } = useCode(component.id, host);
   const { data: artifacts = [] } = useComponentArtifacts(host, component.id.toString());
 
   const currentFile = resolveFilePath(urlParams.file, fileTree, mainFile, loadingCode);
@@ -118,17 +178,19 @@ export function CodePage({ className, fileIconSlot, host, codeViewClassName }: C
     });
   }, [dependencies?.length]);
 
+  const componentId = urlParams.version ? component.id : ComponentID.fromString(component.id.toStringWithoutVersion());
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.codePage, className)}>
       <Pane className={styles.left}>
         <CodeView
-          componentId={component.id}
+          componentId={componentId}
           currentFile={currentFile}
           icon={icon}
           currentFileContent={currentArtifactFileContent}
           loading={loadingArtifactFileContent || loadingCode}
           codeSnippetClassName={codeViewClassName}
           dependencies={dependencies}
+          host={host}
         />
       </Pane>
       <HoverSplitter className={styles.splitter}>

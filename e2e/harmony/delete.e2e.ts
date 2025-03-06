@@ -1,8 +1,7 @@
 import path from 'path';
 import { IssuesClasses } from '@teambit/component-issues';
 import chai, { expect } from 'chai';
-import { Helper } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -289,6 +288,27 @@ describe('bit delete command', function () {
     it('should revert the .bitmap entry of the deleted component as it was before', () => {
       const bitmap = helper.bitMap.read();
       expect(bitmap.comp1).to.deep.equal(bitmapEntryBefore);
+    });
+  });
+  describe('deleting component then creating a new one with the same name', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.softRemoveComponent('comp1');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.addRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+    });
+    it('should throw a descriptive error', () => {
+      const err = helper.general.runWithTryCatch('bit export');
+      expect(err).to.include('were marked as deleted on the remote scope');
     });
   });
 });

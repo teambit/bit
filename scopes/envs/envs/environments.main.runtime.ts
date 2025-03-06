@@ -340,7 +340,7 @@ export class EnvsMain {
 
     if (!envJson) return undefined;
 
-    const object: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true);
+    const object: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
     if (!object.extends) return object;
     const resolvedObject = await this.recursivelyMergeWithParentManifest(object, envExtendsDeps);
 
@@ -827,6 +827,20 @@ export class EnvsMain {
     return finalId;
   }
 
+  validateEnvId(ext: ExtensionDataEntry) {
+    if (!ext.config?.env || !ext.data?.id || ext.config.env === ext.data.id) return;
+    let errorMsg: string;
+    if (ext.data.id === DEFAULT_ENV) {
+      errorMsg = `the env id "${ext.data.id}" is set to the default env (${DEFAULT_ENV}) in the aspect data, but it is set to "${ext.config.env}" in the aspect config.
+this may indicate that the env was not loaded properly. try running "bit install" to ensure the env is correctly loaded.
+to explicitly set the default env, use "bit env set" command.`;
+    } else {
+      errorMsg =`env id "${ext.data.id}" is different from the id in the envs aspect config "${ext.config.env}".
+if needed, use "bit env set" command to align the env id`;
+    }
+    return { errorMsg, minBitVersion: '1.9.82'}
+  }
+
   /**
    * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .calculateEnv() instead!)
    */
@@ -1198,7 +1212,7 @@ export class EnvsMain {
     const envsCmd = new EnvsCmd(envs, component);
     envsCmd.commands = [new ListEnvsCmd(envs, component), new GetEnvCmd(envs, component)];
     cli.register(envsCmd);
-    graphql.register(environmentsSchema(envs));
+    graphql.register(() => environmentsSchema(envs));
     return envs;
   }
 }

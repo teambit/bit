@@ -15,7 +15,7 @@ import {
   Lane,
   LaneHistory,
   Version,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import { ScopeJson, TrackLane } from '../scope-json';
 
 export default class Lanes {

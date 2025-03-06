@@ -22,6 +22,14 @@ describe('convertLockfileToGraph simple case', () => {
             version: '1.0.0(patch_hash=0000)',
             specifier: '^1.0.0',
           },
+          qar: {
+            version: '1.1.0',
+            specifier: '^1.0.0',
+          },
+          zoo: {
+            version: '1.1.0(qar@1.1.0)',
+            specifier: '^1.1.0',
+          },
         },
       },
     },
@@ -33,9 +41,17 @@ describe('convertLockfileToGraph simple case', () => {
         },
       },
       'bar@1.0.0': {},
+      'qar@1.1.0': {},
+      'zoo@1.1.0(qar@1.1.0)': {
+        dependencies: {
+          qar: '1.1.0',
+        },
+      },
       'comp1@file:comps/comp1': {
         dependencies: {
           foo: '1.0.0(patch_hash=0000)',
+          qar: '1.1.0',
+          zoo: '1.1.0(qar@1.1.0)',
         },
       },
     },
@@ -63,6 +79,19 @@ describe('convertLockfileToGraph simple case', () => {
           integrity: 'sha512-111',
         },
       },
+      'qar@1.1.0': {
+        resolution: {
+          integrity: 'sha512-222',
+        },
+      },
+      'zoo@1.1.0': {
+        peerDependencies: {
+          qar: '*',
+        },
+        resolution: {
+          integrity: 'sha512-333',
+        },
+      },
     },
   };
   const graph = convertLockfileToGraph(lockfile, {
@@ -82,10 +111,25 @@ describe('convertLockfileToGraph simple case', () => {
         },
       },
       {
+        id: 'zoo@1.1.0(qar@1.1.0)',
+        neighbours: [{ id: 'qar@1.1.0', optional: false }],
+        attr: {
+          pkgId: 'zoo@1.1.0',
+        },
+      },
+      {
         id: 'comp1@pending:',
         neighbours: [
           {
             id: 'foo@1.0.0(patch_hash=0000)',
+            optional: false,
+          },
+          {
+            id: 'qar@1.1.0',
+            optional: false,
+          },
+          {
+            id: 'zoo@1.1.0(qar@1.1.0)',
             optional: false,
           },
         ],
@@ -97,6 +141,20 @@ describe('convertLockfileToGraph simple case', () => {
             id: 'foo@1.0.0(patch_hash=0000)',
             name: 'foo',
             specifier: '^1.0.0',
+            lifecycle: 'runtime',
+            optional: false,
+          },
+          {
+            id: 'qar@1.1.0',
+            name: 'qar',
+            specifier: '^1.0.0',
+            lifecycle: 'runtime',
+            optional: false,
+          },
+          {
+            id: 'zoo@1.1.0(qar@1.1.0)',
+            name: 'zoo',
+            specifier: '^1.1.0',
             lifecycle: 'runtime',
             optional: false,
           },
@@ -121,6 +179,19 @@ describe('convertLockfileToGraph simple case', () => {
           integrity: 'sha512-111',
         },
       },
+      'qar@1.1.0': {
+        resolution: {
+          integrity: 'sha512-222',
+        },
+      },
+      'zoo@1.1.0': {
+        peerDependencies: {
+          qar: '*',
+        },
+        resolution: {
+          integrity: 'sha512-333',
+        },
+      },
       'comp1@pending:': {
         resolution: {
           directory: 'comps/comp1',
@@ -143,6 +214,9 @@ describe('convertLockfileToGraph simple case', () => {
           [path.resolve('comps/comp1')]: {
             dependencies: {
               foo: '^1.0.0',
+              bar: `link:${path.resolve('comps/bar')}`, // Links from the manifests are added to the lockfile
+              qar: '1.1.0',
+              zoo: '1.1.0',
             },
           },
         },
@@ -155,6 +229,18 @@ describe('convertLockfileToGraph simple case', () => {
             foo: {
               version: '1.0.0(patch_hash=0000)',
               specifier: '^1.0.0',
+            },
+            bar: {
+              version: 'link:../bar',
+              specifier: `link:${path.resolve('comps/bar')}`,
+            },
+            qar: {
+              version: '1.1.0',
+              specifier: '1.1.0',
+            },
+            zoo: {
+              version: '1.1.0(qar@1.1.0)',
+              specifier: '1.1.0',
             },
           },
           devDependencies: {},
@@ -169,9 +255,17 @@ describe('convertLockfileToGraph simple case', () => {
           },
         },
         'bar@1.0.0': {},
+        'qar@1.1.0': {},
         'comp1@pending:': {
           dependencies: {
             foo: '1.0.0(patch_hash=0000)',
+            qar: '1.1.0',
+            zoo: '1.1.0(qar@1.1.0)',
+          },
+        },
+        'zoo@1.1.0(qar@1.1.0)': {
+          dependencies: {
+            qar: '1.1.0',
           },
         },
       },
@@ -197,6 +291,19 @@ describe('convertLockfileToGraph simple case', () => {
         'bar@1.0.0': {
           resolution: {
             integrity: 'sha512-111',
+          },
+        },
+        'qar@1.1.0': {
+          resolution: {
+            integrity: 'sha512-222',
+          },
+        },
+        'zoo@1.1.0': {
+          peerDependencies: {
+            qar: '*',
+          },
+          resolution: {
+            integrity: 'sha512-333',
           },
         },
       },

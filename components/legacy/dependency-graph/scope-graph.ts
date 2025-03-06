@@ -4,11 +4,11 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { VERSION_DELIMITER } from '@teambit/legacy.constants';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { ConsumerComponent as Component, DEPENDENCIES_TYPES_UI_MAP } from '@teambit/legacy.consumer-component';
-import { Consumer } from '@teambit/legacy.consumer';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { getAllVersionsInfo } from '@teambit/component.snap-distance';
 import { Scope, IdNotFoundInGraph } from '@teambit/legacy.scope';
-import { ModelComponent, Version } from '@teambit/scope.objects';
+import { ModelComponent, Version } from '@teambit/objects';
+import { Workspace } from '@teambit/workspace';
 
 export type DependenciesInfo = {
   id: ComponentID;
@@ -152,33 +152,33 @@ export class DependencyGraph {
   //   );
   // }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async buildGraphFromWorkspace(consumer: Consumer, onlyLatest = false, reverse = false): Promise<Graph> {
-    const componentsList = new ComponentsList(consumer);
+  static async buildGraphFromWorkspace(workspace: Workspace): Promise<Graph> {
+    const componentsList = new ComponentsList(workspace);
     const workspaceComponents: Component[] = await componentsList.getFromFileSystem();
     const graph = new Graph();
-    const allModelComponents: ModelComponent[] = await consumer.scope.list();
+    const allModelComponents: ModelComponent[] = await workspace.consumer.scope.list();
     const buildGraphP = allModelComponents.map(async (modelComponent) => {
       const latestVersion = modelComponent.getHeadRegardlessOfLaneAsTagOrHash(true);
       const buildVersionP = modelComponent.listVersionsIncludeOrphaned().map(async (versionNum) => {
-        if (onlyLatest && latestVersion !== versionNum) return;
+        if (latestVersion !== versionNum) return;
         const id = modelComponent.toComponentId().changeVersion(versionNum);
         const componentFromWorkspace = workspaceComponents.find((comp) => comp.id.isEqual(id));
         // if the same component exists in the workspace, use it as it might be modified
         const version =
-          componentFromWorkspace || (await modelComponent.loadVersion(versionNum, consumer.scope.objects, false));
+          componentFromWorkspace ||
+          (await modelComponent.loadVersion(versionNum, workspace.consumer.scope.objects, false));
         if (!version) {
           // a component might be in the scope with only the latest version (happens when it's a nested dep)
           return;
         }
-        this._addDependenciesToGraph(id, graph, version, reverse);
+        this._addDependenciesToGraph(id, graph, version);
       });
       await Promise.all(buildVersionP);
     });
     await Promise.all(buildGraphP);
     workspaceComponents.forEach((component: Component) => {
       const id = component.id;
-      this._addDependenciesToGraph(id, graph, component, reverse);
+      this._addDependenciesToGraph(id, graph, component);
     });
     return graph;
   }
@@ -188,8 +188,8 @@ export class DependencyGraph {
    * according to currently used versions (.bitmap versions).
    * returns a graph that each node is a ComponentID object.
    */
-  static async buildGraphFromCurrentlyUsedComponents(consumer: Consumer): Promise<Graph> {
-    const componentsList = new ComponentsList(consumer);
+  static async buildGraphFromCurrentlyUsedComponents(workspace: Workspace): Promise<Graph> {
+    const componentsList = new ComponentsList(workspace);
     const workspaceComponents: Component[] = await componentsList.getComponentsFromFS();
     const graph = new Graph();
     workspaceComponents.forEach((component: Component) => {

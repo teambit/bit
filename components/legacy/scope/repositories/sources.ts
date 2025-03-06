@@ -27,7 +27,7 @@ import {
   Ref,
   Lane,
   LaneComponent,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import Scope from '../scope';
 import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
@@ -515,7 +515,8 @@ please either remove the component (bit remove) or remove the lane.`);
       incomingComp,
       false,
       isIncomingFromOrigin,
-      existingHeadIsMissingInIncomingComponent
+      existingHeadIsMissingInIncomingComponent,
+      this.scope.objects
     );
     const { mergedComponent, mergedVersions } = await modelComponentMerger.merge();
     if (existingComponentHead || mergedComponent.hasHead()) {

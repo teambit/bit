@@ -16,8 +16,8 @@ type CompilerTransformationMap = ServiceTransformationMap & {
 export class CompilerService implements EnvService<{}, CompilerDescriptor> {
   name = 'Compile';
 
-  getCompiler(context: ExecutionContext): Compiler {
-    const compiler: Compiler = context.env.getCompiler();
+  getCompiler(context: ExecutionContext): Compiler | undefined {
+    const compiler = context.env.getCompiler?.();
     return compiler;
   }
 

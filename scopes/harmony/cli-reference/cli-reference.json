@@ -75,6 +75,87 @@
     "private": false
   },
   {
+    "name": "config",
+    "alias": "",
+    "options": [],
+    "description": "config management",
+    "extendedDescription": "https://bit.dev/reference/config/bit-config",
+    "group": "general",
+    "private": false,
+    "commands": [
+      {
+        "name": "set <key> <val>",
+        "alias": "",
+        "options": [
+          [
+            "l",
+            "local",
+            "set the configuration in the current scope (saved in .bit/scope.json)"
+          ],
+          [
+            "t",
+            "local-track",
+            "set the configuration in the current workspace (saved in workspace.jsonc)"
+          ]
+        ],
+        "description": "set a configuration. default to save it globally",
+        "extendedDescription": "to set temporary configuration by env variable, prefix with \"BIT_CONFIG\", replace \".\" with \"_\" and change to upper case.\nfor example, \"user.token\" becomes \"BIT_CONFIG_USER_TOKEN\"",
+        "group": "ungrouped",
+        "private": false,
+        "skipWorkspace": true
+      },
+      {
+        "name": "del <key>",
+        "alias": "",
+        "options": [
+          [
+            "o",
+            "origin <origin>",
+            "default to delete whenever it found first. specify to delete specifically from the following: [scope, workspace, global]"
+          ]
+        ],
+        "description": "delete given key from global configuration",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false
+      },
+      {
+        "name": "get <key>",
+        "alias": "",
+        "options": [],
+        "description": "get a value from global configuration",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false
+      },
+      {
+        "name": "list",
+        "alias": "",
+        "options": [
+          [
+            "o",
+            "origin <origin>",
+            "list configuration specifically from the following: [scope, workspace, global]"
+          ],
+          [
+            "d",
+            "detailed",
+            "list all configuration(s) with the origin"
+          ],
+          [
+            "j",
+            "json",
+            "output as JSON"
+          ]
+        ],
+        "description": "list all configuration(s)",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false
+      }
+    ]
+  },
+  {
     "name": "doctor [diagnosis-name]",
     "alias": "",
     "options": [
@@ -199,145 +280,6 @@
     "group": "start",
     "private": false,
     "skipWorkspace": true
-  },
-  {
-    "name": "globals",
-    "alias": "",
-    "options": [
-      [
-        "j",
-        "json",
-        "json format"
-      ]
-    ],
-    "description": "list all globals",
-    "extendedDescription": "",
-    "group": "workspace",
-    "private": false
-  },
-  {
-    "name": "system <sub-command>",
-    "alias": "",
-    "options": [],
-    "description": "system operations",
-    "extendedDescription": "",
-    "group": "workspace",
-    "private": false,
-    "commands": [
-      {
-        "name": "log",
-        "alias": "",
-        "options": [],
-        "description": "print debug.log to the screen",
-        "extendedDescription": "",
-        "group": "workspace",
-        "private": false
-      },
-      {
-        "name": "tail-log",
-        "alias": "",
-        "options": [],
-        "description": "print the log file to the screen as it is being written",
-        "extendedDescription": "similar to linux \"tail -f\" command",
-        "group": "workspace",
-        "private": false
-      }
-    ]
-  },
-  {
-    "name": "config",
-    "alias": "",
-    "options": [],
-    "description": "global config management",
-    "extendedDescription": "https://bit.dev/reference/config/bit-config",
-    "group": "general",
-    "private": false,
-    "commands": [
-      {
-        "name": "set <key> <val>",
-        "alias": "",
-        "options": [],
-        "description": "set a global configuration",
-        "extendedDescription": "to set temporary configuration by env variable, prefix with \"BIT_CONFIG\", replace \".\" with \"_\" and change to upper case.\nfor example, \"user.token\" becomes \"BIT_CONFIG_USER_TOKEN\"",
-        "group": "ungrouped",
-        "private": false,
-        "skipWorkspace": true
-      },
-      {
-        "name": "del <key>",
-        "alias": "",
-        "options": [],
-        "description": "delete given key from global configuration",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false
-      },
-      {
-        "name": "get <key>",
-        "alias": "",
-        "options": [],
-        "description": "get a value from global configuration",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false
-      },
-      {
-        "name": "list",
-        "alias": "",
-        "options": [],
-        "description": "list all configuration(s)",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false
-      }
-    ]
-  },
-  {
-    "name": "remote",
-    "alias": "",
-    "options": [
-      [
-        "g",
-        "global",
-        "see globally configured remotes"
-      ]
-    ],
-    "description": "manage set of tracked bit scope(s)",
-    "extendedDescription": "",
-    "group": "collaborate",
-    "private": false,
-    "commands": [
-      {
-        "name": "add <url>",
-        "alias": "",
-        "options": [
-          [
-            "g",
-            "global",
-            "configure a remote bit scope"
-          ]
-        ],
-        "description": "add a bare-scope as a remote",
-        "extendedDescription": "supported protocols are [file, http].\nfor example: \"http://localhost:3000\", \"file:///tmp/local-scope\"",
-        "group": "ungrouped",
-        "private": false
-      },
-      {
-        "name": "del <name>",
-        "alias": "",
-        "options": [
-          [
-            "g",
-            "global",
-            "remove a globally configured remote scope"
-          ]
-        ],
-        "description": "remove a tracked bit remote",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false
-      }
-    ]
   },
   {
     "name": "show <component-name>",
@@ -532,14 +474,100 @@
     ]
   },
   {
-    "name": "graph [id]",
+    "name": "globals",
     "alias": "",
     "options": [
       [
-        "i",
-        "image <image>",
-        "image path and format. use one of the following extensions: [gif, png, svg, pdf]"
-      ],
+        "j",
+        "json",
+        "json format"
+      ]
+    ],
+    "description": "list all globals",
+    "extendedDescription": "",
+    "group": "workspace",
+    "private": false
+  },
+  {
+    "name": "system <sub-command>",
+    "alias": "",
+    "options": [],
+    "description": "system operations",
+    "extendedDescription": "",
+    "group": "workspace",
+    "private": false,
+    "commands": [
+      {
+        "name": "log",
+        "alias": "",
+        "options": [],
+        "description": "print debug.log to the screen",
+        "extendedDescription": "",
+        "group": "workspace",
+        "private": false
+      },
+      {
+        "name": "tail-log",
+        "alias": "",
+        "options": [],
+        "description": "print the log file to the screen as it is being written",
+        "extendedDescription": "similar to linux \"tail -f\" command",
+        "group": "workspace",
+        "private": false
+      }
+    ]
+  },
+  {
+    "name": "remote",
+    "alias": "",
+    "options": [
+      [
+        "g",
+        "global",
+        "see globally configured remotes"
+      ]
+    ],
+    "description": "manage set of tracked bit scope(s)",
+    "extendedDescription": "",
+    "group": "collaborate",
+    "private": false,
+    "commands": [
+      {
+        "name": "add <url>",
+        "alias": "",
+        "options": [
+          [
+            "g",
+            "global",
+            "configure a remote bit scope"
+          ]
+        ],
+        "description": "add a bare-scope as a remote",
+        "extendedDescription": "supported protocols are [file, http].\nfor example: \"http://localhost:3000\", \"file:///tmp/local-scope\"",
+        "group": "ungrouped",
+        "private": false
+      },
+      {
+        "name": "del <name>",
+        "alias": "",
+        "options": [
+          [
+            "g",
+            "global",
+            "remove a globally configured remote scope"
+          ]
+        ],
+        "description": "remove a tracked bit remote",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false
+      }
+    ]
+  },
+  {
+    "name": "graph [id]",
+    "alias": "",
+    "options": [
       [
         "r",
         "remote [remoteName]",
@@ -547,13 +575,23 @@
       ],
       [
         "",
-        "all-versions",
-        "enter all components versions into the graph, not only latest"
+        "layout <name>",
+        "GraphVis layout. default to \"dot\". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]"
       ],
       [
         "",
-        "layout <name>",
-        "GraphVis layout. default to \"dot\". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]"
+        "png",
+        "save the graph as a png file instead of svg. requires \"graphviz\" to be installed"
+      ],
+      [
+        "",
+        "cycles",
+        "generate a graph of cycles only"
+      ],
+      [
+        "",
+        "include-local-only",
+        "include only the components in the workspace (or local scope)"
       ],
       [
         "j",
@@ -561,7 +599,7 @@
         "json format"
       ]
     ],
-    "description": "generate an image file with the workspace components' dependencies graph",
+    "description": "generate an SVG image file with the components' dependencies graph",
     "extendedDescription": "",
     "group": "discover",
     "private": false,
@@ -913,6 +951,11 @@
             "l",
             "layout <name>",
             "GraphVis layout. default to \"dot\". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]"
+          ],
+          [
+            "",
+            "limit <number>",
+            "limit the number of nodes in the graph (starting from the heads)"
           ]
         ],
         "description": "generate a graph of the version history of a component and save as an SVG file",
@@ -2428,7 +2471,7 @@
       ]
     ],
     "description": "mark components as deleted on the remote",
-    "extendedDescription": "to remove components from your local workspace only, use \"bit remove\" command.\nthis command marks the components as deleted, and after snap/tag and export they will be marked as deleted from the remote scope as well.\n",
+    "extendedDescription": "to remove components from your local workspace only, use \"bit remove\" command.\nthis command marks the components as deleted, and after snap/tag and export they will be marked as deleted from the remote scope as well.\nunless the '--hard' flag is used (not recommended!), in which case, the component will be deleted from the remote scope immediately.\n",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
@@ -2866,31 +2909,6 @@
         "description": "(not recommended) component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
-  },
-  {
-    "name": "insights [names...]",
-    "alias": "",
-    "options": [
-      [
-        "l",
-        "list",
-        "list all insights"
-      ],
-      [
-        "j",
-        "json",
-        "return the insights in json format"
-      ],
-      [
-        "",
-        "include-deps",
-        "include component dependencies that are not in this workspace"
-      ]
-    ],
-    "description": "Insights on component graph",
-    "extendedDescription": "",
-    "group": "development",
-    "private": true
   },
   {
     "name": "tag [component-patterns...]",
@@ -3638,6 +3656,11 @@
     "alias": "",
     "options": [
       [
+        "p",
+        "parent",
+        "compare the specified \"version\" to its immediate parent instead of comparing to the current one"
+      ],
+      [
         "v",
         "verbose",
         "show a more verbose output where possible"
@@ -3659,11 +3682,11 @@
       },
       {
         "name": "version",
-        "description": "specific version to compare against"
+        "description": "the base version to compare from. if omitted, compares the workspace's current files to the component's latest version."
       },
       {
         "name": "to-version",
-        "description": "specific version to compare to"
+        "description": "the target version to compare against \"version\".\nif both \"version\" and \"to-version\" are provided, compare those two versions directly (ignoring the workspace)."
       }
     ],
     "examples": [
@@ -3686,6 +3709,10 @@
       {
         "cmd": "diff '$codeModified' ",
         "description": "show diff only for components with modified files. ignore config changes"
+      },
+      {
+        "cmd": "diff foo 0.0.2 --parent",
+        "description": "compare \"foo@0.0.2\" to its parent version. showing what changed in 0.0.2"
       }
     ]
   },
@@ -4621,6 +4648,11 @@
       ],
       [
         "",
+        "build",
+        "in case of snap during the merge, run the build-pipeline (similar to bit snap --build)"
+      ],
+      [
+        "",
         "keep-readme",
         "skip deleting the lane readme component after merging"
       ],
@@ -4853,6 +4885,31 @@
     ]
   },
   {
+    "name": "insights [names...]",
+    "alias": "",
+    "options": [
+      [
+        "l",
+        "list",
+        "list all insights"
+      ],
+      [
+        "j",
+        "json",
+        "return the insights in json format"
+      ],
+      [
+        "",
+        "include-deps",
+        "include component dependencies that are not in this workspace"
+      ]
+    ],
+    "description": "Insights on component graph",
+    "extendedDescription": "",
+    "group": "development",
+    "private": true
+  },
+  {
     "name": "status",
     "alias": "s",
     "options": [
@@ -5064,47 +5121,6 @@
     ]
   },
   {
-    "name": "schema <pattern>",
-    "alias": "",
-    "options": [
-      [
-        "j",
-        "json",
-        "return the component schema in json format"
-      ]
-    ],
-    "description": "shows the API schema of the specified component/s.",
-    "extendedDescription": "you can use a `<pattern>` for multiple component ids, such as `bit schema \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
-    "group": "development",
-    "private": false
-  },
-  {
-    "name": "check-types [component-pattern]",
-    "alias": "",
-    "options": [
-      [
-        "a",
-        "all",
-        "check-types for all components, not only modified and new"
-      ],
-      [
-        "",
-        "strict",
-        "in case issues found, exit with code 1"
-      ]
-    ],
-    "description": "check typescript types",
-    "extendedDescription": "",
-    "group": "development",
-    "private": false,
-    "arguments": [
-      {
-        "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      }
-    ]
-  },
-  {
     "name": "update-dependencies <data>",
     "alias": "",
     "options": [
@@ -5208,6 +5224,47 @@
     "extendedDescription": "a new bare-scope needs to be created and it will import the components to this scope first",
     "group": "development",
     "private": true
+  },
+  {
+    "name": "schema <pattern>",
+    "alias": "",
+    "options": [
+      [
+        "j",
+        "json",
+        "return the component schema in json format"
+      ]
+    ],
+    "description": "shows the API schema of the specified component/s.",
+    "extendedDescription": "you can use a `<pattern>` for multiple component ids, such as `bit schema \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
+    "group": "development",
+    "private": false
+  },
+  {
+    "name": "check-types [component-pattern]",
+    "alias": "",
+    "options": [
+      [
+        "a",
+        "all",
+        "check-types for all components, not only modified and new"
+      ],
+      [
+        "",
+        "strict",
+        "in case issues found, exit with code 1"
+      ]
+    ],
+    "description": "check typescript types",
+    "extendedDescription": "",
+    "group": "development",
+    "private": false,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
   },
   {
     "name": "aspect <sub-command>",

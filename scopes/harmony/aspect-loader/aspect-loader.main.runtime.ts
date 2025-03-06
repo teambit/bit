@@ -783,9 +783,18 @@ export class AspectLoaderMain {
         res[manifest.id] = localAspect;
         return manifest;
       }
-      // eslint-disable-next-line global-require, import/no-dynamic-require
       const module = require(dirPath);
       const manifest = module.default || module;
+      const mainRuntime = this.findRuntime(dirPath, 'main');
+      if (mainRuntime) {
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        const mainRuntimeModule = require(join(dirPath, 'dist', mainRuntime));
+        const mainRuntimeManifest = mainRuntimeModule.default || mainRuntimeModule;
+        // manifest has the "id" prop. the mainRuntimeManifest doesn't have it normally.
+        mainRuntimeManifest.id = manifest.id;
+        res[mainRuntimeManifest.id] = localAspect;
+        return mainRuntimeManifest;
+      }
       res[manifest.id] = localAspect;
       return manifest;
     });
@@ -853,7 +862,7 @@ export class AspectLoaderMain {
       pluginSlot
     );
 
-    graphql.register(aspectLoaderSchema(aspectLoader));
+    graphql.register(() => aspectLoaderSchema(aspectLoader));
     aspectLoader.registerPlugins([envs.getEnvPlugin()]);
 
     return aspectLoader;

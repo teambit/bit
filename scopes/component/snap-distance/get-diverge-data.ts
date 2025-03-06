@@ -1,7 +1,7 @@
 import { difference } from 'lodash';
 import { Graph } from '@teambit/graph.cleargraph';
 import { UnmergedComponent, NoCommonSnap, VersionNotFoundOnFS } from '@teambit/legacy.scope';
-import { ModelComponent, Ref, Repository, VersionParents, versionParentsToGraph } from '@teambit/scope.objects';
+import { ModelComponent, Ref, Repository, VersionParents, versionParentsToGraph } from '@teambit/objects';
 import { SnapsDistance } from './snaps-distance';
 import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
 

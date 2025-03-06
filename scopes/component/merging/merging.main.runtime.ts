@@ -8,7 +8,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
 import { UnmergedComponent } from '@teambit/legacy.scope';
-import { Ref, Lane, ModelComponent } from '@teambit/scope.objects';
+import { Ref, Lane, ModelComponent } from '@teambit/objects';
 import chalk from 'chalk';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
 import { RemoveAspect, RemoveMain, deleteComponentsFiles } from '@teambit/remove';
@@ -18,7 +18,6 @@ import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-w
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { compact } from 'lodash';
 import {
   ApplyVersionWithComps,
@@ -41,7 +40,7 @@ import { InstallMain, InstallAspect } from '@teambit/install';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
-import { MergeStatusProvider, MergeStatusProviderOptions } from './merge-status-provider';
+import { DataMergeResult, MergeStatusProvider, MergeStatusProviderOptions } from './merge-status-provider';
 import {
   MergeStrategy,
   FileStatus,
@@ -49,6 +48,7 @@ import {
   MergeResultsThreeWay,
   MergeOptions,
 } from './merge-version';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 
 type ResolveUnrelatedData = {
   strategy: MergeStrategy;
@@ -64,6 +64,7 @@ export type ComponentMergeStatus = ComponentStatusBase & {
   divergeData?: SnapsDistance;
   resolvedUnrelated?: ResolveUnrelatedData;
   configMergeResult?: ConfigMergeResult;
+  dataMergeResult?: DataMergeResult;
 };
 
 export type ComponentMergeStatusBeforeMergeAttempt = ComponentStatusBase & {
@@ -311,6 +312,8 @@ export class MergingMain {
       }
     }
 
+    const updatedComponents = compact(componentsResults.map((c) => c.legacyCompToWrite));
+
     const getSnapOrTagResults = async (): Promise<MergeSnapResults> => {
       // if one of the component has conflict, don't snap-merge. otherwise, some of the components would be snap-merged
       // and some not. besides the fact that it could by mistake tag dependent, it's a confusing state. better not snap.
@@ -324,7 +327,8 @@ export class MergingMain {
         const { taggedComponents, autoTaggedResults, removedComponents } = results;
         return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults, removedComponents };
       }
-      return this.snapResolvedComponents(snapMessage, build, currentLane?.toLaneId());
+      return this.snapResolvedComponents(allComponentsStatus, snapMessage, build, currentLane?.toLaneId(),
+      updatedComponents);
     };
     let mergeSnapResults: MergeSnapResults = null;
     let mergeSnapError: Error | undefined;
@@ -616,21 +620,40 @@ export class MergingMain {
   }
 
   private async snapResolvedComponents(
+    allComponentsStatus: ComponentMergeStatus[],
     snapMessage?: string,
     build?: boolean,
-    laneId?: LaneId
+    laneId?: LaneId,
+    updatedComponents?: ConsumerComponent[]
   ): Promise<MergeSnapResults> {
     const unmergedComponents = this.scope.legacyScope.objects.unmergedComponents.getComponents();
     this.logger.debug(`merge-snaps, snapResolvedComponents, total ${unmergedComponents.length.toString()} components`);
     if (!unmergedComponents.length) return null;
     const ids = ComponentIdList.fromArray(unmergedComponents.map((r) => ComponentID.fromObject(r.id)));
     if (!this.workspace) {
+      const getLoadAspectOnlyForIds = (): ComponentIdList | undefined => {
+        if (!allComponentsStatus.length || !allComponentsStatus[0].dataMergeResult) return undefined;
+        const dataConflictedIds = allComponentsStatus
+          .filter((c) => {
+            const conflictedAspects = c.dataMergeResult?.conflictedAspects || {};
+            const aspectIds = Object.keys(conflictedAspects);
+            aspectIds.forEach(aspectId => this.logger.debug(`conflicted-data for "${c.id.toString()}". aspectId: ${aspectId}. reason: ${conflictedAspects[aspectId]}`));
+            return aspectIds.length;
+          })
+          .map((c) => c.id);
+        return ComponentIdList.fromArray(dataConflictedIds);
+      };
       const results = await this.snapping.snapFromScope(
-        ids.map((id) => ({ componentId: id.toString() })),
+        ids.map((id) => ({
+          componentId: id.toString(),
+          aspects: this.scope.legacyScope.objects.unmergedComponents.getEntry(id)?.mergedConfig,
+        })),
         {
           message: snapMessage,
           build,
           lane: laneId?.toString(),
+          updatedLegacyComponents: updatedComponents,
+          loadAspectOnlyForIds: getLoadAspectOnlyForIds(),
         }
       );
       return { ...results, autoSnappedResults: [] };
@@ -685,7 +708,7 @@ export class MergingMain {
 
   async listMergePendingComponents(componentsList?: ComponentsList): Promise<DivergedComponent[]> {
     const consumer = this.workspace.consumer;
-    componentsList = componentsList || new ComponentsList(consumer);
+    componentsList = componentsList || new ComponentsList(this.workspace);
     const allIds = consumer.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
     const componentsFromModel = await componentsList.getModelComponents();
     const duringMergeComps = componentsList.listDuringMergeStateComponents();
@@ -714,7 +737,7 @@ export class MergingMain {
     ImporterAspect,
     ConfigAspect,
     RemoveAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
     ConfigMergerAspect,
     DependencyResolverAspect,
   ];
@@ -731,7 +754,7 @@ export class MergingMain {
     importer,
     config,
     remove,
-    globalConfig,
+    configStore,
     configMerger,
     depResolver,
   ]: [
@@ -746,7 +769,7 @@ export class MergingMain {
     ImporterMain,
     ConfigMain,
     RemoveMain,
-    GlobalConfigMain,
+    ConfigStoreMain,
     ConfigMergerMain,
     DependencyResolverMain,
   ]) {
@@ -765,7 +788,7 @@ export class MergingMain {
       configMerger,
       depResolver
     );
-    cli.register(new MergeCmd(merging, globalConfig));
+    cli.register(new MergeCmd(merging, configStore));
     return merging;
   }
 }

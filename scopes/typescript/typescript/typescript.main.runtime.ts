@@ -75,7 +75,7 @@ import { RemoveTypesTask } from './remove-types-task';
 
 export type TsMode = 'build' | 'dev';
 
-export type SchemaTransformerSlot = SlotRegistry<SchemaTransformer[]>;
+export type SchemaTransformerSlot = SlotRegistry<() => SchemaTransformer[]>;
 export type APITransformerSlot = SlotRegistry<SchemaNodeTransformer[]>;
 
 export type TsConfigTransformContext = {
@@ -137,7 +137,7 @@ export class TypescriptMain {
     return this.tsServer;
   }
 
-  registerSchemaTransformer(transformers: SchemaTransformer[]) {
+  registerSchemaTransformer(transformers: () => SchemaTransformer[]) {
     this.schemaTransformerSlot.register(transformers);
     return this;
   }
@@ -228,6 +228,12 @@ export class TypescriptMain {
     return esmTransformer;
   }
 
+  getAllTransformers(): SchemaTransformer[] {
+    const transformersFunc = Array.from(this.schemaTransformerSlot.values());
+    // backward compatibility for transformers that are not wrapped with a function (bit < 1.9.80)
+    return transformersFunc.map((transformer) => Array.isArray(transformer) ? transformer : transformer()).flat();
+  }
+
   /**
    * create an instance of a typescript semantic schema extractor.
    */
@@ -238,7 +244,7 @@ export class TypescriptMain {
     schemaTransformers: SchemaTransformer[] = [],
     apiTransformers: SchemaNodeTransformer[] = []
   ): SchemaExtractor {
-    const schemaTransformersFromSlot = flatten(Array.from(this.schemaTransformerSlot.values()));
+    const schemaTransformersFromSlot = this.getAllTransformers();
     const apiTransformersFromSlot = flatten(Array.from(this.apiTransformerSlot.values()));
 
     const allSchemaTransformers = schemaTransformers.concat(schemaTransformersFromSlot);
@@ -359,7 +365,7 @@ export class TypescriptMain {
       envs,
       aspectLoader
     );
-    tsMain.registerSchemaTransformer([
+    tsMain.registerSchemaTransformer(() => [
       new ExportDeclarationTransformer(),
       new ExportAssignmentTransformer(),
       new FunctionLikeTransformer(),

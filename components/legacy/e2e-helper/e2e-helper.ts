@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import R from 'ramda';
+import { fromPairs } from 'lodash';
 import { FileStatus } from '@teambit/merging';
 import { VERSION_DELIMITER } from '@teambit/legacy.constants';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
@@ -44,7 +44,7 @@ export class Helper {
   git: GitHelper;
   capsules: CapsulesHelper;
   constructor(helperOptions?: HelperOptions) {
-    this.debugMode = !!process.env.npm_config_debug; // default = false
+    this.debugMode = Boolean(process.env.npm_config_debug) || process.argv.includes('--debug'); // debug mode shows the workspace/scopes dirs and doesn't delete them
     this.scopes = new ScopesData(helperOptions?.scopesOptions); // generates dirs and scope names
     this.scopeJson = new ScopeJsonHelper(this.scopes);
     this.workspaceJsonc = new WorkspaceJsoncHelper(this.scopes);
@@ -92,8 +92,10 @@ export function ensureAndWriteJson(filePath: string, fileContent: any) {
   fs.writeJsonSync(filePath, fileContent, { spaces: 2 });
 }
 
-export const FileStatusWithoutChalk = R.fromPairs(
-  Object.keys(FileStatus).map((status) => [status, removeChalkCharacters(FileStatus[status])])
+export const FileStatusWithoutChalk = fromPairs(
+  Object.entries(FileStatus)
+    .map(([status, value]) => [status, removeChalkCharacters(value)])
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
 );
 
 export { VERSION_DELIMITER };

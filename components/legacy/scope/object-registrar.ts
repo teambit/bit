@@ -8,7 +8,7 @@ import {
   ExportMetadata,
   VersionHistory,
   LaneHistory,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 
 export default function types() {
   return [Source, ModelComponent, Version, ScopeMeta, Symlink, Lane, ExportMetadata, VersionHistory, LaneHistory];

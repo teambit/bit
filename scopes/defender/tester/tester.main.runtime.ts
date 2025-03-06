@@ -264,7 +264,7 @@ export class TesterMain {
     }
     cli.register(new TestCmd(tester, workspace, logger));
 
-    graphql.register(testerSchema(tester, graphql));
+    graphql.register(() => testerSchema(tester, graphql));
 
     return tester;
   }

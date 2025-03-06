@@ -3,13 +3,13 @@ import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { DEFAULT_BIT_RELEASE_TYPE, COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
-import { GlobalConfigMain } from '@teambit/global-config';
 import { IssuesClasses } from '@teambit/component-issues';
 import { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { Logger } from '@teambit/logger';
 import { TagResults, SnappingMain } from './snapping.main.runtime';
-import { BasicTagParams } from './tag-model-component';
+import { BasicTagParams } from './version-maker';
+import { ConfigStoreMain } from '@teambit/config-store';
 
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
 export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
@@ -115,7 +115,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
   constructor(
     private snapping: SnappingMain,
     private logger: Logger,
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {}
 
   // eslint-disable-next-line complexity
@@ -151,7 +151,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
 
     const disableTagAndSnapPipelines = disableTagPipeline;
     let build = options.build;
-    build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
+    build = this.configStore.getConfigBoolean(CFG_FORCE_LOCAL_BUILD) || Boolean(build);
     if (persist) {
       if (persist === true) build = true;
       else if (persist === 'skip-build') build = false;

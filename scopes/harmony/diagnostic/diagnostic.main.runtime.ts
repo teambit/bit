@@ -50,7 +50,7 @@ export class DiagnosticMain {
     const diagnosticMain = new DiagnosticMain(diagnosticSlot);
     diagnosticMain.register({ diagnosticFn: DiagnosticMain.getBitVersion });
     express.register([new DiagnosticRoute(diagnosticMain)]);
-    graphql.register(new DiagnosticGraphql(diagnosticMain));
+    graphql.register(() => new DiagnosticGraphql(diagnosticMain));
     return diagnosticMain;
   }
 }

@@ -16,7 +16,6 @@ module.exports = function (api) {
     ],
   ];
   const plugins = [
-    'ramda',
     [
       '@babel/plugin-transform-modules-commonjs',
       {

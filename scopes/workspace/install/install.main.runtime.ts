@@ -16,7 +16,7 @@ import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { type DependenciesGraph } from '@teambit/scope.objects';
+import { type DependenciesGraph } from '@teambit/objects';
 import {
   CodemodResult,
   linkToNodeModulesWithCodemod,
@@ -421,7 +421,14 @@ export class InstallMain {
     if (!options?.lockfileOnly && !options?.skipPrune) {
       // We clean node_modules only after the last install.
       // Otherwise, we might load an env from a location that we later remove.
-      await installer.pruneModules(this.workspace.path);
+      try {
+        await installer.pruneModules(this.workspace.path);
+      // Ignoring the error here as it's not critical and we don't want to fail the install process
+      } catch (err: any) {
+        this.logger.error(`failed running pnpm prune with error`, err);
+      }
+      // After pruning we need reload moved envs, as during the pruning the old location might be deleted
+      await this.reloadMovedEnvs();
     }
     // this is now commented out because we assume we don't need it anymore.
     // even when the env was not loaded before and it is loaded now, it should be fine because the dependencies-data
@@ -474,6 +481,13 @@ export class InstallMain {
       return !regularPathExists || !resolvedPathExists;
     });
     const idsToLoad = movedEnvs.map((env) => env.id);
+    const componentIdsToLoad = idsToLoad.map((id) => ComponentID.fromString(id));
+    await this.reloadEnvs(componentIdsToLoad);
+  }
+
+  private async reloadRegisteredEnvs() {
+    const allEnvs = this.envs.getAllRegisteredEnvs();
+    const idsToLoad = compact(allEnvs.map((env) => env.id));
     const componentIdsToLoad = idsToLoad.map((id) => ComponentID.fromString(id));
     await this.reloadEnvs(componentIdsToLoad);
   }
@@ -1157,8 +1171,7 @@ export class InstallMain {
    * so no reason to try to install them (it will fail)
    */
   private async generateFilterFnForDepsFromLocalRemote() {
-    // TODO: once scope create a new API for this, replace it with the new one
-    const remotes = await this.workspace.scope._legacyRemotes();
+    const remotes = await this.workspace.scope.getRemoteScopes();
     const reg = await this.dependencyResolver.getRegistries();
     const packageScopes = Object.keys(reg.scopes);
     return (dependencyList: DependencyList): DependencyList => {

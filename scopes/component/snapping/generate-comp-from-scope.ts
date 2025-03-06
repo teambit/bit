@@ -6,7 +6,7 @@ import { ComponentOverrides } from '@teambit/legacy.consumer-config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { Component } from '@teambit/component';
 import { DependenciesMain } from '@teambit/dependencies';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 import { FileData } from './snap-from-scope.cmd';
 import { SnappingMain, SnapDataParsed } from './snapping.main.runtime';
 
@@ -75,7 +75,7 @@ export async function generateCompFromScope(
 
   const { version, files: filesBitObject } =
     await scope.legacyScope.sources.consumerComponentToVersion(consumerComponent);
-  const modelComponent = scope.legacyScope.sources.findOrAddComponent(consumerComponent);
+  const modelComponent = await scope.legacyScope.sources.findOrAddComponent(consumerComponent);
   consumerComponent.version = version.hash().toString();
   await scope.legacyScope.objects.writeObjectsToTheFS([version, modelComponent, ...filesBitObject.map((f) => f.file)]);
   const component = await scope.getManyByLegacy([consumerComponent]);
@@ -109,7 +109,8 @@ export async function addDeps(
   scope: ScopeMain,
   deps: DependenciesMain,
   depsResolver: DependencyResolverMain,
-  snapping: SnappingMain
+  snapping: SnappingMain,
+  autoDetect?: VariantPolicyConfigArr
 ) {
   const newDeps = snapData.newDependencies || [];
   const updateDeps = snapData.dependencies || [];
@@ -125,6 +126,13 @@ export async function addDeps(
   const getPkgObj = (type: 'runtime' | 'dev' | 'peer') => {
     return toPackageObj(packageDeps.filter((dep) => dep.type === type));
   };
+  const allAutoDeps: { [pkgName: string]: string } = {};
+  ['dependencies', 'devDependencies', 'peerDependencies'].forEach((depType) => {
+    autoDetect?.[depType]?.forEach((dep) => {
+      allAutoDeps[dep.name] = dep.version;
+    });
+  });
+
   const manipulateCurrentPkgs = (pkgs: Record<string, string>) => {
     snapData.removeDependencies?.forEach((pkg) => {
       delete pkgs[pkg];
@@ -145,6 +153,10 @@ export async function addDeps(
       const found = updateDeps.find((d) => d.startsWith(`${dep.id.toStringWithoutVersion()}@`));
       if (found) {
         dep.id = dep.id.changeVersion(found.replace(`${dep.id.toStringWithoutVersion()}@`, ''));
+      }
+      const foundInAutoDeps = dep.packageName ? allAutoDeps[dep.packageName] : undefined;
+      if (foundInAutoDeps) {
+        dep.id = dep.id.changeVersion(allAutoDeps[dep.packageName!]);
       }
     });
     return afterRemoval;

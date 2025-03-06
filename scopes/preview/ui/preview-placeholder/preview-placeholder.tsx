@@ -73,7 +73,7 @@ export function PreviewPlaceholder({
   }
   const name = component.id.toString();
 
-  if (component.buildStatus === 'pending')
+  if (!shouldShowPreview && component.buildStatus === 'pending')
     return (
       <div className={styles.previewPlaceholder} data-tip="" data-for={name}>
         <Icon of="Ripple-processing" />
@@ -83,7 +83,7 @@ export function PreviewPlaceholder({
 
   return (
     <>
-      <ComponentComposition component={component} composition={selectedPreview} pubsub={false} />
+      <ComponentComposition component={component} composition={selectedPreview} pubsub={false} includeEnv={true} loading={'lazy'} viewport={1280}/>
       <div className={styles.previewOverlay} />
     </>
   );

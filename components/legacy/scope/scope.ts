@@ -2,14 +2,12 @@ import fs from 'fs-extra';
 import * as pathLib from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
-import R from 'ramda';
-import { BitId, BitIdStr } from '@teambit/legacy-bit-id';
+import { reject, isNil } from 'lodash';
+import { BitIdStr } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
-import semver from 'semver';
 import { BitError } from '@teambit/bit-error';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { isTag } from '@teambit/component-version';
-import { readDirIgnoreSystemFilesSync } from '@teambit/toolbox.fs.readdir-skip-system-files';
 import { Analytics } from '@teambit/legacy.analytics';
 import {
   BIT_GIT_DIR,
@@ -49,7 +47,7 @@ import {
   ObjectItem,
   ObjectList,
   DependenciesGraph,
-} from '@teambit/scope.objects';
+} from '@teambit/objects';
 import { RemovedObjects } from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
@@ -60,7 +58,7 @@ import { StagedSnaps } from './staged-snaps';
 import { collectGarbage } from './garbage-collector';
 import { getBitVersionGracefully } from '@teambit/bit.get-bit-version';
 
-const removeNils = R.reject(R.isNil);
+const removeNils = (array) => reject(array, isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
 
 type HasIdOpts = {
@@ -221,38 +219,6 @@ export default class Scope {
     return BITS_DIRNAME;
   }
 
-  /**
-   * Get a relative (to scope) path to a specific component such as compiler / tester / extension
-   * Support getting the latest installed version
-   * @param {BitId} id
-   */
-  static getComponentRelativePath(id: BitId, scopePath?: string): string {
-    if (!id.scope) {
-      throw new Error('could not find id.scope');
-    }
-    const relativePath = pathLib.join(id.name, id.scope);
-    if (!id.getVersion().latest) {
-      if (!id.version) {
-        // brought closer because flow can't deduce if it's done in the beginning.
-        throw new Error('could not find id.version');
-      }
-      return pathLib.join(relativePath, id.version);
-    }
-    if (!scopePath) {
-      throw new Error(`could not find the latest version of ${id.toString()} without the scope path`);
-    }
-    const componentFullPath = pathLib.join(scopePath, Scope.getComponentsRelativePath(), relativePath);
-    if (!fs.existsSync(componentFullPath)) return '';
-    const versions = readDirIgnoreSystemFilesSync(componentFullPath);
-    const latestVersion = semver.maxSatisfying(versions, '*', { includePrerelease: true });
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return pathLib.join(relativePath, latestVersion!);
-  }
-
-  getBitPathInComponentsDir(id: BitId): string {
-    return pathLib.join(this.getComponentsPath(), id.toFullPath());
-  }
-
   describe(): ScopeDescriptor {
     return {
       name: this.name,
@@ -263,7 +229,6 @@ export default class Scope {
     return Promise.all(
       components
         .filter((comp) => !(comp instanceof Symlink))
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         .map((c) => c.toConsumerComponent(c.latestExisting(this.objects).toString(), this.name, this.objects))
     );
   }
@@ -282,9 +247,13 @@ export default class Scope {
     return modelComponent.hasVersion(id.version, this.objects);
   }
 
-  async list(): Promise<ModelComponent[]> {
-    const filter = (comp: ComponentItem) => !comp.isSymlink;
+  async list(localScopeOnly = false): Promise<ModelComponent[]> {
+    const filter = (comp: ComponentItem) => {
+      if (comp.isSymlink) return false;
+      return localScopeOnly ? comp.id.scope === this.name : true;
+    };
     const results = await this.objects.listObjectsFromIndex(IndexType.components, filter);
+    logger.debug(`scope.list found ${results.length} components in the scope`);
     results.forEach((result) => {
       if (!(result instanceof ModelComponent)) {
         throw new Error(
@@ -297,11 +266,6 @@ once done, to continue working, please run "bit cc"`
       }
     });
     return results as ModelComponent[];
-  }
-
-  async listIncludesSymlinks(): Promise<Array<ModelComponent | Symlink>> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.objects.listObjectsFromIndex(IndexType.components);
   }
 
   async listIncludeRemoteHead(laneId: LaneId): Promise<ModelComponent[]> {
@@ -558,13 +522,6 @@ once done, to continue working, please run "bit cc"`
     return logs;
   }
 
-  loadAllVersions(id: ComponentID): Promise<Component[]> {
-    return this.getModelComponentIfExist(id).then((componentModel) => {
-      if (!componentModel) throw new ComponentNotFound(id.toString());
-      return componentModel.collectVersions(this.objects);
-    });
-  }
-
   /**
    * get ModelComponent instance per bit-id.
    * it throws an error if the component wasn't found.
@@ -637,25 +594,11 @@ once done, to continue working, please run "bit cc"`
     return Boolean(comp);
   }
 
-  /**
-   * Creates a symlink object with the local-scope which links to the real-object of the remote-scope
-   * This way, local components that have dependencies to the exported component won't break.
-   */
-  createSymlink(id: ComponentID, remote: string) {
-    const symlink = new Symlink({
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      scope: id.scope,
-      name: id.fullName,
-      realScope: remote,
-    });
-    return this.objects.add(symlink);
-  }
-
   ensureDir() {
     fs.ensureDirSync(this.getComponentsPath());
     return this.tmp
       .ensureDir()
-      .then(() => this.scopeJson.write(this.getPath()))
+      .then(() => this.scopeJson.write())
       .then(() => this.objects.ensureDir())
       .then(() => this);
   }
@@ -740,7 +683,7 @@ once done, to continue working, please run "bit cc"`
     return collectGarbage(this, opts);
   }
 
-  static async ensure(path: PathOsBasedAbsolute, name?: string | null, groupName?: string | null): Promise<Scope> {
+  static async ensure(path: PathOsBasedAbsolute, name?: string, groupName?: string): Promise<Scope> {
     if (pathHasScope(path)) return this.load(path);
     const scopeJson = Scope.ensureScopeJson(path, name, groupName);
     const repository = await Repository.create({ scopePath: path, scopeJson });
@@ -749,16 +692,12 @@ once done, to continue working, please run "bit cc"`
     return scope;
   }
 
-  static ensureScopeJson(
-    path: PathOsBasedAbsolute,
-    name?: string | null | undefined,
-    groupName?: string | null | undefined
-  ): ScopeJson {
+  static ensureScopeJson(scopePath: PathOsBasedAbsolute, name?: string, groupName?: string): ScopeJson {
     if (!name) name = pathLib.basename(process.cwd());
     if (name === CURRENT_UPSTREAM) {
       throw new BitError(`the name "${CURRENT_UPSTREAM}" is a reserved word, please use another name`);
     }
-    const scopeJson = new ScopeJson({ name, groupName, version: getBitVersionGracefully() || 'unknown' });
+    const scopeJson = new ScopeJson({ name, groupName, version: getBitVersionGracefully() || 'unknown' }, getScopeJsonPath(scopePath));
     return scopeJson;
   }
 
@@ -783,6 +722,16 @@ once done, to continue working, please run "bit cc"`
       logger.debug(`scope.load, found scope at ${scopePath} from cache`);
       return Scope.scopeCache[scopePath];
     }
+    const scopeJson = await Scope.getScopeJson(scopePath);
+    const objects = await Repository.load({ scopePath, scopeJson });
+    const isBare =
+      !scopePath.endsWith(pathLib.join(BIT_HIDDEN_DIR)) && !scopePath.endsWith(pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR));
+    const scope = new Scope({ path: scopePath, scopeJson, objects, isBare });
+    Scope.scopeCache[scopePath] = scope;
+    return scope;
+  }
+
+  static async getScopeJson(scopePath: string): Promise<ScopeJson> {
     const scopeJsonPath = getScopeJsonPath(scopePath);
     const scopeJsonExist = fs.existsSync(scopeJsonPath);
     let scopeJson;
@@ -791,12 +740,13 @@ once done, to continue working, please run "bit cc"`
     } else {
       scopeJson = Scope.ensureScopeJson(scopePath);
     }
-    const objects = await Repository.load({ scopePath, scopeJson });
-    const isBare =
-      !scopePath.endsWith(pathLib.join(BIT_HIDDEN_DIR)) && !scopePath.endsWith(pathLib.join(DOT_GIT_DIR, BIT_GIT_DIR));
-    const scope = new Scope({ path: scopePath, scopeJson, objects, isBare });
-    Scope.scopeCache[scopePath] = scope;
-    return scope;
+    return scopeJson;
+  }
+
+  async reloadScopeJson() {
+    const scopeJson = await Scope.getScopeJson(this.path);
+    this.scopeJson = scopeJson;
+    this.objects.scopeJson = scopeJson;
   }
 
   public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {
