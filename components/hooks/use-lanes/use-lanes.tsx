@@ -4,7 +4,7 @@ import { LaneModel, LanesModel, LanesQuery } from '@teambit/lanes.ui.models.lane
 import { gql } from '@apollo/client';
 import { LaneId } from '@teambit/lane-id';
 import { isEqual } from 'lodash';
-import { useLanesContext } from './lanes-context';
+import { LanesContextModel, useLanesContext } from './lanes-context';
 
 const GET_LANES = gql`
   query Lanes(
@@ -141,7 +141,7 @@ export type SearchLanes = (search?: string, skip?: boolean) => SearchLanesResult
 
 export type UseLanesResult = UseRootLanesResult & {
   searchResult?: SearchLanesResult;
-};
+} & LanesContextModel;
 
 export type UseRootLanesResult = {
   lanesModel?: LanesModel;

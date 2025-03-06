@@ -2095,6 +2095,13 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/menus/use-lanes-menu"
     },
+    "ui/models/lanes-model": {
+        "name": "ui/models/lanes-model",
+        "scope": "teambit.lanes",
+        "version": "0.0.221",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/models/lanes-model"
+    },
     "ui/pages/preview-not-found": {
         "name": "ui/pages/preview-not-found",
         "scope": "teambit.ui-foundation",

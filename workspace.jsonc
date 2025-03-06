@@ -223,7 +223,6 @@
         "@teambit/lanes.ui.icons.lane-icon": "^0.0.9",
         "@teambit/lanes.ui.lane-details": "^0.0.205",
         "@teambit/lanes.ui.menus.lanes-overview-menu": "^0.0.11",
-        "@teambit/lanes.ui.models.lanes-model": "^0.0.224",
         "@teambit/lanes.ui.navigation.lane-switcher": "^0.0.231",
         "@teambit/legacy-bit-id": "^1.1.2",
         "@teambit/mdx.compilers.mdx-transpiler": "^1.0.8",
