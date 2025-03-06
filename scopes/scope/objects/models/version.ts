@@ -430,8 +430,8 @@ export default class Version extends BitObject {
   }
   static flattenedEdgeToSource(flattenedEdges?: DepEdge[]): Source | undefined {
     if (!flattenedEdges) return undefined;
-    const flattenedEdgesObj = flattenedEdges.map((f) => Version.depEdgeToArray(f));
-    // const flattenedEdgesObj = flattenedEdges.map((f) => Version.depEdgeToObject(f));
+    // const flattenedEdgesObj = flattenedEdges.map((f) => Version.depEdgeToArray(f));
+    const flattenedEdgesObj = flattenedEdges.map((f) => Version.depEdgeToObject(f));
     const flattenedEdgesBuffer = Buffer.from(JSON.stringify(flattenedEdgesObj));
     return Source.from(flattenedEdgesBuffer);
   }
