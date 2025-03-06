@@ -1,13 +1,13 @@
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { flatten, partition } from 'lodash';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { Component, ComponentID } from '@teambit/component';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ComponentIdList } from '@teambit/component-id';
 import { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy/dist/scope/exceptions';
+import { ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
 import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
 import compact from 'lodash.compact';
 import { Logger } from '@teambit/logger';
@@ -177,12 +177,13 @@ export class GraphIdsFromFsBuilder {
   }
 
   private async loadManyComponents(componentsIds: ComponentID[], dependenciesOf?: string): Promise<Component[]> {
-    const components = await mapSeries(componentsIds, async (comp) => {
-      const idStr = comp.toString();
-      const fromCache = this.loadedComponents[idStr];
+    const components = await mapSeries(componentsIds, async (compId) => {
+      const idStrPotentiallyWithoutVersion = compId.toString();
+      const fromCache = this.loadedComponents[idStrPotentiallyWithoutVersion];
       if (fromCache) return fromCache;
       try {
-        const component = await this.workspace.get(comp);
+        const component = await this.workspace.get(compId);
+        const idStr = component.id.toString();
         this.loadedComponents[idStr] = component;
         this.graph.setNode(new Node(idStr, component.id));
         return component;
@@ -194,23 +195,23 @@ export class GraphIdsFromFsBuilder {
         ) {
           if (dependenciesOf && !this.shouldThrowOnMissingDep) {
             this.logger.warn(
-              `component ${idStr}, dependency of ${dependenciesOf} was not found. continuing without it`
+              `component ${idStrPotentiallyWithoutVersion}, dependency of ${dependenciesOf} was not found. continuing without it`
             );
             return null;
           }
           throw new BitError(
-            `error: component "${idStr}" was not found.\nthis component is a dependency of "${
+            `error: component "${idStrPotentiallyWithoutVersion}" was not found.\nthis component is a dependency of "${
               dependenciesOf || '<none>'
             }" and is needed as part of the graph generation`
           );
         }
         if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
           if (dependenciesOf && !this.shouldThrowOnInvalidDeps) {
-            this.logger.warn(`component ${idStr}, dependency of ${dependenciesOf} is invalid. continuing without it`);
+            this.logger.warn(`component ${idStrPotentiallyWithoutVersion}, dependency of ${dependenciesOf} is invalid. continuing without it`);
             return null;
           }
           throw new BitError(
-            `error: component "${idStr}" is invalid (${err.message}).\nthis component is a dependency of "${
+            `error: component "${idStrPotentiallyWithoutVersion}" is invalid (${err.message}).\nthis component is a dependency of "${
               dependenciesOf || '<none>'
             }" and is needed as part of the graph generation`
           );

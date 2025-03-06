@@ -2,9 +2,8 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { ComponentID } from '@teambit/component-id';
-import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
-import { Remote } from '@teambit/legacy/dist/remotes';
-import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
+import { ConsumerNotFound } from '@teambit/legacy.consumer';
+import { getRemoteByName, Remote } from '@teambit/scope.remotes';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { BitError } from '@teambit/bit-error';
 import { ListCmd } from './list.cmd';
@@ -71,7 +70,7 @@ export class ListerMain {
       throw new ConsumerNotFound();
     }
     this.logger.setStatusLine(BEFORE_LOCAL_LIST);
-    const componentsList = new ComponentsList(this.workspace.consumer);
+    const componentsList = new ComponentsList(this.workspace);
     const results = await componentsList.listAll(showRemoteVersion, showAll, namespacesUsingWildcards);
     return this.sortListScopeResults(results);
   }

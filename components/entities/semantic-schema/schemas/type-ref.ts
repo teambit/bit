@@ -47,6 +47,10 @@ export class TypeRefSchema extends SchemaNode {
     this.componentId = componentId;
   }
 
+  getNodes(): SchemaNode[] {
+    return this.typeArgs || [];
+  }
+
   withTypeArgs(typeArgs: SchemaNode[]) {
     this.typeArgs = typeArgs;
     return this;
@@ -128,7 +132,7 @@ export class TypeRefSchema extends SchemaNode {
     let componentId;
     try {
       componentId = obj.componentId ? ComponentID.fromObject(obj.componentId) : undefined;
-    } catch (e) {
+    } catch {
       componentId = undefined;
     }
     const packageName = obj.packageName;

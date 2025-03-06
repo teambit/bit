@@ -1,12 +1,11 @@
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { ScopeMain } from '@teambit/scope';
 // import { ComponentIdList } from '@teambit/component-id';
-import Lane, { LaneComponent } from '@teambit/legacy/dist/scope/models/lane';
+import { Ref, Lane, LaneComponent } from '@teambit/objects';
 import { isSnap } from '@teambit/component-version';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { Workspace } from '@teambit/workspace';
 import { compact } from 'lodash';
 import { getBitCloudUser } from '@teambit/cloud.modules.get-cloud-user';
@@ -32,7 +31,7 @@ export async function createLane(
   if (!isValidScopeName(scopeName)) {
     throw new InvalidScopeName(scopeName);
   }
-  await throwForStagedComponents(consumer);
+  await throwForStagedComponents(workspace);
   const getDataToPopulateLaneObjectIfNeeded = async (): Promise<LaneComponent[]> => {
     if (remoteLane) return remoteLane.components;
     // when branching from one lane to another, copy components from the origin lane
@@ -105,8 +104,8 @@ export function throwForInvalidLaneName(laneName: string) {
   }
 }
 
-export async function throwForStagedComponents(consumer: Consumer) {
-  const componentList = new ComponentsList(consumer);
+export async function throwForStagedComponents(workspace: Workspace) {
+  const componentList = new ComponentsList(workspace);
   const stagedComponents = await componentList.listExportPendingComponentsIds();
   if (stagedComponents.length) {
     throw new BitError(

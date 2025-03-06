@@ -192,9 +192,16 @@ export class ApplicationMain {
    * if poolIds is provided, it will load only the apps that are part of the pool.
    */
   async listAppsComponents(poolIds?: ComponentID[]): Promise<Component[]> {
+    const host = this.workspace || this.componentAspect.getHost();
     const components = poolIds
-      ? await this.componentAspect.getHost().getMany(poolIds)
-      : await this.componentAspect.getHost().list();
+      ? this.workspace
+        ? await this.workspace.getMany(poolIds, {
+            loadExtensions: true,
+            executeLoadSlot: true,
+            loadSeedersAsAspects: true,
+          })
+        : await host.getMany(poolIds)
+      : await host.list();
     const appTypesPatterns = this.getAppPatterns();
     const appsComponents = components.filter((component) => this.hasAppTypePattern(component, appTypesPatterns));
     return appsComponents;
@@ -238,7 +245,7 @@ export class ApplicationMain {
             // eslint-disable-next-line
             const appManifest = require(pluginPath)?.default;
             return appManifest;
-          } catch (err) {
+          } catch {
             this.logger.error(`failed loading app manifest: ${pluginPath}`);
             return undefined;
           }
@@ -510,7 +517,7 @@ export class ApplicationMain {
       harmony
     );
     appService.registerAppType = application.registerAppType.bind(application);
-    const appCmd = new AppCmd();
+    const appCmd = new AppCmd(application);
     appCmd.commands = [new AppListCmd(application), new RunCmd(application, logger)];
     aspectLoader.registerPlugins([new AppPlugin(appSlot)]);
     builder.registerBuildTasks([new AppsBuildTask(application)]);

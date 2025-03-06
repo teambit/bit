@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 import React, { IframeHTMLAttributes, useState, useRef, useEffect } from 'react';
 import classNames from 'classnames';
 import { compact } from 'lodash';
@@ -95,6 +96,7 @@ export function ComponentPreview({
   fullContentHeight = false,
   onLoad,
   style,
+  sandbox,
   ...rest
 }: ComponentPreviewProps) {
   const [heightIframeRef, iframeHeight] = useIframeContentHeight({ skip: false, viewport });
@@ -162,6 +164,7 @@ export function ComponentPreview({
     <div ref={containerRef} className={classNames(styles.preview, className)} style={{ height: forceHeight }}>
       <iframe
         {...rest}
+        sandbox={sandbox || undefined}
         ref={currentRef}
         style={{
           ...style,

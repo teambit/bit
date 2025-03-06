@@ -4,9 +4,9 @@ import { EOL } from 'os';
 import * as path from 'path';
 
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
-import { NewerVersionFound } from '../../src/consumer/exceptions';
-import Helper, { FileStatusWithoutChalk } from '../../src/e2e-helper/e2e-helper';
-import { Extensions, FILE_CHANGES_CHECKOUT_MSG } from '../../src/constants';
+import { NewerVersionFound } from '@teambit/legacy.consumer';
+import { Helper, FileStatusWithoutChalk } from '@teambit/legacy.e2e-helper';
+import { Extensions, FILE_CHANGES_CHECKOUT_MSG } from '@teambit/legacy.constants';
 
 chai.use(require('chai-fs'));
 
@@ -678,6 +678,39 @@ describe('bit checkout command', function () {
     });
     it('bit status should not throw an error', () => {
       expect(() => helper.command.status()).to.not.throw();
+    });
+  });
+  describe('checkout main component when on a lane', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.tagAllWithoutBuild('--unmodified');
+      helper.command.export();
+      helper.command.createLane('dev');
+      helper.command.checkoutVersion('0.0.1', 'comp1', '-x');
+    });
+    it('should checkout the component successfully', () => {
+      const bitmap = helper.bitMap.read();
+      expect(bitmap.comp1.version).to.equal('0.0.1');
+    });
+  });
+  describe('checkout reset of main component when on a lane and the component-dir is deleted', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.createLane('dev');
+      helper.fs.deletePath('comp1');
+      helper.command.checkoutReset('--all');
+    });
+    it('should re-write the component', () => {
+      expect(path.join(helper.scopes.localPath, 'comp1')).to.be.a.directory();
+    });
+    it('status should not have invalid components', () => {
+      const status = helper.command.statusJson();
+      expect(status.invalidComponents).to.have.lengthOf(0);
     });
   });
 });

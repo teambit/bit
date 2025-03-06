@@ -8,6 +8,7 @@
 /* eslint-disable no-console */
 
 import net from 'net';
+import os from 'os';
 import crypto from 'crypto';
 import { execSync } from 'child_process';
 import { spawn } from '@lydell/node-pty';
@@ -16,23 +17,27 @@ export function spawnPTY() {
   // Create a PTY (terminal emulation) running the 'bit server' process
   // this way, we can catch terminal sequences like arrows, ctrl+c, etc.
   const flags = process.argv.slice(2).filter((arg) => arg.startsWith('-'));
-  const ptyProcess = spawn('bit', ['server', ...flags], {
+  const opts = {
     name: 'xterm-color',
     cols: 80,
     rows: 30,
     cwd: process.cwd(),
     env: process.env,
-  });
+  };
+  const ptyProcess =
+    os.platform() === 'win32'
+      ? spawn('powershell.exe', ['bit', 'server', ...flags], opts)
+      : spawn('bit', ['server', ...flags], opts);
 
   // Keep track of connected clients
   const clients: net.Socket[] = [];
 
   let didGetClient = false;
-  let outputNotForClients = false;
+  let outputNotForClients = '';
 
   // @ts-ignore
   ptyProcess.on('data', (data) => {
-    if (!clients.length) outputNotForClients = data.toString();
+    if (!clients.length) outputNotForClients += data.toString();
     // Forward data from the ptyProcess to connected clients
     // console.log('ptyProcess data:', data.toString());
     clients.forEach((socket) => {
@@ -59,7 +64,7 @@ export function spawnPTY() {
 
     // Handle client disconnect
     socket.on('end', () => {
-      console.log('Client disconnected.');
+      console.log('Client disconnected (gracefully).');
       const index = clients.indexOf(socket);
       if (index !== -1) {
         clients.splice(index, 1);
@@ -67,8 +72,12 @@ export function spawnPTY() {
     });
 
     // Handle socket errors
-    socket.on('error', (err) => {
-      console.error('Socket error:', err);
+    socket.on('error', (err: any) => {
+      if (err.code === 'ECONNRESET') {
+        console.log('Client disconnected (forcibly).');
+      } else {
+        console.error('Socket error:', err);
+      }
       const index = clients.indexOf(socket);
       if (index !== -1) {
         clients.splice(index, 1);
@@ -80,7 +89,7 @@ export function spawnPTY() {
 
   server.on('error', (err: any) => {
     if (err.code === 'EADDRINUSE') {
-      const pid = getPidByPort(PORT);
+      const pid = getPidByPort(PORT, true);
       const usedByPid = pid ? ` (used by PID ${pid})` : '';
       const killCmd = pid ? `\nAlternatively, you can kill the process by running "kill ${pid}".` : '';
       console.error(`Error: Port ${PORT} is already in use${usedByPid}.
@@ -145,7 +154,7 @@ export function getPortFromPath(path: string): number {
   return port;
 }
 
-function getPidByPort(port: number): string | null {
+export function getPidByPort(port: number, consoleErrors = false): string | null {
   const platform = process.platform;
   try {
     if (platform === 'darwin' || platform === 'linux') {
@@ -178,10 +187,10 @@ function getPidByPort(port: number): string | null {
         }
       }
     } else {
-      console.error('Unsupported platform:', platform);
+      if (consoleErrors) console.error('Unsupported platform:', platform);
     }
   } catch (error: any) {
-    console.error('Error executing command:', error.message);
+    if (consoleErrors) console.error('Error executing command:', error.message);
   }
   return null;
 }

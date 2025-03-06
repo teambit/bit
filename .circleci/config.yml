@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: cimg/node:22.11.0
+    - image: cimg/node:22.14.0
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -87,7 +87,7 @@ commands: # reusable commands
         default: 'BASE_IMAGE'
         type: string
       docker_build_arg_value:
-        default: 'node:22.11.0'
+        default: 'node:22.14.0'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -116,7 +116,7 @@ commands: # reusable commands
         default: 'BASE_IMAGE'
         type: string
       docker_build_arg_value:
-        default: 'node:22.11.0'
+        default: 'node:22.14.0'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -198,13 +198,13 @@ commands: # reusable commands
   windows_set_node_version:
     parameters:
       version:
-        default: 22.11.0
+        default: 22.14.0
         type: string
     steps:
       - run: choco upgrade nvm -y
       - run: nvm -v
-      - run: nvm install 22.11.0
-      - run: nvm use 22.11.0
+      - run: nvm install 22.14.0
+      - run: nvm use 22.14.0
       - run: node -v
   windows_add_bvm_to_path:
     steps:
@@ -272,8 +272,8 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:22.11.0"
-          docker_tag_suffix: "-node-22.11.0"
+          docker_build_arg_value: "node:22.14.0"
+          docker_tag_suffix: "-node-22.14.0"
 
   # docker_non_root_build:
   #   machine:
@@ -292,10 +292,10 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:22.11.0"
+          docker_build_arg_value: "node:22.14.0"
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-22.11.0"
+          docker_tag_suffix: "-node-22.14.0"
 
 
   server_docker_build_node_22:
@@ -306,10 +306,10 @@ jobs:
           at: ./
       - docker_build_and_push:
           docker_build_arg_name: "BIT_IMAGE"
-          docker_build_arg_value: "`npm show @teambit/bit version`-node-22.11.0"
+          docker_build_arg_value: "`npm show @teambit/bit version`-node-22.14.0"
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-22.11.0"
+          docker_tag_suffix: "-node-22.14.0"
   set_ssh_key:
     <<: *defaults
     working_directory: ~/.ssh
@@ -382,26 +382,6 @@ jobs:
           name: 'notify community slack'
           command: 'cd bit && node ./scripts/slack-deploy-notification.js community'
 
-  unit_test:
-    <<: *defaults
-    steps:
-      - run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      - attach_workspace:
-          at: ./
-      - run: 'cd bit && mkdir junit'
-      - run:
-          name: 'Run unit tests'
-          command: 'cd bit && npm run test-circle'
-          environment:
-            FORCE_COLOR: 1
-            MOCHA_FILE: junit/unit-test-results.xml
-          when: always
-      - store_test_results:
-          path: bit/junit
-      - store_artifacts:
-          path: bit/junit
 
   lint:
     <<: *defaults
@@ -415,6 +395,9 @@ jobs:
             - 'repo-{{ checksum ".circle-sha" }}'
       - attach_workspace:
           at: ./
+      - run:
+          name: 'run OXlint'
+          command: 'cd bit && npm run oxlint'
       - run:
           name: 'run ESLint'
           command: 'cd bit && node --max-old-space-size=4096 node_modules/eslint/bin/eslint.js "{src,e2e,scopes,components}/**/*.{ts,tsx}" --format junit -o junit/eslint-results.xml'
@@ -431,9 +414,6 @@ jobs:
       - attach_workspace:
           at: ./
       - run:
-          name: 'generate types'
-          command: 'cd bit && npm run build:types'
-      - run:
           name: 'run TSC'
           command: 'cd bit && npm run check-types'
       - run:
@@ -445,10 +425,7 @@ jobs:
       - run:
           name: 'make sure the packages used in legacy are specified in package.json'
           command: 'cd bit && node scripts/validate-pkg-exist-in-pkg-json.js'
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bit/dist
+
 
   setup_harmony:
     resource_class: large
@@ -461,7 +438,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.63-v1
+          key: core-aspect-env-v0.0.65-v2
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
@@ -476,7 +453,7 @@ jobs:
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
       - run: bvm upgrade
-      # - run: bvm install 1.7.41
+      # - run: bvm install 1.9.31
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
@@ -491,10 +468,9 @@ jobs:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.0.63-v1
+          key: core-aspect-env-v0.0.65-v2
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a107
-      - run: cd bit && npm run link-bit-legacy
       # - run: cd bit && bbit compile
 
       # the following 3 commands should help debugging a random error on Circle: "sh: 1: babel: not found"
@@ -502,12 +478,6 @@ jobs:
       # - run: cd bit && ls -l node_modules/@babel/cli/bin
       # - run: cd bit && ls -l node_modules/.bin
 
-      - run:
-          name: 'Build bit source code'
-          command: 'cd bit && npm run build'
-      - run:
-          name: 'Build bit-legacy types'
-          command: 'cd bit && npm run build:types'
       - persist_to_workspace:
           root: .
           paths:
@@ -537,7 +507,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.63-v1
+          key: core-aspect-env-v0.0.65-v2
       # - update_ssh_agent
       # temporary, check if we can remove it
       - run: cd bit && bit cc
@@ -574,7 +544,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.63-v1
+          key: core-aspect-env-v0.0.65-v2
       - bit_config:
           env: "hub"
       - restore_cache:
@@ -586,27 +556,33 @@ jobs:
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
-      - run: cd bit && node scripts/bump-bit-legacy-ver.js
       - run: bvm link
       - run: cd bit && bit config set force_local_build true
       # temporary, check if we can remove it
       - run: cd bit && bit cc
       - run: cd bit && bit status
       - run: cd bit && bit diff
+      - run:
+          name: If no component has changed, fail the job
+          command: |
+            if cd bit && bit diff | grep -q "there are no modified components to diff"; then
+              echo "No changes detected, failing job to prevent further workflow execution."
+              exit 1
+            fi
+      # - run: cd bit && rm -rf node_modules/.bin/bit
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
       - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
+      - run: cd bit && npm run generate-core-aspects-ids
       - run: cd bit && bit checkout head teambit.harmony/content/cli-reference --auto-merge-resolve ours --skip-dependency-installation
       - run: cd bit && bit checkout head --skip-dependency-installation
       - run: cd bit && git diff
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
       # - run: cd bit && bbit checkout head
-      # - run: cd bit && npm run link-bit-legacy
       # since we removed the node_modules we need to make sure we compile, install and link everything again
       # - run: cd bit && bbit install --skip-import
       # - run: cd bit && bbit compile
-      - run: cd bit && npm run link-bit-legacy
       # temporary, check if we can remove it
       - run: cd bit && bit cc
 
@@ -636,6 +612,8 @@ jobs:
             - bit/scopes/harmony/cli-reference
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
+      - store_artifacts:
+          path: bit/scopes/harmony/testing/load-aspect/core-aspects-ids.json
       - store_artifacts:
           path: bit/objects-before-export.tar
 
@@ -669,7 +647,11 @@ jobs:
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values linux --values linux &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
             pnpm add @teambit/bit
+      - run:
+          name: copy lockfile
+          command: mkdir lockfile && cp bit-${BIT_VERSION}/pnpm-lock.yaml lockfile
       - compress_bit
       - run:
           name: move to linux folder
@@ -690,10 +672,13 @@ jobs:
           paths:
             - linux
             - linux-arm64
+            - lockfile
       - store_artifacts:
           path: linux
       - store_artifacts:
           path: linux-arm64
+      - store_artifacts:
+          path: lockfile
 
   bundle_version_macos:
     <<: *defaults
@@ -716,6 +701,7 @@ jobs:
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values darwin --values darwin &&
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
             pnpm add @teambit/bit
       - compress_bit
       - run:
@@ -765,6 +751,7 @@ jobs:
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.neverBuiltDependencies --values cpu-features --values ssh2 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
             pnpm add @teambit/bit
       - compress_bit
       - run:
@@ -803,6 +790,9 @@ jobs:
       # - run:
       #     name: Upload tar file (OSX-arm64) to old location
       #     command: gsutil cp macos-arm64/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/Darwin-arm64/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: Upload Lockfile
+          command: gsutil cp lockfile/pnpm-lock.yaml gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/pnpm-lock.yaml && sha256sum lockfile/pnpm-lock.yaml > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/pnpm-lock.checksum.txt
       - run:
           name: Upload tar file (Linux)
           command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.tar.gz && mv linux/bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}-linux-x64.tar.gz && sha256sum bit-${BIT_VERSION}-linux-x64.tar.gz > checksum.txt && gsutil cp checksum.txt gs://bvm.bit.dev/bit/versions/${BIT_VERSION}/bit-${BIT_VERSION}-linux-x64.checksum.txt
@@ -890,7 +880,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.63-v1
+          key: core-aspect-env-v0.0.65-v2
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -900,7 +890,7 @@ jobs:
       - run: 'cd bit && mkdir junit'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       # Make sure when we run bit from e2e tests we run it from the global not from here
-      - run: 'rm bit/node_modules/.bin/bit'
+      # - run: 'rm -rf bit/node_modules/.bin/bit'
       - run:
           name: 'Run e2e tests'
           command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs -n 1 npm run mocha-circleci'
@@ -926,9 +916,9 @@ jobs:
       # - run: node -v
       # - run: npm -v
       # - run: yarn -v
-      # # - run: choco install nodejs --version 22.11.0
+      # # - run: choco install nodejs --version 22.14.0
       # # - run: node -v
-      # - run: cinst nodejs --version 22.11.0
+      # - run: cinst nodejs --version 22.14.0
       # - run: node -v
 
   windows_checkout_code:
@@ -1015,18 +1005,6 @@ jobs:
           paths:
             - bit/node_modules
 
-  windows_build:
-    <<: *windows_defaults
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: 'Build bit source code'
-          command: 'cd bit; npm run build'
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bit/dist
 
   windows_bvm_install:
     <<: *windows_defaults
@@ -1103,8 +1081,6 @@ jobs:
       - run: 'ls bit\bit'
       - run: 'cd bit\bit; bit install'
       - run: 'cd bit\bit; bit compile'
-      - run: 'cd bit\bit; npm run build'
-      - run: 'cd bit\bit; npm run build:types:windows'
       - persist_to_workspace:
           root: .
           paths:
@@ -1249,9 +1225,6 @@ workflows:
           requires:
             - set_npm_registries
             - checkout_code
-      - unit_test:
-          requires:
-            - setup_harmony
       - lint:
           requires:
             - setup_harmony
@@ -1286,9 +1259,6 @@ workflows:
   #         requires:
   #           - windows_checkout_code
   #           - windows_set_npm_registries
-  #     - windows_build:
-  #         requires:
-  #           - windows_install_npm_deps
   #     - windows_e2e_test:
   #         requires:
   #           - windows_build

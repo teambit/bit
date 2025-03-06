@@ -1,20 +1,12 @@
 import { expect } from 'chai';
-import * as path from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { BitId } from '@teambit/legacy-bit-id';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { BitMap } from './bit-map';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
-const scope = {
-  path: path.join(__dirname, '.bit'),
-  lanes: { getCurrentLaneName: () => 'main' },
-};
-
 const getBitmapInstance = async () => {
-  const consumer = { getPath: () => __dirname, isLegacy: false, scope };
-  // @ts-ignore
-  return BitMap.load(consumer);
+  return BitMap.load(__dirname, '');
 };
 
 const addComponentParamsFixture = {

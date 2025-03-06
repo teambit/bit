@@ -7,5 +7,6 @@ export const ExportValidate = cjsModule.ExportValidate;
 export const RemovePendingDir = cjsModule.RemovePendingDir;
 export const FetchMissingDeps = cjsModule.FetchMissingDeps;
 export const ObjectList = cjsModule.ObjectList;
+export const resumeExport = cjsModule.resumeExport;
 
 export default cjsModule;

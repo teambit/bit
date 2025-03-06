@@ -1,8 +1,8 @@
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { ApplyVersionResults } from '@teambit/merging';
-import { Lane } from '@teambit/legacy/dist/scope/models';
+import { Lane } from '@teambit/objects';
 import { CheckoutProps } from '@teambit/checkout';
 import { Workspace } from '@teambit/workspace';
 import { Logger } from '@teambit/logger';
@@ -39,7 +39,7 @@ export class LaneSwitcher {
   async switch(): Promise<ApplyVersionResults> {
     this.logger.setStatusLine(`switching lanes`);
     if (this.workspace.isOnMain()) {
-      await throwForStagedComponents(this.consumer);
+      await throwForStagedComponents(this.workspace);
     }
     await this.populateSwitchProps();
     const bitMapIds = this.workspace.consumer.bitmapIdsFromCurrentLaneIncludeRemoved;

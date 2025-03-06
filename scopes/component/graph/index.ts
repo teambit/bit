@@ -2,7 +2,6 @@ export { DependenciesCompare } from './ui/dependencies-compare';
 export { Dependency, DependencyType } from './model/dependency';
 export { DuplicateDependency } from './duplicate-dependency';
 export { GraphAspect as default, GraphAspect } from './graph.aspect';
-export { IdGraph, objectListToGraph, bitObjectListToGraph } from './object-list-to-graph';
 export {
   calcElements,
   calcLayout,

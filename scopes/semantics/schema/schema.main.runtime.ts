@@ -66,8 +66,16 @@ export class SchemaMain {
     return this.parserSlot.get(this.config.defaultParser) as Parser;
   }
 
+  /**
+   * @deprecated use registerSchemaClasses instead
+   * registerSchemaClasses is better for performance as it lazy-loads the schemas.
+   */
   registerSchemaClass(schema: SchemaNodeConstructor) {
     SchemaRegistry.register(schema);
+  }
+
+  registerSchemaClasses(getSchemas: () => SchemaNodeConstructor[]) {
+    SchemaRegistry.registerGetSchemas(getSchemas);
   }
 
   /**
@@ -240,7 +248,7 @@ export class SchemaMain {
     const schemaTask = new SchemaTask(SchemaAspect.id, schema, logger);
     builder.registerBuildTasks([schemaTask]);
     cli.register(new SchemaCommand(schema, component, logger));
-    graphql.register(schemaSchema(schema));
+    graphql.register(() => schemaSchema(schema));
     envs.registerService(new SchemaService());
     if (workspace) {
       workspace.registerOnComponentLoad(async () => schema.calcSchemaData());
@@ -249,9 +257,7 @@ export class SchemaMain {
       scope.registerOnCompAspectReCalc(async () => schema.calcSchemaData());
     }
     // register all default schema classes
-    Object.values(Schemas).forEach((Schema) => {
-      schema.registerSchemaClass(Schema);
-    });
+    schema.registerSchemaClasses(() => Object.values(Schemas));
 
     return schema;
   }

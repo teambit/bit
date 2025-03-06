@@ -31,7 +31,6 @@ import { PnpmAspect } from '@teambit/pnpm';
 import { PreviewAspect } from '@teambit/preview';
 import { ComponentSizerAspect } from '@teambit/component-sizer';
 import { ReactAspect } from '@teambit/react';
-import { ReactNativeAspect } from '@teambit/react-native';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { SchemaAspect } from '@teambit/schema';
 import { PubsubAspect } from '@teambit/pubsub';
@@ -69,7 +68,6 @@ import { ExportAspect } from '@teambit/export';
 import { ImporterAspect } from '@teambit/importer';
 import { EjectAspect } from '@teambit/eject';
 import { UserAgentAspect } from '@teambit/user-agent';
-import { HtmlAspect } from '@teambit/html';
 import { LanesAspect } from '@teambit/lanes';
 import { ForkingAspect } from '@teambit/forking';
 import { RenamingAspect } from '@teambit/renaming';
@@ -104,9 +102,16 @@ import { ConfigMergerAspect } from '@teambit/config-merger';
 import { VersionHistoryAspect } from '@teambit/version-history';
 import { HostInitializerAspect } from '@teambit/host-initializer';
 import { DoctorAspect } from '@teambit/doctor';
-import { ApplyAspect } from '@teambit/apply';
+import { ObjectsAspect } from '@teambit/objects';
 import { BitAspect } from './bit.aspect';
+import { ConfigStoreAspect } from '@teambit/config-store';
 
+/**
+ * this is the place to register core aspects.
+ * if you modify this list (add/remove), please run `npm run generate-core-aspects-ids` to update
+ * teambit.harmony/testing/load-aspect component, which should not depend on this component.
+ * (it's done automatically by Circle during tag workflow)
+ */
 export const manifestsMap = {
   [AspectLoaderAspect.id]: AspectLoaderAspect,
   [CLIAspect.id]: CLIAspect,
@@ -143,7 +148,6 @@ export const manifestsMap = {
   [LoggerAspect.id]: LoggerAspect,
   [PkgAspect.id]: PkgAspect,
   [ReactAspect.id]: ReactAspect,
-  [ReactNativeAspect.id]: ReactNativeAspect,
   [WorkerAspect.id]: WorkerAspect,
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,
@@ -178,7 +182,6 @@ export const manifestsMap = {
   [UserAgentAspect.id]: UserAgentAspect,
   [ApplicationAspect.id]: ApplicationAspect,
   [EjectAspect.id]: EjectAspect,
-  [HtmlAspect.id]: HtmlAspect,
   [LanesAspect.id]: LanesAspect,
   [ForkingAspect.id]: ForkingAspect,
   [RenamingAspect.id]: RenamingAspect,
@@ -213,7 +216,8 @@ export const manifestsMap = {
   [VersionHistoryAspect.id]: VersionHistoryAspect,
   [HostInitializerAspect.id]: HostInitializerAspect,
   [DoctorAspect.id]: DoctorAspect,
-  [ApplyAspect.id]: ApplyAspect,
+  [ObjectsAspect.id]: ObjectsAspect,
+  [ConfigStoreAspect.id]: ConfigStoreAspect,
 };
 
 export function isCoreAspect(id: string) {

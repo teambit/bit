@@ -5,10 +5,15 @@ import { isSnap } from '@teambit/component-version';
 import { ComponentID } from '@teambit/component-id';
 import { uniq, isEmpty, forEach, differenceWith } from 'lodash';
 import { IssuesList, IssuesClasses } from '@teambit/component-issues';
-import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
-import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy/dist/constants';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import logger from '@teambit/legacy/dist/logger/logger';
+import {
+  Dependency,
+  RelativePath,
+  ImportSpecifier,
+  ConsumerComponent as Component,
+} from '@teambit/legacy.consumer-component';
+import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
+import { Consumer } from '@teambit/legacy.consumer';
+import { logger } from '@teambit/legacy.logger';
 import { getExt } from '@teambit/toolbox.fs.extension-getter';
 import {
   pathNormalizeToLinux,
@@ -21,9 +26,7 @@ import {
 import { ResolvedPackageData } from '../resolve-pkg-data';
 import { ComponentMap } from '@teambit/legacy.bit-map';
 import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { RelativePath, ImportSpecifier } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
 import { getDependencyTree } from '../files-dependency-builder';
 import { FileObject, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
 import { DevFilesMain } from '@teambit/dev-files';
@@ -150,7 +153,13 @@ export class AutoDetectDeps {
     // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
     // they are referred as "untracked components" and the user should add them later on in order to tag
     this.setTree(dependenciesTree.tree);
-    const devFiles = await this.devFiles.getDevFilesForConsumerComp(this.component);
+    if (dependenciesTree.tree['env.jsonc']?.components.length > 0) {
+      await this.populateDependencies(['env.jsonc'], []);
+    }
+    const envExtendsDeps = this.allDependencies.dependencies.length
+      ? this.allDependencies.dependencies
+      : this.component.componentFromModel?.dependencies.dependencies;
+    const devFiles = await this.devFiles.getDevFilesForConsumerComp(this.component, envExtendsDeps);
     await this.populateDependencies(allFiles, devFiles);
     return {
       dependenciesData: new DependenciesData(
@@ -387,6 +396,9 @@ export class AutoDetectDeps {
         componentIdResolvedFrom: 'DependencyPkgJson',
         packageName: compDep.name,
       };
+      if (originFile === 'env.jsonc') {
+        depDebug.importSource = 'env.jsonc';
+      }
       const getVersionFromPkgJson = (): string | null => {
         const versionFromDependencyPkgJson = getValidVersion(compDep.concreteVersion);
         if (versionFromDependencyPkgJson) {

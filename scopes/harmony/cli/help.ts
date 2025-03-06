@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import rightpad from 'pad-right';
 import { capitalize } from 'lodash';
-import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
+import { GroupsType } from './command-groups';
 import { CommandList } from './cli.main.runtime';
 import { getCommandId } from './get-command-id';
 

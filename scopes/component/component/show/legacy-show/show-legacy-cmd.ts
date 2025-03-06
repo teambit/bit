@@ -1,10 +1,12 @@
 import c from 'chalk';
 import rightpad from 'pad-right';
 import { table } from 'table';
+import type { Alignment } from 'table';
 import { componentToPrintableForDiff, getDiffBetweenObjects, prettifyFieldName } from '@teambit/legacy.component-diff';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { show } from './legacy-show';
 import paintDocumentation from './docs-template';
+import { compact } from 'lodash';
 
 export function actionLegacy(
   [id]: [string],
@@ -67,11 +69,11 @@ const COLUMN_WIDTH = 50;
 const tableColumnConfig = {
   columns: {
     1: {
-      alignment: 'left',
+      alignment: 'left' as Alignment,
       width: COLUMN_WIDTH,
     },
     2: {
-      alignment: 'left',
+      alignment: 'left' as Alignment,
       width: COLUMN_WIDTH,
     },
   },
@@ -84,9 +86,10 @@ function paintComponent(component: ConsumerComponent, componentModel: ConsumerCo
     const printableComponent = componentToPrintableForDiff(component);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     printableComponent.scopesList = (component.scopesList || []).map((s) => s.name).join('\n');
-    const rows = getFields()
-      .map((field) => {
-        const arr = [];
+    const fields = getFields();
+    const rows = compact(
+      fields.map((field) => {
+        const arr: string[] = [];
 
         const title = prettifyFieldName(field);
         if (!printableComponent[field]) return null;
@@ -109,7 +112,7 @@ function paintComponent(component: ConsumerComponent, componentModel: ConsumerCo
         }
         return arr;
       })
-      .filter((x) => x);
+    );
 
     const componentTable = table(rows, tableColumnConfig);
     return componentTable + paintDocumentation(component.docs);
@@ -123,9 +126,9 @@ function paintComponent(component: ConsumerComponent, componentModel: ConsumerCo
     const printableComponentToCompare = componentToPrintableForDiff(componentModel);
 
     const componentsDiffs = getDiffBetweenObjects(printableOriginalComponent, printableComponentToCompare);
-
-    const rows = getFields()
-      .map((field) => {
+    const fields = getFields();
+    const rows = compact(
+      fields.map((field) => {
         const arr = [];
         if (!printableOriginalComponent[field] && !printableComponentToCompare[field]) return null;
         const title = `${field[0].toUpperCase()}${field.slice(1)}`.replace(/([A-Z])/g, ' $1').trim();
@@ -157,7 +160,7 @@ function paintComponent(component: ConsumerComponent, componentModel: ConsumerCo
         }
         return arr;
       })
-      .filter((x) => x);
+    );
 
     const componentTable = table(rows, tableColumnConfig);
     const dependenciesTableStr = generateDependenciesTable();

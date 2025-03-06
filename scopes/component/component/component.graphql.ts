@@ -3,12 +3,13 @@ import { gql } from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
 import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
-import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import { ComponentLog } from '@teambit/objects';
+import { Schema } from '@teambit/graphql';
 import { Component } from './component';
 import { ComponentFactory } from './component-factory';
 import { ComponentMain } from './component.main.runtime';
 
-export function componentSchema(componentExtension: ComponentMain) {
+export function componentSchema(componentExtension: ComponentMain): Schema {
   return {
     typeDefs: gql`
       scalar JSON
@@ -229,7 +230,7 @@ export function componentSchema(componentExtension: ComponentMain) {
             const componentId = await host.resolveComponentId(id);
             const component = await host.get(componentId);
             return component;
-          } catch (error: any) {
+          } catch {
             return null;
           }
         },
@@ -249,8 +250,9 @@ export function componentSchema(componentExtension: ComponentMain) {
             errorMessage: err.message ? stripAnsi(err.message) : err.name,
           }));
         },
-        id: async (host: ComponentFactory) => {
-          return host.name;
+        id: async (host: ComponentFactory, _args, _context, info) => {
+          const extensionId = info.variableValues.extensionId;
+          return extensionId ? `${host.name}/${extensionId}` : host.name;
         },
         name: async (host: ComponentFactory) => {
           return host.name;

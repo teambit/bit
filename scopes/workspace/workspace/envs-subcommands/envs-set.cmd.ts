@@ -1,6 +1,6 @@
 import { Command } from '@teambit/cli';
 import chalk from 'chalk';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { Workspace } from '../workspace';
 
 export const installAfterEnvChangesMsg = chalk.yellow("please run 'bit install' for the changes to take effect");

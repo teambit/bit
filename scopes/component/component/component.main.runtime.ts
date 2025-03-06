@@ -5,7 +5,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';
 import { flatten, orderBy } from 'lodash';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
 import { componentSchema } from './component.graphql';
@@ -130,6 +130,8 @@ export class ComponentMain {
     return priorityHost || hosts[0];
   }
 
+
+
   getShowFragments() {
     const fragments = orderBy(flatten(this.showFragmentSlot.values()), ['weight', ['asc']]);
     return fragments;
@@ -171,7 +173,7 @@ export class ComponentMain {
       new FilesFragment(),
       new ExtensionsFragment(),
     ]);
-    graphql.register(componentSchema(componentExtension));
+    graphql.register(() => componentSchema(componentExtension));
 
     return componentExtension;
   }

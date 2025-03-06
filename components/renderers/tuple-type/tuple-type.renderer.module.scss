@@ -1,0 +1,25 @@
+.tupleArray {
+    display: inline;
+  
+    .bracketGroup {
+      display: inline-flex;
+      align-items: stretch;
+    }
+  
+    .bracket {
+      color: #666;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 4px;
+    }
+  
+    .element {
+      display: inline-flex;
+      align-items: center;
+    }
+  
+    .comma {
+      color: #666;
+      margin-right: 4px;
+    }
+  }

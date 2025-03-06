@@ -4,7 +4,7 @@ import Table from 'cli-table';
 import chalk from 'chalk';
 import archy from 'archy';
 import { ComponentIdGraph } from '@teambit/graph';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { generateDependenciesInfoTable } from './template';
 import { DependenciesMain } from './dependencies.main.runtime';
 
@@ -126,7 +126,11 @@ export class DependenciesRemoveCmd implements Command {
     },
   ];
   group = 'info';
-  description = 'remove a dependency to component(s)';
+  description = 'remove a dependency from one or more components';
+  extendedDescription = `this command removes the dependency whether it was set by 'bit deps set'/variants or by auto-detection.
+if the dependency was auto-detected, it will be marked with a minus sign in the .bitmap file.
+otherwise, the config is written to .bitmap without the dependency.
+see also 'bit deps unset'`;
   alias = '';
   options = [
     ['d', 'dev', 'remove from devDependencies'],
@@ -160,7 +164,10 @@ export class DependenciesUnsetCmd implements Command {
     },
   ];
   group = 'info';
-  description = 'unset a dependency to component(s) that was previously set by "bit deps set"';
+  description = 'unset a dependency to component(s) that was set via config (e.g. "bit deps set" or variants)';
+  extendedDescription = `this command removes the dependency only when it was set by config not if it was auto detected.
+in the .bitmap file, the config is written without the dependency.
+see also "bit deps remove"`;
   alias = '';
   options = [
     ['d', 'dev', 'unset from devDependencies'],

@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { Logger } from '@teambit/logger';
 import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Timer } from '@teambit/toolbox.time.timer';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { TesterMain } from './tester.main.runtime';
 
 type TestFlags = {

@@ -7,7 +7,7 @@ import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { isDir, PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy.utils';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { PathChangeResult } from '@teambit/legacy.bit-map';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { RemovePath } from '@teambit/component.sources';
 import { MoverAspect } from './mover.aspect';
 import { MoveCmd } from './move-cmd';

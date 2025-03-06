@@ -7,7 +7,7 @@
 
 import { clone } from 'lodash';
 import { processPath } from './generate-tree-madge';
-import { Specifier } from '@teambit/legacy/dist/consumer/component/dependencies/dependency';
+import { Specifier } from '@teambit/legacy.consumer-component';
 
 export type PathMapDependency = {
   importSource: string; // dependency path as it has been received from dependency-tree lib

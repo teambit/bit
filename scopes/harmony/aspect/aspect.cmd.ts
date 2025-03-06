@@ -2,8 +2,8 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { CLITable } from '@teambit/cli-table';
 import chalk from 'chalk';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { AspectMain } from './aspect.main.runtime';
 
 export class ListAspectCmd implements Command {
@@ -36,6 +36,28 @@ export class ListAspectCmd implements Command {
     });
     const table = new CLITable([], rows);
     return table.render();
+  }
+}
+
+export class ListCoreAspectCmd implements Command {
+  name = 'list-core';
+  description = 'list all core aspects';
+  arguments = [
+    {
+      name: 'pattern',
+      description: COMPONENT_PATTERN_HELP,
+    },
+  ];
+  options = [['j', 'json', 'format as json']] as CommandOptions;
+  group = 'development';
+
+  constructor(private aspect: AspectMain) {}
+
+  async report() {
+    return this.aspect.listCoreAspects().join('\n');
+  }
+  async json() {
+    return this.aspect.listCoreAspects();
   }
 }
 

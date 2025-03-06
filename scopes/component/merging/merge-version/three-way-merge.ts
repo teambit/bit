@@ -1,14 +1,12 @@
 import { BitError } from '@teambit/bit-error';
-import { Source, Version } from '@teambit/legacy/dist/scope/models';
-import { SourceFileModel } from '@teambit/legacy/dist/scope/models/version';
-import { Tmp } from '@teambit/legacy/dist/scope/repositories';
+import { Source, Version, SourceFileModel } from '@teambit/objects';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { PathLinux, pathNormalizeToLinux, PathOsBased } from '@teambit/toolbox.path.path';
 import * as eol from '@teambit/toolbox.string.eol';
 import { mergeFiles, MergeFileParams, MergeFileResult } from '../merge-files';
-import Component from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { SourceFile } from '@teambit/component.sources';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { Tmp, Scope } from '@teambit/legacy.scope';
 import { isEmpty } from 'lodash';
 
 export type MergeResultsThreeWay = {

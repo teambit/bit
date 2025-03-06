@@ -1,8 +1,8 @@
 import fs from 'fs-extra';
 import glob from 'glob';
 import path from 'path';
-import { loadConsumer } from '@teambit/legacy/dist/consumer';
-import { Scope } from '@teambit/legacy/dist/scope';
+import { loadConsumer } from '@teambit/legacy.consumer';
+import { Scope } from '@teambit/legacy.scope';
 import Diagnosis, { ExamineBareResult } from '../diagnosis';
 import { uniq } from 'lodash';
 
@@ -62,7 +62,7 @@ export default class BrokenSymlinkFiles extends Diagnosis {
     try {
       const link = await fs.readlink(symlinkPath);
       return link;
-    } catch (err: any) {
+    } catch {
       // probably not a symlink
       return null;
     }

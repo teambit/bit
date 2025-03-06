@@ -1,8 +1,4 @@
-import {
-  ExtensionDataList,
-  ExtensionDataEntry,
-  removeInternalConfigFields,
-} from '@teambit/legacy/dist/consumer/config/extension-data';
+import { ExtensionDataList, ExtensionDataEntry, removeInternalConfigFields } from '@teambit/legacy.extension-data';
 import { ComponentID } from '@teambit/component-id';
 import { AspectEntry, SerializableMap } from './aspect-entry';
 

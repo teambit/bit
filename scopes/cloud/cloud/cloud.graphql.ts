@@ -55,7 +55,7 @@ export function cloudSchema(cloud: CloudMain): Schema {
       },
       Mutation: {
         logout: async () => {
-          cloud.logout();
+          await cloud.logout();
           return true;
         },
         setRedirectUrl: async (_, { redirectUrl }: { redirectUrl: string }) => {

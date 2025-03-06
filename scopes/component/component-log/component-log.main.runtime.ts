@@ -7,12 +7,11 @@ import pMap from 'p-map';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { compact } from 'lodash';
 import pMapSeries from 'p-map-series';
-import { Source, Version } from '@teambit/legacy/dist/scope/models';
+import { Ref, Source, Version } from '@teambit/objects';
 import { pathNormalizeToLinux, PathOsBased, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
 import { getFilesDiff } from '@teambit/legacy.component-diff';
 import chalk from 'chalk';
-import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
+import { getRemoteByName } from '@teambit/scope.remotes';
 import { diffLines } from 'diff';
 import { ComponentLogAspect } from './component-log.aspect';
 import LogCmd from './log-cmd';
@@ -75,7 +74,12 @@ export class ComponentLogMain {
     }
     if (!this.workspace) throw new OutsideWorkspaceError();
     const componentId = await this.workspace.resolveComponentId(id);
-    if (!componentId.hasVersion()) return []; // component is new
+    if (!componentId.hasVersion()) {
+      const inWs = this.workspace.getIdIfExist(componentId);
+      if (inWs && !inWs.hasVersion()) {
+        return []; // component is new
+      }
+    }
     const logs = await this.workspace.scope.getLogs(componentId, shortHash, undefined, true);
     logs.forEach((log) => {
       log.date = log.date ? moment(new Date(parseInt(log.date))).format('YYYY-MM-DD HH:mm:ss') : undefined;

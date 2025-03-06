@@ -3,10 +3,8 @@ import path from 'path';
 import { Modules, readModulesManifest } from '@pnpm/modules-yaml';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import rimraf from 'rimraf';
-import { Extensions } from '../../src/constants';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import * as fixtures from '../../src/fixtures/fixtures';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Extensions } from '@teambit/legacy.constants';
+import { Helper, fixtures, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -184,7 +182,7 @@ describe('dependency-resolver extension', function () {
       expect(depResolverExt).to.be.ok;
       expect(depResolverExt.data).to.have.property('dependencies');
       // some of the entries are @types/jest, @types/node, @babel/runtime coming from the node env
-      expect(depResolverExt.data.dependencies).to.have.lengthOf(4);
+      expect(depResolverExt.data.dependencies).to.have.lengthOf(3);
       expect(depResolverExt.data.dependencies[0].componentId.name).to.equal('comp3');
       expect(depResolverExt.data.dependencies[0].componentId.version).to.equal('0.0.1');
       expect(depResolverExt.data.dependencies[0].packageName).to.equal(`react.${randomStr}.comp3`);

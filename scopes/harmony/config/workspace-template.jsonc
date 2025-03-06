@@ -45,10 +45,11 @@
   **/
   "teambit.generator/generator": {
     "envs": [
-  //  "bitdev.node/node-env",
-  //  "bitdev.react/react-env",
-  //  "bitdev.vue/vue-env",
-  //  "bitdev.angular/angular-env"
+      // "bitdev.node/node-env",
+      // "bitdev.react/react-env",
+      // "bitdev.vue/vue-env",
+      // "bitdev.angular/angular-env"
+      // "bitdev.symphony/envs/symphony-env"
     ]
   },
 
@@ -56,10 +57,6 @@
    * main configuration for component dependency resolution.
    **/
   "teambit.dependencies/dependency-resolver": {
-    /**
-     * choose the package manager for Bit to use. you can choose between 'yarn', 'pnpm'
-     */
-    "packageManager": "teambit.dependencies/pnpm",
     "rootComponents": true,
     "policy": {
       "dependencies": {},

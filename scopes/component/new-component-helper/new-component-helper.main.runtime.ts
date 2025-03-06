@@ -10,7 +10,7 @@ import { PathLinuxRelative, PathOsBasedRelative } from '@teambit/toolbox.path.pa
 import { isDirEmpty } from '@teambit/toolbox.fs.is-dir-empty';
 import { ComponentID } from '@teambit/component-id';
 import { Harmony } from '@teambit/harmony';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace, WorkspaceComponentLoadOptions } from '@teambit/workspace';
 import { PkgAspect } from '@teambit/pkg';
 import { RenamingAspect } from '@teambit/renaming';
 import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
@@ -92,7 +92,14 @@ export class NewComponentHelperMain {
   async writeAndAddNewComp(
     comp: Component,
     targetId: ComponentID,
-    options?: { path?: string; scope?: string; env?: string; incrementPathIfConflicted?: boolean },
+    options?: {
+      path?: string;
+      scope?: string;
+      env?: string;
+      incrementPathIfConflicted?: boolean;
+      compile?: boolean;
+      loadOptions?: WorkspaceComponentLoadOptions;
+    },
     config?: { [aspectName: string]: any }
   ) {
     const targetPath = this.getNewComponentPath(targetId, {
@@ -127,7 +134,7 @@ export class NewComponentHelperMain {
     await this.workspace.bitMap.write(`adding ${targetId.toString()}`);
     await this.workspace.clearCache();
     // this takes care of compiling the component as well
-    await this.workspace.triggerOnComponentAdd(targetId, { compile: true });
+    await this.workspace.triggerOnComponentAdd(targetId, { compile: options?.compile ?? true }, options?.loadOptions);
   }
 
   async writeAndAddNewCompFromFiles(

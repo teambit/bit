@@ -196,7 +196,7 @@ export class RefactoringMain {
       const host = this.componentMain.getHost();
       const componentID = await host.resolveComponentId(id);
       return await this.getPackageNameByComponentID(componentID);
-    } catch (err) {
+    } catch {
       if (this.isValidScopedPackageName(id)) {
         return id; // assume this is a package-name
       }

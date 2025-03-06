@@ -8,12 +8,12 @@ import {
   MergeConfigFilename,
   FILE_CHANGES_CHECKOUT_MSG,
   CFG_FORCE_LOCAL_BUILD,
-} from '@teambit/legacy/dist/constants';
-import { GlobalConfigMain } from '@teambit/global-config';
+} from '@teambit/legacy.constants';
 import { ConfigMergeResult, WorkspaceConfigUpdateResult, WorkspaceDepsUpdates } from '@teambit/config-merger';
 import { BitError } from '@teambit/bit-error';
 import { FileStatus, MergeStrategy } from './merge-version';
 import { ApplyVersionResults, MergingMain, ApplyVersionResult } from './merging.main.runtime';
+import { ConfigStoreMain } from '@teambit/config-store';
 
 export class MergeCmd implements Command {
   name = 'merge [component-pattern]';
@@ -55,7 +55,7 @@ optionally use '--abort' to revert the last merge. to revert a lane merge, use "
 
   constructor(
     private merging: MergingMain,
-    private globalConfig: GlobalConfigMain
+    private configStore: ConfigStoreMain
   ) {}
 
   async report(
@@ -86,7 +86,7 @@ optionally use '--abort' to revert the last merge. to revert a lane merge, use "
       skipDependencyInstallation?: boolean;
     }
   ) {
-    build = (await this.globalConfig.getBool(CFG_FORCE_LOCAL_BUILD)) || Boolean(build);
+    build = this.configStore.getConfigBoolean(CFG_FORCE_LOCAL_BUILD) || Boolean(build);
     if (ours || theirs) {
       throw new BitError('the "--ours" and "--theirs" flags are deprecated. use "--auto-merge-resolve" instead');
     }

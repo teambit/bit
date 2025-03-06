@@ -1,11 +1,11 @@
 import * as path from 'path';
 import globby from 'globby';
 import ignore from 'ignore';
-import R from 'ramda';
+import { pickBy, isNil, sortBy, isEmpty } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
-import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '@teambit/legacy/dist/constants';
-import ValidationError from '@teambit/legacy/dist/error/validation-error';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '@teambit/legacy.constants';
+import { ValidationError } from '@teambit/legacy.cli.error';
+import { logger } from '@teambit/legacy.logger';
 import { isValidPath } from '@teambit/legacy.utils';
 import {
   retrieveIgnoreList,
@@ -17,16 +17,15 @@ import {
   PathLinux,
   PathLinuxRelative,
   PathOsBased,
+  PathOsBasedAbsolute,
   PathOsBasedRelative,
   pathJoinLinux,
   pathNormalizeToLinux,
   pathRelativeLinux,
 } from '@teambit/toolbox.path.path';
-import { removeInternalConfigFields } from '@teambit/legacy/dist/consumer/config/extension-data';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { removeInternalConfigFields } from '@teambit/legacy.extension-data';
 import OutsideRootDir from './exceptions/outside-root-dir';
-import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
-import { IgnoredDirectory } from '@teambit/legacy/dist/consumer/component/exceptions/ignored-directory';
+import { IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
 
@@ -128,7 +127,7 @@ export class ComponentMap {
   }
 
   toPlainObject(): Record<string, any> {
-    let res = {
+    let res: Record<string, any> = {
       name: this.name,
       scope: this.scope,
       version: this.version,
@@ -145,10 +144,8 @@ export class ComponentMap {
       localOnly: this.localOnly || null, // if false, change to null so it won't be written
       config: this.configToObject(),
     };
-    const notNil = (val) => {
-      return !R.isNil(val);
-    };
-    res = R.filter(notNil, res);
+
+    res = pickBy(res, (value) => !isNil(value));
     return res;
   }
 
@@ -163,7 +160,7 @@ export class ComponentMap {
 
   static getPathWithoutRootDir(rootDir: PathLinux, filePath: PathLinux): PathLinux {
     const newPath = pathRelativeLinux(rootDir, filePath);
-    if (newPath.startsWith('@teambit/legacy/dist/consumer')) {
+    if (newPath.startsWith('..')) {
       // this is forbidden for security reasons. Allowing files to be written outside the components directory may
       // result in overriding OS files.
       throw new OutsideRootDir(filePath, rootDir);
@@ -298,13 +295,13 @@ export class ComponentMap {
    * if the component dir has changed since the last tracking, re-scan the component-dir to get the
    * updated list of the files
    */
-  async trackDirectoryChangesHarmony(consumer: Consumer): Promise<void> {
+  async trackDirectoryChangesHarmony(consumerPath: PathOsBasedAbsolute): Promise<void> {
     const trackDir = this.rootDir;
     if (!trackDir) {
       return;
     }
-    const gitIgnore = await getGitIgnoreHarmony(consumer.getPath());
-    this.files = await getFilesByDir(trackDir, consumer.getPath(), gitIgnore);
+    const gitIgnore = await getGitIgnoreHarmony(consumerPath);
+    this.files = await getFilesByDir(trackDir, consumerPath, gitIgnore);
   }
 
   updateNextVersion(nextVersion: NextVersion) {
@@ -347,7 +344,7 @@ export class ComponentMap {
   }
 
   sort() {
-    this.files = R.sortBy(R.prop('relativePath'), this.files);
+    this.files = sortBy(this.files, 'relativePath');
   }
 
   clone() {
@@ -382,7 +379,7 @@ export class ComponentMap {
       }
     });
     const foundMainFile = this.files.find((file) => file.relativePath === this.mainFile);
-    if (!foundMainFile || R.isEmpty(foundMainFile)) {
+    if (!foundMainFile || isEmpty(foundMainFile)) {
       throw new ValidationError(`${errorMessage} mainFile ${this.mainFile} is not in the files list.
 if you renamed the mainFile, please re-add the component with the "--main" flag pointing to the correct main-file`);
     }

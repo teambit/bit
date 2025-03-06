@@ -1,7 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import { SourceFile } from '@teambit/component.sources';
-import { SourceFileModel } from '@teambit/legacy/dist/scope/models/version';
-import { Repository } from '@teambit/legacy/dist/scope/objects';
+import { Repository, SourceFileModel } from '@teambit/objects';
 
 type FILE_STATUS = 'new' | 'modified' | 'deleted' | 'unchanged';
 type PathLinux = string; // ts fails when importing it from @teambit/legacy/dist/utils/path.

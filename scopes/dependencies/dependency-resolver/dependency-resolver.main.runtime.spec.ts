@@ -1,5 +1,5 @@
 // @ts-ignore
-jest.mock('@teambit/legacy/dist/scope/network/http', () => ({
+jest.mock('@teambit/scope.network', () => ({
   Http: {
     // @ts-ignore
     getNetworkConfig: jest.fn(),
@@ -11,7 +11,7 @@ jest.mock('@teambit/legacy/dist/scope/network/http', () => ({
 /* eslint-disable import/first */
 import { ComponentID } from '@teambit/component';
 import path from 'path';
-import { Http } from '@teambit/legacy/dist/scope/network/http';
+import { Http } from '@teambit/scope.network';
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
 const logger = {
@@ -218,7 +218,7 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
       {} as any,
       {} as any,
       {
-        getSync: () => false,
+        getConfig: () => false,
       } as any,
       {} as any,
       packageManagerSlot as any,

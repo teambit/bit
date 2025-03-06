@@ -4,7 +4,7 @@ import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
+import { ComponentLoadOptions } from '@teambit/legacy.consumer-component';
 import { AbstractVinyl } from '@teambit/component.sources';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import { SchemaAspect, SchemaMain } from '@teambit/schema';
@@ -98,7 +98,6 @@ export class CompositionsMain {
     if (!entry) return [];
     const compositions = entry.data.compositions;
     if (!compositions) return [];
-
     return Composition.fromArray(compositions);
   }
 
@@ -197,7 +196,7 @@ export class CompositionsMain {
     // TODO: use the docs implementation to allow component specific pattern
     devFiles.registerDevPattern(compositions.getDevPatternToRegister());
 
-    graphql.register(compositionsSchema(compositions));
+    graphql.register(() => compositionsSchema(compositions));
     preview.registerDefinition(new CompositionPreviewDefinition(compositions));
 
     if (workspace) {

@@ -5,6 +5,7 @@ import {
   TaskLocation,
   ComponentResult,
   CAPSULE_ARTIFACTS_DIR,
+  ArtifactDefinition,
 } from '@teambit/builder';
 import { MainRuntime } from '@teambit/cli';
 import mapSeries from 'p-map-series';
@@ -143,7 +144,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
     if (!capsule) throw new Error('no capsule found');
     // Passing here the env itself to make sure it's preview runtime will be part of the preview root file
     // that's needed to make sure the providers register there are running correctly
-    const previewRoot = await this.preview.writePreviewRuntime(context, [envComponent.id.toString()]);
+    const previewRoot = await this.preview.writePreviewEntry(context, [envComponent.id.toString()]);
     const entries = await this.generateEntries({
       envDef,
       splitComponentBundle: envPreviewConfig.splitComponentBundle ?? false,
@@ -268,12 +269,11 @@ export function getArtifactDirectory() {
   return join(CAPSULE_ARTIFACTS_DIR, 'env-template');
 }
 
-export function getArtifactDef() {
+export function getArtifactDef(): ArtifactDefinition[] {
   return [
     {
       name: 'env-template',
-      globPatterns: ['**'],
-      rootDir: getArtifactDirectory(),
+      globPatterns: [getArtifactDirectory()],
     },
   ];
 }

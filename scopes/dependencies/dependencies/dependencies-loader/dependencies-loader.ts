@@ -1,11 +1,10 @@
 import path from 'path';
 import { uniq } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
-import { getLastModifiedComponentTimestampMs } from '@teambit/toolbox.fs.last-modified';
-import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
-import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
-import { DependencyLoaderOpts } from '@teambit/legacy/dist/consumer/component/component-loader';
-import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
+import { getLastModifiedComponentTimestampMs, getLastModifiedPathsTimestampMs } from '@teambit/toolbox.fs.last-modified';
+import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
+import { DependencyLoaderOpts, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
 import { Workspace } from '@teambit/workspace';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DevFilesMain } from '@teambit/dev-files';
@@ -120,7 +119,20 @@ export class DependenciesLoader {
     filesPaths.push(componentConfigPath);
     const lastModifiedComponent = await getLastModifiedComponentTimestampMs(rootDir, filesPaths);
     const wasModifiedAfterCache = lastModifiedComponent > cacheData.timestamp;
+
     if (wasModifiedAfterCache) {
+      // in case the env.jsonc was modified, all components using this env should be invalidated as well.
+      // we don't have a fast way to check which are those components so we clear them all.
+      // in terms of performance, it's not that bad because this file is not modified often.
+      const envJsonFile = this.component.files.find((file) => file.relative === 'env.jsonc');
+      if (envJsonFile) {
+        const lastModifiedEnvJsonc = await getLastModifiedPathsTimestampMs([envJsonFile.path]);
+        const wasEnvJsonModifiedAfterCache = lastModifiedEnvJsonc > cacheData.timestamp;
+        if (wasEnvJsonModifiedAfterCache) {
+          this.logger.debug(`dependencies-loader, the env ${this.idStr} was modified after the cache was created, clearing all deps caches`);
+          await workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
+        }
+      }
       return null; // cache is invalid.
     }
     this.logger.debug(`dependencies-loader, getting the dependencies data for ${this.idStr} from the cache`);

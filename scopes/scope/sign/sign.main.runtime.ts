@@ -7,29 +7,19 @@ import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { isSnap } from '@teambit/component-version';
 import { Component, ComponentID } from '@teambit/component';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
-import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy/dist/constants';
-import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
-import { PostSign } from '@teambit/legacy/dist/scope/actions';
-import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
-import { Remote, Remotes } from '@teambit/legacy/dist/remotes';
+import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy.constants';
+import { PostSign } from '@teambit/scope.remote-actions';
+import { Version, Log, Lane, ObjectList } from '@teambit/objects';
 import { ComponentIdList } from '@teambit/component-id';
-import Version, { Log } from '@teambit/legacy/dist/scope/models/version';
-import { Http } from '@teambit/legacy/dist/scope/network/http';
+import { Http } from '@teambit/scope.network';
 import { LanesAspect, LanesMain } from '@teambit/lanes';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
-import { Lane } from '@teambit/legacy/dist/scope/models';
 import { SignCmd, SignOptions } from './sign.cmd';
 import { SignAspect } from './sign.aspect';
-import { ExportAspect, ExportMain } from '@teambit/export';
-
-type ObjectsPerRemote = {
-  remote: Remote;
-  objectList: ObjectList;
-  exportedIds?: string[];
-};
+import { ExportAspect, ExportMain, ObjectsPerRemote } from '@teambit/export';
 
 export type SignResult = {
   components: Component[];
@@ -134,14 +124,14 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     if (push) {
       if (originalScope) {
-        await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
+        await this.saveExtensionsDataIntoScope(components, buildStatus);
         await this.clearScopesCaches(legacyComponents);
       } else {
-        await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus, lane);
+        await this.exportExtensionsDataIntoScopes(components, buildStatus, lane);
       }
     }
     if (saveLocally) {
-      await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
+      await this.saveExtensionsDataIntoScope(components, buildStatus);
     }
     await this.triggerOnPostSign(components);
 
@@ -169,7 +159,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     try {
       this.harmony.get('teambit.workspace/workspace');
       return true;
-    } catch (err: any) {
+    } catch {
       return false;
     }
   }
@@ -187,20 +177,20 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
   private async clearScopesCaches(components: ConsumerComponent[]) {
     const bitIds = ComponentIdList.fromArray(components.map((c) => c.id));
     const idsGroupedByScope = bitIds.toGroupByScopeName();
-    const scopeRemotes: Remotes = await getScopeRemotes(this.scope.legacyScope);
+    const scopeRemotes = await this.scope.getRemoteScopes();
     await Promise.all(
       Object.keys(idsGroupedByScope).map(async (scopeName) => {
-        const remote = await scopeRemotes.resolve(scopeName, this.scope.legacyScope);
+        const remote = await scopeRemotes.resolve(scopeName);
         return remote.action(PostSign.name, { ids: idsGroupedByScope[scopeName].map((id) => id.toString()) });
       })
     );
   }
 
-  private async saveExtensionsDataIntoScope(components: ConsumerComponent[], buildStatus: BuildStatus) {
+  private async saveExtensionsDataIntoScope(components: Component[], buildStatus: BuildStatus) {
     const modifiedLog = await this.getModifiedLog(buildStatus);
     await mapSeries(components, async (component) => {
-      component.buildStatus = buildStatus;
-      await this.snapping._enrichComp(component, modifiedLog);
+      this.snapping.setBuildStatus(component, buildStatus);
+      await this.snapping.enrichComp(component, modifiedLog);
     });
     await this.scope.legacyScope.objects.persist();
   }
@@ -210,20 +200,20 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     return { ...log, message: `sign. buildStatus: ${buildStatus}` };
   }
 
-  private async exportExtensionsDataIntoScopes(components: ConsumerComponent[], buildStatus: BuildStatus, lane?: Lane) {
+  private async exportExtensionsDataIntoScopes(components: Component[], buildStatus: BuildStatus, lane?: Lane) {
     const objectList = new ObjectList();
     const modifiedLog = await this.getModifiedLog(buildStatus);
     const idsHashMaps = {};
     const signComponents = await mapSeries(components, async (component) => {
-      component.buildStatus = buildStatus;
-      const objects = await this.snapping._getObjectsToEnrichComp(component, modifiedLog);
+      this.snapping.setBuildStatus(component, buildStatus);
+      const objects = await this.snapping.getObjectsToEnrichComp(component, modifiedLog);
       const versionHash = objects
         .find((obj) => obj instanceof Version)
         ?.hash()
         .toString();
       if (!versionHash) throw new Error(`Version object is missing for ${component.id.toString()}`);
       idsHashMaps[versionHash] = component.id.toString();
-      const scopeName = component.scope as string;
+      const scopeName = component.id.scope;
       const objectToMerge = await ObjectList.fromBitObjects(objects);
       objectToMerge.addScopeName(scopeName);
       objectList.mergeObjectList(objectToMerge);
@@ -234,7 +224,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       objectList.addScopeName(lane.scope);
     }
 
-    const scopeRemotes = await getScopeRemotes(this.scope.legacyScope);
+    const scopeRemotes = await this.scope.getRemoteScopes();
     const objectsPerRemote = objectList.objects.reduce((acc, current) => {
       const scope: string = current.scope as string;
       if (acc[scope]) acc[scope].push(current);
@@ -243,7 +233,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     }, {});
     const manyObjectsPerRemote: ObjectsPerRemote[] = await Promise.all(
       Object.keys(objectsPerRemote).map(async (scopeName) => {
-        const remote = await scopeRemotes.resolve(scopeName, this.scope.legacyScope);
+        const remote = await scopeRemotes.resolve(scopeName);
         return { remote, objectList: new ObjectList(objectsPerRemote[scopeName]) };
       })
     );
@@ -278,9 +268,9 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const componentsToSign: ComponentID[] = [];
     const componentsToSkip: ComponentID[] = [];
     components.forEach((component) => {
-      if (component.state._consumer.buildStatus === BuildStatus.Skipped) {
+      if (component.buildStatus === BuildStatus.Skipped) {
         componentsToSkip.push(component.id);
-      } else if (component.state._consumer.buildStatus === BuildStatus.Succeed) {
+      } else if (component.buildStatus === BuildStatus.Succeed) {
         rebuild ? componentsToSign.push(component.id) : componentsToSkip.push(component.id);
       } else {
         componentsToSign.push(component.id);

@@ -4,6 +4,6 @@ export class DocsService implements EnvService<any> {
   name = 'docs';
 
   async run(context: ExecutionContext) {
-    return context.env.getDocsTemplate();
+    return context.env.getDocsTemplate?.();
   }
 }

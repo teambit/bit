@@ -1,10 +1,37 @@
 import { BitError } from '@teambit/bit-error';
-import type { EnvJsoncPolicyPeerEntry, EnvPolicyConfigObject } from './env-policy';
+import type {
+  EnvJsoncPolicyConfigKey,
+  EnvJsoncPolicyEntry,
+  EnvJsoncPolicyPeerEntry,
+  EnvPolicyConfigObject,
+} from './env-policy';
 
 export function validateEnvPolicyConfigObject(configObject: EnvPolicyConfigObject) {
   if (configObject.peers) {
     validateEnvPeers(configObject.peers);
   }
+  const envJsoncPolicyFields: EnvJsoncPolicyConfigKey[] = ['dev', 'runtime', 'peers'];
+  envJsoncPolicyFields.forEach((key) => {
+    if (!configObject[key]) {
+      return;
+    }
+    configObject[key].forEach((policyEntry: EnvJsoncPolicyEntry) => {
+      validateEnvJsoncPolicyEntry(policyEntry, key);
+    });
+  });
+}
+
+function validateEnvJsoncPolicyEntry(policyEntry: EnvJsoncPolicyEntry, key: string) {
+  const prefix = `error: failed validating the env.jsonc file. policy.${key} entry`;
+  if (typeof policyEntry !== 'object') {
+    throw new BitError(`${prefix} must be an object, got type "${typeof policyEntry}" value: "${policyEntry}"`);
+  }
+  const mandatoryFields = ['name', 'version'];
+  mandatoryFields.forEach((field) => {
+    if (!policyEntry[field]) {
+      throw new BitError(`${prefix} must have a "${field}" property`);
+    }
+  });
 }
 
 function validateEnvPeers(peers: EnvJsoncPolicyPeerEntry[]) {

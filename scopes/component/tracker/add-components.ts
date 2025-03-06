@@ -8,7 +8,7 @@ import format from 'string-format';
 import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID } from '@teambit/component-id';
 import { BitIdStr, BitId } from '@teambit/legacy-bit-id';
-import { PACKAGE_JSON, VERSION_DELIMITER, AUTO_GENERATED_STAMP } from '@teambit/legacy/dist/constants';
+import { PACKAGE_JSON, VERSION_DELIMITER, AUTO_GENERATED_STAMP } from '@teambit/legacy.constants';
 import {
   BitMap,
   ComponentMap,
@@ -23,9 +23,9 @@ import MissingMainFileMultipleComponents from './exceptions/missing-main-file-mu
 import { ParentDirTracked } from './exceptions/parent-dir-tracked';
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { BitError } from '@teambit/bit-error';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { logger } from '@teambit/legacy.logger';
 import { glob, isDir, pathNormalizeToLinux, PathLinux, PathLinuxRelative, PathOsBased } from '@teambit/legacy.utils';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { Workspace } from '@teambit/workspace';
@@ -96,7 +96,6 @@ export default class AddComponents {
   constructor(context: AddContext, addProps: AddProps) {
     this.workspace = context.workspace;
     this.consumer = context.workspace.consumer;
-    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = this.consumer.bitMap;
     this.componentPaths = addProps.componentPaths;
     this.id = addProps.id;

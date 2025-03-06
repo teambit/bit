@@ -1,9 +1,9 @@
 import { Graph } from '@teambit/graph.cleargraph';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ComponentID } from '@teambit/component-id';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { CompIdGraph } from '@teambit/graph';
-import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import type { ComponentLog } from '@teambit/objects';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import type { DependencyList } from '@teambit/dependency-resolver';
 import { Component, InvalidComponent } from './component';

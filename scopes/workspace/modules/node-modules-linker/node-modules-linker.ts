@@ -3,12 +3,12 @@ import pMapSeries from 'p-map-series';
 import * as path from 'path';
 import { linkPkgsToRootComponents } from '@teambit/workspace.root-components';
 import { ComponentID } from '@teambit/component-id';
-import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy/dist/constants';
+import { IS_WINDOWS, PACKAGE_JSON, SOURCE_DIR_SYMLINK_TO_NM } from '@teambit/legacy.constants';
 import { BitMap } from '@teambit/legacy.bit-map';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile, DataToPersist, RemovePath, Symlink } from '@teambit/component.sources';
-import Consumer from '@teambit/legacy/dist/consumer/consumer';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { Consumer } from '@teambit/legacy.consumer';
+import { logger } from '@teambit/legacy.logger';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName, getNodeModulesPathOfComponent } from '@teambit/pkg.modules.component-package-name';
 import { Workspace } from '@teambit/workspace';
@@ -39,7 +39,6 @@ export default class NodeModuleLinker {
     private workspace: Workspace
   ) {
     this.consumer = this.workspace.consumer;
-    // @ts-ignore todo: remove after deleting teambit.legacy
     this.bitMap = this.consumer.bitMap;
     this.dataToPersist = new DataToPersist();
     this.existingLinks = [];
@@ -159,7 +158,7 @@ export default class NodeModuleLinker {
         let stat;
         try {
           stat = await fs.lstat(dest);
-        } catch (err) {
+        } catch {
           // Ignore this error, it's probably because the file doesn't exist
         }
         if (stat && stat.isSymbolicLink()) {
@@ -196,7 +195,7 @@ export default class NodeModuleLinker {
         this.dataToPersist.removePath(new RemovePath(linkPath));
       }
       return undefined;
-    } catch (err: any) {
+    } catch {
       return undefined; // probably file does not exist
     }
   }
@@ -305,7 +304,11 @@ export async function linkToNodeModulesByIds(
     if (loadFromScope) {
       return workspace.scope.getMany(componentsIds);
     }
-    return workspace.getMany(componentsIds, { idsToNotLoadAsAspects: componentsIds.map((id) => id.toString()) });
+    return workspace.getMany(componentsIds, {
+      idsToNotLoadAsAspects: componentsIds.map((id) => id.toString()),
+      loadSeedersAsAspects: false,
+      loadExtensions: false,
+    });
   };
   const components = await getComponents();
   const nodeModuleLinker = new NodeModuleLinker(components, workspace);

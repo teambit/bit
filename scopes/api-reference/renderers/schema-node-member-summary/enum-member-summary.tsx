@@ -34,8 +34,8 @@ export function EnumMemberSummary({
 
   return (
     <TableRow
-      {...rest}
       key={`${__schema}-${name}`}
+      {...rest}
       className={classnames(className, styles.row)}
       headings={headings}
       colNumber={3}

@@ -15,9 +15,8 @@ export default class ClearCacheCmd implements Command {
 
   constructor(private clearCache: ClearCacheMain) {
     this.extendedDescription = `The following gets removed by this command:
-1) V8 compiled code (generated the first time Bit is loaded by v8-compile-cache package)
-2) components cache on the filesystem (mainly the dependencies graph and docs)
-3) scope's index file, which maps the component-id:object-hash`;
+1) components cache on the filesystem (mainly the dependencies graph and docs)
+2) scope's index file, which maps the component-id:object-hash`;
   }
 
   async report(arg, { remote }: { remote?: string }): Promise<string> {

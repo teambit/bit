@@ -1,8 +1,6 @@
 import { BitError } from '@teambit/bit-error';
-import { GlobalRemotes } from '@teambit/legacy/dist/global-config';
-import { Remote } from '@teambit/legacy/dist/remotes';
-import { loadScope } from '@teambit/legacy/dist/scope';
-import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
+import { Remote, getScopeRemotes, GlobalRemotes } from '@teambit/scope.remotes';
+import { loadScope } from '@teambit/legacy.scope';
 
 function buildRemote(url: string): Remote {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -27,7 +25,7 @@ export async function add(url: string, global: boolean) {
     return loadScope().then((scope) => {
       return scope.scopeJson
         .addRemote(remote)
-        .write(scope.getPath())
+        .write()
         .then(() => remote);
     });
   });
@@ -52,7 +50,7 @@ export async function remove(name: string, global: boolean) {
   if (!hasRemoved) {
     throw new BitError(`remote "${name}" was not found locally, to remove a global remote, please use "--global" flag`);
   }
-  await scope.scopeJson.write(scope.getPath());
+  await scope.scopeJson.write();
   return name;
 }
 

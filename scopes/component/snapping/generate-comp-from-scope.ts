@@ -1,16 +1,23 @@
 import { ComponentID } from '@teambit/component-id';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { Dependency } from '@teambit/legacy/dist/consumer/component/dependencies';
+import { Dependency, ConsumerComponent, CURRENT_SCHEMA } from '@teambit/legacy.consumer-component';
 import { SourceFile } from '@teambit/component.sources';
 import { ScopeMain } from '@teambit/scope';
-import ComponentOverrides from '@teambit/legacy/dist/consumer/config/component-overrides';
-import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
+import { ComponentOverrides } from '@teambit/legacy.consumer-config';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { Component } from '@teambit/component';
-import { CURRENT_SCHEMA } from '@teambit/legacy/dist/consumer/component/component-schema';
 import { DependenciesMain } from '@teambit/dependencies';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 import { FileData } from './snap-from-scope.cmd';
 import { SnappingMain, SnapDataParsed } from './snapping.main.runtime';
+
+export type NewDependency = {
+  id: string; // component-id or package-name. e.g. "teambit.react/react" or "lodash".
+  version?: string; // version of the package. e.g. "2.0.3". for packages, it is mandatory.
+  isComponent?: boolean; // default true. if false, it's a package dependency
+  type?: 'runtime' | 'dev' | 'peer'; // default "runtime".
+};
+
+export type NewDependencies = NewDependency[];
 
 export type CompData = {
   componentId: ComponentID;
@@ -19,6 +26,7 @@ export type CompData = {
   message: string | undefined;
   files: FileData[] | undefined;
   mainFile?: string;
+  newDependencies?: NewDependencies;
 };
 
 /**
@@ -32,6 +40,7 @@ export type CompData = {
  */
 export async function generateCompFromScope(
   scope: ScopeMain,
+  depsResolver: DependencyResolverMain,
   compData: CompData,
   snapping: SnappingMain
 ): Promise<Component> {
@@ -41,6 +50,7 @@ export async function generateCompFromScope(
   });
   const id = compData.componentId;
   const extensions = ExtensionDataList.fromConfigObject(compData.aspects || {});
+  const { compDeps } = await getCompDeps(scope, depsResolver, compData.newDependencies || []);
 
   const consumerComponent = new ConsumerComponent({
     mainFile: compData.mainFile || 'index.ts',
@@ -48,7 +58,7 @@ export async function generateCompFromScope(
     scope: compData.componentId.scope,
     files,
     schema: CURRENT_SCHEMA,
-    overrides: await ComponentOverrides.loadNewFromScope(id, files, extensions),
+    overrides: await ComponentOverrides.loadNewFromScope(id, files, extensions, compDeps),
     defaultScope: compData.componentId.scope,
     extensions,
     // the dummy data here are not important. this Version object will be discarded later.
@@ -65,7 +75,7 @@ export async function generateCompFromScope(
 
   const { version, files: filesBitObject } =
     await scope.legacyScope.sources.consumerComponentToVersion(consumerComponent);
-  const modelComponent = scope.legacyScope.sources.findOrAddComponent(consumerComponent);
+  const modelComponent = await scope.legacyScope.sources.findOrAddComponent(consumerComponent);
   consumerComponent.version = version.hash().toString();
   await scope.legacyScope.objects.writeObjectsToTheFS([version, modelComponent, ...filesBitObject.map((f) => f.file)]);
   const component = await scope.getManyByLegacy([consumerComponent]);
@@ -73,16 +83,7 @@ export async function generateCompFromScope(
   return component[0];
 }
 
-export async function addDeps(
-  component: Component,
-  snapData: SnapDataParsed,
-  scope: ScopeMain,
-  deps: DependenciesMain,
-  depsResolver: DependencyResolverMain,
-  snapping: SnappingMain
-) {
-  const newDeps = snapData.newDependencies || [];
-  const updateDeps = snapData.dependencies || [];
+async function getCompDeps(scope: ScopeMain, depsResolver: DependencyResolverMain, newDeps: NewDependencies) {
   const compIdsData = newDeps.filter((dep) => dep.isComponent);
   const compIdsDataParsed = compIdsData.map((data) => ({
     ...data,
@@ -99,7 +100,22 @@ export async function addDeps(
   const compDeps = compIdsDataParsed.filter((c) => c.type === 'runtime').map((dep) => toDependency(dep.id));
   const compDevDeps = compIdsDataParsed.filter((c) => c.type === 'dev').map((dep) => toDependency(dep.id));
   const compPeerDeps = compIdsDataParsed.filter((c) => c.type === 'peer').map((dep) => toDependency(dep.id));
+  return { compDeps, compDevDeps, compPeerDeps };
+}
+
+export async function addDeps(
+  component: Component,
+  snapData: SnapDataParsed,
+  scope: ScopeMain,
+  deps: DependenciesMain,
+  depsResolver: DependencyResolverMain,
+  snapping: SnappingMain,
+  autoDetect?: VariantPolicyConfigArr
+) {
+  const newDeps = snapData.newDependencies || [];
+  const updateDeps = snapData.dependencies || [];
   const packageDeps = newDeps.filter((dep) => !dep.isComponent);
+  const { compDeps, compDevDeps, compPeerDeps } = await getCompDeps(scope, depsResolver, newDeps);
   const toPackageObj = (pkgs: Array<{ id: string; version?: string }>) => {
     return pkgs.reduce((acc, curr) => {
       if (!curr.version) throw new Error(`please specify a version for the package dependency: "${curr.id}"`);
@@ -110,6 +126,13 @@ export async function addDeps(
   const getPkgObj = (type: 'runtime' | 'dev' | 'peer') => {
     return toPackageObj(packageDeps.filter((dep) => dep.type === type));
   };
+  const allAutoDeps: { [pkgName: string]: string } = {};
+  ['dependencies', 'devDependencies', 'peerDependencies'].forEach((depType) => {
+    autoDetect?.[depType]?.forEach((dep) => {
+      allAutoDeps[dep.name] = dep.version;
+    });
+  });
+
   const manipulateCurrentPkgs = (pkgs: Record<string, string>) => {
     snapData.removeDependencies?.forEach((pkg) => {
       delete pkgs[pkg];
@@ -130,6 +153,10 @@ export async function addDeps(
       const found = updateDeps.find((d) => d.startsWith(`${dep.id.toStringWithoutVersion()}@`));
       if (found) {
         dep.id = dep.id.changeVersion(found.replace(`${dep.id.toStringWithoutVersion()}@`, ''));
+      }
+      const foundInAutoDeps = dep.packageName ? allAutoDeps[dep.packageName] : undefined;
+      if (foundInAutoDeps) {
+        dep.id = dep.id.changeVersion(allAutoDeps[dep.packageName!]);
       }
     });
     return afterRemoval;

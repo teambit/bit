@@ -1,26 +1,23 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { Consumer } from '@teambit/legacy/dist/consumer';
+import { WorkspaceAspect, OutsideWorkspaceError, Workspace, AutoTagResult } from '@teambit/workspace';
+import { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { SnappingAspect, SnappingMain, TagResults } from '@teambit/snapping';
 import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
-import { AutoTagResult } from '@teambit/legacy/dist/scope/component-ops/auto-tag';
-import { UnmergedComponent } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
-import { Lane, ModelComponent } from '@teambit/legacy/dist/scope/models';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { UnmergedComponent } from '@teambit/legacy.scope';
+import { Ref, Lane, ModelComponent } from '@teambit/objects';
 import chalk from 'chalk';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
 import { RemoveAspect, RemoveMain, deleteComponentsFiles } from '@teambit/remove';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component/consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
 import { compact } from 'lodash';
 import {
   ApplyVersionWithComps,
@@ -37,13 +34,13 @@ import {
   ConfigMergeResult,
   WorkspaceConfigUpdateResult,
 } from '@teambit/config-merger';
-import { SnapsDistance } from '@teambit/legacy/dist/scope/component-ops/snaps-distance';
+import { SnapsDistance } from '@teambit/component.snap-distance';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { InstallMain, InstallAspect } from '@teambit/install';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
-import { MergeStatusProvider, MergeStatusProviderOptions } from './merge-status-provider';
+import { DataMergeResult, MergeStatusProvider, MergeStatusProviderOptions } from './merge-status-provider';
 import {
   MergeStrategy,
   FileStatus,
@@ -51,6 +48,7 @@ import {
   MergeResultsThreeWay,
   MergeOptions,
 } from './merge-version';
+import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 
 type ResolveUnrelatedData = {
   strategy: MergeStrategy;
@@ -59,11 +57,14 @@ type ResolveUnrelatedData = {
   unrelatedLaneId: LaneId;
 };
 
+export type DivergedComponent = { id: ComponentID; diverge: SnapsDistance };
+
 export type ComponentMergeStatus = ComponentStatusBase & {
   mergeResults?: MergeResultsThreeWay | null;
   divergeData?: SnapsDistance;
   resolvedUnrelated?: ResolveUnrelatedData;
   configMergeResult?: ConfigMergeResult;
+  dataMergeResult?: DataMergeResult;
 };
 
 export type ComponentMergeStatusBeforeMergeAttempt = ComponentStatusBase & {
@@ -144,7 +145,7 @@ export class MergingMain {
     } else if (abort) {
       mergeResults = await this.abortMerge(pattern);
     } else {
-      const bitIds = await this.getComponentsToMerge(consumer, pattern);
+      const bitIds = await this.getComponentsToMerge(pattern);
       mergeResults = await this.mergeComponentsFromRemote(
         consumer,
         bitIds,
@@ -217,6 +218,7 @@ export class MergingMain {
     snapMessage,
     build,
     skipDependencyInstallation,
+    detachHead,
   }: {
     mergeStrategy: MergeStrategy;
     allComponentsStatus: ComponentMergeStatus[];
@@ -228,6 +230,7 @@ export class MergingMain {
     snapMessage?: string;
     build?: boolean;
     skipDependencyInstallation?: boolean;
+    detachHead?: boolean;
   }): Promise<ApplyVersionResults> {
     const consumer = this.workspace?.consumer;
     const legacyScope = this.scope.legacyScope;
@@ -258,7 +261,8 @@ export class MergingMain {
       succeededComponents,
       otherLaneId,
       mergeStrategy,
-      currentLane
+      currentLane,
+      detachHead
     );
 
     const allConfigMerge = compact(succeededComponents.map((c) => c.configMergeResult));
@@ -308,6 +312,8 @@ export class MergingMain {
       }
     }
 
+    const updatedComponents = compact(componentsResults.map((c) => c.legacyCompToWrite));
+
     const getSnapOrTagResults = async (): Promise<MergeSnapResults> => {
       // if one of the component has conflict, don't snap-merge. otherwise, some of the components would be snap-merged
       // and some not. besides the fact that it could by mistake tag dependent, it's a confusing state. better not snap.
@@ -321,7 +327,8 @@ export class MergingMain {
         const { taggedComponents, autoTaggedResults, removedComponents } = results;
         return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults, removedComponents };
       }
-      return this.snapResolvedComponents(snapMessage, build, currentLane?.toLaneId());
+      return this.snapResolvedComponents(allComponentsStatus, snapMessage, build, currentLane?.toLaneId(),
+      updatedComponents);
     };
     let mergeSnapResults: MergeSnapResults = null;
     let mergeSnapError: Error | undefined;
@@ -397,7 +404,8 @@ export class MergingMain {
     succeededComponents: ComponentMergeStatus[],
     otherLaneId: LaneId,
     mergeStrategy: MergeStrategy,
-    currentLane?: Lane
+    currentLane?: Lane,
+    detachHead?: boolean
   ): Promise<ApplyVersionWithComps[]> {
     const componentsResults = await mapSeries(
       succeededComponents,
@@ -414,6 +422,7 @@ export class MergingMain {
           currentLane,
           resolvedUnrelated,
           configMergeResult,
+          detachHead,
         });
       }
     );
@@ -443,6 +452,7 @@ export class MergingMain {
     currentLane,
     resolvedUnrelated,
     configMergeResult,
+    detachHead,
   }: {
     currentComponent: ConsumerComponent | null | undefined;
     id: ComponentID;
@@ -453,6 +463,7 @@ export class MergingMain {
     currentLane?: Lane;
     resolvedUnrelated?: ResolveUnrelatedData;
     configMergeResult?: ConfigMergeResult;
+    detachHead?: boolean;
   }): Promise<ApplyVersionWithComps> {
     const legacyScope = this.scope.legacyScope;
     let filesStatus = {};
@@ -549,9 +560,13 @@ export class MergingMain {
       addToCurrentLane(remoteHead);
     } else {
       // this is main
-      modelComponent.setHead(remoteHead);
-      // mark it as local, otherwise, when importing this component from a remote, it'll override it.
-      modelComponent.markVersionAsLocal(remoteHead.toString());
+      if (detachHead) {
+        modelComponent.detachedHeads.setHead(remoteHead);
+      } else {
+        modelComponent.setHead(remoteHead);
+        // mark it as local, otherwise, when importing this component from a remote, it'll override it.
+        modelComponent.markVersionAsLocal(remoteHead.toString());
+      }
       legacyScope.objects.add(modelComponent);
     }
 
@@ -605,21 +620,40 @@ export class MergingMain {
   }
 
   private async snapResolvedComponents(
+    allComponentsStatus: ComponentMergeStatus[],
     snapMessage?: string,
     build?: boolean,
-    laneId?: LaneId
+    laneId?: LaneId,
+    updatedComponents?: ConsumerComponent[]
   ): Promise<MergeSnapResults> {
     const unmergedComponents = this.scope.legacyScope.objects.unmergedComponents.getComponents();
     this.logger.debug(`merge-snaps, snapResolvedComponents, total ${unmergedComponents.length.toString()} components`);
     if (!unmergedComponents.length) return null;
     const ids = ComponentIdList.fromArray(unmergedComponents.map((r) => ComponentID.fromObject(r.id)));
     if (!this.workspace) {
+      const getLoadAspectOnlyForIds = (): ComponentIdList | undefined => {
+        if (!allComponentsStatus.length || !allComponentsStatus[0].dataMergeResult) return undefined;
+        const dataConflictedIds = allComponentsStatus
+          .filter((c) => {
+            const conflictedAspects = c.dataMergeResult?.conflictedAspects || {};
+            const aspectIds = Object.keys(conflictedAspects);
+            aspectIds.forEach(aspectId => this.logger.debug(`conflicted-data for "${c.id.toString()}". aspectId: ${aspectId}. reason: ${conflictedAspects[aspectId]}`));
+            return aspectIds.length;
+          })
+          .map((c) => c.id);
+        return ComponentIdList.fromArray(dataConflictedIds);
+      };
       const results = await this.snapping.snapFromScope(
-        ids.map((id) => ({ componentId: id.toString() })),
+        ids.map((id) => ({
+          componentId: id.toString(),
+          aspects: this.scope.legacyScope.objects.unmergedComponents.getEntry(id)?.mergedConfig,
+        })),
         {
           message: snapMessage,
           build,
           lane: laneId?.toString(),
+          updatedLegacyComponents: updatedComponents,
+          loadAspectOnlyForIds: getLoadAspectOnlyForIds(),
         }
       );
       return { ...results, autoSnappedResults: [] };
@@ -664,13 +698,30 @@ export class MergingMain {
     return unresolvedComponents.map((u) => ComponentID.fromObject(u.id));
   }
 
-  private async getComponentsToMerge(consumer: Consumer, pattern?: string): Promise<ComponentID[]> {
+  private async getComponentsToMerge(pattern?: string): Promise<ComponentID[]> {
     if (pattern) {
       return this.workspace.idsByPattern(pattern);
     }
-    const componentsList = new ComponentsList(consumer);
-    const mergePending = await componentsList.listMergePendingComponents();
+    const mergePending = await this.listMergePendingComponents();
     return mergePending.map((c) => c.id);
+  }
+
+  async listMergePendingComponents(componentsList?: ComponentsList): Promise<DivergedComponent[]> {
+    const consumer = this.workspace.consumer;
+    componentsList = componentsList || new ComponentsList(this.workspace);
+    const allIds = consumer.bitMap.getAllIdsAvailableOnLaneIncludeRemoved();
+    const componentsFromModel = await componentsList.getModelComponents();
+    const duringMergeComps = componentsList.listDuringMergeStateComponents();
+    const mergePendingComponents = await Promise.all(
+      allIds.map(async (componentId: ComponentID) => {
+        const modelComponent = componentsFromModel.find((c) => c.toComponentId().isEqualWithoutVersion(componentId));
+        if (!modelComponent || duringMergeComps.hasWithoutVersion(componentId)) return null;
+        const divergedData = await modelComponent.getDivergeDataForMergePending(consumer.scope.objects);
+        if (!divergedData.isDiverged()) return null;
+        return { id: modelComponent.toComponentId(), diverge: divergedData };
+      })
+    );
+    return compact(mergePendingComponents);
   }
 
   static slots = [];
@@ -686,7 +737,7 @@ export class MergingMain {
     ImporterAspect,
     ConfigAspect,
     RemoveAspect,
-    GlobalConfigAspect,
+    ConfigStoreAspect,
     ConfigMergerAspect,
     DependencyResolverAspect,
   ];
@@ -703,7 +754,7 @@ export class MergingMain {
     importer,
     config,
     remove,
-    globalConfig,
+    configStore,
     configMerger,
     depResolver,
   ]: [
@@ -718,7 +769,7 @@ export class MergingMain {
     ImporterMain,
     ConfigMain,
     RemoveMain,
-    GlobalConfigMain,
+    ConfigStoreMain,
     ConfigMergerMain,
     DependencyResolverMain,
   ]) {
@@ -737,7 +788,7 @@ export class MergingMain {
       configMerger,
       depResolver
     );
-    cli.register(new MergeCmd(merging, globalConfig));
+    cli.register(new MergeCmd(merging, configStore));
     return merging;
   }
 }

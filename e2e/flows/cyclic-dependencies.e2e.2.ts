@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { IssuesClasses } from '@teambit/component-issues';
-import Helper from '../../src/e2e-helper/e2e-helper';
+import { Helper } from '@teambit/legacy.e2e-helper';
 
 const fixtureA = `const b = require('../b/b');
 console.log('got ' + b() + ' and got A')`;
@@ -114,6 +114,16 @@ describe('cyclic dependencies', function () {
     });
     it('should be able to tag with no errors', () => {
       expect(output).to.have.string('7 component(s) tagged');
+    });
+    it('bit insights should show the circular with the correct order: dependent -> dependency', () => {
+      const results = helper.command.runCmd('bit insights circular --json');
+      const parsedResults = JSON.parse(results);
+      expect(parsedResults[0].data[0]).to.deep.equal([
+        `${helper.scopes.remote}/comp/a1@0.0.1`,
+        `${helper.scopes.remote}/comp/b1@0.0.1`,
+        `${helper.scopes.remote}/comp/b2@0.0.1`,
+        `${helper.scopes.remote}/comp/a1@0.0.1`,
+      ]);
     });
     it('leaves (A3 and is-type) should not have any dependency', () => {
       const leaves = ['comp/a3@latest', 'utils/is-type@latest'];

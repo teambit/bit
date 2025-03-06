@@ -2,10 +2,8 @@ import { Component, ComponentFS, ComponentID, Config, Snap, State, Tag, TagMap }
 import pMapSeries from 'p-map-series';
 import { Logger } from '@teambit/logger';
 import { SemVer } from 'semver';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
-import { Ref } from '@teambit/legacy/dist/scope/objects';
-import { VERSION_ZERO } from '@teambit/legacy/dist/scope/models/model-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { VERSION_ZERO, Ref, ModelComponent, Version } from '@teambit/objects';
 import { BitError } from '@teambit/bit-error';
 import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import type { ScopeMain } from './scope.main.runtime';
@@ -87,13 +85,16 @@ export class ScopeComponentLoader {
   /**
    * get a component from a remote without importing it
    */
-  async getRemoteComponent(id: ComponentID): Promise<Component> {
+  async getRemoteComponent(id: ComponentID, fromMain = false): Promise<Component> {
     const compImport = this.scope.legacyScope.scopeImporter;
     const objectList = await compImport.getRemoteComponent(id);
     // it's crucial to add all objects to the Repository cache. otherwise, later, when it asks
     // for the consumerComponent from the legacyScope, it won't work.
     objectList?.getAll().forEach((obj) => this.scope.legacyScope.objects.setCache(obj));
-    const consumerComponent = await this.scope.legacyScope.getConsumerComponent(id);
+    const modelComponent = await this.scope.legacyScope.getModelComponent(id);
+    const headAsTag = modelComponent.getHeadAsTagIfExist();
+    const idToLoad = fromMain && headAsTag ? id.changeVersion(headAsTag) : id;
+    const consumerComponent = await this.scope.legacyScope.getConsumerComponent(idToLoad);
     return this.getFromConsumerComponent(consumerComponent);
   }
 
@@ -197,9 +198,9 @@ export class ScopeComponentLoader {
   private async createStateFromVersion(
     id: ComponentID,
     version: Version,
-    consumerComponent?: ConsumerComponent
+    consumerComponentOptional?: ConsumerComponent
   ): Promise<State> {
-    consumerComponent = consumerComponent || (await this.scope.legacyScope.getConsumerComponent(id));
+    const consumerComponent = consumerComponentOptional || (await this.scope.legacyScope.getConsumerComponent(id));
     const state = new State(
       // We use here the consumerComponent.extensions instead of version.extensions
       // because as part of the conversion to consumer component the artifacts are initialized as Artifact instances

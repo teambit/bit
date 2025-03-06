@@ -1,7 +1,7 @@
 import { MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { WorkerAspect, WorkerMain, HarmonyWorker } from '@teambit/worker';
-import { getCloudDomain } from '@teambit/legacy/dist/constants';
+import { getCloudDomain } from '@teambit/legacy.constants';
 import { JestAspect } from './jest.aspect';
 import { JestTester, JestTesterOptions } from './jest.tester';
 import type { JestWorker } from './jest.worker';

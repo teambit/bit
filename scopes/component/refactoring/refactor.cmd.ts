@@ -1,7 +1,7 @@
 // eslint-disable-next-line max-classes-per-file
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentMain } from '@teambit/component';
-// import { PATTERN_HELP } from '@teambit/legacy/dist/constants';
+// import { PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
 import { RefactoringMain } from './refactoring.main.runtime';
 

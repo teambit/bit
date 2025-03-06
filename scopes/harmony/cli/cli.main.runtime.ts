@@ -1,10 +1,10 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import legacyLogger from '@teambit/legacy/dist/logger/logger';
-import { CLIArgs, Flags, Command } from '@teambit/legacy/dist/cli/command';
+import { logger as legacyLogger } from '@teambit/legacy.logger';
+import { CLIArgs, Flags, Command } from './command';
 import pMapSeries from 'p-map-series';
-import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
+import { groups, GroupsType } from './command-groups';
 import { HostInitializerMain } from '@teambit/host-initializer';
-import { loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
+import { loadConsumerIfExist } from '@teambit/legacy.consumer';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { clone } from 'lodash';
@@ -212,7 +212,7 @@ CLIAspect.addRuntime(CLIMain);
 async function ensureWorkspaceAndScope() {
   try {
     await loadConsumerIfExist();
-  } catch (err) {
+  } catch {
     const potentialWsPath = process.cwd();
     const consumerInfo = await getWorkspaceInfo(potentialWsPath);
     if (consumerInfo && !consumerInfo.hasScope && consumerInfo.hasBitMap && consumerInfo.hasWorkspaceConfig) {

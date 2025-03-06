@@ -1,12 +1,12 @@
 import { ComponentID } from '@teambit/component-id';
-import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
+import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
-import { ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
-import LegacyWorkspaceConfig from '@teambit/legacy/dist/consumer/config/workspace-config';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { LegacyWorkspaceConfig, ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { logger } from '@teambit/legacy.logger';
 import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
-import { currentDateAndTimeToFileName } from '@teambit/legacy/dist/consumer/consumer';
-import { assign, parse, stringify, CommentJSONValue } from 'comment-json';
+import { currentDateAndTimeToFileName } from '@teambit/legacy.consumer';
+import { assign, parse, stringify, CommentObject } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { omit } from 'lodash';
@@ -182,7 +182,11 @@ export class WorkspaceConfig implements HostConfig {
       const generators = generator.split(',').map((g) => g.trim());
       merged['teambit.generator/generator'] = { envs: generators };
     }
-    return new WorkspaceConfig(merged, WorkspaceConfig.composeWorkspaceJsoncPath(dirPath), scopePath);
+    return new WorkspaceConfig(
+      merged as WorkspaceConfigFileProps,
+      WorkspaceConfig.composeWorkspaceJsoncPath(dirPath),
+      scopePath
+    );
   }
 
   /**
@@ -280,7 +284,7 @@ export class WorkspaceConfig implements HostConfig {
     let parsed;
     try {
       parsed = parse(contentBuffer.toString());
-    } catch (e: any) {
+    } catch {
       throw new InvalidConfigFile(workspaceJsoncPath);
     }
     return WorkspaceConfig.fromObject(parsed, workspaceJsoncPath, scopePath);
@@ -380,7 +384,7 @@ export class WorkspaceConfig implements HostConfig {
   }
 }
 
-export async function getWorkspaceConfigTemplateParsed(): Promise<CommentJSONValue> {
+export async function getWorkspaceConfigTemplateParsed(): Promise<Record<string, any>> {
   let fileContent: Buffer;
   try {
     fileContent = await fs.readFile(path.join(__dirname, 'workspace-template.jsonc'));
@@ -389,9 +393,9 @@ export async function getWorkspaceConfigTemplateParsed(): Promise<CommentJSONVal
     // when the extension is compiled by tsc, it doesn't copy .jsonc files into the dists, grab it from src
     fileContent = await fs.readFile(path.join(__dirname, '..', 'workspace-template.jsonc'));
   }
-  return parse(fileContent.toString());
+  return parse(fileContent.toString()) as CommentObject;
 }
 
-export function stringifyWorkspaceConfig(workspaceConfig: CommentJSONValue): string {
+export function stringifyWorkspaceConfig(workspaceConfig: Record<string, any>): string {
   return stringify(workspaceConfig, undefined, 2);
 }

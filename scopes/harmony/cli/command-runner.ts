@@ -1,9 +1,9 @@
-import logger, { shouldDisableLoader } from '@teambit/legacy/dist/logger/logger';
-import { CLIArgs, Command, Flags } from '@teambit/legacy/dist/cli/command';
+import { logger, shouldDisableLoader } from '@teambit/legacy.logger';
+import { CLIArgs, Command, Flags } from './command';
 import { loader } from '@teambit/legacy.loader';
 import { handleErrorAndExit } from './handle-errors';
-import { TOKEN_FLAG_NAME } from '@teambit/legacy/dist/constants';
-import globalFlags from '@teambit/legacy/dist/cli/global-flags';
+import { TOKEN_FLAG_NAME } from '@teambit/legacy.constants';
+import globalFlags from './global-flags';
 import { Analytics } from '@teambit/legacy.analytics';
 import { OnCommandStartSlot } from './cli.main.runtime';
 import pMapSeries from 'p-map-series';
@@ -47,7 +47,12 @@ export class CommandRunner {
   }
 
   private bootstrapCommand() {
-    Analytics.init(this.commandName, this.flags, this.args);
+    try {
+      Analytics.init(this.commandName, this.flags, this.args);
+    } catch (err: any) {
+      // ignoring the error, we don't want to fail the app if analytics failed.
+      logger.error('failed to initialize analytics', err);
+    }
     logger.info(`[*] started a new command: "${this.commandName}" with the following data:`, {
       args: this.args,
       flags: this.flags,

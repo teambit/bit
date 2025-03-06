@@ -12,13 +12,13 @@ import {
   MergeStrategy,
 } from '@teambit/merging';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
-import { HEAD, LATEST } from '@teambit/legacy/dist/constants';
+import { HEAD, LATEST } from '@teambit/legacy.constants';
 import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
 import mapSeries from 'p-map-series';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import { Version, ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
-import { Tmp } from '@teambit/legacy/dist/scope/repositories';
-import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
+import { Version, ModelComponent, Lane } from '@teambit/objects';
+import { Tmp } from '@teambit/legacy.scope';
+import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
 import { applyVersion, ComponentStatus, ComponentStatusBase, throwForFailures } from './checkout-version';
@@ -346,7 +346,12 @@ export class CheckoutMain {
 
     const currentLane = await this.workspace.consumer.getCurrentLaneObject();
     const currentLaneIds = currentLane?.toComponentIds();
-    const ids = currentLaneIds ? idsOnWorkspace.filter((id) => currentLaneIds.hasWithoutVersion(id)) : idsOnWorkspace;
+    // when no ids were given and the user is on a lane, return lane-ids only.
+    // it's relevant for cases like "bit checkout head" when on a lane to not checkout main components. (see https://github.com/teambit/bit/pull/6853)
+    const ids =
+      currentLaneIds && !componentPattern && checkoutProps.head
+        ? idsOnWorkspace.filter((id) => currentLaneIds.hasWithoutVersion(id))
+        : idsOnWorkspace;
     checkoutProps.ids = ids.map((id) => (checkoutProps.head || checkoutProps.latest ? id.changeVersion(LATEST) : id));
   }
 

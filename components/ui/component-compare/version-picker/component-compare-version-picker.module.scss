@@ -13,7 +13,7 @@
   min-width: 400px;
 }
 .showMenuOverNav {
-  z-index: $topBar-zIndex;
+  z-index: $modal-z-index + 1 !important;
 }
 
 .dropdownContainer {

@@ -1,8 +1,7 @@
 import { expect } from 'chai';
 import path from 'path';
-import { Extensions } from '../../src/constants';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Extensions } from '@teambit/legacy.constants';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)('installing a component dependency', function () {
   this.timeout(0);

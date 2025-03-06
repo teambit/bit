@@ -9,7 +9,7 @@ import type { Environment } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
-import { ComponentLoadOptions } from '@teambit/legacy/dist/consumer/component/component-loader';
+import { ComponentLoadOptions } from '@teambit/legacy.consumer-component';
 import { AbstractVinyl } from '@teambit/component.sources';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Doc, DocPropList } from '@teambit/docs.entities.doc';
@@ -224,7 +224,7 @@ export class DocsMain {
       scope.registerOnCompAspectReCalc(computeDocsOnLoad);
     }
 
-    graphql.register(docsSchema(docs));
+    graphql.register(() => docsSchema(docs));
 
     preview.registerDefinition(new DocsPreviewDefinition(docs));
     return docs;

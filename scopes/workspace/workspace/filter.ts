@@ -1,6 +1,6 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
-import { ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { ModelComponent } from '@teambit/objects';
 import { compact } from 'lodash';
 import { Workspace } from './workspace';
 

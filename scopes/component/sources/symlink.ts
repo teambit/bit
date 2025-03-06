@@ -34,7 +34,7 @@ export class Symlink {
     try {
       exists = fs.lstatSync(dest);
       // eslint-disable-next-line no-empty
-    } catch (e: any) {}
+    } catch {}
     if (exists) {
       fs.removeSync(dest);
     }

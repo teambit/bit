@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 
-import { LICENSE_FILENAME } from '@teambit/legacy/dist/constants';
-import { AbstractVinyl } from '.';
+import { LICENSE_FILENAME } from '@teambit/legacy.constants';
+import AbstractVinyl from './abstract-vinyl';
 
 export default class License extends AbstractVinyl {
   override = true;

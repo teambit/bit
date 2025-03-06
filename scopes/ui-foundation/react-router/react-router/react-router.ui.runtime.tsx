@@ -27,7 +27,7 @@ export class ReactRouterUI {
      *
      */
     private routeChangeListener: RouteChangeSlot
-  ) {}
+  ) { }
 
   /**
    * render all slot routes.
@@ -117,7 +117,9 @@ export class ReactRouterUI {
       return { initialLocation };
     },
     serverInit: ({ browser }) => {
-      const initialLocation = browser?.location.url;
+      const initialLocation = browser?.location ?
+        `${browser.location.pathname}${browser.location.search}${browser.location.hash}` :
+        undefined;
       return { initialLocation };
     },
     reactClientContext: this.RoutingContext,

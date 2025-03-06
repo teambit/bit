@@ -12,7 +12,7 @@ import styles from './styles.module.scss';
 
 export type UserAvatarProps = {
   account: AccountObj;
-  size: number;
+  size?: number;
   imageSize?: number;
   fontSize?: number;
   imgClassName?: string;
@@ -25,7 +25,7 @@ export type UserAvatarProps = {
 
 export function UserAvatar({
   account,
-  size,
+  size = 32,
   imageSize = size,
   fontSize = Math.round(size * 0.4),
   className,

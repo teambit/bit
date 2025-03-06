@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { ModelComponent } from '@teambit/legacy/dist/scope/models';
+import { ModelComponent } from '@teambit/objects';
 import { ComponentsList } from './components-list';
 
 describe('ComponentList', function () {
@@ -31,9 +31,9 @@ describe('ComponentList', function () {
     const scope = {};
     before(() => {
       const bitMap = { getAllBitIds: () => new ComponentIdList() };
-      const consumer = { scope, bitMap, getCurrentLaneId: () => {} };
+      const workspace = { consumer: { scope, bitMap, getCurrentLaneId: () => {} } };
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      componentList = new ComponentsList(consumer);
+      componentList = new ComponentsList(workspace);
     });
     it('should return results with the correct id', async () => {
       const modelComponent = getModelComponent();

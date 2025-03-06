@@ -1,5 +1,6 @@
 import React from 'react';
-import { DefaultAvatar, OrgAvatar, UserAvatar } from './index';
+import { AccountDescriptor } from '@teambit/accounts.account-descriptor';
+import { DefaultAvatar, OrgAvatar, UserAvatar, Avatar } from './index';
 
 const accounts = {
   defAccount: {
@@ -22,6 +23,41 @@ const accounts = {
   noPicUserAccount: { name: 'defaultAccount', type: 'user' },
   noNameAccount: { name: '', type: 'user' },
 };
+
+export const BasicAvatarExample = () => (
+  <div
+    style={{
+      width: '100%',
+      display: 'flex',
+      justifyContent: 'center',
+      gap: 16,
+      margin: '12px auto',
+    }}
+  >
+    <Avatar />
+    <Avatar
+      account={AccountDescriptor.fromObject({
+        id: '',
+        image:
+          'https://bitsrc.imgix.net/dfed500a7cfd20263860c20f4e786e2ff7e7645c.jpeg?size=32&w=64&h=64&crop=faces&fit=crop&bg=ededed',
+        name: 'joshk2',
+        displayName: 'Josh Kuttler',
+        type: 'user',
+        entity: '{}',
+      })}
+    />
+    <Avatar
+      account={AccountDescriptor.fromObject({
+        id: '',
+        image: 'https://bitsrc.imgix.net/102fee41d005d76010a8b16f466b13cc75d870d6.png?h=192',
+        name: 'teambit',
+        displayName: 'teambit',
+        type: 'org',
+        entity: '{}',
+      })}
+    />
+  </div>
+);
 
 export const DefaultAvatarExample = () => <DefaultAvatar />;
 

@@ -1,4 +1,5 @@
 import { queryString } from './query-string';
+import { expect } from 'chai';
 
 describe('queryString()', () => {
   it('should serialize an object with {foo: bar} to a query string', () => {
@@ -6,9 +7,7 @@ describe('queryString()', () => {
       foo: 'bar',
     });
 
-    // @ts-ignore
-    // eslint-disable-next-line no-undef
-    expect(str).toEqual('foo=bar');
+    expect(str).to.equal('foo=bar');
   });
 
   it('should serialize an object with multiple entries to a query string', () => {
@@ -17,9 +16,7 @@ describe('queryString()', () => {
       boo: 'app',
     });
 
-    // @ts-ignore
-    // eslint-disable-next-line no-undef
-    expect(str).toEqual('foo=bar&boo=app');
+    expect(str).to.equal('foo=bar&boo=app');
   });
 
   it('should stringify a boolean value into a string if exists', () => {
@@ -28,8 +25,6 @@ describe('queryString()', () => {
       boo: false,
     });
 
-    // @ts-ignore
-    // eslint-disable-next-line no-undef
-    expect(str).toEqual('foo=bar&boo=false');
+    expect(str).to.equal('foo=bar&boo=false');
   });
 });

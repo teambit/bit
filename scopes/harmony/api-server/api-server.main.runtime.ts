@@ -31,8 +31,9 @@ import { CLIRawRoute } from './cli-raw.route';
 import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { DEFAULT_AUTH_TYPE, Http } from '@teambit/legacy/dist/scope/network/http/http';
-import { getSymphonyUrl } from '@teambit/legacy/dist/constants';
+import { DEFAULT_AUTH_TYPE, Http } from '@teambit/scope.network';
+import { getSymphonyUrl } from '@teambit/legacy.constants';
+import { GraphAspect, GraphMain } from '@teambit/graph';
 
 export class ApiServerMain {
   constructor(
@@ -226,6 +227,7 @@ export class ApiServerMain {
     ApplicationAspect,
     DeprecationAspect,
     EnvsAspect,
+    GraphAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -248,6 +250,7 @@ export class ApiServerMain {
     application,
     deprecation,
     envs,
+    graph,
   ]: [
     CLIMain,
     Workspace,
@@ -268,6 +271,7 @@ export class ApiServerMain {
     ApplicationMain,
     DeprecationMain,
     EnvsMain,
+    GraphMain,
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
     const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer, importer);
@@ -287,7 +291,8 @@ export class ApiServerMain {
       config,
       application,
       deprecation,
-      envs
+      envs,
+      graph
     );
     const cliRoute = new CLIRoute(logger, cli, apiForIDE);
     const cliRawRoute = new CLIRawRoute(logger, cli, apiForIDE);

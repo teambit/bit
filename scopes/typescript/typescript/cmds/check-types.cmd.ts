@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
 import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { TypescriptMain } from '../typescript.main.runtime';
 
 export class CheckTypesCmd implements Command {

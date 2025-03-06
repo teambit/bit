@@ -1,7 +1,7 @@
-import { getSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
-import { CFG_GIT_EXECUTABLE_PATH } from '@teambit/legacy/dist/constants';
+import { getConfig } from '@teambit/config-store';
+import { CFG_GIT_EXECUTABLE_PATH } from '@teambit/legacy.constants';
 
 export function getGitExecutablePath() {
-  const executablePath = getSync(CFG_GIT_EXECUTABLE_PATH);
+  const executablePath = getConfig(CFG_GIT_EXECUTABLE_PATH);
   return executablePath || 'git';
 }

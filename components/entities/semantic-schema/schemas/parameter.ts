@@ -5,6 +5,10 @@ export class ParameterSchema<T extends SchemaNode = SchemaNode> extends SchemaNo
   readonly type: T;
   readonly objectBindingNodes?: SchemaNode[];
 
+  getNodes(): SchemaNode[] {
+    return [this.type, ...(this.objectBindingNodes || [])];
+  }
+
   constructor(
     readonly location: SchemaLocation,
     readonly name: string,

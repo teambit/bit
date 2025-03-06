@@ -7,6 +7,9 @@ import type * as WDS from 'webpack-dev-server';
 import { inspect } from 'util';
 import { WebpackAspect } from './webpack.aspect';
 
+//@ts-ignore - ignoring ts errors here because WDS.Configuration is a complex type that might break
+// between versions, leads to errors such as:
+// error TS2430: Interface 'WebpackConfigWithDevServer' incorrectly extends interface 'Configuration'.
 export interface WebpackConfigWithDevServer extends Configuration {
   devServer: WDS.Configuration;
   favicon?: string;
@@ -31,7 +34,7 @@ export class WebpackDevServer implements DevServer {
   }
 
   private getCompiler(): any {
-    return this.webpack(this.config);
+    return this.webpack(this.config as any);
   }
 
   id = WebpackAspect.id;
@@ -49,7 +52,7 @@ export class WebpackDevServer implements DevServer {
       // eslint-disable-next-line import/no-dynamic-require, global-require
       const packageJson = require(packageJsonPath);
       return packageJson.version;
-    } catch (err) {
+    } catch {
       return 'unknown';
     }
   }

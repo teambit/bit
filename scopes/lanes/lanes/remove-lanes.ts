@@ -1,10 +1,9 @@
 import groupArray from 'group-array';
 import { LaneId } from '@teambit/lane-id';
-import { Consumer } from '@teambit/legacy/dist/consumer';
-import { Remotes } from '@teambit/legacy/dist/remotes';
-import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
-import { Http } from '@teambit/legacy/dist/scope/network/http';
-import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL } from '@teambit/legacy/dist/constants';
+import { Consumer } from '@teambit/legacy.consumer';
+import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
+import { Http } from '@teambit/scope.network';
+import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL } from '@teambit/legacy.constants';
 
 export async function removeLanes(consumer: Consumer | undefined, lanes: string[], remote: boolean, force: boolean) {
   if (remote) {
@@ -32,7 +31,7 @@ async function removeRemoteLanes(consumer: Consumer | undefined, lanes: LaneId[]
   const context = {};
   const groupedLanesByScope = groupArray(lanes, 'scope');
   const removeP = Object.keys(groupedLanesByScope).map(async (key) => {
-    const resolvedRemote = await remotes.resolve(key, consumer?.scope);
+    const resolvedRemote = await remotes.resolve(key);
     const idsStr = groupedLanesByScope[key].map((id) => id.toString());
     return resolvedRemote.deleteMany(idsStr, force, context, true);
   });

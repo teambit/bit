@@ -1,7 +1,4 @@
 import { Harmony } from '@teambit/harmony';
-import { BabelCompiler } from '@teambit/compilation.babel-compiler';
-import { TypescriptConfigMutator } from '@teambit/typescript.modules.ts-config-mutator';
-import { TsConfigTransformer } from '@teambit/typescript';
 import { MainRuntime } from '@teambit/cli';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -14,11 +11,11 @@ import { MultiCompilerAspect, MultiCompilerMain } from '@teambit/multi-compiler'
 import { ReactAspect, ReactEnv, ReactMain } from '@teambit/react';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { MDXAspect } from './mdx.aspect';
-import { MDXCompiler, MDXCompilerOpts } from './mdx.compiler';
+import { MDXCompilerOpts } from './mdx.compiler';
 import { MDXDependencyDetector } from './mdx.detector';
 import { MDXDocReader } from './mdx.doc-reader';
 import { getTemplates } from './mdx.templates';
-import { babelConfig } from './babel/babel.config';
+import { MdxEnv } from './mdx.env';
 
 export type MDXConfig = {
   /**
@@ -36,15 +33,14 @@ export class MDXMain {
    * create an instance of the MDX compiler.
    */
   createCompiler(opts: MDXCompilerOpts = {}) {
-    const mdxCompiler = new MDXCompiler(MDXAspect.id, opts);
-    return mdxCompiler;
+    return this.mdxEnv.createMdxCompiler(opts);
   }
 
-  _mdxEnv: ReactEnv;
+  _mdxEnv: MdxEnv;
   get mdxEnv() {
     return this._mdxEnv;
   }
-  private set mdxEnv(value: ReactEnv) {
+  private set mdxEnv(value: MdxEnv) {
     this._mdxEnv = value;
   }
 
@@ -83,58 +79,20 @@ export class MDXMain {
     harmony: Harmony
   ) {
     const mdx = new MDXMain();
-    const tsTransformer: TsConfigTransformer = (tsconfig: TypescriptConfigMutator) => {
-      // set the shouldCopyNonSupportedFiles to false since we don't want ts to copy the .mdx file to the dist folder (it will conflict with the .mdx.js file created by the mdx compiler)
-      tsconfig.setCompileJs(false).setCompileJsx(false).setShouldCopyNonSupportedFiles(false);
-      return tsconfig;
-    };
-    const tsCompiler = react.env.getCompiler([tsTransformer]);
     const logger = loggerAspect.createLogger(MDXAspect.id);
 
-    const babelCompiler = BabelCompiler.create(
-      {
-        babelTransformOptions: babelConfig,
-        // set the shouldCopyNonSupportedFiles to false since we don't want babel to copy the .mdx file to the dist
-        // folder (it will conflict with the .mdx.js file created by the mdx compiler)
-        shouldCopyNonSupportedFiles: false,
-      },
-      { logger }
-    );
+    const mdxEnv = envs.merge<MdxEnv, ReactEnv>(new MdxEnv(react,
+      logger, multiCompiler, compiler, docs), react.reactEnv);
 
-    const mdxCompiler = multiCompiler.createCompiler(
-      [
-        babelCompiler,
-        mdx.createCompiler({ ignoredPatterns: docs.getPatterns(), babelTransformOptions: babelConfig }),
-        tsCompiler,
-      ],
-      {}
-    );
-    const mdxEnv = envs.compose(react.reactEnv, [
-      react.overrideCompiler(mdxCompiler),
-      react.overrideDependencies({
-        dependencies: {
-          '@teambit/mdx.ui.mdx-scope-context': '1.0.0',
-          '@mdx-js/react': '1.6.22',
-        },
-      }),
-      react.overrideCompilerTasks([compiler.createTask('MDXCompiler', mdxCompiler)]),
-      envs.override({
-        __getDescriptor: async () => {
-          return {
-            type: 'mdx',
-          };
-        },
-      }),
-    ]);
     envs.registerEnv(mdxEnv);
     depResolver.registerDetector(new MDXDependencyDetector(config.extensions));
     docs.registerDocReader(new MDXDocReader(config.extensions));
     if (generator) {
       const envContext = new EnvContext(ComponentID.fromString(ReactAspect.id), loggerAspect, workerMain, harmony);
-      generator.registerComponentTemplate(getTemplates(envContext));
+      generator.registerComponentTemplate(() => getTemplates(envContext));
     }
 
-    mdx.mdxEnv = mdxEnv as ReactEnv;
+    mdx.mdxEnv = mdxEnv;
     return mdx;
   }
 }

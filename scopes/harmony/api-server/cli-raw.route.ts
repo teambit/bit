@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import chalk from 'chalk';
 import { Route, Request, Response } from '@teambit/express';
 import { Logger } from '@teambit/logger';
-import legacyLogger, { getLevelFromArgv } from '@teambit/legacy/dist/logger/logger';
+import { logger as legacyLogger, getLevelFromArgv } from '@teambit/legacy.logger';
 import { reloadFeatureToggle } from '@teambit/harmony.modules.feature-toggle';
 import { loader } from '@teambit/legacy.loader';
 import { APIForIDE } from './api-for-ide';
@@ -116,7 +116,7 @@ export class CLIRawRoute implements Route {
           loader.shouldSendServerEvents = false;
         }
         // change chalk back to false, otherwise, the IDE will have colors. (this is a global setting)
-        chalk.enabled = false;
+        chalk.level = 0;
         if (shouldReloadFeatureToggle) {
           process.env.BIT_FEATURES = currentBitFeatures;
           reloadFeatureToggle();
@@ -131,10 +131,8 @@ export class CLIRawRoute implements Route {
 
 /**
  * because this gets called from the express server, which gets spawn from a script, chalk defaults to false.
- * changing only the "level" is not enough, it must be enabled as well.
  * only when calling this route from the terminal, we want colors. on the IDE, we don't want colors.
  */
 function enableChalk() {
-  chalk.enabled = true;
   chalk.level = 3;
 }

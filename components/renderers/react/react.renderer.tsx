@@ -40,8 +40,8 @@ function ReactComponent(props: APINodeRenderProps) {
   const PropsRefComponent =
     paramRef && paramRefRenderer?.Component ? (
       <paramRefRenderer.Component
-        {...props}
         key={`props-ref-${reactProps.name}`}
+        {...props}
         depth={(props.depth ?? 0) + 1}
         apiNode={{ ...props.apiNode, renderer: paramRefRenderer, api: paramRef }}
         metadata={{ [paramRef.__schema]: { columnView: true } }}
@@ -51,8 +51,8 @@ function ReactComponent(props: APINodeRenderProps) {
   const ParamComponent =
     reactProps && paramRenderer?.Component ? (
       <paramRenderer.Component
-        {...props}
         key={`props-${reactProps.name}`}
+        {...props}
         depth={(props.depth ?? 0) + 1}
         apiNode={{ ...props.apiNode, renderer: paramRenderer, api: reactProps }}
         metadata={{ [reactProps.__schema]: { columnView: true } }}
@@ -60,8 +60,8 @@ function ReactComponent(props: APINodeRenderProps) {
     ) : (
       (reactProps && (
         <defaultParamRenderer.Component
-          {...props}
           key={`props-${reactProps.name}`}
+          {...props}
           depth={(props.depth ?? 0) + 1}
           apiNode={{ ...props.apiNode, renderer: defaultParamRenderer, api: reactProps }}
           metadata={{ [reactProps.__schema]: { columnView: true } }}
@@ -128,8 +128,8 @@ function ReactOverviewComponent(props: APINodeRenderProps) {
   const PropsRefComponent =
     paramRef && paramRefRenderer?.Component ? (
       <paramRefRenderer.Component
-        {...props}
         key={`props-ref-${reactProps.name}`}
+        {...props}
         depth={(props.depth ?? 0) + 1}
         apiNode={{ ...props.apiNode, renderer: paramRefRenderer, api: paramRef }}
         metadata={{ [paramRef.__schema]: { columnView: true } }}
@@ -139,8 +139,8 @@ function ReactOverviewComponent(props: APINodeRenderProps) {
   const ParamComponent =
     reactProps && paramRenderer?.Component ? (
       <paramRenderer.Component
-        {...props}
         key={`props-${reactProps.name}`}
+        {...props}
         depth={(props.depth ?? 0) + 1}
         apiNode={{ ...props.apiNode, renderer: paramRenderer, api: reactProps }}
         metadata={{ [reactProps.__schema]: { columnView: true } }}
@@ -148,8 +148,8 @@ function ReactOverviewComponent(props: APINodeRenderProps) {
     ) : (
       (reactProps && (
         <defaultParamRenderer.Component
-          {...props}
           key={`props-${reactProps.name}`}
+          {...props}
           depth={(props.depth ?? 0) + 1}
           apiNode={{ ...props.apiNode, renderer: defaultParamRenderer, api: reactProps }}
           metadata={{ [reactProps.__schema]: { columnView: true } }}

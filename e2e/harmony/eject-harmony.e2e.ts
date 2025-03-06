@@ -1,9 +1,7 @@
 import chai, { expect } from 'chai';
 import { successEjectMessage } from '@teambit/eject';
 import path from 'path';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
+import { Helper, DEFAULT_OWNER, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));

@@ -1,5 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import { COMPONENT_PATTERN_HELP } from '@teambit/legacy/dist/constants';
+import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { VisualDependencyGraph, GraphConfig } from '@teambit/legacy.dependency-graph';
 import chalk from 'chalk';
 import { VersionHistoryMain } from './version-history.main.runtime';
@@ -113,7 +113,8 @@ export class VersionHistoryGraphCmd implements Command {
     const config: GraphConfig = { colorPerEdgeType };
     if (layout) config.layout = layout;
     const visualDependencyGraph = await VisualDependencyGraph.loadFromClearGraph(graphHistory, config, markIds);
-    return png ? visualDependencyGraph.image() : visualDependencyGraph.renderUsingViz();
+
+    return visualDependencyGraph.render(png ? 'png' : 'svg');
   }
 }
 

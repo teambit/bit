@@ -9,8 +9,7 @@ import {
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { cloneDeep, compact, set, uniq } from 'lodash';
 import pMapSeries from 'p-map-series';
-import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
-import ComponentLoader, { DependencyLoaderOpts } from '@teambit/legacy/dist/consumer/component/component-loader';
+import { ConsumerComponent, ComponentLoader, DependencyLoaderOpts } from '@teambit/legacy.consumer-component';
 import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 import { GraphAspect, ComponentIdGraph, GraphMain } from '@teambit/graph';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
@@ -435,7 +434,7 @@ export class DependenciesMain {
       new WhyCmd(depsMain),
       new SetPeerCmd(depsMain),
       new UnsetPeerCmd(depsMain),
-      new DependentsCmd()
+      new DependentsCmd(workspace)
     );
 
     ComponentLoader.loadDeps = depsMain.loadDependencies.bind(depsMain);

@@ -1,9 +1,9 @@
 import chalk from 'chalk';
 import * as pathlib from 'path';
 import { BitError } from '@teambit/bit-error';
-import { getSync } from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import { getConfig } from '@teambit/config-store';
 import { initScope } from '@teambit/legacy.scope-api';
-import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy/dist/constants';
+import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy.constants';
 import { WorkspaceExtensionProps } from '@teambit/config';
 import { Command, CommandOptions } from '@teambit/cli';
 import { HostInitializerMain } from './host-initializer.main.runtime';
@@ -91,8 +91,8 @@ export class InitCmd implements Command {
     }
 
     const workspaceExtensionProps: WorkspaceExtensionProps = {
-      defaultDirectory: defaultDirectory ?? getSync(CFG_INIT_DEFAULT_DIRECTORY),
-      defaultScope: defaultScope ?? getSync(CFG_INIT_DEFAULT_SCOPE),
+      defaultDirectory: defaultDirectory ?? getConfig(CFG_INIT_DEFAULT_DIRECTORY),
+      defaultScope: defaultScope ?? getConfig(CFG_INIT_DEFAULT_SCOPE),
       name,
     };
 

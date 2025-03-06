@@ -7,7 +7,7 @@ import {
   PrettierConfigTransformContext,
   PrettierConfigTransformer,
 } from '@teambit/defender.prettier.config-mutator';
-import { getCloudDomain } from '@teambit/legacy/dist/constants';
+import { getCloudDomain } from '@teambit/legacy.constants';
 import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { PrettierAspect } from './prettier.aspect';
 import { PrettierFormatter } from './prettier.formatter';

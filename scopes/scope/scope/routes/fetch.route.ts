@@ -1,6 +1,6 @@
 import { Route, Verb, Request, Response } from '@teambit/express';
 import { fetch } from '@teambit/legacy.scope-api';
-import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
+import { ObjectList } from '@teambit/objects';
 import { Logger } from '@teambit/logger';
 // @ts-ignore
 import { pipeline } from 'stream/promises';

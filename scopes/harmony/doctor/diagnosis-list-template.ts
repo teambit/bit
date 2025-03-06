@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { table } from 'table';
+import type { Alignment } from 'table';
 
 import Diagnosis from './diagnosis';
 
@@ -8,7 +9,7 @@ import Diagnosis from './diagnosis';
 
 const tableColumnConfig = {
   columnDefault: {
-    alignment: 'left',
+    alignment: 'left' as Alignment,
   },
 };
 

@@ -3,7 +3,7 @@ import { Server } from 'http';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import express, { Express } from 'express';
-import { concat, flatten, lowerCase, sortBy } from 'lodash';
+import { concat, flatten, lowerCase, sortBy, omit } from 'lodash';
 import bodyParser from 'body-parser';
 import { ExpressAspect } from './express.aspect';
 import { catchErrors } from './middlewares';
@@ -94,7 +94,8 @@ export class ExpressMain {
     const app = expressApp || express();
     app.use((req, res, next) => {
       if (this.config.loggerIgnorePath.includes(req.url)) return next();
-      this.logger.debug(`express got a request to a URL: ${req.url}', headers:`, req.headers);
+      const headers = omit(req.headers, ['cookie', 'authorization']);
+      this.logger.debug(`express got a request to a URL: ${req.url}', headers:`, headers);
       return next();
     });
     if (!options?.disableBodyParser) this.bodyParser(app);

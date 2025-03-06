@@ -1,21 +1,19 @@
 import { ComponentID } from '@teambit/component-id';
 import { loader } from '@teambit/legacy.loader';
-import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
-import Component from '@teambit/legacy/dist/consumer/component';
-import getRemoteByName from '@teambit/legacy/dist/remotes/get-remote-by-name';
-import { loadScope, Scope } from '@teambit/legacy/dist/scope';
+import { Consumer, loadConsumerIfExist } from '@teambit/legacy.consumer';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import { getRemoteByName } from '@teambit/scope.remotes';
+import { loadScope, Scope } from '@teambit/legacy.scope';
 import { DependenciesInfo } from '@teambit/legacy.dependency-graph';
 
 export async function getScopeComponent({
   id,
-  allVersions,
   scopePath,
   showDependents,
   showDependencies,
   loadScopeFromCache,
 }: {
   id: string;
-  allVersions?: boolean | null;
   scopePath?: string | null; // used by the api (see /src/api.js)
   showDependents?: boolean;
   showDependencies?: boolean;
@@ -52,9 +50,6 @@ export async function getScopeComponent({
   return { component, dependentsInfo, dependenciesInfo };
 
   async function showComponentUsingScope(scope: Scope) {
-    if (allVersions) {
-      return scope.loadAllVersions(bitId);
-    }
     const scopeComponentsImporter = scope.scopeImporter;
     return scopeComponentsImporter.loadRemoteComponent(bitId);
   }

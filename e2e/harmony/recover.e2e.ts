@@ -1,7 +1,7 @@
 import { IssuesClasses } from '@teambit/component-issues';
 import chai, { expect } from 'chai';
-import Helper from '../../src/e2e-helper/e2e-helper';
-import { Extensions } from '../../src/constants';
+import { Helper } from '@teambit/legacy.e2e-helper';
+import { Extensions } from '@teambit/legacy.constants';
 
 chai.use(require('chai-fs'));
 

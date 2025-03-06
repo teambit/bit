@@ -3,14 +3,14 @@ import fs from 'fs-extra';
 import { dirname, basename } from 'path';
 import { compact, difference, partition } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BIT_MAP, CFG_WATCH_USE_POLLING, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
-import { Consumer } from '@teambit/legacy/dist/consumer';
-import logger from '@teambit/legacy/dist/logger/logger';
+import { BIT_MAP, WORKSPACE_JSONC } from '@teambit/legacy.constants';
+import { Consumer } from '@teambit/legacy.consumer';
+import { logger } from '@teambit/legacy.logger';
 import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import mapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
-import { UNMERGED_FILENAME } from '@teambit/legacy/dist/scope/lanes/unmerged-components';
+import { UNMERGED_FILENAME } from '@teambit/legacy.scope';
 import chokidar, { FSWatcher } from 'chokidar';
 import { ComponentMap } from '@teambit/legacy.bit-map';
 import { CompilationInitiator } from '@teambit/compiler';
@@ -26,6 +26,7 @@ import { CheckTypes } from './check-types';
 import { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';
 import { Logger } from '@teambit/logger';
+import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: ComponentID; componentIds: ComponentID[] };
 
@@ -95,11 +96,11 @@ export class Watcher {
     await this.setRootDirs();
     const componentIds = Object.values(this.rootDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
+    await this.watcherMain.watchScopeInternalFiles();
+
     await this.createWatcher();
     const watcher = this.fsWatcher;
     msgs?.onStart(this.workspace);
-
-    await this.workspace.scope.watchScopeInternalFiles();
 
     return new Promise((resolve, reject) => {
       if (this.verbose) {
@@ -192,10 +193,14 @@ export class Watcher {
       }
       if (dirname(filePath) === this.ipcEventsDir) {
         const eventName = basename(filePath);
-        if (eventName !== 'onPostInstall') {
-          this.watcherMain.logger.warn(`eventName ${eventName} is not recognized, please handle it`);
+        if (eventName === 'onNotifySSE') {
+          const content = await fs.readFile(filePath, 'utf8');
+          this.logger.debug(`Watcher, onNotifySSE ${content}`);
+          const parsed = JSON.parse(content);
+          sendEventsToClients(parsed.event, parsed);
+        } else {
+          await this.watcherMain.ipcEvents.triggerGotEvent(eventName as any);
         }
-        await this.watcherMain.ipcEvents.triggerGotEvent(eventName as 'onPostInstall');
         return { results: [], files: [filePath] };
       }
       if (filePath.endsWith(WORKSPACE_JSONC)) {
@@ -443,8 +448,6 @@ export class Watcher {
   }
 
   private async createWatcher() {
-    const usePollingConf = await this.watcherMain.globalConfig.get(CFG_WATCH_USE_POLLING);
-    const usePolling = usePollingConf === 'true';
     const workspacePathLinux = pathNormalizeToLinux(this.workspace.path);
     const ignoreLocalScope = (pathToCheck: string) => {
       if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
@@ -452,15 +455,11 @@ export class Watcher {
         pathToCheck.startsWith(`${workspacePathLinux}/.git/`) || pathToCheck.startsWith(`${workspacePathLinux}/.bit/`)
       );
     };
-    this.fsWatcher = chokidar.watch(this.workspace.path, {
-      ignoreInitial: true,
-      // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
-      // (windows-style backslashes are converted to forward slashes)
-      ignored: ['**/node_modules/**', '**/package.json', ignoreLocalScope],
-      usePolling,
-      // useFsEvents,
-      persistent: true,
-    });
+    const chokidarOpts = await this.watcherMain.getChokidarWatchOptions();
+    // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
+    // (windows-style backslashes are converted to forward slashes)
+    chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', ignoreLocalScope];
+    this.fsWatcher = chokidar.watch(this.workspace.path, chokidarOpts);
     if (this.verbose) {
       logger.console(`${chalk.bold('chokidar.options:\n')} ${JSON.stringify(this.fsWatcher.options, undefined, 2)}`);
     }
