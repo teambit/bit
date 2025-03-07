@@ -407,7 +407,7 @@
         "doctrine": "2.1.0",
         "dreidels": "0.6.1",
         "enhanced-resolve": "4.5.0",
-        "enquirer": "2.3.6",
+        "enquirer": "2.4.1",
         "eslint": "8.56.0",
         "eslint-config-airbnb-typescript": "17.1.0",
         "eslint-config-prettier": "8.5.0",
