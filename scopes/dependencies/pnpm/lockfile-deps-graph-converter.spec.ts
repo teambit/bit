@@ -1,5 +1,5 @@
 import path from 'path';
-import { DependenciesGraph } from '@teambit/scope.objects';
+import { DependenciesGraph } from '@teambit/objects';
 import { type LockfileFile } from '@pnpm/lockfile.types';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
 import { expect } from 'chai';
