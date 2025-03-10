@@ -70,4 +70,17 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe('eject when there is no main version', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+    });
+    it('should throw an error saying it has no main version', () => {
+      const error = helper.general.runWithTryCatch('bit lane eject comp1');
+      expect(error).to.have.string('it has no main version');
+    });
+  });
 });
