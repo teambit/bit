@@ -168,7 +168,7 @@ export class PkgMain {
     // dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
     builder.registerBuildTasks([preparePackagesTask]);
     builder.registerTagTasks([preparePackagesTask, packTask, publishTask]);
-    builder.registerSnapTasks([preparePackagesTask, packTask]);
+    builder.registerSnapTasks([preparePackagesTask, packTask, publishTask]);
 
     const calcPkgOnLoad = async (component: Component) => {
       const data = await pkg.mergePackageJsonProps(component);
