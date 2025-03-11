@@ -1,6 +1,6 @@
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { DependenciesEnv, PackageEnv, PipeServiceModifier, PipeServiceModifiersMap } from '@teambit/envs';
-import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
 import { ReactMain } from '@teambit/react';
 import { Tester } from '@teambit/tester';
@@ -24,12 +24,34 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
 
   icon = 'https://static.bit.dev/extensions-icons/nodejs.svg';
 
-  getDependencies(): VariantPolicyConfigObject {
+  getDependencies(): EnvPolicyConfigObject {
     return {
+      dependencies: {
+        react: '-',
+        'react-dom': '-',
+      },
       devDependencies: {
+        react: '-',
+        'react-dom': '-',
         '@types/jest': '26.0.20',
         '@types/node': '22.10.5',
       },
+      peers: [
+        {
+          name: 'react',
+          /* the version to be installed and used by the env */
+          version: '^18.0.0',
+          /* the range of versions this env's components are compatible with */
+          supportedRange: '^17.0.0 || ^18.0.0 || ^19.0.0',
+        },
+        {
+          name: 'react-dom',
+          /* the version to be installed and used by the env */
+          version: '^18.0.0',
+          /* the range of versions this env's components are compatible with */
+          supportedRange: '^17.0.0 || ^18.0.0 || ^19.0.0',
+        },
+      ],
     };
   }
 
