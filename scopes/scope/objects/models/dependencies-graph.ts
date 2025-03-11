@@ -1,10 +1,10 @@
 import semver from 'semver';
-import { PackageInfo } from '@pnpm/lockfile.types';
+import { LockfilePackageInfo } from '@pnpm/lockfile.types';
 import * as dp from '@pnpm/dependency-path';
 
 export type PackagesMap = Map<string, PackageAttributes>;
 
-export type PackageAttributes = PackageInfo & {
+export type PackageAttributes = LockfilePackageInfo & {
   component?: {
     scope: string;
     name: string;
