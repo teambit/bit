@@ -7,14 +7,12 @@
 ## Steps to Reproduce the Problem
 
   1.
-  1.
-  1.
+  2.
+  3.
 
 ## Specifications
 
   - Bit version:
-  - Node version:
-  - npm / yarn version:
   - Platform:
-  - Bit compiler (include version):
-  - Bit tester (include version):
+  - Bit Env (run `bit envs` command and get it from there)
+
