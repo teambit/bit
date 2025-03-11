@@ -5253,6 +5253,11 @@
         "",
         "strict",
         "in case issues found, exit with code 1"
+      ],
+      [
+        "j",
+        "json",
+        "return the output in json format"
       ]
     ],
     "description": "check typescript types",
