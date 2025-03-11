@@ -14,6 +14,7 @@ export class CheckTypesCmd implements Command {
   options = [
     ['a', 'all', 'check-types for all components, not only modified and new'],
     ['', 'strict', 'in case issues found, exit with code 1'],
+    ['j', 'json', 'return the output in json format'],
   ] as CommandOptions;
 
   constructor(
@@ -44,6 +45,28 @@ export class CheckTypesCmd implements Command {
     return {
       code: 0,
       data: chalk.green(`${msg}. no errors were found.`),
+    };
+  }
+
+  async json([pattern]: [string], { all = false, strict = false }: { all: boolean; strict: boolean }) {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    const components = await this.workspace.getComponentsByUserInput(all, pattern);
+    const files = this.typescript.getSupportedFilesForTsserver(components);
+    await this.typescript.initTsserverClientFromWorkspace({ aggregateDiagnosticData: true }, files);
+    const tsserver = this.typescript.getTsserverClient();
+    if (!tsserver) throw new Error(`unable to start tsserver`);
+    await tsserver.getDiagnostic(files);
+    const diagData = tsserver.diagnosticData;
+    tsserver.killTsServer();
+    if (tsserver.lastDiagnostics.length) {
+      return {
+        code: strict ? 1 : 0,
+        data: diagData,
+      };
+    }
+    return {
+      code: 0,
+      data: diagData,
     };
   }
 }
