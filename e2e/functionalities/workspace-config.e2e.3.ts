@@ -304,7 +304,7 @@ describe('workspace config', function () {
               const diff = helper.command.diff('bar --verbose');
               expect(diff).to.have.string('--- Overrides Dependencies (0.0.2 original)');
               expect(diff).to.have.string('+++ Overrides Dependencies (0.0.2 modified)');
-              expect(diff).to.have.string(`- [ @${helper.scopes.remote}/utils.foo.foo2@- ]`);
+              expect(diff).to.have.string(`- [ @${helper.scopes.remote}/utils.foo.foo2@-`);
             });
           });
         });
