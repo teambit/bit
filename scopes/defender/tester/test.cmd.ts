@@ -1,10 +1,10 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import { Command, CommandOptions, GenericObject } from '@teambit/cli';
 import chalk from 'chalk';
 import { Logger } from '@teambit/logger';
 import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
 import { Timer } from '@teambit/toolbox.time.timer';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import type { TesterMain } from './tester.main.runtime';
+import type { TesterMain, TestResults } from './tester.main.runtime';
 
 type TestFlags = {
   watch: boolean;
@@ -44,6 +44,7 @@ export class TestCmd implements Command {
       'scope <scope-name>',
       'DEPRECATED. (use the pattern instead, e.g. "scopeName/**"). name of the scope to test',
     ],
+    ['j', 'json', 'return the results in json format'],
     // TODO: we need to reduce this redundant casting every time.
   ] as CommandOptions;
 
@@ -139,4 +140,109 @@ otherwise, only new and modified components will be tested`);
       data,
     };
   }
+
+  async json( [userPattern]: [string],
+    {
+      watch = false,
+      debug = false,
+      env,
+      junit,
+      coverage = false,
+      unmodified = false,
+      updateSnapshot = false,
+    }: TestFlags): Promise<GenericObject> {
+      const timer = Timer.create();
+      timer.start();
+      if (!this.workspace) throw new OutsideWorkspaceError();
+
+      const getPatternWithScope = () => {
+        if (!userPattern) return undefined;
+        const pattern = userPattern || '**';
+        return pattern;
+      };
+      const patternWithScope = getPatternWithScope();
+      const components = await this.workspace.getComponentsByUserInput(unmodified, patternWithScope, true);
+      if (!components.length) {
+        this.logger.info(`no components found to test.
+  use "--unmodified" flag to test all components or specify the ids to test.
+  otherwise, only new and modified components will be tested`);
+        return {
+          code: 0,
+          data: [],
+        };
+      }
+
+      let code = 0;
+      const restore = silenceConsoleAndStdout();
+      let tests: TestResults;
+      try {
+        tests = await this.tester.test(components, {
+          watch,
+          debug,
+          env,
+          junit,
+          coverage,
+          updateSnapshot,
+        });
+      } catch (err) {
+        restore();
+        throw err;
+      }
+      restore();
+      if (tests.hasErrors()) code = 1;
+      if (process.exitCode && process.exitCode !== 0 && typeof process.exitCode === 'number') {
+        // this is needed for testers such as "vitest", where it sets the exitCode to non zero when the coverage is not met.
+        code = process.exitCode;
+      }
+
+      const data = tests.results.map(r => ({
+        data: {
+          components: r.data?.components.map(c => ({
+            ...c,
+            componentId: c.componentId.toString(),
+          })),
+          errors: r.data?.errors,
+        },
+        error: r.error,
+      }));
+
+      return {
+        code,
+        data
+      };
+  }
+}
+
+
+/**
+ * Disables all console logging (via console.*) and direct writes to
+ * process.stdout / process.stderr. Returns a function that, when called,
+ * restores everything back to normal.
+ */
+function silenceConsoleAndStdout(): () => void {
+  // Keep copies of the original methods so we can restore them later
+  const originalConsole = { ...console };
+  const originalStdoutWrite = process.stdout.write;
+  const originalStderrWrite = process.stderr.write;
+
+  // No-op implementations for console.* methods
+  for (const method of ["log", "warn", "error", "info", "debug"] as const) {
+    // eslint-disable-next-line no-console
+    console[method] = () => {};
+  }
+
+  // Replace process.stdout.write and process.stderr.write with no-ops
+  process.stdout.write = (() => true) as any;
+  process.stderr.write = (() => true) as any;
+
+  // Return a function to restore original behavior
+  return () => {
+    for (const method of Object.keys(originalConsole) as (keyof Console)[]) {
+      // @ts-ignore
+      // eslint-disable-next-line no-console
+      console[method] = originalConsole[method];
+    }
+    process.stdout.write = originalStdoutWrite;
+    process.stderr.write = originalStderrWrite;
+  };
 }
