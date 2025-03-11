@@ -457,9 +457,9 @@ export class AutoDetectDeps {
     if (!depMain) {
       return;
     }
+    const normalizedDepMain = depMain.replace('./', '');
     const depFullPath = pathNormalizeToLinux(dependencyPkgData.fullPath);
-
-    if (depFullPath.endsWith(depMain)) {
+    if (depFullPath.endsWith(normalizedDepMain)) {
       // it requires the main-file. all is good.
       return;
     }
