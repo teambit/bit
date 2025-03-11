@@ -1,6 +1,6 @@
 import { DiagnosticMessageChain, server } from 'typescript';
 
-type Diagnostic = server.protocol.Diagnostic;
+export type Diagnostic = server.protocol.Diagnostic;
 
 /**
  * mostly taken from ts repo, src/compiler/program.ts "formatDiagnosticsWithColorAndContext" method.
