@@ -16,7 +16,7 @@ describe('app root components', function () {
     let numberOfFilesInVirtualStore!: number;
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(4);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.workspaceJsonc.addKeyVal(`${helper.scopes.remote}/comp3`, {});
@@ -436,7 +436,7 @@ module.exports.default = {
   describe('pnpm hoisted linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(4);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
@@ -830,7 +830,7 @@ module.exports.default = {
   describe('yarn hoisted linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(4);
       helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
@@ -1193,7 +1193,7 @@ describe('env root components', function () {
     const env2DefaultPeerVersion = '16.13.1';
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.env.setCustomNewEnv(
         undefined,
         undefined,
@@ -1373,7 +1373,7 @@ module.exports.default = {
   let npmCiRegistry: NpmCiRegistry;
   before(async () => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
     npmCiRegistry = new NpmCiRegistry(helper);
     await npmCiRegistry.init();
@@ -1425,7 +1425,7 @@ module.exports.default = {
     helper.command.tagAllComponents();
     helper.command.export();
 
-    helper.scopeHelper.reInitLocalScope({
+    helper.scopeHelper.reInitWorkspace({
       yarnRCConfig: {
         unsafeHttpWhitelist: ['localhost'],
       },
@@ -1559,7 +1559,7 @@ describe('env peer dependencies hoisting', function () {
   describe('pnpm isolated linker', function () {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.command.create('react', 'my-button', '-p my-button --env teambit.react/react');
       helper.command.install();
@@ -1613,7 +1613,7 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
 
   function prepare(pm: 'yarn' | 'pnpm') {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/${pm}`);
     helper.env.setCustomNewEnv(
       undefined,
@@ -1671,7 +1671,7 @@ describe('create with root components on', function () {
   this.timeout(0);
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
     helper.command.create('react', 'card', '--env teambit.react/react');
     helper.command.install();
@@ -1688,7 +1688,7 @@ describe('custom root components directory', function () {
   describe('set a valid custom location', () => {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.extensions.workspaceJsonc.addKeyValToWorkspace('rootComponentsDirectory', '');
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.command.create('react', 'card', '--env teambit.react/react');

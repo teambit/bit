@@ -27,7 +27,7 @@ describe('bit delete command', function () {
       let output: string;
       before(async () => {
         helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(3);
         npmCiRegistry = new NpmCiRegistry(helper);
         npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -62,7 +62,7 @@ describe('bit delete command', function () {
   describe('import a scope with deleted components', () => {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -70,7 +70,7 @@ describe('bit delete command', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('*', '-x');
     });
@@ -91,7 +91,7 @@ describe('bit delete command', function () {
   describe('bit checkout reset after local delete', () => {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -113,15 +113,15 @@ describe('bit delete command', function () {
     let checkoutOutput: string;
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      beforeUpdates = helper.scopeHelper.cloneLocalScope();
+      beforeUpdates = helper.scopeHelper.cloneWorkspace();
 
       helper.command.tagAllWithoutBuild('--unmodified');
       helper.command.export();
-      helper.scopeHelper.getClonedLocalScope(beforeUpdates);
+      helper.scopeHelper.getClonedWorkspace(beforeUpdates);
 
       helper.command.softRemoveComponent('comp1');
       // make sure it's deleted
@@ -146,15 +146,15 @@ describe('bit delete command', function () {
     let beforeUpdates: string;
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      beforeUpdates = helper.scopeHelper.cloneLocalScope();
+      beforeUpdates = helper.scopeHelper.cloneWorkspace();
 
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
-      helper.scopeHelper.getClonedLocalScope(beforeUpdates);
+      helper.scopeHelper.getClonedWorkspace(beforeUpdates);
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
 
       helper.command.softRemoveComponent('comp1');
@@ -194,7 +194,7 @@ describe('bit delete command', function () {
   });
   describe('delete previous versions', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(2, undefined, 'version2');
@@ -234,7 +234,7 @@ describe('bit delete command', function () {
     });
     describe('importing the component', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
       });
       it('import the latest version should not show the deleted message', () => {
@@ -249,7 +249,7 @@ describe('bit delete command', function () {
   });
   describe('deleting with --range when it overlaps the current version', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.softRemoveComponent('comp1', '--range "<1.0.0"');
@@ -270,7 +270,7 @@ describe('bit delete command', function () {
     let output: string;
     let bitmapEntryBefore: Record<string, any>;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
       helper.command.snapAllComponents();
@@ -292,7 +292,7 @@ describe('bit delete command', function () {
   });
   describe('deleting component then creating a new one with the same name', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -301,7 +301,7 @@ describe('bit delete command', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();

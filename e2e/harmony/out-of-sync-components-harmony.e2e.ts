@@ -15,7 +15,7 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer with a new component and scope with the same component as exported with defaultScope configured', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       const bitMap = helper.bitMap.read();
@@ -26,7 +26,7 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.scopeHelper.addRemoteScope();
       helper.command.importAllComponents();
       helper.bitMap.write(bitMap);
-      scopeOutOfSync = helper.scopeHelper.cloneLocalScope();
+      scopeOutOfSync = helper.scopeHelper.cloneWorkspace();
     });
     describe('bit tag', () => {
       it('should tag the component to the next version of what the scope has', () => {
@@ -36,7 +36,7 @@ describe('components that are not synced between the scope and the consumer', fu
     });
     describe('bit status', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeOutOfSync);
+        helper.scopeHelper.getClonedWorkspace(scopeOutOfSync);
         helper.command.status();
       });
       it('should sync .bitmap according to the scope', () => {
@@ -48,13 +48,13 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer with a tagged component and scope with no components', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
       helper.fs.deletePath('.bit');
       helper.command.init();
-      scopeOutOfSync = helper.scopeHelper.cloneLocalScope();
+      scopeOutOfSync = helper.scopeHelper.cloneWorkspace();
     });
     describe('bit build', () => {
       it('should build the component successfully', () => {
@@ -64,7 +64,7 @@ describe('components that are not synced between the scope and the consumer', fu
     describe('bit status', () => {
       let output;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeOutOfSync);
+        helper.scopeHelper.getClonedWorkspace(scopeOutOfSync);
         output = helper.command.status();
       });
       it('should show the component as new', () => {
@@ -78,7 +78,7 @@ describe('components that are not synced between the scope and the consumer', fu
     });
     describe('bit show', () => {
       it('should not show the component with the version', () => {
-        helper.scopeHelper.getClonedLocalScope(scopeOutOfSync);
+        helper.scopeHelper.getClonedWorkspace(scopeOutOfSync);
         const show = helper.command.showComponent('bar/foo');
         expect(show).to.not.have.string('0.0.1');
       });
@@ -86,7 +86,7 @@ describe('components that are not synced between the scope and the consumer', fu
   });
   describe('consumer with a tagged exported component and scope with no components', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -107,7 +107,7 @@ describe('components that are not synced between the scope and the consumer', fu
   });
   describe('new lane got deleted', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();

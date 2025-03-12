@@ -17,11 +17,11 @@ const isDebugMode = () => process.argv.includes('--debug');
 export function mockWorkspace(opts: { bareScopeName?: string } = {}): WorkspaceData {
   const legacyHelper = new LegacyHelper();
   if (opts.bareScopeName) {
-    legacyHelper.scopeHelper.reInitLocalScope();
+    legacyHelper.scopeHelper.reInitWorkspace();
     legacyHelper.scopes.setRemoteScope(undefined, undefined, opts.bareScopeName);
     legacyHelper.scopeHelper.addRemoteScope();
   } else {
-    legacyHelper.scopeHelper.setNewLocalAndRemoteScopes();
+    legacyHelper.scopeHelper.setWorkspaceWithRemoteScope();
   }
   legacyHelper.workspaceJsonc.setupDefault();
   if (isDebugMode()) {

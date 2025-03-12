@@ -15,7 +15,7 @@ describe('installing with non-default nodeLinker', function () {
   describe('using pnpm as a package manager', () => {
     describe(`setting nodeLinker to "hoisted"`, () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
         helper.command.install('is-positive');
       });
@@ -26,7 +26,7 @@ describe('installing with non-default nodeLinker', function () {
     });
     describe(`setting nodeLinker to "isolated"`, () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('nodeLinker', 'isolated');
         helper.command.install('is-positive');
       });
@@ -39,7 +39,7 @@ describe('installing with non-default nodeLinker', function () {
   describe('using Yarn as a package manager', () => {
     describe(`setting nodeLinker to "hoisted"`, () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
         helper.command.install('is-positive');
@@ -51,7 +51,7 @@ describe('installing with non-default nodeLinker', function () {
     });
     describe.skip(`setting nodeLinker to "isolated"`, () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('nodeLinker', 'isolated');
         helper.command.install('is-positive');

@@ -15,7 +15,7 @@ describe('importing internal files flow (component imports from a non-index file
   });
   describe('importing of a non-main .js file', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2, false);
       helper.fs.outputFile('comp2/non-main.js', 'export function nonMain(){}');
       helper.fs.outputFile('comp1/index.js', `import { nonMain } from '@${helper.scopes.remote}/comp2/non-main';`);
@@ -34,7 +34,7 @@ describe('importing internal files flow (component imports from a non-index file
   });
   describe('importing from a main file when the dependency was not compiled yet', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2, true, undefined, false);
       helper.command.compile('comp1');
     });
@@ -46,7 +46,7 @@ describe('importing internal files flow (component imports from a non-index file
   });
   describe('importing of a non-main json file (or any not .js(x)/.ts(x) file)', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2, false);
       helper.fs.outputFile('comp2/non-main.json', '{}');
       helper.fs.outputFile('comp1/index.js', `import nonMain from '@${helper.scopes.remote}/comp2/non-main.json';`);

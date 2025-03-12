@@ -22,7 +22,7 @@ describe('run bit init', function () {
   });
   describe('running bit init with path', () => {
     before(() => {
-      helper.scopeHelper.cleanLocalScope();
+      helper.scopeHelper.cleanWorkspace();
       helper.command.runCmd('bit init my-dir');
     });
     it('should init Bit at that path', () => {
@@ -31,13 +31,13 @@ describe('run bit init', function () {
   });
   describe('automatic bit init when .bit.map.json already exists', () => {
     beforeEach(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
     });
     before(() => {
       helper.bitMap.createHarmony();
     });
     it('should not tell you there is already a scope when running "bit init"', () => {
-      const init = helper.scopeHelper.initWorkspace();
+      const init = helper.command.init();
       expect(init).to.have.string('successfully initialized a bit workspace.');
     });
     it('should create bitmap"', () => {
@@ -53,9 +53,9 @@ describe('run bit init', function () {
   describe('init .bit ', () => {
     describe('when .git exists and bit already initialized with .bit ', () => {
       it('should not create bit inside .git', () => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.git.initNewGitRepo();
-        helper.scopeHelper.initWorkspace();
+        helper.command.init();
         expect(path.join(helper.scopes.local, '.git', 'bit')).to.not.be.a.path('bit dir is missing');
       });
     });
@@ -65,9 +65,9 @@ describe('run bit init', function () {
       let gitFolder;
       // let gitHooksFolder;
       before(() => {
-        helper.scopeHelper.cleanLocalScope();
+        helper.scopeHelper.cleanWorkspace();
         helper.git.initNewGitRepo();
-        helper.scopeHelper.initWorkspace();
+        helper.command.init();
         gitFolder = path.join(helper.scopes.localPath, '.git');
         // gitHooksFolder = path.join(gitFolder, 'hooks');
       });
@@ -80,9 +80,9 @@ describe('run bit init', function () {
         expect(scopeDir).not.be.a.path('bit dir created not in the .git folder');
       });
       it('should not nest the bit folder inside .git if --standalone provided', () => {
-        helper.scopeHelper.cleanLocalScope();
+        helper.scopeHelper.cleanWorkspace();
         helper.git.initNewGitRepo();
-        helper.scopeHelper.initLocalScopeWithOptions({ '-standalone': '' });
+        helper.command.init('--standalone');
         const gitScopeDir = path.join(gitFolder, BIT_GIT_DIR);
         const scopeDir = path.join(helper.scopes.localPath, BIT_HIDDEN_DIR);
         expect(scopeDir).to.be.a.directory('bit dir is missing');
@@ -94,14 +94,14 @@ describe('run bit init', function () {
   describe('when scope.json is missing', () => {
     let scopeJsonPath;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       scopeJsonPath = path.join(helper.scopes.localPath, '.bit/scope.json');
       fs.removeSync(scopeJsonPath);
     });
     describe('running bit init', () => {
       let output;
       before(() => {
-        output = helper.scopeHelper.initWorkspace();
+        output = helper.command.init();
       });
       it('should show a success message', () => {
         expect(output).to.have.string('successfully initialized');
@@ -115,7 +115,7 @@ describe('run bit init', function () {
     describe('when bitMap file is invalid', () => {
       let bitMapPath;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         const invalidBitMap = 'this is an invalid json';
         bitMapPath = path.join(helper.scopes.localPath, BIT_MAP);
         fs.outputFileSync(bitMapPath, invalidBitMap);
@@ -133,7 +133,7 @@ describe('run bit init', function () {
     });
     describe('when workspace.jsonc file is invalid', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.workspaceJsonc.corrupt();
       });
       it('bit status should throw a descriptive error', () => {
@@ -148,18 +148,18 @@ describe('run bit init', function () {
     let localConsumerFiles;
     const filter = (file: string) => !file.includes('bitmap-history') && !file.includes('workspace-config-history');
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo(); // this modifies bitMap
       helper.command.tagAllWithoutBuild(); // this creates objects in .bit dir
 
       bitMap = helper.bitMap.read();
       localConsumerFiles = helper.fs.getConsumerFiles('*', true).filter(filter);
-      localScope = helper.scopeHelper.cloneLocalScope();
+      localScope = helper.scopeHelper.cloneWorkspace();
     });
     describe('bit init', () => {
       before(() => {
-        helper.scopeHelper.initWorkspace(undefined, { 'no-package-json': true });
+        helper.command.init('--no-package-json');
       });
       it('should not change BitMap file', () => {
         const currentBitMap = helper.bitMap.read();
@@ -173,7 +173,7 @@ describe('run bit init', function () {
     });
     describe('bit init --reset', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         helper.command.runCmd('bit init --reset --no-package-json');
       });
       it('should not change BitMap file', () => {
@@ -188,7 +188,7 @@ describe('run bit init', function () {
     });
     describe('bit init --reset-hard', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         helper.command.runCmd('bit init --reset-hard');
       });
       it('should recreate the BitMap file', () => {
@@ -215,9 +215,9 @@ describe('run bit init', function () {
   describe('when a project has package.json file', () => {
     describe('without --standalone flag', () => {
       before(() => {
-        helper.scopeHelper.cleanLocalScope();
+        helper.scopeHelper.cleanWorkspace();
         helper.npm.initNpm();
-        helper.scopeHelper.initWorkspace();
+        helper.command.init();
       });
       it('should preserve the default npm indentation of 2', () => {
         const packageJson = helper.fs.readFile('package.json');
@@ -230,7 +230,7 @@ describe('run bit init', function () {
     });
     describe('with --standalone flag', () => {
       before(() => {
-        helper.scopeHelper.cleanLocalScope();
+        helper.scopeHelper.cleanWorkspace();
         helper.npm.initNpm();
         helper.command.runCmd('bit init --standalone');
       });
@@ -244,12 +244,12 @@ describe('run bit init', function () {
     });
     describe('with an indentation of 4', () => {
       before(() => {
-        helper.scopeHelper.cleanLocalScope();
+        helper.scopeHelper.cleanWorkspace();
         helper.npm.initNpm();
         const packageJson = helper.packageJson.read();
         const packageJsonPath = path.join(helper.scopes.localPath, 'package.json');
         fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 4 });
-        helper.scopeHelper.initWorkspace();
+        helper.command.init();
       });
       it('should preserve the original indentation and keep it as 4', () => {
         const packageJson = helper.fs.readFile('package.json');
@@ -260,7 +260,7 @@ describe('run bit init', function () {
   describe('when there is .bitmap, bit.json but not .bit dir', () => {
     describe('when .bit located directly on workspace root', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.bitMap.createHarmony();
         helper.fs.deletePath('.bit');
       });
@@ -272,9 +272,9 @@ describe('run bit init', function () {
     });
     describe('when bit located on .git', () => {
       before(() => {
-        helper.scopeHelper.cleanLocalScope();
+        helper.scopeHelper.cleanWorkspace();
         helper.git.initNewGitRepo();
-        helper.scopeHelper.initWorkspace();
+        helper.command.init();
         helper.bitMap.createHarmony();
         helper.fs.deletePath('.git/bit');
       });

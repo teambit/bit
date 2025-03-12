@@ -16,7 +16,7 @@ describe('bit move command', function () {
   });
   describe('move a directory', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fs.createFile('bar', 'foo1.js');
       helper.fs.createFile('bar', 'foo2.js');
       helper.fs.createFile('bar', 'foo1.spec.js');
@@ -40,7 +40,7 @@ describe('bit move command', function () {
   describe('when the destination starts with the source dir', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       output = helper.command.runCmd('bit move bar bar2');
@@ -53,13 +53,13 @@ describe('bit move command', function () {
     const oldPath = path.join('components', 'bar');
     const newPath = path.join('components', 'utils');
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo', '--path components/bar');
       helper.command.runCmd(`bit move ${oldPath} ${newPath}`);
@@ -79,7 +79,7 @@ describe('bit move command', function () {
   });
   describe('move directory manually then run bit move', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();

@@ -20,7 +20,7 @@ describe('import lanes', function () {
     let appOutput: string;
     let laneHash: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       appOutput = helper.fixtures.populateComponents();
       helper.command.createLane('dev');
       helper.command.snapAllComponents();
@@ -31,7 +31,7 @@ describe('import lanes', function () {
     });
     describe('fetching lanes objects', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.fetchRemoteLane('dev');
       });
@@ -57,7 +57,7 @@ describe('import lanes', function () {
     });
     describe('importing the lane and checking out by bit switch', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.switchRemoteLane('dev');
       });
@@ -117,7 +117,7 @@ describe('import lanes', function () {
     });
     describe('importing the lane and checking out with a different local lane-name', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.switchRemoteLane('dev', '--alias my-new-lane');
       });

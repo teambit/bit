@@ -15,7 +15,7 @@ describe('rename lanes', function () {
   });
   describe('rename lane using the alias', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.createLane('dev', '--alias d');
       helper.fixtures.populateComponents(1, false);
       helper.command.snapAllComponentsWithoutBuild();
@@ -34,7 +34,7 @@ describe('rename lanes', function () {
   // previous bug left the "lanes.new" prop in scope.json with the old name causing bit later to assume it's exported.
   describe('rename local lane, switch to main and then switch back to the lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.createLane('dev');
       helper.command.renameLane('new-dev');
       helper.fixtures.populateComponents(1, false);

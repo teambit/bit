@@ -17,7 +17,7 @@ describe('snap components from scope', function () {
     let bareTag;
     let beforeSnappingOnScope: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.snapAllComponents();
       helper.command.export();
@@ -75,7 +75,7 @@ describe('snap components from scope', function () {
     describe('snapping with dependencies changes', () => {
       before(() => {
         helper = new Helper();
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(3);
         helper.command.tagWithoutBuild();
         helper.command.tagWithoutBuild('comp3', '--skip-auto-tag --unmodified');
@@ -112,7 +112,7 @@ describe('snap components from scope', function () {
     let comp1FirstSnap: string;
     let beforeSnappingOnScope: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.createLane();
       helper.fixtures.populateComponents(3);
       helper.command.snapAllComponentsWithoutBuild();
@@ -171,7 +171,7 @@ describe('snap components from scope', function () {
     let beforeSnappingOnScope: string;
     let anotherRemote: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       anotherRemote = scopeName;
       helper.scopeHelper.addRemoteScope(scopePath);
@@ -220,7 +220,7 @@ describe('snap components from scope', function () {
     let bareTag;
     let files;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/foo.ts');
       helper.command.snapAllComponents();
@@ -272,7 +272,7 @@ describe('snap components from scope', function () {
   describe('snap a new component', () => {
     let catComp;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -356,7 +356,7 @@ export const BasicIdInput = () => {
   describe('snap a new component in a new lane and existing dependency', () => {
     let catLane;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -403,7 +403,7 @@ export const BasicIdInput = () => {
     let remoteScope: string;
     let snapResult: Record<string, any>;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       comp2HeadOnMain = helper.command.getHead('comp2');
@@ -479,7 +479,7 @@ export const BasicIdInput = () => {
     });
     describe('importing the lane to a new workspace', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
         helper.scopeHelper.getClonedRemoteScope(remoteScope);
         helper.command.importLane('dev', '-x');
@@ -520,7 +520,7 @@ export const BasicIdInput = () => {
     describe('updating a component in the lane then running update-dependencies command to update the dependents', () => {
       let updateDepsOutput: string;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
         helper.scopeHelper.getClonedRemoteScope(remoteScope);
         helper.command.importLane('dev', '-x');
@@ -586,7 +586,7 @@ export const BasicIdInput = () => {
   });
   describe('updating packages (not components)', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/index.js', 'require("lodash.get")');
       helper.npm.addFakeNpmPackage('lodash.get', '4.4.2');
@@ -617,7 +617,7 @@ export const BasicIdInput = () => {
     let bareSnap;
     let envSnapOnLane: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       const envName = helper.env.setCustomNewEnv();
       helper.fixtures.populateComponents(1);
       helper.command.setEnv('comp1', envName);

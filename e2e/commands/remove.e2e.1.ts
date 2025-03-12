@@ -19,7 +19,7 @@ describe('bit remove command', function () {
   describe('with tagged components and --track=false ', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
@@ -42,7 +42,7 @@ describe('bit remove command', function () {
   });
   describe('with tagged components and -t=true', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
@@ -62,7 +62,7 @@ describe('bit remove command', function () {
   });
   describe('with remote scope without dependencies', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
@@ -103,7 +103,7 @@ describe('bit remove command', function () {
   describe('with remote scope with dependencies', () => {
     const componentName = 'comp2';
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -122,13 +122,13 @@ describe('bit remove command', function () {
   });
   describe('with imported components, no dependencies', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
     });
@@ -142,7 +142,7 @@ describe('bit remove command', function () {
   });
   describe('remove modified component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
@@ -157,7 +157,7 @@ describe('bit remove command', function () {
   describe('remove a component when the main file is missing', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fs.createFile('bar', 'foo.js');
       helper.fs.createFile('bar', 'foo-main.js');
       helper.command.addComponent('bar', { m: 'foo-main.js', i: 'bar/foo' });
@@ -175,7 +175,7 @@ describe('bit remove command', function () {
   describe('remove a component when a dependency has a file with the same content as other component file', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.fs.outputFile('comp2/index.js', fixtures.isType);
       helper.fs.outputFile('comp2-b/index.js', fixtures.isType);
@@ -188,7 +188,7 @@ describe('bit remove command', function () {
       helper.command.tagIncludeUnmodified('1.0.0');
 
       helper.command.export();
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
       helper.command.importComponent('comp2');
@@ -215,13 +215,13 @@ describe('bit remove command', function () {
   describe('soft remove', () => {
     let afterRemove: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild();
       helper.command.export();
 
       helper.command.softRemoveComponent('comp2');
-      afterRemove = helper.scopeHelper.cloneLocalScope();
+      afterRemove = helper.scopeHelper.cloneWorkspace();
     });
     it('bit status should show a section of removed components', () => {
       const status = helper.command.statusJson();
@@ -275,7 +275,7 @@ describe('bit remove command', function () {
         describe('importing the component to a new workspace', () => {
           let importOutput: string;
           before(() => {
-            helper.scopeHelper.reInitLocalScope();
+            helper.scopeHelper.reInitWorkspace();
             helper.scopeHelper.addRemoteScope();
             importOutput = helper.command.importComponent('comp2');
           });
@@ -289,7 +289,7 @@ describe('bit remove command', function () {
         });
         describe('importing the entire scope to a new workspace', () => {
           before(() => {
-            helper.scopeHelper.reInitLocalScope();
+            helper.scopeHelper.reInitWorkspace();
             helper.scopeHelper.addRemoteScope();
             helper.command.importComponent('*');
           });
@@ -303,7 +303,7 @@ describe('bit remove command', function () {
     });
     describe('soft-tagging the component', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(afterRemove);
+        helper.scopeHelper.getClonedWorkspace(afterRemove);
         helper.fs.outputFile('comp1/index.js', '');
         helper.command.softTag();
       });
@@ -327,7 +327,7 @@ describe('bit remove command', function () {
   });
   describe('removing from workspace when it had dependents previously in old tags', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild();
       helper.command.export();
@@ -343,7 +343,7 @@ describe('bit remove command', function () {
   });
   describe('remove new component with --keep-files flag', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.command.removeComponent('comp1', '--keep-files');
     });
@@ -360,7 +360,7 @@ describe('bit remove command', function () {
   });
   describe('remove new component without --keep-files flag', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.command.removeComponent('comp1');
     });
@@ -377,7 +377,7 @@ describe('bit remove command', function () {
   });
   describe('soft-remove then snap with --ignore-issues', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.softRemoveComponent('comp1');
@@ -391,7 +391,7 @@ describe('bit remove command', function () {
   });
   describe('remove when a lane is new', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
@@ -409,7 +409,7 @@ describe('bit remove command', function () {
 
   describe('soft-remove then import', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.createLane();
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
@@ -423,7 +423,7 @@ describe('bit remove command', function () {
 
   describe('soft remove on lane then tagging the dependent without removing the references to the removed component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllComponents();
       helper.command.export();
@@ -437,19 +437,19 @@ describe('bit remove command', function () {
 
   describe('soft remove on lane then tagging the dependent without removing the references to the removed component then recovering it', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp2', '-x');
       helper.command.softRemoveComponent('comp2');
       helper.command.tagWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importManyComponents(['comp1', 'comp2'], '-x');
       helper.command.recover('comp2');
@@ -463,7 +463,7 @@ describe('bit remove command', function () {
   describe('soft remove then snapping with --build', () => {
     let snapOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.softRemoveComponent('comp1');
@@ -482,7 +482,7 @@ describe('bit remove command', function () {
   });
   describe('remove component that exists in workspace.jsonc', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.create('bit-aspect', 'my-aspect');
       helper.command.use(`${helper.scopes.remote}/my-aspect`);
       helper.command.removeComponent('my-aspect');

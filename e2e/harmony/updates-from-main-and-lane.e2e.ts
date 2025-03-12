@@ -16,14 +16,14 @@ describe('updates from main and lane', function () {
   describe('updates are available from both main and lane', () => {
     let scopeBeforeUpdate: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.createLane();
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
       helper.command.export();
-      scopeBeforeUpdate = helper.scopeHelper.cloneLocalScope();
+      scopeBeforeUpdate = helper.scopeHelper.cloneWorkspace();
 
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
       helper.command.export();
@@ -31,7 +31,7 @@ describe('updates from main and lane', function () {
       helper.command.tagWithoutBuild('comp2', '--unmodified');
       helper.command.export();
 
-      helper.scopeHelper.getClonedLocalScope(scopeBeforeUpdate);
+      helper.scopeHelper.getClonedWorkspace(scopeBeforeUpdate);
       helper.command.import();
     });
     it('by default should only show updates from the current lane', () => {

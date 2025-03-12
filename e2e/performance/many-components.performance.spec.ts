@@ -62,7 +62,7 @@ describe('many components Harmony', function () {
   });
   describe('basic commands', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       const getImp = (index) => {
         if (index === 0) return '';
         if (index > maxFlattenedDependencies) {
@@ -170,7 +170,7 @@ describe('heavy components Harmony', function () {
   });
   describe('basic commands', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes({ disablePreview: false });
+      helper.scopeHelper.setWorkspaceWithRemoteScope({ disablePreview: false });
       const getImp = () => {
         const hugeStr = randomStr(SIZE_IN_MB);
         return `console.log('${hugeStr}');`;

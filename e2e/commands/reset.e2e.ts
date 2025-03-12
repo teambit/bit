@@ -15,11 +15,11 @@ describe('bit reset command', function () {
   describe('untag single component', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
-      localScope = helper.scopeHelper.cloneLocalScope();
+      localScope = helper.scopeHelper.cloneWorkspace();
       const output = helper.command.listLocalScope();
       expect(output).to.have.string('found 1 components');
     });
@@ -34,7 +34,7 @@ describe('bit reset command', function () {
     });
     describe('with multiple versions when specifying the version', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         helper.command.tagWithoutBuild('bar/foo', '--unmodified');
         const catComponent = helper.command.catComponent('bar/foo');
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -68,7 +68,7 @@ describe('bit reset command', function () {
     describe('with multiple versions when not specifying the version', () => {
       describe('and all versions are local', () => {
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedWorkspace(localScope);
           helper.command.tagWithoutBuild('bar/foo', '--unmodified');
           const catComponent = helper.command.catComponent('bar/foo');
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -84,7 +84,7 @@ describe('bit reset command', function () {
     });
     describe('when some versions are exported, some are local', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         helper.scopeHelper.reInitRemoteScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.export();
@@ -117,7 +117,7 @@ describe('bit reset command', function () {
   describe('untag multiple components (--all flag)', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fs.createFile('bar2', 'foo2.js');
@@ -126,7 +126,7 @@ describe('bit reset command', function () {
       helper.command.addComponent('bar3', { i: 'bar/foo3' });
       helper.command.tagAllWithoutBuild();
       helper.command.exportIds('bar/foo3');
-      localScope = helper.scopeHelper.cloneLocalScope();
+      localScope = helper.scopeHelper.cloneWorkspace();
       const output = helper.command.listLocalScope();
       expect(output).to.have.string('found 3 components');
     });
@@ -147,7 +147,7 @@ describe('bit reset command', function () {
     describe('with --head', () => {
       let untagOutput;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         helper.command.tagIncludeUnmodified('0.0.5');
         untagOutput = helper.command.resetAll('--head');
       });
@@ -165,14 +165,14 @@ describe('bit reset command', function () {
   describe('components with dependencies', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentIsType();
       helper.fixtures.addComponentUtilsIsType();
       helper.fixtures.createComponentIsString();
       helper.fixtures.addComponentUtilsIsString();
       helper.command.linkAndRewire();
       helper.command.tagAllWithoutBuild();
-      localScope = helper.scopeHelper.cloneLocalScope();
+      localScope = helper.scopeHelper.cloneWorkspace();
     });
     describe('untag only the dependency', () => {
       describe('without force flag', () => {
@@ -202,7 +202,7 @@ describe('bit reset command', function () {
       describe('after exporting the component and tagging the scope', () => {
         let output;
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedWorkspace(localScope);
           helper.scopeHelper.reInitRemoteScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.export();
@@ -221,7 +221,7 @@ describe('bit reset command', function () {
     describe('untag all components', () => {
       describe('when all components have only local versions', () => {
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedWorkspace(localScope);
           helper.command.resetAll();
         });
         it('should remove all the components because it does not leave a damaged component without dependency', () => {
@@ -233,7 +233,7 @@ describe('bit reset command', function () {
     describe('untag only the dependent', () => {
       let untagOutput;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         untagOutput = helper.command.reset('utils/is-string');
       });
       it('should untag successfully the dependent', () => {
@@ -248,14 +248,14 @@ describe('bit reset command', function () {
     describe('after import and tagging', () => {
       let scopeAfterImport;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         helper.scopeHelper.reInitRemoteScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.export();
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('utils/is-string --path components/utils/is-string');
-        scopeAfterImport = helper.scopeHelper.cloneLocalScope();
+        scopeAfterImport = helper.scopeHelper.cloneWorkspace();
         helper.command.tagWithoutBuild('utils/is-string', '--unmodified --ignore-issues "*"');
       });
       describe('untag using the id without scope-name', () => {
@@ -270,7 +270,7 @@ describe('bit reset command', function () {
       });
       describe('modify, tag and then untag all', () => {
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
+          helper.scopeHelper.getClonedWorkspace(scopeAfterImport);
           helper.fs.modifyFile('components/utils/is-string/is-string.js');
           helper.command.tagAllWithoutBuild('--ignore-issues "*"');
           helper.command.resetAll();
@@ -286,7 +286,7 @@ describe('bit reset command', function () {
   });
   describe('components with config in the .bitmap file', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild();
       helper.command.deprecateComponent('comp1');
@@ -308,7 +308,7 @@ describe('bit reset command', function () {
   });
   describe('when checked out to a non-head version with detach-head functionality', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.setFeatures(DETACH_HEAD);
       helper.fixtures.populateComponents(1, false);
       helper.command.tagWithoutBuild();
@@ -346,7 +346,7 @@ describe('bit reset command', function () {
   // todo: delete this test once detach-head is not under feature-toggle
   describe('when checked out to a non-head version without detach-head', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagWithoutBuild();
       helper.fixtures.populateComponents(1, false, 'version2');

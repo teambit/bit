@@ -20,11 +20,11 @@ describe('tag components on Harmony', function () {
   });
   describe('workspace with standard components', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
       helper.command.export();
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('*');
     });
@@ -54,7 +54,7 @@ describe('tag components on Harmony', function () {
   });
   describe('tag on Harmony', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
       helper.command.export();
@@ -85,7 +85,7 @@ describe('tag components on Harmony', function () {
   });
   describe('soft tag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
       helper.command.softTag();
     });
@@ -146,7 +146,7 @@ describe('tag components on Harmony', function () {
     });
     describe('soft tag with specific version attached to a component-id', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.fixtures.populateComponents(1);
         helper.command.softTag('comp1@0.0.5');
       });
@@ -192,12 +192,12 @@ describe('tag components on Harmony', function () {
   describe('tag scope', () => {
     let beforeTagScope: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.tagWithoutBuild('comp3@0.0.3');
       helper.command.tagWithoutBuild('comp2@0.0.2');
       helper.command.tagWithoutBuild('comp1@0.0.1');
-      beforeTagScope = helper.scopeHelper.cloneLocalScope();
+      beforeTagScope = helper.scopeHelper.cloneWorkspace();
     });
     describe('without version', () => {
       let output;
@@ -213,7 +213,7 @@ describe('tag components on Harmony', function () {
     describe('without version and --minor flag', () => {
       let output;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeTagScope);
+        helper.scopeHelper.getClonedWorkspace(beforeTagScope);
         output = helper.command.tagIncludeUnmodifiedWithoutBuild('', '--minor');
       });
       it('should bump each component by patch', () => {
@@ -226,11 +226,11 @@ describe('tag components on Harmony', function () {
   describe('with failing tests', () => {
     let beforeTagScope: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.outputFile('bar/index.js');
       helper.fs.outputFile('bar/foo.spec.js'); // it will fail as it doesn't have any test
       helper.command.addComponent('bar');
-      beforeTagScope = helper.scopeHelper.cloneLocalScope();
+      beforeTagScope = helper.scopeHelper.cloneWorkspace();
     });
     it('should fail without --skip-tests', () => {
       const cmd = () => helper.command.tagAllComponents();
@@ -240,17 +240,17 @@ describe('tag components on Harmony', function () {
       expect(stagedConfigPath).to.not.be.a.path();
     });
     it('should succeed with --skip-tests', () => {
-      helper.scopeHelper.getClonedLocalScope(beforeTagScope);
+      helper.scopeHelper.getClonedWorkspace(beforeTagScope);
       expect(() => helper.command.tagAllComponents('--skip-tests')).to.not.throw();
     });
     it('should succeed with --ignore-build-errors', () => {
-      helper.scopeHelper.getClonedLocalScope(beforeTagScope);
+      helper.scopeHelper.getClonedWorkspace(beforeTagScope);
       expect(() => helper.command.tagAllComponents('--ignore-build-errors')).to.not.throw();
     });
   });
   describe('modified one component, the rest are auto-tag pending', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
       // modify only comp3. so then comp1 and comp2 are auto-tag pending
@@ -283,11 +283,11 @@ describe('tag components on Harmony', function () {
   describe('using --incremented-by flag', () => {
     let afterFirstTag: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
-      afterFirstTag = helper.scopeHelper.cloneLocalScope();
+      afterFirstTag = helper.scopeHelper.cloneWorkspace();
     });
     describe('increment the default (patch)', () => {
       before(() => {
@@ -303,7 +303,7 @@ describe('tag components on Harmony', function () {
     });
     describe('increment the default (minor)', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(afterFirstTag);
+        helper.scopeHelper.getClonedWorkspace(afterFirstTag);
         helper.fixtures.populateComponents(3, undefined, 'v2-minor');
         helper.command.tagAllWithoutBuild('--minor --increment-by 2');
       });
@@ -316,7 +316,7 @@ describe('tag components on Harmony', function () {
     });
     describe('auto-tag', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(afterFirstTag);
+        helper.scopeHelper.getClonedWorkspace(afterFirstTag);
         // modify only comp3. so then comp1 and comp2 are auto-tag pending
         helper.fs.appendFile('comp3/index.js');
         helper.command.tagAllWithoutBuild('--increment-by 3');
@@ -332,7 +332,7 @@ describe('tag components on Harmony', function () {
   describe('tag pre-release', () => {
     let tagOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
       tagOutput = helper.command.tagAllWithoutBuild('--increment prerelease --prerelease-id dev');
@@ -353,7 +353,7 @@ describe('tag components on Harmony', function () {
   describe('auto-tag with pre-release', () => {
     let tagOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       tagOutput = helper.command.tagWithoutBuild('comp3', '--unmodified --increment prerelease --prerelease-id dev');
@@ -365,7 +365,7 @@ describe('tag components on Harmony', function () {
   describe('invalid pre-release after normal tag', () => {
     let result: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       result = helper.general.runWithTryCatch(`bit tag --unmodified --pre-release "h?h"`);
@@ -382,7 +382,7 @@ describe('tag components on Harmony', function () {
   describe('soft-tag pre-release', () => {
     let tagOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager();
       helper.fixtures.populateComponents(3);
       tagOutput = helper.command.softTag('--pre-release dev');
@@ -404,7 +404,7 @@ describe('tag components on Harmony', function () {
   });
   describe('builder data saved in the model', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
     });
@@ -418,7 +418,7 @@ describe('tag components on Harmony', function () {
   });
   describe('soft tag --minor with auto-tag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
       helper.command.tagAllWithoutBuild();
       helper.fs.appendFile('comp2/index.js');
@@ -432,7 +432,7 @@ describe('tag components on Harmony', function () {
   });
   describe('with tiny cache', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, false, 'v2');
@@ -449,7 +449,7 @@ describe('tag components on Harmony', function () {
   });
   describe('package.json update', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
     });
@@ -464,7 +464,7 @@ describe('tag components on Harmony', function () {
   describe('tagging a snapped component by specifying the id', () => {
     let tagOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.snapAllComponentsWithoutBuild();
       tagOutput = helper.command.tagWithoutBuild('comp1');
@@ -476,7 +476,7 @@ describe('tag components on Harmony', function () {
   describe('maintain two main branches 1.x and 2.x, tagging the older branch 1.x with a patch', () => {
     let ver2Head: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.setFeatures(DETACH_HEAD);
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild('--ver 1.0.0');
@@ -502,7 +502,7 @@ describe('tag components on Harmony', function () {
     });
     describe('importing the component to a new workspace', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp1', '-x');
       });

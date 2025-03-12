@@ -15,7 +15,7 @@ describe('update command', function () {
       let configFile;
       let componentJson;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.fixtures.populateComponents(2);
         helper.extensions.addExtensionToVariant('comp1', 'teambit.dependencies/dependency-resolver', {
           policy: {
@@ -71,7 +71,7 @@ describe('update command', function () {
     describe('select by patterns', function () {
       let configFile;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.extensions.workspaceJsonc.addPolicyToDependencyResolver({
           dependencies: {
             'is-odd': '1.0.0',
@@ -97,7 +97,7 @@ describe('update command', function () {
     });
     describe('policies added by deps set', function () {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.fixtures.populateComponents(1);
         helper.command.dependenciesSet('comp1', 'is-negative@1.0.0');
         helper.command.update('--yes');
@@ -111,7 +111,7 @@ describe('update command', function () {
   describe('updates policies to compatible versions', function () {
     describe('policies added by deps set', function () {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.fixtures.populateComponents(1);
         helper.command.dependenciesSet('comp1', 'is-negative@1.0.0');
         helper.command.update('--yes --semver');
@@ -123,7 +123,7 @@ describe('update command', function () {
     });
     describe('policies added by deps set. savePrefix is present', function () {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('savePrefix', '^');
         helper.fixtures.populateComponents(1);
         helper.command.dependenciesSet('comp1', 'is-negative@1.0.0');
@@ -140,7 +140,7 @@ describe('update command', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -174,7 +174,7 @@ const isPositive = require("is-positive");`
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.import(`${helper.scopes.remote}/my-aspect`);
       helper.command.tagComponent('my-aspect', undefined, '--unmodified');
@@ -185,7 +185,7 @@ const isPositive = require("is-positive");`
     });
     describe('with save prefix specified', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
         helper.scopeHelper.addRemoteScope();
         helper.workspaceJsonc.setupDefault();
@@ -221,7 +221,7 @@ const isPositive = require("is-positive");`
     });
     describe('with save prefix not specified', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
         helper.scopeHelper.addRemoteScope();
         helper.workspaceJsonc.setupDefault();
@@ -254,7 +254,7 @@ const isPositive = require("is-positive");`
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -265,13 +265,13 @@ const isPositive = require("is-positive");`
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.import(`${helper.scopes.remote}/comp2`);
       helper.command.tagAllComponents('--unmodified');
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.import(`${helper.scopes.remote}/comp1`);
       helper.command.update('--yes');
@@ -289,7 +289,7 @@ const isPositive = require("is-positive");`
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -303,7 +303,7 @@ const isPositive = require("is-positive");`
       helper.command.tagAllComponents('--unmodified');
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.fs.outputFile(
         `comp1new/index.js`,
@@ -320,7 +320,7 @@ const isPositive = require("is-positive");`
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.import(`${helper.scopes.remote}/comp1@0.0.1`);
       helper.command.import(`${helper.scopes.remote}/comp1new@0.0.1`);

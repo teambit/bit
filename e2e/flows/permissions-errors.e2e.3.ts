@@ -17,7 +17,7 @@ describe.skip('permissions', function () {
   });
   describe('adding a component with sudo', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       const output = helper.command.runCmd('sudo bit add bar');
       expect(output).to.have.string('Warning');

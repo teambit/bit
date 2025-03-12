@@ -1,10 +1,9 @@
 /* eslint no-console: 0 */
 
 import fs from 'fs-extra';
-import * as path from 'path';
+import path from 'path';
 import * as yaml from 'yaml';
 import * as ini from 'ini';
-import { createLinkOrSymlink } from '@teambit/toolbox.fs.link-or-symlink';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
 import CommandHelper from './e2e-command-helper';
@@ -25,34 +24,18 @@ type SetupWorkspaceOpts = {
 };
 
 export default class ScopeHelper {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  debugMode: boolean;
-  scopes: ScopesData;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  e2eDir: string;
-  command: CommandHelper;
-  fs: FsHelper;
-  npm: NpmHelper;
-  workspaceJsonc: WorkspaceJsoncHelper;
-  cache?: Record<string, any>;
-  keepEnvs: boolean;
-  clonedScopes: string[] = [];
-  packageManager = 'npm';
+  private cache?: Record<string, any>;
+  private keepEnvs: boolean;
+  private clonedScopes: string[] = [];
   constructor(
-    debugMode: boolean,
-    scopes: ScopesData,
-    commandHelper: CommandHelper,
-    fsHelper: FsHelper,
-    npmHelper: NpmHelper,
-    workspaceJsonc: WorkspaceJsoncHelper
+    private debugMode: boolean,
+    private scopes: ScopesData,
+    private command: CommandHelper,
+    private fsHelper: FsHelper,
+    private npm: NpmHelper,
+    private workspaceJsonc: WorkspaceJsoncHelper
   ) {
-    this.debugMode = debugMode;
     this.keepEnvs = debugMode; // don't delete the workspaces/scopes when in debug mode
-    this.scopes = scopes;
-    this.command = commandHelper;
-    this.fs = fsHelper;
-    this.npm = npmHelper;
-    this.workspaceJsonc = workspaceJsonc;
   }
   clean() {
     fs.emptyDirSync(this.scopes.localPath);
@@ -71,21 +54,19 @@ export default class ScopeHelper {
     if (this.clonedScopes && this.clonedScopes.length) {
       this.clonedScopes.forEach((scopePath) => fs.removeSync(scopePath));
     }
-    this.fs.cleanExternalDirs();
+    this.fsHelper.cleanExternalDirs();
   }
-  cleanLocalScope() {
+  cleanWorkspace() {
     fs.emptyDirSync(this.scopes.localPath);
   }
-
-  usePackageManager(packageManager: string) {
-    this.packageManager = packageManager;
+  deleteWorkspace() {
+    fs.removeSync(this.scopes.localPath);
   }
-
-  reInitLocalScope(opts?: SetupWorkspaceOpts) {
-    this.cleanLocalScope();
+  reInitWorkspace(opts?: SetupWorkspaceOpts) {
+    this.cleanWorkspace();
     if (opts?.initGit) this.command.runCmd('git init');
-    const initWsOpts = opts?.generatePackageJson ? undefined : { 'no-package-json': true };
-    this.initWorkspace(undefined, initWsOpts);
+    const initWsOpts = opts?.generatePackageJson ? undefined : '--no-package-json';
+    this.command.init(initWsOpts);
 
     if (opts?.addRemoteScopeAsDefaultScope ?? true) this.workspaceJsonc.addDefaultScope();
     if (opts?.disablePreview ?? true) this.workspaceJsonc.disablePreview();
@@ -111,44 +92,19 @@ export default class ScopeHelper {
     }
   }
   private _writeYarnRC(yarnRCConfig: any) {
-    this.fs.writeFile('.yarnrc.yml', yaml.stringify(yarnRCConfig));
+    this.fsHelper.writeFile('.yarnrc.yml', yaml.stringify(yarnRCConfig));
   }
 
   private _writeNpmrc(config: any) {
-    this.fs.writeFile('.npmrc', ini.stringify(config));
+    this.fsHelper.writeFile('.npmrc', ini.stringify(config));
   }
 
-  newLocalScope(templateName: string, flags?: string) {
-    fs.removeSync(this.scopes.localPath);
-    this.command.new(templateName, flags, this.scopes.local, this.scopes.e2eDir);
-  }
-
-  initWorkspace(workspacePath?: string, options?: Record<string, any>) {
-    const opts = this.command.parseOptions(options);
-    return this.command.runCmd(`bit init ${opts}`, workspacePath);
-  }
-
-  initLocalScopeWithOptions(options: Record<string, any>) {
-    const value = Object.keys(options)
-      .map((key) => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.command.runCmd(`bit init ${value}`);
-  }
-  setNewLocalAndRemoteScopes(opts?: SetupWorkspaceOpts) {
-    this.reInitLocalScope(opts);
+  setWorkspaceWithRemoteScope(opts?: SetupWorkspaceOpts) {
+    this.reInitWorkspace(opts);
     this.reInitRemoteScope();
     this.addRemoteScope();
   }
 
-  initNewLocalScope(deleteCurrentScope = true, generatePackageJson = false) {
-    if (deleteCurrentScope) {
-      fs.removeSync(this.scopes.localPath);
-    }
-    this.scopes.setLocalScope();
-    fs.ensureDirSync(this.scopes.localPath);
-    const initWsOpts = generatePackageJson ? undefined : { 'no-package-json': true };
-    return this.initWorkspace(undefined, initWsOpts);
-  }
   addRemoteScope(
     remoteScopePath: string = this.scopes.remotePath,
     cwd: string = this.scopes.localPath,
@@ -171,16 +127,8 @@ export default class ScopeHelper {
     return this.command.runCmd(`bit remote del ${remoteScope} ${globalArg}`, localScopePath);
   }
 
-  addRemoteEnvironment(isGlobal = false) {
-    return this.addRemoteScope(this.scopes.envPath, this.scopes.localPath, isGlobal);
-  }
-
   addGlobalRemoteScope() {
     return this.addRemoteScope(this.scopes.globalRemotePath, this.scopes.localPath);
-  }
-
-  removeRemoteEnvironment(isGlobal = false) {
-    return this.removeRemoteScope(this.scopes.env, isGlobal);
   }
 
   reInitRemoteScope(scopePath = this.scopes.remotePath) {
@@ -197,11 +145,6 @@ export default class ScopeHelper {
     this.scopes.setRemoteScope();
     this.reInitRemoteScope();
     this.addRemoteScope();
-  }
-
-  reInitEnvsScope() {
-    fs.emptyDirSync(this.scopes.envPath);
-    return this.command.runCmd('bit init --bare', this.scopes.envPath);
   }
 
   getNewBareScope(scopeNameSuffix = '-remote2', addOwnerPrefix = false, remoteScopeToAdd = this.scopes.remotePath) {
@@ -227,7 +170,7 @@ export default class ScopeHelper {
    * To make it faster, use this method before all tests, and then use getClonedLocalScope method to restore from the
    * cloned scope.
    */
-  cloneLocalScope(dereferenceSymlinks = IS_WINDOWS) {
+  cloneWorkspace(dereferenceSymlinks = IS_WINDOWS) {
     const clonedScope = `${generateRandomStr()}-clone`;
     const clonedScopePath = path.join(this.scopes.e2eDir, clonedScope);
     if (this.debugMode) console.log(`cloning a scope from ${this.scopes.localPath} to ${clonedScopePath}`);
@@ -237,7 +180,7 @@ export default class ScopeHelper {
     return clonedScopePath;
   }
 
-  getClonedLocalScope(clonedScopePath: string, deleteCurrentScope = true) {
+  getClonedWorkspace(clonedScopePath: string, deleteCurrentScope = true) {
     if (!fs.existsSync(clonedScopePath)) {
       throw new Error(`getClonedLocalScope was unable to find the clonedScopePath at ${clonedScopePath}`);
     }
@@ -271,14 +214,5 @@ export default class ScopeHelper {
 
   getClonedRemoteScope(clonedScopePath: string) {
     return this.getClonedScope(clonedScopePath, this.scopes.remotePath);
-  }
-
-  linkCoreAspects() {
-    const aspectsRoot = path.join(this.scopes.localPath, './node_modules/@teambit');
-    const localAspectsRoot = path.join(__dirname, '../../node_modules/@teambit');
-    console.log('aspectsRoot', aspectsRoot);
-    console.log('localAspectsRoot', localAspectsRoot);
-    fs.removeSync(aspectsRoot);
-    createLinkOrSymlink(localAspectsRoot, aspectsRoot);
   }
 }

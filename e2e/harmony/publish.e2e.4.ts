@@ -19,13 +19,13 @@ describe('publish functionality', function () {
     let scopeBeforeTag: string;
     let scopeWithoutOwner: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       appOutput = helper.fixtures.populateComponentsTS(3);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCiInPackageJsonHarmony();
-      scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
+      scopeBeforeTag = helper.scopeHelper.cloneWorkspace();
     });
     describe('publishing before tag', () => {
       it('should throw an error', () => {
@@ -45,11 +45,11 @@ describe('publish functionality', function () {
       });
       describe('automatically by tag pipeline', () => {
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+          helper.scopeHelper.getClonedWorkspace(scopeBeforeTag);
           helper.command.tagAllComponents();
         });
         it('should publish them successfully and be able to consume them by installing the packages', () => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.npm.initNpm();
           helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, '0.0.1');
           helper.fs.outputFile(
@@ -62,7 +62,7 @@ describe('publish functionality', function () {
       });
       describe('automatically by snap pipeline', () => {
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+          helper.scopeHelper.getClonedWorkspace(scopeBeforeTag);
           helper.command.tagIncludeUnmodified('1.0.5');
           helper.command.snapAllComponents('--unmodified');
         });
@@ -75,7 +75,7 @@ describe('publish functionality', function () {
         });
         it('should publish them successfully and be able to consume them by installing the packages', () => {
           const headSnap = helper.command.getHead('comp1');
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.npm.initNpm();
           helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, `0.0.0-${headSnap}`);
           helper.fs.outputFile(
@@ -88,7 +88,7 @@ describe('publish functionality', function () {
       });
       describe('using "bit publish"', () => {
         before(async () => {
-          helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+          helper.scopeHelper.getClonedWorkspace(scopeBeforeTag);
           helper.command.tagIncludeUnmodified('2.0.0');
           helper.command.publish('comp1', '--allow-staged');
           helper.command.publish('comp2', '--allow-staged');
@@ -96,7 +96,7 @@ describe('publish functionality', function () {
         });
         // this also makes sure that the main of package.json points to the dist file correctly
         it('should publish them successfully and be able to consume them by installing the packages', () => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.npm.initNpm();
           helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, '2.0.0');
           helper.fs.outputFile(
@@ -109,11 +109,11 @@ describe('publish functionality', function () {
       });
       describe('with pre-release', () => {
         before(async () => {
-          helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+          helper.scopeHelper.getClonedWorkspace(scopeBeforeTag);
           helper.command.tagIncludeUnmodified('3.0.0-dev.1');
         });
         it('should publish with the tag flag and be able to npm install them by the tag name', () => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.npm.initNpm();
           helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, 'dev');
           helper.fs.outputFile(
@@ -132,7 +132,7 @@ describe('publish functionality', function () {
     let pkgName: string;
     before(async function () {
       npmCiRegistry = new NpmCiRegistry(helper);
-      helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
+      helper.scopeHelper.setWorkspaceWithRemoteScope({ addRemoteScopeAsDefaultScope: false });
       helper.fs.outputFile('ui/button.js', 'console.log("hello button");');
       helper.command.addComponent('ui', { i: 'ui/button' });
 
@@ -152,7 +152,7 @@ describe('publish functionality', function () {
     });
     describe('installing the component as a package', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+        helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
         helper.npm.initNpm();
         npmCiRegistry.installPackage(pkgName);
       });
@@ -176,7 +176,7 @@ describe('publish functionality', function () {
   });
   describe('prevent publishing to npm when custom-package-name is needed', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       const pkg = {
         packageJson: {

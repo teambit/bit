@@ -7,7 +7,7 @@ describe('bit fork command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.fixtures.populateComponents(1);
     helper.command.tagAllWithoutBuild();
     helper.command.export();
@@ -44,7 +44,7 @@ describe('bit fork command', function () {
   });
   describe('fork a remote component with no --target-id flag', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+      helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.scopeHelper.addRemoteScope();
       helper.command.fork(`${helper.scopes.remote}/comp1`);
     });

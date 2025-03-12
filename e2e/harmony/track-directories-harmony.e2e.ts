@@ -17,10 +17,10 @@ describe('track directories functionality', function () {
   describe('add a directory as authored', () => {
     let localScope;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.createFile('utils/bar', 'foo.js');
       helper.command.addComponent('utils/bar', { i: 'utils/bar' });
-      localScope = helper.scopeHelper.cloneLocalScope();
+      localScope = helper.scopeHelper.cloneWorkspace();
     });
     it('should add the directory as rootDir in bitmap file', () => {
       const bitMap = helper.bitMap.read();
@@ -31,7 +31,7 @@ describe('track directories functionality', function () {
     describe('creating another file in the same directory', () => {
       let statusOutput;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         helper.fs.createFile('utils/bar', 'foo2.js');
         statusOutput = helper.command.runCmd('bit status');
       });
@@ -62,7 +62,7 @@ describe('track directories functionality', function () {
     describe('creating another file in the same directory and running bit-status from an inner directory', () => {
       let statusOutput;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         helper.fs.createFile('utils/bar', 'foo2.js');
         statusOutput = helper.command.runCmd('bit status', path.join(helper.scopes.localPath, 'utils'));
       });
@@ -78,7 +78,7 @@ describe('track directories functionality', function () {
     describe('rename the file which is a main file', () => {
       let statusOutput;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         const currentFile = path.join(helper.scopes.localPath, 'utils/bar/foo.js');
         const newFile = path.join(helper.scopes.localPath, 'utils/bar/foo2.js');
         fs.moveSync(currentFile, newFile);
@@ -90,7 +90,7 @@ describe('track directories functionality', function () {
     });
     describe('tagging the component', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         helper.command.tagAllComponents();
       });
       it('should save the files with relativePaths relative to the rootDir', () => {
@@ -118,7 +118,7 @@ describe('track directories functionality', function () {
     });
     describe('adding a file outside of that directory', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         helper.fs.createFile('utils', 'a.js');
       });
       it('should throw an error', () => {
@@ -130,7 +130,7 @@ describe('track directories functionality', function () {
     describe('adding a parent directory', () => {
       let output;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         helper.fs.outputFile('utils/qux/qux.js');
         output = helper.command.addComponent('utils --id utils/bar');
       });
@@ -151,7 +151,7 @@ describe('track directories functionality', function () {
     });
     describe('importing the component', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.scopeHelper.getClonedWorkspace(localScope);
         helper.scopeHelper.addRemoteScope();
         helper.workspaceJsonc.setupDefault();
         helper.command.tagAllComponents();
@@ -167,7 +167,7 @@ describe('track directories functionality', function () {
   });
   describe('add multiple directories', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fs.createFile('utils/foo', 'index.js');
       helper.fs.createFile('utils/bar', 'index.js');
       helper.fs.createFile('utils/baz', 'index.js');
@@ -187,7 +187,7 @@ describe('track directories functionality', function () {
   });
   describe('adding files to sub-directories', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fs.outputFile('bar/foo.ts');
       helper.command.addComponent('bar');
       helper.fs.outputFile('bar/baz/index.ts');
