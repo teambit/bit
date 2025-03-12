@@ -30,9 +30,11 @@ import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
 import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
 import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
+import { readWantedLockfile, writeWantedLockfile } from '@pnpm/lockfile.fs';
 import { Logger } from '@teambit/logger';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import toNerfDart from 'nerf-dart';
+import { isEqual } from 'lodash'
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
@@ -284,6 +286,7 @@ export async function install(
     },
     userAgent: networkConfig.userAgent,
     ...options,
+    returnListOfDepsRequiringBuild: true,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     depth: options.updateAll ? Infinity : 0,
     disableRelinkLocalDirDeps: true,
@@ -306,7 +309,10 @@ export async function install(
       await restartWorkerPool();
       installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
       const installResult = await installsRunning[rootDir];
-      depsRequiringBuild = installResult.depsRequiringBuild;
+      depsRequiringBuild = installResult.depsRequiringBuild?.sort();
+      if (depsRequiringBuild != null) {
+        await addDepsRequiringBuildToLockfile(rootDir, depsRequiringBuild)
+      }
       dependenciesChanged =
         installResult.stats.added + installResult.stats.removed + installResult.stats.linkedToRoot > 0;
       delete installsRunning[rootDir];
@@ -623,4 +629,15 @@ function getAuthTokenForRegistry(registry: Registry, isDefault = false): { keyNa
     ];
   }
   return [];
+}
+
+async function addDepsRequiringBuildToLockfile(rootDir: string, depsRequiringBuild: string[]) {
+  const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: true });
+  if (lockfile == null) return
+  if (isEqual(lockfile['bit']?.depsRequiringBuild, depsRequiringBuild)) return;
+  lockfile['bit'] = {
+    ...lockfile['bit'],
+    depsRequiringBuild,
+  }
+  await writeWantedLockfile(rootDir, lockfile);
 }
