@@ -1,12 +1,15 @@
 import path from 'path';
 import { ComponentID } from '@teambit/component';
 import { DependenciesGraph } from '@teambit/objects';
-import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
+import { type BitLockfileFile } from './lynx';
 import { expect } from 'chai';
 
 describe('convertLockfileToGraph simple case', () => {
-  const lockfile: LockfileFileV9 = {
+  const lockfile: BitLockfileFile = {
+    bit: {
+      depsRequiringBuild: ['bar@1.0.0'],
+    },
     importers: {
       '.': {},
       'node_modules/.bit_roots/env': {
@@ -178,6 +181,7 @@ describe('convertLockfileToGraph simple case', () => {
         },
       },
       'bar@1.0.0': {
+        requiresBuild: true,
         resolution: {
           integrity: 'sha512-111',
         },
@@ -232,6 +236,9 @@ describe('convertLockfileToGraph simple case', () => {
         }
       )
     ).to.eql({
+      bit: {
+        depsRequiringBuild: ['bar@1.0.0'],
+      },
       importers: {
         'comps/comp1': {
           dependencies: {

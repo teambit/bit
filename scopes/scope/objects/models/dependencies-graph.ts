@@ -9,6 +9,7 @@ export type PackageAttributes = PackageInfo & {
     scope: string;
     name: string;
   };
+  requiresBuild?: boolean;
 };
 
 export type DependencyEdge = {
