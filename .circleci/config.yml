@@ -606,10 +606,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - bit/.git/bit
-            - bit/.bitmap
-            - bit/workspace.jsonc
-            - bit/scopes/harmony/cli-reference
+            - bit
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
