@@ -433,11 +433,13 @@ chai.use(require('chai-fs'));
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
       helper.command.sign(
         [`${helper.scopes.remote}/comp2@0.0.1`],
+        '',
         signRemote.scopePath
       );
       helper.command.export();
       helper.command.sign(
         [`${helper.scopes.remote}/comp1@0.0.1`],
+        '',
         signRemote.scopePath
       );
       helper.command.export();
