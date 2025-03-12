@@ -426,7 +426,6 @@ chai.use(require('chai-fs'));
       helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
 
       helper.fixtures.populateComponents(2);
-      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
       helper.command.install('--add-missing-deps');
       helper.command.tagAllWithoutBuild('--skip-tests');
       helper.command.export();
@@ -434,13 +433,11 @@ chai.use(require('chai-fs'));
       helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
       helper.command.sign(
         [`${helper.scopes.remote}/comp2@0.0.1`],
-        '--log',
         signRemote.scopePath
       );
       helper.command.export();
       helper.command.sign(
         [`${helper.scopes.remote}/comp1@0.0.1`],
-        '--log',
         signRemote.scopePath
       );
       helper.command.export();
@@ -454,7 +451,7 @@ chai.use(require('chai-fs'));
       helper.scopeHelper.reInitLocalScope();
       helper.scopeHelper.addRemoteScope();
       helper.command.import(`${helper.scopes.remote}/comp1@latest`);
-      expect(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8')).to.have.string(
+      expect(helper.fs.readFile('pnpm-lock.yaml')).to.have.string(
         'restoredFromModel: true'
       );
     });
