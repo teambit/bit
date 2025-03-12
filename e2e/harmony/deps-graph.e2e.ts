@@ -31,7 +31,7 @@ chai.use(require('chai-fs'));
       await npmCiRegistry.init();
       helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
       helper.fixtures.populateComponents(1);
-      helper.fs.outputFile(`comp1/index.js`, `const React = require("react"); require('@pnpm.e2e/pkg-with-1-dep')`);
+      helper.fs.outputFile(`comp1/index.js`, `const isEven = require("is-even"); require('@pnpm.e2e/pkg-with-1-dep')`);
       helper.fs.outputFile(
         `comp1/index.spec.js`,
         `const isOdd = require("is-odd"); test('test', () => { expect(1).toEqual(1); })`
@@ -43,7 +43,7 @@ chai.use(require('chai-fs'));
           '@pnpm.e2e/pkg-with-1-dep': '^100.0.0',
         },
       });
-      helper.command.install('react@18.3.1 is-odd@1.0.0');
+      helper.command.install('is-even@1.0.0 is-odd@1.0.0');
       helper.command.snapAllComponentsWithoutBuild('--skip-tests');
       await addDistTag({ package: '@pnpm.e2e/pkg-with-1-dep', version: '100.1.0', distTag: 'latest' });
       await addDistTag({ package: '@pnpm.e2e/dep-of-pkg-with-1-dep', version: '100.1.0', distTag: 'latest' });
@@ -57,9 +57,9 @@ chai.use(require('chai-fs'));
       const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
       const directDeps = depsGraph.edges.find((edge) => edge.id === '.')?.neighbours;
       expect(directDeps).deep.include({
-        name: 'react',
-        specifier: '18.3.1',
-        id: 'react@18.3.1',
+        name: 'is-even',
+        specifier: '1.0.0',
+        id: 'is-even@1.0.0',
         lifecycle: 'runtime',
         optional: false,
       });
@@ -93,9 +93,9 @@ chai.use(require('chai-fs'));
         const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
         const directDeps = depsGraph.edges.find((edge) => edge.id === '.')?.neighbours;
         expect(directDeps).deep.include({
-          name: 'react',
-          specifier: '18.3.1',
-          id: 'react@18.3.1',
+          name: 'is-even',
+          specifier: '1.0.0',
+          id: 'is-even@1.0.0',
           lifecycle: 'runtime',
           optional: false,
         });
