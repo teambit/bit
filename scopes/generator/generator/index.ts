@@ -7,6 +7,8 @@ export type {
   ComponentFile,
   ComponentConfig,
   ConfigContext,
+  PromptOption,
+  PromptResults,
 } from './component-template';
 export type {
   WorkspaceContext,

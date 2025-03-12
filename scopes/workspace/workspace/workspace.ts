@@ -1285,6 +1285,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return path.join(this.path, relativeComponentDir);
   }
 
+  /**
+   * @deprecated long long ago we added it to the componentId object. use `componentId.scope` instead.
+   */
   async componentDefaultScope(componentId: ComponentID): Promise<string | undefined> {
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
     return this.componentDefaultScopeFromComponentDirAndName(relativeComponentDir, componentId.fullName);
@@ -1294,10 +1297,6 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     relativeComponentDir: PathOsBasedRelative,
     name: string
   ): Promise<string | undefined> {
-    const componentConfigFile = await this.componentConfigFileFromComponentDirAndName(relativeComponentDir, name);
-    if (componentConfigFile && componentConfigFile.defaultScope) {
-      return componentConfigFile.defaultScope;
-    }
     const bitMapId = this.consumer.bitMap.getExistingBitId(name, false);
     const bitMapEntry = bitMapId ? this.consumer.bitMap.getComponent(bitMapId) : undefined;
     if (bitMapEntry && bitMapEntry.defaultScope) {
@@ -1590,7 +1589,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   public async componentConfigFile(id: ComponentID): Promise<ComponentConfigFile | undefined> {
     const relativeComponentDir = this.componentDir(id, { ignoreVersion: true }, { relative: true });
-    return this.componentConfigFileFromComponentDirAndName(relativeComponentDir, id.fullName);
+    return this.componentConfigFileFromComponentDirAndName(relativeComponentDir);
   }
 
   /**
@@ -1608,17 +1607,13 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   private async componentConfigFileFromComponentDirAndName(
     relativeComponentDir: PathOsBasedRelative,
-    name: string
   ): Promise<ComponentConfigFile | undefined> {
     let componentConfigFile;
     if (relativeComponentDir) {
       const absComponentDir = this.componentDirToAbsolute(relativeComponentDir);
-      const defaultScopeFromVariantsOrWs =
-        await this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(relativeComponentDir, name);
       componentConfigFile = await ComponentConfigFile.load(
         absComponentDir,
         this.createAspectList.bind(this),
-        defaultScopeFromVariantsOrWs
       );
     }
 

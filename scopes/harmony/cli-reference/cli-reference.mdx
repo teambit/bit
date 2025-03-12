@@ -306,6 +306,7 @@ with no args, only workspace's capsules are deleted
 | ---------- | :--------------: | --------------------------------------------------------- |
 | `--all`    |       `-a`       | check-types for all components, not only modified and new |
 | `--strict` |                  | in case issues found, exit with code 1                    |
+| `--json`   |       `-j`       | return the output in json format                          |
 
 ---
 
@@ -484,7 +485,8 @@ for example, "user.token" becomes "BIT_CONFIG_USER_TOKEN"
 
 **Description**: mark components as deleted on the remote  
 to remove components from your local workspace only, use "bit remove" command.  
-this command marks the components as deleted, and after snap/tag and export they will be marked as deleted from the remote scope as well.
+this command marks the components as deleted, and after snap/tag and export they will be marked as deleted from the remote scope as well.  
+unless the '--hard' flag is used (not recommended!), in which case, the component will be deleted from the remote scope immediately.
 
 `bit delete <component-pattern>`
 
@@ -2330,12 +2332,13 @@ list components templates when inside bit-workspace (for bit-create), otherwise,
 
 **Description**: generate a graph of the version history of a component and save as an SVG file
 
-| **Option**        | **Option alias** | **Description**                                                                                        |
-| ----------------- | :--------------: | ------------------------------------------------------------------------------------------------------ |
-| `--short-hash`    |       `-s`       | show only 9 chars of the hash                                                                          |
-| `--mark <string>` |       `-m`       | paint the given node-ids in the graph in red color, for multiple, separate by commas                   |
-| `--png`           |                  | save the graph as a png file instead of svg. requires "graphviz" to be installed                       |
-| `--layout <name>` |       `-l`       | GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi] |
+| **Option**         | **Option alias** | **Description**                                                                                        |
+| ------------------ | :--------------: | ------------------------------------------------------------------------------------------------------ |
+| `--short-hash`     |       `-s`       | show only 9 chars of the hash                                                                          |
+| `--mark <string>`  |       `-m`       | paint the given node-ids in the graph in red color, for multiple, separate by commas                   |
+| `--png`            |                  | save the graph as a png file instead of svg. requires "graphviz" to be installed                       |
+| `--layout <name>`  |       `-l`       | GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi] |
+| `--limit <number>` |                  | limit the number of nodes in the graph (starting from the heads)                                       |
 
 ### version-history show
 

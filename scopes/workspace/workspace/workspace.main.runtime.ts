@@ -241,7 +241,7 @@ export class WorkspaceMain {
       // This component from scope here are only used for merging the extensions with the workspace components
       const componentFromScope = await workspace.scope.get(componentId);
       const { extensions } = await workspace.componentExtensions(componentId, componentFromScope, undefined, loadOpts);
-      const defaultScope = await workspace.componentDefaultScope(componentId);
+      const defaultScope = componentId.scope;
 
       const extensionsWithLegacyIdsP = extensions.map(async (extension) => {
         if (extension.extensionId) {

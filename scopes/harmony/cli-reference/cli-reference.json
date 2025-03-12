@@ -951,6 +951,11 @@
             "l",
             "layout <name>",
             "GraphVis layout. default to \"dot\". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]"
+          ],
+          [
+            "",
+            "limit <number>",
+            "limit the number of nodes in the graph (starting from the heads)"
           ]
         ],
         "description": "generate a graph of the version history of a component and save as an SVG file",
@@ -2466,7 +2471,7 @@
       ]
     ],
     "description": "mark components as deleted on the remote",
-    "extendedDescription": "to remove components from your local workspace only, use \"bit remove\" command.\nthis command marks the components as deleted, and after snap/tag and export they will be marked as deleted from the remote scope as well.\n",
+    "extendedDescription": "to remove components from your local workspace only, use \"bit remove\" command.\nthis command marks the components as deleted, and after snap/tag and export they will be marked as deleted from the remote scope as well.\nunless the '--hard' flag is used (not recommended!), in which case, the component will be deleted from the remote scope immediately.\n",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
@@ -5248,6 +5253,11 @@
         "",
         "strict",
         "in case issues found, exit with code 1"
+      ],
+      [
+        "j",
+        "json",
+        "return the output in json format"
       ]
     ],
     "description": "check typescript types",
