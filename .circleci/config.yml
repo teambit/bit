@@ -606,7 +606,11 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - bit
+            - bit/.git/bit
+            - bit/.bitmap
+            - bit/workspace.jsonc
+            - bit/scopes
+            - bit/components
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
