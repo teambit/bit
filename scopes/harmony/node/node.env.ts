@@ -26,13 +26,13 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
 
   getDependencies(): EnvPolicyConfigObject {
     return {
-      dependencies: {
-        react: '-',
-        'react-dom': '-',
-      },
+      // dependencies: {
+      //   react: '-',
+      //   'react-dom': '-',
+      // },
       devDependencies: {
-        react: '-',
-        'react-dom': '-',
+        // react: '-',
+        // 'react-dom': '-',
         '@types/jest': '26.0.20',
         '@types/node': '22.10.5',
       },
