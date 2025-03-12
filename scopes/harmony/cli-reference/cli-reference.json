@@ -3638,6 +3638,11 @@
         "s",
         "scope <scope-name>",
         "DEPRECATED. (use the pattern instead, e.g. \"scopeName/**\"). name of the scope to test"
+      ],
+      [
+        "j",
+        "json",
+        "return the results in json format"
       ]
     ],
     "description": "test components in the workspace. by default only runs tests for new and modified components",
