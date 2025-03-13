@@ -2,7 +2,7 @@ import fs from 'fs';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { DEPS_GRAPH } from '@teambit/harmony.modules.feature-toggle';
 import { addDistTag } from '@pnpm/registry-mock';
-import { type LockfileFileV9 } from '@pnpm/lockfile.types';
+import { type BitLockfileFile } from '@teambit/pnpm';
 import path from 'path';
 import chai, { expect } from 'chai';
 import stripAnsi from 'strip-ansi';
@@ -157,7 +157,7 @@ chai.use(require('chai-fs'));
     });
     describe('sign component and use dependency graph to generate a lockfile', () => {
       let signOutput: string;
-      let lockfile: LockfileFileV9;
+      let lockfile: BitLockfileFile;
       let signRemote;
       before(async () => {
         helper.command.export();
@@ -177,7 +177,9 @@ chai.use(require('chai-fs'));
         const capsulesDir = signOutput.match(/running installation in root dir (\/[^\s]+)/)?.[1];
         expect(capsulesDir).to.be.a('string');
         lockfile = yaml.load(fs.readFileSync(path.join(stripAnsi(capsulesDir!), 'pnpm-lock.yaml'), 'utf8'));
-        expect(lockfile['bit']).to.be.undefined; // eslint-disable-line
+        expect(lockfile.bit).to.eql({
+          depsRequiringBuild: [],
+        });
       });
     });
     describe('imported component uses dependency graph to generate a lockfile', () => {

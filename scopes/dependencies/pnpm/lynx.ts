@@ -31,6 +31,7 @@ import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
 import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
 import { readWantedLockfile, writeWantedLockfile } from '@pnpm/lockfile.fs';
+import { type LockfileFileV9, type Lockfile } from '@pnpm/lockfile.types'
 import { Logger } from '@teambit/logger';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import toNerfDart from 'nerf-dart';
@@ -632,7 +633,7 @@ function getAuthTokenForRegistry(registry: Registry, isDefault = false): { keyNa
 }
 
 async function addDepsRequiringBuildToLockfile(rootDir: string, depsRequiringBuild: string[]) {
-  const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: true }) as BitLockfileFile;
+  const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: true }) as BitLockfile;
   if (lockfile == null) return
   if (isEqual(lockfile.bit?.depsRequiringBuild, depsRequiringBuild)) return;
   lockfile.bit = {
@@ -640,6 +641,10 @@ async function addDepsRequiringBuildToLockfile(rootDir: string, depsRequiringBui
     depsRequiringBuild,
   }
   await writeWantedLockfile(rootDir, lockfile);
+}
+
+export interface BitLockfile extends Lockfile {
+  bit?: BitLockfileAttributes;
 }
 
 export interface BitLockfileFile extends LockfileFileV9 {
