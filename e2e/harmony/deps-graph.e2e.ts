@@ -2,7 +2,7 @@ import fs from 'fs';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { DEPS_GRAPH } from '@teambit/harmony.modules.feature-toggle';
 import { addDistTag } from '@pnpm/registry-mock';
-import { type LockfileFileV9 } from '@pnpm/lockfile.types';
+import { type BitLockfileFile } from '@teambit/pnpm';
 import path from 'path';
 import chai, { expect } from 'chai';
 import stripAnsi from 'strip-ansi';
@@ -157,7 +157,7 @@ chai.use(require('chai-fs'));
     });
     describe('sign component and use dependency graph to generate a lockfile', () => {
       let signOutput: string;
-      let lockfile: LockfileFileV9;
+      let lockfile: BitLockfileFile;
       let signRemote;
       before(async () => {
         helper.command.export();
@@ -177,7 +177,9 @@ chai.use(require('chai-fs'));
         const capsulesDir = signOutput.match(/running installation in root dir (\/[^\s]+)/)?.[1];
         expect(capsulesDir).to.be.a('string');
         lockfile = yaml.load(fs.readFileSync(path.join(stripAnsi(capsulesDir!), 'pnpm-lock.yaml'), 'utf8'));
-        expect(lockfile['bit']).to.be.undefined; // eslint-disable-line
+        expect(lockfile.bit).to.eql({
+          depsRequiringBuild: [],
+        });
       });
     });
     describe('imported component uses dependency graph to generate a lockfile', () => {
@@ -412,6 +414,50 @@ chai.use(require('chai-fs'));
       npmCiRegistry.destroy();
       helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
+    });
+  });
+  describe('two components exported then one imported', function () {
+    let randomStr: string;
+    before(async () => {
+      randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
+      const name = `@ci/${randomStr}.{name}`;
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
+      await npmCiRegistry.init();
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+
+      helper.fixtures.populateComponents(2);
+      helper.command.install('--add-missing-deps');
+      helper.command.tagAllWithoutBuild('--skip-tests');
+      helper.command.export();
+      const signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
+      helper.command.sign(
+        [`${helper.scopes.remote}/comp2@0.0.1`],
+        '',
+        signRemote.scopePath
+      );
+      helper.command.export();
+      helper.command.sign(
+        [`${helper.scopes.remote}/comp1@0.0.1`],
+        '',
+        signRemote.scopePath
+      );
+      helper.command.export();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.command.delConfig('registry');
+      helper.scopeHelper.destroy();
+    });
+    it('should generate a lockfile', () => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.import(`${helper.scopes.remote}/comp1@latest`);
+      expect(helper.fs.readFile('pnpm-lock.yaml')).to.have.string(
+        'restoredFromModel: true'
+      );
     });
   });
 });

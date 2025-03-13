@@ -21,9 +21,10 @@ import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
+import { type ResolveFunction } from '@pnpm/client';
 import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
 import { Config } from '@pnpm/config';
-import { type ProjectId, type ProjectManifest, type DepPath } from '@pnpm/types';
+import { type ProjectId, type ProjectManifest, type DepPath, type Registries as ScopeRegistires } from '@pnpm/types';
 import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
 import {
   buildDependenciesHierarchy,
@@ -43,7 +44,7 @@ import { join } from 'path';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
-import type { RebuildFn } from './lynx';
+import { generateResolverAndFetcher, getRegistriesMap, RebuildFn } from './lynx';
 import { type DependenciesGraph } from '@teambit/objects';
 
 export type { RebuildFn };
@@ -82,16 +83,20 @@ export class PnpmPackageManager implements PackageManager {
 
   async dependenciesGraphToLockfile(
     dependenciesGraph: DependenciesGraph,
-    manifests: Record<string, ProjectManifest>,
-    rootDir: string
+    opts: {
+      manifests: Record<string, ProjectManifest>;
+      rootDir: string;
+      resolve: ResolveFunction;
+      registries: ScopeRegistires;
+    }
   ) {
-    const lockfile: LockfileFileV9 = convertGraphToLockfile(dependenciesGraph, manifests, rootDir);
+    const lockfile: LockfileFileV9 = await convertGraphToLockfile(dependenciesGraph, opts);
     Object.assign(lockfile, {
       bit: {
         restoredFromModel: true,
       },
     });
-    const lockfilePath = join(rootDir, 'pnpm-lock.yaml');
+    const lockfilePath = join(opts.rootDir, 'pnpm-lock.yaml');
     await writeLockfileFile(lockfilePath, lockfile);
     this.logger.debug(`generated a lockfile from dependencies graph at ${lockfilePath}`);
     if (process.env.DEPS_GRAPH_LOG) {
@@ -108,12 +113,22 @@ export class PnpmPackageManager implements PackageManager {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { install } = require('./lynx');
 
+    const registries = await this.depResolver.getRegistries();
+    const proxyConfig = await this.depResolver.getProxyConfig();
+    const networkConfig = await this.depResolver.getNetworkConfig();
+    const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
     if (
       installOptions.dependenciesGraph &&
       isFeatureEnabled(DEPS_GRAPH) &&
       (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
     ) {
-      await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, manifests, rootDir);
+      const { resolve } = await generateResolverAndFetcher(config.cacheDir, registries, proxyConfig, networkConfig);
+      await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
+        manifests,
+        rootDir,
+        registries: getRegistriesMap(registries),
+        resolve,
+      });
     }
 
     this.logger.debug(`running installation in root dir ${rootDir}`);
@@ -124,10 +139,6 @@ export class PnpmPackageManager implements PackageManager {
       // this.logger.console('-------------------------PNPM OUTPUT-------------------------');
       this.logger.off();
     }
-    const registries = await this.depResolver.getRegistries();
-    const proxyConfig = await this.depResolver.getProxyConfig();
-    const networkConfig = await this.depResolver.getNetworkConfig();
-    const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
     if (!installOptions.useNesting && installOptions.rootComponentsForCapsules) {
       manifests = await extendWithComponentsFromDir(rootDir, manifests);
     }
@@ -405,6 +416,15 @@ export class PnpmPackageManager implements PackageManager {
     const filterByImporterIds = [opts.componentRelativeDir as ProjectId];
     if (opts.componentRootDir != null) {
       filterByImporterIds.push(opts.componentRootDir as ProjectId);
+    }
+    for (const importerId of filterByImporterIds) {
+      for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies', 'specifiers', 'dependenciesMeta']) {
+        for (const workspacePkgName of opts.componentIdByPkgName.keys()) {
+          if (workspacePkgName !== opts.pkgName) {
+            delete lockfile.importers[importerId]?.[depType]?.[workspacePkgName];
+          }
+        }
+      }
     }
     // Filters the lockfile so that it only includes packages related to the given component.
     const partialLockfile = convertLockfileObjectToLockfileFile(

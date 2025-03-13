@@ -1,8 +1,11 @@
 import path from 'path';
-import { type ProjectManifest } from '@pnpm/types';
-import { type LockfileFileV9, type InlineSpecifiersResolvedDependencies } from '@pnpm/lockfile.types';
+import { type ProjectManifest, type Registries } from '@pnpm/types';
+import { type InlineSpecifiersResolvedDependencies } from '@pnpm/lockfile.types';
+import { type ResolveFunction } from '@pnpm/client';
 import * as dp from '@pnpm/dependency-path';
+import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
 import { pick, partition } from 'lodash';
+import { snapToSemver } from '@teambit/component-package-version';
 import {
   DependenciesGraph,
   type PackagesMap,
@@ -13,9 +16,10 @@ import {
 import { type CalcDepsGraphOptions, type ComponentIdByPkgName } from '@teambit/dependency-resolver';
 import { getLockfileImporterId } from '@pnpm/lockfile.fs';
 import normalizePath from 'normalize-path';
+import { type BitLockfileFile } from './lynx';
 
 function convertLockfileToGraphFromCapsule(
-  lockfile: LockfileFileV9,
+  lockfile: BitLockfileFile,
   {
     componentRelativeDir,
     componentIdByPkgName,
@@ -47,7 +51,7 @@ function importerDepsToNeighbours(
 }
 
 export function convertLockfileToGraph(
-  lockfile: LockfileFileV9,
+  lockfile: BitLockfileFile,
   { pkgName, componentRootDir, componentRelativeDir, componentIdByPkgName }: Omit<CalcDepsGraphOptions, 'rootDir'>
 ): DependenciesGraph {
   if (componentRootDir == null || pkgName == null) {
@@ -77,7 +81,7 @@ export function convertLockfileToGraph(
 }
 
 function _convertLockfileToGraph(
-  lockfile: LockfileFileV9,
+  lockfile: BitLockfileFile,
   {
     componentIdByPkgName,
     directDependencies,
@@ -86,16 +90,21 @@ function _convertLockfileToGraph(
     directDependencies: DependencyNeighbour[];
   }
 ): DependenciesGraph {
-  lockfile = replaceFileVersionsWithPendingVersions(lockfile);
   return new DependenciesGraph({
-    edges: buildEdges(lockfile, { directDependencies }),
+    edges: buildEdges(lockfile, { directDependencies, componentIdByPkgName }),
     packages: buildPackages(lockfile, { componentIdByPkgName }),
   });
 }
 
 function buildEdges(
-  lockfile: LockfileFileV9,
-  { directDependencies }: { directDependencies: DependencyNeighbour[] }
+  lockfile: BitLockfileFile,
+  {
+    directDependencies,
+    componentIdByPkgName,
+  }: {
+    directDependencies: DependencyNeighbour[];
+    componentIdByPkgName: ComponentIdByPkgName;
+  }
 ): DependencyEdge[] {
   const edges: DependencyEdge[] = [];
   for (const [depPath, snapshot] of Object.entries(lockfile.snapshots ?? {})) {
@@ -120,9 +129,9 @@ function buildEdges(
   }
   edges.push({
     id: DependenciesGraph.ROOT_EDGE_ID,
-    neighbours: replaceFileVersionsWithPendingVersions(directDependencies),
+    neighbours: replaceFileVersions(componentIdByPkgName, directDependencies),
   });
-  return edges;
+  return replaceFileVersions(componentIdByPkgName, edges);
 }
 
 function extractDependenciesFromSnapshot(snapshot: any): DependencyNeighbour[] {
@@ -144,7 +153,7 @@ function extractDependenciesFromSnapshot(snapshot: any): DependencyNeighbour[] {
 }
 
 function buildPackages(
-  lockfile: LockfileFileV9,
+  lockfile: BitLockfileFile,
   { componentIdByPkgName }: { componentIdByPkgName: ComponentIdByPkgName }
 ): PackagesMap {
   const packages: PackagesMap = new Map();
@@ -163,30 +172,49 @@ function buildPackages(
       'resolution',
       'version',
     ]) as any;
-    if (pkgId.includes('@pending:')) {
-      const parsed = dp.parse(pkgId);
-      if (parsed.name && componentIdByPkgName.has(parsed.name)) {
-        const compId = componentIdByPkgName.get(parsed.name)!;
-        graphPkg.component = {
-          name: compId.fullName,
-          scope: compId.scope,
-        };
-      }
+    if (graphPkg.resolution.type === 'directory') {
+      delete graphPkg.resolution;
+    }
+    const parsed = dp.parse(pkgId);
+    if (parsed.name && componentIdByPkgName.has(parsed.name)) {
+      const compId = componentIdByPkgName.get(parsed.name)!;
+      graphPkg.component = {
+        name: compId.fullName,
+        scope: compId.scope,
+      };
+    }
+    if (lockfile.bit?.depsRequiringBuild?.includes(pkgId)) {
+      graphPkg.requiresBuild = true;
     }
     packages.set(pkgId, graphPkg);
   }
-  return packages;
+  return new Map(replaceFileVersions(componentIdByPkgName, Array.from(packages.entries())));
 }
 
-function replaceFileVersionsWithPendingVersions<T>(obj: T): T {
-  return JSON.parse(JSON.stringify(obj).replaceAll(/file:[^'"(]+/g, 'pending:'));
+function replaceFileVersions<T>(componentIdByPkgName: ComponentIdByPkgName, obj: T): T {
+  let s = JSON.stringify(obj);
+  for (const [pkgName, componentId] of componentIdByPkgName.entries()) {
+    s = s.replaceAll(new RegExp(`${pkgName}@file:[^'"(]+`, 'g'), `${pkgName}@${snapToSemver(componentId.version)}`);
+  }
+  return JSON.parse(s);
 }
 
-export function convertGraphToLockfile(
-  graph: DependenciesGraph,
-  manifests: Record<string, ProjectManifest>,
-  rootDir: string
-): LockfileFileV9 {
+export async function convertGraphToLockfile(
+  _graph: DependenciesGraph,
+  {
+    manifests,
+    rootDir,
+    resolve,
+    registries,
+  }: {
+    manifests: Record<string, ProjectManifest>;
+    rootDir: string;
+    resolve: ResolveFunction;
+    registries: Registries;
+  }
+): Promise<BitLockfileFile> {
+  const graphString = _graph.serialize();
+  const graph = DependenciesGraph.deserialize(graphString)!;
   const packages = {};
   const snapshots = {};
   const allEdgeIds = new Set(graph.edges.map(({ id }) => id));
@@ -208,11 +236,19 @@ export function convertGraphToLockfile(
       Object.assign(packages[pkgId], convertGraphPackageToLockfilePackage(graphPkg));
     }
   }
-  const lockfile = {
+  const depsRequiringBuild: string[] = [];
+  for (const [pkgId, { requiresBuild }] of graph.packages.entries()) {
+    if (requiresBuild) {
+      depsRequiringBuild.push(pkgId);
+    }
+  }
+  depsRequiringBuild.sort();
+  const lockfile: BitLockfileFile & Required<Pick<BitLockfileFile, 'packages'>> = {
     lockfileVersion: '9.0',
     packages,
     snapshots,
     importers: {},
+    bit: { depsRequiringBuild },
   };
   const rootEdge = graph.findRootEdge();
   if (rootEdge) {
@@ -244,6 +280,38 @@ export function convertGraphToLockfile(
       }
     }
   }
+  const pkgsToResolve: Array<{ name: string; version: string; pkgId: string }> = [];
+  const pkgsInTheWorkspaces = new Set(Object.values(manifests).map(({ name }) => name));
+  for (const [pkgId, pkg] of Object.entries(lockfile.packages)) {
+    if (pkg.resolution == null || 'type' in pkg.resolution && pkg.resolution.type === 'directory') {
+      const parsed = dp.parse(pkgId)
+      if (parsed.name && parsed.version && !pkgsInTheWorkspaces.has(parsed.name)) {
+        pkgsToResolve.push({
+          name: parsed.name,
+          version: parsed.version,
+          pkgId,
+        })
+      }
+    }
+  }
+  await Promise.all(pkgsToResolve.map(async (pkgToResolve) => {
+    if (lockfile.packages[pkgToResolve.pkgId].resolution == null) {
+      const { resolution } = await resolve({
+        alias: pkgToResolve.name,
+        pref: pkgToResolve.version,
+      }, {
+        lockfileDir: '',
+        projectDir: '',
+        registry: pickRegistryForPackage(registries, pkgToResolve.name),
+        preferredVersions: {},
+      })
+      if ('integrity' in resolution && resolution.integrity) {
+        lockfile.packages[pkgToResolve.pkgId].resolution = {
+          integrity: resolution.integrity,
+        };
+      }
+    }
+  }));
   return lockfile;
 
   function convertToDeps(neighbours: DependencyNeighbour[]) {
