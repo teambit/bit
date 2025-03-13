@@ -18,11 +18,11 @@ describe('bit rename command', function () {
   describe('rename an exported component with --deprecate', () => {
     let scopeAfterExport: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      scopeAfterExport = helper.scopeHelper.cloneLocalScope();
+      scopeAfterExport = helper.scopeHelper.cloneWorkspace();
     });
     describe('rename with no flag', () => {
       before(() => {
@@ -52,7 +52,7 @@ describe('bit rename command', function () {
     });
     describe('rename with --scope', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterExport);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterExport);
         helper.command.rename('comp1', 'comp2', '--scope org.ui');
       });
       it('should save the entered scope as the defaultScope', () => {
@@ -83,7 +83,7 @@ describe('bit rename command', function () {
     });
     describe('rename with --delete flag', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterExport);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterExport);
         helper.command.rename('comp1', 'comp2', '--delete');
       });
       it('should create a new component', () => {
@@ -98,7 +98,7 @@ describe('bit rename command', function () {
   });
   describe('rename a new component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.rename('comp1', 'comp2');
     });
@@ -117,7 +117,7 @@ describe('bit rename command', function () {
   });
   describe('rename a new component when the scope is different than the defaultScope', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.setScope('different-scope', 'comp1');
       // previously it was errored with "error: component "different-scope/comp1" was not found on your local workspace".
@@ -131,7 +131,7 @@ describe('bit rename command', function () {
   });
   describe('rename a new component scope-name', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.command.rename('comp1', 'comp1', '--scope scope2');
     });
@@ -142,7 +142,7 @@ describe('bit rename command', function () {
   });
   describe('rename with refactoring when the code has other non-import occurrences', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+      helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponents(2);
       helper.fs.outputFile(
         'comp1/index.js',
@@ -161,7 +161,7 @@ describe('bit rename command', function () {
   });
   describe('wrong rename with scope-name inside the name', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.addDefaultScope('owner.scope');
       helper.fixtures.populateComponents(1);
     });
@@ -173,7 +173,7 @@ describe('bit rename command', function () {
   });
   describe('rename scope-name without refactoring', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.addDefaultScope('owner.scope');
       helper.fixtures.populateComponents(2);
       helper.command.rename('comp2', 'comp2', '--scope owner2.scope2');
@@ -184,7 +184,7 @@ describe('bit rename command', function () {
   });
   describe('rename scope-name with refactoring', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.addDefaultScope('owner.scope');
       helper.fixtures.populateComponents(2);
       helper.command.rename('comp2', 'comp2', '--scope owner2.scope2 --refactor');
@@ -196,7 +196,7 @@ describe('bit rename command', function () {
   });
   describe('rename a new aspect without --preserve flag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.create('bit-aspect', 'my-aspect');
       helper.command.rename('my-aspect', 'foo');
     });
@@ -218,7 +218,7 @@ describe('bit rename command', function () {
   });
   describe('rename a new aspect with --preserve flag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.create('bit-aspect', 'my-aspect');
       helper.command.rename('my-aspect', 'foo', '--preserve');
     });
@@ -242,7 +242,7 @@ describe('bit rename command', function () {
   });
   describe('rename an exported aspect', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.command.create('bit-aspect', 'my-aspect');
       helper.command.install();
       helper.command.tagAllWithoutBuild();
@@ -268,7 +268,7 @@ describe('bit rename command', function () {
   });
   describe('rename a new component including the namespace and the scope-name', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
     });
     it('should not throw ComponentNotFound', () => {
@@ -280,7 +280,7 @@ describe('bit rename command', function () {
   describe('rename an exported component from a lane', () => {
     let headOnLane: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -306,7 +306,7 @@ describe('bit rename command', function () {
   describe('rename an exported component from a lane that does not exist on main', () => {
     let headOnLane: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.createLane('my-lane');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');

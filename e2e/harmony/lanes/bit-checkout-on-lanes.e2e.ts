@@ -17,17 +17,17 @@ describe('bit checkout command when on a lane', function () {
     let comp1Head: string;
     let comp2RemoteHead: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      originalWs = helper.scopeHelper.cloneLocalScope();
+      originalWs = helper.scopeHelper.cloneWorkspace();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       comp2RemoteHead = helper.command.getHeadOfLane('dev', 'comp2');
       helper.command.export();
 
-      helper.scopeHelper.getClonedLocalScope(originalWs);
+      helper.scopeHelper.getClonedWorkspace(originalWs);
       helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
       comp1Head = helper.command.getHeadOfLane('dev', 'comp1');
       helper.command.import();
@@ -45,7 +45,7 @@ describe('bit checkout command when on a lane', function () {
   });
   describe('checkout head on main when some components are not available on main', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -74,7 +74,7 @@ describe('bit checkout command when on a lane', function () {
   });
   describe('checkout when some are pending-merge', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.tagWithoutBuild();
       helper.command.export();
@@ -90,9 +90,9 @@ describe('bit checkout command when on a lane', function () {
       helper.command.switchLocalLane('dev', '-x');
       helper.command.mergeLane('main', '-x'); // comp1 is now pending-merge
 
-      const originalWs = helper.scopeHelper.cloneLocalScope();
+      const originalWs = helper.scopeHelper.cloneWorkspace();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev');
 
@@ -100,7 +100,7 @@ describe('bit checkout command when on a lane', function () {
       helper.command.snapComponentWithoutBuild('comp3');
       helper.command.export();
 
-      helper.scopeHelper.getClonedLocalScope(originalWs);
+      helper.scopeHelper.getClonedWorkspace(originalWs);
     });
     it('checkout head should stop with an error', () => {
       expect(() => helper.command.checkoutHead('-x')).to.throw();

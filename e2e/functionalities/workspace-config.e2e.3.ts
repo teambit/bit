@@ -19,7 +19,7 @@ describe('workspace config', function () {
     // on harmony, when both components in the workspace, it doesn't really override.
     describe.skip('changing component dependencies versions', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fs.createFile('foo', 'foo.js');
         helper.fs.createFile('bar', 'bar.js', "require('../foo/foo');");
         helper.command.addComponent('foo');
@@ -60,7 +60,7 @@ describe('workspace config', function () {
     describe('ignoring components dependencies', () => {
       let scopeAfterAdding;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fs.createFile('foo1', 'foo1.js');
         helper.fs.createFile('foo2', 'foo2.js');
         helper.fs.createFile('bar', 'bar.js', "require('../foo1/foo1'); require('../foo2/foo2'); ");
@@ -68,7 +68,7 @@ describe('workspace config', function () {
         helper.command.addComponent('foo2', { i: 'utils/foo/foo2' });
         helper.command.addComponent('bar');
         helper.command.linkAndRewire();
-        scopeAfterAdding = helper.scopeHelper.cloneLocalScope();
+        scopeAfterAdding = helper.scopeHelper.cloneWorkspace();
       });
       describe('ignoring a dependency component', () => {
         describe('when requiring with module path', () => {
@@ -90,7 +90,7 @@ describe('workspace config', function () {
         // this test is irrelevant on Harmony, because the "+" is not supported.
         describe.skip('when adding the component as devDependency without removing it', () => {
           before(() => {
-            helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
+            helper.scopeHelper.getClonedWorkspace(scopeAfterAdding);
             const policy = {
               devDependencies: {
                 [`@${helper.scopes.remote}/utils.foo.foo1`]: '+',
@@ -113,7 +113,7 @@ describe('workspace config', function () {
     describe('ignoring packages dependencies', () => {
       describe('ignoring a missing package', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.fs.createFile('bar', 'bar.js', "require('non-exist-package')");
           helper.command.addComponent('bar');
           helper.command.compile();
@@ -136,7 +136,7 @@ describe('workspace config', function () {
       describe('ignoring an existing package', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.npm.addFakeNpmPackage('existing-package');
           helper.npm.addFakeNpmPackage('another-existing-package');
           helper.fs.createFile('bar', 'bar.js', "require('existing-package'); require('another-existing-package');");
@@ -163,7 +163,7 @@ describe('workspace config', function () {
       describe('ignoring an existing devDependency package', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.npm.addFakeNpmPackage('existing-package');
           helper.npm.addFakeNpmPackage('another-existing-package');
           helper.fs.createFile('bar', 'bar.js');
@@ -202,7 +202,7 @@ describe('workspace config', function () {
         before(() => {
           // keep in mind that the 'chai' dependency is a regular package dependency, which
           // also saved as a peerDependency
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
           helper.npm.addFakeNpmPackage('chai', '2.2.0');
           helper.packageJson.create({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
@@ -234,7 +234,7 @@ describe('workspace config', function () {
     });
     describe('ignoring dependencies components entire flow', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fs.createFile('foo1', 'foo1.js');
         helper.fs.createFile('foo2', 'foo2.js');
         helper.fs.createFile('bar', 'bar.js', "require('../foo1/foo1'); require('../foo2/foo2'); ");
@@ -277,7 +277,7 @@ describe('workspace config', function () {
         describe('importing the component', () => {
           before(() => {
             helper.command.export();
-            helper.scopeHelper.reInitLocalScope();
+            helper.scopeHelper.reInitWorkspace();
             helper.scopeHelper.addRemoteScope();
             helper.command.importComponent('*');
           });
@@ -314,7 +314,7 @@ describe('workspace config', function () {
       describe('moving a package from dependencies to peerDependencies', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
           helper.npm.addFakeNpmPackage('chai', '2.2.0');
           helper.packageJson.create({ dependencies: { chai: '2.2.0' } });
@@ -351,7 +351,7 @@ describe('workspace config', function () {
       describe('adding a package with version that does not exist in package.json', () => {
         let showBar;
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
           helper.fixtures.addComponentBarFoo();
           const policy = {
@@ -374,7 +374,7 @@ describe('workspace config', function () {
       });
       describe('adding a package without version that does not exist in package.json', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.fixtures.createComponentBarFoo("import chai from 'chai';");
           helper.fixtures.addComponentBarFoo();
           const policy = {

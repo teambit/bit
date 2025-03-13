@@ -26,7 +26,7 @@ describe('Filesystem read count', function () {
   describe('basic commands', () => {
     describe('bit --help', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
       });
       it('should not exceed a reasonable file-count number', () => {
         const output = helper.command.runCmd('bit --help', undefined, undefined, undefined, undefined, { 'BIT_DEBUG_READ_FILE': 'true' });
@@ -47,7 +47,7 @@ describe('Filesystem read count', function () {
     });
     describe('bit status', () => {
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(1);
       });
       it('should not exceed a reasonable file-count number', () => {

@@ -18,23 +18,23 @@ describe('user deleted only .bitmap file leaving the objects in place', function
   describe('tagging a component, then, deleting .bitmap file', () => {
     let scopeAfterDeletion;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.bitMap.delete();
-      scopeAfterDeletion = helper.scopeHelper.cloneLocalScope();
+      scopeAfterDeletion = helper.scopeHelper.cloneWorkspace();
     });
     describe('bit init', () => {
       it('should throw an error', () => {
         const error = new ObjectsWithoutConsumer(path.join(helper.scopes.localPath, '.bit'));
-        const initCmd = () => helper.scopeHelper.initWorkspace();
+        const initCmd = () => helper.command.init();
         helper.general.expectToThrow(initCmd, error);
       });
     });
     describe('bit init --force', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterDeletion);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterDeletion);
       });
       it('should init successfully', () => {
         const output = helper.command.runCmd('bit init --force');

@@ -20,7 +20,7 @@ describe('bit snap command', function () {
   describe('snap before tag', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       output = helper.command.snapComponent('bar/foo');
@@ -76,7 +76,7 @@ describe('bit snap command', function () {
   });
   describe('components with dependencies', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponents();
     });
@@ -92,14 +92,14 @@ describe('bit snap command', function () {
     describe('tagging the components', () => {
       let scopeBeforeTag: string;
       before(() => {
-        scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
+        scopeBeforeTag = helper.scopeHelper.cloneWorkspace();
       });
       it('--all flag should include the snapped components', () => {
         const output = helper.command.tagAllWithoutBuild();
         expect(output).to.include('3 component(s) tagged');
       });
       it('--snapped flag should include the snapped components', () => {
-        helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+        helper.scopeHelper.getClonedWorkspace(scopeBeforeTag);
         const output = helper.command.tagWithoutBuild(undefined, '--snapped');
         expect(output).to.include('3 component(s) tagged');
       });
@@ -108,7 +108,7 @@ describe('bit snap command', function () {
   describe('untag a snap', () => {
     let firstSnap: string;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.snapComponent('bar/foo', undefined, '--unmodified');
@@ -135,13 +135,13 @@ describe('bit snap command', function () {
     let firstSnap: string;
     let secondSnap: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.snapComponent('bar/foo');
       firstSnap = helper.command.getHead('bar/foo');
       helper.command.export();
-      scopeAfterFirstSnap = helper.scopeHelper.cloneLocalScope();
+      scopeAfterFirstSnap = helper.scopeHelper.cloneWorkspace();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
       helper.command.snapComponent('bar/foo');
       secondSnap = helper.command.getHead('bar/foo');
@@ -150,7 +150,7 @@ describe('bit snap command', function () {
     describe('when the local is behind the remote', () => {
       describe('import only objects', () => {
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(scopeAfterFirstSnap);
+          helper.scopeHelper.getClonedWorkspace(scopeAfterFirstSnap);
           helper.command.importComponent('bar/foo --objects');
         });
         it('should write the head of the remote component', () => {
@@ -174,7 +174,7 @@ describe('bit snap command', function () {
       });
       describe('import (and merge)', () => {
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(scopeAfterFirstSnap);
+          helper.scopeHelper.getClonedWorkspace(scopeAfterFirstSnap);
           helper.command.importComponent('bar/foo');
         });
         it('should write the head of the remote component', () => {
@@ -199,11 +199,11 @@ describe('bit snap command', function () {
       let localHead;
       let localScope;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeAfterFirstSnap);
+        helper.scopeHelper.getClonedWorkspace(scopeAfterFirstSnap);
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV3);
         helper.command.snapAllComponentsWithoutBuild();
         localHead = helper.command.getHead('bar/foo');
-        localScope = helper.scopeHelper.cloneLocalScope();
+        localScope = helper.scopeHelper.cloneWorkspace();
       });
       it('should prevent exporting the component', () => {
         const exportFunc = () => helper.command.export(); // v2 is exported again
@@ -239,7 +239,7 @@ describe('bit snap command', function () {
       });
       describe('import without any flag', () => {
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedWorkspace(localScope);
         });
         it('should stop the process and throw a descriptive error suggesting to use --merge flag', () => {
           const func = () => helper.command.importComponent('bar/foo');
@@ -253,9 +253,9 @@ describe('bit snap command', function () {
         let beforeMergeScope: string;
         let beforeMergeHead: string;
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedWorkspace(localScope);
           helper.command.importComponent('bar/foo --objects');
-          beforeMergeScope = helper.scopeHelper.cloneLocalScope();
+          beforeMergeScope = helper.scopeHelper.cloneWorkspace();
           beforeMergeHead = helper.command.getHead('bar/foo');
         });
         describe('without --no-snap flag', () => {
@@ -292,7 +292,7 @@ describe('bit snap command', function () {
         describe('with --no-snap flag', () => {
           let mergeOutput;
           before(() => {
-            helper.scopeHelper.getClonedLocalScope(beforeMergeScope);
+            helper.scopeHelper.getClonedWorkspace(beforeMergeScope);
             mergeOutput = helper.command.merge('bar/foo --auto-merge-resolve ours --no-snap');
           });
           it('should succeed and indicate that the files were not changed', () => {
@@ -348,7 +348,7 @@ describe('bit snap command', function () {
       describe('merge with merge=theirs flag', () => {
         let mergeOutput;
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedWorkspace(localScope);
           helper.command.importComponent('bar/foo --objects');
           mergeOutput = helper.command.merge('bar/foo --auto-merge-resolve theirs');
         });
@@ -379,10 +379,10 @@ describe('bit snap command', function () {
         let mergeOutput;
         let scopeWithConflicts;
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedWorkspace(localScope);
           helper.command.importComponent('bar/foo --objects');
           mergeOutput = helper.command.merge('bar/foo --manual');
-          scopeWithConflicts = helper.scopeHelper.cloneLocalScope();
+          scopeWithConflicts = helper.scopeHelper.cloneWorkspace();
         });
         it('should succeed and indicate that the files were left in a conflict state', () => {
           expect(mergeOutput).to.have.string('CONFLICT');
@@ -416,7 +416,7 @@ describe('bit snap command', function () {
         });
         describe('tagging or snapping the component', () => {
           beforeEach(() => {
-            helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
+            helper.scopeHelper.getClonedWorkspace(scopeWithConflicts);
             // change the component to be valid, otherwise it has the conflicts marks and fail with
             // different errors
             helper.fixtures.createComponentBarFoo('');
@@ -450,7 +450,7 @@ describe('bit snap command', function () {
         });
         describe('removing the component', () => {
           before(() => {
-            helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
+            helper.scopeHelper.getClonedWorkspace(scopeWithConflicts);
             helper.command.removeComponent('bar/foo -f');
           });
           it('bit status should not show the component', () => {
@@ -460,7 +460,7 @@ describe('bit snap command', function () {
         });
         describe('un-tagging the component', () => {
           before(() => {
-            helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
+            helper.scopeHelper.getClonedWorkspace(scopeWithConflicts);
             // change it so the file would be valid without conflicts marks
             helper.fixtures.createComponentBarFoo('');
             helper.command.reset('bar/foo');
@@ -476,7 +476,7 @@ describe('bit snap command', function () {
         describe('resolving the merge', () => {
           let resolveOutput;
           before(() => {
-            helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
+            helper.scopeHelper.getClonedWorkspace(scopeWithConflicts);
             helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV3);
             resolveOutput = helper.command.merge('bar/foo --resolve');
           });
@@ -505,7 +505,7 @@ describe('bit snap command', function () {
         describe('aborting the merge', () => {
           let abortOutput;
           before(() => {
-            helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
+            helper.scopeHelper.getClonedWorkspace(scopeWithConflicts);
             abortOutput = helper.command.merge('bar/foo --abort');
           });
           it('should abort the merge successfully', () => {
@@ -535,7 +535,7 @@ describe('bit snap command', function () {
       let firstSnap: string;
       let secondSnap: string;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.command.snapAllComponents();
@@ -580,7 +580,7 @@ describe('bit snap command', function () {
     let snapOutput;
     let isTypeHead;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponents();
 
@@ -635,7 +635,7 @@ describe('bit snap command', function () {
       before(() => {
         helper.command.export();
 
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         // @todo: change to "helper.command.importComponent('comp1');". once the nested are working
         helper.command.importComponent('*');
@@ -654,13 +654,13 @@ describe('bit snap command', function () {
   });
   describe('tag after tag', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, undefined, ' v2');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
     });
@@ -675,16 +675,16 @@ describe('bit snap command', function () {
     let authorFirstTag;
     let headBeforeDiverge;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       headBeforeDiverge = helper.command.getHead('comp1');
-      authorFirstTag = helper.scopeHelper.cloneLocalScope();
+      authorFirstTag = helper.scopeHelper.cloneWorkspace();
       helper.fixtures.populateComponents(1, undefined, ' v2');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.scopeHelper.getClonedLocalScope(authorFirstTag);
+      helper.scopeHelper.getClonedWorkspace(authorFirstTag);
       helper.fixtures.populateComponents(1, false, ' v3');
       helper.command.tagAllWithoutBuild('--ver 0.0.3');
       helper.command.importAllComponents();
@@ -711,7 +711,7 @@ describe('bit snap command', function () {
       before(() => {
         localHeadV3 = helper.command.getHead('comp1');
         helper.command.tagAllWithoutBuild('--ver 0.0.4 --unmodified');
-        beforeUntag = helper.scopeHelper.cloneLocalScope();
+        beforeUntag = helper.scopeHelper.cloneWorkspace();
       });
       describe('reset all local versions', () => {
         before(() => {
@@ -732,7 +732,7 @@ describe('bit snap command', function () {
       });
       describe('reset only head', () => {
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(beforeUntag);
+          helper.scopeHelper.getClonedWorkspace(beforeUntag);
           helper.command.resetAll('--head');
         });
         it('should change the head to point to the parent of the head and not to the remote head', () => {
@@ -747,7 +747,7 @@ describe('bit snap command', function () {
   describe('snap with --unmodified after soft-remove', () => {
     let output: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, undefined);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();

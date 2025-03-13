@@ -10,7 +10,7 @@ describe('all custom envs are compiled during installation', function () {
   let helper: Helper;
   function prepare() {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
 
     helper.env.setCustomNewEnv(
       'node-based-env',
@@ -103,7 +103,7 @@ export function comp() {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -130,7 +130,7 @@ export function comp() {
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.setupDefault();
       helper.command.create('react', 'comp1', '--env teambit.react/react');
@@ -151,7 +151,7 @@ describe('skipping compilation on install', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.fixtures.populateComponents(1, true, '', false); // don't compile
     helper.command.install(undefined, { skipCompile: true });
   });

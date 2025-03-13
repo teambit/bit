@@ -16,7 +16,7 @@ describe('scope components index mechanism', function () {
   });
   describe('after tagging a component', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
@@ -63,7 +63,7 @@ describe('scope components index mechanism', function () {
       });
       describe('importing the component to a new scope', () => {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
         });
@@ -89,7 +89,7 @@ describe('scope components index mechanism', function () {
   });
   describe('changing the index.json file manually to be empty', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
@@ -125,7 +125,7 @@ describe('scope components index mechanism', function () {
   describe('outdated / out-of-sync index.json', () => {
     describe('adding a non-exist component to index.json', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.command.tagAllWithoutBuild();
