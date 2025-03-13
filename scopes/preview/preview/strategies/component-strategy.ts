@@ -17,10 +17,10 @@ import type { ComponentPreviewMetaData, PreviewMain } from '../preview.main.runt
 import { generateComponentLink } from './generate-component-link';
 import { PreviewOutputFileNotFound } from '../exceptions';
 
-export const PREVIEW_CHUNK_SUFFIX = 'preview';
-export const COMPONENT_CHUNK_SUFFIX = 'component';
-export const PREVIEW_CHUNK_FILENAME_SUFFIX = `${PREVIEW_CHUNK_SUFFIX}.js`;
-export const COMPONENT_CHUNK_FILENAME_SUFFIX = `${COMPONENT_CHUNK_SUFFIX}.js`;
+export const PREVIEW_CHUNK_SUFFIX = 'preview-chunk';
+export const COMPONENT_CHUNK_SUFFIX = 'component-chunk';
+export const PREVIEW_CHUNK_FILENAME_SUFFIX = 'preview.js';
+export const COMPONENT_CHUNK_FILENAME_SUFFIX = 'component.js';
 
 export const COMPONENT_STRATEGY_SIZE_KEY_NAME = 'size';
 export const COMPONENT_STRATEGY_ARTIFACT_NAME = 'preview-component';
@@ -133,7 +133,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
     const chunks = {
       componentPreview: this.getComponentChunkId(component.id, 'preview'),
-      component: context.splitComponentBundle ? component.id.toStringWithoutVersion() : undefined,
+      component: context.splitComponentBundle ? this.getComponentChunkId(component.id, 'component') : undefined,
     };
 
     const entries = {
@@ -172,7 +172,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
   private getComponentChunkId(componentId: ComponentID, type: 'component' | 'preview') {
     const id =
       type === 'component'
-        ? componentId.toStringWithoutVersion()
+        ? `${componentId.toStringWithoutVersion()}-${COMPONENT_CHUNK_SUFFIX}`
         : `${componentId.toStringWithoutVersion()}-${PREVIEW_CHUNK_SUFFIX}`;
     return id;
   }
@@ -226,7 +226,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
   ): Asset[] | undefined {
     if (!assets) return undefined;
 
-    const componentEntryId = component.id.toStringWithoutVersion();
+    const componentEntryId = this.getComponentChunkId(component.id, 'component');
     const componentPreviewEntryId = this.getComponentChunkId(component.id, 'preview');
     const componentFiles = entriesAssetsMap[componentEntryId]?.assets || [];
     const componentAuxiliaryFiles = entriesAssetsMap[componentEntryId]?.auxiliaryAssets || [];
