@@ -15,7 +15,7 @@ describe('bit stash command', function () {
   });
   describe('basic stash', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, undefined, 'version2');
@@ -53,7 +53,7 @@ describe('bit stash command', function () {
   });
   describe('stash and local have conflicting modification', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, false, 'from-stash');
@@ -71,7 +71,7 @@ describe('bit stash command', function () {
   });
   describe('stash the modification from 0.0.1 then tag 0.0.2', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1, false);
       helper.fs.outputFile('comp1/index.js', 'console.log("hello");\n\n');
       helper.command.tagAllWithoutBuild();
@@ -90,7 +90,7 @@ describe('bit stash command', function () {
   });
   describe('stash and local have modification with a shared base - 0.0.1', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1, false);
       helper.fs.outputFile('comp1/index.js', 'console.log("hello");\n\n');
       helper.command.tagAllWithoutBuild();
@@ -108,7 +108,7 @@ describe('bit stash command', function () {
   });
   describe('stash new components along with modified', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild('comp2');
       helper.fixtures.populateComponents(2, undefined, 'version2');

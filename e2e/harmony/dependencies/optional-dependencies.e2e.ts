@@ -28,7 +28,7 @@ describe('optional dependencies', function () {
   let envId;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.workspaceJsonc.disablePreview();
     envId = `${helper.scopes.remote}/react-based-env`;
     helper.command.create('react', 'button', '-p button --env teambit.react/react');

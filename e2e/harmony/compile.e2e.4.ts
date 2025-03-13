@@ -20,10 +20,10 @@ describe('compile extension', function () {
     let scopeBeforeTag: string;
     let appOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
       appOutput = helper.fixtures.populateComponentsTS(3);
-      scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
+      scopeBeforeTag = helper.scopeHelper.cloneWorkspace();
     });
     describe('compile from the cmd (compilation for development)', () => {
       before(() => {
@@ -76,7 +76,7 @@ describe('compile extension', function () {
       describe('export and import to another scope', () => {
         before(() => {
           helper.command.export();
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('*');
         });
@@ -119,7 +119,7 @@ describe('compile extension', function () {
     describe('add another component that does not need any compilation', () => {
       let output;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
+        helper.scopeHelper.getClonedWorkspace(scopeBeforeTag);
         helper.fs.outputFile('bar/foo.js');
         helper.command.addComponent('bar');
         helper.workspaceJsonc.setVariant(undefined, 'bar', {});
@@ -143,7 +143,7 @@ describe('compile extension', function () {
   });
   describe('component with unsupported compiler files', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
       helper.fixtures.populateComponentsTS(1);
       helper.fs.outputFile('comp1/style.css', 'h1{}');
@@ -179,7 +179,7 @@ describe('compile extension', function () {
   });
   describe('component with nested directories', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes({ addRemoteScopeAsDefaultScope: false });
+      helper.scopeHelper.setWorkspaceWithRemoteScope({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponentsTS(1);
       helper.fs.outputFile('comp1/nested/foo.ts');
       helper.command.compile();

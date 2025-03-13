@@ -25,7 +25,7 @@ chai.use(require('chai-fs'));
   });
   describe('single component', () => {
     before(async () => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCiInPackageJsonHarmony();
       await npmCiRegistry.init();
@@ -110,7 +110,7 @@ chai.use(require('chai-fs'));
     });
     describe('imported component uses dependency graph to generate a lockfile', () => {
       before(async () => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.import(`${helper.scopes.remote}/comp1@latest`);
       });
@@ -123,7 +123,7 @@ chai.use(require('chai-fs'));
   });
   describe('single component and sign writes the dependency graph', () => {
     before(async () => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCiInPackageJsonHarmony();
       await npmCiRegistry.init();
@@ -184,7 +184,7 @@ chai.use(require('chai-fs'));
     });
     describe('imported component uses dependency graph to generate a lockfile', () => {
       before(async () => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.import(`${helper.scopes.remote}/comp1@latest`);
       });
@@ -207,7 +207,7 @@ chai.use(require('chai-fs'));
     before(async () => {
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
       const name = `@ci/${randomStr}.{name}`;
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
@@ -325,7 +325,7 @@ chai.use(require('chai-fs'));
     });
     describe('importing a component that depends on another component and was export together with that component', () => {
       before(async () => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         await addDistTag({ package: '@pnpm.e2e/foo', version: '100.1.0', distTag: 'latest' });
         await addDistTag({ package: '@pnpm.e2e/bar', version: '100.1.0', distTag: 'latest' });
@@ -349,7 +349,7 @@ chai.use(require('chai-fs'));
     before(async () => {
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
       const name = `@ci/${randomStr}.{name}`;
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
@@ -383,7 +383,7 @@ chai.use(require('chai-fs'));
 
       await addDistTag({ package: '@pnpm.e2e/abc', version: '2.0.0', distTag: 'latest' });
       await addDistTag({ package: '@pnpm.e2e/peer-a', version: '1.0.0', distTag: 'latest' });
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.fs.createFile('foo', 'foo.js', `require("@pnpm.e2e/abc"); require("@ci/${randomStr}.bar");`);
       helper.command.addComponent('foo');
@@ -392,7 +392,7 @@ chai.use(require('chai-fs'));
       helper.command.snapAllComponentsWithoutBuild('--skip-tests');
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.import(`${helper.scopes.remote}/foo@latest ${helper.scopes.remote}/bar@latest`);
     });

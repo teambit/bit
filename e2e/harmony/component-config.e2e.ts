@@ -21,7 +21,7 @@ describe('component config', function () {
   });
   describe('eject config', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+      helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
     });
@@ -143,7 +143,7 @@ describe('component config', function () {
     let output;
     let configuredExtensions;
     before(() => {
-      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+      helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateExtensions(5);
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();

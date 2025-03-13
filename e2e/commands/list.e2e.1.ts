@@ -14,7 +14,7 @@ describe('bit list command', function () {
   describe('when no components created', () => {
     before(() => {
       helper.scopeHelper.clean();
-      helper.scopeHelper.initWorkspace();
+      helper.command.init();
     });
     it('should display "found 0 components"', () => {
       const output = helper.command.listLocalScope();
@@ -23,7 +23,7 @@ describe('bit list command', function () {
   });
   describe('when a component is created but not tagged', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
     });
@@ -34,7 +34,7 @@ describe('bit list command', function () {
   });
   describe('when a component is created and tagged', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
@@ -48,23 +48,23 @@ describe('bit list command', function () {
     describe('when a remote component has a higher version than the local component', () => {
       let output;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.fixtures.tagComponentBarFoo();
         helper.command.export();
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo@0.0.1');
-        const clonedScopePath = helper.scopeHelper.cloneLocalScope();
+        const clonedScopePath = helper.scopeHelper.cloneWorkspace();
 
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo@0.0.1');
         helper.command.tagComponent('bar/foo', 'msg', '--unmodified');
         helper.command.export();
 
-        helper.scopeHelper.getClonedLocalScope(clonedScopePath);
+        helper.scopeHelper.getClonedWorkspace(clonedScopePath);
         output = helper.command.listLocalScopeParsed('-o');
       });
       it('should show that it has a later version in the remote', () => {
@@ -76,12 +76,12 @@ describe('bit list command', function () {
     describe('when a remote component has the same version as the local component', () => {
       let output;
       before(() => {
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fs.createFile('bar', 'baz.js');
         helper.command.addComponent('bar', { i: 'bar/baz' });
         helper.command.tagWithoutBuild('bar/baz');
         helper.command.export();
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/baz@0.0.1');
         output = helper.command.listLocalScopeParsed('-o');
@@ -94,7 +94,7 @@ describe('bit list command', function () {
     describe('when a component is local only (never exported)', () => {
       let output;
       before(() => {
-        helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+        helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
         helper.fs.createFile('bar', 'local');
         helper.command.addComponent('bar', { i: 'bar/local' });
         helper.command.tagWithoutBuild('bar/local');

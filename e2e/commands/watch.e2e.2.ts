@@ -17,7 +17,7 @@ chai.use(require('chai-fs'));
   });
   describe('Harmony watch, using Compiler & Typescript extensions', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponentsTS();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();

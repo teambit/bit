@@ -181,7 +181,7 @@ export class NpmCiRegistry {
   }
 
   publishEntireScope() {
-    this.helper.scopeHelper.reInitLocalScope();
+    this.helper.scopeHelper.reInitWorkspace();
     this.helper.scopeHelper.addRemoteScope();
     this.helper.command.importComponent('* --objects');
     const remoteComponents = this.helper.command.listRemoteScopeParsed();

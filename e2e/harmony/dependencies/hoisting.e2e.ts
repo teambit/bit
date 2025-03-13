@@ -9,7 +9,7 @@ describe('pnpm with hoisted node linker, when there is a dependency that has the
   this.timeout(0);
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
     helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('nodeLinker', 'hoisted');
     helper.fixtures.populateComponents(1);

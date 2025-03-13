@@ -15,7 +15,7 @@ describe('bit reset when on lane', function () {
   describe('snapping on a lane, switching to main, snapping and running "bit reset"', () => {
     let headOnLane: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
@@ -39,7 +39,7 @@ describe('bit reset when on lane', function () {
   });
   describe('reset on lane after export from main', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -53,7 +53,7 @@ describe('bit reset when on lane', function () {
   // this state is now impossible because we blocked the option to create a lane when there are
   describe.skip('reset on lane after fork from another non-exported lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
@@ -73,7 +73,7 @@ describe('bit reset when on lane', function () {
   });
   describe('reset on lane after fork from another exported lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
@@ -91,12 +91,12 @@ describe('bit reset when on lane', function () {
   });
   describe('reset on a new lane after merging from another lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.createLane('dev2');
       helper.command.mergeLane(`${helper.scopes.remote}/dev`);
@@ -115,7 +115,7 @@ describe('bit reset when on lane', function () {
   });
   describe('reset after merge where it snapped multiple snaps on the other lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.createLane();
       helper.command.snapAllComponentsWithoutBuild();
@@ -129,7 +129,7 @@ describe('bit reset when on lane', function () {
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev2', '-x');
       helper.command.mergeLane(`${helper.scopes.remote}/dev`, '-x');
@@ -141,7 +141,7 @@ describe('bit reset when on lane', function () {
   });
   describe('reset a component that was just introduced to the lane', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();

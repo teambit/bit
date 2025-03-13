@@ -10,14 +10,14 @@ describe('current lane a comp is removed, merging a lane that has this comp with
   let headOnLaneB: string;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.command.createLane('lane-a');
     helper.fixtures.populateComponents(1, false, 'lane-a');
     helper.command.snapAllComponentsWithoutBuild();
     helper.command.export();
     headOnLaneA = helper.command.getHeadOfLane('lane-a', 'comp1');
 
-    helper.scopeHelper.reInitLocalScope();
+    helper.scopeHelper.reInitWorkspace();
     helper.scopeHelper.addRemoteScope();
     helper.command.createLane('lane-b');
     helper.fixtures.populateComponents(1, false, 'lane-b');

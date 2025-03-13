@@ -16,7 +16,7 @@ describe('add command on Harmony', function () {
   });
   describe('adding files when workspace is new', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
     });
     it('should throw an error AddingIndividualFiles', () => {
@@ -27,7 +27,7 @@ describe('add command on Harmony', function () {
   });
   describe('add a directory inside an existing component', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/foo/foo.ts');
     });

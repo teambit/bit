@@ -14,7 +14,7 @@ describe('bit doctor - git exec validation', function () {
   });
 
   before(() => {
-    helper.scopeHelper.reInitLocalScope();
+    helper.scopeHelper.reInitWorkspace();
   });
 
   // This test case assume you have proper configuration of git executable

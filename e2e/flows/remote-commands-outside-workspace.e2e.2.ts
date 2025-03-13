@@ -15,7 +15,7 @@ describe('bit remote command', function () {
   });
   describe('exporting a component to a global remote', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.reInitRemoteScope();
       helper.workspaceJsonc.setupDefault();
       helper.command.runCmd(`bit remote add file://${helper.scopes.remotePath} --global`);
@@ -23,7 +23,7 @@ describe('bit remote command', function () {
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.scopeHelper.cleanLocalScope();
+      helper.scopeHelper.cleanWorkspace();
     });
     after(() => {
       helper.command.runCmd(`bit remote del ${helper.scopes.remote} --global`);
