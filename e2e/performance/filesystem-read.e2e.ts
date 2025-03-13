@@ -39,10 +39,10 @@ describe('Filesystem read count', function () {
         const start = process.hrtime();
         helper.command.runCmd('bit --help');
         const [timeInSeconds, nanoseconds] = process.hrtime(start);
-        expect(timeInSeconds).to.be.lessThan(1);
         const timeInMs = timeInSeconds * 1000 + nanoseconds / 1_000_000;
         // On my Mac M1, as of 2025/03/03, it takes 312ms.
         console.log('bit --help load time in milliseconds: ', Math.floor(timeInMs));
+        expect(timeInSeconds).to.be.lessThan(1);
       });
     });
     describe('bit status', () => {
