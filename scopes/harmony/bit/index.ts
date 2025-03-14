@@ -6,3 +6,4 @@ export { registerCoreExtensions } from './bit.main.runtime';
 export { BitAspect } from './bit.aspect';
 export type { BitMain } from './bit.main.runtime';
 export { loadBit, takeLegacyGlobalsSnapshot, restoreGlobalsFromSnapshot, LegacyGlobal } from './load-bit';
+export { runBit } from './run-bit';

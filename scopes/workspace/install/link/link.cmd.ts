@@ -1,10 +1,11 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
 import { timeFormat } from '@teambit/toolbox.time.time-format';
+import { compact } from 'lodash';
 import chalk from 'chalk';
 import { Workspace } from '@teambit/workspace';
 import { InstallMain, WorkspaceLinkOptions, WorkspaceLinkResults } from '../install.main.runtime';
-import { ComponentListLinks } from './component-list-links';
+import { ComponentListLinks, packageListLinks } from './component-list-links';
 import { CoreAspectsLinks } from './core-aspects-links';
 import { NestedComponentLinksLinks } from './nested-deps-in-nm-links';
 import { RewireRow } from './rewire-row';
@@ -69,6 +70,7 @@ export class LinkCommand implements Command {
       coreAspectsLinks: coreAspectsLinksWithMainAspect,
       verbose: opts.verbose,
     });
+    const nonCorePackagesLinks = packageListLinks(linkResults.slotRegisteredLinks);
     const compsLinks = ComponentListLinks({ componentListLinks: linkResults.legacyLinkResults, verbose: opts.verbose });
     const rewireRow = RewireRow({ legacyCodemodResults: linkResults.legacyLinkCodemodResults });
     const nestedLinks = NestedComponentLinksLinks({
@@ -77,7 +79,7 @@ export class LinkCommand implements Command {
     });
     const targetLinks = linkToDir(linkResults.linkToDirResults);
     const footer = `Finished. ${timeDiff}`;
-    return `${title}\n${coreLinks}\n${compsLinks}\n${rewireRow}${nestedLinks}${targetLinks}${footer}`;
+    return compact([title, coreLinks, nonCorePackagesLinks, compsLinks, rewireRow, nestedLinks, targetLinks, footer]).join('\n');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

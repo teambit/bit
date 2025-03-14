@@ -39,7 +39,8 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       packageManagerSlot as any,
       {} as any,
       {} as any,
-      {} as any
+      {} as any,
+      {} as any,
     );
     const globalConfig = {
       fetchTimeout: 1,
@@ -68,7 +69,8 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       packageManagerSlot as any,
       {} as any,
       {} as any,
-      {} as any
+      {} as any,
+      {} as any,
     );
     const pmConfig = {
       fetchTimeout: 11,
@@ -111,7 +113,8 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       packageManagerSlot as any,
       {} as any,
       {} as any,
-      {} as any
+      {} as any,
+      {} as any,
     );
     expect(await depResolver.getNetworkConfig()).toEqual(config);
   });
@@ -147,7 +150,8 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       packageManagerSlot as any,
       {} as any,
       {} as any,
-      {} as any
+      {} as any,
+      {} as any,
     );
     expect(await depResolver.getNetworkConfig()).toEqual({
       fetchTimeout: 1,
@@ -173,7 +177,8 @@ describe('DepenendencyResolverMain.getNetworkConfig()', () => {
       packageManagerSlot as any,
       {} as any,
       {} as any,
-      {} as any
+      {} as any,
+      {} as any,
     );
     // @ts-ignore
     Http.getNetworkConfig.mockReturnValue(
@@ -224,7 +229,8 @@ describe('DepenendencyResolverMain.getOutdatedPkgsFromPolicies()', () => {
       packageManagerSlot as any,
       {} as any,
       {} as any,
-      {} as any
+      {} as any,
+      {} as any,
     );
   }
   describe('without options', () => {
@@ -508,7 +514,8 @@ describe('DepenendencyResolverMain.getComponentEnvPolicyFromEnv()', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any
+      {} as any,
+      {} as any,
     );
     await expect(
       depResolver.getComponentEnvPolicyFromEnv(

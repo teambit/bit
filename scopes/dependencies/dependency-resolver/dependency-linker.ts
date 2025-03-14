@@ -62,6 +62,11 @@ export type LinkingOptions = {
    * Link deps which should be linked to the env
    */
   linkDepsResolvedFromEnv?: boolean;
+
+  /**
+   * non-core packages to link. provided by addPackagesToLink slot of the installer aspect
+   */
+  additionalPackagesToLink?: string[];
 };
 
 const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
@@ -102,6 +107,7 @@ export type LinkResults = {
   resolvedFromEnvLinks?: DepsLinkedToEnvResult[];
   nestedDepsInNmLinks?: NestedNMDepsLinksResult[];
   linkToDirResults?: LinkToDirResult[];
+  slotRegisteredLinks?: LinkDetail[];
 };
 
 type NestedModuleFolderEntry = {
@@ -153,6 +159,9 @@ export class DependencyLinker {
     }
     if (linkResults.teambitLegacyLink) {
       localLinks.push(this.linkDetailToLocalDepEntry(linkResults.teambitLegacyLink));
+    }
+    if (linkResults.slotRegisteredLinks) {
+      localLinks.push(...linkResults.slotRegisteredLinks.map(l => this.linkDetailToLocalDepEntry(l)));
     }
     if (linkResults.resolvedFromEnvLinks) {
       linkResults.resolvedFromEnvLinks.forEach((link) => {
@@ -229,6 +238,9 @@ export class DependencyLinker {
       ...result,
       ...(await this.linkCoreAspectsAndLegacy(finalRootDir, componentIds, linkingOpts)),
     };
+    const registeredPackages = this.linkingOptions?.additionalPackagesToLink || [];
+    result.slotRegisteredLinks = registeredPackages.map(pkgName => this.linkNonCorePackages(finalRootDir, pkgName));
+
     if (!this.linkingContext?.inCapsule) {
       this.logger.consoleSuccess(outputMessage, startTime);
     }
@@ -640,6 +652,16 @@ export class DependencyLinker {
   private _getPkgPathFromCurrentBitDir(packageName: string): string | undefined {
     if (!this._currentBitDir) return undefined;
     return path.join(this._currentBitDir, 'node_modules', packageName);
+  }
+
+  private linkNonCorePackages(rootDir: string, packageName: string): LinkDetail {
+    const target = path.join(rootDir, 'node_modules', packageName);
+    const fromDirBvm = this._getPkgPathFromCurrentBitDir(packageName);
+    if (fromDirBvm) {
+      return { packageName, from: fromDirBvm, to: target };
+    }
+    const fromDirBitRepo = getDistDirForDevEnv(packageName);
+    return { packageName, from: fromDirBitRepo, to: target };
   }
 
   private linkNonAspectCorePackages(rootDir: string, name: string, mainAspectPath: string): LinkDetail | undefined {
