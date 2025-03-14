@@ -13,5 +13,5 @@ export function RewireRow({ legacyCodemodResults }: RewireRowProps) {
 
   return `rewired ${chalk.cyan(totalComps.toString())} components and total of ${chalk.cyan(
     totalFiles.toString()
-  )} files\n`;
+  )} files`;
 }

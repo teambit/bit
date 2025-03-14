@@ -21,6 +21,10 @@ import { autocomplete } from './autocomplete';
 import { ServerCommander, shouldUseBitServer } from './server-commander';
 import { spawnPTY } from './server-forever';
 
+/**
+ * run bit cli tool
+ * @param additionalAspects optionally, add non-core aspects to the runtime.
+ */
 export async function runBit(additionalAspects?: Aspect[]) {
   if (process.argv.includes('--get-yargs-completions')) {
     autocomplete();
@@ -41,8 +45,6 @@ export async function runBit(additionalAspects?: Aspect[]) {
 async function initApp(additionalAspects?: Aspect[]) {
   try {
     await bootstrap();
-    // registerCoreExtensions();
-    // const harmony = await Harmony.load([ConfigExt], {});
     await runCLI(additionalAspects);
   } catch (err: any) {
     const originalError = err.originalError || err;
