@@ -17,6 +17,7 @@ import type { ComponentPreviewMetaData, PreviewMain } from '../preview.main.runt
 import { generateComponentLink } from './generate-component-link';
 import { PreviewOutputFileNotFound } from '../exceptions';
 
+export const PREVIEW_GLOBAL_NAME_SUFFIX = 'preview';
 export const PREVIEW_CHUNK_SUFFIX = 'preview-chunk';
 export const COMPONENT_CHUNK_SUFFIX = 'component-chunk';
 export const PREVIEW_CHUNK_FILENAME_SUFFIX = 'preview.js';
@@ -136,6 +137,11 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       component: context.splitComponentBundle ? this.getComponentChunkId(component.id, 'component') : undefined,
     };
 
+    const libNames = {
+      componentPreview: this.getComponentChunkGlobalName(component.id, 'preview'),
+      component: context.splitComponentBundle ? this.getComponentChunkGlobalName(component.id, 'component') : undefined,
+    };
+
     const entries = {
       [chunks.componentPreview]: {
         filename: this.getComponentChunkFileName(
@@ -147,11 +153,11 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
         ),
         import: componentPreviewPath,
         dependOn: chunks.component,
-        library: { name: chunks.componentPreview, type: 'umd' },
+        library: { name: libNames.componentPreview, type: 'umd' },
       },
     };
 
-    if (chunks.component) {
+    if (chunks.component && libNames.component) {
       entries[chunks.component] = {
         filename: this.getComponentChunkFileName(
           component.id.toString({
@@ -162,7 +168,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
         ),
         dependOn: undefined,
         import: componentPath,
-        library: { name: chunks.component, type: 'umd' },
+        library: { name: libNames.component, type: 'umd' },
       };
     }
 
@@ -174,6 +180,14 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       type === 'component'
         ? `${componentId.toStringWithoutVersion()}-${COMPONENT_CHUNK_SUFFIX}`
         : `${componentId.toStringWithoutVersion()}-${PREVIEW_CHUNK_SUFFIX}`;
+    return id;
+  }
+
+  private getComponentChunkGlobalName(componentId: ComponentID, type: 'component' | 'preview') {
+    const id =
+      type === 'component'
+        ? componentId.toStringWithoutVersion()
+        : `${componentId.toStringWithoutVersion()}-${PREVIEW_GLOBAL_NAME_SUFFIX}`;
     return id;
   }
 
