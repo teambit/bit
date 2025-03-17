@@ -707,9 +707,6 @@
           "bvm": {
             "node": "22.14.0"
           },
-          "bin": {
-            "bbit": "bin/bit"
-          },
           "engines": {
             "node": ">=18.12.0"
           },

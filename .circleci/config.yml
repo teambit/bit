@@ -863,6 +863,10 @@ jobs:
 
   e2e_test:
     <<: *defaults
+    parameters:
+      bit_bin:
+        type: string
+        default: ""
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
@@ -1237,6 +1241,8 @@ workflows:
           requires:
             - setup_harmony
       - e2e_test:
+          #temporarily change to "bbit" to check whether it's working
+          bit_bin: "bbit"
           requires:
             - setup_harmony
       - bit_build:
@@ -1338,6 +1344,10 @@ workflows:
       - server_docker_build_node_22:
           requires:
             - docker_build_node_22
+      - e2e_test:
+          bit_bin: "bbit" # makes sure the newly published version doesn't break bit
+          requires:
+            - harmony_publish_to_gcloud
 
   windows-nightly:
     triggers:
