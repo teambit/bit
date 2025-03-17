@@ -166,6 +166,20 @@ commands: # reusable commands
       - run: npm install --global @teambit/bvm
       - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
       - run: bvm config set RELEASE_TYPE nightly
+  bvm_upgrade:
+    - run: bvm config set DEFAULT_LINK bbit
+    - run: bvm config set RELEASE_TYPE nightly
+    - run: bvm upgrade
+    # - run: bvm install 1.9.31
+    - run: bvm link --verbose
+    - bit_config:
+        env: "hub"
+        bin_name: "bbit"
+    - run: bbit
+    - save_cache:
+        key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+        paths:
+          - /home/circleci/.bvm
   set_bit_cloud_registry:
     steps:
       - run:
@@ -450,19 +464,7 @@ jobs:
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
-      - run: bvm config set DEFAULT_LINK bbit
-      - run: bvm config set RELEASE_TYPE nightly
-      - run: bvm upgrade
-      # - run: bvm install 1.9.31
-      - run: bvm link --verbose
-      - bit_config:
-          env: "hub"
-          bin_name: "bbit"
-      - run: bbit
-      - save_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
-          paths:
-            - /home/circleci/.bvm
+      - bvm_upgrade
       - run: cd bit && bbit init
       - run:
           name: bbit install
@@ -911,6 +913,11 @@ jobs:
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
+  e2e_test_bbit:
+     - bvm_upgrade
+     - e2e_test:
+        bit_bin: "--bin_bit=bbit" # makes sure the newly published version doesn't break bit
+
   # # simple job just to print node version on windows
   # # this is to check what version of node you get when you update the windows orb
   # # as it's missing in their docs
@@ -1241,8 +1248,6 @@ workflows:
           requires:
             - setup_harmony
       - e2e_test:
-          #temporarily change to "bbit" to check whether it's working
-          bit_bin: "--bin_bit=bbit"
           requires:
             - setup_harmony
       - bit_build:
@@ -1344,8 +1349,7 @@ workflows:
       - server_docker_build_node_22:
           requires:
             - docker_build_node_22
-      - e2e_test:
-          bit_bin: "--bin_bit=bbit" # makes sure the newly published version doesn't break bit
+      - e2e_test_bbit:
           requires:
             - harmony_publish_to_gcloud
 
