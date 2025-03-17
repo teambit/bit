@@ -40,14 +40,14 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
         {
           name: 'react',
           /* the version to be installed and used by the env */
-          version: '^18.0.0',
+          version: '^17.0.0',
           /* the range of versions this env's components are compatible with */
           supportedRange: '^17.0.0 || ^18.0.0 || ^19.0.0',
         },
         {
           name: 'react-dom',
           /* the version to be installed and used by the env */
-          version: '^18.0.0',
+          version: '^17.0.0',
           /* the range of versions this env's components are compatible with */
           supportedRange: '^17.0.0 || ^18.0.0 || ^19.0.0',
         },
