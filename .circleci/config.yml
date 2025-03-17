@@ -898,7 +898,7 @@ jobs:
       # - run: 'rm -rf bit/node_modules/.bin/bit'
       - run:
           name: 'Run e2e tests'
-          command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs -n 1 npm run mocha-circleci'
+          command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs -n 1 npm run mocha-circleci << parameters.bin_bit >>'
           # command which support only - for debug purpose
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
@@ -1242,7 +1242,7 @@ workflows:
             - setup_harmony
       - e2e_test:
           #temporarily change to "bbit" to check whether it's working
-          bit_bin: "bbit"
+          bit_bin: "--bin_bit=bbit"
           requires:
             - setup_harmony
       - bit_build:
@@ -1345,7 +1345,7 @@ workflows:
           requires:
             - docker_build_node_22
       - e2e_test:
-          bit_bin: "bbit" # makes sure the newly published version doesn't break bit
+          bit_bin: "--bin_bit=bbit" # makes sure the newly published version doesn't break bit
           requires:
             - harmony_publish_to_gcloud
 
