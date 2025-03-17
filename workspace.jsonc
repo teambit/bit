@@ -261,7 +261,7 @@
         "@teambit/toolbox.object.sorter": "~0.0.2",
         "@teambit/typescript.deps-detectors.detective-typescript": "~0.0.9",
         "@teambit/typescript.deps-lookups.lookup-typescript": "~0.0.1",
-        "@teambit/typescript.typescript-compiler": "^2.0.57",
+        "@teambit/typescript.typescript-compiler": "^2.0.58",
         "@teambit/ui-foundation.ui.constants.z-indexes": "^0.0.504",
         "@teambit/ui-foundation.ui.corner": "^0.0.520",
         "@teambit/ui-foundation.ui.empty-component-gallery": "^0.0.512",
