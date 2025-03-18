@@ -167,19 +167,21 @@ commands: # reusable commands
       - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
       - run: bvm config set RELEASE_TYPE nightly
   bvm_upgrade:
-    - run: bvm config set DEFAULT_LINK bbit
-    - run: bvm config set RELEASE_TYPE nightly
-    - run: bvm upgrade
-    # - run: bvm install 1.9.31
-    - run: bvm link --verbose
-    - bit_config:
-        env: "hub"
-        bin_name: "bbit"
-    - run: bbit
-    - save_cache:
-        key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
-        paths:
-          - /home/circleci/.bvm
+    steps:
+      - run: bvm config set DEFAULT_LINK bbit
+      - run: bvm config set RELEASE_TYPE nightly
+      - run: bvm upgrade
+      # - run: bvm install 1.9.31
+      - run: bvm link --verbose
+      - bit_config:
+          env: "hub"
+          bin_name: "bbit"
+      - run: bbit
+      - run: bbit -v
+      - save_cache:
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+          paths:
+            - /home/circleci/.bvm
   set_bit_cloud_registry:
     steps:
       - run:
@@ -913,10 +915,18 @@ jobs:
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
+  # makes sure the newly published version doesn't break bit
   e2e_test_bbit:
-     - bvm_upgrade
-     - e2e_test:
-        bit_bin: "--bin_bit=bbit" # makes sure the newly published version doesn't break bit
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ./
+      - bit_global_for_npm
+      - restore_cache:
+          key: bitsrc-registry10
+      - bvm_upgrade
+      - e2e_test:
+         bit_bin: "--bin_bit=bbit"
 
   # # simple job just to print node version on windows
   # # this is to check what version of node you get when you update the windows orb
