@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import { NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
 import { getPackageNameFromTarget } from './get-package-name-from-target';
 import { LinkRow, VerboseLinkRow } from './link-row';
+import { LinkDetail } from '@teambit/dependency-resolver';
 
 type ComponentListLinksProps = {
   componentListLinks?: NodeModulesLinksResult[];
@@ -14,6 +15,21 @@ export function ComponentListLinks({ componentListLinks, verbose = false }: Comp
   }
   const title = chalk.bold.cyan('Components links');
   const links = componentListLinks.map((componentLinks) => ComponentLinks({ componentLinks, verbose })).join('\n');
+
+  return `${title}\n${links}`;
+}
+
+export function packageListLinks(packageList?: LinkDetail[]) {
+  if (!packageList || !packageList.length) {
+    return '';
+  }
+  const title = chalk.bold.cyan('Non-Core Package links');
+
+  const links = packageList.map((link) => {
+    const id = link.packageName;
+    const packagePath = getPackageNameFromTarget(link.to);
+    return LinkRow({ title: id, target: packagePath, padding: 50 });
+  }).join('\n');
 
   return `${title}\n${links}`;
 }
