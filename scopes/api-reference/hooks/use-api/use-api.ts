@@ -19,7 +19,7 @@ export function useAPI(
     skipInternals?: boolean;
   }
 ): { apiModel?: APIReferenceModel; loading?: boolean } {
-  // @ts-ignore
+  // @ts-ignore - remove once graphql versions are aligned (see #8753)
   const { data, loading } = useDataQuery(GET_SCHEMA, {
     variables: {
       componentId,

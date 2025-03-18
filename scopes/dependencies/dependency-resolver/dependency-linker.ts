@@ -64,7 +64,7 @@ export type LinkingOptions = {
   linkDepsResolvedFromEnv?: boolean;
 
   /**
-   * non-core packages to link. provided by addPackagesToLink slot of the installer aspect
+   * non-core packages to link. provided by addPackagesToLink slot of the deps-resolver aspect
    */
   additionalPackagesToLink?: string[];
 };
@@ -107,7 +107,10 @@ export type LinkResults = {
   resolvedFromEnvLinks?: DepsLinkedToEnvResult[];
   nestedDepsInNmLinks?: NestedNMDepsLinksResult[];
   linkToDirResults?: LinkToDirResult[];
-  slotRegisteredLinks?: LinkDetail[];
+  /**
+   * non-core packages to link. provided by addPackagesToLink slot of the deps-resolver aspect
+   */
+  slotOriginatedLinks?: LinkDetail[];
 };
 
 type NestedModuleFolderEntry = {
@@ -160,8 +163,8 @@ export class DependencyLinker {
     if (linkResults.teambitLegacyLink) {
       localLinks.push(this.linkDetailToLocalDepEntry(linkResults.teambitLegacyLink));
     }
-    if (linkResults.slotRegisteredLinks) {
-      localLinks.push(...linkResults.slotRegisteredLinks.map(l => this.linkDetailToLocalDepEntry(l)));
+    if (linkResults.slotOriginatedLinks) {
+      localLinks.push(...linkResults.slotOriginatedLinks.map(l => this.linkDetailToLocalDepEntry(l)));
     }
     if (linkResults.resolvedFromEnvLinks) {
       linkResults.resolvedFromEnvLinks.forEach((link) => {
@@ -239,7 +242,7 @@ export class DependencyLinker {
       ...(await this.linkCoreAspectsAndLegacy(finalRootDir, componentIds, linkingOpts)),
     };
     const registeredPackages = this.linkingOptions?.additionalPackagesToLink || [];
-    result.slotRegisteredLinks = registeredPackages.map(pkgName => this.linkNonCorePackages(finalRootDir, pkgName));
+    result.slotOriginatedLinks = registeredPackages.map(pkgName => this.linkNonCorePackages(finalRootDir, pkgName));
 
     if (!this.linkingContext?.inCapsule) {
       this.logger.consoleSuccess(outputMessage, startTime);

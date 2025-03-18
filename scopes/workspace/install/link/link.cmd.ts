@@ -70,7 +70,7 @@ export class LinkCommand implements Command {
       coreAspectsLinks: coreAspectsLinksWithMainAspect,
       verbose: opts.verbose,
     });
-    const nonCorePackagesLinks = packageListLinks(linkResults.slotRegisteredLinks);
+    const nonCorePackagesLinks = packageListLinks(linkResults.slotOriginatedLinks);
     const compsLinks = ComponentListLinks({ componentListLinks: linkResults.legacyLinkResults, verbose: opts.verbose });
     const rewireRow = RewireRow({ legacyCodemodResults: linkResults.legacyLinkCodemodResults });
     const nestedLinks = NestedComponentLinksLinks({
