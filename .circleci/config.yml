@@ -923,6 +923,10 @@ jobs:
   # makes sure the newly published version doesn't break bit
   e2e_test_bbit:
     <<: *defaults
+    environment:
+      BITSRC_ENV: stg
+      BIT_FEATURES: cloud-importer-v2
+    parallelism: 25
     steps:
       - attach_workspace:
           at: ./
