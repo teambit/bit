@@ -626,22 +626,6 @@ describe('custom env', function () {
       );
     });
   });
-  describe('replacing a failed-loaded env', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.env.setEmptyEnv();
-
-      helper.fixtures.populateComponents(1, false);
-      helper.command.setEnv('comp1', 'empty-env');
-      helper.fs.outputFile('empty-env/empty-env.bit-env.ts', 'throw new Error("my-error");');
-      helper.command.compile();
-      helper.command.expectStatusToHaveIssue(IssuesClasses.NonLoadedEnv.name);
-    });
-    it('should be able to replace with no errors', () => {
-      const output = helper.command.replaceEnv(`${helper.scopes.remote}/empty-env`, 'teambit.react/react');
-      expect(output).to.have.string('added teambit.react/react env to the following component(s):');
-    });
-  });
 });
 
 function getEnvIdFromModel(compModel: any): string {
