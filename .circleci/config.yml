@@ -260,6 +260,52 @@ commands: # reusable commands
             --exclude=bit-${BIT_VERSION}/pnpm-lock.yaml
             bit-${BIT_VERSION}
 
+  e2e_test_cmd:
+    parameters:
+      bit_bin:
+        type: string
+        default: ""
+    steps:
+      - attach_workspace:
+          at: ./
+      # - run:
+      #     # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
+      #     name: 'update npm to latest version'
+      #     command: 'npm i -g npm@latest'
+      - bit_global_for_npm
+      - bit_config
+      - restore_cache:
+          key: bitsrc-ssh-key3
+      - restore_cache:
+          key: bitsrc-registry10
+      - restore_cache:
+          key: core-aspect-env-v0.0.65-v2
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      # - run: 'chmod 400 ~/.ssh/id_rsa'
+      # - run: 'ssh-add ~/.ssh/id_rsa'
+      - run: 'cd bit && mkdir junit'
+      - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+      # Make sure when we run bit from e2e tests we run it from the global not from here
+      # - run: 'rm -rf bit/node_modules/.bin/bit'
+      - run:
+          name: 'Run e2e tests'
+          command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs -n 1 npm run mocha-circleci << parameters.bit_bin >>'
+          # command which support only - for debug purpose
+          # command: cd bit && npm run e2e-test-circle --debug
+          environment:
+            MOCHA_FILE: junit/e2e-test-results.xml
+          when: always
+      - store_test_results:
+          path: bit/junit
+      - store_artifacts:
+          path: bit/junit
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
+
+
 jobs:
   checkout_code:
     <<: *defaults
@@ -867,53 +913,12 @@ jobs:
 
   e2e_test:
     <<: *defaults
-    parameters:
-      bit_bin:
-        type: string
-        default: ""
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
     parallelism: 25
     steps:
-      - attach_workspace:
-          at: ./
-      # - run:
-      #     # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
-      #     name: 'update npm to latest version'
-      #     command: 'npm i -g npm@latest'
-      - bit_global_for_npm
-      - bit_config
-      - restore_cache:
-          key: bitsrc-ssh-key3
-      - restore_cache:
-          key: bitsrc-registry10
-      - restore_cache:
-          key: core-aspect-env-v0.0.65-v2
-      - run: npm view @teambit/bit version > ./version.txt
-      - restore_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
-      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
-      # - run: 'chmod 400 ~/.ssh/id_rsa'
-      # - run: 'ssh-add ~/.ssh/id_rsa'
-      - run: 'cd bit && mkdir junit'
-      - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
-      # Make sure when we run bit from e2e tests we run it from the global not from here
-      # - run: 'rm -rf bit/node_modules/.bin/bit'
-      - run:
-          name: 'Run e2e tests'
-          command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs -n 1 npm run mocha-circleci << parameters.bit_bin >>'
-          # command which support only - for debug purpose
-          # command: cd bit && npm run e2e-test-circle --debug
-          environment:
-            MOCHA_FILE: junit/e2e-test-results.xml
-          when: always
-      - store_test_results:
-          path: bit/junit
-      - store_artifacts:
-          path: bit/junit
-      - store_artifacts:
-          path: ~/Library/Caches/Bit/logs
+      - e2e_test_cmd
 
   # makes sure the newly published version doesn't break bit
   e2e_test_bbit:
@@ -925,7 +930,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - bvm_upgrade
-      - e2e_test:
+      - e2e_test_cmd:
          bit_bin: "--bin_bit=bbit"
 
   # # simple job just to print node version on windows
