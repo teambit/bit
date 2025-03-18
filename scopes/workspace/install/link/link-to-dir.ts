@@ -9,5 +9,5 @@ export function linkToDir(links?: LinkToDirResult[]) {
     .map(({ componentId, linksDetail }) => LinkRow({ title: componentId, target: linksDetail.to }))
     .join('\n');
 
-  return `${title}\n${linksOutput}\n`;
+  return `${title}\n${linksOutput}`;
 }

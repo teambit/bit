@@ -47,6 +47,7 @@ export type UseLaneComponentsResult = {
 };
 
 export function useLaneComponents(laneId?: LaneId): UseLaneComponentsResult {
+  // @ts-ignore - remove once graphql versions are aligned (see #8753)
   const { data, loading } = useDataQuery(GET_LANE_COMPONENTS, {
     variables: { ids: [laneId?.toString()], skipList: laneId?.isDefault() },
     skip: !laneId,

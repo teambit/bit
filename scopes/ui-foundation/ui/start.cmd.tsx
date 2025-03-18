@@ -113,7 +113,7 @@ Bit server is running on ${chalk.cyan(url)}`);
         return undefined;
       })
       .catch((error) => {
-        this.logger.error(`failed to start the UI server. ${error.message}`);
+        this.logger.error(`failed to start the UI server`, error);
         // spinnies.fail('ui-server', { text: `failed to start the UI server. ${error.message}` });
         throw new Error(
           'failed to start the UI server, please try running the command with --log flag, or check bit debug.log file (see its location by running bit globals)'
