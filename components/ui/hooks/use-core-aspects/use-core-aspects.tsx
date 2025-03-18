@@ -12,6 +12,7 @@ const GET_CORE_ASPECTS = gql`
 `;
 
 export function useCoreAspects(): CoreAspectIdByPackageName {
+  // @ts-ignore
   const { data } = useDataQuery(GET_CORE_ASPECTS);
   return data?.coreAspects;
 }

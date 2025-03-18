@@ -284,6 +284,7 @@ export async function loadBit(path = process.cwd(), additionalAspects?: Aspect[]
   if (loadCLIOnly) return harmony;
   const aspectLoader = harmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
+  aspectLoader.setNonCoreAspects(additionalAspects || []);
   aspectLoader.setMainAspect(getMainAspect());
   const envs = harmony.get<EnvsMain>(EnvsAspect.id);
   envs.setCoreAspectIds(getAllCoreAspectsIds());

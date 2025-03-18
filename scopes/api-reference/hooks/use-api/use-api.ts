@@ -19,6 +19,7 @@ export function useAPI(
     skipInternals?: boolean;
   }
 ): { apiModel?: APIReferenceModel; loading?: boolean } {
+  // @ts-ignore
   const { data, loading } = useDataQuery(GET_SCHEMA, {
     variables: {
       componentId,

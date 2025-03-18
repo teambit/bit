@@ -47,6 +47,7 @@ export type UseLaneComponentsResult = {
 };
 
 export function useLaneComponents(laneId?: LaneId): UseLaneComponentsResult {
+  // @ts-ignore
   const { data, loading } = useDataQuery(GET_LANE_COMPONENTS, {
     variables: { ids: [laneId?.toString()], skipList: laneId?.isDefault() },
     skip: !laneId,
