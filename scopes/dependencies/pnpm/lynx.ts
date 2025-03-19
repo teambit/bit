@@ -11,7 +11,6 @@ import { Registries } from '@teambit/pkg.entities.registry';
 import { getAuthConfig } from '@teambit/pkg.config.auth';
 import {
   ResolvedPackageVersion,
-  NPM_REGISTRY,
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
@@ -262,7 +261,7 @@ export async function install(
     lockfileOnly: options.lockfileOnly ?? false,
     modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.
     neverBuiltDependencies: options.neverBuiltDependencies,
-    registries: opts.registries.toMap(),
+    registries: registries.toMap(),
     resolutionMode: 'highest',
     rawConfig: authConfig,
     hooks: { readPackage },
