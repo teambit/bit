@@ -7,11 +7,11 @@ import { rebuild } from '@pnpm/plugin-commands-rebuild';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { sortPackages } from '@pnpm/sort-packages';
 import { type PeerDependencyRules, type ProjectRootDir, type DepPath } from '@pnpm/types';
+import { Registries } from '@teambit/pkg.entities.registry';
+import { getAuthConfig } from '@teambit/pkg.config.auth';
 import {
   ResolvedPackageVersion,
-  Registries,
   NPM_REGISTRY,
-  Registry,
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
@@ -34,7 +34,6 @@ import { readWantedLockfile, writeWantedLockfile } from '@pnpm/lockfile.fs';
 import { type LockfileFileV9, type Lockfile } from '@pnpm/lockfile.types'
 import { Logger } from '@teambit/logger';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
-import toNerfDart from 'nerf-dart';
 import { isEqual } from 'lodash'
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
@@ -584,52 +583,6 @@ export function getRegistriesMap(registries: Registries): RegistriesMap {
     registriesMap[`@${registryName}`] = registry.uri;
   });
   return registriesMap;
-}
-
-function getAuthConfig(registries: Registries): Record<string, any> {
-  const res: any = {};
-  res.registry = registries.defaultRegistry.uri;
-  if (registries.defaultRegistry.alwaysAuth) {
-    res['always-auth'] = true;
-  }
-  const defaultAuthTokens = getAuthTokenForRegistry(registries.defaultRegistry, true);
-  defaultAuthTokens.forEach(({ keyName, val }) => {
-    res[keyName] = val;
-  });
-
-  Object.entries(registries.scopes).forEach(([, registry]) => {
-    const authTokens = getAuthTokenForRegistry(registry);
-    authTokens.forEach(({ keyName, val }) => {
-      res[keyName] = val;
-    });
-    if (registry.alwaysAuth) {
-      const nerfed = toNerfDart(registry.uri);
-      const alwaysAuthKeyName = `${nerfed}:always-auth`;
-      res[alwaysAuthKeyName] = true;
-    }
-  });
-  return res;
-}
-
-function getAuthTokenForRegistry(registry: Registry, isDefault = false): { keyName: string; val: string }[] {
-  const nerfed = toNerfDart(registry.uri);
-  if (registry.originalAuthType === 'authToken') {
-    return [
-      {
-        keyName: `${nerfed}:_authToken`,
-        val: registry.originalAuthValue || '',
-      },
-    ];
-  }
-  if (registry.originalAuthType === 'auth') {
-    return [
-      {
-        keyName: isDefault ? '_auth' : `${nerfed}:_auth`,
-        val: registry.originalAuthValue || '',
-      },
-    ];
-  }
-  return [];
 }
 
 async function addDepsRequiringBuildToLockfile(rootDir: string, depsRequiringBuild: string[]) {
