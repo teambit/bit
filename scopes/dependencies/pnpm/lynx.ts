@@ -7,7 +7,7 @@ import { rebuild } from '@pnpm/plugin-commands-rebuild';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { sortPackages } from '@pnpm/sort-packages';
 import { type PeerDependencyRules, type ProjectRootDir, type DepPath } from '@pnpm/types';
-import { Registries, Registry } from '@teambit/pkg.entities.registry';
+import { Registries } from '@teambit/pkg.entities.registry';
 import { getAuthConfig } from '@teambit/pkg.config.auth';
 import {
   ResolvedPackageVersion,
@@ -34,7 +34,6 @@ import { readWantedLockfile, writeWantedLockfile } from '@pnpm/lockfile.fs';
 import { type LockfileFileV9, type Lockfile } from '@pnpm/lockfile.types'
 import { Logger } from '@teambit/logger';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
-import toNerfDart from 'nerf-dart';
 import { isEqual } from 'lodash'
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
