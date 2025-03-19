@@ -11,7 +11,6 @@ import { Registries } from '@teambit/pkg.entities.registry';
 import { getAuthConfig } from '@teambit/pkg.config.auth';
 import {
   ResolvedPackageVersion,
-  NPM_REGISTRY,
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
@@ -40,11 +39,6 @@ import { readConfig } from './read-config';
 
 const installsRunning: Record<string, Promise<any>> = {};
 const cafsLocker = new Map<string, number>();
-
-type RegistriesMap = {
-  default: string;
-  [registryName: string]: string;
-};
 
 async function createStoreController(
   options: {
@@ -142,7 +136,6 @@ export async function getPeerDependencyIssues(
       rootDir: rootDir as ProjectRootDir,
     });
   }
-  const registriesMap = getRegistriesMap(opts.registries);
   const storeController = await createStoreController({
     ...opts,
     rootDir: opts.rootDir,
@@ -154,7 +147,7 @@ export async function getPeerDependencyIssues(
     storeDir: storeController.dir,
     overrides: opts.overrides,
     peersSuffixMaxLength: 1000,
-    registries: registriesMap,
+    registries: opts.registries.toMap(),
     virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
   });
 }
@@ -236,7 +229,6 @@ export async function install(
   const { allProjects, packagesToBuild } = groupPkgs(manifestsByPaths, {
     update: options?.updateAll,
   });
-  const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
   const storeController = await createStoreController({
     rootDir,
@@ -269,7 +261,7 @@ export async function install(
     lockfileOnly: options.lockfileOnly ?? false,
     modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.
     neverBuiltDependencies: options.neverBuiltDependencies,
-    registries: registriesMap,
+    registries: registries.toMap(),
     resolutionMode: 'highest',
     rawConfig: authConfig,
     hooks: { readPackage },
@@ -528,8 +520,7 @@ export async function resolveRemoteVersion(
   };
   try {
     const parsedPackage = parsePackageName(packageName);
-    const registriesMap = getRegistriesMap(registries);
-    const registry = pickRegistryForPackage(registriesMap, parsedPackage.name);
+    const registry = pickRegistryForPackage(registries.toMap(), parsedPackage.name);
     const wantedDep: WantedDependency = {
       alias: parsedPackage.name,
       pref: parsedPackage.version,
@@ -572,17 +563,6 @@ export async function resolveRemoteVersion(
       resolvedVia: val.resolvedVia,
     };
   }
-}
-
-export function getRegistriesMap(registries: Registries): RegistriesMap {
-  const registriesMap = {
-    default: registries.defaultRegistry.uri || NPM_REGISTRY,
-  };
-
-  Object.entries(registries.scopes).forEach(([registryName, registry]) => {
-    registriesMap[`@${registryName}`] = registry.uri;
-  });
-  return registriesMap;
 }
 
 async function addDepsRequiringBuildToLockfile(rootDir: string, depsRequiringBuild: string[]) {

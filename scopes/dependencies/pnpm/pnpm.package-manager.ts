@@ -43,7 +43,7 @@ import { join } from 'path';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
-import { generateResolverAndFetcher, getRegistriesMap, RebuildFn } from './lynx';
+import { generateResolverAndFetcher, RebuildFn } from './lynx';
 import { type DependenciesGraph } from '@teambit/objects';
 
 export type { RebuildFn };
@@ -125,7 +125,7 @@ export class PnpmPackageManager implements PackageManager {
       await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
         manifests,
         rootDir,
-        registries: getRegistriesMap(registries),
+        registries: registries.toMap(),
         resolve,
       });
     }
