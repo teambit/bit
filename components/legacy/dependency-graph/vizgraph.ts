@@ -4,6 +4,8 @@ import os from 'os';
 import fs from 'fs-extra';
 import { Graph } from 'graphlib';
 import { Digraph, Subgraph, Node, Edge, toDot } from 'ts-graphviz';
+// @ts-ignore
+// eslint-disable-next-line import/no-unresolved
 import { toFile } from 'ts-graphviz/adapter';
 import { instance } from '@viz-js/viz';
 import { Graph as ClearGraph } from '@teambit/graph.cleargraph';
