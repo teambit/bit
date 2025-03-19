@@ -245,7 +245,7 @@ export class WorkspaceComponentLoader {
     wsIds.forEach((id) => {
       const idStr = id.toString();
       const fromCache = this.componentsExtensionsCache.get(idStr);
-      if (!fromCache || !fromCache.extensions) {
+      if (!fromCache || !fromCache.envId) {
         return;
       }
       const envId = fromCache.envId;
@@ -305,6 +305,23 @@ export class WorkspaceComponentLoader {
       ...layeredExtGroups,
       { ids: groupedByIsExtOfAnother.false || [], core: false, aspects: false, seeders: true, envs: false },
     ];
+
+    // This is a special use case mostly for the bit core repo
+    const envsOfCoreAspectEnv = ['teambit.harmony/envs/core-aspect-env', 'teambit.harmony/envs/core-aspect-env-jest'];
+    const coreAspectEnvGroup = {ids: [], core: true, aspects: true, seeders: true, envs: true};
+    layeredEnvsGroups.forEach((group) => {
+      const filteredIds = group.ids.filter((id) => envsOfCoreAspectEnv.includes(id.toStringWithoutVersion()));
+      if (filteredIds.length){
+        // @ts-ignore
+        coreAspectEnvGroup.ids.push(...filteredIds);
+      }
+    })
+    if (coreAspectEnvGroup.ids.length){
+      // enter first in the list
+      groupsToHandle.unshift(coreAspectEnvGroup);
+    }
+    // END of bit repo special use case
+
     const groupsByWsScope = groupsToHandle.map((group) => {
       if (!group.ids?.length) return undefined;
       const groupedByWsScope = groupBy(group.ids, (id) => {
