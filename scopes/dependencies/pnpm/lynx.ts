@@ -83,14 +83,21 @@ async function createStoreController(
   return createOrConnectStoreController(opts);
 }
 
-export async function generateResolverAndFetcher(
-  cacheDir: string,
-  registries: Registries,
-  proxyConfig: PackageManagerProxyConfig = {},
-  networkConfig: PackageManagerNetworkConfig = {}
-) {
+export async function generateResolverAndFetcher({
+  cacheDir,
+  registries,
+  proxyConfig,
+  networkConfig,
+}: {
+  cacheDir: string;
+  registries: Registries;
+  proxyConfig?: PackageManagerProxyConfig;
+  networkConfig?: PackageManagerNetworkConfig;
+}) {
   const pnpmConfig = await readConfig();
   const authConfig = getAuthConfig(registries);
+  proxyConfig ??= {};
+  networkConfig ??= {};
   const opts: ClientOptions = {
     authConfig: Object.assign({}, pnpmConfig.config.rawConfig, authConfig),
     cacheDir,
@@ -511,7 +518,7 @@ export async function resolveRemoteVersion(
   proxyConfig: PackageManagerProxyConfig = {},
   networkConfig: PackageManagerNetworkConfig = {}
 ): Promise<ResolvedPackageVersion> {
-  const { resolve } = await generateResolverAndFetcher(cacheDir, registries, proxyConfig, networkConfig);
+  const { resolve } = await generateResolverAndFetcher({ cacheDir, registries, proxyConfig, networkConfig });
   const resolveOpts = {
     lockfileDir: rootDir,
     preferredVersions: {},
