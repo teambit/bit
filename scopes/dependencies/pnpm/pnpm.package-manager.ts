@@ -85,16 +85,20 @@ export class PnpmPackageManager implements PackageManager {
       cacheDir: string;
       manifests: Record<string, ProjectManifest>;
       rootDir: string;
-      registries: Registries;
-      proxyConfig: PackageManagerProxyConfig;
-      networkConfig: PackageManagerNetworkConfig;
+      registries?: Registries;
+      proxyConfig?: PackageManagerProxyConfig;
+      networkConfig?: PackageManagerNetworkConfig;
     }
   ) {
-    const { resolve } = await generateResolverAndFetcher(opts);
+    const registries = opts.registries ?? new Registries(new Registry('https://node-registry.bit.cloud', false), {});
+    const { resolve } = await generateResolverAndFetcher({
+      ...opts,
+      registries,
+    });
     const lockfile: LockfileFileV9 = await convertGraphToLockfile(dependenciesGraph, {
       ...opts,
       resolve,
-      registries: opts.registries.toMap(),
+      registries: registries.toMap(),
     });
     Object.assign(lockfile, {
       bit: {
