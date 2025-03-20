@@ -14,6 +14,7 @@ import {
 } from '@teambit/objects';
 import { type CalcDepsGraphOptions, type ComponentIdByPkgName } from '@teambit/dependency-resolver';
 import { getLockfileImporterId } from '@pnpm/lockfile.fs';
+import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import normalizePath from 'normalize-path';
 import { type BitLockfileFile } from './lynx';
 
