@@ -1,4 +1,5 @@
 import parsePackageName from 'parse-package-name';
+import { Registries, Registry } from '@teambit/pkg.entities.registry';
 import {
   extendWithComponentsFromDir,
   InstallationContext,
@@ -6,8 +7,6 @@ import {
   PackageManager,
   PackageManagerInstallOptions,
   PackageImportMethod,
-  Registries,
-  Registry,
   PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
 } from '@teambit/dependency-resolver';

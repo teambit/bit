@@ -1609,7 +1609,7 @@
         "description": "creates a component named 'ui/button' using the 'react' template"
       },
       {
-        "cmd": "bit create node utils/is-string utils/is-number --aspect teambit.node/node",
+        "cmd": "bit create module utils/is-string utils/is-number --aspect teambit.node/node",
         "description": "creates two components, 'utils/is-string' and 'utils/is-number' using the 'node' template from the 'node' aspect(env)"
       },
       {

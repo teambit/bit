@@ -9,6 +9,7 @@ import { Component, ComponentID } from '@teambit/component';
 import { SnappingAspect, SnappingMain } from '@teambit/snapping';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
+import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { BuildStatus, CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME } from '@teambit/legacy.constants';
 import { PostSign } from '@teambit/scope.remote-actions';
 import { Version, Log, Lane, ObjectList } from '@teambit/objects';
@@ -110,6 +111,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
         seedersOnly: true,
         getExistingAsIs: reuseCapsules,
         emptyRootDir: !reuseCapsules,
+        useDependenciesGraph: isFeatureEnabled(DEPS_GRAPH),
         installOptions: { copyPeerToRuntimeOnComponents: true, installPeersFromEnvs: true },
       },
       {

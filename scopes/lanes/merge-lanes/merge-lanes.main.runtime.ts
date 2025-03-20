@@ -697,7 +697,7 @@ async function filterComponentsStatus(
     const modelComponent = await legacyScope.getModelComponent(compId);
     if (shouldSquash) {
       // no need to check all versions, we merge only the head
-      const headOnTarget = otherLane ? otherLane.getComponent(compId)?.head : modelComponent.head;
+      const headOnTarget = otherLane ? otherLane.getCompHeadIncludeUpdateDependents(compId) : modelComponent.head;
       if (!headOnTarget) {
         throw new Error(`filterComponentsStatus: unable to find head for ${compId.toString()}`);
       }
@@ -743,7 +743,7 @@ async function filterComponentsStatus(
       if (includeDeps) {
         depsToAdd.push(...depsOnLane);
       } else {
-        const headOnTarget = otherLane ? otherLane.getComponent(compId)?.head : modelComponent.head;
+        const headOnTarget = otherLane ? otherLane.getCompHeadIncludeUpdateDependents(compId) : modelComponent.head;
         const depsOnLaneStr = depsOnLane.map((dep) => dep.toStringWithoutVersion());
         if (headOnTarget?.isEqual(remoteVersion)) {
           depsOnLaneStr.forEach((dep) => {

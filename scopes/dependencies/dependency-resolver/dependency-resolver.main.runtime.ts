@@ -40,7 +40,7 @@ import { ProjectManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import { Registries, Registry } from './registry';
+import { Registries, Registry } from '@teambit/pkg.entities.registry';
 import { applyUpdates, UpdatedComponent } from './apply-updates';
 import { ROOT_NAME } from './dependencies/constants';
 import {
