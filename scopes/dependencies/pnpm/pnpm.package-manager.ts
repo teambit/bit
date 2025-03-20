@@ -90,7 +90,7 @@ export class PnpmPackageManager implements PackageManager {
       networkConfig: PackageManagerNetworkConfig;
     }
   ) {
-    const { resolve } = await generateResolverAndFetcher(opts.cacheDir, opts.registries, opts.proxyConfig, opts.networkConfig);
+    const { resolve } = await generateResolverAndFetcher(opts);
     const lockfile: LockfileFileV9 = await convertGraphToLockfile(dependenciesGraph, {
       ...opts,
       resolve,
