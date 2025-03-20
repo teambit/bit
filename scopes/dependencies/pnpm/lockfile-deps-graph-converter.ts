@@ -1,5 +1,6 @@
 import path from 'path';
 import { type ProjectManifest, type Registries } from '@pnpm/types';
+import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import { type ResolveFunction } from '@pnpm/client';
 import * as dp from '@pnpm/dependency-path';
 import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
@@ -14,7 +15,6 @@ import {
 } from '@teambit/objects';
 import { type CalcDepsGraphOptions, type ComponentIdByPkgName } from '@teambit/dependency-resolver';
 import { getLockfileImporterId } from '@pnpm/lockfile.fs';
-import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import normalizePath from 'normalize-path';
 import { type BitLockfileFile } from './lynx';
 
