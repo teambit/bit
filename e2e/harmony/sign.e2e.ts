@@ -17,11 +17,11 @@ describe('sign command', function () {
     let signOutput: string;
     let localWorkspace: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      localWorkspace = helper.scopeHelper.cloneLocalScope();
+      localWorkspace = helper.scopeHelper.cloneWorkspace();
       // yes, this is strange, it adds the remote-scope to itself as a remote. we need it because
       // we run "action" command from the remote to itself to clear the cache. (needed because
       // normally bit-sign is running from the fs but a different http service is running as well)
@@ -62,7 +62,7 @@ describe('sign command', function () {
     describe('running bit artifacts', () => {
       let artifactsOutput: string;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(localWorkspace);
+        helper.scopeHelper.getClonedWorkspace(localWorkspace);
         artifactsOutput = helper.command.artifacts('comp1');
       });
       it('should import the built Version and shows the built artifacts successfully', () => {
@@ -74,7 +74,7 @@ describe('sign command', function () {
   describe('simple case with one scope without --push flag', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -94,7 +94,7 @@ describe('sign command', function () {
     let signRemote;
     let firstSnap;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.snapComponent('comp1', undefined, '--build');
       firstSnap = helper.command.getHead('comp1');
@@ -111,7 +111,7 @@ describe('sign command', function () {
   describe('without specifying the ids', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -125,7 +125,7 @@ describe('sign command', function () {
   describe('failure case', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.outputFile('bar/index.js');
       helper.fs.outputFile('bar/foo.spec.js'); // it will fail as it doesn't have any test
       helper.command.addComponent('bar');
@@ -167,7 +167,7 @@ describe('sign command', function () {
     let firstSnapHash: string;
     let signRemote;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
 
       const secondRemote = helper.scopeHelper.getNewBareScope();
       helper.scopeHelper.addRemoteScope(secondRemote.scopePath);
@@ -228,7 +228,7 @@ describe('sign command', function () {
   describe('circular dependencies between two scopes', () => {
     let signOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       const secondRemote = helper.scopeHelper.getNewBareScope();
       helper.scopeHelper.addRemoteScope(secondRemote.scopePath);
       helper.scopeHelper.addRemoteScope(secondRemote.scopePath, helper.scopes.remotePath);

@@ -47,7 +47,7 @@ import {
 import { isPathInside } from '@teambit/toolbox.path.is-path-inside';
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import { slice, isEmpty, merge, compact, uniqBy } from 'lodash';
+import { slice, isEmpty, merge, compact, uniqBy, uniq } from 'lodash';
 import {
   MergeConfigFilename,
   BIT_ROOTS_DIR,
@@ -673,10 +673,10 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       .map((id) => graph.predecessors(id.toString()))
       .flat()
       .map((node) => node.attr);
-    const uniq = ComponentIdList.uniqFromArray(dependents);
-    if (!filterOutNowWorkspaceIds) return uniq;
-    const workspaceIds = await this.listIds();
-    return uniq.filter((id) => workspaceIds.has(id));
+    const uniqIds = ComponentIdList.uniqFromArray(dependents);
+    if (!filterOutNowWorkspaceIds) return uniqIds;
+    const workspaceIds = this.listIds();
+    return uniqIds.filter((id) => workspaceIds.has(id));
   }
 
   public async createAspectList(extensionDataList: ExtensionDataList) {
@@ -1117,19 +1117,25 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
 
   async getComponentsUsingEnv(env: string, ignoreVersion = true, throwIfNotFound = false): Promise<Component[]> {
     const allComps = await this.list();
-    const allEnvs = await this.envs.createEnvironment(allComps);
-    const foundEnvs = allEnvs.runtimeEnvs.filter((runtimeEnv) => {
-      if (runtimeEnv.id === env) return true;
+    const availableEnvs: string[] = [];
+    const foundComps = allComps.filter((comp) => {
+      const envId = this.envs.getEnvId(comp);
+      if (env === envId) return true;
+      availableEnvs.push(envId);
       if (!ignoreVersion) return false;
-      const envWithoutVersion = runtimeEnv.id.split('@')[0];
-      return env === envWithoutVersion;
+      const envWithoutVersion = envId.split('@')[0];
+      if (env === envWithoutVersion) return true;
+      // envIdFromConfig never has a version. so in case ignoreVersion is true, it's safe to compare without the version.
+      // also, in case the env failed to load, the envId above will be the default teambit.harmony/node env, which
+      // won't help. this one is the one configured on this component.
+      const envIdFromConfig = this.envs.getEnvIdFromEnvsConfig(comp);
+      return envIdFromConfig === env;
     });
-    if (!foundEnvs.length && throwIfNotFound) {
-      const availableEnvs = allEnvs.runtimeEnvs.map((runtimeEnv) => runtimeEnv.id);
+    if (!foundComps.length && throwIfNotFound) {
       throw new BitError(`unable to find components that using "${env}" env.
-the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
+the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}`);
     }
-    return foundEnvs.map((runtimeEnv) => runtimeEnv.components).flat();
+    return foundComps;
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<Component[]> {

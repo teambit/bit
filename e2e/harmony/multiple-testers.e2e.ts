@@ -19,7 +19,7 @@ describe('multi testers', function () {
     let envId;
     let envName;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       compName = helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
       helper.fs.outputFile(

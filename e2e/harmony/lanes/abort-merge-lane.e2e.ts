@@ -16,7 +16,7 @@ describe('bit lane merge-abort command', function () {
     let bitMapBeforeMerge;
     let bitMapAfterMerge;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.createLane('lane-a');
       helper.command.snapAllComponentsWithoutBuild();
@@ -49,7 +49,7 @@ describe('bit lane merge-abort command', function () {
   });
   describe('when the merged lane introduced new components', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.createLane('lane-a');
       helper.command.snapAllComponentsWithoutBuild();
@@ -59,7 +59,7 @@ describe('bit lane merge-abort command', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('lane-a', '-x');
       helper.command.mergeLane(`${helper.scopes.remote}/lane-b`, '-x');

@@ -21,7 +21,7 @@ export function NestedComponentLinksLinks({ nestedDepsInNmLinks, verbose = false
       })
     )
     .join('\n');
-  return `${title}\n${links}\n`;
+  return `${title}\n${links}`;
 }
 
 type NestedComponentLinksProps = {

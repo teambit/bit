@@ -2,7 +2,7 @@ import fs from 'fs';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { DEPS_GRAPH } from '@teambit/harmony.modules.feature-toggle';
 import { addDistTag } from '@pnpm/registry-mock';
-import { type LockfileFile } from '@pnpm/lockfile.types';
+import { type BitLockfileFile } from '@teambit/pnpm';
 import path from 'path';
 import chai, { expect } from 'chai';
 import stripAnsi from 'strip-ansi';
@@ -25,13 +25,13 @@ chai.use(require('chai-fs'));
   });
   describe('single component', () => {
     before(async () => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCiInPackageJsonHarmony();
       await npmCiRegistry.init();
       helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
       helper.fixtures.populateComponents(1);
-      helper.fs.outputFile(`comp1/index.js`, `const React = require("react"); require('@pnpm.e2e/pkg-with-1-dep')`);
+      helper.fs.outputFile(`comp1/index.js`, `const isEven = require("is-even"); require('@pnpm.e2e/pkg-with-1-dep')`);
       helper.fs.outputFile(
         `comp1/index.spec.js`,
         `const isOdd = require("is-odd"); test('test', () => { expect(1).toEqual(1); })`
@@ -43,7 +43,7 @@ chai.use(require('chai-fs'));
           '@pnpm.e2e/pkg-with-1-dep': '^100.0.0',
         },
       });
-      helper.command.install('react@18.3.1 is-odd@1.0.0');
+      helper.command.install('is-even@1.0.0 is-odd@1.0.0');
       helper.command.snapAllComponentsWithoutBuild('--skip-tests');
       await addDistTag({ package: '@pnpm.e2e/pkg-with-1-dep', version: '100.1.0', distTag: 'latest' });
       await addDistTag({ package: '@pnpm.e2e/dep-of-pkg-with-1-dep', version: '100.1.0', distTag: 'latest' });
@@ -57,9 +57,9 @@ chai.use(require('chai-fs'));
       const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
       const directDeps = depsGraph.edges.find((edge) => edge.id === '.')?.neighbours;
       expect(directDeps).deep.include({
-        name: 'react',
-        specifier: '18.3.1',
-        id: 'react@18.3.1',
+        name: 'is-even',
+        specifier: '1.0.0',
+        id: 'is-even@1.0.0',
         lifecycle: 'runtime',
         optional: false,
       });
@@ -93,9 +93,9 @@ chai.use(require('chai-fs'));
         const depsGraph = JSON.parse(helper.command.catObject(versionObj.dependenciesGraphRef));
         const directDeps = depsGraph.edges.find((edge) => edge.id === '.')?.neighbours;
         expect(directDeps).deep.include({
-          name: 'react',
-          specifier: '18.3.1',
-          id: 'react@18.3.1',
+          name: 'is-even',
+          specifier: '1.0.0',
+          id: 'is-even@1.0.0',
           lifecycle: 'runtime',
           optional: false,
         });
@@ -110,7 +110,7 @@ chai.use(require('chai-fs'));
     });
     describe('imported component uses dependency graph to generate a lockfile', () => {
       before(async () => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.import(`${helper.scopes.remote}/comp1@latest`);
       });
@@ -123,7 +123,7 @@ chai.use(require('chai-fs'));
   });
   describe('single component and sign writes the dependency graph', () => {
     before(async () => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCiInPackageJsonHarmony();
       await npmCiRegistry.init();
@@ -157,7 +157,7 @@ chai.use(require('chai-fs'));
     });
     describe('sign component and use dependency graph to generate a lockfile', () => {
       let signOutput: string;
-      let lockfile: LockfileFile;
+      let lockfile: BitLockfileFile;
       let signRemote;
       before(async () => {
         helper.command.export();
@@ -177,12 +177,14 @@ chai.use(require('chai-fs'));
         const capsulesDir = signOutput.match(/running installation in root dir (\/[^\s]+)/)?.[1];
         expect(capsulesDir).to.be.a('string');
         lockfile = yaml.load(fs.readFileSync(path.join(stripAnsi(capsulesDir!), 'pnpm-lock.yaml'), 'utf8'));
-        expect(lockfile['bit']).to.be.undefined; // eslint-disable-line
+        expect(lockfile.bit).to.eql({
+          depsRequiringBuild: [],
+        });
       });
     });
     describe('imported component uses dependency graph to generate a lockfile', () => {
       before(async () => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.import(`${helper.scopes.remote}/comp1@latest`);
       });
@@ -205,7 +207,7 @@ chai.use(require('chai-fs'));
     before(async () => {
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
       const name = `@ci/${randomStr}.{name}`;
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
@@ -323,7 +325,7 @@ chai.use(require('chai-fs'));
     });
     describe('importing a component that depends on another component and was export together with that component', () => {
       before(async () => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         await addDistTag({ package: '@pnpm.e2e/foo', version: '100.1.0', distTag: 'latest' });
         await addDistTag({ package: '@pnpm.e2e/bar', version: '100.1.0', distTag: 'latest' });
@@ -347,7 +349,7 @@ chai.use(require('chai-fs'));
     before(async () => {
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
       const name = `@ci/${randomStr}.{name}`;
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
@@ -381,7 +383,7 @@ chai.use(require('chai-fs'));
 
       await addDistTag({ package: '@pnpm.e2e/abc', version: '2.0.0', distTag: 'latest' });
       await addDistTag({ package: '@pnpm.e2e/peer-a', version: '1.0.0', distTag: 'latest' });
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.fs.createFile('foo', 'foo.js', `require("@pnpm.e2e/abc"); require("@ci/${randomStr}.bar");`);
       helper.command.addComponent('foo');
@@ -390,7 +392,7 @@ chai.use(require('chai-fs'));
       helper.command.snapAllComponentsWithoutBuild('--skip-tests');
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.import(`${helper.scopes.remote}/foo@latest ${helper.scopes.remote}/bar@latest`);
     });
@@ -412,6 +414,50 @@ chai.use(require('chai-fs'));
       npmCiRegistry.destroy();
       helper.command.delConfig('registry');
       helper.scopeHelper.destroy();
+    });
+  });
+  describe('two components exported then one imported', function () {
+    let randomStr: string;
+    before(async () => {
+      randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
+      const name = `@ci/${randomStr}.{name}`;
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
+      await npmCiRegistry.init();
+      helper.command.setConfig('registry', npmCiRegistry.getRegistryUrl());
+
+      helper.fixtures.populateComponents(2);
+      helper.command.install('--add-missing-deps');
+      helper.command.tagAllWithoutBuild('--skip-tests');
+      helper.command.export();
+      const signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
+      helper.command.sign(
+        [`${helper.scopes.remote}/comp2@0.0.1`],
+        '',
+        signRemote.scopePath
+      );
+      helper.command.export();
+      helper.command.sign(
+        [`${helper.scopes.remote}/comp1@0.0.1`],
+        '',
+        signRemote.scopePath
+      );
+      helper.command.export();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.command.delConfig('registry');
+      helper.scopeHelper.destroy();
+    });
+    it('should generate a lockfile', () => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.import(`${helper.scopes.remote}/comp1@latest`);
+      expect(helper.fs.readFile('pnpm-lock.yaml')).to.have.string(
+        'restoredFromModel: true'
+      );
     });
   });
 });

@@ -16,7 +16,7 @@ describe('require.resolve detection', function () {
   });
   describe('when a dependency is inside require.resolve statement', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile(
         'comp1/babel.config.js',

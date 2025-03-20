@@ -4,7 +4,6 @@ export type { UpdatedComponent } from './apply-updates';
 export type { RawComponentState, ComponentsManifestsMap, RegistriesMap } from './types';
 export { WorkspaceManifest, ComponentManifest } from './manifest';
 export type { CreateFromComponentsOptions, ManifestDependenciesObject } from './manifest';
-export { Registries, Registry } from './registry';
 export type {
   InstallationContext,
   PackageImportMethod,

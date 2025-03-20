@@ -9,12 +9,12 @@ describe('local is diverged from the remote', function () {
   let beforeDiverge: string;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.command.createLane();
     helper.fixtures.populateComponents(1, false);
     helper.command.snapAllComponentsWithoutBuild();
     helper.command.export();
-    beforeDiverge = helper.scopeHelper.cloneLocalScope();
+    beforeDiverge = helper.scopeHelper.cloneWorkspace();
     helper.command.snapAllComponentsWithoutBuild('--unmodified');
     helper.command.export();
   });
@@ -23,7 +23,7 @@ describe('local is diverged from the remote', function () {
   });
   describe('snap first then import', () => {
     before(() => {
-      helper.scopeHelper.getClonedLocalScope(beforeDiverge);
+      helper.scopeHelper.getClonedWorkspace(beforeDiverge);
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.import();
     });
@@ -38,7 +38,7 @@ describe('local is diverged from the remote', function () {
   describe('import first then snap', () => {
     let currentSnap: string;
     before(() => {
-      helper.scopeHelper.getClonedLocalScope(beforeDiverge);
+      helper.scopeHelper.getClonedWorkspace(beforeDiverge);
       currentSnap = helper.command.getHeadOfLane('dev', 'comp1');
       helper.command.import();
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
@@ -68,7 +68,7 @@ describe('local is diverged from the remote and another lane has a more recent s
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.command.createLane('lane-a');
     helper.fixtures.populateComponents(1, false);
     helper.command.snapAllComponentsWithoutBuild(); // snapA
@@ -76,7 +76,7 @@ describe('local is diverged from the remote and another lane has a more recent s
     helper.command.createLane('lane-b');
     helper.command.snapAllComponentsWithoutBuild('--unmodified'); // snapB
     helper.command.export();
-    const laneAFirstSnap = helper.scopeHelper.cloneLocalScope();
+    const laneAFirstSnap = helper.scopeHelper.cloneWorkspace();
     helper.command.snapAllComponentsWithoutBuild('--unmodified'); // snapY
     helper.command.export();
     helper.command.switchLocalLane('lane-a');
@@ -84,7 +84,7 @@ describe('local is diverged from the remote and another lane has a more recent s
     helper.command.export();
 
     // locally
-    helper.scopeHelper.getClonedLocalScope(laneAFirstSnap);
+    helper.scopeHelper.getClonedWorkspace(laneAFirstSnap);
     helper.command.mergeLane('lane-a'); // now lane-b has snapA + snapB + snapX1 (from lane-a) + snapX2 (the snap-merge)
     helper.command.import();
     // keep this to fetch from all lanes, because in the future, by default, only the current lane is fetched

@@ -18,7 +18,7 @@ describe('repository-hooks', function () {
   });
   describe('export to remote scope with manipulation hook', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.copyFixtureFile(
         path.join('scopes', 'repository-hooks-fixture.js'),
         'repository-hooks.js',
@@ -29,7 +29,7 @@ describe('repository-hooks', function () {
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       exportOutput = helper.command.export();
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
     });
     it('should run the on persist hook', () => {

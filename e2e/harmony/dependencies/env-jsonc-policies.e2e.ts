@@ -119,7 +119,7 @@ describe('env-jsonc-policies', function () {
     let envId;
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       envId = `${helper.scopes.remote}/react-based-env`;
       helper.command.create('react', 'button', '-p button --env teambit.react/react');
       helper.fs.prependFile('button/button.tsx', 'import isPositive from "is-positive";\n');
@@ -255,7 +255,7 @@ describe('env-jsonc-policies', function () {
     let fullEnvIdLevel3;
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       envIdLevel1 = 'react-based-env-level1';
       fullEnvIdLevel1 = `${helper.scopes.remote}/react-based-env-level1`;
       packageNameEnvLevel1 = `@${helper.scopes.remote}/react-based-env-level1`;
@@ -465,7 +465,7 @@ describe('env-jsonc-policies', function () {
           describe('after import', () => {
             before(() => {
               helper.command.export();
-              helper.scopeHelper.reInitLocalScope();
+              helper.scopeHelper.reInitWorkspace();
               helper.scopeHelper.addRemoteScope();
               helper.command.importComponent(envIdLevel3);
             });

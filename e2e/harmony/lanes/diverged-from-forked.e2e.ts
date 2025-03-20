@@ -10,7 +10,7 @@ describe('lane-b was forked from lane-a and they are now diverged', function () 
   let headOnLaneB: string;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.command.createLane('lane-a');
     helper.fixtures.populateComponents(1, false);
     helper.command.snapAllComponentsWithoutBuild();

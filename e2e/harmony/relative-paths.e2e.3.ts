@@ -17,7 +17,7 @@ describe('relative paths flow (components requiring each other by relative paths
   describe('adding directories and using relative-paths', () => {
     let appOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       appOutput = helper.fixtures.populateComponents(2, false);
     });
     it('bit status should show it as an invalid component', () => {
@@ -65,7 +65,7 @@ describe('relative paths flow (components requiring each other by relative paths
         describe('should work after importing to another workspace', () => {
           before(() => {
             helper.command.export();
-            helper.scopeHelper.reInitLocalScope();
+            helper.scopeHelper.reInitWorkspace();
             helper.scopeHelper.addRemoteScope();
             helper.command.importComponent('*');
           });

@@ -12,20 +12,20 @@ describe('new command', function () {
     helper.scopeHelper.destroy();
   });
   it('entering a non-exist workspace, should throw a descriptive error', () => {
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
-    helper.scopeHelper.cleanLocalScope(); // it deletes all content without bit-init
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
+    helper.scopeHelper.cleanWorkspace(); // it deletes all content without bit-init
     expect(() =>
       helper.command.new('non-exist', '--aspect non.exist/aspect --load-from /non/exist/workspace')
     ).to.throw(`fatal: "/non/exist/workspace" is not a valid Bit workspace, make sure the path is correct`);
   });
   describe('export a workspace-template aspect', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope(undefined, undefined, true);
       helper.command.create('standalone-starter', 'react');
       helper.workspaceJsonc.addToVariant('*', 'teambit.harmony/aspect', {});
@@ -42,7 +42,7 @@ describe('new command', function () {
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.cleanLocalScope(); // it deletes all content without bit-init
+      helper.scopeHelper.cleanWorkspace(); // it deletes all content without bit-init
       helper.scopeHelper.addRemoteScope(undefined, undefined, true);
       helper.command.new('react-workspace', `--aspect ${helper.scopes.remote}/react`);
     });
@@ -66,7 +66,7 @@ describe('new command', function () {
   });
   describe('running inside workspace', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
     });
     it('should throw an error', () => {
       expect(() => helper.command.new('react', '--aspect teambit.react/react-env')).to.throw();
@@ -74,7 +74,8 @@ describe('new command', function () {
   });
   describe('creating a new react workspace', () => {
     before(() => {
-      helper.scopeHelper.newLocalScope('react', '--aspect teambit.react/react-env');
+      helper.scopeHelper.deleteWorkspace();
+      helper.command.new('react', '--aspect teambit.react/react-env', helper.scopes.local, helper.scopes.e2eDir);
     });
     it('bit status should be clean', () => {
       helper.command.expectStatusToNotHaveIssues();

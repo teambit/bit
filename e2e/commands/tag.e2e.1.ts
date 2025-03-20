@@ -16,12 +16,12 @@ describe('bit tag command', function () {
     helper.scopeHelper.destroy();
   });
   before(() => {
-    helper.scopeHelper.reInitLocalScope();
+    helper.scopeHelper.reInitWorkspace();
   });
   describe('tag component with invalid mainFile in bitmap', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       const bitMap = helper.bitMap.read();
@@ -42,7 +42,7 @@ describe('bit tag command', function () {
     let output;
     describe('tag specific component', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+        helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
         helper.fs.createFile('components/patch', 'patch.js');
         helper.fs.createFile('components/minor', 'minor.js');
         helper.fs.createFile('components/major', 'major.js');
@@ -119,7 +119,7 @@ describe('bit tag command', function () {
   });
   describe('with removed file/files', () => {
     beforeEach(() => {
-      helper.scopeHelper.initNewLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fs.createFile('bar', 'index.js');
       helper.command.addComponent('bar', { i: 'bar/foo' });
@@ -142,7 +142,7 @@ describe('bit tag command', function () {
   });
   describe('with Windows end-of-line characters', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       const impl = 'hello\r\n world\r\n';
       helper.fixtures.createComponentBarFoo(impl);
       helper.fixtures.addComponentBarFoo();
@@ -160,7 +160,7 @@ describe('bit tag command', function () {
   describe('tag a component without its dependencies', () => {
     let output;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
       output = helper.general.runWithTryCatch('bit tag comp1');
     });
@@ -170,7 +170,7 @@ describe('bit tag command', function () {
   });
   describe('tag with an empty string', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1, false);
     });
     // previously it was throwing `expected log.message to be string, got boolean`.

@@ -9,6 +9,7 @@ export type PackageAttributes = LockfilePackageInfo & {
     scope: string;
     name: string;
   };
+  requiresBuild?: boolean;
 };
 
 export type DependencyEdge = {
@@ -31,7 +32,7 @@ export type DependencyNeighbour = {
   lifecycle?: 'runtime' | 'dev';
 };
 
-const DEPENDENCIES_GRAPH_SCHEMA_VERSION = '1.0';
+const DEPENDENCIES_GRAPH_SCHEMA_VERSION = '2.0';
 
 export class DependenciesGraph {
   static ROOT_EDGE_ID = '.';

@@ -10,7 +10,7 @@ describe('install missing dependencies', function () {
   this.timeout(0);
   before(async () => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.fixtures.createComponentBarFoo(
       'const isPositive = require("is-positive");const compiler = require("@teambit/compiler")'
     );
@@ -19,7 +19,7 @@ describe('install missing dependencies', function () {
     helper.command.tagAllWithoutBuild();
     helper.command.export();
 
-    helper.scopeHelper.reInitLocalScope();
+    helper.scopeHelper.reInitWorkspace();
     helper.scopeHelper.addRemoteScope();
     helper.command.importComponent('bar/foo');
     helper.fixtures.populateComponents(2);

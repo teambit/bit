@@ -33,6 +33,8 @@ export type TesterExtensionConfig = {
   patterns: string[];
 };
 
+export type TestResults = EnvsExecutionResult<Tests>;
+
 export type TesterOptions = {
   /**
    * start the tester in watch mode.
@@ -119,7 +121,7 @@ export class TesterMain {
 
   _testsResults: { [componentId: string]: ComponentsResults } | undefined[] = [];
 
-  async test(components: Component[], opts?: TesterOptions): Promise<EnvsExecutionResult<Tests>> {
+  async test(components: Component[], opts?: TesterOptions): Promise<TestResults> {
     const options = this.getOptions(opts);
     const envsRuntime = await this.envs.createEnvironment(components);
     if (opts?.env) {
@@ -132,7 +134,7 @@ export class TesterMain {
     return results;
   }
 
-  private async generateJUnit(filePath: string, testsResults: EnvsExecutionResult<Tests>) {
+  private async generateJUnit(filePath: string, testsResults: TestResults) {
     const components = testsResults.results.map((envResult) => envResult.data?.components).flat();
     const jUnit = testsResultsToJUnitFormat(compact(components));
     await fs.outputFile(filePath, jUnit);

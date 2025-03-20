@@ -40,7 +40,7 @@ import { ProjectManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import { Registries, Registry } from './registry';
+import { Registries, Registry } from '@teambit/pkg.entities.registry';
 import { applyUpdates, UpdatedComponent } from './apply-updates';
 import { ROOT_NAME } from './dependencies/constants';
 import {
@@ -114,6 +114,8 @@ export type PackageManagerSlot = SlotRegistry<PackageManager>;
 export type DependencyFactorySlot = SlotRegistry<DependencyFactory[]>;
 export type PreInstallSlot = SlotRegistry<PreInstallSubscriberList>;
 export type PostInstallSlot = SlotRegistry<PostInstallSubscriberList>;
+type AddPackagesToLink = () => string[];
+type AddPackagesToLinkSlot = SlotRegistry<AddPackagesToLink>;
 
 export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) => Promise<VariantPolicyConfigObject>;
 
@@ -155,6 +157,7 @@ export class DependencyResolverMain {
    * @see workspace.triggerOnWorkspaceConfigChange
    */
   private _workspacePolicy: WorkspacePolicy | undefined;
+  private _additionalPackagesToLink?: string[];
   constructor(
     /**
      * Dependency resolver  extension configuration.
@@ -195,7 +198,9 @@ export class DependencyResolverMain {
 
     private preInstallSlot: PreInstallSlot,
 
-    private postInstallSlot: PostInstallSlot
+    private postInstallSlot: PostInstallSlot,
+
+    private addPackagesToLinkSlot: AddPackagesToLinkSlot,
   ) {}
 
   /**
@@ -268,6 +273,10 @@ export class DependencyResolverMain {
 
   registerPostInstallSubscribers(subscribers: PreInstallSubscriberList) {
     this.postInstallSlot.register(subscribers);
+  }
+
+  registerAddPackagesToLink(fn: AddPackagesToLink) {
+    this.addPackagesToLinkSlot.register(fn);
   }
 
   getSavePrefix(): string {
@@ -649,11 +658,22 @@ export class DependencyResolverMain {
     return this.postInstallSlot.values().flat();
   }
 
+  private getAdditionalPackagesToLink(): string[] {
+    if (!this._additionalPackagesToLink) {
+      const additionalPackagesToLinkFn = this.addPackagesToLinkSlot.values().flat();
+      this._additionalPackagesToLink = additionalPackagesToLinkFn.map((fn) => fn()).flat();
+    }
+
+    return this._additionalPackagesToLink;
+  }
+
   /**
    * get a component dependency linker.
    */
   getLinker(options: GetLinkerOptions = {}) {
-    const linkingOptions = Object.assign({}, defaultLinkingOptions, options?.linkingOptions || {});
+    const additionalPackagesToLink = this.getAdditionalPackagesToLink();
+    const linkingOptions = Object.assign({ additionalPackagesToLink },
+      defaultLinkingOptions, options?.linkingOptions || {});
     // TODO: we should somehow pass the cache root dir to the package manager constructor
     return new DependencyLinker(
       this,
@@ -1520,6 +1540,7 @@ export class DependencyResolverMain {
     Slot.withType<PreInstallSubscriberList>(),
     Slot.withType<PostInstallSubscriberList>(),
     Slot.withType<DependencyDetector>(),
+    Slot.withType<AddPackagesToLinkSlot>(),
   ];
 
   static defaultConfig: DependencyResolverWorkspaceConfig &
@@ -1546,6 +1567,7 @@ export class DependencyResolverMain {
       dependencyFactorySlot,
       preInstallSlot,
       postInstallSlot,
+      addPackagesToLinkSlot,
     ]: [
       RootPolicyRegistry,
       PoliciesRegistry,
@@ -1553,6 +1575,7 @@ export class DependencyResolverMain {
       DependencyFactorySlot,
       PreInstallSlot,
       PostInstallSlot,
+      AddPackagesToLinkSlot,
     ]
   ) {
     // const packageManager = new PackageManagerLegacy(config.packageManager, logger);
@@ -1570,7 +1593,8 @@ export class DependencyResolverMain {
       packageManagerSlot,
       dependencyFactorySlot,
       preInstallSlot,
-      postInstallSlot
+      postInstallSlot,
+      addPackagesToLinkSlot,
     );
 
     const envJsoncDetector = envs.getEnvJsoncDetector();

@@ -7,11 +7,10 @@ import { rebuild } from '@pnpm/plugin-commands-rebuild';
 import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
 import { sortPackages } from '@pnpm/sort-packages';
 import { type PeerDependencyRules, type ProjectRootDir, type DepPath } from '@pnpm/types';
+import { Registries } from '@teambit/pkg.entities.registry';
+import { getAuthConfig } from '@teambit/pkg.config.auth';
 import {
   ResolvedPackageVersion,
-  Registries,
-  NPM_REGISTRY,
-  Registry,
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
@@ -30,19 +29,16 @@ import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
 import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
 import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
+import { readWantedLockfile, writeWantedLockfile } from '@pnpm/lockfile.fs';
+import { type LockfileFileV9, type Lockfile } from '@pnpm/lockfile.types'
 import { Logger } from '@teambit/logger';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
-import toNerfDart from 'nerf-dart';
+import { isEqual } from 'lodash'
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
 const installsRunning: Record<string, Promise<any>> = {};
 const cafsLocker = new Map<string, number>();
-
-type RegistriesMap = {
-  default: string;
-  [registryName: string]: string;
-};
 
 async function createStoreController(
   options: {
@@ -87,14 +83,21 @@ async function createStoreController(
   return createOrConnectStoreController(opts);
 }
 
-async function generateResolverAndFetcher(
-  cacheDir: string,
-  registries: Registries,
-  proxyConfig: PackageManagerProxyConfig = {},
-  networkConfig: PackageManagerNetworkConfig = {}
-) {
+export async function generateResolverAndFetcher({
+  cacheDir,
+  registries,
+  proxyConfig,
+  networkConfig,
+}: {
+  cacheDir: string;
+  registries: Registries;
+  proxyConfig?: PackageManagerProxyConfig;
+  networkConfig?: PackageManagerNetworkConfig;
+}) {
   const pnpmConfig = await readConfig();
   const authConfig = getAuthConfig(registries);
+  proxyConfig ??= {};
+  networkConfig ??= {};
   const opts: ClientOptions = {
     authConfig: Object.assign({}, pnpmConfig.config.rawConfig, authConfig),
     cacheDir,
@@ -140,7 +143,6 @@ export async function getPeerDependencyIssues(
       rootDir: rootDir as ProjectRootDir,
     });
   }
-  const registriesMap = getRegistriesMap(opts.registries);
   const storeController = await createStoreController({
     ...opts,
     rootDir: opts.rootDir,
@@ -152,7 +154,7 @@ export async function getPeerDependencyIssues(
     storeDir: storeController.dir,
     overrides: opts.overrides,
     peersSuffixMaxLength: 1000,
-    registries: registriesMap,
+    registries: opts.registries.toMap(),
     virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
   });
 }
@@ -234,7 +236,6 @@ export async function install(
   const { allProjects, packagesToBuild } = groupPkgs(manifestsByPaths, {
     update: options?.updateAll,
   });
-  const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
   const storeController = await createStoreController({
     rootDir,
@@ -267,7 +268,7 @@ export async function install(
     lockfileOnly: options.lockfileOnly ?? false,
     modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.
     neverBuiltDependencies: options.neverBuiltDependencies ?? [],
-    registries: registriesMap,
+    registries: registries.toMap(),
     resolutionMode: 'highest',
     rawConfig: authConfig,
     hooks: { readPackage },
@@ -284,6 +285,7 @@ export async function install(
     },
     userAgent: networkConfig.userAgent,
     ...options,
+    returnListOfDepsRequiringBuild: true,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     depth: options.updateAll ? Infinity : 0,
     disableRelinkLocalDirDeps: true,
@@ -306,7 +308,10 @@ export async function install(
       await restartWorkerPool();
       installsRunning[rootDir] = mutateModules(packagesToBuild, opts);
       const installResult = await installsRunning[rootDir];
-      depsRequiringBuild = installResult.depsRequiringBuild;
+      depsRequiringBuild = installResult.depsRequiringBuild?.sort();
+      if (depsRequiringBuild != null) {
+        await addDepsRequiringBuildToLockfile(rootDir, depsRequiringBuild)
+      }
       dependenciesChanged =
         installResult.stats.added + installResult.stats.removed + installResult.stats.linkedToRoot > 0;
       delete installsRunning[rootDir];
@@ -513,7 +518,7 @@ export async function resolveRemoteVersion(
   proxyConfig: PackageManagerProxyConfig = {},
   networkConfig: PackageManagerNetworkConfig = {}
 ): Promise<ResolvedPackageVersion> {
-  const { resolve } = await generateResolverAndFetcher(cacheDir, registries, proxyConfig, networkConfig);
+  const { resolve } = await generateResolverAndFetcher({ cacheDir, registries, proxyConfig, networkConfig });
   const resolveOpts = {
     lockfileDir: rootDir,
     preferredVersions: {},
@@ -522,8 +527,7 @@ export async function resolveRemoteVersion(
   };
   try {
     const parsedPackage = parsePackageName(packageName);
-    const registriesMap = getRegistriesMap(registries);
-    const registry = pickRegistryForPackage(registriesMap, parsedPackage.name);
+    const registry = pickRegistryForPackage(registries.toMap(), parsedPackage.name);
     const wantedDep: WantedDependency = {
       alias: parsedPackage.name,
       pref: parsedPackage.version,
@@ -568,59 +572,25 @@ export async function resolveRemoteVersion(
   }
 }
 
-function getRegistriesMap(registries: Registries): RegistriesMap {
-  const registriesMap = {
-    default: registries.defaultRegistry.uri || NPM_REGISTRY,
-  };
-
-  Object.entries(registries.scopes).forEach(([registryName, registry]) => {
-    registriesMap[`@${registryName}`] = registry.uri;
-  });
-  return registriesMap;
+async function addDepsRequiringBuildToLockfile(rootDir: string, depsRequiringBuild: string[]) {
+  const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: true }) as BitLockfile;
+  if (lockfile == null) return
+  if (isEqual(lockfile.bit?.depsRequiringBuild, depsRequiringBuild)) return;
+  lockfile.bit = {
+    ...lockfile.bit,
+    depsRequiringBuild,
+  }
+  await writeWantedLockfile(rootDir, lockfile);
 }
 
-function getAuthConfig(registries: Registries): Record<string, any> {
-  const res: any = {};
-  res.registry = registries.defaultRegistry.uri;
-  if (registries.defaultRegistry.alwaysAuth) {
-    res['always-auth'] = true;
-  }
-  const defaultAuthTokens = getAuthTokenForRegistry(registries.defaultRegistry, true);
-  defaultAuthTokens.forEach(({ keyName, val }) => {
-    res[keyName] = val;
-  });
-
-  Object.entries(registries.scopes).forEach(([, registry]) => {
-    const authTokens = getAuthTokenForRegistry(registry);
-    authTokens.forEach(({ keyName, val }) => {
-      res[keyName] = val;
-    });
-    if (registry.alwaysAuth) {
-      const nerfed = toNerfDart(registry.uri);
-      const alwaysAuthKeyName = `${nerfed}:always-auth`;
-      res[alwaysAuthKeyName] = true;
-    }
-  });
-  return res;
+export interface BitLockfile extends Lockfile {
+  bit?: BitLockfileAttributes;
 }
 
-function getAuthTokenForRegistry(registry: Registry, isDefault = false): { keyName: string; val: string }[] {
-  const nerfed = toNerfDart(registry.uri);
-  if (registry.originalAuthType === 'authToken') {
-    return [
-      {
-        keyName: `${nerfed}:_authToken`,
-        val: registry.originalAuthValue || '',
-      },
-    ];
-  }
-  if (registry.originalAuthType === 'auth') {
-    return [
-      {
-        keyName: isDefault ? '_auth' : `${nerfed}:_auth`,
-        val: registry.originalAuthValue || '',
-      },
-    ];
-  }
-  return [];
+export interface BitLockfileFile extends LockfileFileV9 {
+  bit?: BitLockfileAttributes;
+}
+
+export interface BitLockfileAttributes {
+  depsRequiringBuild: string[];
 }

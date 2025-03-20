@@ -14,12 +14,12 @@ describe('handling binary files in Bit', function () {
   describe('checkout with a binary file', () => {
     let afterFirstTag: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fixtures.copyFixtureFile('png/png-fixture1.png', 'comp1/icon.png');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      afterFirstTag = helper.scopeHelper.cloneLocalScope();
+      afterFirstTag = helper.scopeHelper.cloneWorkspace();
       helper.fixtures.copyFixtureFile('png/png-fixture2.png', 'comp1/icon.png');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -27,7 +27,7 @@ describe('handling binary files in Bit', function () {
     describe('when there is a conflict', () => {
       let checkoutOutput: string;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(afterFirstTag);
+        helper.scopeHelper.getClonedWorkspace(afterFirstTag);
         helper.fixtures.copyFixtureFile('png/png-fixture3.png', 'comp1/icon.png');
         helper.command.import();
         checkoutOutput = helper.command.checkoutHead('--all --manual');
@@ -39,7 +39,7 @@ describe('handling binary files in Bit', function () {
     describe('when there is no conflict', () => {
       let checkoutOutput: string;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(afterFirstTag);
+        helper.scopeHelper.getClonedWorkspace(afterFirstTag);
         helper.command.import();
         checkoutOutput = helper.command.checkoutHead('--all');
       });

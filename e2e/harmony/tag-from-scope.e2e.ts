@@ -23,7 +23,7 @@ describe('tag components on Harmony', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -90,7 +90,7 @@ describe('tag components on Harmony', function () {
         expect(pkgJson.data.pkgJson.version).to.equal('0.0.2'); // new tag
       });
       it('the package should have the dists', () => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         const pkgName = helper.general.getPackageNameByCompName('comp1');
         helper.command.install(pkgName);
         const distPath = path.join(helper.scopes.localPath, 'node_modules', pkgName, 'dist');
@@ -184,7 +184,7 @@ describe('tag components on Harmony', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       // new npmCiRegistry to avoid collision with the previous one
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -240,7 +240,7 @@ describe('tag components on Harmony', function () {
     let bareTag;
     let headBeforeTag: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.snapAllComponents();
       const firstSnap = helper.command.getHead('comp1');
@@ -281,7 +281,7 @@ describe('tag components on Harmony', function () {
   describe('tagging multiple components in the same machine with dependencies specified as ranges', () => {
     let bareTag;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.snapAllComponents();
       helper.command.export();
@@ -321,7 +321,7 @@ describe('tag components on Harmony', function () {
   describe('hidden snaps', () => {
     let bareTag;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.snapAllComponents('-m "message from the snap command"');
       helper.command.export();
@@ -338,7 +338,7 @@ describe('tag components on Harmony', function () {
       // console.log('data', `bit _tag '${JSON.stringify(data)}' --push`);
       helper.command.tagFromScope(bareTag.scopePath, data, '--push');
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1', '-x');
     });
@@ -360,7 +360,7 @@ describe('tag components on Harmony', function () {
     let bareTag;
     let capsuleDir: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes({ disablePreview: false });
+      helper.scopeHelper.setWorkspaceWithRemoteScope({ disablePreview: false });
       helper.fixtures.populateComponents(1, false);
       helper.command.snapAllComponents('-m "message from the snap command"');
       helper.command.export();

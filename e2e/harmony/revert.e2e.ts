@@ -15,12 +15,12 @@ describe('bit revert command', function () {
   describe('basic revert', () => {
     let beforeRevert: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, false, 'version2');
       helper.command.tagAllWithoutBuild();
-      beforeRevert = helper.scopeHelper.cloneLocalScope();
+      beforeRevert = helper.scopeHelper.cloneWorkspace();
       helper.command.revert('comp1', '0.0.1', '-x');
     });
     it('should change the code to the specified version', () => {
@@ -33,7 +33,7 @@ describe('bit revert command', function () {
     });
     describe('when the component is modified', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeRevert);
+        helper.scopeHelper.getClonedWorkspace(beforeRevert);
         helper.fixtures.populateComponents(1, false, 'version3');
         helper.command.revert('comp1', '0.0.1', '-x');
       });
@@ -46,7 +46,7 @@ describe('bit revert command', function () {
   });
   describe('revert from lane to main', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();

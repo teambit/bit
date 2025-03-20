@@ -18,7 +18,7 @@ describe('bit lane command', function () {
     let scopeWithoutOwner: string;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       helper.fixtures.populateComponents(3);
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -68,6 +68,19 @@ describe('bit lane command', function () {
         const ids = listScope.map((l) => l.id);
         expect(ids).to.include(`${helper.scopes.remote}/comp1`);
       });
+    });
+  });
+  describe('eject when there is no main version', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane();
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+    });
+    it('should throw an error saying it has no main version', () => {
+      const error = helper.general.runWithTryCatch('bit lane eject comp1');
+      expect(error).to.have.string('it has no main version');
     });
   });
 });

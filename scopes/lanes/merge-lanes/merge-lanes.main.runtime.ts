@@ -514,10 +514,8 @@ export class MergeLanesMain {
         allVersions: false,
         // no need to export anything else other than the head. the normal calculation of what to export won't apply here
         // as it is done from the scope.
-        // @todo: if we merge main to a lane, then no need to export all main history, it'll be fetched later by fetchMissingHistory.
-        // once a change is done in the exporter about this, uncomment the next line.
-        // exportHeadsOnly: shouldSquash || fromLaneId.isDefault(),
-        exportHeadsOnly: shouldSquash,
+        // when merging main to a lane, no need to export all main history, it'll be fetched later by fetchMissingHistory.
+        exportHeadsOnly: shouldSquash || fromLaneId.isDefault(),
         // when merging main into a lane, because `shouldSquash` is false, we don't export head only, but all the snaps
         // in between. chances are that a) many of them are already exported, b) those that are not head, are not in
         // the local bare-scope, so trying to export them result in VersionNotFoundOnFS error.
@@ -699,7 +697,7 @@ async function filterComponentsStatus(
     const modelComponent = await legacyScope.getModelComponent(compId);
     if (shouldSquash) {
       // no need to check all versions, we merge only the head
-      const headOnTarget = otherLane ? otherLane.getComponent(compId)?.head : modelComponent.head;
+      const headOnTarget = otherLane ? otherLane.getCompHeadIncludeUpdateDependents(compId) : modelComponent.head;
       if (!headOnTarget) {
         throw new Error(`filterComponentsStatus: unable to find head for ${compId.toString()}`);
       }
@@ -745,7 +743,7 @@ async function filterComponentsStatus(
       if (includeDeps) {
         depsToAdd.push(...depsOnLane);
       } else {
-        const headOnTarget = otherLane ? otherLane.getComponent(compId)?.head : modelComponent.head;
+        const headOnTarget = otherLane ? otherLane.getCompHeadIncludeUpdateDependents(compId) : modelComponent.head;
         const depsOnLaneStr = depsOnLane.map((dep) => dep.toStringWithoutVersion());
         if (headOnTarget?.isEqual(remoteVersion)) {
           depsOnLaneStr.forEach((dep) => {

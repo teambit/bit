@@ -20,7 +20,7 @@ describe('cyclic dependencies', function () {
   describe('a => b, b => a (component A requires B, component B requires A)', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.createFile('comp/a', 'a.js', fixtureA);
       helper.fs.createFile('comp/b', 'b.js', fixtureB);
       helper.command.addComponent('comp/a', { i: 'comp/a' });
@@ -65,7 +65,7 @@ describe('cyclic dependencies', function () {
       describe('importing to a new environment', () => {
         let importOutput;
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('comp/a');
           importOutput = helper.command.importComponent('comp/b');
@@ -88,7 +88,7 @@ describe('cyclic dependencies', function () {
   describe('a complex case with a long chain of dependencies', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       // isString => isType
       helper.fixtures.createComponentIsType();
       helper.fixtures.createComponentIsString();
@@ -397,7 +397,7 @@ describe('cyclic dependencies', function () {
       describe('importing to a new environment', () => {
         let importOutput;
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.scopeHelper.addRemoteScope();
           importOutput = helper.command.importComponent('comp/a1');
         });
@@ -420,7 +420,7 @@ describe('cyclic dependencies', function () {
   describe('same component require itself using module path', () => {
     let tagOutput;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();

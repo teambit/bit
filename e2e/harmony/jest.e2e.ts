@@ -15,7 +15,7 @@ describe('Jest Tester', function () {
   });
   describe('component without any test file', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
     });
     it('bit test should not throw any error', () => {
@@ -36,7 +36,7 @@ describe('Jest Tester', function () {
   // #2. C:\\Users\\Administrator\\AppData\\Local\\Temp\\2\\bit\\e2e\\2zmx1543-local\\comp1\\comp1.spec.ts
   (IS_WINDOWS ? describe.skip : describe)('component with a passing test', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
     });
@@ -51,7 +51,7 @@ describe('Jest Tester', function () {
   });
   (IS_WINDOWS ? describe.skip : describe)('component with a failing test', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFileFailingFixture());
     });
@@ -74,7 +74,7 @@ describe('Jest Tester', function () {
   });
   describe('component with an errored test', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFileErroringFixture());
     });
@@ -95,7 +95,7 @@ describe('Jest Tester', function () {
     let envName;
     let envId;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
       envName = helper.env.setCustomNewEnv('invalid-jest-config-env', [
@@ -125,7 +125,7 @@ describe('Jest Tester', function () {
     let envName;
     let envId;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       compName = helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
       helper.fs.outputFile(

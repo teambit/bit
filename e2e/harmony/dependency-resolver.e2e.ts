@@ -27,7 +27,7 @@ describe('dependency-resolver extension', function () {
       let isTypeOutput;
 
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.fixtures.createComponentUtilsIsType();
@@ -67,7 +67,7 @@ describe('dependency-resolver extension', function () {
       let barFooOutput;
       describe('policies added core env', function () {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.fixtures.createComponentBarFoo();
           helper.fixtures.addComponentBarFoo();
           // TODO: use custom env with versions provided from outside in the config by the user
@@ -82,7 +82,7 @@ describe('dependency-resolver extension', function () {
       describe('policies added by custom env', function () {
         let utilsIsTypeOutput;
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.fixtures.createComponentBarFoo('import "lodash.zip"');
           helper.fixtures.addComponentBarFoo();
           helper.fixtures.createComponentUtilsIsType();
@@ -115,7 +115,7 @@ describe('dependency-resolver extension', function () {
       const EXTENSIONS_BASE_FOLDER = 'extension-add-dependencies';
       const config = {};
       before(() => {
-        helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+        helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.fixtures.createComponentUtilsIsType();
@@ -161,7 +161,7 @@ describe('dependency-resolver extension', function () {
     let npmCiRegistry: NpmCiRegistry;
     let randomStr;
     before(async () => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
 
       npmCiRegistry = new NpmCiRegistry(helper);
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
@@ -224,7 +224,7 @@ describe('dependency-resolver extension', function () {
     //   └── path-is-absolute 1.0.1
     describe('using Yarn as a package manager', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/yarn');
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('overrides', {
           'is-odd': '1.0.0',
@@ -259,7 +259,7 @@ describe('dependency-resolver extension', function () {
     });
     describe('using pnpm as a package manager', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/pnpm');
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('overrides', {
           'is-odd': '1.0.0',
@@ -295,7 +295,7 @@ describe('dependency-resolver extension', function () {
     let modulesState: Modules | null;
     before(async () => {
       helper = new Helper();
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('hoistPatterns', ['hoist-pattern']);
       helper.fixtures.populateComponents(1);

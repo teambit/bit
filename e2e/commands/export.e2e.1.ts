@@ -16,7 +16,7 @@ describe('bit export command', function () {
   });
   describe('with no components to export', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
     });
     it('should print nothing to export', () => {
       const output = helper.command.export();
@@ -25,7 +25,7 @@ describe('bit export command', function () {
   });
   describe('with multiple versions', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
@@ -42,13 +42,13 @@ describe('bit export command', function () {
   });
   describe('imported (v1), exported (v2) and then exported again (v3)', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo'); // v1
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo', '--path components/bar/foo');
 
@@ -70,7 +70,7 @@ describe('bit export command', function () {
     let pngSize;
     let destPngFile;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
       destPngFile = path.join(helper.scopes.localPath, 'bar', 'png_fixture.png');
@@ -101,7 +101,7 @@ describe('bit export command', function () {
   describe('export a component, do not modify it and export again to the same scope', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
@@ -114,7 +114,7 @@ describe('bit export command', function () {
   });
   describe('export a component when the checked out version is not the latest', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo('// v2');
       helper.fixtures.addComponentBarFoo();
       helper.command.tagIncludeUnmodified('2.0.0');
@@ -141,7 +141,7 @@ describe('bit export command', function () {
     const isWin = process.platform === 'win32';
     let scopeBeforeExport;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       fs.emptyDirSync(helper.scopes.remotePath);
       helper.command.runCmd('bit init --bare --shared nonExistGroup', helper.scopes.remotePath);
       helper.scopeHelper.addRemoteScope();
@@ -149,7 +149,7 @@ describe('bit export command', function () {
       helper.fixtures.addComponentBarFoo();
       helper.workspaceJsonc.setupDefault();
       helper.command.tagAllComponents();
-      scopeBeforeExport = helper.scopeHelper.cloneLocalScope();
+      scopeBeforeExport = helper.scopeHelper.cloneWorkspace();
     });
     describe('when the group name does not exist', () => {
       before(() => {
@@ -172,7 +172,7 @@ describe('bit export command', function () {
         this.skip;
       } else {
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(scopeBeforeExport);
+          helper.scopeHelper.getClonedWorkspace(scopeBeforeExport);
           fs.emptyDirSync(helper.scopes.remotePath);
           const currentGroup = helper.command.runCmd('id -gn');
           helper.command.runCmd(`bit init --bare --shared ${currentGroup}`, helper.scopes.remotePath);
@@ -187,7 +187,7 @@ describe('bit export command', function () {
   });
   describe('export after re-creating the remote', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
       helper.command.export();
@@ -223,7 +223,7 @@ describe('bit export command', function () {
   describe('re-export using the component name without the scope name', () => {
     let output;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllComponents();
