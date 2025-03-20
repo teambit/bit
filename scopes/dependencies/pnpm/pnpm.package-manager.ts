@@ -20,10 +20,9 @@ import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
-import { type ResolveFunction } from '@pnpm/client';
 import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
 import { Config } from '@pnpm/config';
-import { type ProjectId, type ProjectManifest, type DepPath, type Registries as ScopeRegistires } from '@pnpm/types';
+import { type ProjectId, type ProjectManifest, type DepPath } from '@pnpm/types';
 import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
 import {
   buildDependenciesHierarchy,
