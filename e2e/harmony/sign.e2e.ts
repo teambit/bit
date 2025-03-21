@@ -8,6 +8,7 @@ import { type BitLockfileFile } from '@teambit/pnpm';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import stripAnsi from 'strip-ansi';
 import { addDistTag } from '@pnpm/registry-mock';
+import yaml from 'js-yaml';
 
 chai.use(require('chai-fs'));
 
