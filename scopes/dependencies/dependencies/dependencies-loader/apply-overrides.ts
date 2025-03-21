@@ -633,9 +633,11 @@ export class ApplyOverrides {
       acc[pkgName] = this.resolveEnvPeerDepVersion(pkgName);
       return acc;
     }, {});
-    Object.assign(deps, envPolicyManifest);
     // TODO: handle component deps once we support peers between components
-    this.allPackagesDependencies.packageDependencies = resolvedEnvPolicyManifest;
+    this.allPackagesDependencies.packageDependencies = {
+      ...deps,
+      ...resolvedEnvPolicyManifest,
+    };
   }
 
   /**
