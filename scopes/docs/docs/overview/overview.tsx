@@ -138,7 +138,6 @@ export function Overview({
                 fullContentHeight
                 disableScroll={true}
                 sandbox={sandboxValue}
-                includeEnv={true}
                 {...rest}
                 component={component}
                 style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
@@ -157,7 +156,6 @@ export function Overview({
                 fullContentHeight
                 disableScroll={true}
                 sandbox={sandboxValue}
-                includeEnv={true}
                 {...rest}
                 component={component}
                 style={{ width: '100%', height: '100%', minHeight: !isScaling ? 500 : undefined }}
