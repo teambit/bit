@@ -29,7 +29,7 @@ function _CompositionCard({
       <ComponentComposition
         disableScroll
         className={previewClass}
-        includeEnv={false}
+        includeEnv={true}
         loading={'lazy'}
         composition={composition}
         component={component}
