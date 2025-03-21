@@ -267,7 +267,6 @@ export async function install(
     pruneLockfileImporters: true,
     lockfileOnly: options.lockfileOnly ?? false,
     modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.
-    neverBuiltDependencies: options.neverBuiltDependencies ?? [],
     registries: registries.toMap(),
     resolutionMode: 'highest',
     rawConfig: authConfig,
@@ -285,6 +284,7 @@ export async function install(
     },
     userAgent: networkConfig.userAgent,
     ...options,
+    neverBuiltDependencies: options.neverBuiltDependencies ?? [],
     returnListOfDepsRequiringBuild: true,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     depth: options.updateAll ? Infinity : 0,
