@@ -32,7 +32,7 @@ export function updateDependencyVersion(
   if (dependency.getPackageName) {
     const packageName = dependency.getPackageName();
     const variantVersion = variantPolicy?.getDepVersion(packageName, dependency.lifecycle);
-    const variantVersionWithoutSpecialChar = variantVersion && variantVersion !== '-' && variantVersion !== '+'
+    const variantVersionWithoutSpecialChar = variantVersion && variantVersion !== '-' && variantVersion !== '+' && variantVersion !== '*'
       ? variantVersion
       : undefined;
     const version =

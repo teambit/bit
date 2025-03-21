@@ -388,4 +388,63 @@ describe('dependency-resolver extension', function () {
       });
     });
   });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('env.jsonc with policy.peer version="*"', () => {
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllComponents();
+      helper.env.setEmptyEnv();
+      helper.fs.outputFile('empty-env/env.jsonc', `{
+  "policy": {
+    "peers": [
+      {
+        "name": "${helper.general.getPackageNameByCompName('comp1')}",
+        "version": "*",
+        "supportedRange": "*"
+      }
+    ]
+  }
+}
+`);
+      helper.command.tagAllComponents(); // it'll tag only empty-env.
+      helper.command.export();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+    });
+    function validateDepData(expectedVersion: string) {
+      const comp = helper.command.catComponent(`${helper.scopes.remote}/empty-env@latest`);
+      const depResolverExt = comp.extensions.find((e) => e.name === Extensions.dependencyResolver);
+      const policy = depResolverExt.data.policy.find(p => p.dependencyId === helper.general.getPackageNameByCompName('comp1'));
+      expect(policy.value.version).to.equal('*');
+      const data =  depResolverExt.data.dependencies.find(p => p.packageName === helper.general.getPackageNameByCompName('comp1'));
+      expect(data.version).to.equal(expectedVersion);
+      expect(data.componentId.version).to.equal(expectedVersion);
+    }
+    it('should not break and save the policy correctly with the *', () => {
+      validateDepData('0.0.1');
+    });
+    describe('making a new version of the env dep', () => {
+      before(() => {
+        helper.command.tagAllComponents('--unmodified');
+        helper.command.export();
+      });
+      it('should update the dep in the env model', () => {
+        validateDepData('0.0.2');
+      });
+      it('should be able to install the env on a new workspace with no errors', () => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.install(helper.general.getPackageNameByCompName('empty-env'));
+        const pkgJson = helper.fs.readJsonFile(`node_modules/${helper.general.getPackageNameByCompName('empty-env')}/package.json`);
+        expect(pkgJson.dependencies[`${helper.general.getPackageNameByCompName('comp1')}`]).to.equal('0.0.2');
+      });
+    });
+  });
 });
