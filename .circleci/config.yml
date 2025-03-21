@@ -933,6 +933,10 @@ jobs:
       - bit_global_for_npm
       - restore_cache:
           key: bitsrc-registry10
+      - install_bvm
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - bvm_upgrade
       - e2e_test_cmd:
          bit_bin: "--bin_bit=bbit"
