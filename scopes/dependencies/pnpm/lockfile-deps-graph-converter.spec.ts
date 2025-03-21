@@ -1,11 +1,15 @@
 import path from 'path';
+import { ComponentID } from '@teambit/component';
 import { DependenciesGraph } from '@teambit/objects';
-import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
+import { type BitLockfileFile } from './lynx';
 import { expect } from 'chai';
 
 describe('convertLockfileToGraph simple case', () => {
-  const lockfile: LockfileFileV9 = {
+  const lockfile: BitLockfileFile = {
+    bit: {
+      depsRequiringBuild: ['bar@1.0.0'],
+    },
     importers: {
       '.': {},
       'node_modules/.bit_roots/env': {
@@ -98,10 +102,12 @@ describe('convertLockfileToGraph simple case', () => {
     pkgName: 'comp1',
     componentRelativeDir: 'comps/comp1',
     componentRootDir: 'node_modules/.bit_roots/env',
-    componentIdByPkgName: new Map(),
+    componentIdByPkgName: new Map([
+      ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')]
+    ]),
   });
   const expected = {
-    schemaVersion: '1.0',
+    schemaVersion: '2.0',
     edges: [
       {
         id: 'foo@1.0.0(patch_hash=0000)',
@@ -118,7 +124,7 @@ describe('convertLockfileToGraph simple case', () => {
         },
       },
       {
-        id: 'comp1@pending:',
+        id: 'comp1@1.0.0',
         neighbours: [
           {
             id: 'foo@1.0.0(patch_hash=0000)',
@@ -175,6 +181,7 @@ describe('convertLockfileToGraph simple case', () => {
         },
       },
       'bar@1.0.0': {
+        requiresBuild: true,
         resolution: {
           integrity: 'sha512-111',
         },
@@ -192,10 +199,10 @@ describe('convertLockfileToGraph simple case', () => {
           integrity: 'sha512-333',
         },
       },
-      'comp1@pending:': {
-        resolution: {
-          directory: 'comps/comp1',
-          type: 'directory',
+      'comp1@1.0.0': {
+        component: {
+          name: 'comp1',
+          scope: 'my-scope',
         },
       },
     },
@@ -206,23 +213,32 @@ describe('convertLockfileToGraph simple case', () => {
       packages: Object.fromEntries(graph.packages.entries()),
     }).to.eql(expected);
   });
-  it('should convert the graph object to the lockfile object', () => {
+  it('should convert the graph object to the lockfile object', async () => {
     expect(
-      convertGraphToLockfile(
+      await convertGraphToLockfile(
         new DependenciesGraph(graph),
         {
-          [path.resolve('comps/comp1')]: {
-            dependencies: {
-              foo: '^1.0.0',
-              bar: `link:${path.resolve('comps/bar')}`, // Links from the manifests are added to the lockfile
-              qar: '1.1.0',
-              zoo: '1.1.0',
+          manifests: {
+            [path.resolve('comps/comp1')]: {
+              dependencies: {
+                foo: '^1.0.0',
+                bar: `link:${path.resolve('comps/bar')}`, // Links from the manifests are added to the lockfile
+                qar: '1.1.0',
+                zoo: '1.1.0',
+              },
             },
           },
-        },
-        process.cwd()
+          rootDir: process.cwd(),
+          resolve: () => ({ resolution: { integrity: '0000' } }) as any,
+          registries: {
+            default: 'https://registry.npmjs.org/',
+          },
+        }
       )
     ).to.eql({
+      bit: {
+        depsRequiringBuild: ['bar@1.0.0'],
+      },
       importers: {
         'comps/comp1': {
           dependencies: {
@@ -256,7 +272,7 @@ describe('convertLockfileToGraph simple case', () => {
         },
         'bar@1.0.0': {},
         'qar@1.1.0': {},
-        'comp1@pending:': {
+        'comp1@1.0.0': {
           dependencies: {
             foo: '1.0.0(patch_hash=0000)',
             qar: '1.1.0',
@@ -270,10 +286,9 @@ describe('convertLockfileToGraph simple case', () => {
         },
       },
       packages: {
-        'comp1@pending:': {
+        'comp1@1.0.0': {
           resolution: {
-            directory: 'comps/comp1',
-            type: 'directory',
+            integrity: '0000',
           },
         },
         'foo@1.0.0': {
