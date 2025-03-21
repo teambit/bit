@@ -1,6 +1,6 @@
 import path from 'path';
 import { type ProjectManifest, type Registries } from '@pnpm/types';
-import { type InlineSpecifiersResolvedDependencies } from '@pnpm/lockfile.types';
+import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import { type ResolveFunction } from '@pnpm/client';
 import * as dp from '@pnpm/dependency-path';
 import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
@@ -38,7 +38,7 @@ function convertLockfileToGraphFromCapsule(
 }
 
 function importerDepsToNeighbours(
-  importerDependencies: InlineSpecifiersResolvedDependencies,
+  importerDependencies: LockfileFileProjectResolvedDependencies,
   lifecycle: 'dev' | 'runtime',
   optional: boolean
 ): DependencyNeighbour[] {

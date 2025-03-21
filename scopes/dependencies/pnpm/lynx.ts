@@ -30,7 +30,7 @@ import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
 import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
 import { readWantedLockfile, writeWantedLockfile } from '@pnpm/lockfile.fs';
-import { type LockfileFileV9, type Lockfile } from '@pnpm/lockfile.types'
+import { type LockfileFile, type LockfileObject } from '@pnpm/lockfile.types'
 import { Logger } from '@teambit/logger';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { isEqual } from 'lodash'
@@ -267,7 +267,6 @@ export async function install(
     pruneLockfileImporters: true,
     lockfileOnly: options.lockfileOnly ?? false,
     modulesCacheMaxAge: Infinity, // pnpm should never prune the virtual store. Bit does it on its own.
-    neverBuiltDependencies: options.neverBuiltDependencies,
     registries: registries.toMap(),
     resolutionMode: 'highest',
     rawConfig: authConfig,
@@ -285,6 +284,7 @@ export async function install(
     },
     userAgent: networkConfig.userAgent,
     ...options,
+    neverBuiltDependencies: options.neverBuiltDependencies ?? [],
     returnListOfDepsRequiringBuild: true,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
     depth: options.updateAll ? Infinity : 0,
@@ -583,11 +583,11 @@ async function addDepsRequiringBuildToLockfile(rootDir: string, depsRequiringBui
   await writeWantedLockfile(rootDir, lockfile);
 }
 
-export interface BitLockfile extends Lockfile {
+export interface BitLockfile extends LockfileObject {
   bit?: BitLockfileAttributes;
 }
 
-export interface BitLockfileFile extends LockfileFileV9 {
+export interface BitLockfileFile extends LockfileFile {
   bit?: BitLockfileAttributes;
 }
 
