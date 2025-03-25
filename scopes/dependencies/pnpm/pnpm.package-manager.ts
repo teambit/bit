@@ -150,6 +150,7 @@ export class PnpmPackageManager implements PackageManager {
       const allPackageNames: string[] = [];
       for (const manifest of Object.values(manifests)) {
         if (manifest.name != null && manifest.name !== 'workspace') {
+          overrides[manifest.name] = 'workspace:*'
           allPackageNames.push(manifest.name);
         }
       }
