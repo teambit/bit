@@ -107,7 +107,83 @@ export class DependenciesGraph {
    * Returns the edge related to the root component
    */
   findRootEdge(): DependencyEdge | undefined {
-    return this.edges.find(({ id }) => id === DependenciesGraph.ROOT_EDGE_ID);
+    return this.findEdgeById(DependenciesGraph.ROOT_EDGE_ID);
+  }
+
+  findEdgeById(edgeId: string): DependencyEdge | undefined {
+    return this.edges.find(({ id }) => id === edgeId);
+  }
+
+  /**
+   * Finds all possible paths from the root to the specified package names
+   * @param targetPackageNames Array of package names to find paths to
+   * @returns An object mapping each target package name to an array of paths,
+   *          where each path is an array of node IDs representing the traversal from root to target
+   */
+  findPathsToPackages(targetPackageNames: string[]): Record<string, string[][]> {
+    const result: Record<string, string[][]> = {};
+    const rootEdge = this.findRootEdge();
+
+    // Initialize result object with empty arrays for each target package
+    for (const packageName of targetPackageNames) {
+      result[packageName] = [];
+    }
+
+    if (!rootEdge) {
+      return result; // Return empty result if no root edge found
+    }
+
+    // Helper function to perform depth-first search
+    const dfs = (
+      currentEdgeId: string, 
+      currentPath: string[], 
+      visited: Set<string>
+    ) => {
+      // Avoid cycles by checking if we've already visited this node
+      if (visited.has(currentEdgeId)) {
+        return;
+      }
+
+      visited.add(currentEdgeId);
+      currentPath.push(currentEdgeId);
+
+      // Find the current edge
+      const currentEdge = this.findEdgeById(currentEdgeId);
+      // console.log(currentEdge)
+      if (!currentEdge) {
+        // Remove the node from path and visited if it doesn't exist
+        currentPath.pop();
+        visited.delete(currentEdgeId);
+        return;
+      }
+
+      // Check if the current edge represents a package in our target list
+      // const packageAttr = this.packages.get(currentEdge.attr?.pkgId ?? currentEdge.id);
+      // console.log(currentEdge)
+      // console.log(packageAttr)
+      const parsed = dp.parse(currentEdgeId);
+      if (parsed.name) {
+        // console.log(packageAttr.name)
+        if (targetPackageNames.includes(parsed.name)) {
+          // Found a path to a target package, add it to results
+          result[parsed.name].push([...currentPath]);
+        }
+      }
+
+      // Visit all neighbors
+      for (const neighbor of currentEdge.neighbours) {
+        dfs(neighbor.id, [...currentPath], new Set(visited));
+      }
+
+      // Backtrack
+      currentPath.pop();
+      visited.delete(currentEdgeId);
+    };
+
+    // Start DFS from the root edge
+    dfs(rootEdge.id, [], new Set());
+
+    return result;
   }
 }
 

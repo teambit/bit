@@ -30,6 +30,7 @@ import {
   createPackagesSearcher,
   PackageNode,
 } from '@pnpm/reviewing.dependencies-hierarchy';
+import * as dp from '@pnpm/dependency-path';
 import { renderTree } from '@pnpm/list';
 import {
   readWantedLockfile,
@@ -126,19 +127,45 @@ export class PnpmPackageManager implements PackageManager {
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
-    if (
-      installOptions.dependenciesGraph &&
-      isFeatureEnabled(DEPS_GRAPH) &&
-      (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
-    ) {
-      await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
-        manifests,
-        rootDir,
-        registries,
-        proxyConfig,
-        networkConfig,
-        cacheDir: config.cacheDir,
-      });
+    const overrides = { ...installOptions.overrides };
+    console.log(installOptions.dependenciesGraph != null)
+    if (installOptions.dependenciesGraph) {
+      if (
+        isFeatureEnabled(DEPS_GRAPH) &&
+        (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
+      ) {
+        try {
+        await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
+          manifests,
+          rootDir,
+          registries,
+          proxyConfig,
+          networkConfig,
+          cacheDir: config.cacheDir,
+        });
+        } catch (err) {
+          console.log(err)
+        }
+      }
+      const allPackageNames: string[] = [];
+      for (const manifest of Object.values(manifests)) {
+        if (manifest.name != null && manifest.name !== 'workspace') {
+          allPackageNames.push(manifest.name);
+        }
+      }
+      const paths = installOptions.dependenciesGraph.findPathsToPackages(allPackageNames);
+      console.log(paths)
+      for (const allEdgeIds of Object.values(paths)) {
+        for (const edgeIds of allEdgeIds) {
+          for (const edgeId of edgeIds.slice(0, edgeIds.length - 1)) {
+            const parsed = dp.parse(edgeId);
+            if (parsed.name) {
+              overrides[parsed.name] = 'latest';
+            }
+          }
+        }
+      }
+      console.log(overrides)
     }
 
     this.logger.debug(`running installation in root dir ${rootDir}`);
@@ -184,7 +211,7 @@ export class PnpmPackageManager implements PackageManager {
         ignorePackageManifest: installOptions.ignorePackageManifest,
         dedupeInjectedDeps: installOptions.dedupeInjectedDeps ?? false,
         dryRun: installOptions.dependenciesGraph == null && installOptions.dryRun,
-        overrides: installOptions.overrides,
+        overrides,
         hoistPattern: installOptions.hoistPatterns ?? config.hoistPattern,
         publicHoistPattern: config.shamefullyHoist
           ? ['*']
