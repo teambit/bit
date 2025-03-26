@@ -1,7 +1,10 @@
 /* eslint no-console: 0 */
 
+import fs from 'fs-extra';
+import path from 'path';
 import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import { difference } from 'lodash';
 
 const MAX_FILES_READ = 1050;
 const MAX_FILES_READ_STATUS = 1500;
@@ -30,6 +33,15 @@ describe('Filesystem read count', function () {
       });
       it('should not exceed a reasonable file-count number', () => {
         const output = helper.command.runCmd('bit --help', undefined, undefined, undefined, undefined, { 'BIT_DEBUG_READ_FILE': 'true' });
+        const numberOfReads = getNumberOfReads(output);
+        if (numberOfReads) {
+          console.log(`Total reads found: ${numberOfReads}`);
+          if (numberOfReads > MAX_FILES_READ) {
+            printDiffFromLastSnapshot(output);
+          }
+        } else {
+          console.log(`No read lines (#...) found`);
+        }
         expect(output).to.have.string('0');
         expect(output).to.have.string('package.json');
         expect(output).to.have.string('node_modules');
@@ -67,3 +79,62 @@ describe('Filesystem read count', function () {
     });
   });
 });
+
+function getNumberOfReads(cmdOutput: string): number {
+  const lines = cmdOutput.split('\n');
+
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i].trim();
+    if (line.startsWith('#')) {
+      // match lines that begin with `#<digits>`
+      const match = line.match(/^#(\d+)/);
+      if (match) {
+        const lastNumber = parseInt(match[1], 10);
+        return lastNumber;
+      }
+    }
+  }
+
+  // if no match found at all
+  return 0;
+}
+
+function printDiffFromLastSnapshot(cmdOutput: string) {
+  const fromLastSnapshot = fs.readFileSync(path.join(__dirname, 'files-snapshot.txt')).toString();
+  const fromLastSnapshotLines = fromLastSnapshot.split('\n');
+  const { linesFromBitInstallation, otherLines } = getLinesFromBitInstallation(cmdOutput);
+  console.log('********** the following files are new ***************************');
+  difference(fromLastSnapshotLines, linesFromBitInstallation).forEach((line) => console.log(line));
+  console.log('******************************************************************');
+  console.log('********** the following files are not from bit-installation *****');
+  otherLines.forEach((line) => console.log(line));
+  console.log('*******************************************************************');
+}
+
+function getLinesFromBitInstallation(cmdOutput: string) {
+  const lines = cmdOutput.split('\n');
+  const relevantLines = lines.filter((line) => line.startsWith('#'));
+  const linesWithoutHash = relevantLines.map(l => l.replace(/#[0-9]+/, ''));
+  const mustPresentFileCandidate = '@teambit/bit/dist/bootstrap.js';
+  const bitBootstrap = linesWithoutHash.find(l => l.endsWith(mustPresentFileCandidate));
+  if (!bitBootstrap) {
+    throw new Error(`unable to find ${mustPresentFileCandidate} in the output`);
+  }
+  const commonDir = bitBootstrap.replace(mustPresentFileCandidate, '');
+  const linesWithCommonDir = linesWithoutHash.filter(l => l.startsWith(commonDir));
+  const linesFromBitInstallation = linesWithCommonDir.map(l => l.replace(commonDir, ''));
+  const otherLines = linesWithoutHash.filter(l => !l.startsWith(commonDir));
+  return { linesFromBitInstallation, otherLines };
+}
+
+/**
+ * in case a new snapshot is needed, call this function during the test.
+ * then go to the output and paste the files into files-snapshot.txt.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function makeSnapshot(cmdOutput: string) {
+  const { linesFromBitInstallation } = getLinesFromBitInstallation(cmdOutput);
+  console.log('************** start snapshot **************');
+  linesFromBitInstallation.forEach((line) => console.log(line));
+  console.log('************** end snapshot ****************');
+}
