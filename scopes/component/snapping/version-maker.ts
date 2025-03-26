@@ -343,18 +343,41 @@ export class VersionMaker {
     return Object.values(consumerComponentsIdsMap); // consumerComponents unique
   }
 
-  private async getAutoTagData(idsToTag: ComponentID[]) {
+  private async getAutoTagData(idsToTag: ComponentIdList): Promise<AutoTagResult[]> {
+    if (this.params.skipAutoTag) return [];
+    if (!this.workspace) return this.getLaneAutoTagIdsFromScope(idsToTag);
     // ids without versions are new. it's impossible that tagged (and not-modified) components has
     // them as dependencies.
     const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
-    const autoTagDataWithLocalOnly =
-      this.params.skipAutoTag || !this.workspace
-        ? []
-        : await this.workspace.getAutoTagInfo(ComponentIdList.fromArray(idsToTriggerAutoTag));
+    const autoTagDataWithLocalOnly = await this.workspace.getAutoTagInfo(
+      ComponentIdList.fromArray(idsToTriggerAutoTag));
     const localOnly = this.workspace?.listLocalOnly();
     return localOnly
       ? autoTagDataWithLocalOnly.filter((autoTagItem) => !localOnly.hasWithoutVersion(autoTagItem.component.id))
       : autoTagDataWithLocalOnly;
+  }
+
+  private async getLaneAutoTagIdsFromScope(idsToTag: ComponentIdList): Promise<AutoTagResult[]> {
+    const lane = await this.legacyScope.getCurrentLaneObject();
+    if (!lane) return [];
+    const laneCompIds = lane.toComponentIds();
+    const graphIds = await this.scope.getGraphIds(laneCompIds);
+    const dependentsMap = idsToTag.reduce((acc, id) => {
+      const dependents = graphIds.predecessors(id.toString());
+      const dependentsCompIds = dependents.map(d => d.attr);
+      const dependentsCompIdsFromTheLane = dependentsCompIds.filter(s => laneCompIds.has(s));
+      if (!dependentsCompIdsFromTheLane.length) return acc;
+      acc[id.toString()] = ComponentIdList.fromArray(dependentsCompIdsFromTheLane);
+      return acc;
+    }, {} as Record<string, ComponentIdList>);
+    if (Object.keys(dependentsMap).length === 0) return [];
+    const allDependentsIds = ComponentIdList.uniqFromArray(Object.values(dependentsMap).flat());
+    const allDependents = await this.legacyScope.getManyConsumerComponents(allDependentsIds);
+    return allDependents.map((dependent) => {
+      const triggeredByIds = Object.keys(dependentsMap).filter((id) => dependentsMap[id].has(dependent.id));
+      const triggeredBy = ComponentIdList.fromStringArray(triggeredByIds);
+      return { component: dependent, triggeredBy };
+    });
   }
 
   private async setFutureVersions(autoTagIds: ComponentIdList): Promise<void> {

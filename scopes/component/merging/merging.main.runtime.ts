@@ -656,7 +656,7 @@ export class MergingMain {
           loadAspectOnlyForIds: getLoadAspectOnlyForIds(),
         }
       );
-      return { ...results, autoSnappedResults: [] };
+      return results;
     }
     return this.snapping.snap({
       legacyBitIds: ids,
