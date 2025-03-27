@@ -135,8 +135,8 @@ export class DependenciesGraph {
 
     // Helper function to perform depth-first search
     const dfs = (
-      currentEdgeId: string, 
-      currentPath: string[], 
+      currentEdgeId: string,
+      currentPath: string[],
       visited: Set<string>
     ) => {
       // Avoid cycles by checking if we've already visited this node
@@ -149,13 +149,6 @@ export class DependenciesGraph {
 
       // Find the current edge
       const currentEdge = this.findEdgeById(currentEdgeId);
-      // console.log(currentEdge)
-      if (!currentEdge) {
-        // Remove the node from path and visited if it doesn't exist
-        currentPath.pop();
-        visited.delete(currentEdgeId);
-        return;
-      }
 
       // Check if the current edge represents a package in our target list
       // const packageAttr = this.packages.get(currentEdge.attr?.pkgId ?? currentEdge.id);
@@ -170,9 +163,13 @@ export class DependenciesGraph {
         }
       }
 
-      // Visit all neighbors
-      for (const neighbor of currentEdge.neighbours) {
-        dfs(neighbor.id, [...currentPath], new Set(visited));
+      if (currentEdge) {
+        // Visit all neighbors
+        for (const neighbor of currentEdge.neighbours) {
+          if (neighbor.id != null) { // We currently ignore the "linked" packages.
+            dfs(neighbor.id, [...currentPath], new Set(visited));
+          }
+        }
       }
 
       // Backtrack
