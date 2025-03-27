@@ -8,7 +8,7 @@
  * See the docs (https://bit.dev/reference/components/removing-components) for more information, or use "bit remove --help".
  */
 
-{
+ {
     "analytics": {
         "name": "analytics",
         "scope": "teambit.legacy",
@@ -1639,13 +1639,6 @@
         "version": "1.0.579",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/sidebar"
-    },
-    "sign": {
-        "name": "sign",
-        "scope": "teambit.scope",
-        "version": "1.0.580",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/scope/sign"
     },
     "snap-distance": {
         "name": "snap-distance",
