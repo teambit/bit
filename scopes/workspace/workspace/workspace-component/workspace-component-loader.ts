@@ -121,7 +121,7 @@ export class WorkspaceComponentLoader {
       return { components: [], invalidComponents: [] };
     }
     const callId = Math.floor(Math.random() * 1000); // generate a random callId to be able to identify the call from the logs
-    this.logger.profile(`getMany-${callId}`);
+    this.logger.profileTrace(`getMany-${callId}`);
     this.logger.setStatusLine(`loading ${ids.length} component(s)`);
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
       // We don't want to load extension or execute the load slot at this step
@@ -167,7 +167,7 @@ export class WorkspaceComponentLoader {
       (comp) =>
         idsWithEmptyStrs.includes(comp.id.toString()) || idsWithEmptyStrs.includes(comp.id.toStringWithoutVersion())
     );
-    this.logger.profile(`getMany-${callId}`);
+    this.logger.profileTrace(`getMany-${callId}`);
     this.logger.clearStatusLine();
     return { components: requestedComponents, invalidComponents };
   }
@@ -180,9 +180,9 @@ export class WorkspaceComponentLoader {
     if (!ids?.length) return { components: [], invalidComponents: [] };
 
     const workspaceScopeIdsMap: WorkspaceScopeIdsMap = await this.groupAndUpdateIds(ids);
-    this.logger.profile('buildLoadGroups');
+    this.logger.profileTrace('buildLoadGroups');
     const groupsToHandle = await this.buildLoadGroups(workspaceScopeIdsMap);
-    this.logger.profile('buildLoadGroups');
+    this.logger.profileTrace('buildLoadGroups');
     // prefix your command with "BIT_LOG=*" to see the detailed groups
     if (process.env.BIT_LOG) {
       printGroupsToHandle(groupsToHandle, this.logger);
@@ -191,12 +191,12 @@ export class WorkspaceComponentLoader {
       await mapSeries(groupsToHandle, async (group, index) => {
         const { scopeIds, workspaceIds, aspects, core, seeders, envs } = group;
         const groupDesc = `getMany-${callId} group ${index + 1}/${groupsToHandle.length} - ${loadGroupToStr(group)}`;
-        this.logger.profile(groupDesc);
+        this.logger.profileTrace(groupDesc);
         if (!workspaceIds.length && !scopeIds.length) {
           throw new Error('getAndLoadSlotOrdered - group has no ids to load');
         }
         const res = await this.getAndLoadSlot(workspaceIds, scopeIds, { ...loadOpts, core, seeders, aspects, envs });
-        this.logger.profile(groupDesc);
+        this.logger.profileTrace(groupDesc);
         // We don't want to return components that were not asked originally (we do want to load them)
         if (!group.seeders) return undefined;
         return res;
@@ -411,17 +411,17 @@ export class WorkspaceComponentLoader {
       return !loadOpts.idsToNotLoadAsAspects?.includes(ext.stringId);
     });
     if (loadOpts.loadExtensions) {
-      this.logger.profile('loadComponentsExtensions');
+      this.logger.profileTrace('loadComponentsExtensions');
       await this.workspace.loadComponentsExtensions(filteredMergeExtensions);
-      this.logger.profile('loadComponentsExtensions');
+      this.logger.profileTrace('loadComponentsExtensions');
     }
     let wsComponentsWithAspects = workspaceComponents;
     // if (loadOpts.seeders) {
-    this.logger.profile('executeLoadSlot');
+    this.logger.profileTrace('executeLoadSlot');
     wsComponentsWithAspects = await pMapPool(workspaceComponents, (component) => this.executeLoadSlot(component), {
       concurrency: concurrentComponentsLimit(),
     });
-    this.logger.profile('executeLoadSlot');
+    this.logger.profileTrace('executeLoadSlot');
     await this.warnAboutMisconfiguredEnvs(wsComponentsWithAspects);
     // }
 
@@ -430,7 +430,7 @@ export class WorkspaceComponentLoader {
     // It's important to load the workspace components as aspects here
     // otherwise the envs from the workspace won't be loaded at time
     // so we will get wrong dependencies from component who uses envs from the workspace
-    this.logger.profile('loadCompsAsAspects');
+    this.logger.profileTrace('loadCompsAsAspects');
     if (loadOpts.loadSeedersAsAspects || (loadOpts.core && loadOpts.aspects)) {
       await this.loadCompsAsAspects(workspaceComponents.concat(scopeComponents), {
         loadApps: true,
@@ -441,7 +441,7 @@ export class WorkspaceComponentLoader {
         idsToNotLoadAsAspects: loadOpts.idsToNotLoadAsAspects,
       });
     }
-    this.logger.profile('loadCompsAsAspects');
+    this.logger.profileTrace('loadCompsAsAspects');
 
     return { components: withAspects, invalidComponents };
   }
@@ -581,7 +581,7 @@ export class WorkspaceComponentLoader {
     workspaceIds.forEach((id) => {
       idsIndex[id.toString()] = id;
     });
-    this.logger.profile('consumer.loadComponents');
+    this.logger.profileTrace('consumer.loadComponents');
     const {
       components: legacyComponents,
       invalidComponents: legacyInvalidComponents,
@@ -591,7 +591,7 @@ export class WorkspaceComponentLoader {
       false,
       loadOptsWithDefaults
     );
-    this.logger.profile('consumer.loadComponents');
+    this.logger.profileTrace('consumer.loadComponents');
     const allLegacyComponents = legacyComponents.concat(removedComponents);
     legacyInvalidComponents.forEach((invalidComponent) => {
       const entry = { id: idsIndex[invalidComponent.id.toString()], err: invalidComponent.error };

@@ -738,7 +738,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     storeInCache = true,
     loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
-    this.logger.debug(`get ${componentId.toString()}`);
+    this.logger.trace(`get ${componentId.toString()}`);
     const component = await this.componentLoader.get(componentId, legacyComponent, useCache, storeInCache, loadOpts);
     // When loading a component if it's an env make sure to load it as aspect as well
     // We only want to try load it as aspect if it's the first time we load the component
@@ -1139,7 +1139,9 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<Component[]> {
+    this.logger.debug(`getMany, started. ${ids.length} components`);
     const { components } = await this.componentLoader.getMany(ids, loadOpts, throwOnFailure);
+    this.logger.debug(`getMany, completed. ${components.length} components`);
     return components;
   }
 

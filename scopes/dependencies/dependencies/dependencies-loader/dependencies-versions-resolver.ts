@@ -78,7 +78,7 @@ export async function updateDependenciesVersions(
     for (const strategy of strategies) {
       const strategyId = strategy();
       if (strategyId) {
-        logger.debug(
+        logger.trace(
           `found dependency version ${strategyId.version} for ${id.toString()} in strategy ${strategy.name}`
         );
         if (debugDep) {

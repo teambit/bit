@@ -166,11 +166,11 @@ class BitLogger implements IBitLogger {
    * [2020-12-04 16:24:46.100 -0500] INFO	 (31641): loadingComponent: 14ms. (total repeating 14ms)
    * [2020-12-04 16:24:46.110 -0500] INFO	 (31641): loadingComponent: 18ms. (total repeating 32ms)
    */
-  profile(id: string, console?: boolean) {
+  profile(id: string, console?: boolean, level: Level = 'info') {
     const msg = this.profiler.profile(id);
     if (!msg) return;
     const fullMsg = `${id}: ${msg}`;
-    console || this.shouldConsoleProfiler ? this.console(fullMsg) : this.info(fullMsg);
+    console || this.shouldConsoleProfiler ? this.console(fullMsg) : this[level](fullMsg);
   }
 
   registerOnBeforeExitFn(fn: Function) {
