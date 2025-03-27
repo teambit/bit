@@ -13,7 +13,7 @@ describe('Bit Ignore functionality', function () {
   });
   describe('adding .bitignore in a comp dir', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/.bitignore', '*.json');
       helper.fs.outputFile('comp1/hello.json', '{"hello": "world"}');
@@ -27,7 +27,7 @@ describe('Bit Ignore functionality', function () {
   });
   describe('adding .bitignore in the root dir', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('.bitignore', '*.json');
       helper.fs.outputFile('comp1/hello.json', '{"hello": "world"}');
@@ -40,7 +40,7 @@ describe('Bit Ignore functionality', function () {
   });
   describe('adding .gitignore and an empty .bitignore in the root dir', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('.gitignore', '*.json');
       helper.fs.outputFile('.bitignore', '');
@@ -53,7 +53,7 @@ describe('Bit Ignore functionality', function () {
   });
   describe('adding only .gitignore in the component dir', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/.gitignore', '*.json');
       helper.fs.outputFile('comp1/hello.json', '{"hello": "world"}');
@@ -66,7 +66,7 @@ describe('Bit Ignore functionality', function () {
   });
   describe('adding .gitignore and .bitignore in the component dir', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('comp1/.bitignore', '');
       helper.fs.outputFile('comp1/.gitignore', '*.json');

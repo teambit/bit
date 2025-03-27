@@ -279,6 +279,7 @@ export class AspectLoaderMain {
   }
 
   private _coreAspects: Aspect[] = [];
+  private _nonCoreAspects: Aspect[] = [];
 
   get coreAspects() {
     return this._coreAspects;
@@ -294,9 +295,23 @@ export class AspectLoaderMain {
     return this;
   }
 
-  getCoreAspectIds() {
+  setNonCoreAspects(aspects: Aspect[]) {
+    this._nonCoreAspects = aspects;
+    return this;
+  }
+
+  getCoreAspectIds(): string[] {
     const ids = this.coreAspects.map((aspect) => aspect.id);
     return ids.concat(this._reserved);
+  }
+
+  /**
+   * bit aspects that are not core aspects
+   * normally coming from a composition over teambit.harmony/bit and are passed to loadBit as "additionalAspects".
+   * these are *not* user aspects. they're not in workspaces created by users. they're part of bit installation.
+   */
+  getNonCoreAspectIds(): string[] {
+    return this._nonCoreAspects.map((aspect) => aspect.id);
   }
 
   /**
@@ -317,7 +332,9 @@ export class AspectLoaderMain {
 
   getUserAspects(): string[] {
     const coreAspectIds = this.getCoreAspectIds();
-    return difference(this.harmony.extensionsIds, coreAspectIds);
+    const nonCoreAspectIds = this.getNonCoreAspectIds();
+    const nonUserAspectIds = [...coreAspectIds, ...nonCoreAspectIds];
+    return difference(this.harmony.extensionsIds, nonUserAspectIds);
   }
 
   async getCoreAspectDefs(runtimeName?: string) {
@@ -862,7 +879,7 @@ export class AspectLoaderMain {
       pluginSlot
     );
 
-    graphql.register(aspectLoaderSchema(aspectLoader));
+    graphql.register(() => aspectLoaderSchema(aspectLoader));
     aspectLoader.registerPlugins([envs.getEnvPlugin()]);
 
     return aspectLoader;

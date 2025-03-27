@@ -26,7 +26,7 @@ describe('harmony extension config', function () {
       let devDeps;
       let scopeExtensionEntry;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.extensions.addExtensionToVariant('*', 'teambit.scope/scope', config);
@@ -54,7 +54,7 @@ describe('harmony extension config', function () {
 
       before(() => {
         const EXTENSION_FOLDER = 'dummy-extension-without-logs';
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.workspaceJsonc.addDefaultScope();
@@ -65,7 +65,7 @@ describe('harmony extension config', function () {
         helper.extensions.addExtensionToVariant(EXTENSION_FOLDER, 'teambit.harmony/aspect');
         helper.command.link();
         helper.command.compile();
-        localBeforeTag = helper.scopeHelper.cloneLocalScope();
+        localBeforeTag = helper.scopeHelper.cloneWorkspace();
       });
       describe('extension is new component on the workspace', () => {
         it('should not allow tagging the component without tagging the extensions', () => {
@@ -79,7 +79,7 @@ describe('harmony extension config', function () {
           let dummyExtensionBefore;
           let dummyExtensionAfter;
           before(() => {
-            helper.scopeHelper.getClonedLocalScope(localBeforeTag);
+            helper.scopeHelper.getClonedWorkspace(localBeforeTag);
             const componentShowBeforeRemove = helper.command.showComponentParsed('bar/foo');
             dummyExtensionBefore = findDummyExtension(componentShowBeforeRemove.extensions);
             helper.extensions.addExtensionToVariant('bar', `${helper.scopes.remote}/dummy-extension-without-logs`, '-');
@@ -98,7 +98,7 @@ describe('harmony extension config', function () {
         describe('tagging extension and component together', () => {
           let componentModel;
           before(() => {
-            helper.scopeHelper.getClonedLocalScope(localBeforeTag);
+            helper.scopeHelper.getClonedWorkspace(localBeforeTag);
             helper.workspaceJsonc.disablePreview();
             helper.command.tagAllComponents();
             const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
@@ -127,7 +127,7 @@ describe('harmony extension config', function () {
         describe('tagging extension then component', () => {
           let componentModel;
           before(() => {
-            helper.scopeHelper.getClonedLocalScope(localBeforeTag);
+            helper.scopeHelper.getClonedWorkspace(localBeforeTag);
             helper.command.tagComponent('dummy-extension-without-logs');
             helper.command.tagComponent('bar/foo');
             const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
@@ -146,11 +146,11 @@ describe('harmony extension config', function () {
           let remoteBeforeExport;
           let componentModel;
           before(() => {
-            helper.scopeHelper.getClonedLocalScope(localBeforeTag);
+            helper.scopeHelper.getClonedWorkspace(localBeforeTag);
             helper.command.tagAllComponents();
             helper.scopeHelper.reInitRemoteScope();
             helper.scopeHelper.addRemoteScope();
-            localBeforeExport = helper.scopeHelper.cloneLocalScope();
+            localBeforeExport = helper.scopeHelper.cloneWorkspace();
             remoteBeforeExport = helper.scopeHelper.cloneRemoteScope();
           });
           it('should block exporting component without exporting the extension', () => {
@@ -173,7 +173,7 @@ describe('harmony extension config', function () {
           });
           describe('exporting extension then exporting component', () => {
             before(() => {
-              helper.scopeHelper.getClonedLocalScope(localBeforeExport);
+              helper.scopeHelper.getClonedWorkspace(localBeforeExport);
               helper.scopeHelper.getClonedRemoteScope(remoteBeforeExport);
               helper.command.export('dummy-extension-without-logs');
               helper.command.export('bar/foo');
@@ -191,7 +191,7 @@ describe('harmony extension config', function () {
 
       describe('imported component', () => {
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(localBeforeTag);
+          helper.scopeHelper.getClonedWorkspace(localBeforeTag);
           helper.scopeHelper.reInitRemoteScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.tagComponent('dummy-extension-without-logs');
@@ -200,7 +200,7 @@ describe('harmony extension config', function () {
           helper.workspaceJsonc.disablePreview();
           helper.command.tagAllComponents();
           helper.command.export();
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
         });
@@ -213,7 +213,7 @@ describe('harmony extension config', function () {
           let dummyExtensionBefore;
           let dummyExtensionAfter;
           before(() => {
-            helper.scopeHelper.getClonedLocalScope(localBeforeTag);
+            helper.scopeHelper.getClonedWorkspace(localBeforeTag);
             const componentShowBeforeRemove = helper.command.showComponentParsed('bar/foo');
             dummyExtensionBefore = findDummyExtension(componentShowBeforeRemove.extensions);
             helper.extensions.addExtensionToVariant(
@@ -237,7 +237,7 @@ describe('harmony extension config', function () {
   });
   describe('changing config after the component had been cached', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       const depResolverConfig = {

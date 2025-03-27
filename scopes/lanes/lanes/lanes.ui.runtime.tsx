@@ -20,7 +20,6 @@ import { UseLaneMenu } from '@teambit/lanes.ui.menus.use-lanes-menu';
 import { LanesHost, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LanesProvider, useLanes, IgnoreDerivingFromUrl } from '@teambit/lanes.hooks.use-lanes';
 import { LaneSwitcher } from '@teambit/lanes.ui.navigation.lane-switcher';
-import { LaneId } from '@teambit/lane-id';
 import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
 import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-compare';
 import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
@@ -155,22 +154,18 @@ export class LanesUI {
     fn: () => {
       prefix: string;
       path: string;
-      getLaneIdFromPathname: (pathname: string) => LaneId | undefined;
-      getLaneUrl: (laneId: LaneId, relative?: boolean) => string;
-      getLaneComponentUrl: (componentId: ComponentID, laneId: LaneId) => string;
+      getLaneIdFromPathname: typeof LanesModel.getLaneIdFromPathname;
+      getLaneUrl: typeof LanesModel.getLaneUrl;
+      getLaneComponentUrl: typeof LanesModel.getLaneComponentUrl;
     }
   ) {
     const { prefix, path, getLaneComponentUrl, getLaneIdFromPathname, getLaneUrl } = fn();
     LanesModel.lanesPrefix = prefix;
     LanesModel.lanePath = path;
-    LanesModel.getLaneComponentUrl = getLaneComponentUrl as any;
+    LanesModel.getLaneComponentUrl = getLaneComponentUrl;
     LanesModel.getLaneUrl = getLaneUrl;
     LanesModel.getLaneIdFromPathname = getLaneIdFromPathname;
   }
-
-  // getLaneReadme() {
-  //   return <LaneReadmeOverview host={this.host} overviewSlot={this.overviewSlot} routeSlot={this.routeSlot} />;
-  // }
 
   getLaneComponent() {
     return this.componentUI.getComponentUI(this.host, {

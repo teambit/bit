@@ -497,6 +497,14 @@ please create a new lane instead, which will include all components of this lane
     if (!this.workspace) {
       throw new BitError(`unable to eject a component outside of Bit workspace`);
     }
+    const ids = await this.workspace.idsByPattern(pattern);
+    await Promise.all(ids.map(async (id) => {
+      const modelComp = await this.scope.getBitObjectModelComponent(id, true);
+      if (!modelComp!.head) {
+        throw new BitError(`unable to eject "${id.toString()}" as it has no main version`);
+      }
+    }));
+
     const deletedComps = await this.remove.deleteComps(pattern);
     const packages = deletedComps.map((c) => c.getPackageName());
     await this.install.install(packages);
@@ -1256,7 +1264,7 @@ please create a new lane instead, which will include all components of this lane
     cli.registerOnStart(async () => {
       await lanesMain.recreateNewLaneIfDeleted();
     });
-    graphql.register(lanesSchema(lanesMain));
+    graphql.register(() => lanesSchema(lanesMain));
     express.register([
       new LanesCreateRoute(lanesMain, logger),
       new LanesDeleteRoute(lanesMain, logger),

@@ -2,8 +2,7 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import { readModulesManifest } from '@pnpm/modules-yaml';
 
-import { Helper } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -18,7 +17,7 @@ chai.use(require('chai-string'));
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -30,13 +29,13 @@ chai.use(require('chai-string'));
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.setupDefault();
     });
     describe('using Yarn', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope({
+        helper.scopeHelper.reInitWorkspace({
           yarnRCConfig: {
             packageExtensions: {
               'lodash.get@*': {
@@ -68,7 +67,7 @@ chai.use(require('chai-string'));
     });
     describe('using pnpm', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope({
+        helper.scopeHelper.reInitWorkspace({
           npmrcConfig: {
             'hoist-pattern[]': 'foo',
           },

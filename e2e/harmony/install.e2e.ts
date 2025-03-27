@@ -5,9 +5,8 @@ import { addDistTag } from '@pnpm/registry-mock';
 import { IssuesClasses } from '@teambit/component-issues';
 import { getAnotherInstallRequiredOutput } from '@teambit/install';
 import chai, { expect } from 'chai';
-import { Helper } from '@teambit/legacy.e2e-helper';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -24,7 +23,7 @@ describe('install command', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       npmCiRegistry = new NpmCiRegistry(helper);
       npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -49,7 +48,7 @@ describe('install command', function () {
     let envName;
     let output;
     before(async () => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       envName = helper.env.setCustomEnv('env-add-dependencies', { skipCompile: true, skipInstall: true });
       envId = `${helper.scopes.remote}/${envName}`;
@@ -57,7 +56,7 @@ describe('install command', function () {
       helper.extensions.addExtensionToVariant('*', envId);
       // Clean the node_modules as we want to run tests when node_modules is empty
       fs.rmdirSync(path.join(helper.scopes.localPath, 'node_modules'), { recursive: true });
-      wsEmptyNM = helper.scopeHelper.cloneLocalScope(IS_WINDOWS);
+      wsEmptyNM = helper.scopeHelper.cloneWorkspace(IS_WINDOWS);
     });
     describe('without --recurring-install', () => {
       before(async () => {
@@ -85,7 +84,7 @@ describe('install command', function () {
     });
     describe('with --recurring-install', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(wsEmptyNM);
+        helper.scopeHelper.getClonedWorkspace(wsEmptyNM);
         output = helper.command.install(undefined, { 'recurring-install': '' });
       });
       // Skip for now, I don't know think it is relevant anymore (the warning is not shown anymore which is expected)
@@ -105,7 +104,7 @@ describe('install generator configured envs', function () {
   let helper: Helper;
   before(async () => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     const generatorConfig = {
       envs: ['teambit.react/react-env', 'teambit.react/react'],
     };
@@ -128,7 +127,7 @@ describe('install generator configured envs', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -156,7 +155,7 @@ describe('install generator configured envs', function () {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -194,7 +193,7 @@ describe('install new dependencies', function () {
   describe('using pnpm', () => {
     before(() => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       helper.command.install('is-positive@~1.0.0 is-odd@3.0.0 is-even@1 is-negative semver@2.0.0-beta');
       workspaceJsonc = helper.workspaceJsonc.read();
@@ -234,7 +233,7 @@ describe('install new dependencies', function () {
   describe('using yarn', () => {
     before(() => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
       helper.command.install('is-positive@~1.0.0 is-odd@1.0.0 is-even@1 is-negative');
       workspaceJsonc = helper.workspaceJsonc.read();
@@ -271,7 +270,7 @@ describe('named install', function () {
   let workspaceJsonc;
   before(() => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
     helper.command.install('is-positive@1.0.0');
     helper.command.install('is-positive');
@@ -293,7 +292,7 @@ describe('install with --lockfile-only', function () {
   let workspaceJsonc;
   before(() => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
     helper.command.install('is-positive@^1.0.0 --lockfile-only');
     workspaceJsonc = helper.workspaceJsonc.read();

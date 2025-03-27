@@ -261,7 +261,7 @@ export class Http implements Network {
     errors: { [scopeName: string]: string };
     metadata?: { jobs?: string[] };
   }> {
-    const _data = await retry(
+    const { results ,response } = await retry(
       async () => {
         const route = 'api/put';
         logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
@@ -271,19 +271,14 @@ export class Http implements Network {
           body: pack,
           headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
         });
-        const res = await _fetch(`${this.url}/${route}`, opts);
+        const _response = await _fetch(`${this.url}/${route}`, opts);
         logger.debug(
-          `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
+          `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${_response.status} statusText ${_response.statusText}`
         );
 
         // @ts-ignore TODO: need to fix this
-        const results = await this.readPutCentralStream(res.body);
-        if (!results.data) throw new Error(`HTTP results are missing "data" property`);
-        if (results.data.isError) {
-          throw new UnexpectedNetworkError(results.message);
-        }
-        await this.throwForNonOkStatus(res);
-        return results.data;
+        const _results = await this.readPutCentralStream(_response.body);
+        return { results: _results , response: _response };
       },
       {
         retries: 3,
@@ -293,7 +288,13 @@ export class Http implements Network {
         },
       }
     );
-    return _data;
+
+    if (!results.data) throw new Error(`HTTP results are missing "data" property`);
+    if (results.data.isError) {
+      throw new UnexpectedNetworkError(results.message);
+    }
+    await this.throwForNonOkStatus(response);
+    return results.data;
   }
 
   async deleteViaCentralHub(

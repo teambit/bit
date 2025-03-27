@@ -1,5 +1,6 @@
 import { ComponentResult, TaskMetadata } from '@teambit/builder';
 import { Component, ComponentID } from '@teambit/component';
+import { isSnap } from '@teambit/component-version';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
@@ -63,6 +64,7 @@ export class Publisher {
     }
     if (this.options.dryRun) publishParams.push('--dry-run');
     publishParams.push(...this.getTagFlagForPreRelease(capsule.component.id));
+    publishParams.push(...this.getTagFlagForSnap(capsule.component.id));
     const extraArgs = this.getExtraArgsFromConfig(capsule.component);
     if (extraArgs && Array.isArray(extraArgs) && extraArgs?.length) {
       const extraArgsSplit = extraArgs.map((arg) => arg.split(' ')).flat();
@@ -127,6 +129,14 @@ export class Publisher {
     const maybeIdentifier = preReleaseData[0]; // it can be numeric as in 1.0.0-0.
     if (typeof maybeIdentifier !== 'string') return [];
     return ['--tag', maybeIdentifier];
+  }
+
+  private getTagFlagForSnap(id: ComponentID): string[] {
+    if (isSnap(id.version)) {
+      const snapTag = 'snap';
+      return ['--tag', snapTag];
+    }
+    return [];
   }
 
   private async getComponentCapsules(componentIds: ComponentID[]): Promise<Capsule[]> {

@@ -23,7 +23,7 @@ import json from 'comment-json';
 import userHome from 'user-home';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
-import { Harmony, RuntimeDefinition, Extension } from '@teambit/harmony';
+import { Harmony, RuntimeDefinition, Extension, Aspect } from '@teambit/harmony';
 // TODO: expose this types from harmony (once we have a way to expose it only for node)
 import { Config } from '@teambit/harmony/dist/harmony-config';
 import { readConfigFile } from '@teambit/harmony/dist/harmony-config/config-reader';
@@ -190,7 +190,8 @@ function getVersionFromBitMapIds(allBitmapIds: ComponentIdList, aspectId: string
 export async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
   const id = aspect.name;
   if (!id) throw new Error('could not retrieve aspect id');
-  const dirPath = getAspectDistDir(id);
+  const isCore = isCoreAspect(id)
+  const dirPath = getAspectDistDir(id, isCore);
   const files = await readdir(dirPath);
   const runtimeFile = files.find((file) => file.includes(`.${runtime.name}.runtime.js`));
   if (!runtimeFile) return;
@@ -256,7 +257,7 @@ function shouldRunAsDaemon() {
   return process.env.BIT_DAEMON === 'true';
 }
 
-export async function loadBit(path = process.cwd()) {
+export async function loadBit(path = process.cwd(), additionalAspects?: Aspect[]) {
   clearGlobalsIfNeeded();
   logger.info(`*** Loading Bit *** argv:\n${process.argv.join('\n')}`);
   const config = await getConfig(path);
@@ -268,6 +269,7 @@ export async function loadBit(path = process.cwd()) {
   verifyEngine(configMap[BitAspect.id]);
 
   const aspectsToLoad = [CLIAspect];
+  if (additionalAspects) additionalAspects.forEach((aspect) => aspectsToLoad.push(aspect));
   const loadCLIOnly = shouldLoadInSafeMode();
   if (isClearCacheCommand()) aspectsToLoad.push(ClearCacheAspect);
   if (!loadCLIOnly) {
@@ -282,6 +284,7 @@ export async function loadBit(path = process.cwd()) {
   if (loadCLIOnly) return harmony;
   const aspectLoader = harmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
+  aspectLoader.setNonCoreAspects(additionalAspects || []);
   aspectLoader.setMainAspect(getMainAspect());
   const envs = harmony.get<EnvsMain>(EnvsAspect.id);
   envs.setCoreAspectIds(getAllCoreAspectsIds());
@@ -311,8 +314,8 @@ please run "bvm install ${bitConfig.engine}" to install and use a specific versi
   logger.console(msg, 'warn', 'yellow');
 }
 
-export async function runCLI() {
-  const harmony = await loadBit();
+export async function runCLI(additionalAspects?: Aspect[]) {
+  const harmony = await loadBit(undefined, additionalAspects);
   const cli = harmony.get<CLIMain>('teambit.harmony/cli');
   let hasWorkspace = true;
   try {

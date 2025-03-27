@@ -64,13 +64,14 @@ export type MergeLaneOptions = {
   fetchCurrent?: boolean; // needed when merging from a bare-scope (because it's empty)
   detachHead?: boolean;
 };
-export type ConflictPerId = { id: ComponentID; files: string[]; config?: boolean };
+export type ConflictPerId = { id: ComponentID; files: string[]; config?: boolean, configConflict?: string };
 export type MergeFromScopeResult = {
   mergedNow: ComponentID[];
   exportResult?: PushToScopesResult;
   unmerged: { id: ComponentID; reason: string }[]; // reasons currently are: ahead / already-merge / removed
   conflicts?: ConflictPerId[]; // relevant in case of diverge (currently possible only when merging from main to a lane)
   snappedIds?: ComponentID[]; // relevant in case of diverge (currently possible only when merging from main to a lane)
+  autoSnappedIds?: ComponentID[]; // relevant in case of diverge (currently possible only when merging from main to a lane)
   mergedPreviously: ComponentID[];
   mergeSnapError?: Error;
 };
@@ -154,6 +155,7 @@ export class MergeLanesMain {
         mergeStrategy,
         handleTargetAheadAsDiverged: noSnap,
         detachHead,
+        shouldMergeAspectsData: true,
       },
       currentLane,
       otherLane
@@ -416,7 +418,9 @@ export class MergeLanesMain {
       const files = c.mergeResults?.modifiedFiles.filter((f) => f.conflict || f.isBinaryConflict) || [];
       const config = componentsWithConfigConflicts.includes(c.id.toStringWithoutVersion());
       if (files.length || config) {
-        conflicts.push({ id: c.id, files: files.map(f => f.filePath), config });
+        const configData = configMergeResults.find((co) => co.compIdStr === c.id.toStringWithoutVersion());
+        const configConflict = configData?.generateMergeConflictFile() || undefined;
+        conflicts.push({ id: c.id, files: files.map(f => f.filePath), config, configConflict });
       }
     });
 
@@ -511,10 +515,8 @@ export class MergeLanesMain {
         allVersions: false,
         // no need to export anything else other than the head. the normal calculation of what to export won't apply here
         // as it is done from the scope.
-        // @todo: if we merge main to a lane, then no need to export all main history, it'll be fetched later by fetchMissingHistory.
-        // once a change is done in the exporter about this, uncomment the next line.
-        // exportHeadsOnly: shouldSquash || fromLaneId.isDefault(),
-        exportHeadsOnly: shouldSquash,
+        // when merging main to a lane, no need to export all main history, it'll be fetched later by fetchMissingHistory.
+        exportHeadsOnly: shouldSquash || fromLaneId.isDefault(),
         // when merging main into a lane, because `shouldSquash` is false, we don't export head only, but all the snaps
         // in between. chances are that a) many of them are already exported, b) those that are not head, are not in
         // the local bare-scope, so trying to export them result in VersionNotFoundOnFS error.
@@ -558,6 +560,7 @@ export class MergeLanesMain {
     }
 
     const snappedIds = mergeSnapResults?.snappedComponents.map((c) => c.id) || [];
+    const autoSnappedIds = mergeSnapResults?.autoSnappedResults.map((c) => c.component.id) || [];
 
     const laneToExport = toLaneId.isDefault() ? undefined : await this.lanes.loadLane(toLaneId); // needs to be loaded again after the merge as it changed
     const exportResult =
@@ -578,9 +581,11 @@ export class MergeLanesMain {
       unmerged: failedComponents?.map((c) => ({ id: c.id, reason: c.unchangedMessage })) || [],
       conflicts,
       snappedIds,
+      autoSnappedIds,
       mergeSnapError,
     };
   }
+
   private async throwIfNotUpToDate(fromLaneId: LaneId, toLaneId: LaneId) {
     const status = await this.lanes.diffStatus(fromLaneId, toLaneId, { skipChanges: true });
     const compsNotUpToDate = status.componentsStatus.filter((s) => !s.upToDate);
@@ -696,7 +701,7 @@ async function filterComponentsStatus(
     const modelComponent = await legacyScope.getModelComponent(compId);
     if (shouldSquash) {
       // no need to check all versions, we merge only the head
-      const headOnTarget = otherLane ? otherLane.getComponent(compId)?.head : modelComponent.head;
+      const headOnTarget = otherLane ? otherLane.getCompHeadIncludeUpdateDependents(compId) : modelComponent.head;
       if (!headOnTarget) {
         throw new Error(`filterComponentsStatus: unable to find head for ${compId.toString()}`);
       }
@@ -742,7 +747,7 @@ async function filterComponentsStatus(
       if (includeDeps) {
         depsToAdd.push(...depsOnLane);
       } else {
-        const headOnTarget = otherLane ? otherLane.getComponent(compId)?.head : modelComponent.head;
+        const headOnTarget = otherLane ? otherLane.getCompHeadIncludeUpdateDependents(compId) : modelComponent.head;
         const depsOnLaneStr = depsOnLane.map((dep) => dep.toStringWithoutVersion());
         if (headOnTarget?.isEqual(remoteVersion)) {
           depsOnLaneStr.forEach((dep) => {

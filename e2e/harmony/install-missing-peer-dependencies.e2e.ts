@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-import { Helper } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -21,7 +20,7 @@ chai.use(require('chai-fs'));
   });
   describe(`using pnpm as a package manager`, () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope({ registry: npmCiRegistry.ciRegistry });
+      helper.scopeHelper.reInitWorkspace({ registry: npmCiRegistry.ciRegistry });
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
       helper.command.install('has-foo100-peer@1.0.0 has-foo101-peer@1.0.0 abc@1.0.0');
       helper.command.install('--add-missing-peers');
@@ -53,7 +52,7 @@ chai.use(require('chai-fs'));
   });
   describe('installing new packages and missing peer dependencies at the same time', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope({ registry: npmCiRegistry.ciRegistry });
+      helper.scopeHelper.reInitWorkspace({ registry: npmCiRegistry.ciRegistry });
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
       helper.command.install('abc@1.0.0 --add-missing-peers');
     });
@@ -79,7 +78,7 @@ chai.use(require('chai-fs'));
   });
   describe(`using Yarn as a package manager`, () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope({ registry: npmCiRegistry.ciRegistry });
+      helper.scopeHelper.reInitWorkspace({ registry: npmCiRegistry.ciRegistry });
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
       helper.command.install('has-foo100-peer@1.0.0 has-foo101-peer@1.0.0 abc@1.0.0');
       helper.command.install('--add-missing-peers');

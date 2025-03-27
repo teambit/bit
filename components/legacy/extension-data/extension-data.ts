@@ -51,6 +51,10 @@ export class ExtensionDataEntry {
     return this.rawConfig === REMOVE_EXTENSION_SPECIAL_SIGN;
   }
 
+  get idWithoutVersion(): string {
+    return this.extensionId?.toStringWithoutVersion() || this.stringId;
+  }
+
   toModelObject() {
     const extensionId =
       this.extensionId && this.extensionId.serialize ? this.extensionId.serialize() : this.extensionId;

@@ -2,10 +2,11 @@
 import { addUser, REGISTRY_MOCK_PORT, start as startRegistryMock, prepare } from '@pnpm/registry-mock';
 import { ChildProcess } from 'child_process';
 import { fetch } from '@pnpm/fetch';
+import fs from 'fs-extra';
 import execa from 'execa';
 import * as path from 'path';
 
-import { Helper } from '@teambit/legacy.e2e-helper';
+import { Helper } from './e2e-helper';
 
 const skipRegistryTests = process.env.SKIP_REGISTRY_TESTS === 'True' || process.env.SKIP_REGISTRY_TESTS === 'true';
 export const supportNpmCiRegistryTesting = !skipRegistryTests;
@@ -33,7 +34,7 @@ export const supportNpmCiRegistryTesting = !skipRegistryTests;
  * an alternative, it's possible to run `npm unpublish package-name --force` to delete the packages.
  * (or just use `this.unpublishComponent()` method)
  */
-export default class NpmCiRegistry {
+export class NpmCiRegistry {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   registryServer: ChildProcess;
   helper: Helper;
@@ -148,6 +149,22 @@ export default class NpmCiRegistry {
     this.helper.command.runCmd('npm publish', extractedDir);
   }
 
+  /**
+   * publish an empty package to the registry.
+   * it's helpful in case a package is needed. not a component.
+   * instead of going to the NPM, this method is faster.
+   */
+  publishPackage(packageName: string, version = '0.0.1') {
+    const dir = this.helper.fs.createNewDirectory();
+    this.helper.command.runCmd(`npm init -y`, dir);
+    // change package.json according to the packageName and version
+    const packageJson = fs.readJsonSync(path.join(dir, 'package.json'));
+    packageJson.name = packageName;
+    packageJson.version = version;
+    fs.writeJsonSync(path.join(dir, 'package.json'), packageJson);
+    this.helper.command.runCmd('npm publish', dir);
+  }
+
   configureCiInPackageJsonHarmony() {
     const pkg = {
       packageJson: {
@@ -181,7 +198,7 @@ export default class NpmCiRegistry {
   }
 
   publishEntireScope() {
-    this.helper.scopeHelper.reInitLocalScope();
+    this.helper.scopeHelper.reInitWorkspace();
     this.helper.scopeHelper.addRemoteScope();
     this.helper.command.importComponent('* --objects');
     const remoteComponents = this.helper.command.listRemoteScopeParsed();

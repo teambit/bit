@@ -1,8 +1,7 @@
 import chai, { expect } from 'chai';
 import { successEjectMessage } from '@teambit/eject';
 import path from 'path';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-import { DEFAULT_OWNER, Helper } from '@teambit/legacy.e2e-helper';
+import { Helper, DEFAULT_OWNER, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -22,7 +21,7 @@ describe('eject command on Harmony', function () {
     let scopeBeforeEject: string;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       helper.fixtures.populateComponents(3);
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -32,7 +31,7 @@ describe('eject command on Harmony', function () {
       helper.command.export();
       helper.scopeHelper.removeRemoteScope();
       npmCiRegistry.setResolver();
-      scopeBeforeEject = helper.scopeHelper.cloneLocalScope(false);
+      scopeBeforeEject = helper.scopeHelper.cloneWorkspace(false);
     });
     after(() => {
       npmCiRegistry.destroy();
@@ -74,7 +73,7 @@ describe('eject command on Harmony', function () {
     describe('eject with --keep-files flag', () => {
       let ejectOutput: string;
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(scopeBeforeEject);
+        helper.scopeHelper.getClonedWorkspace(scopeBeforeEject);
         ejectOutput = helper.command.ejectComponents('comp1', '--keep-files');
       });
       it('should indicate that the eject was successful', () => {

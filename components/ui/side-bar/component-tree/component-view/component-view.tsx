@@ -7,7 +7,7 @@ import classNames from 'classnames';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentModel } from '@teambit/component';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import React, { useCallback, useContext } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
@@ -31,6 +31,14 @@ export function ComponentView(props: ComponentViewProps) {
   const { onSelect } = useContext(TreeContext);
   const lanesContextModel = useContext(LanesContext);
   const lanesModel = lanesContextModel?.lanesModel;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => {
+      setMounted(false);
+    };
+  }, []);
 
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
@@ -55,10 +63,11 @@ export function ComponentView(props: ComponentViewProps) {
     ? undefined
     : (isEnvOnCurrentLane &&
       lanesModel?.viewedLane?.id &&
-      `${window.location.origin}${LanesModel.getLaneComponentUrl(envId, lanesModel.viewedLane?.id)}`) ||
+      mounted &&
+      `${window.location.origin}${LanesModel.getLaneComponentUrl(envId, lanesModel.viewedLane?.id, undefined, lanesModel.viewedLane)}`) ||
     ComponentUrl.toUrl(envId, {
       includeVersion: true,
-      useLocationOrigin: !window.location.host.startsWith('localhost'),
+      useLocationOrigin: mounted ? window.location.host.startsWith('localhost') : false,
     });
 
   const envTooltip = envId ? (
@@ -77,7 +86,12 @@ export function ComponentView(props: ComponentViewProps) {
   ) : null;
 
   const href = !isMissingCompOrEnvId
-    ? lanesModel?.getLaneComponentUrlByVersion(component.id as any, lanesModel.viewedLane?.id, !scope.name)
+    ? lanesModel?.getLaneComponentUrlByVersion(
+      component.id as any,
+      lanesModel.viewedLane?.id,
+      !scope.name,
+      lanesModel.viewedLane
+    )
     : undefined;
 
   const viewingMainCompOnLane = React.useMemo(() => {
@@ -135,7 +149,6 @@ export function ComponentView(props: ComponentViewProps) {
 
     const searchParams = new URLSearchParams(location.search);
     const scopeFromQueryParams = searchParams.get('scope');
-
     const pathname = location.pathname.substring(1).split('?')[0];
     const compIdStr = component.id.toStringWithoutVersion();
     const compIdName = component.id.fullName;

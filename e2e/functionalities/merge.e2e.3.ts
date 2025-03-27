@@ -14,7 +14,7 @@ describe('merge functionality', function () {
   });
   describe('re-exporting/importing an existing version', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
@@ -25,16 +25,16 @@ describe('merge functionality', function () {
 
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('bar/foo');
       helper.command.importComponent('bar2/foo2');
-      const scopeWithV1 = helper.scopeHelper.cloneLocalScope();
+      const scopeWithV1 = helper.scopeHelper.cloneWorkspace();
       helper.command.tagWithoutBuild('bar/foo', '--unmodified');
       helper.command.tagWithoutBuild('bar2/foo2', '--unmodified');
       helper.command.export(); // v2 is exported
 
-      helper.scopeHelper.getClonedLocalScope(scopeWithV1);
+      helper.scopeHelper.getClonedWorkspace(scopeWithV1);
       helper.command.tagWithoutBuild('bar/foo', '--unmodified');
       helper.command.tagWithoutBuild('bar2/foo2', '--unmodified');
     });
@@ -57,7 +57,7 @@ describe('merge functionality', function () {
   describe('importing a component with --merge flag', () => {
     let beforeImport;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.fs.outputFile('comp2/is-type.js', fixtures.isType);
       helper.command.tagAllWithoutBuild();
@@ -65,9 +65,9 @@ describe('merge functionality', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
-      beforeImport = helper.scopeHelper.cloneLocalScope();
+      beforeImport = helper.scopeHelper.cloneWorkspace();
       helper.command.importComponent('comp2@0.0.1', '--path components/comp2');
     });
     describe('using invalid value for merge flag', () => {
@@ -83,7 +83,7 @@ describe('merge functionality', function () {
       let localScope;
       before(() => {
         helper.fs.createFile('components/comp2', 'is-type.js', fixtures.isTypeV3);
-        localScope = helper.scopeHelper.cloneLocalScope();
+        localScope = helper.scopeHelper.cloneWorkspace();
       });
       describe('merge with strategy=manual', () => {
         let output;
@@ -117,7 +117,7 @@ describe('merge functionality', function () {
         let output;
         let fileContent;
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedWorkspace(localScope);
           output = helper.command.importComponent('comp2 --merge=theirs');
           fileContent = helper.fs.readFile('components/comp2/is-type.js');
         });
@@ -140,7 +140,7 @@ describe('merge functionality', function () {
         let output;
         let fileContent;
         before(() => {
-          helper.scopeHelper.getClonedLocalScope(localScope);
+          helper.scopeHelper.getClonedWorkspace(localScope);
           output = helper.command.importComponent('comp2 --merge=ours');
           fileContent = helper.fs.readFile('components/comp2/is-type.js');
         });
@@ -190,7 +190,7 @@ describe('merge functionality', function () {
     });
     describe('modifying the dependency then import --merge of the dependent', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeImport);
+        helper.scopeHelper.getClonedWorkspace(beforeImport);
         helper.command.importComponent('comp2', '--path components/comp2');
         helper.command.importComponent('comp1', '--path components/comp1');
         helper.fs.createFile('components/comp2', 'is-type.js', fixtures.isTypeV3);

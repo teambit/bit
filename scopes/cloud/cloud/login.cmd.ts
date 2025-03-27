@@ -70,7 +70,7 @@ export class LoginCmd implements Command {
       await this.cloud.logout();
     }
 
-    const isLoggedIn = this.cloud.isLoggedIn();
+    const isLoggedIn = await this.cloud.isLoggedIn();
 
     if (isLoggedIn) {
       this.cloud.logger.clearStatusLine();

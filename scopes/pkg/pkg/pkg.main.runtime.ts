@@ -155,7 +155,7 @@ export class PkgMain {
     componentAspect.registerShowFragments([new PackageFragment(pkg)]);
     dependencyResolver.registerDependencyFactories([new PackageDependencyFactory()]);
 
-    graphql.register(pkgSchema(pkg));
+    graphql.register(() => pkgSchema(pkg));
     envs.registerService(new PkgService());
 
     componentAspect.registerRoute([new PackageRoute(pkg)]);
@@ -168,7 +168,7 @@ export class PkgMain {
     // dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
     builder.registerBuildTasks([preparePackagesTask]);
     builder.registerTagTasks([preparePackagesTask, packTask, publishTask]);
-    builder.registerSnapTasks([preparePackagesTask, packTask]);
+    builder.registerSnapTasks([preparePackagesTask, packTask, publishTask]);
 
     const calcPkgOnLoad = async (component: Component) => {
       const data = await pkg.mergePackageJsonProps(component);

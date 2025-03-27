@@ -14,7 +14,7 @@ describe('Mocha Tester', function () {
   });
   describe('component that use Mocha as a tester', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env');
       helper.command.install();
@@ -95,7 +95,7 @@ describe('Mocha Tester', function () {
   });
   describe('typescript component', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponentsTS(1);
       helper.command.setEnv('comp1', 'teambit.harmony/envs/core-aspect-env');
       helper.command.install();

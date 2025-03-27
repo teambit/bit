@@ -1,5 +1,5 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Mutex, withTimeout } from 'async-mutex';
+import { Mutex, withTimeout, MutexInterface } from 'async-mutex';
 import mapSeries from 'p-map-series';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
@@ -47,16 +47,8 @@ export class ScopeComponentsImporter {
   private static instancePerScope: { [scopeName: string]: ScopeComponentsImporter } = {};
   private sources: SourcesRepository;
   private repo: Repository;
-  private fetchWithDepsMutex = withTimeout(
-    new Mutex(),
-    TIMEOUT_FOR_MUTEX,
-    new BitError(`error: fetch-with-dependencies timeout exceeded (${TIMEOUT_FOR_MUTEX} minutes)`)
-  );
-  private importManyObjectsMutex = withTimeout(
-    new Mutex(),
-    TIMEOUT_FOR_MUTEX,
-    new BitError(`error: fetch-multiple-objects timeout exceeded (${TIMEOUT_FOR_MUTEX} minutes)`)
-  );
+  private _fetchWithDepsMutex?: MutexInterface;
+  private _importManyObjectsMutex?: MutexInterface;
   /**
    * important!
    * refrain from using this. it's a workaround for bare-scopes to import from the lane when the call is
@@ -70,6 +62,29 @@ export class ScopeComponentsImporter {
     this.sources = scope.sources;
     this.repo = scope.objects;
   }
+
+  private get fetchWithDepsMutex(): MutexInterface {
+    if (!this._fetchWithDepsMutex) {
+      this._fetchWithDepsMutex = withTimeout(
+        new Mutex(),
+        TIMEOUT_FOR_MUTEX,
+        new BitError(`error: fetch-with-dependencies timeout exceeded (${TIMEOUT_FOR_MUTEX} minutes)`)
+      );
+    }
+    return this._fetchWithDepsMutex;
+  }
+
+  private get importManyObjectsMutex(): MutexInterface {
+    if (!this._importManyObjectsMutex) {
+      this._importManyObjectsMutex = withTimeout(
+        new Mutex(),
+        TIMEOUT_FOR_MUTEX,
+        new BitError(`error: fetch-multiple-objects timeout exceeded (${TIMEOUT_FOR_MUTEX} minutes)`)
+      );
+    }
+    return this._importManyObjectsMutex;
+  }
+
 
   static getInstance(scope: Scope): ScopeComponentsImporter {
     if (!this.instancePerScope[scope.name]) {

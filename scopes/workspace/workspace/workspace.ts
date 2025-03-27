@@ -1,5 +1,4 @@
 /* eslint-disable max-lines */
-import memoize from 'memoizee';
 import { parse } from 'comment-json';
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -48,7 +47,7 @@ import {
 import { isPathInside } from '@teambit/toolbox.path.is-path-inside';
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import { slice, isEmpty, merge, compact, uniqBy } from 'lodash';
+import { slice, isEmpty, merge, compact, uniqBy, uniq } from 'lodash';
 import {
   MergeConfigFilename,
   BIT_ROOTS_DIR,
@@ -180,7 +179,6 @@ export class Workspace implements ComponentFactory {
   inInstallAfterPmContext = false;
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
   private aspectsMerger: AspectsMerger;
-  private componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized;
   /**
    * Components paths are calculated from the component package names of the workspace
    * They are used in webpack configuration to only track changes from these paths inside `node_modules`
@@ -256,15 +254,6 @@ export class Workspace implements ComponentFactory {
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver, envs, aspectLoader);
     this.validateConfig();
     this.bitMap = new BitMap(this.consumer.bitMap, this.consumer);
-    // memoize this method to improve performance.
-    this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized = memoize(
-      this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile.bind(this),
-      {
-        primitive: true,
-        promise: true,
-        maxAge: 60 * 1000, // 1 min
-      }
-    );
     this.aspectsMerger = new AspectsMerger(this, this.harmony);
     this.filter = new Filter(this);
     this.componentStatusLoader = new ComponentStatusLoader(this);
@@ -684,10 +673,10 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       .map((id) => graph.predecessors(id.toString()))
       .flat()
       .map((node) => node.attr);
-    const uniq = ComponentIdList.uniqFromArray(dependents);
-    if (!filterOutNowWorkspaceIds) return uniq;
-    const workspaceIds = await this.listIds();
-    return uniq.filter((id) => workspaceIds.has(id));
+    const uniqIds = ComponentIdList.uniqFromArray(dependents);
+    if (!filterOutNowWorkspaceIds) return uniqIds;
+    const workspaceIds = this.listIds();
+    return uniqIds.filter((id) => workspaceIds.has(id));
   }
 
   public async createAspectList(extensionDataList: ExtensionDataList) {
@@ -804,7 +793,6 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     this.aspectLoader.resetFailedLoadAspects();
     if (!options.skipClearFailedToLoadEnvs) this.envs.resetFailedToLoadEnvs();
     await this.scope.clearCache();
-    this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized.clear();
     this.clearAllComponentsCache();
   }
 
@@ -1129,19 +1117,25 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
 
   async getComponentsUsingEnv(env: string, ignoreVersion = true, throwIfNotFound = false): Promise<Component[]> {
     const allComps = await this.list();
-    const allEnvs = await this.envs.createEnvironment(allComps);
-    const foundEnvs = allEnvs.runtimeEnvs.filter((runtimeEnv) => {
-      if (runtimeEnv.id === env) return true;
+    const availableEnvs: string[] = [];
+    const foundComps = allComps.filter((comp) => {
+      const envId = this.envs.getEnvId(comp);
+      if (env === envId) return true;
+      availableEnvs.push(envId);
       if (!ignoreVersion) return false;
-      const envWithoutVersion = runtimeEnv.id.split('@')[0];
-      return env === envWithoutVersion;
+      const envWithoutVersion = envId.split('@')[0];
+      if (env === envWithoutVersion) return true;
+      // envIdFromConfig never has a version. so in case ignoreVersion is true, it's safe to compare without the version.
+      // also, in case the env failed to load, the envId above will be the default teambit.harmony/node env, which
+      // won't help. this one is the one configured on this component.
+      const envIdFromConfig = this.envs.getEnvIdFromEnvsConfig(comp);
+      return envIdFromConfig === env;
     });
-    if (!foundEnvs.length && throwIfNotFound) {
-      const availableEnvs = allEnvs.runtimeEnvs.map((runtimeEnv) => runtimeEnv.id);
+    if (!foundComps.length && throwIfNotFound) {
       throw new BitError(`unable to find components that using "${env}" env.
-the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
+the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}`);
     }
-    return foundEnvs.map((runtimeEnv) => runtimeEnv.components).flat();
+    return foundComps;
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<Component[]> {
@@ -1297,6 +1291,9 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     return path.join(this.path, relativeComponentDir);
   }
 
+  /**
+   * @deprecated long long ago we added it to the componentId object. use `componentId.scope` instead.
+   */
   async componentDefaultScope(componentId: ComponentID): Promise<string | undefined> {
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
     return this.componentDefaultScopeFromComponentDirAndName(relativeComponentDir, componentId.fullName);
@@ -1306,16 +1303,12 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
     relativeComponentDir: PathOsBasedRelative,
     name: string
   ): Promise<string | undefined> {
-    const componentConfigFile = await this.componentConfigFileFromComponentDirAndName(relativeComponentDir, name);
-    if (componentConfigFile && componentConfigFile.defaultScope) {
-      return componentConfigFile.defaultScope;
-    }
     const bitMapId = this.consumer.bitMap.getExistingBitId(name, false);
     const bitMapEntry = bitMapId ? this.consumer.bitMap.getComponent(bitMapId) : undefined;
     if (bitMapEntry && bitMapEntry.defaultScope) {
       return bitMapEntry.defaultScope;
     }
-    return this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized(relativeComponentDir, name);
+    return this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(relativeComponentDir, name);
   }
 
   get defaultScope() {
@@ -1602,7 +1595,7 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
    */
   public async componentConfigFile(id: ComponentID): Promise<ComponentConfigFile | undefined> {
     const relativeComponentDir = this.componentDir(id, { ignoreVersion: true }, { relative: true });
-    return this.componentConfigFileFromComponentDirAndName(relativeComponentDir, id.fullName);
+    return this.componentConfigFileFromComponentDirAndName(relativeComponentDir);
   }
 
   /**
@@ -1620,17 +1613,13 @@ the following envs are used in this workspace: ${availableEnvs.join(', ')}`);
 
   private async componentConfigFileFromComponentDirAndName(
     relativeComponentDir: PathOsBasedRelative,
-    name: string
   ): Promise<ComponentConfigFile | undefined> {
     let componentConfigFile;
     if (relativeComponentDir) {
       const absComponentDir = this.componentDirToAbsolute(relativeComponentDir);
-      const defaultScopeFromVariantsOrWs =
-        await this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFileMemoized(relativeComponentDir, name);
       componentConfigFile = await ComponentConfigFile.load(
         absComponentDir,
         this.createAspectList.bind(this),
-        defaultScopeFromVariantsOrWs
       );
     }
 

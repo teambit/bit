@@ -23,7 +23,7 @@ describe('build command', function () {
   // the second by the mdx-env.
   describe('an mdx dependency of a react env', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.command.create('mdx', 'my-mdx', '--env teambit.mdx/mdx');
       helper.env.setCustomEnv('custom-react-env');
       const importStatement = `import { MyMdx } from '@${helper.scopes.remote}/my-mdx';\n`;
@@ -49,24 +49,24 @@ describe('build command', function () {
   describe('list tasks', () => {
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
     });
-    it('should list the publish task in the tagPipeline but not in the snapPipeline', async () => {
+    it('should list the publish task in the tagPipeline and in the snapPipeline', async () => {
       const harmony = await loadBit(helper.scopes.localPath);
       const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
       const compId = await workspace.resolveComponentId('comp1');
       const component = await workspace.get(compId);
       const builder = harmony.get<BuilderMain>(BuilderAspect.id);
       const tasks = builder.listTasks(component);
-      expect(tasks.snapTasks).to.not.include('teambit.pkg/pkg:PublishComponents');
+      expect(tasks.snapTasks).to.include('teambit.pkg/pkg:PublishComponents');
       expect(tasks.tagTasks).to.include('teambit.pkg/pkg:PublishComponents');
     });
   });
 
   describe('registering the publish task for the snap pipeline in a new-custom env', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+      helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.env.setCustomEnv();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile('node-env/node-env.extension.ts', getNodeEnvExtension());
@@ -88,12 +88,12 @@ describe('build command', function () {
   describe('dist file is deleted from the remote', () => {
     let errorOutput: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
 
@@ -118,7 +118,7 @@ describe('build command', function () {
 
   describe('3 components use 3 different envs', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
       helper.command.setEnv('comp1', 'teambit.harmony/aspect');
       helper.command.setEnv('comp2', 'teambit.react/react');

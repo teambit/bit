@@ -142,7 +142,7 @@ export default class Component extends BitObject {
   schema: string | undefined;
   detachedHeads: DetachedHeads;
   private divergeData?: SnapsDistance;
-  private populateVersionHistoryMutex = new Mutex();
+  private _populateVersionHistoryMutex?: Mutex;
   constructor(props: ComponentProps) {
     super();
     if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
@@ -161,6 +161,13 @@ export default class Component extends BitObject {
     this.head = props.head;
     this.schema = props.schema;
     this.detachedHeads = props.detachedHeads || new DetachedHeads();
+  }
+
+  private get populateVersionHistoryMutex() {
+    if (!this._populateVersionHistoryMutex) {
+      this._populateVersionHistoryMutex = new Mutex();
+    }
+    return this._populateVersionHistoryMutex;
   }
 
   get versionArray(): Ref[] {
@@ -743,9 +750,16 @@ otherwise, please run "bit checkout head" to be up to date, then snap/tag your c
   }
 
   version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1, preReleaseId?: string): string {
-    // if (preRelease) releaseType = 'prerelease';
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const increment = (ver: string) => semver.inc(ver, releaseType, undefined, preReleaseId)!;
+    const increment = (ver: string) => {
+      try {
+        // don't use "semver.inc" function, it'll swallow the error and return null.
+        const incResult = new semver.SemVer(ver).inc(releaseType, preReleaseId)
+        return incResult.version;
+      } catch (err: any) {
+        throw new Error(`unable to increment version "${ver}" with releaseType "${releaseType}" and preReleaseId "${preReleaseId}".
+Error from "semver": ${err.message}`);
+      }
+    };
 
     const latest = this.latestVersion();
     if (!latest) {

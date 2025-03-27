@@ -1,4 +1,5 @@
 import multimatch from 'multimatch';
+import { isSnap } from '@teambit/component-version';
 import mapSeries from 'p-map-series';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { MainRuntime } from '@teambit/cli';
@@ -40,7 +41,7 @@ import { ProjectManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import { Registries, Registry } from './registry';
+import { Registries, Registry } from '@teambit/pkg.entities.registry';
 import { applyUpdates, UpdatedComponent } from './apply-updates';
 import { ROOT_NAME } from './dependencies/constants';
 import {
@@ -101,7 +102,7 @@ export { ProxyConfig, NetworkConfig } from '@teambit/scope.network';
 export interface DependencyResolverComponentData {
   packageName: string;
   policy: SerializedVariantPolicy;
-  dependencies: SerializedDependency;
+  dependencies: SerializedDependency[];
 }
 
 export interface DependencyResolverVariantConfig {
@@ -114,6 +115,8 @@ export type PackageManagerSlot = SlotRegistry<PackageManager>;
 export type DependencyFactorySlot = SlotRegistry<DependencyFactory[]>;
 export type PreInstallSlot = SlotRegistry<PreInstallSubscriberList>;
 export type PostInstallSlot = SlotRegistry<PostInstallSubscriberList>;
+type AddPackagesToLink = () => string[];
+type AddPackagesToLinkSlot = SlotRegistry<AddPackagesToLink>;
 
 export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) => Promise<VariantPolicyConfigObject>;
 
@@ -155,6 +158,7 @@ export class DependencyResolverMain {
    * @see workspace.triggerOnWorkspaceConfigChange
    */
   private _workspacePolicy: WorkspacePolicy | undefined;
+  private _additionalPackagesToLink?: string[];
   constructor(
     /**
      * Dependency resolver  extension configuration.
@@ -195,7 +199,9 @@ export class DependencyResolverMain {
 
     private preInstallSlot: PreInstallSlot,
 
-    private postInstallSlot: PostInstallSlot
+    private postInstallSlot: PostInstallSlot,
+
+    private addPackagesToLinkSlot: AddPackagesToLinkSlot,
   ) {}
 
   /**
@@ -268,6 +274,10 @@ export class DependencyResolverMain {
 
   registerPostInstallSubscribers(subscribers: PreInstallSubscriberList) {
     this.postInstallSlot.register(subscribers);
+  }
+
+  registerAddPackagesToLink(fn: AddPackagesToLink) {
+    this.addPackagesToLinkSlot.register(fn);
   }
 
   getSavePrefix(): string {
@@ -649,11 +659,22 @@ export class DependencyResolverMain {
     return this.postInstallSlot.values().flat();
   }
 
+  private getAdditionalPackagesToLink(): string[] {
+    if (!this._additionalPackagesToLink) {
+      const additionalPackagesToLinkFn = this.addPackagesToLinkSlot.values().flat();
+      this._additionalPackagesToLink = additionalPackagesToLinkFn.map((fn) => fn()).flat();
+    }
+
+    return this._additionalPackagesToLink;
+  }
+
   /**
    * get a component dependency linker.
    */
   getLinker(options: GetLinkerOptions = {}) {
-    const linkingOptions = Object.assign({}, defaultLinkingOptions, options?.linkingOptions || {});
+    const additionalPackagesToLink = this.getAdditionalPackagesToLink();
+    const linkingOptions = Object.assign({ additionalPackagesToLink },
+      defaultLinkingOptions, options?.linkingOptions || {});
     // TODO: we should somehow pass the cache root dir to the package manager constructor
     return new DependencyLinker(
       this,
@@ -1356,6 +1377,40 @@ export class DependencyResolverMain {
     return manifest;
   }
 
+  validateAspectData(data: DependencyResolverComponentData) {
+    const errorPrefix = `failed validating ${DependencyResolverAspect.id} aspect-data.`;
+    let errorMsg: undefined | string;
+    data.dependencies?.forEach((dep) => {
+      const isVersionValid = Boolean(semver.valid(dep.version) || semver.validRange(dep.version));
+      if (isVersionValid) return;
+      if (dep.__type === COMPONENT_DEP_TYPE && isSnap(dep.version)) return;
+      errorMsg = `${errorPrefix} the dependency version "${dep.version}" of ${dep.id} is not a valid semver version or range`;
+    });
+    data.policy?.forEach((policy) => {
+      const policyVersion = policy.value.version;
+      const allowedSpecialChars = ['+', '-'];
+      if (policyVersion === '*') {
+        // this is only valid for packages, not for components.
+        const isComp = data.dependencies.find(d => d.__type === COMPONENT_DEP_TYPE
+          && d.packageName === policy.dependencyId);
+        if (!isComp) return;
+        errorMsg = `${errorPrefix} the policy version "${policyVersion}" of ${policy.dependencyId} is not valid for components, only for packages.
+as an alternative, you can use "+" to keep the same version installed in the workspace`;
+      }
+      const isVersionValid = Boolean(
+        semver.valid(policyVersion) ||
+          semver.validRange(policyVersion) ||
+          allowedSpecialChars.includes(policyVersion)
+      );
+      if (isVersionValid) return;
+      errorMsg = `${errorPrefix} the policy version "${policyVersion}" of ${policy.dependencyId} is not a valid semver version or range`;
+    });
+
+    if (errorMsg) {
+      return { errorMsg, minBitVersion: '1.9.107' };
+    }
+  }
+
   /**
    * Return a list of outdated policy dependencies.
    */
@@ -1520,6 +1575,7 @@ export class DependencyResolverMain {
     Slot.withType<PreInstallSubscriberList>(),
     Slot.withType<PostInstallSubscriberList>(),
     Slot.withType<DependencyDetector>(),
+    Slot.withType<AddPackagesToLinkSlot>(),
   ];
 
   static defaultConfig: DependencyResolverWorkspaceConfig &
@@ -1546,6 +1602,7 @@ export class DependencyResolverMain {
       dependencyFactorySlot,
       preInstallSlot,
       postInstallSlot,
+      addPackagesToLinkSlot,
     ]: [
       RootPolicyRegistry,
       PoliciesRegistry,
@@ -1553,6 +1610,7 @@ export class DependencyResolverMain {
       DependencyFactorySlot,
       PreInstallSlot,
       PostInstallSlot,
+      AddPackagesToLinkSlot,
     ]
   ) {
     // const packageManager = new PackageManagerLegacy(config.packageManager, logger);
@@ -1570,7 +1628,8 @@ export class DependencyResolverMain {
       packageManagerSlot,
       dependencyFactorySlot,
       preInstallSlot,
-      postInstallSlot
+      postInstallSlot,
+      addPackagesToLinkSlot,
     );
 
     const envJsoncDetector = envs.getEnvJsoncDetector();
@@ -1607,7 +1666,7 @@ export class DependencyResolverMain {
         dependencyResolver.onLoadRequireableExtensionSubscriber.bind(dependencyResolver)
       );
 
-    graphql.register(dependencyResolverSchema(dependencyResolver));
+    graphql.register(() => dependencyResolverSchema(dependencyResolver));
     envs.registerService(new DependenciesService());
     envs.registerEnvJsoncMergeCustomizer(dependencyResolver.mergeEnvManifestPolicy.bind(dependencyResolver));
 

@@ -67,11 +67,13 @@ import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
 import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { VersionMaker, BasicTagParams, BasicTagSnapParams, updateVersions, VersionMakerParams } from './version-maker';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 
-export type PackageIntegritiesByPublishedPackages = Map<string, string | undefined>;
+export type PackageIntegritiesByPublishedPackages = Map<string, {
+  integrity: string | undefined;
+  previouslyUsedVersion: string | undefined;
+}>;
 
 export type TagDataPerComp = {
   componentId: ComponentID;
@@ -108,6 +110,7 @@ export type SnapResults = BasicTagResults & {
 export type SnapFromScopeResults = {
   snappedIds: ComponentID[];
   exportedIds?: ComponentID[];
+  autoSnappedResults: AutoTagResult[];
   snappedComponents: ConsumerComponent[];
 };
 
@@ -137,7 +140,7 @@ export class SnappingMain {
   private objectsRepo: Repository;
   constructor(
     readonly workspace: Workspace,
-    private logger: Logger,
+    readonly logger: Logger,
     readonly dependencyResolver: DependencyResolverMain,
     readonly scope: ScopeMain,
     private exporter: ExportMain,
@@ -407,6 +410,13 @@ if you're willing to lose the history from the head to the specified version, us
     if (!configObject) return;
     ExtensionDataList.adjustEnvsOnConfigObject(configObject);
     const extensionsFromConfigObject = ExtensionDataList.fromConfigObject(configObject);
+    const depsResolverFromConfig = extensionsFromConfigObject.findCoreExtension(DependencyResolverAspect.id);
+    if (depsResolverFromConfig) {
+      // @todo: merge also the scope-specific into the config here. same way we do in "addConfigDepsFromModelToConfigMerge"
+      depsResolverFromConfig.data.policy = component.state._consumer.extensions.findCoreExtension(
+        DependencyResolverAspect.id
+      )?.data.policy;
+    }
     const autoDeps = extensionsFromConfigObject.extractAutoDepsFromConfig();
     const consumerComponent: ConsumerComponent = component.state._consumer;
     const extensionDataList = ExtensionDataList.mergeConfigs([
@@ -414,6 +424,7 @@ if you're willing to lose the history from the head to the specified version, us
       consumerComponent.extensions,
     ]).filterRemovedExtensions();
     consumerComponent.extensions = extensionDataList;
+    component.state.aspects = await this.scope.createAspectListFromExtensionDataList(extensionDataList);
 
     return autoDeps;
   }
@@ -428,6 +439,7 @@ if you're willing to lose the history from the head to the specified version, us
       tag?: boolean;
       // in case of merging lanes, the component files are updated in-memory
       updatedLegacyComponents?: ConsumerComponent[];
+      loadAspectOnlyForIds?: ComponentIdList; // if undefined, load aspects for all components
     } & Partial<BasicTagParams>
   ): Promise<SnapFromScopeResults> {
     if (this.workspace) {
@@ -505,7 +517,6 @@ if you're willing to lose the history from the head to the specified version, us
       const foundInUpdated = updatedComponents.find((c) => c.id.isEqualWithoutVersion(id));
       return foundInUpdated || this.scope.get(id);
     }));
-
     // in case of update-dependents, align the dependencies of the dependents according to the lane
     if (params.updateDependents && laneCompIds) {
       existingComponents.forEach((comp) => {
@@ -526,7 +537,6 @@ if you're willing to lose the history from the head to the specified version, us
     await pMapSeries(components, async (component) => {
       const snapData = getSnapData(component.id);
       const autoDeps = await this.addAspectsFromConfigObject(component, snapData.aspects);
-
       // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
       await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver, this, autoDeps);
     });
@@ -545,10 +555,15 @@ if you're willing to lose the history from the head to the specified version, us
     // otherwise, when a user set a custom-env, it won't be loaded and the Version object will leave the
     // teambit.envs/envs in a weird state. the config will be set correctly but the data will be set to the default
     // node env.
-    await this.scope.loadManyCompsAspects(components);
+    const { loadAspectOnlyForIds } = params;
+    const compsToLoadAspects = loadAspectOnlyForIds
+      ? components.filter(c => loadAspectOnlyForIds.hasWithoutVersion(c.id))
+      : components;
+
+    await this.scope.loadManyCompsAspects(compsToLoadAspects);
 
     // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
-    await pMapSeries(components, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
+    await pMapSeries(compsToLoadAspects, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
 
     const ids = ComponentIdList.fromArray(allCompIds);
     const shouldTag = Boolean(params.tag);
@@ -560,7 +575,6 @@ if you're willing to lose the history from the head to the specified version, us
         dependencies: [],
         versionToTag: shouldTag ? s.version || 'patch' : undefined,
       })),
-      skipAutoTag: true,
       persist: true,
       isSnap: !shouldTag,
       message: params.message as string,
@@ -588,6 +602,7 @@ if you're willing to lose the history from the head to the specified version, us
     return {
       snappedComponents: taggedComponents,
       snappedIds: taggedComponents.map((comp) => comp.id),
+      autoSnappedResults: results.autoTaggedResults,
       exportedIds,
     };
   }
@@ -808,35 +823,6 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     this.logger.profile('snap._addFlattenedDependenciesToComponents');
   }
 
-  async _addDependenciesGraphToComponents(components: Component[]): Promise<void> {
-    if (!this.workspace) {
-      return;
-    }
-    this.logger.setStatusLine('adding dependencies graph...');
-    this.logger.profile('snap._addDependenciesGraphToComponents');
-    const componentIdByPkgName = this.dependencyResolver.createComponentIdByPkgNameMap(components);
-    const options = {
-      rootDir: this.workspace.path,
-      rootComponentsPath: this.workspace.rootComponentsPath,
-      componentIdByPkgName,
-    };
-    await pMapPool(
-      components,
-      async (component) => {
-        if (component.state._consumer.componentMap?.rootDir) {
-          await this.dependencyResolver.addDependenciesGraph(
-            component,
-            component.state._consumer.componentMap.rootDir,
-            options
-          );
-        }
-      },
-      { concurrency: 10 }
-    );
-    this.logger.clearStatusLine();
-    this.logger.profile('snap._addDependenciesGraphToComponents');
-  }
-
   async throwForDepsFromAnotherLane(components: ConsumerComponent[]) {
     const lane = await this.scope.legacyScope.getCurrentLaneObject();
     const allIds = ComponentIdList.fromArray(components.map((c) => c.id));
@@ -1007,7 +993,10 @@ another option, in case this dependency is not in main yet is to remove all refe
       const builderExt = comp.extensions.findCoreExtension(Extensions.builder);
       const pkgData = builderExt?.data?.aspectsData?.find((a) => a.aspectId === Extensions.pkg);
       if (pkgData?.data?.publishedPackage != null) {
-        publishedPackages.set(pkgData.data.publishedPackage, pkgData.data.integrity);
+        publishedPackages.set(pkgData.data.publishedPackage, {
+          integrity: pkgData.data.integrity,
+          previouslyUsedVersion: comp.previouslyUsedVersion,
+        });
       }
     }
     return publishedPackages;

@@ -44,7 +44,7 @@ export default class GitHelper {
         fs.removeSync(path.join(this.scopes.localPath, dir));
       }
     });
-    this.scopeHelper.initWorkspace();
+    this.command.init();
   }
   mimicGitCloneLocalProjectHarmony(cloneWithComponentsFiles = true) {
     fs.removeSync(path.join(this.scopes.localPath, '.bit'));
@@ -56,6 +56,6 @@ export default class GitHelper {
         fs.removeSync(path.join(this.scopes.localPath, dir));
       }
     });
-    this.scopeHelper.initWorkspace();
+    this.command.init();
   }
 }

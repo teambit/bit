@@ -20,7 +20,7 @@ describe('merge lanes from scope', function () {
     let comp2HeadOnMain: string;
     let beforeMerging: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild('comp2', '-m "first tag"');
       comp2HeadOnMain = helper.command.getHead('comp2');
@@ -92,7 +92,7 @@ describe('merge lanes from scope', function () {
     let comp2HeadOnLaneA: string;
     let beforeMerging: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.createLane('lane-a');
       helper.command.snapComponentWithoutBuild('comp2');
@@ -158,7 +158,7 @@ describe('merge lanes from scope', function () {
     let comp2OnLane: string;
     let beforeMerging: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -222,7 +222,7 @@ describe('merge lanes from scope', function () {
     let beforeMerging: string;
     let mergeResultsParsed: Record<string, any>;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -270,7 +270,7 @@ describe('merge lanes from scope', function () {
     let envName: string;
     let envId: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
 
       envName = helper.env.setCustomEnv();
@@ -326,7 +326,7 @@ describe('merge lanes from scope', function () {
     let comp2OnLane: string;
     let beforeMerging: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -388,7 +388,7 @@ describe('merge lanes from scope', function () {
     let scope2Name;
     let scope2Path;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild('comp2');
       helper.command.export();
@@ -418,7 +418,7 @@ describe('merge lanes from scope', function () {
       expect(comp2OnBare.head).to.equal(comp2OnRemote.head);
     });
     it('bit import from the second scope should not throw', () => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.scopeHelper.addRemoteScope(scope2Path);
       expect(() => helper.command.import(`${scope2Name}/comp1`)).to.not.throw();
@@ -429,11 +429,11 @@ describe('merge lanes from scope', function () {
     let scope2Name;
     let scope2Path;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      const mainScope = helper.scopeHelper.cloneLocalScope();
+      const mainScope = helper.scopeHelper.cloneWorkspace();
 
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       scope2Name = scopeName;
@@ -445,7 +445,7 @@ describe('merge lanes from scope', function () {
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
 
-      helper.scopeHelper.getClonedLocalScope(mainScope);
+      helper.scopeHelper.getClonedWorkspace(mainScope);
       helper.command.tagAllWithoutBuild('--unmodified');
       helper.command.tagAllWithoutBuild('--unmodified');
       helper.command.export();
@@ -462,7 +462,7 @@ describe('merge lanes from scope', function () {
   describe('merge from scope lane to main when it is not up to date', () => {
     let bareMerge;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagWithoutBuild('comp2');
       helper.command.export();
@@ -486,7 +486,7 @@ describe('merge lanes from scope', function () {
     let comp1HeadOnMain: string;
     let comp1OnLane: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -527,7 +527,7 @@ describe('merge lanes from scope', function () {
     let envName: string;
     let envId: string;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -564,7 +564,7 @@ describe('merge lanes from scope', function () {
   describe.skip('merge from scope, main to lane when they are diverged with a removal of a dependency', () => {
     let bareMerge;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -591,7 +591,7 @@ describe('merge lanes from scope', function () {
   describe('merge from scope, main to lane when they are diverged with files updates', () => {
     let bareMerge;
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -616,6 +616,61 @@ describe('merge lanes from scope', function () {
       const fileHash = obj.files[0].file;
       const fileContent = helper.command.catObject(fileHash, false, bareMerge.scopePath);
       expect(fileContent).to.include('on-main');
+    });
+  });
+  describe('merge from scope, main to lane when they are diverged with custom env and dependencies update', () => {
+    let bareMerge;
+    let envId: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+
+      const envName = helper.env.setCustomEnv('node-env-dev-dep');
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.setEnv('comp1', envId);
+      helper.command.setEnv('comp2', envId);
+
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.removeComponent(envId);
+      helper.command.createLane();
+      helper.command.snapComponentWithoutBuild('comp1', '--unmodified');
+      helper.command.export();
+
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.tagAllWithoutBuild('--unmodified -m "second tag on main"');
+      helper.command.export();
+
+      bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
+      helper.command.mergeLaneFromScope(bareMerge.scopePath, 'main', `${helper.scopes.remote}/dev`);
+    });
+    it('should keep the env data correctly', () => {
+      const comp1HeadOnLane = helper.command.getHeadOfLane(`${helper.scopes.remote}/dev`, `comp1`, bareMerge.scopePath);
+      const obj = helper.command.catComponent(`comp1@${comp1HeadOnLane}`, bareMerge.scopePath);
+      const envExt = obj.extensions.find((e) => e.name === 'teambit.envs/envs');
+      expect(envExt.config.env).to.equal(envId);
+      expect(envExt.data.id).to.equal(envId);
+    });
+    it('should update the dependencies according to main', () => {
+      const comp1HeadOnLane = helper.command.getHeadOfLane(`${helper.scopes.remote}/dev`, `comp1`, bareMerge.scopePath);
+      const obj = helper.command.catComponent(`comp1@${comp1HeadOnLane}`, bareMerge.scopePath);
+      expect(obj.dependencies[0].id.name).to.equal('comp2');
+      expect(obj.dependencies[0].id.version).to.equal('0.0.2');
+      expect(obj.flattenedDependencies[0].version).to.equal('0.0.2');
+      const depsResolver = obj.extensions.find((e) => e.name === 'teambit.dependencies/dependency-resolver');
+      const comp2 = depsResolver.data.dependencies.find((d) => d.id.includes('comp2'));
+      expect(comp2.version).to.equal('0.0.2');
+    });
+    it('should save the policy and deps from policy correctly', () => {
+      const comp1HeadOnLane = helper.command.getHeadOfLane(`${helper.scopes.remote}/dev`, `comp1`, bareMerge.scopePath);
+      const obj = helper.command.catComponent(`comp1@${comp1HeadOnLane}`, bareMerge.scopePath);
+      const depsExt = obj.extensions.find((e) => e.name === 'teambit.dependencies/dependency-resolver');
+      const policy = depsExt.data.policy;
+      expect(policy).to.have.lengthOf(1);
+      expect(policy[0].dependencyId).to.equal('is-positive');
+      const isPositive = depsExt.data.dependencies.find((d) => d.id === 'is-positive');
+      expect(isPositive.source).to.equal('env');
     });
   });
 });

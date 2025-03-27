@@ -75,6 +75,7 @@ export class VersionMaker {
   private builder: BuilderMain;
   private dependencyResolver: DependencyResolverMain;
   private allComponentsToTag: ConsumerComponent[] = [];
+  private allWorkspaceComps?: Component[];
   constructor(
     private snapping: SnappingMain,
     private components: Component[],
@@ -98,6 +99,7 @@ export class VersionMaker {
     stagedConfig?: StagedConfig;
     removedComponents?: ComponentIdList;
   }> {
+    this.allWorkspaceComps = this.workspace ? await this.workspace.list() : undefined;
     const componentsToTag = this.getUniqCompsToTag();
     const idsToTag = ComponentIdList.fromArray(componentsToTag.map((c) => c.id));
     const autoTagData = await this.getAutoTagData(idsToTag);
@@ -132,7 +134,7 @@ export class VersionMaker {
 
     const { rebuildDepsGraph, build, updateDependentsOnLane, setHeadAsParent, detachHead, overrideHead } = this.params;
     await this.snapping._addFlattenedDependenciesToComponents(this.allComponentsToTag, rebuildDepsGraph);
-    await this.snapping._addDependenciesGraphToComponents(this.components);
+    await this._addDependenciesGraphToComponents();
     await this.snapping.throwForDepsFromAnotherLane(this.allComponentsToTag);
     if (!build) this.emptyBuilderData();
     this.addBuildStatus(this.allComponentsToTag, BuildStatus.Pending);
@@ -195,6 +197,50 @@ export class VersionMaker {
       stagedConfig,
       removedComponents,
     };
+  }
+
+  private async _addDependenciesGraphToComponents(): Promise<void> {
+    if (!this.workspace) {
+      return;
+    }
+    this.snapping.logger.setStatusLine('adding dependencies graph...');
+    this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
+    const componentIdByPkgName = this._getComponentIdByPkgNameMap();
+    const options = {
+      rootDir: this.workspace.path,
+      rootComponentsPath: this.workspace.rootComponentsPath,
+      componentIdByPkgName,
+    };
+    await pMapPool(
+      this.components,
+      async (component) => {
+        if (component.state._consumer.componentMap?.rootDir) {
+          await this.dependencyResolver.addDependenciesGraph(
+            component,
+            component.state._consumer.componentMap.rootDir,
+            options
+          );
+        }
+      },
+      { concurrency: 10 }
+    );
+    this.snapping.logger.clearStatusLine();
+    this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
+  }
+
+  private _getComponentIdByPkgNameMap(): Map<string, ComponentID> {
+    if (!this.allWorkspaceComps) throw new Error('please make sure to populate this.allWorkspaceComps before');
+    const componentIdByPkgName = new Map<string, ComponentID>();
+    this.components.forEach((component, index) => {
+      const pkgName = this.dependencyResolver.getPackageName(component);
+      componentIdByPkgName.set(pkgName, this.allComponentsToTag[index].id);
+    });
+    for (const workspaceComp of this.allWorkspaceComps) {
+      if (this.components.every((snappedComponent) => !snappedComponent.id.isEqualWithoutVersion(workspaceComp.id))) {
+        componentIdByPkgName.set(this.dependencyResolver.getPackageName(workspaceComp), workspaceComp.id);
+      }
+    }
+    return componentIdByPkgName;
   }
 
   private async triggerOnPreSnap(autoTagIds: ComponentIdList) {
@@ -297,18 +343,41 @@ export class VersionMaker {
     return Object.values(consumerComponentsIdsMap); // consumerComponents unique
   }
 
-  private async getAutoTagData(idsToTag: ComponentID[]) {
+  private async getAutoTagData(idsToTag: ComponentIdList): Promise<AutoTagResult[]> {
+    if (this.params.skipAutoTag) return [];
+    if (!this.workspace) return this.getLaneAutoTagIdsFromScope(idsToTag);
     // ids without versions are new. it's impossible that tagged (and not-modified) components has
     // them as dependencies.
     const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
-    const autoTagDataWithLocalOnly =
-      this.params.skipAutoTag || !this.workspace
-        ? []
-        : await this.workspace.getAutoTagInfo(ComponentIdList.fromArray(idsToTriggerAutoTag));
+    const autoTagDataWithLocalOnly = await this.workspace.getAutoTagInfo(
+      ComponentIdList.fromArray(idsToTriggerAutoTag));
     const localOnly = this.workspace?.listLocalOnly();
     return localOnly
       ? autoTagDataWithLocalOnly.filter((autoTagItem) => !localOnly.hasWithoutVersion(autoTagItem.component.id))
       : autoTagDataWithLocalOnly;
+  }
+
+  private async getLaneAutoTagIdsFromScope(idsToTag: ComponentIdList): Promise<AutoTagResult[]> {
+    const lane = await this.legacyScope.getCurrentLaneObject();
+    if (!lane) return [];
+    const laneCompIds = lane.toComponentIds();
+    const graphIds = await this.scope.getGraphIds(laneCompIds);
+    const dependentsMap = idsToTag.reduce((acc, id) => {
+      const dependents = graphIds.predecessors(id.toString());
+      const dependentsCompIds = dependents.map(d => d.attr);
+      const dependentsCompIdsFromTheLane = dependentsCompIds.filter(s => laneCompIds.has(s));
+      if (!dependentsCompIdsFromTheLane.length) return acc;
+      acc[id.toString()] = ComponentIdList.fromArray(dependentsCompIdsFromTheLane);
+      return acc;
+    }, {} as Record<string, ComponentIdList>);
+    if (Object.keys(dependentsMap).length === 0) return [];
+    const allDependentsIds = ComponentIdList.uniqFromArray(Object.values(dependentsMap).flat());
+    const allDependents = await this.legacyScope.getManyConsumerComponents(allDependentsIds);
+    return allDependents.map((dependent) => {
+      const triggeredByIds = Object.keys(dependentsMap).filter((id) => dependentsMap[id].has(dependent.id));
+      const triggeredBy = ComponentIdList.fromStringArray(triggeredByIds);
+      return { component: dependent, triggeredBy };
+    });
   }
 
   private async setFutureVersions(autoTagIds: ComponentIdList): Promise<void> {
@@ -546,16 +615,16 @@ function addIntegritiesToDependenciesGraph(
   packageIntegritiesByPublishedPackages: PackageIntegritiesByPublishedPackages,
   dependenciesGraph: DependenciesGraph
 ): DependenciesGraph {
-  const resolvedVersions: Array<{ name: string; version: string }> = [];
-  for (const [selector, integrity] of packageIntegritiesByPublishedPackages.entries()) {
+  const resolvedVersions: Array<{ name: string; version: string; previouslyUsedVersion?: string; }> = [];
+  for (const [selector, { integrity, previouslyUsedVersion }] of packageIntegritiesByPublishedPackages.entries()) {
     if (integrity == null) continue;
     const index = selector.indexOf('@', 1);
     const name = selector.substring(0, index);
     const version = selector.substring(index + 1);
-    const pendingPkg = dependenciesGraph.packages.get(`${name}@pending:`);
+    const pendingPkg = dependenciesGraph.packages.get(`${name}@${previouslyUsedVersion}`) ?? dependenciesGraph.packages.get(`${name}@${version}`);;
     if (pendingPkg) {
       pendingPkg.resolution = { integrity };
-      resolvedVersions.push({ name, version });
+      resolvedVersions.push({ name, version, previouslyUsedVersion });
     }
   }
   return replacePendingVersions(dependenciesGraph, resolvedVersions) as DependenciesGraph;
@@ -664,11 +733,13 @@ export async function updateVersions(
 
 function replacePendingVersions(
   graph: DependenciesGraph,
-  resolvedVersions: Array<{ name: string; version: string }>
+  resolvedVersions: Array<{ name: string; version: string; previouslyUsedVersion?: string; }>
 ): DependenciesGraph {
   let s = graph.serialize();
-  for (const { name, version } of resolvedVersions) {
-    s = s.replaceAll(`${name}@pending:`, `${name}@${version}`);
+  for (const { name, version, previouslyUsedVersion } of resolvedVersions) {
+    if (previouslyUsedVersion) {
+      s = s.replaceAll(`${name}@${previouslyUsedVersion}:`, `${name}@${version}`);
+    }
   }
   const updatedDependenciesGraph = DependenciesGraph.deserialize(s);
   // This should never happen as we know at this point that the schema version is supported

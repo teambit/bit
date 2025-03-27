@@ -241,7 +241,7 @@ export class WorkspaceMain {
       // This component from scope here are only used for merging the extensions with the workspace components
       const componentFromScope = await workspace.scope.get(componentId);
       const { extensions } = await workspace.componentExtensions(componentId, componentFromScope, undefined, loadOpts);
-      const defaultScope = await workspace.componentDefaultScope(componentId);
+      const defaultScope = componentId.scope;
 
       const extensionsWithLegacyIdsP = extensions.map(async (extension) => {
         if (extension.extensionId) {
@@ -258,12 +258,11 @@ export class WorkspaceMain {
       };
     });
 
-    const workspaceSchema = getWorkspaceSchema(workspace, graphql);
     ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
     ui.registerPreStart(async () => {
       return workspace.setComponentPathsRegExps();
     });
-    graphql.register(workspaceSchema);
+    graphql.register(() => getWorkspaceSchema(workspace, graphql));
     const capsuleCmd = getCapsulesCommands(isolator, scope, workspace);
     const commands: CommandList = [
       new EjectConfCmd(workspace),

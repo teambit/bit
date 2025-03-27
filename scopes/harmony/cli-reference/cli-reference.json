@@ -951,6 +951,11 @@
             "l",
             "layout <name>",
             "GraphVis layout. default to \"dot\". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]"
+          ],
+          [
+            "",
+            "limit <number>",
+            "limit the number of nodes in the graph (starting from the heads)"
           ]
         ],
         "description": "generate a graph of the version history of a component and save as an SVG file",
@@ -1604,7 +1609,7 @@
         "description": "creates a component named 'ui/button' using the 'react' template"
       },
       {
-        "cmd": "bit create node utils/is-string utils/is-number --aspect teambit.node/node",
+        "cmd": "bit create module utils/is-string utils/is-number --aspect teambit.node/node",
         "description": "creates two components, 'utils/is-string' and 'utils/is-number' using the 'node' template from the 'node' aspect(env)"
       },
       {
@@ -2466,7 +2471,7 @@
       ]
     ],
     "description": "mark components as deleted on the remote",
-    "extendedDescription": "to remove components from your local workspace only, use \"bit remove\" command.\nthis command marks the components as deleted, and after snap/tag and export they will be marked as deleted from the remote scope as well.\n",
+    "extendedDescription": "to remove components from your local workspace only, use \"bit remove\" command.\nthis command marks the components as deleted, and after snap/tag and export they will be marked as deleted from the remote scope as well.\nunless the '--hard' flag is used (not recommended!), in which case, the component will be deleted from the remote scope immediately.\n",
     "group": "collaborate",
     "private": false,
     "remoteOp": true,
@@ -3633,6 +3638,11 @@
         "s",
         "scope <scope-name>",
         "DEPRECATED. (use the pattern instead, e.g. \"scopeName/**\"). name of the scope to test"
+      ],
+      [
+        "j",
+        "json",
+        "return the results in json format"
       ]
     ],
     "description": "test components in the workspace. by default only runs tests for new and modified components",
@@ -5248,6 +5258,11 @@
         "",
         "strict",
         "in case issues found, exit with code 1"
+      ],
+      [
+        "j",
+        "json",
+        "return the output in json format"
       ]
     ],
     "description": "check typescript types",

@@ -32,7 +32,7 @@ export type GraphQLConfig = {
 
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
 
-export type SchemaSlot = SlotRegistry<Schema>;
+export type SchemaSlot = SlotRegistry<Schema | (() => Schema)>;
 
 export type PubSubSlot = SlotRegistry<PubSubEngine>;
 
@@ -87,21 +87,25 @@ export class GraphqlMain {
   /**
    * returns the schema for a specific aspect by its id.
    */
-  getSchema(aspectId: string) {
-    return this.moduleSlot.get(aspectId);
+  getSchema(aspectId: string): Schema | undefined {
+    const schemaOrFunc = this.moduleSlot.get(aspectId);
+    if (!schemaOrFunc) return undefined;
+    const schema = typeof schemaOrFunc === 'function' ? schemaOrFunc() : schemaOrFunc;
+    return schema;
   }
 
   /**
    * get multiple schema by aspect ids.
+   * used by the cloud.
    */
-  getSchemas(aspectIds: string[]) {
+  getSchemas(aspectIds: string[]): Schema[] {
     return this.moduleSlot
       .toArray()
       .filter(([aspectId]) => {
         return aspectIds.includes(aspectId);
       })
-      .map(([, schema]) => {
-        return schema;
+      .map(([, schemaOrFunc]) => {
+        return typeof schemaOrFunc === 'function' ? schemaOrFunc() : schemaOrFunc;
       });
   }
 
@@ -193,8 +197,10 @@ export class GraphqlMain {
 
   /**
    * register a new graphql module.
+   * @param schema a function that returns Schema. avoid passing the Schema directly, it's supported only for backward
+   * compatibility but really bad for performance. it pulls the entire graphql library.
    */
-  register(schema: Schema) {
+  register(schema: Schema | (() => Schema)) {
     // const module = new GraphQLModule(schema);
     this.moduleSlot.register(schema);
     return this;
@@ -263,7 +269,8 @@ export class GraphqlMain {
 
   private buildModules(schemaSlot?: SchemaSlot) {
     const schemaSlots = schemaSlot ? schemaSlot.toArray() : this.moduleSlot.toArray();
-    return schemaSlots.map(([extensionId, schema]) => {
+    return schemaSlots.map(([extensionId, schemaOrFunc]) => {
+      const schema = typeof schemaOrFunc === 'function' ? schemaOrFunc() : schemaOrFunc;
       const moduleDeps = this.getModuleDependencies(extensionId);
 
       const module = new GraphQLModule({
@@ -321,6 +328,7 @@ export class GraphqlMain {
   ) {
     const logger = loggerFactory.createLogger(GraphqlAspect.id);
     const graphqlMain = new GraphqlMain(config, moduleSlot, context, logger, graphQLServerSlot, pubSubSlot);
+    graphqlMain.registerPubSub(new PubSub());
     return graphqlMain;
   }
 }

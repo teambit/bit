@@ -40,6 +40,13 @@ module.exports = {
       },
 
       rules: {
+        '@typescript-eslint/no-unused-vars': 'warn',
+        'no-nested-ternary': 'warn',
+        'react/self-closing-comp': 'warn',
+        'import/order': 'warn',
+        'object-shorthand': 'warn',
+        'react/button-has-type': 'off',
+        'react/jsx-boolean-value': 'warn',
         'no-useless-constructor': 'off',
         '@typescript-eslint/no-useless-constructor': 'off',
         '@typescript-eslint/camelcase': 'off',

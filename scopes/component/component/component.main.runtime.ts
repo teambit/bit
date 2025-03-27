@@ -130,6 +130,8 @@ export class ComponentMain {
     return priorityHost || hosts[0];
   }
 
+
+
   getShowFragments() {
     const fragments = orderBy(flatten(this.showFragmentSlot.values()), ['weight', ['asc']]);
     return fragments;
@@ -171,7 +173,7 @@ export class ComponentMain {
       new FilesFragment(),
       new ExtensionsFragment(),
     ]);
-    graphql.register(componentSchema(componentExtension));
+    graphql.register(() => componentSchema(componentExtension));
 
     return componentExtension;
   }

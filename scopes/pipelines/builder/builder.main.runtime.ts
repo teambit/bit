@@ -602,7 +602,7 @@ export class BuilderMain {
     );
     builder.registerBuildTasks([new BundleUiTask(ui, logger)]);
     component.registerRoute([new BuilderRoute(builder, scope, logger)]);
-    graphql.register(builderSchema(builder, logger));
+    graphql.register(() => builderSchema(builder, logger));
     if (generator) generator.registerComponentTemplate([buildTaskTemplate]);
     const commands = [new BuilderCmd(builder, workspace, logger), new ArtifactsCmd(builder, component)];
     cli.register(...commands);

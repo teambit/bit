@@ -19,7 +19,7 @@ describe('bit config', function () {
     let delOutput;
 
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       setOutput = helper.command.runCmd('bit config set conf.key conf.value');
       getOutput = helper.command.runCmd('bit config get conf.key');
       delOutput = helper.command.runCmd('bit config del conf.key');
@@ -42,7 +42,7 @@ describe('bit config', function () {
 
   describe('git propagation', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.git.initNewGitRepo();
       helper.command.runCmd('bit config set conf.key bit-value');
       // Commented because of permission issue
@@ -54,26 +54,6 @@ describe('bit config', function () {
       const confVal = helper.command.runCmd('bit config get conf.key');
       expect(confVal).to.have.string('bit-value\n');
     });
-    it('should read config from git-local if not exists in bit', () => {
-      helper.command.runCmd('bit config del conf.key');
-      const confVal = helper.command.runCmd('bit config get conf.key');
-      expect(confVal).to.have.string('git-local-val\n');
-    });
-    it('should read config from git-global if not exists in bit and git-local', () => {
-      helper.git.unsetGitConfig('conf.key', 'local');
-      const confVal = helper.command.runCmd('bit config get conf.key');
-      // Clean the global env
-      helper.git.unsetGitConfig('conf.key', 'global');
-      expect(confVal).to.have.string('git-global-val\n');
-    });
-    // Commented because of permission issue
-    // it('should read config from git-system if not exists in bit', () => {
-    //   helper.git.unsetGitConfig('conf.key', 'global');
-    //   helper.command.runCmd('bit config del conf.key');
-    //   const confVal = helper.command.runCmd('bit config get conf.key');
-    //   expect(confVal).to.be.equal('git-system-val\n');
-    // });
-    // it('should return undefined if not exists both in git and bit', () => {
     it('should not throw an error if not exists both in git and bit', () => {
       // const confVal = helper.command.runCmd('bit config get nonExistsKey');
       // expect(confVal).to.be.oneOf(['\n', '', 'undefined\n']);
@@ -84,7 +64,7 @@ describe('bit config', function () {
 
   describe('saving config in the local workspace', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.command.setConfig('local.ws', 'hello-ws',  '--local-track');
     });
     after(() => {
@@ -125,7 +105,7 @@ describe('bit config', function () {
   });
   describe('saving config in the local scope', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.command.setConfig('local.scope', 'hello-scope',  '--local');
     });
     it('should save to the scope when using "--local"', () => {

@@ -110,7 +110,7 @@ export class CloudMain {
     public scope: ScopeMain,
     public configStore: ConfigStoreMain,
     public onSuccessLoginSlot: OnSuccessLoginSlot
-  ) {}
+  ) { }
 
   getNpmConfig(): Record<string, string> {
     try {
@@ -383,8 +383,9 @@ export class CloudMain {
     return this.config.loginPort || CloudMain.DEFAULT_PORT;
   }
 
-  isLoggedIn(): boolean {
-    return Boolean(this.getAuthToken());
+  async isLoggedIn(): Promise<boolean> {
+    const currentUser = await this.getCurrentUser();
+    return Boolean(currentUser)
   }
 
   getAuthToken() {
@@ -433,17 +434,15 @@ export class CloudMain {
     }
     const authListenerForPort = this.authListenerByPort.get(port);
     if (authListenerForPort) {
-      return `${loginUrl}?port=${port}&clientId=${authListenerForPort.clientId}&responseType=token&deviceName=${
-        machineName || os.hostname()
-      }&os=${process.platform}`;
+      return `${loginUrl}?port=${port}&clientId=${authListenerForPort.clientId}&responseType=token&deviceName=${machineName || os.hostname()
+        }&os=${process.platform}`;
     }
     const authListener = await this.setupAuthListener({ port });
 
     if (!authListener) return null;
 
     return encodeURI(
-      `${loginUrl}?port=${port}&clientId=${authListener?.clientId}&responseType=token&deviceName=${
-        machineName || os.hostname()
+      `${loginUrl}?port=${port}&clientId=${authListener?.clientId}&responseType=token&deviceName=${machineName || os.hostname()
       }&os=${process.platform}`
     );
   }
@@ -514,8 +513,9 @@ export class CloudMain {
     if (defaultCloudDomain) {
       cloudDomain = DEFAULT_CLOUD_DOMAIN;
     }
+    const isLoggedIn = await this.isLoggedIn();
     return new Promise((resolve, reject) => {
-      if (this.isLoggedIn()) {
+      if (isLoggedIn) {
         resolve({
           isAlreadyLoggedIn: true,
           username: this.configStore.getConfig(CFG_USER_NAME_KEY),
@@ -642,7 +642,6 @@ export class CloudMain {
   }
 
   async fetchFromSymphonyViaGQL<T>(query: string, variables?: Record<string, any>): Promise<T | null> {
-    if (!this.isLoggedIn()) return null;
     const graphqlUrl = `https://${this.getCloudApi()}${CloudMain.GRAPHQL_ENDPOINT}`;
     const body = JSON.stringify({
       query,
@@ -719,7 +718,7 @@ export class CloudMain {
     const npmrc = new NpmrcCmd();
     npmrc.commands = [npmrcGenerateCmd];
     cli.register(loginCmd, logoutCmd, whoamiCmd, npmrc);
-    graphql.register(cloudSchema(cloudMain));
+    graphql.register(() => cloudSchema(cloudMain));
     if (workspace) {
       ui.registerOnStart(async () => {
         await cloudMain.setupAuthListener();

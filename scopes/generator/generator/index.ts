@@ -3,9 +3,12 @@ export type {
   ComponentContext,
   ComponentTemplate,
   ComponentTemplateOptions,
+  GetComponentTemplates,
   ComponentFile,
   ComponentConfig,
   ConfigContext,
+  PromptOption,
+  PromptResults,
 } from './component-template';
 export type {
   WorkspaceContext,

@@ -107,20 +107,22 @@ export default class CommandHelper {
     cwd: string = this.scopes.localPath,
     stdio: StdioOptions = 'pipe',
     overrideFeatures?: string,
-    getStderrAsPartOfTheOutput = false // needed to get Jest output as they write to the stderr for some reason. see https://github.com/facebook/jest/issues/5064
+    getStderrAsPartOfTheOutput = false, // needed to get Jest output as they write to the stderr for some reason. see https://github.com/facebook/jest/issues/5064
+    envVariables?: Record<string, string>
   ): string {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
     const isBitCommand = cmd.startsWith('bit ');
     if (isBitCommand) cmd = cmd.replace('bit', this.bitBin);
     const featuresTogglePrefix = isBitCommand ? this._getFeatureToggleCmdPrefix(overrideFeatures) : '';
     const cmdWithFeatures = featuresTogglePrefix + cmd;
+    const env = envVariables ? { ...process.env, ...envVariables } : undefined;
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmdWithFeatures); // eslint-disable-line no-console
     // `spawnSync` gets the data from stderr, `shell: true` is needed for Windows to get the output.
     const cmdOutput = getStderrAsPartOfTheOutput
       ? childProcess
-          .spawnSync(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, stdio, shell: true })
+          .spawnSync(cmd.split(' ')[0], cmd.split(' ').slice(1), { cwd, stdio, shell: true, env })
           .output.toString()
-      : childProcess.execSync(cmdWithFeatures, { cwd, stdio, maxBuffer: EXEC_SYNC_MAX_BUFFER });
+      : childProcess.execSync(cmdWithFeatures, { cwd, stdio, maxBuffer: EXEC_SYNC_MAX_BUFFER, env });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line no-console
     return cmdOutput.toString();
   }
@@ -766,6 +768,11 @@ export default class CommandHelper {
   getCompDepsIdsFromData(compId: string): string[] {
     const aspectConf = this.showAspectConfig(compId, Extensions.dependencyResolver);
     return aspectConf.data.dependencies.map((dep) => dep.id);
+  }
+
+  getCompDepsDataFromData(compId: string): {id: string, version: string, lifecycle: string, source: string}[] {
+    const aspectConf = this.showAspectConfig(compId, Extensions.dependencyResolver);
+    return aspectConf.data.dependencies;
   }
 
   showComponentParsedHarmonyByTitle(compId: string, title: string) {

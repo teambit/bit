@@ -20,7 +20,7 @@ import { NewComponentHelperAspect, NewComponentHelperMain } from '@teambit/new-c
 import { compact, uniq } from 'lodash';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { DeprecationAspect, DeprecationMain } from '@teambit/deprecation';
-import { ComponentTemplate } from './component-template';
+import { ComponentTemplate, GetComponentTemplates, PromptResults } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
@@ -41,7 +41,7 @@ import { GeneratorService } from './generator.service';
 import { WorkspacePathExists } from './exceptions/workspace-path-exists';
 import { GLOBAL_SCOPE } from '@teambit/legacy.constants';
 
-export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
+export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[] | GetComponentTemplates>;
 export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
 export type OnComponentCreateSlot = SlotRegistry<OnComponentCreateFn>;
 
@@ -112,8 +112,10 @@ export class GeneratorMain {
 
   /**
    * register a new component template.
+   * @param templates array of component templates or a function that returns an array of component templates.
+   * prefer to use the function to improve performance by loading the templates only when needed.
    */
-  registerComponentTemplate(templates: ComponentTemplate[]) {
+  registerComponentTemplate(templates: ComponentTemplate[] | GetComponentTemplates) {
     this.componentTemplateSlot.register(templates);
     return this;
   }
@@ -171,7 +173,10 @@ export class GeneratorMain {
    * get all component templates registered by a specific aspect ID.
    */
   getComponentTemplateByAspect(aspectId: string): ComponentTemplate[] {
-    return this.componentTemplateSlot.get(aspectId) || [];
+    const result = this.componentTemplateSlot.get(aspectId);
+    if (!result) return [];
+    if (Array.isArray(result)) return result;
+    return result();
   }
 
   /**
@@ -350,16 +355,7 @@ export class GeneratorMain {
     return found?.template;
   }
 
-  async generateComponentTemplate(
-    componentNames: string[],
-    templateName: string,
-    options: Partial<CreateOptions>,
-    installOptions?: InstallOptions
-  ): Promise<GenerateResult[]> {
-    if (!this.workspace) throw new OutsideWorkspaceError();
-    await this.loadAspects();
-    const { namespace, aspect } = options;
-
+  async getTemplateWithId(templateName: string, aspect?: string): Promise<ComponentTemplateWithId> {
     const componentConfigLoadingRegistry = ComponentConfig.componentConfigLoadingRegistry;
 
     const templateWithId = await this.getComponentTemplate(templateName, aspect);
@@ -367,6 +363,21 @@ export class GeneratorMain {
     ComponentConfig.componentConfigLoadingRegistry = componentConfigLoadingRegistry;
 
     if (!templateWithId) throw new BitError(`template "${templateName}" was not found`);
+    return templateWithId;
+  }
+
+  async generateComponentTemplate(
+    componentNames: string[],
+    templateName: string,
+    options: Partial<CreateOptions>,
+    installOptions?: InstallOptions,
+    promptResults?: PromptResults
+  ): Promise<GenerateResult[]> {
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    await this.loadAspects();
+    const { namespace, aspect } = options;
+
+    const templateWithId = await this.getTemplateWithId(templateName, aspect);
 
     const componentIds = componentNames.map((componentName) =>
       this.newComponentHelper.getNewComponentId(componentName, namespace, options.scope)
@@ -396,7 +407,8 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       this.onComponentCreateSlot,
       templateWithId.id,
       envId,
-      installOptions
+      installOptions,
+      promptResults
     );
     return componentGenerator.generate(options.force);
   }
@@ -475,7 +487,8 @@ the reason is that after refactoring, the code will have this invalid class: "cl
   private getAllComponentTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {
     const templatesByAspects = this.componentTemplateSlot.toArray();
     const flattened = templatesByAspects.flatMap(([id, componentTemplates]) => {
-      return componentTemplates.map((template) => ({
+      const resolvedComponentTemplates = Array.isArray(componentTemplates) ? componentTemplates : componentTemplates();
+      return resolvedComponentTemplates.map((template) => ({
         id,
         template,
       }));
@@ -675,12 +688,12 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     );
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);
-    graphql.register(generatorSchema(generator));
+    graphql.register(() => generatorSchema(generator));
     aspectLoader.registerPlugins([new StarterPlugin(generator)]);
     envs.registerService(new GeneratorService());
 
     if (generator)
-      generator.registerComponentTemplate([
+      generator.registerComponentTemplate(() => [
         componentGeneratorTemplate,
         componentGeneratorTemplateStandalone,
         starterTemplate,

@@ -362,7 +362,7 @@ make sure this argument is the name only, without the scope-name. to change the 
     scopeCommand?.commands?.push(new ScopeRenameCmd(renaming));
     scopeCommand?.commands?.push(new ScopeRenameOwnerCmd(renaming));
 
-    graphql.register(renamingSchema(renaming));
+    graphql.register(() => renamingSchema(renaming));
     componentMain.registerShowFragments([new RenamingFragment(renaming)]);
     return renaming;
   }

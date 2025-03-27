@@ -4,8 +4,7 @@ import { Modules, readModulesManifest } from '@pnpm/modules-yaml';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import rimraf from 'rimraf';
 import { Extensions } from '@teambit/legacy.constants';
-import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, fixtures, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -28,7 +27,7 @@ describe('dependency-resolver extension', function () {
       let isTypeOutput;
 
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.fixtures.createComponentUtilsIsType();
@@ -68,7 +67,7 @@ describe('dependency-resolver extension', function () {
       let barFooOutput;
       describe('policies added core env', function () {
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.fixtures.createComponentBarFoo();
           helper.fixtures.addComponentBarFoo();
           // TODO: use custom env with versions provided from outside in the config by the user
@@ -83,7 +82,7 @@ describe('dependency-resolver extension', function () {
       describe('policies added by custom env', function () {
         let utilsIsTypeOutput;
         before(() => {
-          helper.scopeHelper.reInitLocalScope();
+          helper.scopeHelper.reInitWorkspace();
           helper.fixtures.createComponentBarFoo('import "lodash.zip"');
           helper.fixtures.addComponentBarFoo();
           helper.fixtures.createComponentUtilsIsType();
@@ -116,7 +115,7 @@ describe('dependency-resolver extension', function () {
       const EXTENSIONS_BASE_FOLDER = 'extension-add-dependencies';
       const config = {};
       before(() => {
-        helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+        helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.fixtures.createComponentUtilsIsType();
@@ -162,7 +161,7 @@ describe('dependency-resolver extension', function () {
     let npmCiRegistry: NpmCiRegistry;
     let randomStr;
     before(async () => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
 
       npmCiRegistry = new NpmCiRegistry(helper);
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
@@ -225,7 +224,7 @@ describe('dependency-resolver extension', function () {
     //   └── path-is-absolute 1.0.1
     describe('using Yarn as a package manager', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/yarn');
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('overrides', {
           'is-odd': '1.0.0',
@@ -260,7 +259,7 @@ describe('dependency-resolver extension', function () {
     });
     describe('using pnpm as a package manager', () => {
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/pnpm');
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('overrides', {
           'is-odd': '1.0.0',
@@ -296,7 +295,7 @@ describe('dependency-resolver extension', function () {
     let modulesState: Modules | null;
     before(async () => {
       helper = new Helper();
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/pnpm`);
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('hoistPatterns', ['hoist-pattern']);
       helper.fixtures.populateComponents(1);
@@ -318,6 +317,138 @@ describe('dependency-resolver extension', function () {
       });
       it('should run pnpm with the specified hoist pattern', () => {
         expect(modulesState?.hoistPattern).to.deep.eq(['hoist-pattern']);
+      });
+    });
+  });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('env.jsonc with policy.peer version="+"', () => {
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllComponents();
+      helper.env.setEmptyEnv();
+      helper.fs.outputFile('empty-env/env.jsonc', `{
+  "policy": {
+    "peers": [
+      {
+        "name": "${helper.general.getPackageNameByCompName('comp1')}",
+        "version": "+",
+        "supportedRange": "^0.0.1"
+      }
+    ]
+  }
+}
+`);
+      helper.command.tagAllComponents(); // it'll tag only empty-env.
+      helper.command.export();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+    });
+    function validateDepData(expectedVersion: string) {
+      const comp = helper.command.catComponent(`${helper.scopes.remote}/empty-env@latest`);
+      const depResolverExt = comp.extensions.find((e) => e.name === Extensions.dependencyResolver);
+      const policy = depResolverExt.data.policy.find(p => p.dependencyId === helper.general.getPackageNameByCompName('comp1'));
+      expect(policy.value.version).to.equal('+');
+      const data =  depResolverExt.data.dependencies.find(p => p.packageName === helper.general.getPackageNameByCompName('comp1'));
+      expect(data.version).to.equal(expectedVersion);
+      expect(data.componentId.version).to.equal(expectedVersion);
+    }
+    it('should not break and save the policy correctly with the plus', () => {
+      validateDepData('0.0.1');
+    });
+    describe('making a new version of the env dep', () => {
+      before(() => {
+        helper.command.tagAllComponents('--unmodified');
+        helper.command.export();
+      });
+      it('should update the dep in the env model', () => {
+        validateDepData('0.0.2');
+      });
+      it('should be able to install the env on a new workspace with no errors', () => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.install(helper.general.getPackageNameByCompName('empty-env'));
+        const pkgJson = helper.fs.readJsonFile(`node_modules/${helper.general.getPackageNameByCompName('empty-env')}/package.json`);
+        expect(pkgJson.dependencies[`${helper.general.getPackageNameByCompName('comp1')}`]).to.equal('0.0.2');
+      });
+      // this is an important test. in case the env is imported without the dep, it is unable to resolve the dep-version
+      // from the local workspace and it falls back to other strategies, in this case, to the version from the model.
+      it('should be able to import the env on a new workspace and tag with no errors', () => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent(`empty-env`);
+        helper.command.tagAllComponents('--unmodified');
+        validateDepData('0.0.2');
+      });
+    });
+  });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('env.jsonc with policy.peer version="*"', () => {
+    let npmCiRegistry: NpmCiRegistry;
+    const examplePkg = '@ci/lodash';
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      npmCiRegistry.publishPackage(examplePkg, '0.0.1');
+
+      helper.env.setEmptyEnv();
+      helper.fs.outputFile('empty-env/env.jsonc', `{
+  "policy": {
+    "peers": [
+      {
+        "name": "${examplePkg}",
+        "version": "*",
+        "supportedRange": "*"
+      }
+    ]
+  }
+}
+`);
+      helper.command.tagAllComponents();
+      helper.command.export();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+    });
+    function validatePkgData() {
+      const comp = helper.command.catComponent(`${helper.scopes.remote}/empty-env@latest`);
+      const depResolverExt = comp.extensions.find((e) => e.name === Extensions.dependencyResolver);
+      const policy = depResolverExt.data.policy.find(p => p.dependencyId === examplePkg);
+      expect(policy.value.version).to.equal('*');
+      const data =  depResolverExt.data.dependencies.find(p => p.id === examplePkg);
+      expect(data.version).to.equal('*');
+    }
+    it('should not break and save the policy correctly with the *', () => {
+      validatePkgData();
+    });
+    describe('publishing a new version of the package and re-tagging', () => {
+      before(() => {
+        npmCiRegistry.publishPackage(examplePkg, '0.0.2');
+        helper.command.tagAllComponents('--unmodified');
+        helper.command.export();
+      });
+      it('should update the dep in the env model', () => {
+        validatePkgData();
+      });
+      it('should be able to install the env on a new workspace with no errors and install the latest of the pkg dep', () => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.install(helper.general.getPackageNameByCompName('empty-env'));
+
+        const envPkgJson = helper.fs.readJsonFile(`node_modules/${helper.general.getPackageNameByCompName('empty-env')}/package.json`);
+        expect(envPkgJson.dependencies[examplePkg]).to.equal('*');
+
+        const pkgJsonPath = path.join('node_modules', '.pnpm/@ci+lodash@0.0.2/node_modules/@ci/lodash/package.json');
+        const pkgJson = helper.fs.readJsonFile(pkgJsonPath);
+        expect(pkgJson.version).to.equal('0.0.2');
       });
     });
   });

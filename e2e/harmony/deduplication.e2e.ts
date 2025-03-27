@@ -1,8 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-import { Helper } from '@teambit/legacy.e2e-helper';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
@@ -15,7 +14,7 @@ chai.use(require('chai-fs'));
   this.timeout(0);
   before(async () => {
     helper = new Helper();
-    helper.scopeHelper.setNewLocalAndRemoteScopes();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
     scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
     remote = helper.scopes.remote;
 
@@ -39,7 +38,7 @@ chai.use(require('chai-fs'));
       helper.command.export();
 
       // A new version of comp2 is created
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       helper.workspaceJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
       helper.scopeHelper.addRemoteScope();
@@ -49,7 +48,7 @@ chai.use(require('chai-fs'));
       helper.command.export();
 
       // comp1 is imported and the newest version of comp2 is installed
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       helper.workspaceJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
       helper.scopeHelper.addRemoteScope();
@@ -69,7 +68,7 @@ chai.use(require('chai-fs'));
   });
   describe('complex scenario', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
 
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
       const name = `@ci/${randomStr}.{name}`;
@@ -111,7 +110,7 @@ const get = require("lodash.get");`
       helper.command.export();
 
       // comp4 is created with lodash.get@^4.4.0 in its dependencies
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       helper.workspaceJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
       helper.scopeHelper.addRemoteScope();
@@ -122,7 +121,7 @@ const get = require("lodash.get");`
       helper.command.export();
 
       // Releasing 2 new versions of comp-dep
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       helper.workspaceJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
       helper.scopeHelper.addRemoteScope();
@@ -135,7 +134,7 @@ const get = require("lodash.get");`
       helper.command.export();
 
       // Creating a new component that has comp-dep@0.0.2 in dependencies
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       helper.workspaceJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
       helper.scopeHelper.addRemoteScope();
@@ -146,7 +145,7 @@ const get = require("lodash.get");`
       helper.command.export();
 
       // Importing comp1,2,3,4,5 and installing comp-dep@0.0.3 as a dependency
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       helper.workspaceJsonc.addKeyValToWorkspace('defaultScope', scopeWithoutOwner);
       helper.scopeHelper.addRemoteScope();

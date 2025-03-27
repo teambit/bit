@@ -14,7 +14,7 @@ describe('extensions config diff', function () {
   let beforeEject: string;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.reInitLocalScope({ addRemoteScopeAsDefaultScope: false });
+    helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
     helper.workspaceJsonc.disablePreview();
     helper.fixtures.populateExtensions(4);
     helper.fixtures.createComponentBarFoo();
@@ -26,7 +26,7 @@ describe('extensions config diff', function () {
     helper.command.install();
     helper.command.compile();
     helper.command.tagAllComponents();
-    beforeEject = helper.scopeHelper.cloneLocalScope();
+    beforeEject = helper.scopeHelper.cloneWorkspace();
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -61,7 +61,7 @@ describe('extensions config diff', function () {
     });
     describe('remove extension', () => {
       before(() => {
-        helper.scopeHelper.getClonedLocalScope(beforeEject);
+        helper.scopeHelper.getClonedWorkspace(beforeEject);
         reEjectAndCheckStatusBefore(helper);
         helper.componentJson.removeExtension('my-scope/ext3@0.0.1');
       });

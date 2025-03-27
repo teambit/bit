@@ -2,8 +2,7 @@ import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { Helper } from '@teambit/legacy.e2e-helper';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)(
   'installing the right versions of dependencies of a new imported component',
@@ -14,7 +13,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
@@ -35,7 +34,7 @@ const isPositive = require('is-positive');
       helper.command.tagComponent('comp3 comp2', undefined, '--unmodified');
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.setupDefault();
@@ -81,7 +80,7 @@ const isPositive = require('is-positive');
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
         peerDependencies: {
@@ -98,7 +97,7 @@ const isPositive = require('is-positive');
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.extensions.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.setupDefault();

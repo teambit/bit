@@ -1,8 +1,7 @@
 import path from 'path';
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
-import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
-import { Helper } from '@teambit/legacy.e2e-helper';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-string'));
 
@@ -18,7 +17,7 @@ describe('peer-dependencies functionality', function () {
   describe('when a package is a regular dependency and a peer dependency', () => {
     let catComponent;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.workspaceJsonc.addPolicyToDependencyResolver({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
       helper.npm.addFakeNpmPackage('chai', '2.4');
       helper.fixtures.createComponentBarFoo("import chai from 'chai';");
@@ -48,7 +47,7 @@ describe('peer-dependencies functionality', function () {
         helper.workspaceJsonc.setupDefault();
         helper.command.export();
 
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
         // const output = helper.command.importComponent('bar/foo');
@@ -63,7 +62,7 @@ describe('peer-dependencies functionality', function () {
 
   describe('when a package is only a peer dependency but not required in the code', () => {
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.workspaceJsonc.addPolicyToDependencyResolver({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
       helper.npm.addFakeNpmPackage('chai', '2.4');
       helper.fixtures.createComponentBarFoo();
@@ -86,7 +85,7 @@ describe('peer-dependencies functionality', function () {
   describe('a component is a peer dependency', () => {
     let workspaceCapsulesRootDir: string;
     before(() => {
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
       helper.workspaceJsonc.addPolicyToDependencyResolver({
         peerDependencies: { [`@${helper.scopes.remote}/comp2`]: '*' },
@@ -128,7 +127,7 @@ describe('peer-dependencies functionality', function () {
       let npmCiRegistry: NpmCiRegistry;
       before(async () => {
         helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         npmCiRegistry = new NpmCiRegistry(helper);
         await npmCiRegistry.init();
         npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -137,7 +136,7 @@ describe('peer-dependencies functionality', function () {
         helper.command.tagAllComponents();
         helper.command.export();
 
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('peer-dep');
         peerPkgName = `@ci/${helper.scopes.remoteWithoutOwner}.peer-dep`;
@@ -207,7 +206,7 @@ describe('peer-dependencies functionality', function () {
       let peerName: string;
       before(async () => {
         helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-        helper.scopeHelper.setNewLocalAndRemoteScopes();
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
         npmCiRegistry = new NpmCiRegistry(helper);
         await npmCiRegistry.init();
         npmCiRegistry.configureCiInPackageJsonHarmony();
@@ -216,7 +215,7 @@ describe('peer-dependencies functionality', function () {
         helper.command.tagAllComponents('--build --skip-tests');
         helper.command.export();
 
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
 
         helper.fixtures.populateComponents(1);
@@ -262,9 +261,9 @@ describe('peer-dependencies functionality', function () {
     let workspaceCapsulesRootDir: string;
     before(() => {
       helper = new Helper();
-      helper.scopeHelper.reInitLocalScope();
+      helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
-      helper.command.dependenciesSet('comp1', `@${helper.scopes.remote}/comp2@*`, '--peer');
+      helper.command.dependenciesSet('comp1', `@${helper.scopes.remote}/comp2@+`, '--peer');
       helper.command.snapAllComponents();
       helper.command.build();
       workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
@@ -274,12 +273,12 @@ describe('peer-dependencies functionality', function () {
       const peerDepData = output.peerDependencies[0];
       expect(peerDepData.id).to.startWith(`${helper.scopes.remote}/comp2`);
       expect(peerDepData.packageName).to.startWith(`@${helper.scopes.remote}/comp2`);
-      expect(peerDepData.versionRange).to.startWith('*');
+      expect(peerDepData.versionRange).to.startWith('+');
       const depResolver = output.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
       const peerDep = depResolver.data.dependencies[0];
       expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/comp2`);
       expect(peerDep.lifecycle).to.eq('peer');
-      expect(peerDep.versionRange).to.eq('*');
+      expect(peerDep.versionRange).to.eq('+');
     });
     it('should save the peer dependency in the scope data', () => {
       const comp = helper.command.catComponent(`comp1@latest`);
@@ -287,7 +286,7 @@ describe('peer-dependencies functionality', function () {
       const peerDep = depResolver.data.dependencies[0];
       expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/comp2`);
       expect(peerDep.lifecycle).to.eq('peer');
-      expect(peerDep.versionRange).to.eq('*');
+      expect(peerDep.versionRange).to.eq('+');
     });
     it('adds peer dependency to the generated package.json', () => {
       const { head } = helper.command.catComponent('comp1');
@@ -295,7 +294,7 @@ describe('peer-dependencies functionality', function () {
         path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1@${head}/package.json`)
       );
       expect(pkgJson.peerDependencies).to.deep.equal({
-        [`@${helper.scopes.remote}/comp2`]: '*',
+        [`@${helper.scopes.remote}/comp2`]: '+',
       });
     });
   });
