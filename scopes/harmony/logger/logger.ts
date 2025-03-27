@@ -142,6 +142,13 @@ export class Logger implements IBitLogger {
   }
 
   /**
+   * by default, the "profile" writes the message as "info". use this method to write it as "trace".
+   */
+  profileTrace(id: string) {
+    logger.profile(id, false, 'trace');
+  }
+
+  /**
    * print to the screen with a red `✖` prefix. if message is empty, print the last logged message.
    */
   consoleFailure(message?: string) {

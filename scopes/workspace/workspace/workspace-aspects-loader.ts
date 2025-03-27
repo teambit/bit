@@ -102,7 +102,7 @@ export class WorkspaceAspectsLoader {
     // generate a random callId to be able to identify the call from the logs
     const callId = Math.floor(Math.random() * 1000);
     const loggerPrefix = `[${callId}] loadAspects,`;
-    this.logger.profile(`[${callId}] workspace.loadAspects`);
+    this.logger.profileTrace(`[${callId}] workspace.loadAspects`);
     this.logger.info(`${loggerPrefix} loading ${ids.length} aspects.
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts, null, 2)}`);
@@ -115,7 +115,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
       notLoadedIds = nonLocalAspects.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     }
     if (!notLoadedIds.length) {
-      this.logger.profile(`[${callId}] workspace.loadAspects`);
+      this.logger.profileTrace(`[${callId}] workspace.loadAspects`);
       return [];
     }
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -181,7 +181,7 @@ needed-for: ${neededFor || '<unknown>'}. using opts: ${JSON.stringify(mergedOpts
     await this.aspectLoader.loadExtensionsByManifests(pluginsManifests, undefined, { throwOnError });
     const manifestIds = manifests.map((manifest) => manifest.id);
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
-    this.logger.profile(`[${callId}] workspace.loadAspects`);
+    this.logger.profileTrace(`[${callId}] workspace.loadAspects`);
     return compact(manifestIds.concat(scopeAspectIds));
   }
 
