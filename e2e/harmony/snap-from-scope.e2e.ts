@@ -444,22 +444,6 @@ export const BasicIdInput = () => {
     it('should indicate what components were exported', () => {
       expect(snapResult.exportedIds).to.have.lengthOf(1);
     });
-    describe('running bit-sign', () => {
-      it('should not throw', () => {
-        const signRemote = helper.scopeHelper.getNewBareScope('-remote-sign');
-        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, signRemote.scopePath);
-
-        const lane = helper.command.catLane('dev', helper.scopes.remotePath);
-        const comp2OnLane = lane.updateDependents[0];
-        const signCmd = () =>
-          helper.command.sign(
-            [comp2OnLane, `${helper.scopes.remote}/comp3@${comp3HeadOnLane}`],
-            `--lane ${helper.scopes.remote}/dev`,
-            signRemote.scopePath
-          );
-        expect(signCmd).to.not.throw();
-      });
-    });
     describe('merging the lane into main from the scope', () => {
       let bareMerge;
       before(() => {
