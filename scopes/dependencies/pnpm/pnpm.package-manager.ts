@@ -130,6 +130,11 @@ export class PnpmPackageManager implements PackageManager {
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
     const overrides = { ...installOptions.overrides };
     console.log(installOptions.dependenciesGraph != null)
+    for (const manifest of Object.values(manifests)) {
+      if (manifest.name != null && manifest.name !== 'workspace') {
+        overrides[manifest.name] = 'workspace:*'
+      }
+    }
     if (installOptions.dependenciesGraph) {
       const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: false });
       if (lockfile) {
@@ -161,7 +166,6 @@ export class PnpmPackageManager implements PackageManager {
       const allPackageNames: string[] = [];
       for (const manifest of Object.values(manifests)) {
         if (manifest.name != null && manifest.name !== 'workspace') {
-          overrides[manifest.name] = 'workspace:*'
           allPackageNames.push(manifest.name);
         }
       }

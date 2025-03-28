@@ -52,7 +52,7 @@ function importerDepsToNeighbours(
 
 export function convertLockfileToGraphWithoutFiltering(
   lockfile: BitLockfileFile,
-  { componentIdByPkgName }: Omit<CalcDepsGraphOptions, 'rootDir'>
+  { componentIdByPkgName }: Pick<CalcDepsGraphOptions, 'componentIdByPkgName'>
 ) {
   const directDependencies: DependencyNeighbour[] = [];
   for (const importer of Object.values(lockfile.importers ?? {})) {
