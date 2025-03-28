@@ -50,6 +50,23 @@ function importerDepsToNeighbours(
   return neighbours;
 }
 
+export function convertLockfileToGraphWithoutFiltering(
+  lockfile: BitLockfileFile,
+  { componentIdByPkgName }: Pick<CalcDepsGraphOptions, 'componentIdByPkgName'>
+) {
+  const directDependencies: DependencyNeighbour[] = [];
+  for (const importer of Object.values(lockfile.importers ?? {})) {
+    for (const depType of ['dependencies' as const, 'optionalDependencies' as const, 'devDependencies' as const]) {
+      if (importer[depType] != null) {
+        const lifecycle = depType === 'devDependencies' ? 'dev' : 'runtime';
+        const optional = depType === 'optionalDependencies';
+        directDependencies.push(...importerDepsToNeighbours(importer[depType]!, lifecycle, optional));
+      }
+    }
+  }
+  return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
+}
+
 export function convertLockfileToGraph(
   lockfile: BitLockfileFile,
   { pkgName, componentRootDir, componentRelativeDir, componentIdByPkgName }: Omit<CalcDepsGraphOptions, 'rootDir'>

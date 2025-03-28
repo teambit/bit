@@ -291,6 +291,7 @@ export async function install(
     disableRelinkLocalDirDeps: true,
     hoistPattern,
     virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
+    linkWorkspacePackagesDepth: Infinity, // Does this ignore range?
   };
 
   let dependenciesChanged = false;

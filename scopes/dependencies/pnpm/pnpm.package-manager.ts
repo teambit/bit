@@ -1,5 +1,6 @@
 import { CloudMain } from '@teambit/cloud';
 import {
+  type ComponentIdByPkgName,
   DependencyResolverMain,
   extendWithComponentsFromDir,
   InstallationContext,
@@ -30,6 +31,7 @@ import {
   createPackagesSearcher,
   PackageNode,
 } from '@pnpm/reviewing.dependencies-hierarchy';
+import * as dp from '@pnpm/dependency-path';
 import { renderTree } from '@pnpm/list';
 import {
   readWantedLockfile,
@@ -39,7 +41,7 @@ import {
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
 import { ServerSendOutStream } from '@teambit/legacy.logger';
 import { join } from 'path';
-import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
+import { convertLockfileToGraph, convertGraphToLockfile, convertLockfileToGraphWithoutFiltering } from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import { generateResolverAndFetcher, RebuildFn } from './lynx';
@@ -115,7 +117,7 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async install(
-    { rootDir, manifests }: InstallationContext,
+    { rootDir, manifests, componentDirectoryMap }: InstallationContext,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<InstallResult> {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
@@ -126,19 +128,60 @@ export class PnpmPackageManager implements PackageManager {
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
-    if (
-      installOptions.dependenciesGraph &&
-      isFeatureEnabled(DEPS_GRAPH) &&
-      (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
-    ) {
-      await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
-        manifests,
-        rootDir,
-        registries,
-        proxyConfig,
-        networkConfig,
-        cacheDir: config.cacheDir,
-      });
+    const overrides = { ...installOptions.overrides };
+    console.log(installOptions.dependenciesGraph != null)
+    for (const manifest of Object.values(manifests)) {
+      if (manifest.name != null && manifest.name !== 'workspace') {
+        overrides[manifest.name] = 'workspace:*'
+      }
+    }
+    if (installOptions.dependenciesGraph) {
+      const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: false });
+      if (lockfile) {
+        const componentIdByPkgName: ComponentIdByPkgName = new Map();
+        componentDirectoryMap.forEach((_, component) => {
+          componentIdByPkgName.set(this.depResolver.getPackageName(component), component.id);
+        });
+        const lockfileFile = convertLockfileObjectToLockfileFile(lockfile, { forceSharedFormat: true })
+        const graphFromLockfile = convertLockfileToGraphWithoutFiltering(lockfileFile, { componentIdByPkgName });
+        installOptions.dependenciesGraph.merge(graphFromLockfile);
+      }
+      if (
+        isFeatureEnabled(DEPS_GRAPH) &&
+        (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
+      ) {
+        try {
+        await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
+          manifests,
+          rootDir,
+          registries,
+          proxyConfig,
+          networkConfig,
+          cacheDir: config.cacheDir,
+        });
+        } catch (err) {
+          console.log(err)
+        }
+      }
+      const allPackageNames: string[] = [];
+      for (const manifest of Object.values(manifests)) {
+        if (manifest.name != null && manifest.name !== 'workspace') {
+          allPackageNames.push(manifest.name);
+        }
+      }
+      const paths = installOptions.dependenciesGraph.findPathsToPackages(allPackageNames);
+      console.log(paths)
+      for (const allEdgeIds of Object.values(paths)) {
+        for (const edgeIds of allEdgeIds) {
+          for (const edgeId of edgeIds.slice(0, edgeIds.length - 1)) {
+            const parsed = dp.parse(edgeId);
+            if (parsed.name && overrides[parsed.name] != 'workspace:*') {
+              overrides[parsed.name] = 'latest';
+            }
+          }
+        }
+      }
+      console.log(overrides)
     }
 
     this.logger.debug(`running installation in root dir ${rootDir}`);
@@ -184,7 +227,7 @@ export class PnpmPackageManager implements PackageManager {
         ignorePackageManifest: installOptions.ignorePackageManifest,
         dedupeInjectedDeps: installOptions.dedupeInjectedDeps ?? false,
         dryRun: installOptions.dependenciesGraph == null && installOptions.dryRun,
-        overrides: installOptions.overrides,
+        overrides,
         hoistPattern: installOptions.hoistPatterns ?? config.hoistPattern,
         publicHoistPattern: config.shamefullyHoist
           ? ['*']
