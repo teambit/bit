@@ -19,7 +19,7 @@ import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-t
 import { Logger } from '@teambit/logger';
 import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import fs from 'fs';
-import { memoize, omit } from 'lodash';
+import { memoize, omit, isEqual } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
 import { Config } from '@pnpm/config';
@@ -206,6 +206,45 @@ export class PnpmPackageManager implements PackageManager {
       });
     }
     this.modulesManifestCache.delete(rootDir);
+    const pnpmInstallOptions = {
+      autoInstallPeers: installOptions.autoInstallPeers ?? true,
+      enableModulesDir: installOptions.enableModulesDir,
+      engineStrict: installOptions.engineStrict ?? config.engineStrict,
+      excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
+      lockfileOnly: installOptions.lockfileOnly,
+      neverBuiltDependencies: installOptions.neverBuiltDependencies,
+      nodeLinker: installOptions.nodeLinker,
+      nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
+      includeOptionalDeps: installOptions.includeOptionalDeps,
+      ignorePackageManifest: installOptions.ignorePackageManifest,
+      dedupeInjectedDeps: installOptions.dedupeInjectedDeps ?? false,
+      dryRun: installOptions.dependenciesGraph == null && installOptions.dryRun,
+      overrides,
+      hoistPattern: installOptions.hoistPatterns ?? config.hoistPattern,
+      publicHoistPattern: config.shamefullyHoist
+        ? ['*']
+        : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
+      hoistWorkspacePackages: installOptions.hoistWorkspacePackages ?? false,
+      hoistInjectedDependencies: installOptions.hoistInjectedDependencies,
+      packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
+      preferOffline: installOptions.preferOffline,
+      rootComponents: installOptions.rootComponents,
+      rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
+      sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
+      sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
+      pnpmHomeDir: config.pnpmHomeDir,
+      updateAll: installOptions.updateAll,
+      hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
+      reportOptions: {
+        appendOnly: installOptions.optimizeReportForNonTerminal,
+        process: process.env.BIT_CLI_SERVER_NO_TTY ? { ...process, stdout: new ServerSendOutStream() } : undefined,
+        throttleProgress: installOptions.throttleProgress,
+        hideProgressPrefix: installOptions.hideProgressPrefix,
+        hideLifecycleOutput: installOptions.hideLifecycleOutput,
+        peerDependencyRules: installOptions.peerDependencyRules,
+      },
+      returnListOfDepsRequiringBuild: installOptions.returnListOfDepsRequiringBuild,
+    };
     const { dependenciesChanged, rebuild, storeDir, depsRequiringBuild } = await install(
       rootDir,
       manifests,
@@ -214,47 +253,55 @@ export class PnpmPackageManager implements PackageManager {
       registries,
       proxyConfig,
       networkConfig,
-      {
-        autoInstallPeers: installOptions.autoInstallPeers ?? true,
-        enableModulesDir: installOptions.enableModulesDir,
-        engineStrict: installOptions.engineStrict ?? config.engineStrict,
-        excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
-        lockfileOnly: installOptions.lockfileOnly,
-        neverBuiltDependencies: installOptions.neverBuiltDependencies,
-        nodeLinker: installOptions.nodeLinker,
-        nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
-        includeOptionalDeps: installOptions.includeOptionalDeps,
-        ignorePackageManifest: installOptions.ignorePackageManifest,
-        dedupeInjectedDeps: installOptions.dedupeInjectedDeps ?? false,
-        dryRun: installOptions.dependenciesGraph == null && installOptions.dryRun,
-        overrides,
-        hoistPattern: installOptions.hoistPatterns ?? config.hoistPattern,
-        publicHoistPattern: config.shamefullyHoist
-          ? ['*']
-          : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
-        hoistWorkspacePackages: installOptions.hoistWorkspacePackages ?? false,
-        hoistInjectedDependencies: installOptions.hoistInjectedDependencies,
-        packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
-        preferOffline: installOptions.preferOffline,
-        rootComponents: installOptions.rootComponents,
-        rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
-        sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
-        sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
-        pnpmHomeDir: config.pnpmHomeDir,
-        updateAll: installOptions.updateAll,
-        hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
-        reportOptions: {
-          appendOnly: installOptions.optimizeReportForNonTerminal,
-          process: process.env.BIT_CLI_SERVER_NO_TTY ? { ...process, stdout: new ServerSendOutStream() } : undefined,
-          throttleProgress: installOptions.throttleProgress,
-          hideProgressPrefix: installOptions.hideProgressPrefix,
-          hideLifecycleOutput: installOptions.hideLifecycleOutput,
-          peerDependencyRules: installOptions.peerDependencyRules,
-        },
-        returnListOfDepsRequiringBuild: installOptions.returnListOfDepsRequiringBuild,
-      },
+      pnpmInstallOptions,
       this.logger
     );
+    const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: false });
+    if (lockfile) {
+      const componentIdByPkgName: ComponentIdByPkgName = new Map();
+      componentDirectoryMap.forEach((_, component) => {
+        componentIdByPkgName.set(this.depResolver.getPackageName(component), component.id);
+      });
+      const lockfileFile = convertLockfileObjectToLockfileFile(lockfile, { forceSharedFormat: true })
+      const graphFromLockfile = convertLockfileToGraphWithoutFiltering(lockfileFile, { componentIdByPkgName });
+      console.log(graphFromLockfile.serialize())
+      const allPackageNames: string[] = [];
+      for (const manifest of Object.values(manifests)) {
+        if (manifest.name != null && manifest.name !== 'workspace') {
+          allPackageNames.push(manifest.name);
+        }
+      }
+      const paths = graphFromLockfile.findPathsToPackages(allPackageNames);
+
+      const newOverrides = { ...overrides }
+      console.log(paths)
+      for (const allEdgeIds of Object.values(paths)) {
+        for (const edgeIds of allEdgeIds) {
+          for (const edgeId of edgeIds.slice(0, edgeIds.length - 1)) {
+            const parsed = dp.parse(edgeId);
+            if (parsed.name && overrides[parsed.name] != 'workspace:*') {
+              newOverrides[parsed.name] = 'latest';
+            }
+          }
+        }
+      }
+      if (!isEqual(overrides, newOverrides)) {
+        await install(
+          rootDir,
+          manifests,
+          config.storeDir,
+          config.cacheDir,
+          registries,
+          proxyConfig,
+          networkConfig,
+          {
+            ...pnpmInstallOptions,
+            overrides: newOverrides,
+          },
+          this.logger
+        );
+      }
+    }
     if (!installOptions.hidePackageManagerOutput) {
       this.logger.on();
       // Make a divider row to improve output

@@ -162,6 +162,8 @@ function extractDependenciesFromSnapshot(snapshot: any): DependencyNeighbour[] {
       const subDepPath = dp.refToRelative(ref, name);
       if (subDepPath != null) {
         dependencies.push({ id: subDepPath, optional });
+      } else {
+        dependencies.push({ id: `${name}@${ref}`, name, optional });
       }
     }
   }

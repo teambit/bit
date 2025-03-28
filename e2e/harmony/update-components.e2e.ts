@@ -117,7 +117,8 @@ chai.use(require('chai-fs'));
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.import(`${helper.scopes.remote}/comp3`);
-      helper.fixtures.createComponentBarFoo(`const comp1 = require("@ci/${helper.scopes.remote}.comp1")`);
+      helper.fixtures.createComponentBarFoo(`const comp1 = require("@ci/${randomStr}.comp1")`);
+      helper.fixtures.addComponentBarFoo();
       helper.command.install('--add-missing-deps');
     });
     after(() => {
@@ -128,7 +129,10 @@ chai.use(require('chai-fs'));
     it('should link component from the workspace', () => {
       const lockfile = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8'));
       expect(lockfile.overrides).to.eql({
+        [`@ci/${randomStr}.comp1`]: 'latest',
+        [`@ci/${randomStr}.comp2`]: 'latest',
         [`@ci/${randomStr}.comp3`]: 'workspace:*',
+        [`@${helper.scopes.remote}/bar.foo`]: 'workspace:*',
       })
     });
   });
