@@ -55,6 +55,7 @@ import { LinkCommand } from './link';
 import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
 import UpdateCmd from './update.cmd';
+import BundlerAspect, { BundlerMain } from '@teambit/bundler';
 
 export type WorkspaceLinkOptions = LinkingOptions & {
   rootPolicy?: WorkspacePolicy;
@@ -1254,6 +1255,7 @@ export class InstallMain {
     GeneratorAspect,
     WorkspaceConfigFilesAspect,
     AspectLoaderAspect,
+    BundlerAspect
   ];
 
   static runtime = MainRuntime;
@@ -1273,6 +1275,7 @@ export class InstallMain {
       generator,
       wsConfigFiles,
       aspectLoader,
+      bundler
     ]: [
       DependencyResolverMain,
       Workspace,
@@ -1287,6 +1290,7 @@ export class InstallMain {
       GeneratorMain,
       WorkspaceConfigFilesMain,
       AspectLoaderMain,
+      BundlerMain
     ],
     _,
     [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot],
@@ -1332,7 +1336,14 @@ export class InstallMain {
     if (workspace) {
       workspace.registerOnRootAspectAdded(installExt.onRootAspectAddedSubscriber.bind(installExt));
       workspace.registerOnComponentChange(installExt.onComponentChange.bind(installExt));
+      workspace.registerOnComponentAdd(async (newComponent) => {
+        await bundler.createServerForNewEnvironment(workspace, newComponent);
+     })
     }
+    installExt.registerPostInstall(async () => {
+      // @todo handle this on post install
+      //  await bundler.createServerForNewEnvironment(workspace);
+    })
     cli.register(...commands);
     return installExt;
   }

@@ -50,14 +50,17 @@ export class ComponentServer {
 
   _port: number;
   async listen() {
+    console.log(`[DEBUG] ComponentServer.listen called for env: ${this.context.envRuntime.id}`);
     const port = await selectPort(this.portRange);
     this._port = port;
     const server = await this.devServer.listen(port);
+    console.log(`[DEBUG] About to call devServer.listen with port ${port}`);
     const address = server.address();
     const hostname = this.getHostname(address);
     if (!address) throw new BindError();
     this.hostname = hostname;
     this.pubsub.pub(BundlerAspect.id, this.createComponentsServerStartedEvent(server, this.context, hostname, port));
+    console.log(`[DEBUG] Server successfully started on port ${port} for env: ${this.context.envRuntime.id}`);
   }
 
   private getHostname(address: string | AddressInfo | null) {

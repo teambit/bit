@@ -127,6 +127,7 @@ export type RuntimeOptions = {
 
 export class UiMain {
   private _isBundleUiServed = false;
+  private currentUIServer: UIServer | undefined;
 
   constructor(
     /**
@@ -284,6 +285,9 @@ export class UiMain {
 
   runtimeOptions: RuntimeOptions = {};
 
+  getUIServer(): UIServer | undefined {
+    return this.currentUIServer;
+  }
   /**
    * create a Bit UI runtime.
    */
@@ -316,6 +320,8 @@ export class UiMain {
       publicDir,
       startPlugins: plugins,
     });
+
+    this.currentUIServer = uiServer;
 
     // Adding signal listeners to make sure we immediately close the process on sigint / sigterm (otherwise webpack dev server closing will take time)
     this.addSignalListener();

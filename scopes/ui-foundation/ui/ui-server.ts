@@ -18,6 +18,7 @@ import { UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
 
 import { devConfig } from './webpack/webpack.dev.config';
+import { ComponentServer } from '@teambit/bundler';
 
 export type UIServerProps = {
   graphql: GraphqlMain;
@@ -42,6 +43,9 @@ export type StartOptions = {
 };
 
 export class UIServer {
+  private _app: Express;
+  private _server: Server;
+
   constructor(
     private graphql: GraphqlMain,
     private expressExtension: ExpressMain,
@@ -51,7 +55,7 @@ export class UIServer {
     private logger: Logger,
     private publicDir: string,
     private plugins: StartPlugin[]
-  ) {}
+  ) { }
 
   getName() {
     return this.uiRoot.name;
@@ -91,6 +95,90 @@ export class UIServer {
   private startPromise = new Promise<void>((resolve) => (this.setReady = resolve));
   get whenReady() {
     return Promise.all([this.startPromise, ...this.plugins.map((x) => x?.whenReady)]);
+  }
+
+  addComponentServerProxy(server: ComponentServer): void {
+    if (!server || !server.context) {
+      console.log('[DEBUG-PROXY] Cannot add proxy for invalid server');
+      return;
+    }
+  
+    const envId = server.context.envRuntime.id;
+    console.log(`[DEBUG-PROXY] Adding proxy routes for component server: ${envId}`);
+    console.log(`[DEBUG-PROXY] Server port: ${server.port}`);
+  
+    if (!this._app || !this._server) {
+      console.log('[DEBUG-PROXY] Cannot add proxy routes - server not initialized');
+      return;
+    }
+  
+    const dynamicProxy = httpProxy.createProxyServer();
+    
+    dynamicProxy.on('error', (e) => {
+      console.log(`[DEBUG-PROXY] Dynamic proxy error: ${e.message}`);
+      this.logger.error(e.message);
+    });
+  
+    const entries = [
+      {
+        context: [`/preview/${envId}`],
+        target: `http://localhost:${server.port}`,
+      },
+      {
+        context: [`/_hmr/${envId}`],
+        target: `http://localhost:${server.port}`,
+        ws: true,
+      }
+    ];
+  
+    const wsHandler = (req, socket, head) => {
+      const reqUrl = req.url?.replace(/\?.+$/, '') || '';
+      const path = stripTrailingChar(reqUrl, '/');
+      
+      const entry = entries.find((proxy) =>
+        proxy.ws && proxy.context.some(item => {
+          const itemPath = stripTrailingChar(item, '/');
+          return path === itemPath || path.startsWith(itemPath);
+        })
+      );
+      
+      if (!entry) return;
+      
+      dynamicProxy.ws(req, socket, head, { target: entry.target });
+    };
+    
+    this._server.on('upgrade', wsHandler);
+  
+    // Create an Express Router specifically for this component server
+    const router = express.Router();
+    
+    // Set up the routes on this router
+    entries.forEach((entry) => {
+      entry.context.forEach((route) => {
+        // Extract the path relative to this router
+        // For example, if route is '/preview/bitdev.general/envs/bit-env@3.0.2'
+        // we'll mount the router at that exact path and handle '/*' within it
+        
+        // Set up the route
+        router.all('/*', (req, res) => {
+          console.log(`[DEBUG-PROXY] Matched dynamic route ${route}/* for ${req.url}`);
+          req.url = req.originalUrl;
+          dynamicProxy.web(req, res, { target: entry.target });
+        });
+        
+        // Mount this router at the exact route path, BEFORE any other middleware
+        // This guarantees it will handle requests before any catch-all middleware
+        console.log(`[DEBUG-PROXY] Setting up dynamic HTTP route: ${route}/* -> ${entry.target}`);
+        
+        // Insert this router at the beginning of the middleware stack
+        const existingMiddleware = this._app._router.stack;
+        this._app.use(route, router);
+        
+        // Now move it to the beginning 
+        const lastMiddleware = existingMiddleware.pop();
+        existingMiddleware.unshift(lastMiddleware);
+      });
+    });
   }
 
   /**
@@ -150,6 +238,8 @@ export class UIServer {
   }
 
   private async configureProxy(app: Express, server: Server) {
+    console.trace("🚀 ~ UIServer ~ configureProxy ~ server:", server)
+
     const proxServer = httpProxy.createProxyServer();
     proxServer.on('error', (e) => this.logger.error(e.message));
     const proxyEntries = await this.getProxyFromPlugins();
@@ -173,6 +263,9 @@ export class UIServer {
         });
       });
     });
+
+    this._app = app;
+    this._server = server;
   }
 
   /**

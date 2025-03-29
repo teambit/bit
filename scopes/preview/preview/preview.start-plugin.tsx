@@ -1,5 +1,5 @@
 import { flatten } from 'lodash';
-import { BundlerMain, ComponentServer } from '@teambit/bundler';
+import BundlerAspect, { BundlerMain, ComponentServer, ComponentsServerStartedEvent, NewDevServerCreatedEvent } from '@teambit/bundler';
 import { PubsubMain } from '@teambit/pubsub';
 import { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
 import { Workspace } from '@teambit/workspace';
@@ -28,24 +28,65 @@ export class PreviewStartPlugin implements StartPlugin {
     private pubsub: PubsubMain,
     private logger: Logger,
     private watcher: WatcherMain
-  ) {}
+  ) {
+    this.pubsub.sub(BundlerAspect.id, (event) => {
+      if (event instanceof NewDevServerCreatedEvent) {
+        console.log("\n\n\n\n\n🚀 ~ PreviewStartPlugin ~ this.pubsub.sub ~ event:", event.context)
+        console.log(`Received legacy new-dev-server-created event for env: ${event.context.envRuntime.id}`);
+        this.handleNewServer(event.context.envRuntime.id, event.componentsServer);
+      }
+    });
+  }
 
   previewServers: ComponentServer[] = [];
   serversState: ServerStateMap = {};
   serversMap: Record<string, ComponentServer> = {};
+  private handleNewServer(envId: string, server: ComponentServer) {
+    this.listenToDevServers();
+    this.logger.debug(`Registering new server for env: ${envId}`);
+
+    this.pubsub.sub(BundlerAspect.id, (event) => {
+      if (event instanceof ComponentsServerStartedEvent &&
+        event.context.envRuntime.id === envId) {
+        console.log(`[DEBUG] ComponentsServerStartedEvent received for env: ${envId}`);
+        // safe to start the server now since the port has been assigned
+        const uiServer = this.ui.getUIServer();
+        if (uiServer) {
+          uiServer.addComponentServerProxy(server);
+        }
+      }
+    });
+
+    // Register the new server
+    this.serversMap[envId] = server;
+    this.previewServers.push(server);
+
+    // DON'T add wait! this promise never resolves, so it would stop the start process!
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    server.listen();
+  }
 
   async initiate(options: StartPluginOptions) {
+    console.log(`[DEBUG] PreviewStartPlugin.initiate starting with pattern: ${options.pattern || 'all'}`);
     this.listenToDevServers(options.showInternalUrls);
 
     const components = await this.workspace.getComponentsByUserInput(!options.pattern, options.pattern);
+    console.log(`[DEBUG] Got ${components.length} components to watch`);
+    console.log(`[DEBUG] About to call bundler.devServer for components`);
+
     // TODO: logic for creating preview servers must be refactored to this aspect from the DevServer aspect.
     const previewServers = await this.bundler.devServer(components);
+    console.log(`[DEBUG] Got ${previewServers.length} preview servers`);
+
     previewServers.forEach((server) => {
+      console.log(`[DEBUG] Registering server for env: ${server.context.envRuntime.id}`);
       this.serversMap[server.context.envRuntime.id] = server;
+      console.log(`[DEBUG] Calling server.listen() for env: ${server.context.envRuntime.id}`);
       // DON'T add wait! this promise never resolves, so it would stop the start process!
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       server.listen();
     });
+    console.log(`[DEBUG] About to start watcher.watch for components`);
     this.watcher
       .watch({
         spawnTSServer: true,

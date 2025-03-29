@@ -66,13 +66,12 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     private runtimeSlot: BrowserRuntimeSlot,
 
     private devServerTransformerSlot: DevServerTransformerSlot
-  ) {}
+  ) { }
 
   async render(env: EnvDefinition, context: ExecutionContext[]) {
     const descriptor = await this.getDescriptor(env, context);
-    const name = `${chalk.green('configured dev server:')} ${descriptor?.id} (${descriptor?.displayName} @ ${
-      descriptor?.version
-    })`;
+    const name = `${chalk.green('configured dev server:')} ${descriptor?.id} (${descriptor?.displayName} @ ${descriptor?.version
+      })`;
     const configLabel = chalk.green('dev server config:');
     const configObj = descriptor?.config
       ? highlight(descriptor?.config, { language: 'javascript', ignoreIllegals: true })
@@ -107,6 +106,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
         return preview.getDevEnvId();
       },
       getDevServer: (context) => {
+        console.trace("\n\n\n\n🚀 ~ DevServerService ~ transform ~ preview.getDevServer(context)(envContext):", preview.getDevServer(context)(envContext),  preview.getDevServer(context)(envContext).config.devServer.static)
         return preview.getDevServer(context)(envContext);
       },
     };
@@ -124,6 +124,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     contexts: ExecutionContext[],
     { dedicatedEnvDevServers }: DevServerServiceOptions
   ): Promise<ComponentServer[]> {
+    console.warn("\n\n\n\n🚀 ~ DevServerService ~ contexts:", contexts.length, contexts.map(c => c))
     const groupedEnvs = await dedupEnvs(contexts, this.dependencyResolver, dedicatedEnvDevServers);
 
     // TODO: (gilad) - change this back to promise all once we make the preview pre-bundle to run before that loop
@@ -132,8 +133,12 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
       const additionalContexts = contextList.filter((context) => context.envDefinition.id !== id);
 
       const devServerContext = await this.buildContext(mainContext, additionalContexts);
+      console.log("\n\n\n\n\n🚀 ~ DevServerService ~ servers ~ devServerContext:", devServerContext)
       const devServer: DevServer = await devServerContext.envRuntime.env.getDevServer(devServerContext);
+      console.log("\n\n\n\n\n🚀 ~ DevServerService ~ servers ~ devServer:", devServer.displayConfig?.())
       const transformedDevServer: DevServer = this.transformDevServer(devServer, { envId: id });
+      console.log("\n\n\n\n🚀 ~ DevServerService ~ servers ~ transformedDevServer:", transformedDevServer.displayConfig?.())
+      console.log(`\n\n\n\nWebpack config publicPath for ${devServerContext.envRuntime.id}:`, devServer.webpackConfig?.output?.publicPath);
 
       return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], transformedDevServer);
     });
@@ -141,7 +146,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     return servers;
   }
 
-  mergeContext() {}
+  mergeContext() { }
 
   private getComponentsFromContexts(contexts: ExecutionContext[]) {
     return flatten(
@@ -163,6 +168,8 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     const peers = await this.dependencyResolver.getPreviewHostDependenciesFromEnv(context.envDefinition.env);
     const hostRootDir = context.envRuntime.envAspectDefinition?.aspectPath;
     const entry = await getEntry(context, this.runtimeSlot);
+    console.log("\n\n\n\n🚀 ~ DevServerService ~ entry:", entry)
+
     const componentDirectoryMap = {};
     context.components.forEach((component) => {
       // @ts-ignore this is usually a workspace component here so it has a workspace
@@ -170,6 +177,18 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
       if (!workspace) return;
       componentDirectoryMap[component.id.toString()] = workspace.componentDir(component.id);
     });
+
+
+    console.log(`\n\n\n🚀 ~ DevServerService ~ Object.assign:`, Object.assign(context, {
+      entry,
+      componentDirectoryMap,
+      // don't start with a leading "/" because it generates errors on Windows
+      rootPath: `preview/${context.envRuntime.id}`,
+      publicPath: `${sep}public`,
+      hostRootDir,
+      hostDependencies: peers,
+      aliasHostDependencies: true,
+    }))
 
     return Object.assign(context, {
       entry,
@@ -186,6 +205,10 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
   private transformDevServer(devServer: DevServer, { envId }: { envId: string }): DevServer {
     return this.devServerTransformerSlot
       .values()
-      .reduce((updatedDevServer, transformFn) => transformFn(updatedDevServer, { envId }), devServer);
+      .reduce((updatedDevServer, transformFn) => {
+        const res = transformFn(updatedDevServer, { envId });
+        console.log("\n\n🚀 ~ DevServerService ~ .reduce ~ res:", res)
+        return res;
+      }, devServer);
   }
 }
