@@ -190,7 +190,7 @@ export class PnpmPackageManager implements PackageManager {
     if (isFeatureEnabled(COMPS_UPDATE)) {
       const graphFromLockfile = await this.createGraphFromLockfileIfExists(rootDir, componentDirectoryMap);
       if (graphFromLockfile) {
-        const newOverrides = forceLatestOverrides(graphFromLockfile, manifests, pnpmInstallOptions.overrides);
+        const newOverrides = forceLatestOverrides(graphFromLockfile, manifests, pnpmInstallOptions.overrides ?? {});
         // If the overrides have changed it means that we need to run installation again.
         if (!isEqual(pnpmInstallOptions.overrides, newOverrides)) {
           await runInstall({
@@ -259,7 +259,7 @@ export class PnpmPackageManager implements PackageManager {
       hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
       reportOptions: {
         appendOnly: installOptions.optimizeReportForNonTerminal,
-        process: process.env.BIT_CLI_SERVER_NO_TTY ? { ...process, stdout: new ServerSendOutStream() } : undefined,
+        process: process.env.BIT_CLI_SERVER_NO_TTY ? { ...process, stdout: new ServerSendOutStream() } as NodeJS.Process : undefined,
         throttleProgress: installOptions.throttleProgress,
         hideProgressPrefix: installOptions.hideProgressPrefix,
         hideLifecycleOutput: installOptions.hideLifecycleOutput,
@@ -269,17 +269,20 @@ export class PnpmPackageManager implements PackageManager {
     }
   }
 
-  async mergeGraphFromModelWithGraphFromLockfile(graphFromModel: DependenciesGraph | undefined, rootDir: string, componentDirectoryMap: ComponentMap<string>) {
-    let dependenciesGraph = graphFromModel
+  async mergeGraphFromModelWithGraphFromLockfile(
+    graphFromModel: DependenciesGraph | undefined,
+    rootDir: string,
+    componentDirectoryMap: ComponentMap<string>
+  ): Promise<DependenciesGraph | undefined> {
     const graphFromLockfile = await this.createGraphFromLockfileIfExists(rootDir, componentDirectoryMap);
-    if (graphFromLockfile) {
-      if (!dependenciesGraph) {
-        dependenciesGraph = graphFromLockfile;
-      } else {
-        dependenciesGraph.merge(graphFromLockfile);
-      }
+    if (graphFromLockfile == null) {
+      return graphFromModel;
     }
-    return dependenciesGraph;
+    if (graphFromModel == null) {
+      return graphFromLockfile;
+    }
+    graphFromModel.merge(graphFromLockfile);
+    return graphFromModel;
   }
 
   async createGraphFromLockfileIfExists(rootDir: string, componentDirectoryMap: ComponentMap<string>): Promise<DependenciesGraph | undefined> {

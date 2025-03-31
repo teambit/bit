@@ -197,6 +197,8 @@ export type PnpmInstallOptions = {
   | 'ignorePackageManifest'
   | 'hoistWorkspacePackages'
   | 'returnListOfDepsRequiringBuild'
+  | 'sideEffectsCacheRead'
+  | 'sideEffectsCacheWrite'
 > &
   Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>
 
