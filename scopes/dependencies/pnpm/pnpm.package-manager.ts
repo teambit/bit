@@ -1,4 +1,5 @@
 import { CloudMain } from '@teambit/cloud';
+import { ComponentMap } from '@teambit/component';
 import {
   type ComponentIdByPkgName,
   DependencyResolverMain,
@@ -128,17 +129,11 @@ export class PnpmPackageManager implements PackageManager {
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
-    const overrides = { ...installOptions.overrides };
+    let overrides = { ...installOptions.overrides };
     {
       let dependenciesGraph = installOptions.dependenciesGraph;
-      const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: false });
-      if (lockfile) {
-        const componentIdByPkgName: ComponentIdByPkgName = new Map();
-        componentDirectoryMap.forEach((_, component) => {
-          componentIdByPkgName.set(this.depResolver.getPackageName(component), component.id);
-        });
-        const lockfileFile = convertLockfileObjectToLockfileFile(lockfile, { forceSharedFormat: true })
-        const graphFromLockfile = convertLockfileToGraph(lockfileFile, { componentIdByPkgName });
+      const graphFromLockfile = await this.createGraphFromLockfileIfExists(rootDir, componentDirectoryMap);
+      if (graphFromLockfile) {
         if (!dependenciesGraph) {
           dependenciesGraph = graphFromLockfile;
         } else {
@@ -152,23 +147,7 @@ export class PnpmPackageManager implements PackageManager {
           }
         }
         if (dependenciesGraph) {
-          const allPackageNames: string[] = [];
-          for (const manifest of Object.values(manifests)) {
-            if (manifest.name != null && manifest.name !== 'workspace') {
-              allPackageNames.push(manifest.name);
-            }
-          }
-          const paths = dependenciesGraph.findPathsToPackages(allPackageNames);
-          for (const allEdgeIds of Object.values(paths)) {
-            for (const edgeIds of allEdgeIds) {
-              for (const edgeId of edgeIds.slice(0, edgeIds.length - 1)) {
-                const parsed = dp.parse(edgeId);
-                if (parsed.name && overrides[parsed.name] != 'workspace:*') {
-                  overrides[parsed.name] = 'latest';
-                }
-              }
-            }
-          }
+          overrides = calculateDependencyOverrides(dependenciesGraph, manifests, overrides);
         }
       }
     }
@@ -264,35 +243,9 @@ export class PnpmPackageManager implements PackageManager {
       this.logger
     );
     if (isFeatureEnabled(COMPS_UPDATE)) {
-      const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: false });
-      if (lockfile) {
-        const componentIdByPkgName: ComponentIdByPkgName = new Map();
-        componentDirectoryMap.forEach((_, component) => {
-          componentIdByPkgName.set(this.depResolver.getPackageName(component), component.id);
-        });
-        const lockfileFile = convertLockfileObjectToLockfileFile(lockfile, { forceSharedFormat: true })
-        const graphFromLockfile = convertLockfileToGraph(lockfileFile, { componentIdByPkgName });
-        console.log(graphFromLockfile.serialize())
-        const allPackageNames: string[] = [];
-        for (const manifest of Object.values(manifests)) {
-          if (manifest.name != null && manifest.name !== 'workspace') {
-            allPackageNames.push(manifest.name);
-          }
-        }
-        const paths = graphFromLockfile.findPathsToPackages(allPackageNames);
-
-        const newOverrides = { ...overrides }
-        console.log(paths)
-        for (const allEdgeIds of Object.values(paths)) {
-          for (const edgeIds of allEdgeIds) {
-            for (const edgeId of edgeIds.slice(0, edgeIds.length - 1)) {
-              const parsed = dp.parse(edgeId);
-              if (parsed.name && overrides[parsed.name] != 'workspace:*') {
-                newOverrides[parsed.name] = 'latest';
-              }
-            }
-          }
-        }
+      const graphFromLockfile = await this.createGraphFromLockfileIfExists(rootDir, componentDirectoryMap);
+      if (graphFromLockfile) {
+        const newOverrides = calculateDependencyOverrides(graphFromLockfile, manifests, overrides);
         if (!isEqual(overrides, newOverrides)) {
           await install(
             rootDir,
@@ -318,6 +271,22 @@ export class PnpmPackageManager implements PackageManager {
       // this.logger.consoleSuccess('installing dependencies using pnpm');
     }
     return { dependenciesChanged, rebuild, storeDir, depsRequiringBuild };
+  }
+
+  async createGraphFromLockfileIfExists(rootDir: string, componentDirectoryMap: ComponentMap<string>): Promise<DependenciesGraph | undefined> {
+    const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: false });
+    if (!lockfile) return undefined;
+    const lockfileFile = convertLockfileObjectToLockfileFile(lockfile, { forceSharedFormat: true })
+    const componentIdByPkgName = this.getComponentIdByPkgNameMap(componentDirectoryMap);
+    return convertLockfileToGraph(lockfileFile, { componentIdByPkgName });
+  }
+
+  getComponentIdByPkgNameMap(componentDirectoryMap: ComponentMap<string>): ComponentIdByPkgName {
+    const componentIdByPkgName: ComponentIdByPkgName = new Map();
+    componentDirectoryMap.forEach((_, component) => {
+      componentIdByPkgName.set(this.depResolver.getPackageName(component), component.id);
+    });
+    return componentIdByPkgName;
   }
 
   async getPeerDependencyIssues(
@@ -582,4 +551,30 @@ function tryReadPackageJson(pkgDir: string) {
   } catch {
     return undefined;
   }
+}
+
+function calculateDependencyOverrides(
+  graph: DependenciesGraph,
+  manifests: Record<string, ProjectManifest>,
+  existingOverrides: Record<string, string>
+): Record<string, string> {
+  const allPackageNames: string[] = [];
+  for (const manifest of Object.values(manifests)) {
+    if (manifest.name != null && manifest.name !== 'workspace') {
+      allPackageNames.push(manifest.name);
+    }
+  }
+  const paths = graph.findPathsToPackages(allPackageNames);
+  const newOverrides = { ...existingOverrides };
+  for (const allEdgeIds of Object.values(paths)) {
+    for (const edgeIds of allEdgeIds) {
+      for (const edgeId of edgeIds.slice(0, edgeIds.length - 1)) {
+        const parsed = dp.parse(edgeId);
+        if (parsed.name && existingOverrides[parsed.name] != 'workspace:*') {
+          newOverrides[parsed.name] = 'latest';
+        }
+      }
+    }
+  }
+  return newOverrides;
 }
