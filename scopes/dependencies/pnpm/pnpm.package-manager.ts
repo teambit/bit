@@ -130,25 +130,15 @@ export class PnpmPackageManager implements PackageManager {
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
     let overrides = { ...installOptions.overrides };
-    {
-      let dependenciesGraph = installOptions.dependenciesGraph;
-      const graphFromLockfile = await this.createGraphFromLockfileIfExists(rootDir, componentDirectoryMap);
-      if (graphFromLockfile) {
-        if (!dependenciesGraph) {
-          dependenciesGraph = graphFromLockfile;
-        } else {
-          dependenciesGraph.merge(graphFromLockfile);
+    const dependenciesGraph = await this.mergeGraphFromModelWithGraphFromLockfile(installOptions.dependenciesGraph, rootDir, componentDirectoryMap);
+    if (isFeatureEnabled(COMPS_UPDATE)) {
+      for (const manifest of Object.values(manifests)) {
+        if (manifest.name != null && manifest.name !== 'workspace') {
+          overrides[manifest.name] = 'workspace:*'
         }
       }
-      if (isFeatureEnabled(COMPS_UPDATE)) {
-        for (const manifest of Object.values(manifests)) {
-          if (manifest.name != null && manifest.name !== 'workspace') {
-            overrides[manifest.name] = 'workspace:*'
-          }
-        }
-        if (dependenciesGraph) {
-          overrides = calculateDependencyOverrides(dependenciesGraph, manifests, overrides);
-        }
+      if (dependenciesGraph) {
+        overrides = calculateDependencyOverrides(dependenciesGraph, manifests, overrides);
       }
     }
     if (
@@ -231,31 +221,27 @@ export class PnpmPackageManager implements PackageManager {
       },
       returnListOfDepsRequiringBuild: installOptions.returnListOfDepsRequiringBuild,
     };
-    const { dependenciesChanged, rebuild, storeDir, depsRequiringBuild } = await install(
-      rootDir,
+    const runInstall = install.bind(null, rootDir,
       manifests,
       config.storeDir,
       config.cacheDir,
       registries,
       proxyConfig,
-      networkConfig,
-      pnpmInstallOptions,
-      this.logger
+      networkConfig
     );
+    const {
+      dependenciesChanged,
+      rebuild,
+      storeDir,
+      depsRequiringBuild,
+    } = await runInstall(pnpmInstallOptions, this.logger);
     if (isFeatureEnabled(COMPS_UPDATE)) {
       const graphFromLockfile = await this.createGraphFromLockfileIfExists(rootDir, componentDirectoryMap);
       if (graphFromLockfile) {
         const newOverrides = calculateDependencyOverrides(graphFromLockfile, manifests, overrides);
+        // If the overrides have changed it means that we need to run installation again.
         if (!isEqual(overrides, newOverrides)) {
-          await install(
-            rootDir,
-            manifests,
-            config.storeDir,
-            config.cacheDir,
-            registries,
-            proxyConfig,
-            networkConfig,
-            {
+          await runInstall({
               ...pnpmInstallOptions,
               overrides: newOverrides,
             },
@@ -271,6 +257,19 @@ export class PnpmPackageManager implements PackageManager {
       // this.logger.consoleSuccess('installing dependencies using pnpm');
     }
     return { dependenciesChanged, rebuild, storeDir, depsRequiringBuild };
+  }
+
+  async mergeGraphFromModelWithGraphFromLockfile(graphFromModel: DependenciesGraph | undefined, rootDir: string, componentDirectoryMap: ComponentMap<string>) {
+    let dependenciesGraph = graphFromModel
+    const graphFromLockfile = await this.createGraphFromLockfileIfExists(rootDir, componentDirectoryMap);
+    if (graphFromLockfile) {
+      if (!dependenciesGraph) {
+        dependenciesGraph = graphFromLockfile;
+      } else {
+        dependenciesGraph.merge(graphFromLockfile);
+      }
+    }
+    return dependenciesGraph;
   }
 
   async createGraphFromLockfileIfExists(rootDir: string, componentDirectoryMap: ComponentMap<string>): Promise<DependenciesGraph | undefined> {
