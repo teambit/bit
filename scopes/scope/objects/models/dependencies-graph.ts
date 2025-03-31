@@ -151,9 +151,6 @@ export class DependenciesGraph {
       const currentEdge = this.findEdgeById(currentEdgeId);
 
       // Check if the current edge represents a package in our target list
-      // const packageAttr = this.packages.get(currentEdge.attr?.pkgId ?? currentEdge.id);
-      // console.log(currentEdge)
-      // console.log(packageAttr)
       const parsed = dp.parse(currentEdgeId);
       if (parsed.name) {
         // console.log(packageAttr.name)

@@ -129,7 +129,11 @@ export class PnpmPackageManager implements PackageManager {
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
-    const dependenciesGraph = await this.mergeGraphFromModelWithGraphFromLockfile(installOptions.dependenciesGraph, rootDir, componentDirectoryMap);
+    const dependenciesGraph = await this.mergeGraphFromModelWithGraphFromLockfile({
+      graphFromModel: installOptions.dependenciesGraph,
+      rootDir,
+      componentDirectoryMap
+    });
     if (
       installOptions.dependenciesGraph &&
       isFeatureEnabled(DEPS_GRAPH) &&
@@ -228,6 +232,15 @@ export class PnpmPackageManager implements PackageManager {
         overrides = forceLatestOverrides(dependenciesGraph, manifests, overrides);
       }
     }
+    const reportOptions = {
+      appendOnly: installOptions.optimizeReportForNonTerminal,
+      process: process.env.BIT_CLI_SERVER_NO_TTY
+        ? { ...process, stdout: new ServerSendOutStream() } as NodeJS.Process : undefined,
+      throttleProgress: installOptions.throttleProgress,
+      hideProgressPrefix: installOptions.hideProgressPrefix,
+      hideLifecycleOutput: installOptions.hideLifecycleOutput,
+      peerDependencyRules: installOptions.peerDependencyRules,
+    };
     return {
       autoInstallPeers: installOptions.autoInstallPeers ?? true,
       enableModulesDir: installOptions.enableModulesDir,
@@ -257,23 +270,20 @@ export class PnpmPackageManager implements PackageManager {
       pnpmHomeDir: config.pnpmHomeDir,
       updateAll: installOptions.updateAll,
       hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
-      reportOptions: {
-        appendOnly: installOptions.optimizeReportForNonTerminal,
-        process: process.env.BIT_CLI_SERVER_NO_TTY ? { ...process, stdout: new ServerSendOutStream() } as NodeJS.Process : undefined,
-        throttleProgress: installOptions.throttleProgress,
-        hideProgressPrefix: installOptions.hideProgressPrefix,
-        hideLifecycleOutput: installOptions.hideLifecycleOutput,
-        peerDependencyRules: installOptions.peerDependencyRules,
-      },
+      reportOptions,
       returnListOfDepsRequiringBuild: installOptions.returnListOfDepsRequiringBuild,
     }
   }
 
-  async mergeGraphFromModelWithGraphFromLockfile(
+  async mergeGraphFromModelWithGraphFromLockfile({
+    graphFromModel,
+    rootDir,
+    componentDirectoryMap,
+  }: {
     graphFromModel: DependenciesGraph | undefined,
     rootDir: string,
     componentDirectoryMap: ComponentMap<string>
-  ): Promise<DependenciesGraph | undefined> {
+  }): Promise<DependenciesGraph | undefined> {
     const graphFromLockfile = await this.createGraphFromLockfileIfExists(rootDir, componentDirectoryMap);
     if (graphFromLockfile == null) {
       return graphFromModel;
@@ -285,7 +295,10 @@ export class PnpmPackageManager implements PackageManager {
     return graphFromModel;
   }
 
-  async createGraphFromLockfileIfExists(rootDir: string, componentDirectoryMap: ComponentMap<string>): Promise<DependenciesGraph | undefined> {
+  async createGraphFromLockfileIfExists(
+    rootDir: string,
+    componentDirectoryMap: ComponentMap<string>
+  ): Promise<DependenciesGraph | undefined> {
     const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: false });
     if (!lockfile) return undefined;
     const lockfileFile = convertLockfileObjectToLockfileFile(lockfile, { forceSharedFormat: true })
@@ -574,17 +587,19 @@ function forceLatestOverrides(
   manifests: Record<string, ProjectManifest>,
   existingOverrides: Record<string, string>
 ): Record<string, string> {
-  const allPackageNames: string[] = [];
+  const workspacePackageNames: string[] = [];
   for (const manifest of Object.values(manifests)) {
     if (manifest.name != null && manifest.name !== 'workspace') {
-      allPackageNames.push(manifest.name);
+      workspacePackageNames.push(manifest.name);
     }
   }
-  const paths = graph.findPathsToPackages(allPackageNames);
+  const paths = graph.findPathsToPackages(workspacePackageNames);
   const newOverrides = { ...existingOverrides };
   for (const allEdgeIds of Object.values(paths)) {
     for (const edgeIds of allEdgeIds) {
-      for (const edgeId of edgeIds.slice(0, edgeIds.length - 1)) {
+      // Exclude the last edge as it's the target package
+      const intermediateEdges = edgeIds.slice(0, -1);
+      for (const edgeId of intermediateEdges) {
         const parsed = dp.parse(edgeId);
         if (parsed.name && existingOverrides[parsed.name] != 'workspace:*') {
           newOverrides[parsed.name] = 'latest';
