@@ -15,7 +15,7 @@ import {
 } from '@teambit/dependency-resolver';
 import { Registries, Registry } from '@teambit/pkg.entities.registry';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
-import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
+import { DEPS_GRAPH, COMPS_UPDATE, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { Logger } from '@teambit/logger';
 import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import fs from 'fs';
@@ -41,7 +41,7 @@ import {
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
 import { ServerSendOutStream } from '@teambit/legacy.logger';
 import { join } from 'path';
-import { convertLockfileToGraph, convertGraphToLockfile, convertLockfileToGraphWithoutFiltering } from './lockfile-deps-graph-converter';
+import { lockfileToGraphForComponent, convertGraphToLockfile, convertLockfileToGraph } from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
 import { generateResolverAndFetcher, RebuildFn } from './lynx';
@@ -129,13 +129,8 @@ export class PnpmPackageManager implements PackageManager {
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
     const overrides = { ...installOptions.overrides };
-    console.log(installOptions.dependenciesGraph != null)
-    for (const manifest of Object.values(manifests)) {
-      if (manifest.name != null && manifest.name !== 'workspace') {
-        overrides[manifest.name] = 'workspace:*'
-      }
-    }
-    if (installOptions.dependenciesGraph) {
+    {
+      let dependenciesGraph = installOptions.dependenciesGraph;
       const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: false });
       if (lockfile) {
         const componentIdByPkgName: ComponentIdByPkgName = new Map();
@@ -143,14 +138,45 @@ export class PnpmPackageManager implements PackageManager {
           componentIdByPkgName.set(this.depResolver.getPackageName(component), component.id);
         });
         const lockfileFile = convertLockfileObjectToLockfileFile(lockfile, { forceSharedFormat: true })
-        const graphFromLockfile = convertLockfileToGraphWithoutFiltering(lockfileFile, { componentIdByPkgName });
-        installOptions.dependenciesGraph.merge(graphFromLockfile);
+        const graphFromLockfile = convertLockfileToGraph(lockfileFile, { componentIdByPkgName });
+        if (!dependenciesGraph) {
+          dependenciesGraph = graphFromLockfile;
+        } else {
+          dependenciesGraph.merge(graphFromLockfile);
+        }
       }
-      if (
-        isFeatureEnabled(DEPS_GRAPH) &&
-        (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
-      ) {
-        try {
+      if (isFeatureEnabled(COMPS_UPDATE)) {
+        for (const manifest of Object.values(manifests)) {
+          if (manifest.name != null && manifest.name !== 'workspace') {
+            overrides[manifest.name] = 'workspace:*'
+          }
+        }
+        if (dependenciesGraph) {
+          const allPackageNames: string[] = [];
+          for (const manifest of Object.values(manifests)) {
+            if (manifest.name != null && manifest.name !== 'workspace') {
+              allPackageNames.push(manifest.name);
+            }
+          }
+          const paths = dependenciesGraph.findPathsToPackages(allPackageNames);
+          for (const allEdgeIds of Object.values(paths)) {
+            for (const edgeIds of allEdgeIds) {
+              for (const edgeId of edgeIds.slice(0, edgeIds.length - 1)) {
+                const parsed = dp.parse(edgeId);
+                if (parsed.name && overrides[parsed.name] != 'workspace:*') {
+                  overrides[parsed.name] = 'latest';
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    if (
+      isFeatureEnabled(DEPS_GRAPH) && installOptions.dependenciesGraph &&
+      (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
+    ) {
+      try {
         await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
           manifests,
           rootDir,
@@ -159,29 +185,10 @@ export class PnpmPackageManager implements PackageManager {
           networkConfig,
           cacheDir: config.cacheDir,
         });
-        } catch (err) {
-          console.log(err)
-        }
+      } catch (error) {
+        // If the lockfile could not be created for some reason, it will be created later during installation.
+        this.logger.error((error as Error).message);
       }
-      const allPackageNames: string[] = [];
-      for (const manifest of Object.values(manifests)) {
-        if (manifest.name != null && manifest.name !== 'workspace') {
-          allPackageNames.push(manifest.name);
-        }
-      }
-      const paths = installOptions.dependenciesGraph.findPathsToPackages(allPackageNames);
-      console.log(paths)
-      for (const allEdgeIds of Object.values(paths)) {
-        for (const edgeIds of allEdgeIds) {
-          for (const edgeId of edgeIds.slice(0, edgeIds.length - 1)) {
-            const parsed = dp.parse(edgeId);
-            if (parsed.name && overrides[parsed.name] != 'workspace:*') {
-              overrides[parsed.name] = 'latest';
-            }
-          }
-        }
-      }
-      console.log(overrides)
     }
 
     this.logger.debug(`running installation in root dir ${rootDir}`);
@@ -256,50 +263,52 @@ export class PnpmPackageManager implements PackageManager {
       pnpmInstallOptions,
       this.logger
     );
-    const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: false });
-    if (lockfile) {
-      const componentIdByPkgName: ComponentIdByPkgName = new Map();
-      componentDirectoryMap.forEach((_, component) => {
-        componentIdByPkgName.set(this.depResolver.getPackageName(component), component.id);
-      });
-      const lockfileFile = convertLockfileObjectToLockfileFile(lockfile, { forceSharedFormat: true })
-      const graphFromLockfile = convertLockfileToGraphWithoutFiltering(lockfileFile, { componentIdByPkgName });
-      console.log(graphFromLockfile.serialize())
-      const allPackageNames: string[] = [];
-      for (const manifest of Object.values(manifests)) {
-        if (manifest.name != null && manifest.name !== 'workspace') {
-          allPackageNames.push(manifest.name);
+    if (isFeatureEnabled(COMPS_UPDATE)) {
+      const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: false });
+      if (lockfile) {
+        const componentIdByPkgName: ComponentIdByPkgName = new Map();
+        componentDirectoryMap.forEach((_, component) => {
+          componentIdByPkgName.set(this.depResolver.getPackageName(component), component.id);
+        });
+        const lockfileFile = convertLockfileObjectToLockfileFile(lockfile, { forceSharedFormat: true })
+        const graphFromLockfile = convertLockfileToGraph(lockfileFile, { componentIdByPkgName });
+        console.log(graphFromLockfile.serialize())
+        const allPackageNames: string[] = [];
+        for (const manifest of Object.values(manifests)) {
+          if (manifest.name != null && manifest.name !== 'workspace') {
+            allPackageNames.push(manifest.name);
+          }
         }
-      }
-      const paths = graphFromLockfile.findPathsToPackages(allPackageNames);
+        const paths = graphFromLockfile.findPathsToPackages(allPackageNames);
 
-      const newOverrides = { ...overrides }
-      console.log(paths)
-      for (const allEdgeIds of Object.values(paths)) {
-        for (const edgeIds of allEdgeIds) {
-          for (const edgeId of edgeIds.slice(0, edgeIds.length - 1)) {
-            const parsed = dp.parse(edgeId);
-            if (parsed.name && overrides[parsed.name] != 'workspace:*') {
-              newOverrides[parsed.name] = 'latest';
+        const newOverrides = { ...overrides }
+        console.log(paths)
+        for (const allEdgeIds of Object.values(paths)) {
+          for (const edgeIds of allEdgeIds) {
+            for (const edgeId of edgeIds.slice(0, edgeIds.length - 1)) {
+              const parsed = dp.parse(edgeId);
+              if (parsed.name && overrides[parsed.name] != 'workspace:*') {
+                newOverrides[parsed.name] = 'latest';
+              }
             }
           }
         }
-      }
-      if (!isEqual(overrides, newOverrides)) {
-        await install(
-          rootDir,
-          manifests,
-          config.storeDir,
-          config.cacheDir,
-          registries,
-          proxyConfig,
-          networkConfig,
-          {
-            ...pnpmInstallOptions,
-            overrides: newOverrides,
-          },
-          this.logger
-        );
+        if (!isEqual(overrides, newOverrides)) {
+          await install(
+            rootDir,
+            manifests,
+            config.storeDir,
+            config.cacheDir,
+            registries,
+            proxyConfig,
+            networkConfig,
+            {
+              ...pnpmInstallOptions,
+              overrides: newOverrides,
+            },
+            this.logger
+          );
+        }
       }
     }
     if (!installOptions.hidePackageManagerOutput) {
@@ -539,7 +548,7 @@ export class PnpmPackageManager implements PackageManager {
       }),
       { forceSharedFormat: true }
     );
-    const graph = convertLockfileToGraph(partialLockfile, opts);
+    const graph = lockfileToGraphForComponent(partialLockfile, opts);
     return graph;
   }
 }

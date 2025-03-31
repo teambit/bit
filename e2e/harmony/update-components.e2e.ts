@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
-import { DEPS_GRAPH } from '@teambit/harmony.modules.feature-toggle';
+import { DEPS_GRAPH, COMPS_UPDATE } from '@teambit/harmony.modules.feature-toggle';
 import path from 'path';
 import chai, { expect } from 'chai';
 import yaml from 'js-yaml';
@@ -8,13 +8,13 @@ import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/leg
 
 chai.use(require('chai-fs'));
 
-(supportNpmCiRegistryTesting ? describe : describe.skip)('updating components', function () {
+(supportNpmCiRegistryTesting ? describe.only : describe.skip)('updating components', function () {
   this.timeout(0);
   let npmCiRegistry: NpmCiRegistry;
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures(DEPS_GRAPH);
+    helper.command.setFeatures([DEPS_GRAPH, COMPS_UPDATE]);
   });
   after(() => {
     helper.scopeHelper.destroy();
