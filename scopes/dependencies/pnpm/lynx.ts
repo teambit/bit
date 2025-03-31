@@ -171,6 +171,35 @@ export interface ReportOptions {
   process?: NodeJS.Process;
 }
 
+export type PnpmInstallOptions = {
+  updateAll?: boolean;
+  nodeLinker?: 'hoisted' | 'isolated';
+  overrides?: Record<string, string>;
+  rootComponents?: boolean;
+  rootComponentsForCapsules?: boolean;
+  includeOptionalDeps?: boolean;
+  reportOptions?: ReportOptions;
+  hidePackageManagerOutput?: boolean;
+  hoistInjectedDependencies?: boolean;
+  dryRun?: boolean;
+  dedupeInjectedDeps?: boolean;
+} & Pick<
+  InstallOptions,
+  | 'autoInstallPeers'
+  | 'publicHoistPattern'
+  | 'hoistPattern'
+  | 'lockfileOnly'
+  | 'nodeVersion'
+  | 'enableModulesDir'
+  | 'engineStrict'
+  | 'excludeLinksFromLockfile'
+  | 'neverBuiltDependencies'
+  | 'ignorePackageManifest'
+  | 'hoistWorkspacePackages'
+  | 'returnListOfDepsRequiringBuild'
+> &
+  Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>
+
 export async function install(
   rootDir: string,
   manifestsByPaths: Record<string, ProjectManifest>,
@@ -179,34 +208,7 @@ export async function install(
   registries: Registries,
   proxyConfig: PackageManagerProxyConfig = {},
   networkConfig: PackageManagerNetworkConfig = {},
-  options: {
-    updateAll?: boolean;
-    nodeLinker?: 'hoisted' | 'isolated';
-    overrides?: Record<string, string>;
-    rootComponents?: boolean;
-    rootComponentsForCapsules?: boolean;
-    includeOptionalDeps?: boolean;
-    reportOptions?: ReportOptions;
-    hidePackageManagerOutput?: boolean;
-    hoistInjectedDependencies?: boolean;
-    dryRun?: boolean;
-    dedupeInjectedDeps?: boolean;
-  } & Pick<
-    InstallOptions,
-    | 'autoInstallPeers'
-    | 'publicHoistPattern'
-    | 'hoistPattern'
-    | 'lockfileOnly'
-    | 'nodeVersion'
-    | 'enableModulesDir'
-    | 'engineStrict'
-    | 'excludeLinksFromLockfile'
-    | 'neverBuiltDependencies'
-    | 'ignorePackageManifest'
-    | 'hoistWorkspacePackages'
-    | 'returnListOfDepsRequiringBuild'
-  > &
-    Pick<CreateStoreControllerOptions, 'packageImportMethod' | 'pnpmHomeDir' | 'preferOffline'>,
+  options: PnpmInstallOptions,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string; depsRequiringBuild?: DepPath[] }> {

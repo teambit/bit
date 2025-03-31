@@ -45,7 +45,7 @@ import { join } from 'path';
 import { lockfileToGraphForComponent, convertGraphToLockfile, convertLockfileToGraph } from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
-import { generateResolverAndFetcher, RebuildFn } from './lynx';
+import { generateResolverAndFetcher, RebuildFn, type PnpmInstallOptions } from './lynx';
 import { type DependenciesGraph } from '@teambit/objects';
 
 export type { RebuildFn };
@@ -129,20 +129,10 @@ export class PnpmPackageManager implements PackageManager {
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
-    let overrides = { ...installOptions.overrides };
     const dependenciesGraph = await this.mergeGraphFromModelWithGraphFromLockfile(installOptions.dependenciesGraph, rootDir, componentDirectoryMap);
-    if (isFeatureEnabled(COMPS_UPDATE)) {
-      for (const manifest of Object.values(manifests)) {
-        if (manifest.name != null && manifest.name !== 'workspace') {
-          overrides[manifest.name] = 'workspace:*'
-        }
-      }
-      if (dependenciesGraph) {
-        overrides = calculateDependencyOverrides(dependenciesGraph, manifests, overrides);
-      }
-    }
     if (
-      isFeatureEnabled(DEPS_GRAPH) && installOptions.dependenciesGraph &&
+      installOptions.dependenciesGraph &&
+      isFeatureEnabled(DEPS_GRAPH) &&
       (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
     ) {
       try {
@@ -182,7 +172,63 @@ export class PnpmPackageManager implements PackageManager {
       });
     }
     this.modulesManifestCache.delete(rootDir);
-    const pnpmInstallOptions = {
+    const pnpmInstallOptions = this.calcPnpmInstallOptions(installOptions, config, dependenciesGraph, manifests);
+    const runInstall = install.bind(null, rootDir,
+      manifests,
+      config.storeDir,
+      config.cacheDir,
+      registries,
+      proxyConfig,
+      networkConfig
+    );
+    const {
+      dependenciesChanged,
+      rebuild,
+      storeDir,
+      depsRequiringBuild,
+    } = await runInstall(pnpmInstallOptions, this.logger);
+    if (isFeatureEnabled(COMPS_UPDATE)) {
+      const graphFromLockfile = await this.createGraphFromLockfileIfExists(rootDir, componentDirectoryMap);
+      if (graphFromLockfile) {
+        const newOverrides = forceLatestOverrides(graphFromLockfile, manifests, pnpmInstallOptions.overrides);
+        // If the overrides have changed it means that we need to run installation again.
+        if (!isEqual(pnpmInstallOptions.overrides, newOverrides)) {
+          await runInstall({
+              ...pnpmInstallOptions,
+              overrides: newOverrides,
+            },
+            this.logger
+          );
+        }
+      }
+    }
+    if (!installOptions.hidePackageManagerOutput) {
+      this.logger.on();
+      // Make a divider row to improve output
+      // this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
+      // this.logger.consoleSuccess('installing dependencies using pnpm');
+    }
+    return { dependenciesChanged, rebuild, storeDir, depsRequiringBuild };
+  }
+
+  calcPnpmInstallOptions(
+    installOptions: PackageManagerInstallOptions,
+    config: Config,
+    dependenciesGraph: DependenciesGraph | undefined,
+    manifests: Record<string, ProjectManifest>
+  ): PnpmInstallOptions {
+    let overrides = { ...installOptions.overrides };
+    if (isFeatureEnabled(COMPS_UPDATE)) {
+      for (const manifest of Object.values(manifests)) {
+        if (manifest.name != null && manifest.name !== 'workspace') {
+          overrides[manifest.name] = 'workspace:*'
+        }
+      }
+      if (dependenciesGraph) {
+        overrides = forceLatestOverrides(dependenciesGraph, manifests, overrides);
+      }
+    }
+    return {
       autoInstallPeers: installOptions.autoInstallPeers ?? true,
       enableModulesDir: installOptions.enableModulesDir,
       engineStrict: installOptions.engineStrict ?? config.engineStrict,
@@ -220,43 +266,7 @@ export class PnpmPackageManager implements PackageManager {
         peerDependencyRules: installOptions.peerDependencyRules,
       },
       returnListOfDepsRequiringBuild: installOptions.returnListOfDepsRequiringBuild,
-    };
-    const runInstall = install.bind(null, rootDir,
-      manifests,
-      config.storeDir,
-      config.cacheDir,
-      registries,
-      proxyConfig,
-      networkConfig
-    );
-    const {
-      dependenciesChanged,
-      rebuild,
-      storeDir,
-      depsRequiringBuild,
-    } = await runInstall(pnpmInstallOptions, this.logger);
-    if (isFeatureEnabled(COMPS_UPDATE)) {
-      const graphFromLockfile = await this.createGraphFromLockfileIfExists(rootDir, componentDirectoryMap);
-      if (graphFromLockfile) {
-        const newOverrides = calculateDependencyOverrides(graphFromLockfile, manifests, overrides);
-        // If the overrides have changed it means that we need to run installation again.
-        if (!isEqual(overrides, newOverrides)) {
-          await runInstall({
-              ...pnpmInstallOptions,
-              overrides: newOverrides,
-            },
-            this.logger
-          );
-        }
-      }
     }
-    if (!installOptions.hidePackageManagerOutput) {
-      this.logger.on();
-      // Make a divider row to improve output
-      // this.logger.console('-------------------------END PNPM OUTPUT-------------------------');
-      // this.logger.consoleSuccess('installing dependencies using pnpm');
-    }
-    return { dependenciesChanged, rebuild, storeDir, depsRequiringBuild };
   }
 
   async mergeGraphFromModelWithGraphFromLockfile(graphFromModel: DependenciesGraph | undefined, rootDir: string, componentDirectoryMap: ComponentMap<string>) {
@@ -552,7 +562,11 @@ function tryReadPackageJson(pkgDir: string) {
   }
 }
 
-function calculateDependencyOverrides(
+/**
+ * Finds all possible paths to components from the workspace that are also present as dependencies.
+ * The packages in the paths are forced to be "latest" via overrides.
+ */
+function forceLatestOverrides(
   graph: DependenciesGraph,
   manifests: Record<string, ProjectManifest>,
   existingOverrides: Record<string, string>
