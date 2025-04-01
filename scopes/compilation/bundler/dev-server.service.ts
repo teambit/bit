@@ -65,13 +65,14 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
      */
     private runtimeSlot: BrowserRuntimeSlot,
 
-    private devServerTransformerSlot: DevServerTransformerSlot,
-  ) { }
+    private devServerTransformerSlot: DevServerTransformerSlot
+  ) {}
 
   async render(env: EnvDefinition, context: ExecutionContext[]) {
     const descriptor = await this.getDescriptor(env, context);
-    const name = `${chalk.green('configured dev server:')} ${descriptor?.id} (${descriptor?.displayName} @ ${descriptor?.version
-      })`;
+    const name = `${chalk.green('configured dev server:')} ${descriptor?.id} (${descriptor?.displayName} @ ${
+      descriptor?.version
+    })`;
     const configLabel = chalk.green('dev server config:');
     const configObj = descriptor?.config
       ? highlight(descriptor?.config, { language: 'javascript', ignoreIllegals: true })
@@ -124,6 +125,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     { dedicatedEnvDevServers }: DevServerServiceOptions
   ): Promise<ComponentServer[]> {
     const groupedEnvs = await dedupEnvs(contexts, this.dependencyResolver, dedicatedEnvDevServers);
+
     // TODO: (gilad) - change this back to promise all once we make the preview pre-bundle to run before that loop
     const servers = await pMapSeries(Object.entries(groupedEnvs), async ([id, contextList]) => {
       const mainContext = contextList.find((context) => context.envDefinition.id === id) || contextList[0];
@@ -132,13 +134,14 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
       const devServerContext = await this.buildContext(mainContext, additionalContexts);
       const devServer: DevServer = await devServerContext.envRuntime.env.getDevServer(devServerContext);
       const transformedDevServer: DevServer = this.transformDevServer(devServer, { envId: id });
+
       return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], transformedDevServer);
     });
 
     return servers;
   }
 
-  mergeContext() { }
+  mergeContext() {}
 
   private getComponentsFromContexts(contexts: ExecutionContext[]) {
     return flatten(
