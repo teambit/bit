@@ -232,7 +232,6 @@ export class PreviewMain {
       PreviewAspect.id,
       PREVIEW_TASK_NAME
     );
-    console.log("🚀 ~ getPreview ~ artifacts:", artifacts)
     if (!artifacts) return undefined;
     return new PreviewArtifact(artifacts);
   }
@@ -244,9 +243,7 @@ export class PreviewMain {
    */
   async getPreviewFiles(component: Component): Promise<PreviewFiles | undefined> {
     const artifacts = await this.getPreview(component);
-    console.log("🚀 ~ getPreviewFiles ~ artifacts:", artifacts)
     const isBundledWithEnv = await this.isBundledWithEnv(component);
-    console.log("🚀 ~ getPreviewFiles ~ isBundledWithEnv:", isBundledWithEnv)
     if (!artifacts) return undefined;
     return {
       files: artifacts.getPaths(),

@@ -1,9 +1,8 @@
 import { Component } from '@teambit/component';
 import { ExecutionContext } from '@teambit/envs';
 import { PubsubMain } from '@teambit/pubsub';
-
 import { AddressInfo } from 'net';
-
+import { Server } from 'http';
 import { DevServer } from './dev-server';
 import { BindError } from './exceptions';
 import { ComponentsServerStartedEvent } from './events';
@@ -33,10 +32,13 @@ export class ComponentServer {
      * env dev server.
      */
     readonly devServer: DevServer
-  ) {}
+  ) { }
 
   hostname: string | undefined;
-
+  private server?: Server;
+  get envId() {
+    return this.context.envRuntime.id;
+  };
   /**
    * determine whether component server contains a component.
    */
@@ -49,18 +51,60 @@ export class ComponentServer {
   }
 
   _port: number;
+
   async listen() {
-    console.log(`[DEBUG] ComponentServer.listen called for env: ${this.context.envRuntime.id}`);
     const port = await selectPort(this.portRange);
     this._port = port;
-    const server = await this.devServer.listen(port);
-    console.log(`[DEBUG] About to call devServer.listen with port ${port}`);
-    const address = server.address();
+    this.server = await this.devServer.listen(port);
+    const address = this.server.address();
     const hostname = this.getHostname(address);
     if (!address) throw new BindError();
     this.hostname = hostname;
-    this.pubsub.pub(BundlerAspect.id, this.createComponentsServerStartedEvent(server, this.context, hostname, port));
-    console.log(`[DEBUG] Server successfully started on port ${port} for env: ${this.context.envRuntime.id}`);
+    this.pubsub.pub(
+      BundlerAspect.id,
+      this.createComponentsServerStartedEvent(this.server, this.context, hostname, port)
+    );
+  }
+
+  /**
+   * Restart the server
+   * Closes the existing server if it exists and starts a new one
+   * @param useNewPort - Whether to select a new port (default: false)
+   * @returns Promise that resolves when the server has been restarted
+   */
+  async restart(useNewPort: boolean = false): Promise<void> {
+    if (this.server) {
+      await new Promise<void>((resolve, reject) => {
+        this.server?.close((err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      });
+      this.server = undefined;
+    }
+
+    if (useNewPort) {
+      await this.listen();
+    } else {
+      try {
+        this.server = await this.devServer.listen(this._port);
+        const address = this.server.address();
+        const hostname = this.getHostname(address);
+        if (!address) throw new BindError();
+        this.hostname = hostname;
+        this.pubsub.pub(
+          BundlerAspect.id,
+          this.createComponentsServerStartedEvent(this.server, this.context, hostname, this._port)
+        );
+      } catch (error) {
+        if (!this.errors) this.errors = [];
+        this.errors.push(error as Error);
+        await this.listen();
+      }
+    }
   }
 
   private getHostname(address: string | AddressInfo | null) {
@@ -75,10 +119,10 @@ export class ComponentServer {
     return hostname;
   }
 
-  private onChange() {}
+  private onChange() { }
 
   private createComponentsServerStartedEvent: (
-    DevServer,
+    Server,
     ExecutionContext,
     string,
     number

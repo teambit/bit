@@ -2230,6 +2230,11 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
   async setComponentPathsRegExps() {
     const workspaceComponents = await this.list();
+    if(!workspaceComponents.length) {
+      this.componentPathsRegExps = [];
+      return;
+    }
+    
     const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
     const packageManager = this.dependencyResolver.packageManagerName;
     const isPnpmEnabled = typeof packageManager === 'undefined' || packageManager.includes('pnpm');

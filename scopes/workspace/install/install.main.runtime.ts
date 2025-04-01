@@ -48,6 +48,8 @@ import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { snapToSemver } from '@teambit/component-package-version';
 import { AspectDefinition, AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import hash from 'object-hash';
+import BundlerAspect, { BundlerMain } from '@teambit/bundler';
+import UIAspect, { UiMain } from '@teambit/ui';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
@@ -55,7 +57,6 @@ import { LinkCommand } from './link';
 import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
 import UpdateCmd from './update.cmd';
-import BundlerAspect, { BundlerMain } from '@teambit/bundler';
 
 export type WorkspaceLinkOptions = LinkingOptions & {
   rootPolicy?: WorkspacePolicy;
@@ -142,7 +143,7 @@ export class InstallMain {
     private ipcEvents: IpcEventsMain,
 
     private harmony: Harmony
-  ) {}
+  ) { }
   /**
    * Install dependencies for all components in the workspace
    *
@@ -424,7 +425,7 @@ export class InstallMain {
       // Otherwise, we might load an env from a location that we later remove.
       try {
         await installer.pruneModules(this.workspace.path);
-      // Ignoring the error here as it's not critical and we don't want to fail the install process
+        // Ignoring the error here as it's not critical and we don't want to fail the install process
       } catch (err: any) {
         this.logger.error(`failed running pnpm prune with error`, err);
       }
@@ -1255,7 +1256,8 @@ export class InstallMain {
     GeneratorAspect,
     WorkspaceConfigFilesAspect,
     AspectLoaderAspect,
-    BundlerAspect
+    BundlerAspect,
+    UIAspect
   ];
 
   static runtime = MainRuntime;
@@ -1275,23 +1277,25 @@ export class InstallMain {
       generator,
       wsConfigFiles,
       aspectLoader,
-      bundler
+      bundler,
+      ui
     ]: [
-      DependencyResolverMain,
-      Workspace,
-      LoggerMain,
-      VariantsMain,
-      CLIMain,
-      CompilerMain,
-      IssuesMain,
-      EnvsMain,
-      ApplicationMain,
-      IpcEventsMain,
-      GeneratorMain,
-      WorkspaceConfigFilesMain,
-      AspectLoaderMain,
-      BundlerMain
-    ],
+        DependencyResolverMain,
+        Workspace,
+        LoggerMain,
+        VariantsMain,
+        CLIMain,
+        CompilerMain,
+        IssuesMain,
+        EnvsMain,
+        ApplicationMain,
+        IpcEventsMain,
+        GeneratorMain,
+        WorkspaceConfigFilesMain,
+        AspectLoaderMain,
+        BundlerMain,
+        UiMain
+      ],
     _,
     [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot],
     harmony: Harmony
@@ -1336,14 +1340,15 @@ export class InstallMain {
     if (workspace) {
       workspace.registerOnRootAspectAdded(installExt.onRootAspectAddedSubscriber.bind(installExt));
       workspace.registerOnComponentChange(installExt.onComponentChange.bind(installExt));
-      workspace.registerOnComponentAdd(async (newComponent) => {
-        await bundler.createServerForNewEnvironment(workspace, newComponent);
-     })
     }
+
     installExt.registerPostInstall(async () => {
-      // @todo handle this on post install
-      //  await bundler.createServerForNewEnvironment(workspace);
-    })
+      if(!ui.getUIServer()) {
+        return;
+      }
+      const components = await workspace.list();
+      await bundler.devServer(components);
+    });
     cli.register(...commands);
     return installExt;
   }

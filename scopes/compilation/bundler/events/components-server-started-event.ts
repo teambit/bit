@@ -1,6 +1,9 @@
 /* eslint-disable max-classes-per-file */
 
+import { GraphqlMain } from '@teambit/graphql';
 import { BitBaseEvent } from '@teambit/pubsub';
+
+export const ComponentServerStartedEvent = 'ComponentServerStartedEvent';
 
 class ComponentsServerStartedEventData {
   constructor(
@@ -30,7 +33,7 @@ export class ComponentsServerStartedEvent extends BitBaseEvent<ComponentsServerS
   }
 }
 
-export class NewDevServerCreatedEvent  extends BitBaseEvent<ComponentsServerStartedEventData> {
+export class NewDevServerCreatedEvent extends BitBaseEvent<ComponentsServerStartedEventData> {
   static readonly TYPE = 'new-dev-server-created';
 
   constructor(
@@ -38,7 +41,9 @@ export class NewDevServerCreatedEvent  extends BitBaseEvent<ComponentsServerStar
     readonly componentsServer,
     readonly context,
     readonly hostname,
-    readonly port
+    readonly port,
+    readonly graphql: GraphqlMain,
+    readonly restartIfRunning: boolean = false
   ) {
     super(
       ComponentsServerStartedEvent.TYPE,
@@ -46,6 +51,15 @@ export class NewDevServerCreatedEvent  extends BitBaseEvent<ComponentsServerStar
       timestamp,
       new ComponentsServerStartedEventData(componentsServer, context, hostname, port)
     );
+  }
+
+  async publishGraphqlEvent() {
+    await this.graphql.pubsub.publish(ComponentServerStartedEvent, {
+      componentsServer: this.componentsServer,
+      context: this.context,
+      hostname: this.hostname,
+      port: this.port
+    });
   }
 }
 

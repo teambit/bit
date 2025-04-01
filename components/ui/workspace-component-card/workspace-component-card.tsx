@@ -51,9 +51,7 @@ export function WorkspaceComponentCard({
           ...plugin,
           preview: function PreviewWrapper(props) {
             return (
-              <div className={styles.previewWrapper}>
-                <Preview {...props} shouldShowPreview={shouldShowPreviewState} />
-              </div>
+              <Preview {...props} shouldShowPreview={shouldShowPreviewState} />
             );
           },
         };
