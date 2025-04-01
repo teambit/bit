@@ -2214,13 +2214,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/workspace-component-card"
     },
-    "update-dependencies": {
-        "name": "update-dependencies",
-        "scope": "teambit.scope",
-        "version": "1.0.581",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/scope/update-dependencies"
-    },
     "url/add-avatar-query-params": {
         "name": "url/add-avatar-query-params",
         "scope": "teambit.toolbox",

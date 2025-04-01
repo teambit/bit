@@ -501,44 +501,6 @@ export const BasicIdInput = () => {
         });
       });
     });
-    describe('updating a component in the lane then running update-dependencies command to update the dependents', () => {
-      let updateDepsOutput: string;
-      before(() => {
-        helper.scopeHelper.reInitWorkspace();
-        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
-        helper.scopeHelper.getClonedRemoteScope(remoteScope);
-        helper.command.importLane('dev', '-x');
-        helper.command.snapComponentWithoutBuild('comp3', '--skip-auto-snap --unmodified');
-        helper.command.export();
-
-        const updateRemote = helper.scopeHelper.getNewBareScope('-remote-update');
-        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, updateRemote.scopePath);
-
-        const data = [
-          {
-            componentId: `${helper.scopes.remote}/comp2`,
-            dependencies: [`${helper.scopes.remote}/comp3`],
-          },
-        ];
-        // console.log('updateRemote.scopePath', updateRemote.scopePath);
-        // console.log(`bit update-dependencies '${JSON.stringify(data)}' --lane ${helper.scopes.remote}/dev`);
-        try {
-          updateDepsOutput = helper.command.updateDependencies(
-            data,
-            `--lane ${helper.scopes.remote}/dev`,
-            updateRemote.scopePath
-          );
-        } catch (err: any) {
-          updateDepsOutput = err.message;
-        }
-      });
-      // it's currently failing because comp3 is not in the npm registry, that's fine.
-      // all we care about here is that it won't fail because it cannot find the version of the dependency
-      it('should not throw an error saying it cannot find the version of the dependency', () => {
-        expect(updateDepsOutput).to.not.include('unable to find a version');
-        expect(updateDepsOutput).to.include('comp3 is not in the npm registry'); // not a mandatory test
-      });
-    });
     describe('updating the dependent of the dependent', () => {
       before(() => {
         helper.scopeHelper.getClonedRemoteScope(remoteScope);
