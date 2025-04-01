@@ -5176,61 +5176,6 @@
     "private": true
   },
   {
-    "name": "sign [component...]",
-    "alias": "",
-    "options": [
-      [
-        "",
-        "multiple",
-        "DEPRECATED. this is now the default. sign components from multiple scopes"
-      ],
-      [
-        "",
-        "always-succeed",
-        "exit with code 0 even though the build failed"
-      ],
-      [
-        "",
-        "push",
-        "export the updated objects to the original scopes once done"
-      ],
-      [
-        "",
-        "lane <lane-id>",
-        "helps to fetch the components from the lane scope (relevant for --multiple)"
-      ],
-      [
-        "",
-        "rebuild",
-        "allow signing components whose buildStatus is successful for testing purposes"
-      ],
-      [
-        "",
-        "original-scope",
-        "sign components from the original scope. works only when all components are from the same scope"
-      ],
-      [
-        "",
-        "save-locally",
-        "save the signed components locally on the bare-scope for debugging purposes"
-      ],
-      [
-        "",
-        "reuse-capsules",
-        "avoid deleting the capsules root-dir before starting the build"
-      ],
-      [
-        "",
-        "tasks <string>",
-        "build the specified task(s) only. for multiple tasks, separate by a comma and wrap with quotes.\nspecify the task-name (e.g. \"TypescriptCompiler\") or the task-aspect-id (e.g. teambit.compilation/compiler)"
-      ]
-    ],
-    "description": "complete the build process for components",
-    "extendedDescription": "a new bare-scope needs to be created and it will import the components to this scope first",
-    "group": "development",
-    "private": true
-  },
-  {
     "name": "schema <pattern>",
     "alias": "",
     "options": [

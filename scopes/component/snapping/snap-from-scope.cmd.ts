@@ -135,6 +135,7 @@ ${inputDataDescription}
       rebuildDepsGraph,
       updateDependents,
       tag,
+      skipAutoTag: true
     });
 
     const { snappedIds, exportedIds } = results;
@@ -184,6 +185,7 @@ ${inputDataDescription}
         rebuildDepsGraph,
         updateDependents,
         tag,
+        skipAutoTag: true
       });
 
       return {

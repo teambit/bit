@@ -1,4 +1,5 @@
 import multimatch from 'multimatch';
+import { isSnap } from '@teambit/component-version';
 import mapSeries from 'p-map-series';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { MainRuntime } from '@teambit/cli';
@@ -101,7 +102,7 @@ export { ProxyConfig, NetworkConfig } from '@teambit/scope.network';
 export interface DependencyResolverComponentData {
   packageName: string;
   policy: SerializedVariantPolicy;
-  dependencies: SerializedDependency;
+  dependencies: SerializedDependency[];
 }
 
 export interface DependencyResolverVariantConfig {
@@ -1374,6 +1375,40 @@ export class DependencyResolverMain {
     }
 
     return manifest;
+  }
+
+  validateAspectData(data: DependencyResolverComponentData) {
+    const errorPrefix = `failed validating ${DependencyResolverAspect.id} aspect-data.`;
+    let errorMsg: undefined | string;
+    data.dependencies?.forEach((dep) => {
+      const isVersionValid = Boolean(semver.valid(dep.version) || semver.validRange(dep.version));
+      if (isVersionValid) return;
+      if (dep.__type === COMPONENT_DEP_TYPE && isSnap(dep.version)) return;
+      errorMsg = `${errorPrefix} the dependency version "${dep.version}" of ${dep.id} is not a valid semver version or range`;
+    });
+    data.policy?.forEach((policy) => {
+      const policyVersion = policy.value.version;
+      const allowedSpecialChars = ['+', '-'];
+      if (policyVersion === '*') {
+        // this is only valid for packages, not for components.
+        const isComp = data.dependencies.find(d => d.__type === COMPONENT_DEP_TYPE
+          && d.packageName === policy.dependencyId);
+        if (!isComp) return;
+        errorMsg = `${errorPrefix} the policy version "${policyVersion}" of ${policy.dependencyId} is not valid for components, only for packages.
+as an alternative, you can use "+" to keep the same version installed in the workspace`;
+      }
+      const isVersionValid = Boolean(
+        semver.valid(policyVersion) ||
+          semver.validRange(policyVersion) ||
+          allowedSpecialChars.includes(policyVersion)
+      );
+      if (isVersionValid) return;
+      errorMsg = `${errorPrefix} the policy version "${policyVersion}" of ${policy.dependencyId} is not a valid semver version or range`;
+    });
+
+    if (errorMsg) {
+      return { errorMsg, minBitVersion: '1.9.107' };
+    }
   }
 
   /**

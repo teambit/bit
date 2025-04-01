@@ -107,7 +107,7 @@ module.exports = {
         ignoreTemplateLiterals: true,
       },
     ],
-    'max-lines': [2, 1800],
+    'max-lines': [2, 2000],
     'func-names': [0],
 
     // ERRORS OF plugin:react/recommended

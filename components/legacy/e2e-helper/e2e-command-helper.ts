@@ -236,9 +236,6 @@ export default class CommandHelper {
   removeLaneReadme(laneName = '') {
     return this.runCmd(`bit lane remove-readme ${laneName}`);
   }
-  sign(ids: string[], flags = '', cwd = this.scopes.localPath) {
-    return this.runCmd(`bit sign ${ids.join(' ')} ${flags}`, cwd);
-  }
   artifacts(id = '', flags = '') {
     return this.runCmd(`bit artifacts ${id} ${flags}`);
   }

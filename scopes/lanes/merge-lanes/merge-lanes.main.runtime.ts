@@ -71,6 +71,7 @@ export type MergeFromScopeResult = {
   unmerged: { id: ComponentID; reason: string }[]; // reasons currently are: ahead / already-merge / removed
   conflicts?: ConflictPerId[]; // relevant in case of diverge (currently possible only when merging from main to a lane)
   snappedIds?: ComponentID[]; // relevant in case of diverge (currently possible only when merging from main to a lane)
+  autoSnappedIds?: ComponentID[]; // relevant in case of diverge (currently possible only when merging from main to a lane)
   mergedPreviously: ComponentID[];
   mergeSnapError?: Error;
 };
@@ -559,6 +560,7 @@ export class MergeLanesMain {
     }
 
     const snappedIds = mergeSnapResults?.snappedComponents.map((c) => c.id) || [];
+    const autoSnappedIds = mergeSnapResults?.autoSnappedResults.map((c) => c.component.id) || [];
 
     const laneToExport = toLaneId.isDefault() ? undefined : await this.lanes.loadLane(toLaneId); // needs to be loaded again after the merge as it changed
     const exportResult =
@@ -579,9 +581,11 @@ export class MergeLanesMain {
       unmerged: failedComponents?.map((c) => ({ id: c.id, reason: c.unchangedMessage })) || [],
       conflicts,
       snappedIds,
+      autoSnappedIds,
       mergeSnapError,
     };
   }
+
   private async throwIfNotUpToDate(fromLaneId: LaneId, toLaneId: LaneId) {
     const status = await this.lanes.diffStatus(fromLaneId, toLaneId, { skipChanges: true });
     const compsNotUpToDate = status.componentsStatus.filter((s) => !s.upToDate);

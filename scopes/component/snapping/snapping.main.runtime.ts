@@ -110,6 +110,7 @@ export type SnapResults = BasicTagResults & {
 export type SnapFromScopeResults = {
   snappedIds: ComponentID[];
   exportedIds?: ComponentID[];
+  autoSnappedResults: AutoTagResult[];
   snappedComponents: ConsumerComponent[];
 };
 
@@ -574,7 +575,6 @@ if you're willing to lose the history from the head to the specified version, us
         dependencies: [],
         versionToTag: shouldTag ? s.version || 'patch' : undefined,
       })),
-      skipAutoTag: true,
       persist: true,
       isSnap: !shouldTag,
       message: params.message as string,
@@ -602,6 +602,7 @@ if you're willing to lose the history from the head to the specified version, us
     return {
       snappedComponents: taggedComponents,
       snappedIds: taggedComponents.map((comp) => comp.id),
+      autoSnappedResults: results.autoTaggedResults,
       exportedIds,
     };
   }
