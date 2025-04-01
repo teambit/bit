@@ -390,21 +390,21 @@ describe('dependency-resolver extension', function () {
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('env.jsonc with policy.peer version="*"', () => {
     let npmCiRegistry: NpmCiRegistry;
+    const examplePkg = '@ci/lodash';
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       npmCiRegistry = new NpmCiRegistry(helper);
       await npmCiRegistry.init();
       npmCiRegistry.configureCiInPackageJsonHarmony();
+      npmCiRegistry.publishPackage(examplePkg, '0.0.1');
 
-      helper.fixtures.populateComponents(1);
-      helper.command.tagAllComponents();
       helper.env.setEmptyEnv();
       helper.fs.outputFile('empty-env/env.jsonc', `{
   "policy": {
     "peers": [
       {
-        "name": "${helper.general.getPackageNameByCompName('comp1')}",
+        "name": "${examplePkg}",
         "version": "*",
         "supportedRange": "*"
       }
@@ -412,38 +412,43 @@ describe('dependency-resolver extension', function () {
   }
 }
 `);
-      helper.command.tagAllComponents(); // it'll tag only empty-env.
+      helper.command.tagAllComponents();
       helper.command.export();
     });
     after(() => {
       npmCiRegistry.destroy();
     });
-    function validateDepData(expectedVersion: string) {
+    function validatePkgData() {
       const comp = helper.command.catComponent(`${helper.scopes.remote}/empty-env@latest`);
       const depResolverExt = comp.extensions.find((e) => e.name === Extensions.dependencyResolver);
-      const policy = depResolverExt.data.policy.find(p => p.dependencyId === helper.general.getPackageNameByCompName('comp1'));
+      const policy = depResolverExt.data.policy.find(p => p.dependencyId === examplePkg);
       expect(policy.value.version).to.equal('*');
-      const data =  depResolverExt.data.dependencies.find(p => p.packageName === helper.general.getPackageNameByCompName('comp1'));
-      expect(data.version).to.equal(expectedVersion);
-      expect(data.componentId.version).to.equal(expectedVersion);
+      const data =  depResolverExt.data.dependencies.find(p => p.id === examplePkg);
+      expect(data.version).to.equal('*');
     }
     it('should not break and save the policy correctly with the *', () => {
-      validateDepData('0.0.1');
+      validatePkgData();
     });
-    describe('making a new version of the env dep', () => {
+    describe('publishing a new version of the package and re-tagging', () => {
       before(() => {
+        npmCiRegistry.publishPackage(examplePkg, '0.0.2');
         helper.command.tagAllComponents('--unmodified');
         helper.command.export();
       });
       it('should update the dep in the env model', () => {
-        validateDepData('0.0.2');
+        validatePkgData();
       });
-      it('should be able to install the env on a new workspace with no errors', () => {
+      it('should be able to install the env on a new workspace with no errors and install the latest of the pkg dep', () => {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.install(helper.general.getPackageNameByCompName('empty-env'));
-        const pkgJson = helper.fs.readJsonFile(`node_modules/${helper.general.getPackageNameByCompName('empty-env')}/package.json`);
-        expect(pkgJson.dependencies[`${helper.general.getPackageNameByCompName('comp1')}`]).to.equal('0.0.2');
+
+        const envPkgJson = helper.fs.readJsonFile(`node_modules/${helper.general.getPackageNameByCompName('empty-env')}/package.json`);
+        expect(envPkgJson.dependencies[examplePkg]).to.equal('*');
+
+        const pkgJsonPath = path.join('node_modules', '.pnpm/@ci+lodash@0.0.2/node_modules/@ci/lodash/package.json');
+        const pkgJson = helper.fs.readJsonFile(pkgJsonPath);
+        expect(pkgJson.version).to.equal('0.0.2');
       });
     });
   });

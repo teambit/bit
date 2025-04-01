@@ -83,7 +83,8 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
 
     const titleBase64Decoded = titleBase64 ? fromBase64(titleBase64) : undefined;
 
-    const { mergedNow, unmerged, exportResult, conflicts, mergeSnapError } = await this.mergeLanes.mergeFromScope(
+    const { mergedNow, snappedIds, autoSnappedIds,
+      unmerged, exportResult, conflicts, mergeSnapError } = await this.mergeLanes.mergeFromScope(
       fromLane,
       toLane || DEFAULT_LANE,
       {
@@ -102,6 +103,13 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
       `successfully merged ${mergedNow.length} components from ${fromLane} to ${toLane || DEFAULT_LANE}`
     );
     const mergedOutput = mergedNow.length ? `${mergedTitle}\n${mergedNow.join('\n')}` : '';
+
+    const snappedOutput = snappedIds?.length
+      ? chalk.bold(`the following ${snappedIds.length} components were snapped\n`) + snappedIds.join('\n')
+      : '';
+    const autoSnappedOutput = autoSnappedIds?.length
+      ? chalk.bold(`the following ${autoSnappedIds.length} components were auto snapped\n`) + autoSnappedIds.join('\n')
+      : '';
 
     const nonMergedTitle = chalk.bold(`the following ${unmerged.length} components were not merged`);
     const nonMergedOutput = unmerged.length
@@ -124,7 +132,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
     const exportedTitle = chalk.bold(`successfully exported ${exportedIds.length} components`);
     const exportedOutput = exportedIds.length ? `${exportedTitle}\n${exportedIds.join('\n')}` : '';
 
-    return compact([mergedOutput, nonMergedOutput, conflictsOutput, mergeSnapErrorOutput, exportedOutput]).join('\n\n');
+    return compact([mergedOutput, snappedOutput, autoSnappedOutput, nonMergedOutput, conflictsOutput, mergeSnapErrorOutput, exportedOutput]).join('\n\n');
   }
   async json(
     [fromLane, toLane]: [string, string],
@@ -162,6 +170,7 @@ the lane must be up-to-date with the other lane, otherwise, conflicts might occu
           unmerged: results.unmerged.map(({ id, reason }) => ({ id: id.toString(), reason })),
           conflicts: results.conflicts?.map(({ id, ...rest }) => ({ id: id.toString(), ...rest })),
           snappedIds: results.snappedIds?.map((id) => id.toString()),
+          autoSnappedIds: results.autoSnappedIds?.map((id) => id.toString()),
           mergeSnapError: results.mergeSnapError
             ? { message: results.mergeSnapError.message, stack: results.mergeSnapError.stack }
             : undefined,
