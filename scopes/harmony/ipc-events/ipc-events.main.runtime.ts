@@ -23,11 +23,14 @@ const EVENTS_DIR = 'events';
  * while each one of the processes has a watcher in the background watch this file. once they got the data from the watcher,
  * they can act upon it.
  *
- * in the previous example, when the user is running `bit install`, the install aspect runs `this.publishIpcEvent` to
- * write `.bit/events/onPostInstall` to the filesystem. then, the watcher of `bit start` process got a notification
- * that this file has changed/added and it runs `triggerGotEvent` to run all aspects registered to its gotEventSlot.
+ * in the previous example, when the user is running `bit install`, the "install" aspect runs `this.publishIpcEvent` to
+ * write `.bit/events/onPostInstall` to the filesystem. then, the watcher of `bit start` process gets a notification
+ * that this file has changed/added and it runs `ipcEvents.triggerGotEvent()` to run all aspects registered to
+ * ipc-event's gotEventSlot.
  * the installer in turn is registered to this slot and once its function is triggered, it check whether the eventName
- * is onPostInstall and then triggers its own OnPostInstall slot.
+ * is onPostInstall and if so triggers its own OnPostInstall slot.
+ *
+ * @see ./example-diagram.md for a visual representation of the above.
  */
 export class IpcEventsMain {
   constructor(
