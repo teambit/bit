@@ -30,15 +30,10 @@ export function configFactory(
   title?: string,
   favicon?: string
 ): WebpackConfigWithDevServer {
-  console.log("🚀 ~ publicPath:", publicPath)
-  console.log("🚀 ~ publicRoot:", publicRoot)
-
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
-  // todo fix this properly
-  const publicDirectory = publicPath.startsWith('/')
-  ? `${publicRoot}${publicPath}`  
-  : `${publicRoot}/${publicPath}`;
+  const publicDirectory = `${publicRoot}/${publicPath}`;
+
   return {
     // Environment mode
     mode: 'development',

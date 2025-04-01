@@ -51,7 +51,6 @@ export class EnvTemplateRoute implements RegisteredComponentRoute {
         try {
           const { componentId: envId } = req.params;
           artifact = await this.preview.getEnvTemplateByEnvId(envId);
-          console.log("🚀 ~ EnvTemplateRoute ~ artifact:", artifact)
         } catch (e: any) {
           this.logger.error(`getEnvTemplateByEnvId has failed`, e);
           return res.status(404).send(noPreview());

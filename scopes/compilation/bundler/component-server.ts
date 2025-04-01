@@ -122,7 +122,7 @@ export class ComponentServer {
   private onChange() { }
 
   private createComponentsServerStartedEvent: (
-    Server,
+    DevServer,
     ExecutionContext,
     string,
     number

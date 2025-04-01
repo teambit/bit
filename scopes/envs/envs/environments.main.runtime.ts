@@ -158,7 +158,7 @@ export class EnvsMain {
     private envJsoncMergeCustomizerSlot: EnvJsoncMergeCustomizerRegistry,
 
     private envJsoncResolverSlot: EnvJsoncResolverRegistry
-  ) { }
+  ) {}
 
   /**
    * creates a new runtime environments for a set of components.
@@ -411,26 +411,17 @@ export class EnvsMain {
   /**
    * get the env id of the given component.
    */
-  getEnvId(component: Component, log = false): string {
+  getEnvId(component: Component): string {
     const envIdFromEnvData = this.getEnvIdFromEnvsData(component);
-
-    if (log) console.log("🚀 ~ EnvsMain ~ getEnvId ~ envIdFromEnvData:", envIdFromEnvData)
-
     if (!envIdFromEnvData) {
       // This should never happen
       throw new Error(`no env found for ${component.id.toString()}`);
     }
     const withVersion = this.resolveEnv(component, envIdFromEnvData);
-
-    if (log) console.log("🚀 ~ EnvsMain ~ getEnvId ~ withVersion:", withVersion)
-
     const withVersionMatch = this.envSlot.toArray().find(([envId]) => {
       return withVersion?.toString() === envId;
     });
     const withVersionMatchId = withVersionMatch?.[0];
-
-    if (log) console.log("🚀 ~ EnvsMain ~ getEnvId ~ withVersionMatchId:", withVersionMatchId)
-
     if (withVersionMatchId) return withVersionMatchId;
 
     // Handle core envs
@@ -439,9 +430,6 @@ export class EnvsMain {
     });
 
     const exactMatchId = exactMatch?.[0];
-
-    if (log) console.log("🚀 ~ EnvsMain ~ getEnvId ~ exactMatchId:", exactMatchId)
-
     if (exactMatchId) return exactMatchId;
 
     if (!withVersion) throw new EnvNotConfiguredForComponent(envIdFromEnvData, component.id.toString());
@@ -847,10 +835,10 @@ export class EnvsMain {
 this may indicate that the env was not loaded properly. try running "bit install" to ensure the env is correctly loaded.
 to explicitly set the default env, use "bit env set" command.`;
     } else {
-      errorMsg = `env id "${ext.data.id}" is different from the id in the envs aspect config "${ext.config.env}".
+      errorMsg =`env id "${ext.data.id}" is different from the id in the envs aspect config "${ext.config.env}".
 if needed, use "bit env set" command to align the env id`;
     }
-    return { errorMsg, minBitVersion: '1.9.82' }
+    return { errorMsg, minBitVersion: '1.9.82'}
   }
 
   /**

@@ -25,10 +25,8 @@ export function getArtifactFileMiddleware(logger: Logger, getCacheControlFunc?: 
       let file;
       if (!isLegacyPath) {
         file = getEnvTemplateFile(artifact, req.params.previewName, req.params.filePath);
-        console.log("🚀 ~ return ~ file:", file)
       } else {
         file = getPreviewFile(artifact, req.params.previewName, req.params.filePath);
-        console.log("🚀 ~ return ~ file:", file)
       }
       if (!file) return res.status(404).send(noPreview());
 
