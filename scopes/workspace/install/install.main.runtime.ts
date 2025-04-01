@@ -48,8 +48,8 @@ import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { snapToSemver } from '@teambit/component-package-version';
 import { AspectDefinition, AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import hash from 'object-hash';
-import BundlerAspect, { BundlerMain } from '@teambit/bundler';
-import UIAspect, { UiMain } from '@teambit/ui';
+import { BundlerAspect, BundlerMain } from '@teambit/bundler';
+import { UIAspect, UiMain } from '@teambit/ui';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
@@ -1343,7 +1343,7 @@ export class InstallMain {
     }
 
     installExt.registerPostInstall(async () => {
-      if(!ui.getUIServer()) {
+      if (!ui.getUIServer()) {
         return;
       }
       const components = await workspace.list();

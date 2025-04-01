@@ -1,5 +1,5 @@
 import { flatten } from 'lodash';
-import BundlerAspect, { BundlerMain, ComponentServer, ComponentsServerStartedEvent, NewDevServerCreatedEvent } from '@teambit/bundler';
+import { BundlerAspect, BundlerMain, ComponentServer, ComponentsServerStartedEvent, NewDevServerCreatedEvent } from '@teambit/bundler';
 import { PubsubMain } from '@teambit/pubsub';
 import { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
 import { Workspace } from '@teambit/workspace';

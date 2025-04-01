@@ -16,7 +16,7 @@ import { devServerSchema } from './dev-server.graphql';
 import { DevServerService } from './dev-server.service';
 import { BundlerService } from './bundler.service';
 import { DevServer } from './dev-server';
-import UIAspect, { UiMain } from '@teambit/ui';
+import { UIAspect, UiMain } from '@teambit/ui';
 
 export type DevServerTransformer = (devServer: DevServer, { envId }: { envId: string }) => DevServer;
 
@@ -68,7 +68,7 @@ export class BundlerMain {
      */
     private ui: UiMain,
 
-    private graphql: GraphqlMain  
+    private graphql: GraphqlMain
   ) {
   }
 
