@@ -20,7 +20,6 @@ import { ComponentsList } from '@teambit/legacy.component-list';
 import pMapSeries from 'p-map-series';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import pMap from 'p-map';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
@@ -38,7 +37,7 @@ import {
   Log,
   AddVersionOpts,
 } from '@teambit/objects';
-import { Component } from '@teambit/component';
+import { Component, ConsumerComponent } from '@teambit/component';
 import { DependencyResolverAspect, DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
