@@ -15,20 +15,17 @@ type GotEventSlot = SlotRegistry<GotEvent>;
 const EVENTS_DIR = 'events';
 
 /**
- * imagine you have multiple processes running in the background, such as `bit watch`, `bit start`, `bit server`.
- * the user is running `bit install` from the cli, how do you let these processes know that the installation is complete?
- * `bit start` for instance could use ths info to clear the "component issues" of the components that were missing packages.
+ * You might have several processes running in the background (for example, bit watch, bit start, or bit server).
+ * When the user runs `bit install`, these processes need to be notified that the installation has completed. One reason
+ * is that "bit start" in the workspace could remove component-issues related to missing dependencies.
  *
- * this class provides a mechanism to achieve this by writing the event into the filesystem (`.bit/events/event-name`),
- * while each one of the processes has a watcher in the background watch this file. once they got the data from the watcher,
- * they can act upon it.
+ * To achieve this, an event file is written to the filesystem (e.g., .bit/events/<event-name>), and each background
+ * process has a file watcher monitoring these event files. When an event file is created or updated, they can act upon it.
  *
- * in the previous example, when the user is running `bit install`, the "install" aspect runs `this.publishIpcEvent` to
- * write `.bit/events/onPostInstall` to the filesystem. then, the watcher of `bit start` process gets a notification
- * that this file has changed/added and it runs `ipcEvents.triggerGotEvent()` to run all aspects registered to
- * ipc-event's gotEventSlot.
- * the installer in turn is registered to this slot and once its function is triggered, it check whether the eventName
- * is onPostInstall and if so triggers its own OnPostInstall slot.
+ * For instance, when the user runs bit install, the “install” aspect calls publishIpcEvent, which writes
+ * `.bit/events/onPostInstall`. The "bit start" process (along with others) detects the file change and invokes
+ * `ipcEvents.triggerGotEvent()`. Any aspect subscribed to the gotEventSlot then runs its logic. In this example, the
+ * installer aspect is subscribed, so when it recognizes the onPostInstall event, it triggers its own OnPostInstall slot.
  *
  * @see ./example-diagram.md for a visual representation of the above.
  */
