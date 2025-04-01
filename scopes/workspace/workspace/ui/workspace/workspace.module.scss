@@ -13,7 +13,7 @@
 }
 
 .minimalCorner {
-  width: 130px;
+  width: fit-content;
   &.dark {
     --bit-border-color-lightest: #333333;
     --bit-text-color-heavy: white;
