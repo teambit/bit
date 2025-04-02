@@ -166,19 +166,20 @@ export class TesterMain {
   async getTestsResults(
     component: IComponent,
     idHasVersion = true
-  ): Promise<{ testsResults?: TestsResult; loading: boolean } | undefined> {
+  ): Promise<{ testsResults?: TestsResult; loading: boolean, coverage?: unknown[] } | undefined> {
     const entry = component.get(TesterAspect.id);
     const isModified = !idHasVersion && (await component.isModified());
     const data = this.builder.getDataByAspect(component, TesterAspect.id) as { tests: TestsResult };
+    console.log('\n\ngetTestsResults', data.tests);
     if ((entry || data) && !isModified) {
-      return { testsResults: data?.tests || entry?.data.tests, loading: false };
+      return { testsResults: data?.tests || entry?.data.tests, loading: false, coverage: data?.tests.coverage };
     }
     return this.getTestsResultsFromState(component);
   }
 
   private getTestsResultsFromState(component: IComponent) {
     const tests = this._testsResults[component.id.toString()];
-    return { testsResults: tests?.results, loading: tests?.loading || false };
+    return { testsResults: tests?.results, loading: tests?.loading || false, coverage: tests?.coverage };
   }
 
   /**

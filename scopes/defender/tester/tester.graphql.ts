@@ -31,6 +31,7 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
         testFiles: [TestFiles]
         success: Boolean
         start: Int
+        coverage: [FileCoverage!]
       }
 
       type TestFiles {
@@ -39,7 +40,7 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
         pass: Int
         failed: Int
         pending: Int
-        duration: Int
+        duration: String
         slow: Boolean
         errorStr: String
       }
@@ -50,6 +51,21 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
         duration: String
         status: String
         error: String
+      }
+
+      type CoverageDetails {
+        total: Int!
+        covered: Int!
+        skipped: Int!
+        pct: Float!
+      }
+
+      type FileCoverage {
+        lines: CoverageDetails!
+        functions: CoverageDetails!
+        statements: CoverageDetails!
+        branches: CoverageDetails!
+        path: String!
       }
     `,
     resolvers: {

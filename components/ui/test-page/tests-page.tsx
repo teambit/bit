@@ -12,6 +12,7 @@ import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-
 import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/defender.ui.test-table';
+import { Table, type ColumnProps } from '@teambit/design.content.table';
 import styles from './tests-page.module.scss';
 
 const TESTS_SUBSCRIPTION_CHANGED = gql`
@@ -60,6 +61,33 @@ const GET_COMPONENT = gql`
               error
             }
           }
+          coverage {
+            path
+            lines {
+              total
+              covered
+              skipped
+              pct
+            }
+            functions {
+              total
+              covered
+              skipped
+              pct
+            }
+            statements {
+              total
+              covered
+              skipped
+              pct
+            }
+            branches {
+              total
+              covered
+              skipped
+              pct
+            }
+          }
         }
       }
     }
@@ -92,6 +120,7 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
 
   const testData = onTestsChanged.data?.testsChanged || data?.getHost?.getTests;
   const testResults = testData?.testsResults?.testFiles;
+  const testCoverage = testData?.testsResults?.coverage;
 
   // TODO: change loading EmptyBox
   if (testData?.loading) return <TestLoader />;
@@ -140,6 +169,37 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
         <H1 className={styles.title}>Tests</H1>
         <Separator isPresentational className={styles.separator} />
         <TestTable testResults={testResults} className={styles.testBlock} />
+        <Separator isPresentational className={styles.separator} />
+        <Table
+          data={testCoverage}
+          columns={[
+            {
+              id: 'path',
+              header: 'File',
+              cell: ({ row }) => row?.path,
+            },
+            {
+              id: 'lines.pct',
+              header: 'Lines',
+              cell: ({ row }) => `${row?.lines.pct}%`,
+            },
+            {
+              id: 'functions.pct',
+              header: 'Functions',
+              cell: ({ row }) => `${row?.functions.pct}%`,
+            },
+            {
+              id: 'statements.pct',
+              header: 'Statements',
+              cell: ({ row }) => `${row?.statements.pct}%`,
+            },
+            {
+              id: 'branches.pct',
+              header: 'Branches',
+              cell: ({ row }) => `${row?.branches.pct}%`,
+            }
+          ]}
+        />
       </div>
     </div>
   );
