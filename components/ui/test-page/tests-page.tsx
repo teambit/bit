@@ -171,7 +171,22 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
         <TestTable testResults={testResults} className={styles.testBlock} />
         <Separator isPresentational className={styles.separator} />
         <Table
-          data={testCoverage}
+          // TODO: use shareable types
+          data={testCoverage as {
+            path: string
+            lines: {
+              pct: number
+            }
+            statements: {
+              pct: number
+            }
+            functions: {
+              pct: number
+            }
+            branches: {
+              pct: number
+            }
+          }[]}
           columns={[
             {
               id: 'path',

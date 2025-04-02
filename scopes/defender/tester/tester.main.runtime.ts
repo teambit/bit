@@ -169,7 +169,9 @@ export class TesterMain {
   ): Promise<{ testsResults?: TestsResult; loading: boolean, coverage?: unknown[] } | undefined> {
     const entry = component.get(TesterAspect.id);
     const isModified = !idHasVersion && (await component.isModified());
-    const data = this.builder.getDataByAspect(component, TesterAspect.id) as { tests: TestsResult };
+    const data = this.builder.getDataByAspect(component, TesterAspect.id) as { tests: TestsResult & {
+      coverage: unknown[]
+    } };
     console.log('\n\ngetTestsResults', data.tests);
     if ((entry || data) && !isModified) {
       return { testsResults: data?.tests || entry?.data.tests, loading: false, coverage: data?.tests.coverage };
