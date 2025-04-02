@@ -12,7 +12,7 @@ import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-
 import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/defender.ui.test-table';
-import { Table, type ColumnProps } from '@teambit/design.content.table';
+import { Table } from '@teambit/design.content.table';
 import styles from './tests-page.module.scss';
 
 const TESTS_SUBSCRIPTION_CHANGED = gql`
@@ -170,9 +170,7 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
         <Separator isPresentational className={styles.separator} />
         <TestTable testResults={testResults} className={styles.testBlock} />
         <Separator isPresentational className={styles.separator} />
-        <Table
-          // TODO: use shareable types
-          data={testCoverage as {
+        <Table<{
             path: string
             lines: {
               pct: number
@@ -186,7 +184,9 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
             branches: {
               pct: number
             }
-          }[]}
+          }>
+          // TODO: use shareable types
+          data={testCoverage}
           columns={[
             {
               id: 'path',
