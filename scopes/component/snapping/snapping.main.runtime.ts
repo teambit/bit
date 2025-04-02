@@ -20,7 +20,6 @@ import { ComponentsList } from '@teambit/legacy.component-list';
 import pMapSeries from 'p-map-series';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import pMap from 'p-map';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
@@ -38,7 +37,7 @@ import {
   Log,
   AddVersionOpts,
 } from '@teambit/objects';
-import { Component } from '@teambit/component';
+import { Component, ConsumerComponent } from '@teambit/component';
 import { DependencyResolverAspect, DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
@@ -793,6 +792,9 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     return notExported;
   }
 
+  /**
+   * used externally. don't make it private.
+   */
   async _addFlattenedDependenciesToComponents(components: ConsumerComponent[], rebuildDepsGraph = false) {
     this.logger.setStatusLine('importing missing dependencies...');
     this.logger.profile('snap._addFlattenedDependenciesToComponents');
@@ -976,6 +978,9 @@ another option, in case this dependency is not in main yet is to remove all refe
     }
   }
 
+  /**
+   * used externally. don't make it private.
+   */
   _updateComponentsByTagResult(components: ConsumerComponent[], tagResult: LegacyOnTagResult[]) {
     tagResult.forEach((result) => {
       const matchingComponent = components.find((c) => c.id.isEqual(result.id));
@@ -987,6 +992,9 @@ another option, in case this dependency is not in main yet is to remove all refe
     });
   }
 
+  /**
+   * used externally. don't make it private.
+   */
   _getPublishedPackages(components: ConsumerComponent[]): PackageIntegritiesByPublishedPackages {
     const publishedPackages: PackageIntegritiesByPublishedPackages = new Map();
     for (const comp of components) {
@@ -1053,6 +1061,9 @@ another option, in case this dependency is not in main yet is to remove all refe
     return { addedVersionStr, component, version };
   }
 
+  /**
+   * used externally. don't make it private.
+   */
   async _addCompFromScopeToObjects(
     source: ConsumerComponent,
     lane?: Lane,
@@ -1102,6 +1113,7 @@ another option, in case this dependency is not in main yet is to remove all refe
   }
 
   /**
+   * used externally. don't make it private.
    * needed to be updated after the build-pipeline was running
    */
   setBuildStatus(component: Component, buildStatus: BuildStatus) {
@@ -1189,6 +1201,8 @@ another option, in case this dependency is not in main yet is to remove all refe
   }
 
   /**
+   * used externally. don't make it private.
+   *
    * the compId.version can be a range (e.g. "^1.0.0"), in which case, it finds the component in the local scope and
    * resolves the latest version that falls under the range.
    * in case the version has no range, it returns the same compId.
@@ -1237,6 +1251,9 @@ another option, in case this dependency is not in main yet is to remove all refe
       throw new Error(`unable to update component ${component.id.toString()}, all files were deleted`);
   }
 
+  /**
+   * used externally. don't make it private.
+   */
   async updateDependenciesVersionsOfComponent(
     component: Component,
     dependencies: ComponentID[],

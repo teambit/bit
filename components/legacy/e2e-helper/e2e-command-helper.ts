@@ -239,9 +239,6 @@ export default class CommandHelper {
   artifacts(id = '', flags = '') {
     return this.runCmd(`bit artifacts ${id} ${flags}`);
   }
-  updateDependencies(data: Record<string, any>, flags = '', cwd = this.scopes.localPath) {
-    return this.runCmd(`bit update-dependencies '${JSON.stringify(data)}' ${flags}`, cwd);
-  }
   getConfig(configName: string, flags = '') {
     return this.runCmd(`bit config get ${configName} ${flags}`);
   }
