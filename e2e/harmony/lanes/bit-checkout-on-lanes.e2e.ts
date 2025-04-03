@@ -60,11 +60,14 @@ describe('bit checkout command when on a lane', function () {
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(1);
 
-      // merge the lane from a bare-scope
-      const bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
-      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
-      helper.command.mergeLaneFromScope(bareMerge.scopePath, `${helper.scopes.remote}/dev`, '--push');
+      // merge in another workspace
+      const workspaceBeforeMerge = helper.scopeHelper.cloneWorkspace();
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.mergeLane('dev', '-x');
+      helper.command.export();
 
+      helper.scopeHelper.getClonedWorkspace(workspaceBeforeMerge);
       helper.command.checkoutHead('-x');
     });
     it('should make them available on main even without running bit-import before', () => {
