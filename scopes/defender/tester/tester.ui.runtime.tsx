@@ -1,16 +1,46 @@
 import React, { ComponentType } from 'react';
 import { UIRuntime } from '@teambit/ui';
 import { SlotRegistry, Slot } from '@teambit/harmony';
-import { ComponentAspect, ComponentUI } from '@teambit/component';
+import { ComponentAspect, ComponentModel, ComponentUI } from '@teambit/component';
 import { CompareTests } from '@teambit/defender.ui.test-compare';
 import { ComponentCompareUI, ComponentCompareAspect } from '@teambit/component-compare';
 import { TestCompareSection } from '@teambit/defender.ui.test-compare-section';
+import { useQuery } from '@apollo/client';
+import { DocsAspect, DocsUI } from '@teambit/docs';
+import { gql } from '@apollo/client';
+import { PillLabel } from '@teambit/design.ui.pill-label';
+import { Tooltip } from '@teambit/design.ui.tooltip';
+import { Icon } from '@teambit/evangelist.elements.icon';
+import { Link } from '@teambit/base-react.navigation.link';
 import { TestsSection } from './tests.section';
-import { TesterAspect } from './tester.aspect';
+import TesterAspect from './tester.aspect';
+import styles from './coverage-label.module.scss'
+
+const GET_COMPONENT = gql`
+  query ($id: String!) {
+    getHost {
+      id # for GQL caching
+      getTests(id: $id) {
+        loading
+        testsResults {
+          coverage {
+            path
+            lines {
+              pct
+              covered
+              skipped
+              total
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 
 export type EmptyStateSlot = SlotRegistry<ComponentType>;
 export class TesterUI {
-  static dependencies = [ComponentAspect, ComponentCompareAspect];
+  static dependencies = [ComponentAspect, ComponentCompareAspect, DocsAspect];
 
   static runtime = UIRuntime;
 
@@ -36,7 +66,7 @@ export class TesterUI {
   static slots = [Slot.withType<ComponentType>()];
 
   static async provider(
-    [component, componentCompare]: [ComponentUI, ComponentCompareUI],
+    [component, componentCompare, docs]: [ComponentUI, ComponentCompareUI, DocsUI],
     config,
     [emptyStateSlot]: [EmptyStateSlot]
   ) {
@@ -47,6 +77,39 @@ export class TesterUI {
     component.registerNavigation(section.navigationLink, section.order);
     componentCompare.registerNavigation(testerCompareSection);
     componentCompare.registerRoutes([testerCompareSection.route]);
+    docs.registerTitleBadge({
+      component: function badge({ legacyComponentModel }: { legacyComponentModel: ComponentModel }) {
+        const { data } = useQuery(GET_COMPONENT, {
+          variables: { id: legacyComponentModel.id.toString() },
+        });
+        
+        if (!data || !data.getHost || !data.getHost.getTests) return null;
+
+        const total = data.getHost.getTests.testsResults.coverage.find((file) => file.path === 'total');
+
+        if (!total) return null;
+
+        return (
+          <Tooltip
+            className={styles.coverageTooltip}
+            placement="top"
+            content={
+              <div className={styles.coverageTooltipContent}>
+                {total.lines.covered}/{total.lines.total} lines covered
+              </div>
+            }
+          >
+            <Link href={'~tests'} className={styles.link}>
+              <PillLabel className={styles.label}>
+                <span>{total.lines.pct}%</span>
+                <Icon of='scan-component'  />
+              </PillLabel>
+            </Link>
+          </Tooltip>
+        )
+      },
+      weight: 30,
+    });
     return testerUi;
   }
 }

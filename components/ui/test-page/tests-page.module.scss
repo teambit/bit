@@ -18,3 +18,47 @@
 .testBlock {
   margin-bottom: 50px;
 }
+
+th {
+  font-weight: bold;
+}
+
+.container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.percentage {
+  font-weight: bolder;
+}
+
+.label {
+  color: #666;
+}
+
+.badge {
+  background-color: #f0f0f0;
+  color: #666;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 0.85em;
+}
+
+.coverage_column {
+  width: 50px;
+}
+
+.filePath {
+  font-family: monospace;
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  gap: 4px;
+}

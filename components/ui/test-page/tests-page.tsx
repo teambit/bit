@@ -12,8 +12,206 @@ import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-
 import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/defender.ui.test-table';
-import { Table } from '@teambit/design.content.table';
+import { Table, ColumnProps } from '@teambit/design.content.table';
+import { Link } from '@teambit/base-react.navigation.link';
 import styles from './tests-page.module.scss';
+
+type CoverageStats = {
+  pct: number
+  total: number
+  covered: number
+  skipped: number
+}
+
+type CoverageFile = {
+  path: string
+  lines: CoverageStats
+  statements: CoverageStats
+  functions: CoverageStats
+  branches: CoverageStats
+}
+
+/**
+   * Displays the total row with color-coded values
+   * 0-25 - red
+   * 26-50 - orange
+   * 51-75 - yellow
+   * 76-100 - green
+   */
+const getColor = (pct: number) => {
+  if (pct < 25) return 'oklch(44.4% 0.177 26.899)';
+  if (pct < 50) return 'oklch(64.6% 0.222 41.116)';
+  if (pct < 75) return 'oklch(85.2% 0.199 91.936)';
+  return 'oklch(52.7% 0.154 150.069)';
+}
+
+const StyledTotalRow: React.FC<{
+  row: CoverageFile | undefined | null,
+  type: keyof CoverageFile
+}> = ({ row, type }) => {
+  if (!row) return null;
+
+  const data = row[type] as CoverageStats;
+
+  if (!data) {
+    console.error(`Failed to render total row for ${type}`, row);
+    return null;
+  };
+
+  return (
+    <span style={{ color: getColor(data.pct) }}>
+      {data.covered}/{data.total}
+    </span>
+  )
+}
+
+const StyledPctRow: React.FC<{
+  row: CoverageFile | undefined | null,
+  type: keyof CoverageFile
+}> = ({ row, type }) => {
+  if (!row) return null;
+
+  const data = row[type] as CoverageStats;
+
+  if (!data) {
+    console.error(`Failed to render total row for ${type}`, row);
+    return null;
+  };
+
+  return (
+    <span style={{ color: getColor(data.pct) }}>
+      {data.pct}%
+    </span>
+  )
+}
+
+const columns: ColumnProps<CoverageFile>[] = [
+  {
+    id: 'path',
+    header: 'File',
+    cell: ({ row }) => (
+      <div className={styles.filePath}>
+        <Link href={`../~code/${row?.path}`}>
+          {row?.path}
+        </Link>
+        {/** small badge that shows the color code based on the coverage percentage */}
+        <span style={{
+            backgroundColor: getColor(row?.lines.pct || 0),
+            borderRadius: '50px',
+            width: '75px',
+            height: '6px',
+            display: 'inline-block',
+            marginLeft: '10px',
+          }}
+        />
+      </div>
+    )
+  },
+  {
+    id: 'lines',
+    header: 'Lines',
+    columns: [
+      {
+        id: 'pct',
+        header: '%',
+        cell: ({ row }) => <StyledPctRow row={row} type="lines" />,
+        value: (file) => file?.lines.pct ? file.lines.pct : 0,
+        className: {
+          td: styles.coverage_column,
+          th: styles.coverage_column,
+        }
+      },
+      {
+        id: 'total',
+        header: 'Total',
+        cell: ({ row }) => <StyledTotalRow row={row} type="lines" />,
+        value: (file) => file?.lines.covered ? file.lines.covered : 0,
+        className: {
+          td: styles.coverage_column,
+          th: styles.coverage_column,
+        }
+      },
+    ]
+  },
+  {
+    id: 'functions',
+    header: 'Functions',
+    columns: [
+      {
+        id: 'pct',
+        header: '%',
+        cell: ({ row }) => <StyledPctRow row={row} type="functions" />,
+        value: (file) => file?.functions.pct ? file.functions.pct : 0,
+        className: {
+          td: styles.coverage_column,
+          th: styles.coverage_column,
+        }
+      },
+      {
+        id: 'total',
+        header: 'Total',
+        cell: ({ row }) => <StyledTotalRow row={row} type="functions" />,
+        value: (file) => file?.functions.covered ? file.functions.covered : 0,
+        className: {
+          td: styles.coverage_column,
+          th: styles.coverage_column,
+        }
+      },
+    ]
+  },
+  {
+    id: 'statements',
+    header: 'Statements',
+    columns: [
+      {
+        id: 'pct',
+        header: '%',
+        cell: ({ row }) => <StyledPctRow row={row} type="statements" />,
+        value: (file) => file?.statements.pct ? file.statements.pct : 0,
+        className: {
+          td: styles.coverage_column,
+          th: styles.coverage_column,
+        }
+      }, 
+      {
+        id: 'total',
+        header: 'Total',
+        cell: ({ row }) => <StyledTotalRow row={row} type="statements" />,
+        value: (file) => file?.statements.covered ? file.statements.covered : 0,
+        className: {
+          td: styles.coverage_column,
+          th: styles.coverage_column,
+        }
+      },     
+    ]
+  },
+  {
+    id: 'branches',
+    header: 'Branches',
+    columns: [
+      {
+        id: 'pct',
+        header: '%',
+        cell: ({ row }) => <StyledPctRow row={row} type="branches" />,
+        value: (file) => file?.branches.pct ? file.branches.pct : 0,
+        className: {
+          td: styles.coverage_column,
+          th: styles.coverage_column,
+        }
+      },
+      {
+        id: 'total',
+        header: 'Total',
+        cell: ({ row }) => <StyledTotalRow row={row} type="branches" />,
+        value: (file) => file?.branches.covered ? file.branches.covered : 0,
+        className: {
+          td: styles.coverage_column,
+          th: styles.coverage_column,
+        }
+      },   
+    ]
+  },
+]
 
 const TESTS_SUBSCRIPTION_CHANGED = gql`
   subscription OnTestsChanged($id: String!) {
@@ -94,6 +292,43 @@ const GET_COMPONENT = gql`
   }
 `;
 
+type CoverageDisplayProps = {
+  coverageData: CoverageFile;
+};
+
+const CoverageDisplay: React.FC<CoverageDisplayProps> = ({ coverageData }) => {
+  const { lines, statements, functions, branches } = coverageData
+
+  const data = [
+    { label: "Statements", value: `${statements.covered}/${statements.total}`, pct: statements.pct },
+    { label: "Branches", value: `${branches.covered}/${branches.total}`, pct: branches.pct },
+    { label: "Functions", value: `${functions.covered}/${functions.total}`, pct: functions.pct },
+    { label: "Lines", value: `${lines.covered}/${lines.total}`, pct: lines.pct },
+  ]
+
+  return (
+    <div className={styles.container}>
+      {data.map((item) => (
+        <div key={item.label} className={styles.item}>
+          <span className={styles.percentage}
+            style={{
+              color: getColor(item.pct)
+            }}
+          >
+            {item.pct}%
+          </span>
+          <span className={styles.label}>
+            {item.label}
+          </span>
+          <span className={styles.badge}>
+            {item.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 type TestsPageProps = {
   emptyState: EmptyStateSlot;
 } & HTMLAttributes<HTMLDivElement>;
@@ -120,7 +355,7 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
 
   const testData = onTestsChanged.data?.testsChanged || data?.getHost?.getTests;
   const testResults = testData?.testsResults?.testFiles;
-  const testCoverage = testData?.testsResults?.coverage;
+  const testCoverage = testData?.testsResults?.coverage as CoverageFile[];
 
   // TODO: change loading EmptyBox
   if (testData?.loading) return <TestLoader />;
@@ -163,62 +398,28 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
     );
   }
 
+  const totalCoverage = testCoverage?.find((file) => file.path === 'total') || null;
+
   return (
     <div className={classNames(styles.testsPage, className)}>
       <div>
         <H1 className={styles.title}>Tests</H1>
         {testCoverage && testCoverage.length > 0 && (
           <>
-            <H2 className={styles.title}>Coverage</H2>
+            <H2 className={styles.title}>Coverage Report</H2>
+            {totalCoverage && <CoverageDisplay coverageData={totalCoverage} />}
             <Separator isPresentational className={styles.separator} />
-            <Table<{
-                path: string
-                lines: {
-                  pct: number
-                }
-                statements: {
-                  pct: number
-                }
-                functions: {
-                  pct: number
-                }
-                branches: {
-                  pct: number
-                }
-              }>
-              // TODO: use shareable types
-              data={testCoverage}
-              columns={[
-                {
-                  id: 'path',
-                  header: 'File',
-                  cell: ({ row }) => row?.path,
-                },
-                {
-                  id: 'lines.pct',
-                  header: 'Lines',
-                  cell: ({ row }) => `${row?.lines.pct}%`,
-                },
-                {
-                  id: 'functions.pct',
-                  header: 'Functions',
-                  cell: ({ row }) => `${row?.functions.pct}%`,
-                },
-                {
-                  id: 'statements.pct',
-                  header: 'Statements',
-                  cell: ({ row }) => `${row?.statements.pct}%`,
-                },
-                {
-                  id: 'branches.pct',
-                  header: 'Branches',
-                  cell: ({ row }) => `${row?.branches.pct}%`,
-                }
-              ]}
+            <Table<CoverageFile>
+              data={testCoverage.filter((file) => file.path !== 'total')}
+              columns={columns}
+              sorting={{
+                enable: true,
+              }}
             />
           </>
         )}
         <Separator isPresentational className={styles.separator} />
+        <H2 className={styles.title}>Tests Results</H2>
         <TestTable testResults={testResults} className={styles.testBlock} />
       </div>
     </div>
