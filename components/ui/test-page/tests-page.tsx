@@ -1,7 +1,7 @@
 import { useQuery, useSubscription, gql } from '@apollo/client';
 import { ComponentContext } from '@teambit/component';
 import { useQuery as useRouterQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
-import { H1 } from '@teambit/documenter.ui.heading';
+import { H1, H2 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/design.ui.separator';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
@@ -167,54 +167,59 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
     <div className={classNames(styles.testsPage, className)}>
       <div>
         <H1 className={styles.title}>Tests</H1>
+        {testCoverage && testCoverage.length > 0 && (
+          <>
+            <H2 className={styles.title}>Coverage</H2>
+            <Separator isPresentational className={styles.separator} />
+            <Table<{
+                path: string
+                lines: {
+                  pct: number
+                }
+                statements: {
+                  pct: number
+                }
+                functions: {
+                  pct: number
+                }
+                branches: {
+                  pct: number
+                }
+              }>
+              // TODO: use shareable types
+              data={testCoverage}
+              columns={[
+                {
+                  id: 'path',
+                  header: 'File',
+                  cell: ({ row }) => row?.path,
+                },
+                {
+                  id: 'lines.pct',
+                  header: 'Lines',
+                  cell: ({ row }) => `${row?.lines.pct}%`,
+                },
+                {
+                  id: 'functions.pct',
+                  header: 'Functions',
+                  cell: ({ row }) => `${row?.functions.pct}%`,
+                },
+                {
+                  id: 'statements.pct',
+                  header: 'Statements',
+                  cell: ({ row }) => `${row?.statements.pct}%`,
+                },
+                {
+                  id: 'branches.pct',
+                  header: 'Branches',
+                  cell: ({ row }) => `${row?.branches.pct}%`,
+                }
+              ]}
+            />
+          </>
+        )}
         <Separator isPresentational className={styles.separator} />
         <TestTable testResults={testResults} className={styles.testBlock} />
-        <Separator isPresentational className={styles.separator} />
-        <Table<{
-            path: string
-            lines: {
-              pct: number
-            }
-            statements: {
-              pct: number
-            }
-            functions: {
-              pct: number
-            }
-            branches: {
-              pct: number
-            }
-          }>
-          // TODO: use shareable types
-          data={testCoverage}
-          columns={[
-            {
-              id: 'path',
-              header: 'File',
-              cell: ({ row }) => row?.path,
-            },
-            {
-              id: 'lines.pct',
-              header: 'Lines',
-              cell: ({ row }) => `${row?.lines.pct}%`,
-            },
-            {
-              id: 'functions.pct',
-              header: 'Functions',
-              cell: ({ row }) => `${row?.functions.pct}%`,
-            },
-            {
-              id: 'statements.pct',
-              header: 'Statements',
-              cell: ({ row }) => `${row?.statements.pct}%`,
-            },
-            {
-              id: 'branches.pct',
-              header: 'Branches',
-              cell: ({ row }) => `${row?.branches.pct}%`,
-            }
-          ]}
-        />
       </div>
     </div>
   );
