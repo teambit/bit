@@ -274,7 +274,7 @@
         "@teambit/ui-foundation.ui.hooks.use-user-agent": "^0.0.199",
         "@teambit/ui-foundation.ui.is-browser": "^0.0.500",
         "@teambit/ui-foundation.ui.keycap": "^0.0.500",
-        "@teambit/ui-foundation.ui.main-dropdown": "^0.0.502",
+        "@teambit/ui-foundation.ui.main-dropdown": "^0.0.503",
         "@teambit/ui-foundation.ui.menu": "^0.0.502",
         "@teambit/ui-foundation.ui.menu-widget-icon": "^0.0.502",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "^6.1.2",
