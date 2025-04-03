@@ -1,5 +1,6 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import path from 'path';
+import mapSeries from 'p-map-series';
 import { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
 import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
@@ -50,6 +51,13 @@ export class TrackerMain {
     const addedComponent = result.addedComponents[0];
     const files = addedComponent?.files.map((f) => f.relativePath) || [];
     return { files, warnings: result.warnings, componentId: result.addedComponents[0].id };
+  }
+
+  /**
+   * @todo: optimize it.
+   */
+  async trackMany(manyTrackData: TrackData[]): Promise<TrackResult[]> {
+    return mapSeries(manyTrackData, (trackData) => this.track(trackData));
   }
 
   async addForCLI(addProps: AddProps): Promise<AddActionResults> {
