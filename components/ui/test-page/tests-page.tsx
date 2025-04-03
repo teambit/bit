@@ -12,7 +12,7 @@ import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-
 import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/defender.ui.test-table';
-import { Table, ColumnProps } from '@teambit/design.content.table';
+import { Table, type ColumnProps } from '@teambit/design.content.table';
 import { Link } from '@teambit/base-react.navigation.link';
 import styles from './tests-page.module.scss';
 
@@ -54,7 +54,6 @@ const StyledTotalRow: React.FC<{
   const data = row[type] as CoverageStats;
 
   if (!data) {
-    console.error(`Failed to render total row for ${type}`, row);
     return null;
   };
 
@@ -74,7 +73,6 @@ const StyledPctRow: React.FC<{
   const data = row[type] as CoverageStats;
 
   if (!data) {
-    console.error(`Failed to render total row for ${type}`, row);
     return null;
   };
 

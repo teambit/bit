@@ -5,15 +5,14 @@ import { ComponentAspect, ComponentModel, ComponentUI } from '@teambit/component
 import { CompareTests } from '@teambit/defender.ui.test-compare';
 import { ComponentCompareUI, ComponentCompareAspect } from '@teambit/component-compare';
 import { TestCompareSection } from '@teambit/defender.ui.test-compare-section';
-import { useQuery } from '@apollo/client';
 import { DocsAspect, DocsUI } from '@teambit/docs';
-import { gql } from '@apollo/client';
+import { gql, useQuery } from '@apollo/client';
 import { PillLabel } from '@teambit/design.ui.pill-label';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { Link } from '@teambit/base-react.navigation.link';
 import { TestsSection } from './tests.section';
-import TesterAspect from './tester.aspect';
+import { TesterAspect } from './tester.aspect';
 import styles from './coverage-label.module.scss'
 
 const GET_COMPONENT = gql`
