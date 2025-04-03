@@ -274,7 +274,7 @@
         "@teambit/ui-foundation.ui.hooks.use-user-agent": "^0.0.199",
         "@teambit/ui-foundation.ui.is-browser": "^0.0.500",
         "@teambit/ui-foundation.ui.keycap": "^0.0.500",
-        "@teambit/ui-foundation.ui.main-dropdown": "^0.0.502",
+        "@teambit/ui-foundation.ui.main-dropdown": "^0.0.503",
         "@teambit/ui-foundation.ui.menu": "^0.0.502",
         "@teambit/ui-foundation.ui.menu-widget-icon": "^0.0.502",
         "@teambit/ui-foundation.ui.navigation.react-router-adapter": "^6.1.2",
@@ -610,6 +610,7 @@
     "packageManager": "teambit.dependencies/pnpm",
     "rootComponents": true,
     "overrides": {
+      "@teambit/harmony": "0.4.7",
       "@types/fs-capacitor": "2.0.0",
       // @types/node is used as a peer dependency, so to reduce duplication,
       // we force the version installed in the root.
