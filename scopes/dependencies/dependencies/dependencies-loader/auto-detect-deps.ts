@@ -138,8 +138,7 @@ export class AutoDetectDeps {
     cacheProjectAst: Record<string, any> | undefined
   ): Promise<{ dependenciesData: DependenciesData; debugDependenciesData: DebugDependencies }> {
     const componentDir = path.join(this.consumerPath, this.componentMap.rootDir);
-    const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
-    const allFiles = [...nonTestsFiles, ...testsFiles];
+    const allFiles = this.componentMap.getAllFilesPaths();
     const envDetectors = await this.getEnvDetectors();
     // find the dependencies (internal files and packages) through automatic dependency resolution
     const dependenciesTree = await getDependencyTree({

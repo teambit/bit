@@ -16,7 +16,7 @@ export default function determineMainFile(
 ): PathLinux {
   const mainFile = addedComponent.mainFile;
   const componentIdStr = addedComponent.componentId.toString();
-  const files = addedComponent.files.filter((file) => !file.test);
+  const files = addedComponent.files;
   const rootDir = existingComponentMap && existingComponentMap.rootDir;
   const strategies: Function[] = [
     getExistingIfNotChanged,

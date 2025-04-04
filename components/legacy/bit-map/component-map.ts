@@ -32,7 +32,6 @@ export type Config = { [aspectId: string]: Record<string, any> | '-' };
 export type ComponentMapFile = {
   name: string;
   relativePath: PathLinux;
-  test: boolean;
 };
 
 export type NextVersion = {
@@ -49,7 +48,6 @@ export type ComponentMapData = {
   defaultScope?: string;
   mainFile: PathLinux;
   rootDir: PathLinux;
-  trackDir?: PathLinux;
   wrapDir?: PathLinux;
   exported?: boolean;
   onLanesOnly?: boolean;
@@ -67,11 +65,6 @@ export class ComponentMap {
   defaultScope?: string;
   mainFile: PathLinux;
   rootDir: PathLinux;
-  // reason why trackDir and not re-use rootDir is because using rootDir requires all paths to be
-  // relative to rootDir for consistency, then, when saving into the model changing them back to
-  // be relative to consumer-root. (we can't save in the model relative to rootDir, otherwise the
-  // dependencies paths won't work).
-  trackDir: PathLinux | undefined; // relevant for AUTHORED only when a component was added as a directory, used for tracking changes in that dir
   wrapDir: PathLinux | undefined; // a wrapper directory needed when a user adds a package.json file to the component root so then it won't collide with Bit generated one
   // wether the compiler / tester are detached from the workspace global configuration
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -100,7 +93,6 @@ export class ComponentMap {
     defaultScope,
     mainFile,
     rootDir,
-    trackDir,
     wrapDir,
     onLanesOnly,
     localOnly,
@@ -113,7 +105,6 @@ export class ComponentMap {
     this.defaultScope = defaultScope;
     this.mainFile = mainFile;
     this.rootDir = rootDir;
-    this.trackDir = trackDir;
     this.wrapDir = wrapDir;
     this.onLanesOnly = onLanesOnly;
     this.localOnly = localOnly;
@@ -135,7 +126,6 @@ export class ComponentMap {
       defaultScope: this.defaultScope,
       mainFile: this.mainFile,
       rootDir: this.rootDir,
-      trackDir: this.trackDir,
       wrapDir: this.wrapDir,
       exported: this.exported,
       onLanesOnly: this.onLanesOnly || null, // if false, change to null so it won't be written
@@ -202,7 +192,6 @@ export class ComponentMap {
       file.relativePath = newPath;
     });
     this.rootDir = newRootDir;
-    this.trackDir = undefined; // if there is trackDir, it's not needed anymore.
   }
 
   addRootDirToDistributedFiles(rootDir: PathOsBased) {
@@ -254,21 +243,6 @@ export class ComponentMap {
 
   getAllFilesPaths(): PathLinux[] {
     return this.files.map((file) => file.relativePath);
-  }
-
-  getFilesGroupedByBeingTests(): { allFiles: string[]; nonTestsFiles: string[]; testsFiles: string[] } {
-    const allFiles = [];
-    const nonTestsFiles = [];
-    const testsFiles = [];
-    this.files.forEach((file: ComponentMapFile) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      allFiles.push(file.relativePath);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (file.test) testsFiles.push(file.relativePath);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      else nonTestsFiles.push(file.relativePath);
-    });
-    return { allFiles, nonTestsFiles, testsFiles };
   }
 
   /**

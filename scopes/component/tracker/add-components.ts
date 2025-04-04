@@ -393,7 +393,6 @@ you can add the directory these files are located at and it'll change the root d
           }
           files.push({
             relativePath: pathNormalizeToLinux(generatedFile),
-            test: false,
             name: path.basename(generatedFile),
           });
           mainFile = generatedFile;
@@ -415,7 +414,6 @@ you can add the directory these files are located at and it'll change the root d
       }
       files.push({
         relativePath: pathNormalizeToLinux(mainFileRelativeToConsumer),
-        test: false,
         name: path.basename(mainFileRelativeToConsumer),
       });
       return mainFileRelativeToConsumer;
@@ -514,7 +512,6 @@ you can add the directory these files are located at and it'll change the root d
     const resolvedComponentPathsWithoutGitIgnore = (
       await Promise.all(this.componentPaths.map((componentPath) => glob(componentPath)))
     ).flat();
-    this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
 
     const resolvedComponentPathsWithGitIgnore = this.gitIgnore.filter(resolvedComponentPathsWithoutGitIgnore);
     // Run diff on both arrays to see what was filtered out because of the gitignore file
