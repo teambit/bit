@@ -164,6 +164,10 @@ export class DependencyInstaller {
         JSON.stringify(options.linkedDependencies)
       ) as typeof options.linkedDependencies;
       if (linkedDependencies[finalRootDir]) {
+        if (options.forceTeambitHarmonyLink && manifests[finalRootDir].dependencies?.['@teambit/harmony']) {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          delete manifests[finalRootDir].dependencies!['@teambit/harmony'];
+        }
         const directDeps = new Set<string>();
         Object.values(manifests).forEach((manifest) => {
           for (const depName of Object.keys({ ...manifest.dependencies, ...manifest.devDependencies })) {
@@ -174,10 +178,6 @@ export class DependencyInstaller {
           if (manifest.name && directDeps.has(manifest.name)) {
             delete linkedDependencies[finalRootDir][manifest.name];
           }
-        }
-        if (options.forceTeambitHarmonyLink && manifests[finalRootDir].dependencies?.['@teambit/harmony']) {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          delete manifests[finalRootDir].dependencies!['@teambit/harmony'];
         }
       }
       Object.entries(linkedDependencies).forEach(([dir, linkedDeps]) => {

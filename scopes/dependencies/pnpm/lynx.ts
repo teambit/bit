@@ -403,11 +403,21 @@ function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string)
  * It is linked from bvm.
  */
 function removeLegacyFromDeps(pkg: PackageManifest): PackageManifest {
-  if (pkg.dependencies?.['@teambit/legacy'] && !pkg.dependencies['@teambit/legacy'].startsWith('link:')) {
-    delete pkg.dependencies['@teambit/legacy'];
+  if (pkg.dependencies != null) {
+    if (pkg.dependencies['@teambit/legacy'] && !pkg.dependencies['@teambit/legacy'].startsWith('link:')) {
+      delete pkg.dependencies['@teambit/legacy'];
+    }
+    if (pkg.dependencies['@teambit/harmony'] && !pkg.dependencies['@teambit/harmony'].startsWith('link:')) {
+      delete pkg.dependencies['@teambit/harmony'];
+    }
   }
-  if (pkg.peerDependencies?.['@teambit/legacy']) {
-    delete pkg.peerDependencies['@teambit/legacy'];
+  if (pkg.peerDependencies != null) {
+    if (pkg.peerDependencies['@teambit/legacy']) {
+      delete pkg.peerDependencies['@teambit/legacy'];
+    }
+    if (pkg.peerDependencies['@teambit/harmony']) {
+      delete pkg.peerDependencies['@teambit/harmony'];
+    }
   }
   return pkg;
 }
