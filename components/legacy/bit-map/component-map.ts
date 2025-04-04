@@ -32,6 +32,10 @@ export type Config = { [aspectId: string]: Record<string, any> | '-' };
 export type ComponentMapFile = {
   name: string;
   relativePath: PathLinux;
+  /**
+   * @deprecated should be safe to remove around August 2025
+   */
+  test?: boolean;
 };
 
 export type NextVersion = {
