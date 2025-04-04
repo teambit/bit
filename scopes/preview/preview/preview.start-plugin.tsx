@@ -1,5 +1,5 @@
 import { flatten } from 'lodash';
-import { BundlerMain, ComponentServer } from '@teambit/bundler';
+import { BundlerAspect, BundlerMain, ComponentServer, ComponentsServerStartedEvent, NewDevServerCreatedEvent } from '@teambit/bundler';
 import { PubsubMain } from '@teambit/pubsub';
 import { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
 import { Workspace } from '@teambit/workspace';
@@ -21,22 +21,50 @@ type ServerState = {
 type ServerStateMap = Record<string, ServerState>;
 
 export class PreviewStartPlugin implements StartPlugin {
+  previewServers: ComponentServer[] = [];
+  serversState: ServerStateMap = {};
+  serversMap: Record<string, ComponentServer> = {};
+
   constructor(
     private workspace: Workspace,
     private bundler: BundlerMain,
     private ui: UiMain,
     private pubsub: PubsubMain,
     private logger: Logger,
-    private watcher: WatcherMain
-  ) {}
+    private watcher: WatcherMain,
+  ) {
+    this.pubsub.sub(BundlerAspect.id, async (event) => {
+      if (event instanceof NewDevServerCreatedEvent && event.type === NewDevServerCreatedEvent.TYPE) {
+        const envId = event.context.envRuntime.id;
+        const server = event.componentsServer;
+        if (this.serversMap[envId]) {
+          if (event.restartIfRunning) await this.serversMap[envId].restart();
+          return;
+        }
 
-  previewServers: ComponentServer[] = [];
-  serversState: ServerStateMap = {};
-  serversMap: Record<string, ComponentServer> = {};
+        this.logger.debug(`Registering server for env: ${envId}`);
+        this.serversMap[envId] = server;
+        this.previewServers.push(server);
+        this.listenToDevServers();
+        // Start the server
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        server.listen();
+      }
+      if (event instanceof ComponentsServerStartedEvent) {
+        const startedEnvId = event.context.envRuntime.id;
+        const server = this.serversMap[startedEnvId];
+        if (server) {
+          const uiServer = this.ui.getUIServer();
+          if (uiServer) {
+            uiServer.addComponentServerProxy(server);
+          }
+        }
+      }
+    });
+  }
 
   async initiate(options: StartPluginOptions) {
     this.listenToDevServers(options.showInternalUrls);
-
     const components = await this.workspace.getComponentsByUserInput(!options.pattern, options.pattern);
     // TODO: logic for creating preview servers must be refactored to this aspect from the DevServer aspect.
     const previewServers = await this.bundler.devServer(components);
