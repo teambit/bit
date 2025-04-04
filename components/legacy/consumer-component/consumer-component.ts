@@ -593,7 +593,7 @@ async function getLoadedFiles(
   await componentMap.trackDirectoryChangesHarmony(consumer.getPath());
   const sourceFiles = componentMap.files.map((file) => {
     const filePath = path.join(bitDir, file.relativePath);
-    const sourceFile = SourceFile.load(filePath, bitDir, consumer.getPath());
+    const sourceFile = SourceFile.load(filePath, bitDir, consumer.getPath(), { test: file.test || false });
     return sourceFile;
   });
   const filePaths = componentMap.getAllFilesPaths();
