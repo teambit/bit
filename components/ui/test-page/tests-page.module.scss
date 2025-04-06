@@ -10,6 +10,10 @@
     margin-bottom: 24px;
     font-size: var(--bit-h-xs, 26px);
   }
+  .subtitle {
+    margin-bottom: 24px;
+    font-size: var(--bit-h-xxs, 18px);
+  }
   .separator {
     margin-bottom: 41px;
   }
@@ -52,7 +56,7 @@ th {
 }
 
 .coverage_column {
-  width: 50px;
+  width: 75px;
 }
 
 .filePath {
@@ -61,4 +65,21 @@ th {
   align-items: center;
   justify-items: center;
   gap: 4px;
+}
+
+.progressBar {
+  width: 75px;
+  border-radius: 50px;
+  height: 6px;
+  display: inline-block;
+  margin-left: 10px;
+  background-color: lightgray;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressBarFill {
+  height: 100%;
+  border-radius: 50px;
+  width: 0;
 }

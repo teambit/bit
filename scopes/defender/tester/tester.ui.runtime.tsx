@@ -84,7 +84,7 @@ export class TesterUI {
         
         if (!data || !data.getHost || !data.getHost.getTests) return null;
 
-        const total = data.getHost.getTests.testsResults.coverage.find((file) => file.path === 'total');
+        const total = data.getHost.getTests.testsResults?.coverage.find((file) => file.path === 'total');
 
         if (!total) return null;
 
@@ -98,7 +98,7 @@ export class TesterUI {
               </div>
             }
           >
-            <Link href={'~tests'} className={styles.link}>
+            <Link href={`~tests${document.location.search}`} className={styles.link}>
               <PillLabel className={styles.label}>
                 <span>{total.lines.pct}%</span>
                 <Icon of='scan-component'  />

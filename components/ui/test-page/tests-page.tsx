@@ -89,21 +89,29 @@ const columns: ColumnProps<CoverageFile>[] = [
     header: 'File',
     cell: ({ row }) => (
       <div className={styles.filePath}>
-        <Link href={`../~code/${row?.path}`}>
+        <Link href={`../~code/${row?.path}${document.location.search}`}>
           {row?.path}
         </Link>
-        {/** small badge that shows the color code based on the coverage percentage */}
-        <span style={{
+      </div>
+    )
+  },
+  {
+    id: 'progress',
+    header: '',
+    cell: ({ row }) => (
+      <div className={styles.progressBar}>
+        <div className={styles.progressBarFill} style={{
+            width: `${row?.lines.pct}%`,
             backgroundColor: getColor(row?.lines.pct || 0),
-            borderRadius: '50px',
-            width: '75px',
-            height: '6px',
-            display: 'inline-block',
-            marginLeft: '10px',
           }}
         />
       </div>
-    )
+    ),
+    value: (file) => file?.lines.pct ? file.lines.pct : 0,
+    className: {
+      td: styles.coverage_column,
+      th: styles.coverage_column,
+    }
   },
   {
     id: 'lines',
@@ -402,11 +410,14 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
     <div className={classNames(styles.testsPage, className)}>
       <div>
         <H1 className={styles.title}>Tests</H1>
+        <Separator isPresentational className={styles.separator} />
+        <H2 className={styles.subtitle}>Tests Results</H2>
+        <TestTable testResults={testResults} className={styles.testBlock} />
         {testCoverage && testCoverage.length > 0 && (
           <>
-            <H2 className={styles.title}>Coverage Report</H2>
-            {totalCoverage && <CoverageDisplay coverageData={totalCoverage} />}
             <Separator isPresentational className={styles.separator} />
+            <H2 className={styles.subtitle}>Coverage Report</H2>
+            {totalCoverage && <CoverageDisplay coverageData={totalCoverage} />}
             <Table<CoverageFile>
               data={testCoverage.filter((file) => file.path !== 'total')}
               columns={columns}
@@ -416,9 +427,6 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
             />
           </>
         )}
-        <Separator isPresentational className={styles.separator} />
-        <H2 className={styles.title}>Tests Results</H2>
-        <TestTable testResults={testResults} className={styles.testBlock} />
       </div>
     </div>
   );
