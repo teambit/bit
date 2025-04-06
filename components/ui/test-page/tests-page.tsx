@@ -39,10 +39,10 @@ type CoverageFile = {
    * 76-100 - green
    */
 const getColor = (pct: number) => {
-  if (pct < 25) return '#e62e5c';
-  if (pct < 50) return 'var(--bit-accent-hunger-color, #BB8C25)';
+  if (pct < 25) return 'var(--bit-accent-impulsive-color)';
+  if (pct < 50) return 'var(--bit-accent-hunger-color)';
   if (pct < 75) return 'oklch(85.2% 0.199 91.936)';
-  return '#37b26c';
+  return 'var(--bit-accent-success-color)';
 }
 
 const StyledTotalRow: React.FC<{
