@@ -222,7 +222,16 @@ export async function install(
     readPackage.push(readPackageHook as ReadPackageHook);
   }
   readPackage.push(removeLegacyFromDeps as ReadPackageHook);
-  if (!options.forcedHarmonyVersion) {
+  const overrides = {
+    ...options.overrides,
+  };
+  if (options.forcedHarmonyVersion) {
+    // Harmony needs to be a singleton, so if a specific version was requested for the workspace,
+    // we force that version accross the whole dependency graph.
+    overrides['@teambit/harmony'] = options.forcedHarmonyVersion;
+  } else {
+    // If the workspace did not specify a harmony version in a root policy,
+    // then we remove harmony from any dependencies, so that the one linked from bvm is used.
     readPackage.push(removeHarmonyFromDeps as ReadPackageHook);
   }
   if (!manifestsByPaths[rootDir].dependenciesMeta) {
@@ -257,12 +266,6 @@ export async function install(
     for (const pkgName of externalDependencies) {
       hoistPattern.push(`!${pkgName}`);
     }
-  }
-  const overrides = {
-    ...options.overrides,
-  };
-  if (options.forcedHarmonyVersion) {
-    overrides['@teambit/harmony'] = options.forcedHarmonyVersion;
   }
   const opts: InstallOptions = {
     allProjects,

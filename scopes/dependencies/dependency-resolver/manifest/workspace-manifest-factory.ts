@@ -107,7 +107,6 @@ export class WorkspaceManifestFactory {
     const coreAspectIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectPkgNames = new Set(coreAspectIds.map((coreAspectId) => getCoreAspectPackageName(coreAspectId)));
     coreAspectPkgNames.add('@teambit/legacy');
-    coreAspectPkgNames.add('@teambit/harmony');
     return rootPolicy.filter((dep) => !coreAspectPkgNames.has(dep.dependencyId));
   }
 
