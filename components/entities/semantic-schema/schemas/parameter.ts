@@ -22,7 +22,6 @@ export class ParameterSchema<T extends SchemaNode = SchemaNode> extends SchemaNo
     super();
     this.type = type;
     this.objectBindingNodes = objectBindingNodes;
-    this.isSpread = isSpread;
   }
 
   toString() {
