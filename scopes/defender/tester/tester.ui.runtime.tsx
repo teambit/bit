@@ -23,12 +23,12 @@ const GET_COMPONENT = gql`
         loading
         testsResults {
           coverage {
-            path
-            lines {
-              pct
-              covered
-              skipped
-              total
+            total {
+              lines {
+                covered
+                total
+                pct
+              }
             }
           }
         }
@@ -84,7 +84,13 @@ export class TesterUI {
         
         if (!data || !data.getHost || !data.getHost.getTests) return null;
 
-        const total = data.getHost.getTests.testsResults?.coverage.find((file) => file.path === 'total');
+        const total = data.getHost.getTests.testsResults?.coverage?.total as {
+          lines: {
+            covered: number;
+            total: number;
+            pct: number;
+          };
+        };
 
         if (!total) return null;
 
