@@ -31,7 +31,7 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
         testFiles: [TestFiles]
         success: Boolean
         start: Int
-        coverage: [FileCoverage!]
+        coverage: CoverageResult
       }
 
       type TestFiles {
@@ -40,7 +40,7 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
         pass: Int
         failed: Int
         pending: Int
-        duration: String
+        duration: Int
         slow: Boolean
         errorStr: String
       }
@@ -53,6 +53,11 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
         error: String
       }
 
+      type CoverageResult {
+        files: [FileCoverage!]
+        total: CoverageData!
+      }
+
       type CoverageDetails {
         total: Int!
         covered: Int!
@@ -60,12 +65,16 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
         pct: Float!
       }
 
-      type FileCoverage {
+      type CoverageData {
         lines: CoverageDetails!
         functions: CoverageDetails!
         statements: CoverageDetails!
         branches: CoverageDetails!
+      }
+
+      type FileCoverage {
         path: String!
+        data: CoverageData!
       }
     `,
     resolvers: {
@@ -86,9 +95,20 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
           const idHasVersion = ComponentID.fromString(id).hasVersion();
           const component = await host.get(componentId);
           if (!component) return null;
-          const testsResults = await tester.getTestsResults(component, idHasVersion);
-          if (!testsResults) return null;
-          return testsResults;
+          const testsData = await tester.getTestsResults(component, idHasVersion);
+          if (!testsData) return null;
+          return {
+            ...testsData,
+            testsResults: {
+              ...testsData.testsResults,
+              testFiles: testsData.testsResults?.testFiles.map((testFile) => {
+                return {
+                  ...testFile,
+                  duration: testFile.duration?.toFixed(0),
+                }
+              }),
+            }
+          }
         },
       },
     },
