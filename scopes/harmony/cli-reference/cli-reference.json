@@ -1503,7 +1503,7 @@
         "output as json format"
       ]
     ],
-    "description": "Add any subset of files to be tracked as a component(s).",
+    "description": "track one or more directories as new components",
     "extendedDescription": "Learn the recommended workflow for tracking directories as components, in the link below.",
     "group": "development",
     "private": false
