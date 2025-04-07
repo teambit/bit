@@ -191,6 +191,7 @@ export async function install(
     hoistInjectedDependencies?: boolean;
     dryRun?: boolean;
     dedupeInjectedDeps?: boolean;
+    forcedHarmonyVersion?: string;
   } & Pick<
     InstallOptions,
     | 'autoInstallPeers'
@@ -221,6 +222,9 @@ export async function install(
     readPackage.push(readPackageHook as ReadPackageHook);
   }
   readPackage.push(removeLegacyFromDeps as ReadPackageHook);
+  if (!options.forcedHarmonyVersion) {
+    readPackage.push(removeHarmonyFromDeps as ReadPackageHook);
+  }
   if (!manifestsByPaths[rootDir].dependenciesMeta) {
     manifestsByPaths = {
       ...manifestsByPaths,
@@ -253,6 +257,12 @@ export async function install(
     for (const pkgName of externalDependencies) {
       hoistPattern.push(`!${pkgName}`);
     }
+  }
+  const overrides = {
+    ...options.overrides,
+  };
+  if (options.forcedHarmonyVersion) {
+    overrides['@teambit/harmony'] = options.forcedHarmonyVersion;
   }
   const opts: InstallOptions = {
     allProjects,
@@ -291,6 +301,7 @@ export async function install(
     disableRelinkLocalDirDeps: true,
     hoistPattern,
     virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
+    overrides,
   };
 
   let dependenciesChanged = false;
@@ -407,14 +418,22 @@ function removeLegacyFromDeps(pkg: PackageManifest): PackageManifest {
     if (pkg.dependencies['@teambit/legacy'] && !pkg.dependencies['@teambit/legacy'].startsWith('link:')) {
       delete pkg.dependencies['@teambit/legacy'];
     }
-    if (pkg.dependencies['@teambit/harmony'] && !pkg.dependencies['@teambit/harmony'].startsWith('link:')) {
-      delete pkg.dependencies['@teambit/harmony'];
-    }
   }
   if (pkg.peerDependencies != null) {
     if (pkg.peerDependencies['@teambit/legacy']) {
       delete pkg.peerDependencies['@teambit/legacy'];
     }
+  }
+  return pkg;
+}
+
+function removeHarmonyFromDeps(pkg: PackageManifest): PackageManifest {
+  if (pkg.dependencies != null) {
+    if (pkg.dependencies['@teambit/harmony'] && !pkg.dependencies['@teambit/harmony'].startsWith('link:')) {
+      delete pkg.dependencies['@teambit/harmony'];
+    }
+  }
+  if (pkg.peerDependencies != null) {
     if (pkg.peerDependencies['@teambit/harmony']) {
       delete pkg.peerDependencies['@teambit/harmony'];
     }

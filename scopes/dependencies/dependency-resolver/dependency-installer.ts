@@ -42,7 +42,7 @@ export type InstallOptions = {
   packageManagerConfigRootDir?: string;
   resolveVersionsFromDependenciesOnly?: boolean;
   linkedDependencies?: Record<string, Record<string, string>>;
-  forceTeambitHarmonyLink?: boolean;
+  forcedHarmonyVersion?: string;
   excludeExtensionsDependencies?: boolean;
   dedupeInjectedDeps?: boolean;
   dependenciesGraph?: DependenciesGraph;
@@ -164,7 +164,7 @@ export class DependencyInstaller {
         JSON.stringify(options.linkedDependencies)
       ) as typeof options.linkedDependencies;
       if (linkedDependencies[finalRootDir]) {
-        if (options.forceTeambitHarmonyLink && manifests[finalRootDir].dependencies?.['@teambit/harmony']) {
+        if (options.forcedHarmonyVersion == null && manifests[finalRootDir].dependencies?.['@teambit/harmony']) {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           delete manifests[finalRootDir].dependencies!['@teambit/harmony'];
         }
@@ -210,6 +210,7 @@ export class DependencyInstaller {
       preferOffline: this.preferOffline,
       dedupeInjectedDeps: options.dedupeInjectedDeps,
       dependenciesGraph: options.dependenciesGraph,
+      forcedHarmonyVersion: options.forcedHarmonyVersion,
       ...packageManagerOptions,
     };
     if (options.installTeambitBit) {
