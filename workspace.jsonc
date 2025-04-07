@@ -215,6 +215,7 @@
         "@teambit/git.modules.git-ignore": "^1.0.2",
         "@teambit/gitconfig": "2.0.10",
         "@teambit/graph.cleargraph": "0.0.11",
+        "@teambit/harmony": "0.4.7",
         "@teambit/html.modules.inject-html-element": "0.0.5",
         "@teambit/lane-id": "~0.0.312",
         "@teambit/lanes.ui.compare.lane-compare": "^0.0.202",
@@ -726,7 +727,6 @@
             "@apollo/client": "3.6.9",
             // for backward compatibility only
             "@teambit/legacy": "2.1.0",
-            "@teambit/harmony": "0.4.7",
             // These are the peer dependencies of Yarn
             "@yarnpkg/cli": "3.6.1",
             "@yarnpkg/core": "3.5.2",
