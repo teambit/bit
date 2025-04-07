@@ -134,6 +134,8 @@ export type PackageManagerInstallOptions = {
   returnListOfDepsRequiringBuild?: boolean;
 
   dependenciesGraph?: DependenciesGraph;
+
+  forcedHarmonyVersion?: string;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;

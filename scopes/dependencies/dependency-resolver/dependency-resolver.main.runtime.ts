@@ -241,9 +241,9 @@ export class DependencyResolverMain {
     return res;
   }
 
-  hasHarmonyInRootPolicy(): boolean {
+  harmonyVersionInRootPolicy(): string | undefined {
     const rootPolicy = this.getWorkspacePolicyFromConfig();
-    return rootPolicy.entries.some(({ dependencyId }) => dependencyId === '@teambit/harmony');
+    return rootPolicy.entries.find(({ dependencyId }) => dependencyId === '@teambit/harmony')?.value?.version;
   }
 
   nodeLinker(packageManagerName?: string): NodeLinker {
