@@ -105,6 +105,12 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
                 return {
                   ...testFile,
                   duration: testFile.duration?.toFixed(0),
+                  tests: testFile.tests.map((test) => {
+                    return {
+                      ...test,
+                      duration: test.duration?.toFixed(0),
+                    }
+                  }),
                 }
               }),
             }
