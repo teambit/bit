@@ -42,7 +42,6 @@ type CoverageData = {
 
 
 /**
- * TODO: use theme values
  * Displays the total row with color-coded values
  * 0-25 - red
  * 26-50 - orange
@@ -50,10 +49,10 @@ type CoverageData = {
  * 76-100 - green
  */
 const getColor = (pct: number) => {
-  if (pct < 25) return '#E62E5C';
-  if (pct < 50) return '#EE700F';
+  if (pct < 25) return 'var(--negative-color)';
+  if (pct < 50) return 'var(--warning-color)';
   if (pct < 75) return '#EEB90F';
-  return '#37B26C';
+  return 'var(--positive-color)';
 }
 
 const StyledRow: React.FC<{
