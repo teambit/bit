@@ -20,7 +20,6 @@ import { ComponentsList } from '@teambit/legacy.component-list';
 import pMapSeries from 'p-map-series';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import pMap from 'p-map';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
@@ -38,7 +37,7 @@ import {
   Log,
   AddVersionOpts,
 } from '@teambit/objects';
-import { Component } from '@teambit/component';
+import { Component, ConsumerComponent } from '@teambit/component';
 import { DependencyResolverAspect, DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
@@ -52,9 +51,7 @@ import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
 import ResetCmd from './reset-cmd';
-import { TagDataPerCompRaw, TagFromScopeCmd } from './tag-from-scope.cmd';
-import { SnapDataPerCompRaw, SnapFromScopeCmd, FileData } from './snap-from-scope.cmd';
-import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
+import { addDeps, generateCompFromScope, NewDependencies } from './generate-comp-from-scope';
 import { FlattenedEdgesGetter } from './flattened-edges';
 import { SnapDistanceCmd } from './snap-distance-cmd';
 import {
@@ -126,6 +123,22 @@ export type BasicTagResults = {
   warnings: string[];
   newComponents: ComponentIdList;
   removedComponents?: ComponentIdList;
+};
+
+export type FileData = { path: string; content: string; delete?: boolean };
+
+export type SnapDataPerCompRaw = {
+  componentId: string;
+  dependencies?: string[];
+  aspects?: Record<string, any>;
+  message?: string;
+  files?: FileData[];
+  isNew?: boolean;
+  mainFile?: string; // relevant when isNew is true. default to "index.ts".
+  newDependencies?: NewDependencies;
+  removeDependencies?: string[];
+  forkFrom?: string; // origin id to fork from. the componentId is the new id. (no need to populate isNew prop).
+  version?: string; // relevant when passing "--tag". optionally, specify the semver to tag. default to "patch".
 };
 
 export type OnPreSnap = (
@@ -280,127 +293,6 @@ export class SnappingMain {
     const componentIds = ComponentIdList.fromArray(ids);
     const versionMaker = new VersionMaker(this, components, consumerComponents, componentIds, params);
     return versionMaker.makeVersion();
-  }
-
-  async tagFromScope(
-    tagDataPerCompRaw: TagDataPerCompRaw[],
-    params: {
-      push?: boolean;
-      version?: string;
-      releaseType?: ReleaseType;
-      ignoreIssues?: string;
-      incrementBy?: number;
-      rebuildArtifacts?: boolean;
-      ignoreLastPkgJson?: boolean;
-    } & Partial<BasicTagParams>
-  ): Promise<TagResults | null> {
-    if (this.workspace) {
-      throw new BitError(
-        `unable to run this command from a workspace, please create a new bare-scope and run it from there`
-      );
-    }
-    if (!this.scope) {
-      throw new BitError(`please create a new bare-scope and run it from there`);
-    }
-    params.ignoreNewestVersion = params.ignoreNewestVersion || params.detachHead || params.overrideHead;
-
-    const tagDataPerComp = await Promise.all(
-      tagDataPerCompRaw.map(async (tagData) => {
-        return {
-          componentId: await this.scope.resolveComponentId(tagData.componentId),
-          dependencies: tagData.dependencies ? await this.scope.resolveMultipleComponentIds(tagData.dependencies) : [],
-          versionToTag: tagData.versionToTag || params.releaseType || 'patch',
-          prereleaseId: tagData.prereleaseId,
-          message: tagData.message,
-        };
-      })
-    );
-    const componentIds = ComponentIdList.fromArray(tagDataPerComp.map((t) => t.componentId));
-    // important! leave the "preferDependencyGraph" with the default - true. no need to bring all dependencies at this
-    // stage. later on, they'll be imported during "snapping._addFlattenedDependenciesToComponents".
-    // otherwise, the dependencies are imported without version-history and fail later when checking their origin.
-    await this.scope.import(componentIds, { reason: 'of the seeders to tag' });
-    const deps = compact(tagDataPerComp.map((t) => t.dependencies).flat()).map((dep) => dep.changeVersion(LATEST));
-    const additionalComponentIdsToFetch = await Promise.all(
-      componentIds.map(async (id) => {
-        if (!id.hasVersion()) return null;
-        const modelComp = await this.scope.getBitObjectModelComponent(id);
-        if (!modelComp) throw new Error(`unable to find ModelComponent of ${id.toString()}`);
-        if (!modelComp.head) return null;
-        if (modelComp.getRef(id.version as string)?.isEqual(modelComp.head)) return null;
-        if (!params.ignoreNewestVersion) {
-          throw new BitError(`unable to tag "${id.toString()}", this version is older than the head ${modelComp.head.toString()}.
-if you're willing to lose the history from the head to the specified version, use --ignore-newest-version flag`);
-        }
-        return id.changeVersion(LATEST);
-      })
-    );
-
-    // import deps to be able to resolve semver
-    await this.scope.import([...deps, ...compact(additionalComponentIdsToFetch)], {
-      useCache: false,
-      reason: `which are the dependencies of the ${componentIds.length} seeders`,
-    });
-    await Promise.all(
-      tagDataPerComp.map(async (tagData) => {
-        // disregard the dependencies that are now part of the tag-from-scope. their version will be determined during the process
-        const filteredDependencies = tagData.dependencies.filter((dep) => !componentIds.hasWithoutVersion(dep));
-        tagData.dependencies = await Promise.all(
-          filteredDependencies.map((d) => this.getCompIdWithExactVersionAccordingToSemver(d))
-        );
-      })
-    );
-    const components = await this.scope.getMany(componentIds);
-    await Promise.all(
-      components.map(async (comp) => {
-        const tagData = tagDataPerComp.find((t) => t.componentId.isEqual(comp.id, { ignoreVersion: true }));
-        if (!tagData) throw new Error(`unable to find ${comp.id.toString()} in tagDataPerComp`);
-        if (!tagData.dependencies.length) return;
-        await this.updateDependenciesVersionsOfComponent(comp, tagData.dependencies, componentIds);
-      })
-    );
-
-    await this.scope.loadManyCompsAspects(components);
-
-    const shouldUsePopulateArtifactsFrom = components.every((comp) => {
-      if (!comp.buildStatus) throw new Error(`tag-from-scope expect ${comp.id.toString()} to have buildStatus`);
-      return comp.buildStatus === BuildStatus.Succeed && !params.rebuildArtifacts;
-    });
-    const makeVersionParams = {
-      ...params,
-      tagDataPerComp,
-      populateArtifactsFrom: shouldUsePopulateArtifactsFrom ? components.map((c) => c.id) : undefined,
-      populateArtifactsIgnorePkgJson: params.ignoreLastPkgJson,
-      copyLogFromPreviousSnap: true,
-      skipAutoTag: true,
-      persist: true,
-      message: params.message as string,
-      setHeadAsParent: params.overrideHead,
-    };
-    const results = await this.makeVersion(componentIds, components, makeVersionParams);
-
-    const { taggedComponents, publishedPackages } = results;
-    let exportedIds: ComponentIdList | undefined;
-    if (params.push) {
-      const { exported } = await this.exporter.pushToScopes({
-        scope: this.scope.legacyScope,
-        ids: componentIds,
-        exportHeadsOnly: true,
-        includeParents: true, // in order to export the previous snaps with "hidden" prop changed.
-        exportOrigin: 'tag',
-      });
-      exportedIds = exported;
-    }
-
-    return {
-      taggedComponents,
-      exportedIds,
-      autoTaggedResults: [],
-      isSoftTag: false,
-      publishedPackages,
-      warnings: [],
-      newComponents: new ComponentIdList(),
-    };
   }
 
   private async addAspectsFromConfigObject(
@@ -793,6 +685,9 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     return notExported;
   }
 
+  /**
+   * used externally. don't make it private.
+   */
   async _addFlattenedDependenciesToComponents(components: ConsumerComponent[], rebuildDepsGraph = false) {
     this.logger.setStatusLine('importing missing dependencies...');
     this.logger.profile('snap._addFlattenedDependenciesToComponents');
@@ -976,6 +871,9 @@ another option, in case this dependency is not in main yet is to remove all refe
     }
   }
 
+  /**
+   * used externally. don't make it private.
+   */
   _updateComponentsByTagResult(components: ConsumerComponent[], tagResult: LegacyOnTagResult[]) {
     tagResult.forEach((result) => {
       const matchingComponent = components.find((c) => c.id.isEqual(result.id));
@@ -987,6 +885,9 @@ another option, in case this dependency is not in main yet is to remove all refe
     });
   }
 
+  /**
+   * used externally. don't make it private.
+   */
   _getPublishedPackages(components: ConsumerComponent[]): PackageIntegritiesByPublishedPackages {
     const publishedPackages: PackageIntegritiesByPublishedPackages = new Map();
     for (const comp of components) {
@@ -1053,6 +954,9 @@ another option, in case this dependency is not in main yet is to remove all refe
     return { addedVersionStr, component, version };
   }
 
+  /**
+   * used externally. don't make it private.
+   */
   async _addCompFromScopeToObjects(
     source: ConsumerComponent,
     lane?: Lane,
@@ -1102,6 +1006,7 @@ another option, in case this dependency is not in main yet is to remove all refe
   }
 
   /**
+   * used externally. don't make it private.
    * needed to be updated after the build-pipeline was running
    */
   setBuildStatus(component: Component, buildStatus: BuildStatus) {
@@ -1189,6 +1094,8 @@ another option, in case this dependency is not in main yet is to remove all refe
   }
 
   /**
+   * used externally. don't make it private.
+   *
    * the compId.version can be a range (e.g. "^1.0.0"), in which case, it finds the component in the local scope and
    * resolves the latest version that falls under the range.
    * in case the version has no range, it returns the same compId.
@@ -1237,6 +1144,9 @@ another option, in case this dependency is not in main yet is to remove all refe
       throw new Error(`unable to update component ${component.id.toString()}, all files were deleted`);
   }
 
+  /**
+   * used externally. don't make it private.
+   */
   async updateDependenciesVersionsOfComponent(
     component: Component,
     dependencies: ComponentID[],
@@ -1457,11 +1367,9 @@ another option, in case this dependency is not in main yet is to remove all refe
     );
     const snapCmd = new SnapCmd(snapping, logger, configStore);
     const tagCmd = new TagCmd(snapping, logger, configStore);
-    const tagFromScopeCmd = new TagFromScopeCmd(snapping, logger);
-    const snapFromScopeCmd = new SnapFromScopeCmd(snapping, logger);
     const resetCmd = new ResetCmd(snapping);
     const snapDistanceCmd = new SnapDistanceCmd(scope, workspace);
-    cli.register(tagCmd, snapCmd, resetCmd, tagFromScopeCmd, snapFromScopeCmd, snapDistanceCmd);
+    cli.register(tagCmd, snapCmd, resetCmd, snapDistanceCmd);
     return snapping;
   }
 }

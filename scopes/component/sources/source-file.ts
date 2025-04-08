@@ -11,7 +11,7 @@ export default class SourceFile extends AbstractVinyl {
     filePath: PathOsBased,
     base: PathOsBased,
     consumerPath: PathOsBased,
-    extendedProps: Record<string, any>
+    extendedProps: Record<string, any> = {}
   ): SourceFile {
     try {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

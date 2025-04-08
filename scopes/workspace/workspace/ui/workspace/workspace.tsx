@@ -1,6 +1,6 @@
 import 'reset-css';
 import pluralize from 'pluralize';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useLayoutEffect } from 'react';
 import { Route } from 'react-router-dom';
 import type { ComponentModel } from '@teambit/component';
 import type { ComponentID } from '@teambit/component-id';
@@ -40,20 +40,22 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
   const { workspace } = useWorkspace(reactions);
   const theme = useThemePicker();
   const currentTheme = theme?.current;
-  const [isSidebarOpen, setSidebarOpen] = useState(!isMinimal);
-  const handleSidebarToggle = () => setSidebarOpen(prev => !prev);
+  const [isSidebarOpen, setSidebarOpen] = useState<boolean | null>(null);
+  const handleSidebarToggle = useCallback(() => {
+    setSidebarOpen(prev => !prev);
+  }, []);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
   const themeName = currentTheme?.themeName || 'light';
   onSidebarTogglerChange(handleSidebarToggle);
 
   useEffect(() => {
     if (!window) return;
-    if (window.innerWidth <= 1024 && isSidebarOpen) {
+    if (window.innerWidth <= 1024) {
       setSidebarOpen(false);
     }
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setSidebarOpen(!isMinimal);
   }, [isMinimal]);
 
@@ -73,8 +75,8 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
               Corner={() => (
                 <Corner
                   className={classNames((isMinimal && styles.minimalCorner) || styles.corner, styles[themeName])}
-                  name={workspace.name}
-                  icon={workspace.icon}
+                  name={isMinimal ? '' : workspace.name}
+                  icon={isMinimal ? 'https://static.bit.dev/bit-icons/house.svg' : workspace.icon}
                 />
               )}
               // @ts-ignore - getting an error of "Types have separate declarations of a private property 'registerFn'." for some reason after upgrading teambit.harmony/harmony from 0.4.6 to 0.4.7
@@ -87,7 +89,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
             </Pane>
             <HoverSplitter className={styles.splitter}>
               <Collapser
-                isOpen={isSidebarOpen}
+                isOpen={Boolean(isSidebarOpen)}
                 onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
                 onClick={handleSidebarToggle}
                 tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side panel`}

@@ -22,7 +22,7 @@ type AddResults = {
 
 export class AddCmd implements Command {
   name = 'add [path...]';
-  description = 'Add any subset of files to be tracked as a component(s).';
+  description = 'track one or more directories as new components';
   group = 'development';
   extendedDescription = 'Learn the recommended workflow for tracking directories as components, in the link below.';
   helpUrl = 'reference/workspace/component-directory';
