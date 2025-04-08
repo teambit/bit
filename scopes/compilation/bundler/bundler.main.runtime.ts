@@ -68,19 +68,6 @@ export class BundlerMain {
     private harmony: Harmony
   ) {
   }
-
-  getServerEnvIds(): string[] {
-    if (!this._componentServers) return [];
-    return this._componentServers.map(server => server.context.envRuntime.id);
-  }
-
-  async restartAllDevServers() {
-    if (!this._componentServers) return;
-    await pMapSeries(this._componentServers, (server) => {
-      return server.restart();
-    });
-  }
-
   async addNewDevServers(components: Component[]): Promise<ComponentServer[]> {
     const newComponents = components.filter((component) => {
       return !this.getComponentServer(component);
@@ -178,7 +165,6 @@ export class BundlerMain {
   ];
 
   static defaultConfig = {
-    // dedicatedEnvDevServers: ['bitdev.react/react-env'],
     dedicatedEnvDevServers: [],
   };
 
