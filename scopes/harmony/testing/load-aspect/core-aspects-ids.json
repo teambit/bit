@@ -59,8 +59,6 @@
   "teambit.explorer/command-bar",
   "teambit.ui-foundation/sidebar",
   "teambit.component/component-tree",
-  "teambit.scope/sign",
-  "teambit.scope/update-dependencies",
   "teambit.scope/export",
   "teambit.scope/importer",
   "teambit.ui-foundation/harmony-ui-app",

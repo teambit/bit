@@ -236,14 +236,8 @@ export default class CommandHelper {
   removeLaneReadme(laneName = '') {
     return this.runCmd(`bit lane remove-readme ${laneName}`);
   }
-  sign(ids: string[], flags = '', cwd = this.scopes.localPath) {
-    return this.runCmd(`bit sign ${ids.join(' ')} ${flags}`, cwd);
-  }
   artifacts(id = '', flags = '') {
     return this.runCmd(`bit artifacts ${id} ${flags}`);
-  }
-  updateDependencies(data: Record<string, any>, flags = '', cwd = this.scopes.localPath) {
-    return this.runCmd(`bit update-dependencies '${JSON.stringify(data)}' ${flags}`, cwd);
   }
   getConfig(configName: string, flags = '') {
     return this.runCmd(`bit config get ${configName} ${flags}`);
@@ -836,43 +830,6 @@ export default class CommandHelper {
   }
   mergeMoveLane(laneName: string, options = '') {
     return this.runCmd(`bit lane merge-move ${laneName} ${options}`);
-  }
-  mergeLaneFromScope(cwd: string, fromLane: string, options = '') {
-    return this.runCmd(`bit _merge-lane ${fromLane} ${options}`, cwd);
-  }
-  mergeLaneFromScopeParsed(cwd: string, fromLane: string, options = ''): Record<string, any> {
-    const output = this.mergeLaneFromScope(cwd, fromLane, `${options} --json`);
-    return JSON.parse(output);
-  }
-  tagFromScope(cwd: string, data: Record<string, any>, options = '') {
-    return this.runCmd(`bit _tag '${JSON.stringify(data)}' ${options}`, cwd);
-  }
-  snapFromScope(cwd: string, data: Record<string, any>, options = '') {
-    data.forEach((dataItem) => {
-      if (!dataItem.files) return;
-      dataItem.files.forEach((file) => {
-        if (file.content) {
-          file.content = Buffer.from(file.content).toString('base64');
-        }
-      });
-    });
-    return this.runCmd(`bit _snap '${JSON.stringify(data)}' ${options}`, cwd);
-  }
-  snapFromScopeParsed(cwd: string, data: Record<string, any>, options = '') {
-    const output = this.snapFromScope(cwd, data, `${options} --json`);
-    return JSON.parse(output);
-  }
-  apply(data: Record<string, any>, options = '') {
-    data.forEach((dataItem) => {
-      if (!dataItem.files) return;
-      dataItem.files.forEach((file) => {
-        if (file.content) {
-          file.content = Buffer.from(file.content).toString('base64');
-        }
-      });
-    });
-    // console.log('apply command', `bit apply '${JSON.stringify(data)}' ${options}`);
-    return this.runCmd(`bit apply '${JSON.stringify(data)}' ${options}`);
   }
   diff(id = '') {
     const output = this.runCmd(`bit diff ${id}`);

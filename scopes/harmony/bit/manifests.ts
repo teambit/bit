@@ -56,14 +56,12 @@ import { ComponentTreeAspect } from '@teambit/component-tree';
 import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
 import { PrettierAspect } from '@teambit/prettier';
-import { SignAspect } from '@teambit/sign';
 import { WorkerAspect } from '@teambit/worker';
 import { GlobalConfigAspect } from '@teambit/global-config';
 import { MultiCompilerAspect } from '@teambit/multi-compiler';
 import { MDXAspect } from '@teambit/mdx';
 import { ReadmeAspect } from '@teambit/readme';
 import { ApplicationAspect } from '@teambit/application';
-import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
 import { ExportAspect } from '@teambit/export';
 import { ImporterAspect } from '@teambit/importer';
 import { EjectAspect } from '@teambit/eject';
@@ -174,8 +172,6 @@ export const manifestsMap = {
   [CommandBarAspect.id]: CommandBarAspect,
   [SidebarAspect.id]: SidebarAspect,
   [ComponentTreeAspect.id]: ComponentTreeAspect,
-  [SignAspect.id]: SignAspect,
-  [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
   [ExportAspect.id]: ExportAspect,
   [ImporterAspect.id]: ImporterAspect,
   [HarmonyUiAppAspect.id]: HarmonyUiAppAspect,

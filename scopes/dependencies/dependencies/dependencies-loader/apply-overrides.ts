@@ -624,9 +624,51 @@ export class ApplyOverrides {
         }
       });
     });
-    Object.assign(deps, envPolicyManifest);
+    const resolvedEnvPolicyManifest = Object.keys(envPolicyManifest).reduce((acc, pkgName) => {
+      const version = envPolicyManifest[pkgName];
+      if (version !== '+') {
+        acc[pkgName] = version;
+        return acc;
+      }
+      acc[pkgName] = this.resolveEnvPeerDepVersion(pkgName);
+      return acc;
+    }, {});
     // TODO: handle component deps once we support peers between components
-    this.allPackagesDependencies.packageDependencies = deps;
+    this.allPackagesDependencies.packageDependencies = {
+      ...deps,
+      ...resolvedEnvPolicyManifest,
+    };
+  }
+
+  /**
+   * in the env.jsonc file, a policy-peer package can have `+` sign in the version. it means that it should be resolved
+   * from the workspace. whatever version is installed/imported in the workspace, it should be used here.
+   * in some cases, the package is not installed in the workspace, for example, the env is now imported without the
+   * dep. so the dep is not in the node_modules.
+   * strategy should be: .bitmap, workspace.jsonc, then model.
+   * it's not in .bitmap, otherwise, it was linked and `_resolvePackageData` would have found it.
+   * so either, it's in the workspace.jsonc or in the model.
+   */
+  private resolveEnvPeerDepVersion(pkgName: string): string {
+    const resolved = this._resolvePackageData(pkgName);
+    if (resolved && resolved.concreteVersion) {
+      return resolved.concreteVersion;
+    }
+    const wsPolicy = this.depsResolver.getWorkspacePolicyManifest();
+    const wsVersion = wsPolicy?.dependencies?.[pkgName] || wsPolicy?.peerDependencies?.[pkgName];
+    if (wsVersion) {
+      return wsVersion;
+    }
+    const fromModelDep = this.componentFromModel?.dependencies.get().find((dep) => dep.packageName === pkgName);
+    if (fromModelDep) {
+      return fromModelDep.id.version;
+    }
+    const fromModelPkg = this.componentFromModel?.packageDependencies[pkgName];
+    if (fromModelPkg) {
+      return fromModelPkg;
+    }
+    // no where to be found. instead of throwing an error, return the "latest" version
+    return '*';
   }
 
   /**

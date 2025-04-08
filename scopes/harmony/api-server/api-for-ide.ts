@@ -386,7 +386,7 @@ export class APIForIDE {
     this.workspace.clearAllComponentsCache();
   }
 
-  async install(options = {}) {
+  async install(options = {}, packages?: string[]) {
     const opts = {
       optimizeReportForNonTerminal: true,
       dedupe: true,
@@ -395,7 +395,7 @@ export class APIForIDE {
       ...options,
     };
 
-    return this.installer.install(undefined, opts);
+    return this.installer.install(packages, opts);
   }
 
   async export() {

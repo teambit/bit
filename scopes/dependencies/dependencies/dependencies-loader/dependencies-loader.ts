@@ -135,7 +135,7 @@ export class DependenciesLoader {
       }
       return null; // cache is invalid.
     }
-    this.logger.debug(`dependencies-loader, getting the dependencies data for ${this.idStr} from the cache`);
+    this.logger.trace(`dependencies-loader, getting the dependencies data for ${this.idStr} from the cache`);
     return DependenciesData.deserialize(cacheData.data);
   }
 

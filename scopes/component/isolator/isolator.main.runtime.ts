@@ -832,7 +832,7 @@ export class IsolatorMain {
       packageManagerConfigRootDir: isolateInstallOptions.packageManagerConfigRootDir,
       resolveVersionsFromDependenciesOnly: true,
       linkedDependencies: opts.linkedDependencies,
-      forceTeambitHarmonyLink: !this.dependencyResolver.hasHarmonyInRootPolicy(),
+      forcedHarmonyVersion: this.dependencyResolver.harmonyVersionInRootPolicy(),
       excludeExtensionsDependencies: true,
       dedupeInjectedDeps: true,
       dependenciesGraph: opts.dependenciesGraph,
