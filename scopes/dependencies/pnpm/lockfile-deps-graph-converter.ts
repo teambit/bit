@@ -3,7 +3,6 @@ import { type ProjectManifest, type Registries } from '@pnpm/types';
 import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import { type ResolveFunction } from '@pnpm/client';
 import * as dp from '@pnpm/dependency-path';
-import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
 import { pick, partition } from 'lodash';
 import { snapToSemver } from '@teambit/component-package-version';
 import {
@@ -302,7 +301,6 @@ export async function convertGraphToLockfile(
       }, {
         lockfileDir: '',
         projectDir: '',
-        registry: pickRegistryForPackage(registries, pkgToResolve.name),
         preferredVersions: {},
       })
       if ('integrity' in resolution && resolution.integrity) {

@@ -25,7 +25,6 @@ import {
 } from '@pnpm/core';
 import * as pnpm from '@pnpm/core';
 import { createClient, ClientOptions } from '@pnpm/client';
-import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
 import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
 import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
@@ -79,6 +78,7 @@ async function createStoreController(
     fetchRetryMintimeout: options.networkConfig.fetchRetryMintimeout,
     fetchTimeout: options.networkConfig.fetchTimeout,
     virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
+    registries: options.registries.toMap(),
   };
   return createOrConnectStoreController(opts);
 }
@@ -118,6 +118,7 @@ export async function generateResolverAndFetcher({
       minTimeout: networkConfig.fetchRetryMintimeout,
       retries: networkConfig.fetchRetries,
     },
+    registries: registries.toMap(),
   };
   const result = createClient(opts);
   return result;
@@ -559,12 +560,10 @@ export async function resolveRemoteVersion(
   };
   try {
     const parsedPackage = parsePackageName(packageName);
-    const registry = pickRegistryForPackage(registries.toMap(), parsedPackage.name);
     const wantedDep: WantedDependency = {
       alias: parsedPackage.name,
       pref: parsedPackage.version,
     };
-    resolveOpts.registry = registry;
     const val = await resolve(wantedDep, resolveOpts);
     if (!val.manifest) {
       throw new BitError('The resolved package has no manifest');
