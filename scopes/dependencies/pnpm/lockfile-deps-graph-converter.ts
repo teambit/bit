@@ -1,5 +1,5 @@
 import path from 'path';
-import { type ProjectManifest, type Registries } from '@pnpm/types';
+import { type ProjectManifest } from '@pnpm/types';
 import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import { type ResolveFunction } from '@pnpm/client';
 import * as dp from '@pnpm/dependency-path';
@@ -204,12 +204,10 @@ export async function convertGraphToLockfile(
     manifests,
     rootDir,
     resolve,
-    registries,
   }: {
     manifests: Record<string, ProjectManifest>;
     rootDir: string;
     resolve: ResolveFunction;
-    registries: Registries;
   }
 ): Promise<BitLockfileFile> {
   const graphString = _graph.serialize();

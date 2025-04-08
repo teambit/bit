@@ -98,7 +98,6 @@ export class PnpmPackageManager implements PackageManager {
     const lockfile: LockfileFile = await convertGraphToLockfile(dependenciesGraph, {
       ...opts,
       resolve,
-      registries: registries.toMap(),
     });
     Object.assign(lockfile, {
       bit: {
