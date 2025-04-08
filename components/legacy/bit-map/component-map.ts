@@ -16,7 +16,6 @@ import {
 import {
   PathLinux,
   PathLinuxRelative,
-  PathOsBased,
   PathOsBasedAbsolute,
   PathOsBasedRelative,
   pathJoinLinux,
@@ -30,8 +29,12 @@ import { IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.consu
 export type Config = { [aspectId: string]: Record<string, any> | '-' };
 
 export type ComponentMapFile = {
-  name: string;
   relativePath: PathLinux;
+  /**
+   * @deprecated should be safe to remove around August 2025
+   * you can easily get it by running `path.basename(relativePath)`
+   */
+  name?: string;
   /**
    * @deprecated should be safe to remove around August 2025
    */
@@ -196,15 +199,6 @@ export class ComponentMap {
       file.relativePath = newPath;
     });
     this.rootDir = newRootDir;
-  }
-
-  addRootDirToDistributedFiles(rootDir: PathOsBased) {
-    this.files.forEach((file) => {
-      file.relativePath = file.name;
-    });
-    this.rootDir = pathNormalizeToLinux(rootDir);
-    this.mainFile = path.basename(this.mainFile);
-    this.validate();
   }
 
   updateDirLocation(dirFrom: PathOsBasedRelative, dirTo: PathOsBasedRelative): PathChange[] {
