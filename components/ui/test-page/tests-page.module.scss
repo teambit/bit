@@ -68,7 +68,7 @@ th {
 }
 
 .progressBar {
-  width: 75px;
+  width: 150px;
   border-radius: 50px;
   height: 6px;
   display: inline-block;
@@ -82,4 +82,14 @@ th {
   height: 100%;
   border-radius: 50px;
   width: 0;
+}
+
+.summaryProgressBar {
+  width: 100%;
+  border-radius: 50px;
+  height: 6px;
+  display: inline-block;
+  background-color: lightgray;
+  overflow: hidden;
+  position: relative;
 }

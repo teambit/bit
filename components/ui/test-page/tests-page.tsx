@@ -42,6 +42,7 @@ type CoverageData = {
 
 
 /**
+ * TODO: use theme values
  * Displays the total row with color-coded values
  * 0-25 - red
  * 26-50 - orange
@@ -124,16 +125,24 @@ const columns: ColumnProps<CoverageFile>[] = [
   },
   {
     id: 'progress',
-    header: '',
-    cell: ({ row }) => (
-      <div className={styles.progressBar}>
-        <div className={styles.progressBarFill} style={{
-            width: `${row?.data?.lines.pct}%`,
-            backgroundColor: getColor(row?.data?.lines.pct || 0),
-          }}
-        />
-      </div>
-    ),
+    header: 'Overall',
+    cell: ({ row }) => {
+      if (!row) {
+        return null;
+      }
+
+      const totalCovered = row?.data?.lines.covered + row?.data?.branches.covered + row?.data?.functions.covered + row?.data?.statements.covered;
+      const totalLines = row?.data?.lines.total + row?.data?.branches.total + row?.data?.functions.total + row?.data?.statements.total;
+      return (
+        <div className={styles.summaryProgressBar}>
+          <div className={styles.progressBarFill} style={{
+              width: `${totalCovered / totalLines * 100}%`,
+              backgroundColor: getColor(totalCovered / totalLines * 100)
+            }}
+          />
+        </div>
+      )
+    },
     value: (file) => file?.data.lines.pct ?? 0,
     className: {
       td: styles.coverage_column,
@@ -277,25 +286,38 @@ const TotalCoverageSummary: React.FC<TotalCoverageSummaryProps> = ({ coverageRes
     { label: "Lines", value: `${lines.covered}/${lines.total}`, pct: lines.pct },
   ]
 
+  const totalCovered = lines.covered + branches.covered + functions.covered + statements.covered;
+  const totalLines = lines.total + branches.total + functions.total + statements.total;
+
   return (
-    <div className={styles.container}>
-      {data.map((item) => (
-        <div key={item.label} className={styles.item}>
-          <span className={styles.percentage}
-            style={{
-              color: getColor(item.pct)
-            }}
-          >
-            {item.pct}%
-          </span>
-          <span className={styles.label}>
-            {item.label}
-          </span>
-          <span className={styles.badge}>
-            {item.value}
-          </span>
-        </div>
-      ))}
+    <div style={{ display: "flex", flexDirection: "column", marginBottom: "20px" }}>
+      <div className={styles.container}>
+        {data.map((item) => (
+          <div key={item.label} className={styles.item}>
+            <span className={styles.percentage}
+              style={{
+                color: getColor(item.pct)
+              }}
+            >
+              {item.pct}%
+            </span>
+            <span className={styles.label}>
+              {item.label}
+            </span>
+            <span className={styles.badge}>
+              {item.value}
+            </span>
+          </div>
+        ))}
+      </div>
+      {/** Display a progress bar for the total */}
+      <div className={styles.summaryProgressBar}>
+        <div className={styles.progressBarFill} style={{
+            width: `${totalCovered / totalLines * 100}%`,
+            backgroundColor: getColor(totalCovered / totalLines * 100)
+          }}
+        />
+      </div>
     </div>
   )
 }
