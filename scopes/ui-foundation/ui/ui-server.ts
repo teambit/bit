@@ -99,16 +99,7 @@ export class UIServer {
   }
 
   addComponentServerProxy(server: ComponentServer): void {
-    const uiMainInstance = this.ui;
-    const apiServer = uiMainInstance.getUIServer();
-
-    if (apiServer && apiServer !== this && apiServer.port >= 4100 && apiServer.port <= 4200) {
-      apiServer.addComponentServerProxy(server);
-      return;
-    }
-
     const envId = server.context.envRuntime.id;
-
     const previewRoute = `/preview/${envId}`;
     const hmrRoute = `/_hmr/${envId}`;
 
