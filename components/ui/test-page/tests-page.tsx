@@ -12,7 +12,7 @@ import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-
 import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/defender.ui.test-table';
-import { Table, type ColumnProps } from '@teambit/design.content.table';
+import { CellFunctionProps, Table, type ColumnProps } from '@teambit/design.content.table';
 import { Link } from '@teambit/base-react.navigation.link';
 import styles from './tests-page.module.scss';
 
@@ -49,49 +49,66 @@ type CoverageData = {
  * 76-100 - green
  */
 const getColor = (pct: number) => {
-  if (pct < 25) return 'var(--bit-accent-impulsive-color)';
-  if (pct < 50) return 'oklch(70.5% 0.213 47.604)';
+  if (pct < 25) return '#E62E5C';
+  if (pct < 50) return '#FFC640';
   if (pct < 75) return 'var(--bit-accent-hunger-color)';
-  return 'var(--bit-accent-success-color)';
+  return '#37B26C';
 }
 
-const StyledTotalRow: React.FC<{
+const StyledRow: React.FC<{
   row: CoverageFile | undefined | null,
-  type: keyof CoverageFile['data']
-}> = ({ row, type }) => {
-  if (!row) return null;
-
-  const data = row.data[type];;
-
-  if (!data) {
-    return null;
-  };
-
-  return (
-    <span style={{ color: getColor(data.pct) }}>
-      {data.covered}/{data.total}
-    </span>
-  )
-}
-
-const StyledPctRow: React.FC<{
-  row: CoverageFile | undefined | null,
-  type: keyof CoverageFile['data']
-}> = ({ row, type }) => {
+  type: keyof CoverageFile['data'],
+  displayValue: (data: CoverageFile['data'][keyof CoverageFile['data']]) => string
+}> = ({ row, type, displayValue }) => {
   if (!row) return null;
 
   const data = row.data[type];
 
   if (!data) {
     return null;
-  };
+  }
 
   return (
     <span style={{ color: getColor(data.pct) }}>
-      {data.pct}%
+      {displayValue(data)}
     </span>
   )
 }
+
+const StyledTotalRow = (props: { row: CoverageFile | undefined | null, type: keyof CoverageFile['data'] }) => (
+  <StyledRow {...props} displayValue={data => `${data.covered}/${data.total}`} />
+);
+
+const StyledPctRow = (props: { row: CoverageFile | undefined | null, type: keyof CoverageFile['data'] }) => (
+  <StyledRow {...props} displayValue={data => `${data.pct}%`} />
+);
+
+const createColumn = (id: string, header: string, type: keyof CoverageFile['data']) => [
+  {
+    id: `${id}_pct`,
+    header: '%',
+    cell: ({ row }: CellFunctionProps<CoverageFile>) => (
+      row ? <StyledPctRow row={row} type={type} /> : null
+    ),
+    value: (row?: CoverageFile) => row?.data[type].pct ?? 0,
+    className: {
+      td: styles.coverage_column,
+      th: styles.coverage_column,
+    }
+  },
+  {
+    id: `${id}_total`,
+    header: 'Total',
+    cell: ({ row }: CellFunctionProps<CoverageFile>) => (
+      row ? <StyledTotalRow row={row} type={type} /> : null
+    ),
+    value: (row?: CoverageFile) => row?.data[type].covered ?? 0,
+    className: {
+      td: styles.coverage_column,
+      th: styles.coverage_column,
+    }
+  },
+];
 
 const columns: ColumnProps<CoverageFile>[] = [
   {
@@ -117,7 +134,7 @@ const columns: ColumnProps<CoverageFile>[] = [
         />
       </div>
     ),
-    value: (file) => file?.data.lines.pct ? file.data.lines.pct : 0,
+    value: (file) => file?.data.lines.pct ?? 0,
     className: {
       td: styles.coverage_column,
       th: styles.coverage_column,
@@ -126,108 +143,24 @@ const columns: ColumnProps<CoverageFile>[] = [
   {
     id: 'lines',
     header: 'Lines',
-    columns: [
-      {
-        id: 'lines_pct',
-        header: '%',
-        cell: ({ row }) => <StyledPctRow row={row} type="lines" />,
-        value: (file) => file?.data.lines.pct ? file.data.lines.pct : 0,
-        className: {
-          td: styles.coverage_column,
-          th: styles.coverage_column,
-        }
-      },
-      {
-        id: 'lines_total',
-        header: 'Total',
-        cell: ({ row }) => <StyledTotalRow row={row} type="lines" />,
-        value: (file) => file?.data.lines.covered ? file.data.lines.covered : 0,
-        className: {
-          td: styles.coverage_column,
-          th: styles.coverage_column,
-        }
-      },
-    ]
+    columns: createColumn('lines', 'Lines', 'lines')
   },
   {
     id: 'functions',
     header: 'Functions',
-    columns: [
-      {
-        id: 'functions_pct',
-        header: '%',
-        cell: ({ row }) => <StyledPctRow row={row} type="functions" />,
-        value: (file) => file?.data.functions.pct ? file.data.functions.pct : 0,
-        className: {
-          td: styles.coverage_column,
-          th: styles.coverage_column,
-        }
-      },
-      {
-        id: 'functions_total',
-        header: 'Total',
-        cell: ({ row }) => <StyledTotalRow row={row} type="functions" />,
-        value: (file) => file?.data.functions.covered ? file.data.functions.covered : 0,
-        className: {
-          td: styles.coverage_column,
-          th: styles.coverage_column,
-        }
-      },
-    ]
+    columns: createColumn('functions', 'Functions', 'functions')
   },
   {
     id: 'statements',
     header: 'Statements',
-    columns: [
-      {
-        id: 'statements_pct',
-        header: '%',
-        cell: ({ row }) => <StyledPctRow row={row} type="statements" />,
-        value: (file) => file?.data.statements.pct ? file.data.statements.pct : 0,
-        className: {
-          td: styles.coverage_column,
-          th: styles.coverage_column,
-        }
-      }, 
-      {
-        id: 'statements_total',
-        header: 'Total',
-        cell: ({ row }) => <StyledTotalRow row={row} type="statements" />,
-        value: (file) => file?.data.statements.covered ? file.data.statements.covered : 0,
-        className: {
-          td: styles.coverage_column,
-          th: styles.coverage_column,
-        }
-      },     
-    ]
+    columns: createColumn('statements', 'Statements', 'statements')
   },
   {
     id: 'branches',
     header: 'Branches',
-    columns: [
-      {
-        id: 'branches_pct',
-        header: '%',
-        cell: ({ row }) => <StyledPctRow row={row} type="branches" />,
-        value: (file) => file?.data.branches.pct ? file.data.branches.pct : 0,
-        className: {
-          td: styles.coverage_column,
-          th: styles.coverage_column,
-        }
-      },
-      {
-        id: 'branches_total',
-        header: 'Total',
-        cell: ({ row }) => <StyledTotalRow row={row} type="branches" />,
-        value: (file) => file?.data.branches.covered ? file.data.branches.covered : 0,
-        className: {
-          td: styles.coverage_column,
-          th: styles.coverage_column,
-        }
-      },   
-    ]
+    columns: createColumn('branches', 'Branches', 'branches')
   },
-]
+];
 
 const TESTS_SUBSCRIPTION_CHANGED = gql`
   subscription OnTestsChanged($id: String!) {
