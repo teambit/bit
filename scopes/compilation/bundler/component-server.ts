@@ -35,7 +35,13 @@ export class ComponentServer {
   ) { }
 
   hostname: string | undefined;
-  private server?: Server;
+  private _server?: Server;
+  private _isRestarting: boolean = false;
+
+  get server() {
+    return this._server;
+  }
+
   get envId() {
     return this.context.envRuntime.id;
   };
@@ -52,58 +58,52 @@ export class ComponentServer {
 
   _port: number;
 
-  async listen() {
-    const port = await selectPort(this.portRange);
+  async listen(specificPort?: number) {
+    const port = specificPort || await selectPort(this.portRange);
     this._port = port;
-    this.server = await this.devServer.listen(port);
-    const address = this.server.address();
+    this._server = await this.devServer.listen(port);
+    const address = this._server.address();
     const hostname = this.getHostname(address);
     if (!address) throw new BindError();
     this.hostname = hostname;
+
     this.pubsub.pub(
       BundlerAspect.id,
-      this.createComponentsServerStartedEvent(this.server, this.context, hostname, port)
+      this.createComponentsServerStartedEvent(this, this.context, hostname, port)
     );
   }
 
-  /**
-   * Restart the server
-   * Closes the existing server if it exists and starts a new one
-   * @param useNewPort - Whether to select a new port (default: false)
-   * @returns Promise that resolves when the server has been restarted
-   */
-  async restart(useNewPort: boolean = false): Promise<void> {
-    if (this.server) {
-      await new Promise<void>((resolve, reject) => {
-        this.server?.close((err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      });
-      this.server = undefined;
-    }
+  async close(): Promise<void> {
+    if (!this.server) return;
 
-    if (useNewPort) {
-      await this.listen();
-    } else {
-      try {
-        this.server = await this.devServer.listen(this._port);
-        const address = this.server.address();
-        const hostname = this.getHostname(address);
-        if (!address) throw new BindError();
-        this.hostname = hostname;
-        this.pubsub.pub(
-          BundlerAspect.id,
-          this.createComponentsServerStartedEvent(this.server, this.context, hostname, this._port)
-        );
-      } catch (error) {
-        if (!this.errors) this.errors = [];
-        this.errors.push(error as Error);
-        await this.listen();
-      }
+    return new Promise<void>((resolve, reject) => {
+      this.server?.close((err) => {
+        if (err) {
+          reject(err);
+        } else {
+          this._server = undefined;
+          this.hostname = undefined;
+          resolve();
+        }
+      });
+    });
+  }
+
+  async restart(useNewPort: boolean = false): Promise<void> {
+    if (this._isRestarting) {
+      throw new Error('Server restart already in progress');
+    }
+    this._isRestarting = true;
+    try {
+      await this.close();
+      await this.listen(useNewPort ? undefined : this._port);
+    }
+    catch (error) {
+      if (!this.errors) this.errors = [];
+      this.errors.push(error as Error);
+    }
+    finally {
+      this._isRestarting = false;
     }
   }
 
@@ -122,8 +122,8 @@ export class ComponentServer {
   private onChange() { }
 
   private createComponentsServerStartedEvent: (
-    DevServer,
-    ExecutionContext,
+    componentsServer,
+    context,
     string,
     number
   ) => ComponentsServerStartedEvent = (componentsServer, context, hostname, port) => {

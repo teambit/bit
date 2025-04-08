@@ -1,6 +1,6 @@
 import 'reset-css';
 import pluralize from 'pluralize';
-import React, { useReducer, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Route } from 'react-router-dom';
 import type { ComponentModel } from '@teambit/component';
 import type { ComponentID } from '@teambit/component-id';
@@ -40,17 +40,22 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
   const { workspace } = useWorkspace(reactions);
   const theme = useThemePicker();
   const currentTheme = theme?.current;
-  const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
+  const [isSidebarOpen, setSidebarOpen] = useState(!isMinimal);
+  const handleSidebarToggle = () => setSidebarOpen(prev => !prev);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
   const themeName = currentTheme?.themeName || 'light';
   onSidebarTogglerChange(handleSidebarToggle);
 
   useEffect(() => {
     if (!window) return;
-    if (window.innerWidth <= 1024) {
-      handleSidebarToggle();
+    if (window.innerWidth <= 1024 && isSidebarOpen) {
+      setSidebarOpen(false);
     }
   }, []);
+
+  useEffect(() => {
+    setSidebarOpen(!isMinimal);
+  }, [isMinimal]);
 
   if (!workspace) {
     return <div className={styles.emptyContainer}></div>;
@@ -99,6 +104,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
     </WorkspaceProvider>
   );
 }
+
 function useComponentNotifications() {
   const notifications = useNotifications();
 
@@ -117,6 +123,19 @@ function useComponentNotifications() {
           `removed ${pluralize('component', ids.length)} ${ids.map((id) => id.toString()).join(', ')}`
         );
         setTimeout(() => notifications.dismiss(notificationId), 12 * 1000);
+      },
+      
+      onComponentUpdated: (comps: ComponentModel[]) => {
+        const compsWithServerUpdates = comps.filter(comp => comp.server?.url);
+        
+        if (compsWithServerUpdates.length > 0) {
+          const notificationId = notifications.log(
+            `Server ready for ${pluralize('component', compsWithServerUpdates.length)}: ${compsWithServerUpdates
+              .map((comp) => comp.id.toString())
+              .join(', ')}`
+          );
+          setTimeout(() => notifications.dismiss(notificationId), 8 * 1000);
+        }
       },
     }),
     [notifications]

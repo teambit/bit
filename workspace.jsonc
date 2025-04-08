@@ -128,8 +128,8 @@
         "@teambit/component.ui.component-compare.status-resolver": "^0.0.9",
         "@teambit/component.ui.component-compare.utils.group-by-version": "^0.0.8",
         "@teambit/component.ui.component-compare.utils.sort-logs": "^0.0.8",
-        "@teambit/component.ui.component-deprecated": "^0.0.40",
         "@teambit/component.ui.component-compare.utils.sort-tabs": "0.0.104",
+        "@teambit/component.ui.component-deprecated": "^0.0.40",
         "@teambit/component.ui.component-meta": "^0.0.367",
         "@teambit/component.ui.component-size": "^0.0.77",
         "@teambit/component.ui.component-status-resolver": "^0.0.510",
@@ -289,8 +289,8 @@
         "@teambit/ui-foundation.ui.tree.tree-node": "0.0.517",
         "@teambit/ui-foundation.ui.use-box.bottom-link": "^0.0.119",
         "@teambit/ui-foundation.ui.use-box.dropdown": "^0.0.143",
-        "@teambit/ui-foundation.ui.use-box.scope-menu": "^0.0.147",
         "@teambit/ui-foundation.ui.use-box.menu": "^1.0.16",
+        "@teambit/ui-foundation.ui.use-box.scope-menu": "^0.0.147",
         "@teambit/ui-foundation.ui.use-box.tab": "^0.0.122",
         "@teambit/workspace.content.variants": "1.95.9",
         "@teambit/workspace.content.workspace-overview": "1.95.0",
@@ -317,7 +317,9 @@
         "@types/find-root": "1.1.2",
         "@types/fs-extra": "9.0.7",
         "@types/graphlib": "2.1.7",
+        "@types/http-proxy": "^1.17.16",
         "@types/http-proxy-agent": "2.0.2",
+        "@types/http-proxy-middleware": "^1.0.0",
         "@types/lodash": "4.14.165",
         "@types/lodash.compact": "3.0.6",
         "@types/lodash.flatten": "4.4.6",
@@ -447,7 +449,7 @@
         "html-webpack-plugin": "5.3.2",
         "http-proxy": "1.18.1",
         "http-proxy-agent": "4.0.1",
-        "http-proxy-middleware": "^3.0.0",
+        "http-proxy-middleware": "^3.0.3",
         "https-proxy-agent": "5.0.0",
         "humanize-duration": "3.23.1",
         "humanize-string": "2.1.0",
@@ -606,7 +608,6 @@
       }
     },
     "linkCoreAspects": false,
-    // "packageManager": "teambit.fusepm/aspects/fusepm",
     "packageManager": "teambit.dependencies/pnpm",
     "rootComponents": true,
     "overrides": {
@@ -628,8 +629,6 @@
     },
     "nodeVersion": "22.14.0",
     "engineStrict": true,
-    // This is a temporary workaround to fix "bit compile" on macOS and Windows.
-    // "bit compile" breaks node_modules when hard links are used.
     "packageImportMethod": "copy",
     "packageManagerArgs": [],
     "devFilePatterns": [
@@ -637,8 +636,6 @@
     ],
     "strictPeerDependencies": true,
     "autoInstallPeers": true,
-    // Setting this to false, to make sure we are not consuming anything that exists only on the bit.dev registry
-    // "installFromBitDevRegistry": false,
     "savePrefix": "",
     "extraArgs": [],
     "peerDependencyRules": {

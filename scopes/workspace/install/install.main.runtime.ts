@@ -1347,7 +1347,7 @@ export class InstallMain {
         return;
       }
       const components = await workspace.list();
-      await bundler.devServer(components);
+      await bundler.addNewDevServers(components);
     });
     cli.register(...commands);
     return installExt;

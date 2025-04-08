@@ -114,6 +114,17 @@ const COMPONENT_SUBSCRIPTION_REMOVED = gql`
   }
 `;
 
+const COMPONENT_SERVER_STARTED = gql`
+  subscription OnComponentServerStarted {
+    componentServerStarted {
+      env
+      url
+      host
+      basePath
+    }
+  }
+`;
+
 export function useWorkspace(options: UseWorkspaceOptions = {}) {
   const { data, subscribeToMore, ...rest } = useDataQuery(WORKSPACE);
   const optionsRef = useLatest(options);
@@ -187,12 +198,67 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
       },
     });
 
-    // TODO - sub to component removal
+    const unSubServerStarted = subscribeToMore({
+      document: COMPONENT_SERVER_STARTED,
+      updateQuery: (prev, { subscriptionData }) => {
+        const update = subscriptionData.data;
+        if (!update) return prev;
+        console.log("🚀 ~ useEffect ~ update:", update)
+
+        const serverInfo = update.componentServerStarted;
+        if (!serverInfo || serverInfo.length === 0) return prev;
+        
+        const updatedComponents = prev.workspace.components.map((component) => {
+          if (component.env?.id === serverInfo[0].env) {
+            return {
+              ...component,
+              server: {
+                env: serverInfo[0].env,
+                url: serverInfo[0].url,
+                host: serverInfo[0].host,
+                basePath: serverInfo[0].basePath,
+              },
+            };
+          }
+          return component;
+        });
+
+        // If components were updated, create component models and trigger the onComponentUpdated callback
+        const changedComponents = updatedComponents.filter((updatedComp, index) => {
+          const originalComp = prev.workspace.components[index];
+          // Compare server information to detect changes
+          return (
+            originalComp.server?.url !== updatedComp.server?.url ||
+            originalComp.server?.env !== updatedComp.server?.env
+          );
+        });
+
+        if (changedComponents.length > 0) {
+          // side effect - trigger observers for components that were updated
+          setTimeout(() => 
+            optionsRef.current.onComponentUpdated?.(
+              changedComponents.map(comp => ComponentModel.from(comp))
+            )
+          );
+        }
+
+        return {
+          ...prev,
+          workspace: {
+            ...prev.workspace,
+            components: updatedComponents,
+          },
+        };
+      },
+
+
+    });
 
     return () => {
       unSubCompAddition();
       unSubCompChange();
       unSubCompRemoved();
+      unSubServerStarted();
     };
   }, [optionsRef]);
 

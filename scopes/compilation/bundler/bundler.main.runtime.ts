@@ -6,17 +6,17 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import pMapSeries from 'p-map-series';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { BrowserRuntime } from './browser-runtime';
 import { BundlerAspect } from './bundler.aspect';
 import { ComponentServer } from './component-server';
-import { NewDevServerCreatedEvent } from './events';
+import { NewDevServersCreatedEvent } from './events';
 import { BundlerContext } from './bundler-context';
 import { devServerSchema } from './dev-server.graphql';
 import { DevServerService } from './dev-server.service';
 import { BundlerService } from './bundler.service';
 import { DevServer } from './dev-server';
-import { UIAspect, UiMain } from '@teambit/ui';
+import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 
 export type DevServerTransformer = (devServer: DevServer, { envId }: { envId: string }) => DevServer;
 
@@ -63,12 +63,9 @@ export class BundlerMain {
      */
     private devServerTransformerSlot: DevServerTransformerSlot,
 
-    /**
-     * ui extension.
-     */
-    private ui: UiMain,
+    private graphql: GraphqlMain,
 
-    private graphql: GraphqlMain
+    private harmony: Harmony
   ) {
   }
 
@@ -84,23 +81,34 @@ export class BundlerMain {
     });
   }
 
-  async devServer(components: Component[]): Promise<ComponentServer[]> {
+  async addNewDevServers(components: Component[]): Promise<ComponentServer[]> {
+    const newComponents = components.filter((component) => {
+      return !this.getComponentServer(component);
+    });
+
+    if (newComponents.length === 0) {
+      return [];
+    }
+
+    const compiler = this.harmony.get(CompilerAspect.id) as CompilerMain;
+    await compiler.compileOnWorkspace(newComponents.map(c => c.id))
+
+    return this.devServer(newComponents, { configureProxy: true });
+  }
+
+  async devServer(components: Component[], opts: { configureProxy?: boolean } = {}): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
     const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer>(this.devService, {
       dedicatedEnvDevServers: this.config.dedicatedEnvDevServers,
     });
-
-    servers.forEach(server => {
-      this.pubsub.pub(BundlerAspect.id, new NewDevServerCreatedEvent(
+    if (opts.configureProxy) {
+      this.pubsub.pub(BundlerAspect.id, new NewDevServersCreatedEvent(
+        servers,
         Date.now(),
-        server,
-        server.context,
-        server.hostname,
-        server.port,
         this.graphql,
         true
       ));
-    });
+    }
     this._componentServers = servers;
     this.indexByComponent();
     return servers;
@@ -167,31 +175,31 @@ export class BundlerMain {
     EnvsAspect,
     GraphqlAspect,
     DependencyResolverAspect,
-    UIAspect,
   ];
 
   static defaultConfig = {
+    // dedicatedEnvDevServers: ['bitdev.react/react-env'],
     dedicatedEnvDevServers: [],
   };
 
   static async provider(
-    [pubsub, envs, graphql, dependencyResolver, ui]:
+    [pubsub, envs, graphql, dependencyResolver]:
       [
         PubsubMain,
         EnvsMain,
         GraphqlMain,
         DependencyResolverMain,
-        UiMain
       ],
     config,
-    [runtimeSlot, devServerTransformerSlot]: [BrowserRuntimeSlot, DevServerTransformerSlot]
+    [runtimeSlot, devServerTransformerSlot]: [BrowserRuntimeSlot, DevServerTransformerSlot],
+    harmony
   ) {
+
     const devServerService = new DevServerService(pubsub, dependencyResolver, runtimeSlot, devServerTransformerSlot);
     const bundler = new BundlerMain(
-      config, pubsub, envs, devServerService, runtimeSlot, devServerTransformerSlot, ui, graphql);
+      config, pubsub, envs, devServerService, runtimeSlot, devServerTransformerSlot, graphql, harmony);
     envs.registerService(devServerService, new BundlerService());
-
-    graphql.register(() => devServerSchema(bundler));
+    graphql.register(() => devServerSchema(bundler, graphql));
 
     return bundler;
   }
