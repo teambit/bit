@@ -203,7 +203,6 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
       updateQuery: (prev, { subscriptionData }) => {
         const update = subscriptionData.data;
         if (!update) return prev;
-        console.log("🚀 ~ useEffect ~ update:", update)
 
         const serverInfo = update.componentServerStarted;
         if (!serverInfo || serverInfo.length === 0) return prev;
