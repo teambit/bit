@@ -12,7 +12,7 @@ import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-
 import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/defender.ui.test-table';
-import { CellFunctionProps, Table, type ColumnProps } from '@teambit/design.content.table';
+import { Table, type ColumnProps, type CellFunctionProps } from '@teambit/design.content.table';
 import { Link } from '@teambit/base-react.navigation.link';
 import styles from './tests-page.module.scss';
 
