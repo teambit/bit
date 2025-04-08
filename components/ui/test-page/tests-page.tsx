@@ -51,7 +51,7 @@ type CoverageData = {
 const getColor = (pct: number) => {
   if (pct < 25) return '#E62E5C';
   if (pct < 50) return '#FFC640';
-  if (pct < 75) return 'var(--bit-accent-hunger-color)';
+  if (pct < 75) return '#EEB90F';
   return '#37B26C';
 }
 
