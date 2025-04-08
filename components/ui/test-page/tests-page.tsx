@@ -130,8 +130,11 @@ const columns: ColumnProps<CoverageFile>[] = [
         return null;
       }
 
-      const totalCovered = row?.data?.lines.covered + row?.data?.branches.covered + row?.data?.functions.covered + row?.data?.statements.covered;
-      const totalLines = row?.data?.lines.total + row?.data?.branches.total + row?.data?.functions.total + row?.data?.statements.total;
+      const totalCovered = 
+        row?.data?.lines.covered + row?.data?.branches.covered + row?.data?.functions.covered + row?.data?.statements.covered;
+      const totalLines = 
+        row?.data?.lines.total + row?.data?.branches.total + row?.data?.functions.total + row?.data?.statements.total;
+      
       return (
         <div className={styles.summaryProgressBar}>
           <div className={styles.progressBarFill} style={{
