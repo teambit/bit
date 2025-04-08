@@ -110,6 +110,19 @@ const createColumn = (id: string, header: string, type: keyof CoverageFile['data
   },
 ];
 
+const calculatePercentage = (data: CoverageData) => {
+  const covered = data.lines.covered 
+    + data.branches.covered
+    + data.functions.covered
+    + data.statements.covered;
+
+  const total = data.lines.total 
+    + data.branches.total
+    + data.functions.total
+    + data.statements.total;
+  return (covered / total) * 100;
+}
+
 const columns: ColumnProps<CoverageFile>[] = [
   {
     id: 'path',
@@ -130,16 +143,13 @@ const columns: ColumnProps<CoverageFile>[] = [
         return null;
       }
 
-      const totalCovered = 
-        row?.data?.lines.covered + row?.data?.branches.covered + row?.data?.functions.covered + row?.data?.statements.covered;
-      const totalLines = 
-        row?.data?.lines.total + row?.data?.branches.total + row?.data?.functions.total + row?.data?.statements.total;
+      const coveredPercentage = calculatePercentage(row?.data);
       
       return (
         <div className={styles.summaryProgressBar}>
           <div className={styles.progressBarFill} style={{
-              width: `${totalCovered / totalLines * 100}%`,
-              backgroundColor: getColor(totalCovered / totalLines * 100)
+              width: `${coveredPercentage}%`,
+              backgroundColor: getColor(coveredPercentage)
             }}
           />
         </div>
