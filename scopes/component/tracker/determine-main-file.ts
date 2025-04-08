@@ -125,7 +125,7 @@ export default function determineMainFile(
       if (mainFileUsingRootDir) return mainFileUsingRootDir.relativePath;
     }
     // search for a file-name
-    const potentialMainFiles = files.filter((file) => file.name === baseMainFile);
+    const potentialMainFiles = files.filter((file) => path.basename(file.relativePath) === baseMainFile);
     if (!potentialMainFiles.length) return null;
     // when there are several files that met the criteria, choose the closer to the root
     const sortByNumOfDirs = (a, b) =>
