@@ -1,12 +1,10 @@
-/* eslint-disable complexity */
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { CompilerAspect, CompilerMain } from '@teambit/compiler';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BrowserRuntime } from './browser-runtime';
 import { BundlerAspect } from './bundler.aspect';
 import { ComponentServer } from './component-server';
@@ -18,9 +16,10 @@ import { BundlerService } from './bundler.service';
 import { DevServer } from './dev-server';
 
 export type DevServerTransformer = (devServer: DevServer, { envId }: { envId: string }) => DevServer;
-
+export type PreDevServerOperation = (components: Component[]) => Promise<void>;
 export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
 export type DevServerTransformerSlot = SlotRegistry<DevServerTransformer>;
+export type PreDevServerOperationSlot = SlotRegistry<PreDevServerOperation>;
 
 export type BundlerConfig = {
   dedicatedEnvDevServers: string[];
@@ -62,11 +61,15 @@ export class BundlerMain {
      */
     private devServerTransformerSlot: DevServerTransformerSlot,
 
-    private graphql: GraphqlMain,
+    /**
+     * pre-dev-server operation slot.
+     */
+    private preDevServerOperationSlot: PreDevServerOperationSlot,
 
-    private harmony: Harmony
+    private graphql: GraphqlMain,
   ) {
   }
+
   async addNewDevServers(components: Component[]): Promise<ComponentServer[]> {
     const newComponents = components.filter((component) => {
       return !this.getComponentServer(component);
@@ -76,8 +79,9 @@ export class BundlerMain {
       return [];
     }
 
-    const compiler = this.harmony.get(CompilerAspect.id) as CompilerMain;
-    await compiler.compileOnWorkspace(newComponents.map(c => c.id))
+    await Promise.all(
+      this.preDevServerOperationSlot.values().map(compiler => compiler(newComponents))
+    );
 
     return this.devServer(newComponents, { configureProxy: true });
   }
@@ -151,9 +155,22 @@ export class BundlerMain {
     return this;
   }
 
+  /**
+   * register a new pre-dev-server operation.
+   * @param preDevServerOperation
+   */
+  registerPreDevServerOperation(preDevServerOperation: PreDevServerOperation) {
+    this.preDevServerOperationSlot.register(preDevServerOperation);
+    return this;
+  }
+
   private indexByComponent() { }
 
-  static slots = [Slot.withType<BrowserRuntime>(), Slot.withType<DevServerTransformerSlot>()];
+  static slots = [
+    Slot.withType<BrowserRuntime>(),
+    Slot.withType<DevServerTransformerSlot>(),
+    Slot.withType<PreDevServerOperationSlot>()
+  ];
 
   static runtime = MainRuntime;
   static dependencies = [
@@ -176,13 +193,28 @@ export class BundlerMain {
         DependencyResolverMain,
       ],
     config,
-    [runtimeSlot, devServerTransformerSlot]: [BrowserRuntimeSlot, DevServerTransformerSlot],
-    harmony
+    [
+      runtimeSlot,
+      devServerTransformerSlot,
+      preDevServerCompilerSlot
+    ]: [
+        BrowserRuntimeSlot,
+        DevServerTransformerSlot,
+        PreDevServerOperationSlot
+      ]
   ) {
 
     const devServerService = new DevServerService(pubsub, dependencyResolver, runtimeSlot, devServerTransformerSlot);
     const bundler = new BundlerMain(
-      config, pubsub, envs, devServerService, runtimeSlot, devServerTransformerSlot, graphql, harmony);
+      config,
+      pubsub,
+      envs,
+      devServerService,
+      runtimeSlot,
+      devServerTransformerSlot,
+      preDevServerCompilerSlot,
+      graphql,
+    );
     envs.registerService(devServerService, new BundlerService());
     graphql.register(() => devServerSchema(bundler, graphql));
 

@@ -1322,8 +1322,8 @@ export class InstallMain {
       if (eventName !== 'onPostInstall') return;
       logger.debug('got onPostInstall event, clear workspace and all components cache');
       await workspace.clearCache();
-      await pMapSeries(postInstallSlot.values(), (fn) => fn());
       await installExt.reloadMovedEnvs();
+      await pMapSeries(postInstallSlot.values(), (fn) => fn());
     });
     if (issues) {
       issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));
@@ -1341,6 +1341,11 @@ export class InstallMain {
       workspace.registerOnRootAspectAdded(installExt.onRootAspectAddedSubscriber.bind(installExt));
       workspace.registerOnComponentChange(installExt.onComponentChange.bind(installExt));
     }
+
+    bundler.registerPreDevServerOperation(async (components) => {
+      logger.debug(`Compiling ${components.length} components: ${components.map(c => c.id.toString()).join(', ')} before dev server creation`);
+      await compiler.compileOnWorkspace(components.map(c => c.id), { initiator: CompilationInitiator.PreDevServer });
+    });
 
     installExt.registerPostInstall(async () => {
       if (!ui.getUIServer()) {
