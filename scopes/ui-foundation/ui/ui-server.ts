@@ -11,6 +11,7 @@ import httpProxy from 'http-proxy';
 import { join } from 'path';
 import webpack from 'webpack';
 import WebpackDevServer, { Configuration as WdsConfiguration } from 'webpack-dev-server';
+import { ComponentServer } from '@teambit/bundler';
 import { createSsrMiddleware } from './ssr-middleware';
 import { StartPlugin } from './start-plugin';
 import { ProxyEntry, UIRoot } from './ui-root';
@@ -18,7 +19,6 @@ import { UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
 
 import { devConfig } from './webpack/webpack.dev.config';
-import { ComponentServer } from '@teambit/bundler';
 
 export type UIServerProps = {
   graphql: GraphqlMain;
