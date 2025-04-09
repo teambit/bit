@@ -1,9 +1,8 @@
 import path from 'path';
-import { type ProjectManifest, type Registries } from '@pnpm/types';
-import { type InlineSpecifiersResolvedDependencies } from '@pnpm/lockfile.types';
+import { type ProjectManifest } from '@pnpm/types';
+import { type LockfileFileProjectResolvedDependencies } from '@pnpm/lockfile.types';
 import { type ResolveFunction } from '@pnpm/client';
 import * as dp from '@pnpm/dependency-path';
-import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
 import { pick, partition } from 'lodash';
 import { snapToSemver } from '@teambit/component-package-version';
 import {
@@ -38,7 +37,7 @@ function convertLockfileToGraphFromCapsule(
 }
 
 function importerDepsToNeighbours(
-  importerDependencies: InlineSpecifiersResolvedDependencies,
+  importerDependencies: LockfileFileProjectResolvedDependencies,
   lifecycle: 'dev' | 'runtime',
   optional: boolean
 ): DependencyNeighbour[] {
@@ -205,12 +204,10 @@ export async function convertGraphToLockfile(
     manifests,
     rootDir,
     resolve,
-    registries,
   }: {
     manifests: Record<string, ProjectManifest>;
     rootDir: string;
     resolve: ResolveFunction;
-    registries: Registries;
   }
 ): Promise<BitLockfileFile> {
   const graphString = _graph.serialize();
@@ -302,7 +299,6 @@ export async function convertGraphToLockfile(
       }, {
         lockfileDir: '',
         projectDir: '',
-        registry: pickRegistryForPackage(registries, pkgToResolve.name),
         preferredVersions: {},
       })
       if ('integrity' in resolution && resolution.integrity) {
