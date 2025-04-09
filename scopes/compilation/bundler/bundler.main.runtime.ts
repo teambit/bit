@@ -16,10 +16,10 @@ import { BundlerService } from './bundler.service';
 import { DevServer } from './dev-server';
 
 export type DevServerTransformer = (devServer: DevServer, { envId }: { envId: string }) => DevServer;
-export type PreDevServerOperation = (components: Component[]) => Promise<void>;
+export type OnPreDevServerCreated = (newCompsWithoutDevServer: Component[]) => Promise<void>;
 export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
 export type DevServerTransformerSlot = SlotRegistry<DevServerTransformer>;
-export type PreDevServerOperationSlot = SlotRegistry<PreDevServerOperation>;
+export type OnPreDevServerCreatedSlot = SlotRegistry<OnPreDevServerCreated>;
 
 export type BundlerConfig = {
   dedicatedEnvDevServers: string[];
@@ -64,14 +64,14 @@ export class BundlerMain {
     /**
      * pre-dev-server operation slot.
      */
-    private preDevServerOperationSlot: PreDevServerOperationSlot,
+    private onPreDevServerCreatedSlot: OnPreDevServerCreatedSlot,
 
     private graphql: GraphqlMain,
   ) {
   }
 
-  async addNewDevServers(components: Component[]): Promise<ComponentServer[]> {
-    const newComponents = components.filter((component) => {
+  async addNewDevServers(newCompsWithoutDevServers: Component[]): Promise<ComponentServer[]> {
+    const newComponents = newCompsWithoutDevServers.filter((component) => {
       return !this.getComponentServer(component);
     });
 
@@ -80,7 +80,7 @@ export class BundlerMain {
     }
 
     await Promise.all(
-      this.preDevServerOperationSlot.values().map(compiler => compiler(newComponents))
+      this.onPreDevServerCreatedSlot.values().map(subscriberFn => subscriberFn(newComponents))
     );
 
     return this.devServer(newComponents, { configureProxy: true });
@@ -156,11 +156,11 @@ export class BundlerMain {
   }
 
   /**
-   * register a new pre-dev-server operation.
-   * @param preDevServerOperation
+   * register a new pre-dev-server compiler.
+   * @param onPreDevServerCreated
    */
-  registerPreDevServerOperation(preDevServerOperation: PreDevServerOperation) {
-    this.preDevServerOperationSlot.register(preDevServerOperation);
+  registerOnPreDevServerCreated(onPreDevServerCreated: OnPreDevServerCreated) {
+    this.onPreDevServerCreatedSlot.register(onPreDevServerCreated);
     return this;
   }
 
@@ -169,7 +169,7 @@ export class BundlerMain {
   static slots = [
     Slot.withType<BrowserRuntime>(),
     Slot.withType<DevServerTransformerSlot>(),
-    Slot.withType<PreDevServerOperationSlot>()
+    Slot.withType<OnPreDevServerCreatedSlot>()
   ];
 
   static runtime = MainRuntime;
@@ -193,14 +193,13 @@ export class BundlerMain {
         DependencyResolverMain,
       ],
     config,
-    [
-      runtimeSlot,
+    [runtimeSlot,
       devServerTransformerSlot,
-      preDevServerCompilerSlot
+      onPreDevServerCreatedSlot
     ]: [
         BrowserRuntimeSlot,
         DevServerTransformerSlot,
-        PreDevServerOperationSlot
+        OnPreDevServerCreatedSlot
       ]
   ) {
 
@@ -212,7 +211,7 @@ export class BundlerMain {
       devServerService,
       runtimeSlot,
       devServerTransformerSlot,
-      preDevServerCompilerSlot,
+      onPreDevServerCreatedSlot,
       graphql,
     );
     envs.registerService(devServerService, new BundlerService());

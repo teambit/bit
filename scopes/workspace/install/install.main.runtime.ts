@@ -1342,9 +1342,13 @@ export class InstallMain {
       workspace.registerOnComponentChange(installExt.onComponentChange.bind(installExt));
     }
 
-    bundler.registerPreDevServerOperation(async (components) => {
-      logger.debug(`Compiling ${components.length} components: ${components.map(c => c.id.toString()).join(', ')} before dev server creation`);
-      await compiler.compileOnWorkspace(components.map(c => c.id), { initiator: CompilationInitiator.PreDevServer });
+    bundler.registerOnPreDevServerCreated(async (newCompsWithoutDevServer) => {
+      logger.debug(`Compiling ${newCompsWithoutDevServer.length} components: ${newCompsWithoutDevServer.map(c => c.id.toString()).join(', ')} before dev server creation`);
+      await compiler
+        .compileOnWorkspace(
+          newCompsWithoutDevServer
+            .map(c => c.id), { initiator: CompilationInitiator.PreDevServer }
+        );
     });
 
     installExt.registerPostInstall(async () => {
