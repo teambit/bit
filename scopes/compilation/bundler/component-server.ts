@@ -89,9 +89,10 @@ export class ComponentServer {
     });
   }
 
-  async restart(useNewPort: boolean = false): Promise<void> {
+  async restart(useNewPort = false): Promise<void> {
     if (this._isRestarting) {
-      throw new Error('Server restart already in progress');
+      // add a logger here once we start using this API
+      return;
     }
     this._isRestarting = true;
     try {
