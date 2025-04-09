@@ -6,6 +6,7 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
+import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { BrowserRuntime } from './browser-runtime';
 import { BundlerAspect } from './bundler.aspect';
 import { ComponentServer } from './component-server';
@@ -15,7 +16,6 @@ import { devServerSchema } from './dev-server.graphql';
 import { DevServerService } from './dev-server.service';
 import { BundlerService } from './bundler.service';
 import { DevServer } from './dev-server';
-import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 
 export type DevServerTransformer = (devServer: DevServer, { envId }: { envId: string }) => DevServer;
 
@@ -31,8 +31,8 @@ export type BundlerConfig = {
  */
 export class BundlerMain {
   /**
- * component servers.
- */
+   * component servers.
+   */
   private _componentServers: ComponentServer[] = [];
 
   constructor(
