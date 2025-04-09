@@ -106,11 +106,11 @@ export class UIServer {
     const entries = [
       {
         context: [previewRoute],
-        target: `http://localhost:${server.port}`,
+        target: `http://${this.host}:${server.port}`,
       },
       {
         context: [hmrRoute],
-        target: `http://localhost:${server.port}`,
+        target: `ws://${this.host}:${server.port}`,
         ws: true,
       }
     ];
