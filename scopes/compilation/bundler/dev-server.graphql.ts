@@ -48,8 +48,6 @@ export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Sch
             id: `server-${componentServer.context.envRuntime.id}`,
             env: componentServer.context.envRuntime.id,
             url: componentServer.url,
-            host: componentServer.hostname,
-            basePath: componentServer.url,
           };
         },
       },
@@ -67,8 +65,6 @@ export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Sch
               id: `server-${server.context.envRuntime.id}`,
               env: server.context.envRuntime.id,
               url: server.url,
-              host: server.hostname,
-              basePath: server.url,
             }];
           }
         },
