@@ -25,6 +25,7 @@ import { DistArtifactNotFound } from './exceptions';
 import { CompilationInitiator, Compiler } from './types';
 import { CompileOptions, WorkspaceCompiler } from './workspace-compiler';
 import { compilerTemplate } from './templates/compiler';
+import BundlerAspect, { BundlerMain } from '@teambit/bundler';
 
 export class CompilerMain {
   constructor(
@@ -126,6 +127,7 @@ export class CompilerMain {
     DependencyResolverAspect,
     WatcherAspect,
     IssuesAspect,
+    BundlerAspect
   ];
 
   static async provider([
@@ -141,6 +143,7 @@ export class CompilerMain {
     dependencyResolver,
     watcher,
     issues,
+    bundler
   ]: [
     CLIMain,
     Workspace,
@@ -154,6 +157,7 @@ export class CompilerMain {
     DependencyResolverMain,
     WatcherMain,
     IssuesMain,
+    BundlerMain
   ]) {
     const logger = loggerMain.createLogger(CompilerAspect.id);
     const compilerService = new CompilerService();
@@ -183,6 +187,14 @@ export class CompilerMain {
       issues.registerAddComponentsIssues(compilerMain.addMissingDistsIssue.bind(compilerMain));
     }
     if (generator) generator.registerComponentTemplate([compilerTemplate]);
+
+    bundler.registerOnPreDevServerCreated(async (newCompsWithoutDevServer) => {
+      logger.debug(`Compiling ${newCompsWithoutDevServer.length} components: ${newCompsWithoutDevServer.map(c => c.id.toString()).join(', ')} before dev server creation`);
+      await compilerMain.compileOnWorkspace(
+          newCompsWithoutDevServer
+            .map(c => c.id), { initiator: CompilationInitiator.PreDevServer }
+        );
+    });
 
     return compilerMain;
   }
