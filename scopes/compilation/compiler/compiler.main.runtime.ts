@@ -16,6 +16,7 @@ import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { Workspace, WorkspaceAspect, WorkspaceComponentLoadOptions } from '@teambit/workspace';
+import BundlerAspect, { BundlerMain } from '@teambit/bundler';
 import { CompilerAspect } from './compiler.aspect';
 import { CompileCmd } from './compiler.cmd';
 import { CompilerService } from './compiler.service';
@@ -25,7 +26,6 @@ import { DistArtifactNotFound } from './exceptions';
 import { CompilationInitiator, Compiler } from './types';
 import { CompileOptions, WorkspaceCompiler } from './workspace-compiler';
 import { compilerTemplate } from './templates/compiler';
-import BundlerAspect, { BundlerMain } from '@teambit/bundler';
 
 export class CompilerMain {
   constructor(
