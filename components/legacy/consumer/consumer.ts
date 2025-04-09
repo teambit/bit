@@ -312,6 +312,22 @@ export default class Consumer {
 
       sortProperties(version);
 
+
+      // align files properties between model and filesystem.
+      // the reason is that "name" and "test" props became deprecated. we don't want discrepancies between the
+      // model and the filesystem related to these two props. they should not make a component modified. we simply
+      // don't care about them anymore.
+      const filesFromFs = version.files;
+      const filesFromModel = componentFromModel.files;
+      filesFromFs.forEach((fileFromFs) => {
+        const fileFromModel = filesFromModel.find((file) => file.relativePath === fileFromFs.relativePath);
+        if (!fileFromModel) {
+          return;
+        }
+        fileFromFs.name = fileFromModel.name;
+        fileFromFs.test = fileFromModel.test;
+      });
+
       // prefix your command with "BIT_LOG=*" to see the actual id changes
       if (process.env.BIT_LOG && componentFromModel.calculateHash().hash !== version.calculateHash().hash) {
         console.log('-------------------componentFromModel------------------------'); // eslint-disable-line no-console
