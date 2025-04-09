@@ -37,10 +37,10 @@ export class PreviewStartPlugin implements StartPlugin {
     private graphql: GraphqlMain
   ) {
     this.pubsub.sub(BundlerAspect.id, async (event) => {
-      if (event instanceof NewDevServersCreatedEvent && event.type === NewDevServersCreatedEvent.TYPE) {
+      if (event.type === NewDevServersCreatedEvent.TYPE) {
         await this.onNewDevServersCreated(event.componentsServers);
       }
-      if (event instanceof ComponentsServerStartedEvent) {
+      if (event.type === ComponentsServerStartedEvent.TYPE) {
         await this.onComponentServerStarted(event.componentsServer);
       }
     });
