@@ -106,6 +106,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
     </WorkspaceProvider>
   );
 }
+
 function useComponentNotifications() {
   const notifications = useNotifications();
 
@@ -124,6 +125,19 @@ function useComponentNotifications() {
           `removed ${pluralize('component', ids.length)} ${ids.map((id) => id.toString()).join(', ')}`
         );
         setTimeout(() => notifications.dismiss(notificationId), 12 * 1000);
+      },
+      
+      onComponentUpdated: (comps: ComponentModel[]) => {
+        const compsWithServerUpdates = comps.filter(comp => comp.server?.url);
+        
+        if (compsWithServerUpdates.length > 0) {
+          const notificationId = notifications.log(
+            `Server ready for ${pluralize('component', compsWithServerUpdates.length)}: ${compsWithServerUpdates
+              .map((comp) => comp.id.toString())
+              .join(', ')}`
+          );
+          setTimeout(() => notifications.dismiss(notificationId), 8 * 1000);
+        }
       },
     }),
     [notifications]
