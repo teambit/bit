@@ -16,7 +16,7 @@ import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { Workspace, WorkspaceAspect, WorkspaceComponentLoadOptions } from '@teambit/workspace';
-import BundlerAspect, { BundlerMain } from '@teambit/bundler';
+import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { CompilerAspect } from './compiler.aspect';
 import { CompileCmd } from './compiler.cmd';
 import { CompilerService } from './compiler.service';
@@ -36,7 +36,7 @@ export class CompilerMain {
     private workspace: Workspace,
     private dependencyResolver: DependencyResolverMain,
     private compilerService: CompilerService
-  ) {}
+  ) { }
 
   getCompiler(context: ExecutionContext): Compiler | undefined {
     return this.compilerService.getCompiler(context);
@@ -145,20 +145,20 @@ export class CompilerMain {
     issues,
     bundler
   ]: [
-    CLIMain,
-    Workspace,
-    EnvsMain,
-    LoggerMain,
-    PubsubMain,
-    AspectLoaderMain,
-    BuilderMain,
-    UiMain,
-    GeneratorMain,
-    DependencyResolverMain,
-    WatcherMain,
-    IssuesMain,
-    BundlerMain
-  ]) {
+      CLIMain,
+      Workspace,
+      EnvsMain,
+      LoggerMain,
+      PubsubMain,
+      AspectLoaderMain,
+      BuilderMain,
+      UiMain,
+      GeneratorMain,
+      DependencyResolverMain,
+      WatcherMain,
+      IssuesMain,
+      BundlerMain
+    ]) {
     const logger = loggerMain.createLogger(CompilerAspect.id);
     const compilerService = new CompilerService();
 
@@ -191,9 +191,9 @@ export class CompilerMain {
     bundler.registerOnPreDevServerCreated(async (newCompsWithoutDevServer) => {
       logger.debug(`Compiling ${newCompsWithoutDevServer.length} components: ${newCompsWithoutDevServer.map(c => c.id.toString()).join(', ')} before dev server creation`);
       await compilerMain.compileOnWorkspace(
-          newCompsWithoutDevServer
-            .map(c => c.id), { initiator: CompilationInitiator.PreDevServer }
-        );
+        newCompsWithoutDevServer
+          .map(c => c.id), { initiator: CompilationInitiator.PreDevServer }
+      );
     });
 
     return compilerMain;
