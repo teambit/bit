@@ -71,6 +71,7 @@ export type WorkspaceLinkResults = {
 
 export type WorkspaceInstallOptions = {
   addMissingDeps?: boolean;
+  skipUnavailable?: boolean;
   addMissingPeers?: boolean;
   lifecycleType?: WorkspaceDependencyLifecycleType;
   dedupe?: boolean;
@@ -262,15 +263,22 @@ export class InstallMain {
     }
     this.logger.debug(`installing the following packages: ${packages.join()}`);
     const resolver = await this.dependencyResolver.getVersionResolver();
-    const resolvedPackagesP = packages.map((packageName) =>
-      resolver.resolveRemoteVersion(packageName, {
-        rootDir: this.workspace.path,
-      })
-    );
+    const resolvedPackagesP = packages.map(async (packageName) => {
+      try {
+        return await resolver.resolveRemoteVersion(packageName, {
+          rootDir: this.workspace.path,
+        });
+      } catch (error: unknown) {
+        if (options?.skipUnavailable) {
+          return;
+        }
+        throw error
+      }
+    });
     const resolvedPackages = await Promise.all(resolvedPackagesP);
     const newWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
     resolvedPackages.forEach((resolvedPackage) => {
-      if (resolvedPackage.version) {
+      if (resolvedPackage?.version) {
         const versionWithPrefix = this.dependencyResolver.getVersionWithSavePrefix({
           version: resolvedPackage.version,
           overridePrefix: options?.savePrefix,
@@ -324,6 +332,7 @@ export class InstallMain {
       {
         ...calcManifestsOpts,
         addMissingDeps: options?.addMissingDeps,
+        skipUnavailable: options?.skipUnavailable,
         linkedRootDeps,
       }
     );
@@ -634,6 +643,7 @@ export class InstallMain {
     installer: DependencyInstaller,
     options: GetComponentsAndManifestsOptions & {
       addMissingDeps?: boolean;
+      skipUnavailable?: boolean;
       linkedRootDeps: Record<string, string>;
     }
   ): Promise<{ componentsAndManifests: ComponentsAndManifests; mergedRootPolicy: WorkspacePolicy }> {
@@ -655,7 +665,9 @@ export class InstallMain {
         rootDeps.add((manifest as ProjectManifest).name!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
       }
     });
-    const addedNewPkgs = await this._addMissingPackagesToRootPolicy(rootDeps);
+    const addedNewPkgs = await this._addMissingPackagesToRootPolicy(rootDeps, {
+      skipUnavailable: options?.skipUnavailable,
+    });
     if (!addedNewPkgs) {
       return { componentsAndManifests, mergedRootPolicy };
     }
