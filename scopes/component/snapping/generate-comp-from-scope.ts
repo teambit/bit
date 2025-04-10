@@ -7,8 +7,7 @@ import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { Component } from '@teambit/component';
 import { DependenciesMain } from '@teambit/dependencies';
 import { DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
-import { FileData } from './snap-from-scope.cmd';
-import { SnappingMain, SnapDataParsed } from './snapping.main.runtime';
+import { FileData, SnappingMain, SnapDataParsed } from './snapping.main.runtime';
 
 export type NewDependency = {
   id: string; // component-id or package-name. e.g. "teambit.react/react" or "lodash".

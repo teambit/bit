@@ -17,9 +17,8 @@ import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { ComponentID } from '@teambit/component-id';
 import { Ref, Version } from '@teambit/objects';
 import { mockComponents } from '@teambit/component.testing.mock-components';
-import { SnappingMain } from './snapping.main.runtime';
+import { SnapDataPerCompRaw, SnappingMain } from './snapping.main.runtime';
 import { SnappingAspect } from './snapping.aspect';
-import { SnapDataPerCompRaw } from './snap-from-scope.cmd';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 
 describe('Snapping aspect', function () {

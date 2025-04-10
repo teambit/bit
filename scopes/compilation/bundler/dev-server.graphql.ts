@@ -1,22 +1,26 @@
 import { Component } from '@teambit/component';
-import { Schema } from '@teambit/graphql';
+import { GraphqlMain, Schema } from '@teambit/graphql';
 import { gql } from '@apollo/client';
-
 import { BundlerMain } from './bundler.main.runtime';
+import { ComponentServerStartedEvent } from './events';
 
-// TODO: this has to be refactored to the Preview aspect. with the entire preview logic here.
-export function devServerSchema(bundler: BundlerMain): Schema {
+export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Schema {
   return {
     typeDefs: gql`
       extend type Component {
         server: ComponentServer
       }
-
+      
       type ComponentServer {
+        id: ID!
         env: String
         url: String
         host: String
         basePath: String
+      }
+      
+      type Subscription {
+        componentServerStarted(id: String): [ComponentServer!]!
       }
     `,
     resolvers: {
@@ -30,15 +34,39 @@ export function devServerSchema(bundler: BundlerMain): Schema {
           // so don't return the server url
           // see https://github.com/teambit/bit/issues/5328
           if (requestedId && requestedId.includes('@')) {
-            return {};
+            return {
+              id: 'no-server'
+            };
           }
+
           const componentServer = bundler.getComponentServer(component);
-          if (!componentServer) return {};
+          if (!componentServer) return {
+            id: 'no-server'
+          };
 
           return {
+            id: `server-${componentServer.context.envRuntime.id}`,
             env: componentServer.context.envRuntime.id,
             url: componentServer.url,
           };
+        },
+      },
+      Subscription: {
+        componentServerStarted: {
+          subscribe: () => graphql.pubsub.asyncIterator([ComponentServerStartedEvent]),
+          resolve: (payload, { id }) => {
+            const server = payload.componentServers;
+
+            if (!server || (id && server.context.envRuntime.id !== id)) {
+              return [];
+            }
+
+            return [{
+              id: `server-${server.context.envRuntime.id}`,
+              env: server.context.envRuntime.id,
+              url: server.url,
+            }];
+          }
         },
       },
     },

@@ -1,5 +1,5 @@
 import { flatten } from 'lodash';
-import { BundlerMain, ComponentServer } from '@teambit/bundler';
+import { BundlerAspect, BundlerMain, ComponentServer, ComponentServerStartedEvent, ComponentsServerStartedEvent, NewDevServersCreatedEvent } from '@teambit/bundler';
 import { PubsubMain } from '@teambit/pubsub';
 import { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
 import { Workspace } from '@teambit/workspace';
@@ -8,6 +8,7 @@ import { SubscribeToWebpackEvents } from '@teambit/preview.cli.webpack-events-li
 import { CompilationInitiator } from '@teambit/compiler';
 import { Logger } from '@teambit/logger';
 import { CheckTypes, WatcherMain } from '@teambit/watcher';
+import { GraphqlMain } from '@teambit/graphql';
 import chalk from 'chalk';
 
 type ServerState = {
@@ -21,22 +22,70 @@ type ServerState = {
 type ServerStateMap = Record<string, ServerState>;
 
 export class PreviewStartPlugin implements StartPlugin {
+  previewServers: ComponentServer[] = [];
+  serversState: ServerStateMap = {};
+  serversMap: Record<string, ComponentServer> = {};
+  private pendingServers: Map<string, ComponentServer> = new Map();
+
   constructor(
     private workspace: Workspace,
     private bundler: BundlerMain,
     private ui: UiMain,
     private pubsub: PubsubMain,
     private logger: Logger,
-    private watcher: WatcherMain
-  ) {}
+    private watcher: WatcherMain,
+    private graphql: GraphqlMain
+  ) {
+    this.pubsub.sub(BundlerAspect.id, async (event) => {
+      if (event.type === NewDevServersCreatedEvent.TYPE) {
+        await this.onNewDevServersCreated(event.componentsServers);
+      }
+      if (event.type === ComponentsServerStartedEvent.TYPE) {
+        await this.onComponentServerStarted(event.componentsServer);
+      }
+    });
+  }
 
-  previewServers: ComponentServer[] = [];
-  serversState: ServerStateMap = {};
-  serversMap: Record<string, ComponentServer> = {};
+  async onComponentServerStarted(componentServer: ComponentServer) {
+    const startedEnvId = componentServer.context.envRuntime.id;
+    this.serversMap[startedEnvId] = componentServer;
+    const wasPending = this.pendingServers.has(startedEnvId);
+    this.pendingServers.delete(startedEnvId);
+
+    const index = this.previewServers.findIndex(s => s.context.envRuntime.id === startedEnvId);
+    if (index >= 0) {
+      this.previewServers[index] = componentServer;
+    } else {
+      this.previewServers.push(componentServer);
+    }
+
+    const uiServer = this.ui.getUIServer();
+
+    if (uiServer) {
+      uiServer.addComponentServerProxy(componentServer);
+      if (wasPending) {
+        await this.graphql.pubsub.publish(ComponentServerStartedEvent, {
+          componentServers: componentServer,
+        });
+      }
+    }
+  }
+
+  async onNewDevServersCreated(servers: ComponentServer[]) {
+    for (const server of servers) {
+      const envId = server.context.envRuntime.id;
+      this.pendingServers.set(envId, server);
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        server.listen();
+      } catch (err) {
+        this.logger.error(`failed to start server for ${envId}`, err);
+      }
+    }
+  }
 
   async initiate(options: StartPluginOptions) {
     this.listenToDevServers(options.showInternalUrls);
-
     const components = await this.workspace.getComponentsByUserInput(!options.pattern, options.pattern);
     // TODO: logic for creating preview servers must be refactored to this aspect from the DevServer aspect.
     const previewServers = await this.bundler.devServer(components);
@@ -106,7 +155,7 @@ export class PreviewStartPlugin implements StartPlugin {
   private handleOnStartCompiling(id: string) {
     this.serversState[id] = { isCompiling: true };
     const spinnerId = getSpinnerId(id);
-    const text = getSpinnerCompilingMessage(this.serversMap[id]);
+    const text = getSpinnerCompilingMessage(this.serversMap[id] || this.pendingServers.get(id));
     const exists = this.logger.multiSpinner.spinners[spinnerId];
     if (!exists) {
       this.logger.multiSpinner.add(spinnerId, { text });
@@ -120,7 +169,7 @@ export class PreviewStartPlugin implements StartPlugin {
       errors: results.errors,
       warnings: results.warnings,
     };
-    const previewServer = this.serversMap[id];
+    const previewServer = this.serversMap[id] || this.pendingServers.get(id);
     const spinnerId = getSpinnerId(id);
     const spinner = this.logger.multiSpinner.spinners[spinnerId];
     if (spinner && spinner.isActive()) {

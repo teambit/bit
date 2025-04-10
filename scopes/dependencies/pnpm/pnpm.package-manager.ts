@@ -209,6 +209,7 @@ export class PnpmPackageManager implements PackageManager {
           peerDependencyRules: installOptions.peerDependencyRules,
         },
         returnListOfDepsRequiringBuild: installOptions.returnListOfDepsRequiringBuild,
+        forcedHarmonyVersion: installOptions.forcedHarmonyVersion,
       },
       this.logger
     );

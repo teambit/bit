@@ -32,7 +32,8 @@ import createSsrWebpackConfig from './webpack/webpack.ssr.config';
 import { StartPlugin, StartPluginOptions } from './start-plugin';
 import { BundleUiTask, BUNDLE_UI_HASH_FILENAME } from './bundle-ui.task';
 
-export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
+export type UIDeps = [
+  PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
@@ -127,6 +128,7 @@ export type RuntimeOptions = {
 
 export class UiMain {
   private _isBundleUiServed = false;
+  private currentUIServer: UIServer | undefined;
 
   constructor(
     /**
@@ -189,7 +191,7 @@ export class UiMain {
     private harmony: Harmony,
 
     private startPluginSlot: StartPluginSlot
-  ) {}
+  ) { }
 
   async publicDir(uiRoot: UIRoot) {
     const overwriteFn = this.getOverwritePublic();
@@ -284,6 +286,9 @@ export class UiMain {
 
   runtimeOptions: RuntimeOptions = {};
 
+  getUIServer(): UIServer | undefined {
+    return this.currentUIServer;
+  }
   /**
    * create a Bit UI runtime.
    */
@@ -316,6 +321,8 @@ export class UiMain {
       publicDir,
       startPlugins: plugins,
     });
+
+    this.currentUIServer = uiServer;
 
     // Adding signal listeners to make sure we immediately close the process on sigint / sigterm (otherwise webpack dev server closing will take time)
     this.addSignalListener();
