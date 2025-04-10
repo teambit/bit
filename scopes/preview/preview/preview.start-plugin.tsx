@@ -96,7 +96,6 @@ export class PreviewStartPlugin implements StartPlugin {
       const envId = server.context.envRuntime.id;
       this.pendingServers.set(envId, server);
       
-      // Initialize the server state
       this.serversState[envId] = {
         isCompiling: false,
         isReady: false,
