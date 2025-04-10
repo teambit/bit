@@ -7,14 +7,10 @@ export type {
   SnapResults,
   SnapFromScopeResults,
   SnapDataParsed,
+  SnapDataPerCompRaw,
 } from './snapping.main.runtime';
 export default SnappingAspect;
 export { SnappingAspect };
-export { VersionMaker, onTagIdTransformer, BasicTagParams, VersionMakerParams } from './version-maker';
-export { AUTO_TAGGED_MSG, NOTHING_TO_TAG_MSG } from './tag-cmd';
-export {
-  snapFromScopeOptions,
-  inputDataDescription,
-  SnapDataPerCompRaw,
-  SnapFromScopeOptions,
-} from './snap-from-scope.cmd';
+export { VersionMaker, onTagIdTransformer, BasicTagParams, VersionMakerParams, BasicTagSnapParams } from './version-maker';
+export { AUTO_TAGGED_MSG, NOTHING_TO_TAG_MSG, tagCmdOptions, TagParams, validateOptions, tagResultOutput } from './tag-cmd';
+

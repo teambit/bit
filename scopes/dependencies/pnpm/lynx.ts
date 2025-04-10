@@ -183,6 +183,7 @@ export type PnpmInstallOptions = {
   hoistInjectedDependencies?: boolean;
   dryRun?: boolean;
   dedupeInjectedDeps?: boolean;
+  forcedHarmonyVersion?: string;
 } & Pick<
   InstallOptions,
   | 'autoInstallPeers'
@@ -225,6 +226,18 @@ export async function install(
     readPackage.push(readPackageHook as ReadPackageHook);
   }
   readPackage.push(removeLegacyFromDeps as ReadPackageHook);
+  const overrides = {
+    ...options.overrides,
+  };
+  if (options.forcedHarmonyVersion) {
+    // Harmony needs to be a singleton, so if a specific version was requested for the workspace,
+    // we force that version accross the whole dependency graph.
+    overrides['@teambit/harmony'] = options.forcedHarmonyVersion;
+  } else {
+    // If the workspace did not specify a harmony version in a root policy,
+    // then we remove harmony from any dependencies, so that the one linked from bvm is used.
+    readPackage.push(removeHarmonyFromDeps as ReadPackageHook);
+  }
   if (!manifestsByPaths[rootDir].dependenciesMeta) {
     manifestsByPaths = {
       ...manifestsByPaths,
@@ -295,6 +308,7 @@ export async function install(
     disableRelinkLocalDirDeps: true,
     hoistPattern,
     virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
+    overrides,
   };
 
   let dependenciesChanged = false;
@@ -407,11 +421,29 @@ function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string)
  * It is linked from bvm.
  */
 function removeLegacyFromDeps(pkg: PackageManifest): PackageManifest {
-  if (pkg.dependencies?.['@teambit/legacy'] && !pkg.dependencies['@teambit/legacy'].startsWith('link:')) {
-    delete pkg.dependencies['@teambit/legacy'];
+  if (pkg.dependencies != null) {
+    if (pkg.dependencies['@teambit/legacy'] && !pkg.dependencies['@teambit/legacy'].startsWith('link:')) {
+      delete pkg.dependencies['@teambit/legacy'];
+    }
   }
-  if (pkg.peerDependencies?.['@teambit/legacy']) {
-    delete pkg.peerDependencies['@teambit/legacy'];
+  if (pkg.peerDependencies != null) {
+    if (pkg.peerDependencies['@teambit/legacy']) {
+      delete pkg.peerDependencies['@teambit/legacy'];
+    }
+  }
+  return pkg;
+}
+
+function removeHarmonyFromDeps(pkg: PackageManifest): PackageManifest {
+  if (pkg.dependencies != null) {
+    if (pkg.dependencies['@teambit/harmony'] && !pkg.dependencies['@teambit/harmony'].startsWith('link:')) {
+      delete pkg.dependencies['@teambit/harmony'];
+    }
+  }
+  if (pkg.peerDependencies != null) {
+    if (pkg.peerDependencies['@teambit/harmony']) {
+      delete pkg.peerDependencies['@teambit/harmony'];
+    }
   }
   return pkg;
 }

@@ -16,6 +16,7 @@ type InstallCmdOptions = {
   updateExisting: boolean;
   savePrefix: string;
   addMissingDeps: boolean;
+  skipUnavailable: boolean;
   addMissingPeers: boolean;
   noOptional: boolean;
   recurringInstall: boolean;
@@ -55,6 +56,7 @@ export default class InstallCmd implements Command {
     ['', 'skip-compile', 'do not compile components'],
     ['', 'skip-write-config-files', 'do not write config files (such as eslint, tsconfig, prettier, etc...)'],
     ['a', 'add-missing-deps', 'install all missing dependencies'],
+    ['', 'skip-unavailable', 'when adding missing dependencies, skip those that are not found in the regisry'],
     ['', 'add-missing-peers', 'install all missing peer dependencies'],
     [
       '',
@@ -101,6 +103,7 @@ export default class InstallCmd implements Command {
       updateExisting: true,
       savePrefix: options.savePrefix,
       addMissingDeps: options.addMissingDeps,
+      skipUnavailable: options.skipUnavailable,
       addMissingPeers: options.addMissingPeers,
       compile: !options.skipCompile,
       includeOptionalDeps: !options.noOptional,

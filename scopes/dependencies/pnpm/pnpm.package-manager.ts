@@ -272,6 +272,7 @@ export class PnpmPackageManager implements PackageManager {
       hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
       reportOptions,
       returnListOfDepsRequiringBuild: installOptions.returnListOfDepsRequiringBuild,
+      forcedHarmonyVersion: installOptions.forcedHarmonyVersion,
     }
   }
 
