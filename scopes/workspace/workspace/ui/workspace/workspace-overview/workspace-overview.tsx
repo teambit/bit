@@ -72,6 +72,14 @@ export function useCardPlugins({
   compModelsById: Map<string, ComponentModel>;
   showPreview?: boolean;
 }): ComponentCardPluginType<PluginProps>[] {
+  const serverUrlsSignature = React.useMemo(() => {
+    const serversCount = Array.from(compModelsById.values())
+      .filter(comp => comp.server?.url)
+      .map(comp => comp.server?.url)
+      .join(',');
+    return serversCount;
+  }, [compModelsById]);
+  
   const plugins = React.useMemo(
     () => [
       {
@@ -105,7 +113,7 @@ export function useCardPlugins({
       },
       new LinkPlugin(),
     ],
-    [compModelsById.size]
+    [compModelsById.size, serverUrlsSignature, showPreview]
   );
 
   return plugins;
