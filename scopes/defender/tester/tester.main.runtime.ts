@@ -74,6 +74,30 @@ export type TesterOptions = {
   callback?: CallbackFn;
 };
 
+type CoverageResults = {
+  files: CoverageFile[]
+  total: CoverageData
+}
+
+type CoverageStats = {
+  pct: number
+  total: number
+  covered: number
+  skipped: number
+}
+
+type CoverageFile = {
+  path: string
+  data: CoverageData
+}
+
+type CoverageData = {
+  lines: CoverageStats
+  statements: CoverageStats
+  functions: CoverageStats
+  branches: CoverageStats
+}
+
 export class TesterMain {
   static runtime = MainRuntime;
   static dependencies = [
@@ -166,11 +190,11 @@ export class TesterMain {
   async getTestsResults(
     component: IComponent,
     idHasVersion = true
-  ): Promise<{ testsResults?: TestsResult; loading: boolean, coverage?: unknown[] } | undefined> {
+  ): Promise<{ testsResults?: TestsResult; loading: boolean, coverage?: CoverageResults } | undefined> {
     const entry = component.get(TesterAspect.id);
     const isModified = !idHasVersion && (await component.isModified());
     const data = this.builder.getDataByAspect(component, TesterAspect.id) as { tests: TestsResult & {
-      coverage: unknown[]
+      coverage: CoverageResults
     } };
     if ((entry || data) && !isModified) {
       return { testsResults: data?.tests || entry?.data.tests, loading: false, coverage: data?.tests.coverage };
