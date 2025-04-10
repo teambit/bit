@@ -40,7 +40,6 @@ type CoverageData = {
   branches: CoverageStats
 }
 
-
 /**
  * Displays the total row with color-coded values
  * 0-25 - red
