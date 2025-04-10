@@ -17,6 +17,9 @@ type ServerState = {
   errors?: Error[];
   warnings?: Error[];
   results?: any[];
+  isStarted?: boolean;
+  isCompilationDone?: boolean;
+  isPendingPublish?: boolean;
 };
 
 type ServerStateMap = Record<string, ServerState>;
@@ -52,6 +55,11 @@ export class PreviewStartPlugin implements StartPlugin {
     const wasPending = this.pendingServers.has(startedEnvId);
     this.pendingServers.delete(startedEnvId);
 
+    this.serversState[startedEnvId] = {
+      ...this.serversState[startedEnvId],
+      isStarted: true
+    };
+
     const index = this.previewServers.findIndex(s => s.context.envRuntime.id === startedEnvId);
     if (index >= 0) {
       this.previewServers[index] = componentServer;
@@ -60,21 +68,43 @@ export class PreviewStartPlugin implements StartPlugin {
     }
 
     const uiServer = this.ui.getUIServer();
-
     if (uiServer) {
       uiServer.addComponentServerProxy(componentServer);
+      
       if (wasPending) {
-        await this.graphql.pubsub.publish(ComponentServerStartedEvent, {
-          componentServers: componentServer,
-        });
+        if (this.serversState[startedEnvId]?.isCompilationDone) {
+          await this.publishServerStarted(componentServer);
+        } else {
+          this.serversState[startedEnvId] = {
+            ...this.serversState[startedEnvId],
+            isPendingPublish: true
+          };
+          this.logger.console(`Server ${startedEnvId} started but waiting for compilation to complete before publishing event.`);
+        }
       }
     }
+  }
+
+  private async publishServerStarted(server: ComponentServer) {
+    await this.graphql.pubsub.publish(ComponentServerStartedEvent, {
+      componentServers: server,
+    });
   }
 
   async onNewDevServersCreated(servers: ComponentServer[]) {
     for (const server of servers) {
       const envId = server.context.envRuntime.id;
       this.pendingServers.set(envId, server);
+      
+      // Initialize the server state
+      this.serversState[envId] = {
+        isCompiling: false,
+        isReady: false,
+        isStarted: false,
+        isCompilationDone: false,
+        isPendingPublish: false
+      };
+      
       try {
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         server.listen();
@@ -90,7 +120,17 @@ export class PreviewStartPlugin implements StartPlugin {
     // TODO: logic for creating preview servers must be refactored to this aspect from the DevServer aspect.
     const previewServers = await this.bundler.devServer(components);
     previewServers.forEach((server) => {
-      this.serversMap[server.context.envRuntime.id] = server;
+      const envId = server.context.envRuntime.id;
+      this.serversMap[envId] = server;
+      
+      this.serversState[envId] = {
+        isCompiling: false,
+        isReady: false,
+        isStarted: false,
+        isCompilationDone: false,
+        isPendingPublish: false
+      };
+      
       // DON'T add wait! this promise never resolves, so it would stop the start process!
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       server.listen();
@@ -153,7 +193,10 @@ export class PreviewStartPlugin implements StartPlugin {
   }
 
   private handleOnStartCompiling(id: string) {
-    this.serversState[id] = { isCompiling: true };
+    this.serversState[id] = { 
+      ...this.serversState[id],
+      isCompiling: true 
+    };
     const spinnerId = getSpinnerId(id);
     const text = getSpinnerCompilingMessage(this.serversMap[id] || this.pendingServers.get(id));
     const exists = this.logger.multiSpinner.spinners[spinnerId];
@@ -164,8 +207,10 @@ export class PreviewStartPlugin implements StartPlugin {
 
   private handleOnDoneCompiling(id: string, results, showInternalUrls?: boolean) {
     this.serversState[id] = {
+      ...this.serversState[id],
       isCompiling: false,
       isReady: true,
+      isCompilationDone: true,
       errors: results.errors,
       warnings: results.warnings,
     };
@@ -190,6 +235,15 @@ export class PreviewStartPlugin implements StartPlugin {
 
     const noneAreCompiling = Object.values(this.serversState).every((x) => !x.isCompiling);
     if (noneAreCompiling) this.setReady();
+    if (this.serversState[id]?.isPendingPublish) {
+      const server = this.serversMap[id];
+      if (server) {
+        this.serversState[id].isPendingPublish = false;
+         this.publishServerStarted(server).catch((err) => {
+          this.logger.error(`failed to publish server started event for ${server.context.envRuntime.id}`, err);
+         });
+      }
+    }
   }
 
   private setReady: () => void;
