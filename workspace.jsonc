@@ -155,6 +155,7 @@
         "@teambit/dependencies.modules.packages-excluder": "^1.0.8",
         "@teambit/dependencies.pnpm.dep-path": "^0.0.2",
         "@teambit/design.buttons.action-button": "^0.0.3",
+        "@teambit/design.content.table": "^0.0.2",
         "@teambit/design.controls.menu": "^0.0.1",
         "@teambit/design.elements.icon": "1.0.5",
         "@teambit/design.inputs.dropdown": "1.2.16",
