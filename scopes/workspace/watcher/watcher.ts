@@ -1,6 +1,6 @@
 import { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
-import { dirname, basename } from 'path';
+import { dirname, basename, join, sep } from 'path';
 import { compact, difference, partition } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BIT_MAP, WORKSPACE_JSONC } from '@teambit/legacy.constants';
@@ -74,7 +74,7 @@ export class Watcher {
   private changedFilesPerComponent: { [componentId: string]: string[] } = {};
   private watchQueue = new WatchQueue();
   private bitMapChangesInProgress = false;
-  private ipcEventsDir: string;
+  private ipcEventsDir: PathOsBasedAbsolute;
   private rootDirs: RootDirs = {};
   private verbose = false;
   private multipleWatchers: WatcherProcessData[] = [];
@@ -479,18 +479,24 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
     return this.findRootDirByFilePathRecursively(parentDir);
   }
 
-  private shouldIgnoreFromLocalScope(pathToCheck: string) {
+  private shouldIgnoreFromLocalScopeChokidar(pathToCheck: string) {
     if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
     return (
       pathToCheck.startsWith(`${this.workspacePathLinux}/.git/`) || pathToCheck.startsWith(`${this.workspacePathLinux}/.bit/`)
     );
   }
 
+  private shouldIgnoreFromLocalScopeParcel(pathToCheck: string) {
+    if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
+    return pathToCheck.startsWith(join(this.workspace.path, '.git') + sep)
+     || pathToCheck.startsWith(join(this.workspace.path, '.bit') + sep);
+  }
+
   private async createChokidarWatcher() {
     const chokidarOpts = await this.watcherMain.getChokidarWatchOptions();
     // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
     // (windows-style backslashes are converted to forward slashes)
-    chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', this.shouldIgnoreFromLocalScope.bind(this)];
+    chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', this.shouldIgnoreFromLocalScopeChokidar.bind(this)];
     this.chokidarWatcher = chokidar.watch(this.workspace.path, chokidarOpts);
     if (this.verbose) {
       logger.console(`${chalk.bold('chokidar.options:\n')} ${JSON.stringify(this.chokidarWatcher.options, undefined, 2)}`);
@@ -498,7 +504,11 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
   }
 
   private async onParcelWatch(err: Error | null, allEvents: Event[]) {
-    const events = allEvents.filter((event) => !this.shouldIgnoreFromLocalScope(event.path));
+    const events = allEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
+    if (!events.length) {
+      return;
+    }
+
     const msgs = this.msgs;
     if (this.verbose) {
       if (msgs?.onAll) events.forEach((event) => msgs.onAll(event.type, event.path));
