@@ -2,7 +2,5 @@
 import cjsModule from './index.js';
 
 export const SnappingAspect = cjsModule.SnappingAspect;
-export const inputDataDescription = cjsModule.inputDataDescription;
-export const snapFromScopeOptions = cjsModule.snapFromScopeOptions;
 
 export default cjsModule;

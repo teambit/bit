@@ -137,6 +137,10 @@ export class NewComponentHelperMain {
     await this.workspace.triggerOnComponentAdd(targetId, { compile: options?.compile ?? true }, options?.loadOptions);
   }
 
+  /**
+   * @deprecated
+   * not needed anymore.
+   */
   async writeAndAddNewCompFromFiles(
     files: File[],
     targetId: ComponentID,
@@ -189,7 +193,7 @@ export class NewComponentHelperMain {
     return results;
   }
 
-  private async throwForExistingPath(targetPath: string) {
+  async throwForExistingPath(targetPath: string) {
     try {
       const stat = await fs.stat(targetPath);
       if (!stat.isDirectory()) {

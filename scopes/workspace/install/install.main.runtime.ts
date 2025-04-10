@@ -48,6 +48,8 @@ import { IssuesAspect, IssuesMain } from '@teambit/issues';
 import { snapToSemver } from '@teambit/component-package-version';
 import { AspectDefinition, AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import hash from 'object-hash';
+import { BundlerAspect, BundlerMain } from '@teambit/bundler';
+import { UIAspect, UiMain } from '@teambit/ui';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
@@ -141,7 +143,7 @@ export class InstallMain {
     private ipcEvents: IpcEventsMain,
 
     private harmony: Harmony
-  ) {}
+  ) { }
   /**
    * Install dependencies for all components in the workspace
    *
@@ -350,7 +352,7 @@ export class InstallMain {
     const compDirMap = await this.getComponentsDirectory([]);
     let installCycle = 0;
     let hasMissingLocalComponents = true;
-    const forceTeambitHarmonyLink = !this.dependencyResolver.hasHarmonyInRootPolicy();
+    const forcedHarmonyVersion = this.dependencyResolver.harmonyVersionInRootPolicy();
     /* eslint-disable no-await-in-loop */
     do {
       // In case there are missing local components,
@@ -366,7 +368,7 @@ export class InstallMain {
         {
           linkedDependencies,
           installTeambitBit: false,
-          forceTeambitHarmonyLink,
+          forcedHarmonyVersion,
         },
         pmInstallOptions
       );
@@ -423,7 +425,7 @@ export class InstallMain {
       // Otherwise, we might load an env from a location that we later remove.
       try {
         await installer.pruneModules(this.workspace.path);
-      // Ignoring the error here as it's not critical and we don't want to fail the install process
+        // Ignoring the error here as it's not critical and we don't want to fail the install process
       } catch (err: any) {
         this.logger.error(`failed running pnpm prune with error`, err);
       }
@@ -1254,6 +1256,8 @@ export class InstallMain {
     GeneratorAspect,
     WorkspaceConfigFilesAspect,
     AspectLoaderAspect,
+    BundlerAspect,
+    UIAspect
   ];
 
   static runtime = MainRuntime;
@@ -1273,21 +1277,25 @@ export class InstallMain {
       generator,
       wsConfigFiles,
       aspectLoader,
+      bundler,
+      ui
     ]: [
-      DependencyResolverMain,
-      Workspace,
-      LoggerMain,
-      VariantsMain,
-      CLIMain,
-      CompilerMain,
-      IssuesMain,
-      EnvsMain,
-      ApplicationMain,
-      IpcEventsMain,
-      GeneratorMain,
-      WorkspaceConfigFilesMain,
-      AspectLoaderMain,
-    ],
+        DependencyResolverMain,
+        Workspace,
+        LoggerMain,
+        VariantsMain,
+        CLIMain,
+        CompilerMain,
+        IssuesMain,
+        EnvsMain,
+        ApplicationMain,
+        IpcEventsMain,
+        GeneratorMain,
+        WorkspaceConfigFilesMain,
+        AspectLoaderMain,
+        BundlerMain,
+        UiMain
+      ],
     _,
     [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot],
     harmony: Harmony
@@ -1314,8 +1322,8 @@ export class InstallMain {
       if (eventName !== 'onPostInstall') return;
       logger.debug('got onPostInstall event, clear workspace and all components cache');
       await workspace.clearCache();
-      await pMapSeries(postInstallSlot.values(), (fn) => fn());
       await installExt.reloadMovedEnvs();
+      await pMapSeries(postInstallSlot.values(), (fn) => fn());
     });
     if (issues) {
       issues.registerAddComponentsIssues(installExt.addDuplicateComponentAndPackageIssue.bind(installExt));
@@ -1333,6 +1341,14 @@ export class InstallMain {
       workspace.registerOnRootAspectAdded(installExt.onRootAspectAddedSubscriber.bind(installExt));
       workspace.registerOnComponentChange(installExt.onComponentChange.bind(installExt));
     }
+
+    installExt.registerPostInstall(async () => {
+      if (!ui.getUIServer()) {
+        return;
+      }
+      const components = await workspace.list();
+      await bundler.addNewDevServers(components);
+    });
     cli.register(...commands);
     return installExt;
   }

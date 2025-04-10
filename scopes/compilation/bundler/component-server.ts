@@ -1,9 +1,8 @@
 import { Component } from '@teambit/component';
 import { ExecutionContext } from '@teambit/envs';
 import { PubsubMain } from '@teambit/pubsub';
-
 import { AddressInfo } from 'net';
-
+import { Server } from 'http';
 import { DevServer } from './dev-server';
 import { BindError } from './exceptions';
 import { ComponentsServerStartedEvent } from './events';
@@ -33,10 +32,19 @@ export class ComponentServer {
      * env dev server.
      */
     readonly devServer: DevServer
-  ) {}
+  ) { }
 
   hostname: string | undefined;
+  private _server?: Server;
+  private _isRestarting: boolean = false;
 
+  get server() {
+    return this._server;
+  }
+
+  get envId() {
+    return this.context.envRuntime.id;
+  };
   /**
    * determine whether component server contains a component.
    */
@@ -49,15 +57,55 @@ export class ComponentServer {
   }
 
   _port: number;
-  async listen() {
-    const port = await selectPort(this.portRange);
+
+  async listen(specificPort?: number) {
+    const port = specificPort || await selectPort(this.portRange);
     this._port = port;
-    const server = await this.devServer.listen(port);
-    const address = server.address();
+    this._server = await this.devServer.listen(port);
+    const address = this._server.address();
     const hostname = this.getHostname(address);
     if (!address) throw new BindError();
     this.hostname = hostname;
-    this.pubsub.pub(BundlerAspect.id, this.createComponentsServerStartedEvent(server, this.context, hostname, port));
+
+    this.pubsub.pub(
+      BundlerAspect.id,
+      this.createComponentsServerStartedEvent(this, this.context, hostname, port)
+    );
+  }
+
+  async close(): Promise<void> {
+    if (!this.server) return;
+
+    return new Promise<void>((resolve, reject) => {
+      this.server?.close((err) => {
+        if (err) {
+          reject(err);
+        } else {
+          this._server = undefined;
+          this.hostname = undefined;
+          resolve();
+        }
+      });
+    });
+  }
+
+  async restart(useNewPort = false): Promise<void> {
+    if (this._isRestarting) {
+      // add a logger here once we start using this API
+      return;
+    }
+    this._isRestarting = true;
+    try {
+      await this.close();
+      await this.listen(useNewPort ? undefined : this._port);
+    }
+    catch (error) {
+      if (!this.errors) this.errors = [];
+      this.errors.push(error as Error);
+    }
+    finally {
+      this._isRestarting = false;
+    }
   }
 
   private getHostname(address: string | AddressInfo | null) {
@@ -72,11 +120,11 @@ export class ComponentServer {
     return hostname;
   }
 
-  private onChange() {}
+  private onChange() { }
 
   private createComponentsServerStartedEvent: (
-    DevServer,
-    ExecutionContext,
+    componentsServer,
+    context,
     string,
     number
   ) => ComponentsServerStartedEvent = (componentsServer, context, hostname, port) => {

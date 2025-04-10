@@ -64,7 +64,6 @@ import { CatComponentCmd } from './debug-commands/cat-component-cmd';
 import CatObjectCmd from './debug-commands/cat-object-cmd';
 import CatLaneCmd from './debug-commands/cat-lane-cmd';
 import { RunActionCmd } from './run-action/run-action.cmd';
-import { ScopeGarbageCollectorCmd } from './_scope-garbage-collector.cmd';
 import { ConfigStoreAspect, ConfigStoreMain, Store } from '@teambit/config-store';
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
@@ -1306,7 +1305,7 @@ export class ScopeMain implements ComponentFactory {
       configStore
     );
     configStore.addStore('scope', scope.getConfigStore());
-    cli.register(...allCommands, new ScopeGarbageCollectorCmd(scope));
+    cli.register(...allCommands);
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions(), undefined, 'scope.cli.registerOnStart');
