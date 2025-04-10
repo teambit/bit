@@ -272,7 +272,7 @@ export class InstallMain {
         if (options?.skipUnavailable) {
           return;
         }
-        throw error
+        throw error;
       }
     });
     const resolvedPackages = await Promise.all(resolvedPackagesP);
