@@ -69,7 +69,7 @@ const DEBOUNCE_WAIT_MS = 100;
 type PathLinux = string; // ts fails when importing it from @teambit/legacy/dist/utils/path.
 
 export class Watcher {
-  private watcherType: WatcherType = 'chokidar';
+  private watcherType: WatcherType = 'parcel';
   private chokidarWatcher: FSWatcher;
   private changedFilesPerComponent: { [componentId: string]: string[] } = {};
   private watchQueue = new WatchQueue();
@@ -92,9 +92,8 @@ export class Watcher {
     this.logger = this.watcherMain.logger;
     this.workspacePathLinux = pathNormalizeToLinux(this.workspace.path);
 
-    // enable for mac only for now.
-    if (process.platform === 'darwin' && !process.env.BIT_WATCHER_USE_CHOKIDAR) {
-      this.watcherType = 'parcel';
+    if (process.env.BIT_WATCHER_USE_CHOKIDAR === 'true' || process.env.BIT_WATCHER_USE_CHOKIDAR === '1') {
+      this.watcherType = 'chokidar';
     }
   }
 
@@ -112,9 +111,19 @@ export class Watcher {
 
   private async watchParcel() {
     this.msgs?.onStart(this.workspace);
-    await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), {
-      ignore: ['**/node_modules/**', '**/package.json'],
-    });
+    try {
+      await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), {
+        ignore: ['**/node_modules/**', '**/package.json'],
+      });
+    } catch (err: any) {
+      if (err.message.includes('Error starting FSEvents stream')) {
+        throw new Error(`failed to start the watcher: ${err.message}.
+try rerunning the command. if that doesn't help, please refer to this Watchman troubleshooting guide:
+https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-register_with_server-error-f2d_register_rpc--null--21`);
+      }
+      throw err;
+    }
+
     this.msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
     this.logger.clearStatusLine();
   }
