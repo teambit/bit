@@ -8,7 +8,7 @@ import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/leg
 
 chai.use(require('chai-fs'));
 
-(supportNpmCiRegistryTesting ? describe.only : describe.skip)('updating components', function () {
+(supportNpmCiRegistryTesting ? describe : describe.skip)('updating components', function () {
   this.timeout(0);
   let npmCiRegistry: NpmCiRegistry;
   let helper: Helper;
