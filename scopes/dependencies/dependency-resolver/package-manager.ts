@@ -146,12 +146,14 @@ export type ResolvedPackageVersion = {
   wantedRange?: string;
   isSemver: boolean;
   resolvedVia?: string;
+  manifest: object;
 };
 
 export type PackageManagerResolveRemoteVersionOptions = {
   rootDir: string;
   cacheRootDir?: string;
   packageManagerConfigRootDir?: string;
+  fullMetadata?: boolean;
   // fetchToCache?: boolean;
   // update?: boolean;
 };

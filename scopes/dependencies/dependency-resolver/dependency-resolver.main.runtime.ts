@@ -1476,6 +1476,13 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     return mergeOutdatedPkgs(outdatedPkgs);
   }
 
+  async fetchPackageManifest(spec: string) {
+    const resolver = await this.getVersionResolver();
+    return (await resolver.resolveRemoteVersion(spec, {
+      rootDir: process.cwd(),
+    })).manifest;
+  }
+
   /**
    * Accepts a list of package dependency policies and returns a list of outdated policies extended with their "latestRange"
    */

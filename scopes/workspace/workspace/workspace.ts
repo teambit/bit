@@ -1818,24 +1818,16 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     packageName: string,
     errMsgPrefix: string
   ): Promise<ComponentID | undefined> {
-    const url = `https://node-registry.bit.cloud/${packageName}`;
-    const token = this.configStore.getConfig(CFG_USER_TOKEN_KEY);
-    const headers = token ? getAuthHeader(token) : {};
-    const res = await fetch(url, { headers });
-    if (!res.ok) {
+    const manifest = await this.dependencyResolver.fetchPackageManifest(`${packageName}@latest`);
+    if (!manifest) {
       return undefined;
     }
-    const data = await res.json();
-    const latest = data['dist-tags'].latest;
-    if (!latest) throw new BitError(`${errMsgPrefix}the "dist-tags" has no latest field`);
-    const version = data.versions[latest];
-    if (!version) throw new BitError(`${errMsgPrefix}the "versions" is missing the latest "${latest}" field`);
-    const compId = version.componentId;
-    if (!compId)
+    if (!('componentId' in manifest)) {
       throw new BitError(
-        `${errMsgPrefix}the package.json of version "${latest}" has no componentId field, it's probably not a component`
+        `${errMsgPrefix}the package.json of version "${manifest.version}" has no componentId field, it's probably not a component`
       );
-    return ComponentID.fromObject(compId).changeVersion(undefined);
+    }
+    return ComponentID.fromObject(manifest.componentId).changeVersion(undefined);
   }
 
   private async resolveComponentIdFromPackageJsonInNM(
