@@ -21,7 +21,7 @@ describe('bit recover command', function () {
       helper.command.tagWithoutBuild();
       helper.command.export();
 
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
       helper.command.recover('comp2');
       helper.command.link();
     });
@@ -44,7 +44,7 @@ describe('bit recover command', function () {
       helper.command.tagWithoutBuild();
       helper.command.export();
 
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.tagAllWithoutBuild();
       helper.command.recover(`${helper.scopes.remote}/comp2`);
@@ -73,7 +73,7 @@ describe('bit recover command', function () {
       helper.command.tagWithoutBuild();
       helper.command.export();
 
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -100,7 +100,7 @@ describe('bit recover command', function () {
       helper.command.tagWithoutBuild();
       helper.command.export();
 
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
@@ -225,14 +225,14 @@ describe('bit recover command', function () {
       helper.command.tagWithoutBuild();
       helper.command.export();
 
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.tagAllWithoutBuild();
       helper.command.recover(`${helper.scopes.remote}/comp2`);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
     });
     it('bit show should show the component as removed', () => {
       const removeData = helper.command.showAspectConfig('comp2', Extensions.remove);
@@ -303,7 +303,7 @@ describe('bit recover command', function () {
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.import();
 
-      helper.command.softRemoveComponent('comp1');
+      helper.command.deleteComponent('comp1');
     });
     it('should not throw', () => {
       expect(() => helper.command.recover('comp1')).not.to.throw();

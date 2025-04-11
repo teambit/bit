@@ -66,7 +66,7 @@ describe('bit delete command', function () {
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.command.softRemoveComponent('comp1');
+      helper.command.deleteComponent('comp1');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
@@ -95,7 +95,7 @@ describe('bit delete command', function () {
       helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.command.softRemoveComponent('comp1');
+      helper.command.deleteComponent('comp1');
 
       // make sure it's deleted
       const list = helper.command.listParsed();
@@ -123,7 +123,7 @@ describe('bit delete command', function () {
       helper.command.export();
       helper.scopeHelper.getClonedWorkspace(beforeUpdates);
 
-      helper.command.softRemoveComponent('comp1');
+      helper.command.deleteComponent('comp1');
       // make sure it's deleted
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(2);
@@ -157,7 +157,7 @@ describe('bit delete command', function () {
       helper.scopeHelper.getClonedWorkspace(beforeUpdates);
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
 
-      helper.command.softRemoveComponent('comp1');
+      helper.command.deleteComponent('comp1');
       // make sure it's deleted
       const list = helper.command.listParsed();
       expect(list).to.have.lengthOf(2);
@@ -199,7 +199,7 @@ describe('bit delete command', function () {
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(2, undefined, 'version2');
       helper.command.tagAllWithoutBuild();
-      helper.command.softRemoveComponent('comp2', '--range 0.0.1');
+      helper.command.deleteComponent('comp2', '--range 0.0.1');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
     });
@@ -252,7 +252,7 @@ describe('bit delete command', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
-      helper.command.softRemoveComponent('comp1', '--range "<1.0.0"');
+      helper.command.deleteComponent('comp1', '--range "<1.0.0"');
       helper.command.tagAllWithoutBuild();
     });
     it('should show the component as deleted', () => {
@@ -297,7 +297,7 @@ describe('bit delete command', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      helper.command.softRemoveComponent('comp1');
+      helper.command.deleteComponent('comp1');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
@@ -309,6 +309,24 @@ describe('bit delete command', function () {
     it('should throw a descriptive error', () => {
       const err = helper.general.runWithTryCatch('bit export');
       expect(err).to.include('were marked as deleted on the remote scope');
+    });
+  });
+  describe('delete and then remove', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.deleteComponent('comp1');
+      helper.command.tagAllWithoutBuild();
+      helper.command.importComponent('comp1', '-x');
+      helper.command.removeComponent('comp1');
+    });
+    // previously, it was throwing "error: component "012240bb-remote/comp1@0.0.2" was not found"
+    // because the entry was still in ".bit/staged-config/main.json".
+    it('bit status should not throw an error', () => {
+      expect(() => helper.command.status()).not.to.throw();
     });
   });
 });
