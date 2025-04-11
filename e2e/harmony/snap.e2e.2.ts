@@ -751,7 +751,7 @@ describe('bit snap command', function () {
       helper.fixtures.populateComponents(1, undefined);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      helper.command.softRemoveComponent('comp1');
+      helper.command.deleteComponent('comp1');
       output = helper.command.snapAllComponentsWithoutBuild('--unmodified');
     });
     it('should indicate that the component was removed successfully', () => {
