@@ -111,19 +111,9 @@ export class Watcher {
 
   private async watchParcel() {
     this.msgs?.onStart(this.workspace);
-    try {
-      await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), {
-        ignore: ['**/node_modules/**', '**/package.json'],
-      });
-    } catch (err: any) {
-      if (err.message.includes('Error starting FSEvents stream')) {
-        throw new Error(`failed to start the watcher: ${err.message}.
-try rerunning the command. if that doesn't help, please refer to this Watchman troubleshooting guide:
-https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-register_with_server-error-f2d_register_rpc--null--21`);
-      }
-      throw err;
-    }
-
+    await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), {
+      ignore: ['**/node_modules/**', '**/package.json'],
+    });
     this.msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
     this.logger.clearStatusLine();
   }
@@ -504,6 +494,7 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
   }
 
   private async onParcelWatch(err: Error | null, allEvents: Event[]) {
+    totalEvents += allEvents.length;
     const events = allEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
     if (!events.length) {
       return;
@@ -515,7 +506,15 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
     }
     if (err) {
       msgs?.onError(err);
-      throw err;
+      if (err.message.includes('Error starting FSEvents stream')) {
+        throw new Error(`failed to start the watcher: ${err.message}.
+try rerunning the command. if that doesn't help, please refer to this Watchman troubleshooting guide:
+https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-register_with_server-error-f2d_register_rpc--null--21`);
+      }
+      // don't throw on other errors, just log them.
+      // for example, when running "bit install" on a big project, it might error out with:
+      // "Error: Events were dropped by the FSEvents client. File system must be re-scanned."
+      // but it still works for the future events.
     }
     const startTime = new Date().getTime();
     await mapSeries(events, async (event) => {
