@@ -74,3 +74,5 @@ export const ALLOW_SAME_NAME = 'allow-same-name'; // not in use anymore
 export const DEPS_GRAPH = 'deps-graph';
 
 export const DETACH_HEAD = 'detach-head';
+
+export const COMPS_UPDATE = 'comps-update';
