@@ -494,7 +494,6 @@ export class Watcher {
   }
 
   private async onParcelWatch(err: Error | null, allEvents: Event[]) {
-    totalEvents += allEvents.length;
     const events = allEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
     if (!events.length) {
       return;
