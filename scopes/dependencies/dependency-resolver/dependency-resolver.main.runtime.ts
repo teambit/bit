@@ -1481,9 +1481,10 @@ as an alternative, you can use "+" to keep the same version installed in the wor
    * By default, we always request the abbreviated package document,
    * which is much smaller in size but doesn't include all the fields published in the package's package.json file.
    */
-  async fetchFullPackageManifest(spec: string): Promise<DependencyManifest> {
-    const resolver = await this.getVersionResolver();
-    const { manifest } = await resolver.resolveRemoteVersion(spec, {
+  async fetchFullPackageManifest(packageName: string): Promise<DependencyManifest | undefined> {
+    const pm = this.getSystemPackageManager();
+    const { manifest } = await pm.resolveRemoteVersion(packageName, {
+      cacheRootDir: this.configStore.getConfig(CFG_PACKAGE_MANAGER_CACHE),
       fullMetadata: true,
       // We can set anything here. The rootDir option is ignored, when resolving npm-hosted packages.
       rootDir: process.cwd(),

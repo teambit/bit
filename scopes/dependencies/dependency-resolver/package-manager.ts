@@ -146,7 +146,7 @@ export type ResolvedPackageVersion = {
   wantedRange?: string;
   isSemver: boolean;
   resolvedVia?: string;
-  manifest: DependencyManifest;
+  manifest?: DependencyManifest;
 };
 
 export type PackageManagerResolveRemoteVersionOptions = {

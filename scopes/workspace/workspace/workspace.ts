@@ -1816,7 +1816,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     packageName: string,
     errMsgPrefix: string
   ): Promise<ComponentID | undefined> {
-    const manifest = await this.dependencyResolver.fetchFullPackageManifest(`${packageName}@latest`);
+    const manifest = await this.dependencyResolver.fetchFullPackageManifest(packageName);
     if (!manifest) {
       return undefined;
     }
