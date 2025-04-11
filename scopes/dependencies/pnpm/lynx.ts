@@ -563,7 +563,13 @@ export async function resolveRemoteVersion(
     networkConfig?: PackageManagerNetworkConfig;
   }
 ): Promise<ResolvedPackageVersion> {
-  const { resolve } = await generateResolverAndFetcher({ cacheDir, registries, proxyConfig, networkConfig, fullMetadata });
+  const { resolve } = await generateResolverAndFetcher({
+    cacheDir,
+    fullMetadata,
+    networkConfig,
+    proxyConfig,
+    registries,
+  });
   const resolveOpts = {
     lockfileDir: rootDir,
     preferredVersions: {},
