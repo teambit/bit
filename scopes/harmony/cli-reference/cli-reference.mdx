@@ -1056,6 +1056,7 @@ when no package is specified, all workspace dependencies are installed and all w
 | `--skip-compile`             |                  | do not compile components                                                                              |
 | `--skip-write-config-files`  |                  | do not write config files (such as eslint, tsconfig, prettier, etc...)                                 |
 | `--add-missing-deps`         |       `-a`       | install all missing dependencies                                                                       |
+| `--skip-unavailable`         |                  | when adding missing dependencies, skip those that are not found in the regisry                         |
 | `--add-missing-peers`        |                  | install all missing peer dependencies                                                                  |
 | `--recurring-install`        |                  | automatically run install again if there are non loaded old envs in your workspace                     |
 | `--no-optional [noOptional]` |                  | do not install optional dependencies (works with pnpm only)                                            |

@@ -222,25 +222,6 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
           return component;
         });
 
-        // If components were updated, create component models and trigger the onComponentUpdated callback
-        const changedComponents = updatedComponents.filter((updatedComp, index) => {
-          const originalComp = prev.workspace.components[index];
-          // Compare server information to detect changes
-          return (
-            originalComp.server?.url !== updatedComp.server?.url ||
-            originalComp.server?.env !== updatedComp.server?.env
-          );
-        });
-
-        if (changedComponents.length > 0) {
-          // side effect - trigger observers for components that were updated
-          setTimeout(() => 
-            optionsRef.current.onComponentUpdated?.(
-              changedComponents.map(comp => ComponentModel.from(comp))
-            )
-          );
-        }
-
         return {
           ...prev,
           workspace: {
