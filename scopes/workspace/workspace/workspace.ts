@@ -30,7 +30,7 @@ import { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import type { VariantsMain } from '@teambit/variants';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { ComponentID, ComponentIdList, ComponentIdObj } from '@teambit/component-id';
 import { InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName, BitId } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy.consumer';
@@ -52,7 +52,6 @@ import {
   MergeConfigFilename,
   BIT_ROOTS_DIR,
   CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS,
-  CFG_USER_TOKEN_KEY,
 } from '@teambit/legacy.constants';
 import path from 'path';
 import { ConsumerComponent, Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
@@ -65,7 +64,6 @@ import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { isHash } from '@teambit/component-version';
 import { GlobalConfigMain } from '@teambit/global-config';
-import { getAuthHeader, fetchWithAgent as fetch } from '@teambit/scope.network';
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,
@@ -1818,7 +1816,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     packageName: string,
     errMsgPrefix: string
   ): Promise<ComponentID | undefined> {
-    const manifest = await this.dependencyResolver.fetchPackageManifest(`${packageName}@latest`);
+    const manifest = await this.dependencyResolver.fetchFullPackageManifest(`${packageName}@latest`);
     if (!manifest) {
       return undefined;
     }
@@ -1827,7 +1825,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
         `${errMsgPrefix}the package.json of version "${manifest.version}" has no componentId field, it's probably not a component`
       );
     }
-    return ComponentID.fromObject(manifest.componentId).changeVersion(undefined);
+    return ComponentID.fromObject(manifest.componentId as ComponentIdObj).changeVersion(undefined);
   }
 
   private async resolveComponentIdFromPackageJsonInNM(

@@ -37,7 +37,7 @@ import fs from 'fs-extra';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
 import { SourceFile } from '@teambit/component.sources';
-import { ProjectManifest } from '@pnpm/types';
+import { ProjectManifest, DependencyManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
@@ -1476,11 +1476,19 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     return mergeOutdatedPkgs(outdatedPkgs);
   }
 
-  async fetchPackageManifest(spec: string) {
+  /**
+   * Fetching the package manifest from the full package document.
+   * By default, we always request the abbreviated package document,
+   * which is much smaller in size but doesn't include all the fields published in the package's package.json file.
+   */
+  async fetchFullPackageManifest(spec: string): Promise<DependencyManifest> {
     const resolver = await this.getVersionResolver();
-    return (await resolver.resolveRemoteVersion(spec, {
+    const { manifest } = await resolver.resolveRemoteVersion(spec, {
+      fullMetadata: true,
+      // We can set anything here. The rootDir option is ignored, when resolving npm-hosted packages.
       rootDir: process.cwd(),
-    })).manifest;
+    });
+    return manifest;
   }
 
   /**
