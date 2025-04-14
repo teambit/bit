@@ -2048,6 +2048,11 @@
       ],
       [
         "",
+        "skip-unavailable",
+        "when adding missing dependencies, skip those that are not found in the regisry"
+      ],
+      [
+        "",
         "add-missing-peers",
         "install all missing peer dependencies"
       ],

@@ -1,6 +1,6 @@
 import { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
-import { dirname, basename } from 'path';
+import { dirname, basename, join, sep } from 'path';
 import { compact, difference, partition } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BIT_MAP, WORKSPACE_JSONC } from '@teambit/legacy.constants';
@@ -26,6 +26,7 @@ import { CheckTypes } from './check-types';
 import { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';
 import { Logger } from '@teambit/logger';
+import ParcelWatcher, { Event } from '@parcel/watcher';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: ComponentID; componentIds: ComponentID[] };
@@ -49,7 +50,6 @@ export type OnFileEventFunc = (
 ) => void;
 
 export type WatchOptions = {
-  msgs?: EventMessages;
   initiator?: CompilationInitiator;
   verbose?: boolean; // print watch events to the console. (also ts-server events if spawnTSServer is true)
   spawnTSServer?: boolean; // needed for check types and extract API/docs.
@@ -63,28 +63,38 @@ export type WatchOptions = {
 
 export type RootDirs = { [dir: PathLinux]: ComponentID };
 
+type WatcherType = 'chokidar' | 'parcel';
+
 const DEBOUNCE_WAIT_MS = 100;
 type PathLinux = string; // ts fails when importing it from @teambit/legacy/dist/utils/path.
 
 export class Watcher {
-  private fsWatcher: FSWatcher;
+  private watcherType: WatcherType = 'parcel';
+  private chokidarWatcher: FSWatcher;
   private changedFilesPerComponent: { [componentId: string]: string[] } = {};
   private watchQueue = new WatchQueue();
   private bitMapChangesInProgress = false;
-  private ipcEventsDir: string;
+  private ipcEventsDir: PathOsBasedAbsolute;
   private rootDirs: RootDirs = {};
   private verbose = false;
   private multipleWatchers: WatcherProcessData[] = [];
   private logger: Logger;
+  private workspacePathLinux: string;
   constructor(
     private workspace: Workspace,
     private pubsub: PubsubMain,
     private watcherMain: WatcherMain,
-    private options: WatchOptions
+    private options: WatchOptions,
+    private msgs?: EventMessages
   ) {
     this.ipcEventsDir = this.watcherMain.ipcEvents.eventsDir;
     this.verbose = this.options.verbose || false;
     this.logger = this.watcherMain.logger;
+    this.workspacePathLinux = pathNormalizeToLinux(this.workspace.path);
+
+    if (process.env.BIT_WATCHER_USE_CHOKIDAR === 'true' || process.env.BIT_WATCHER_USE_CHOKIDAR === '1') {
+      this.watcherType = 'chokidar';
+    }
   }
 
   get consumer(): Consumer {
@@ -92,25 +102,37 @@ export class Watcher {
   }
 
   async watch() {
-    const { msgs, ...watchOpts } = this.options;
     await this.setRootDirs();
     const componentIds = Object.values(this.rootDirs);
-    await this.watcherMain.triggerOnPreWatch(componentIds, watchOpts);
+    await this.watcherMain.triggerOnPreWatch(componentIds, this.options);
     await this.watcherMain.watchScopeInternalFiles();
+    this.watcherType === 'parcel' ? await this.watchParcel() : await this.watchChokidar();
+  }
 
-    await this.createWatcher();
-    const watcher = this.fsWatcher;
+  private async watchParcel() {
+    this.msgs?.onStart(this.workspace);
+    await ParcelWatcher.subscribe(this.workspace.path, this.onParcelWatch.bind(this), {
+      ignore: ['**/node_modules/**', '**/package.json'],
+    });
+    this.msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
+    this.logger.clearStatusLine();
+  }
+
+  private async watchChokidar() {
+    await this.createChokidarWatcher();
+    const watcher = this.chokidarWatcher;
+    const msgs = this.msgs;
     msgs?.onStart(this.workspace);
 
     return new Promise((resolve, reject) => {
       if (this.verbose) {
         // @ts-ignore
-        if (msgs?.onAll) watcher.on('all', msgs?.onAll);
+        if (msgs?.onAll) watcher.on('all', msgs.onAll);
       }
       watcher.on('ready', () => {
         msgs?.onReady(this.workspace, this.rootDirs, this.verbose);
         if (this.verbose) {
-          const watched = this.fsWatcher.getWatched();
+          const watched = this.chokidarWatcher.getWatched();
           const totalWatched = Object.values(watched).flat().length;
           logger.console(
             `${chalk.bold('the following files are being watched:')}\n${JSON.stringify(watched, null, 2)}`
@@ -447,22 +469,61 @@ export class Watcher {
     return this.findRootDirByFilePathRecursively(parentDir);
   }
 
-  private async createWatcher() {
-    const workspacePathLinux = pathNormalizeToLinux(this.workspace.path);
-    const ignoreLocalScope = (pathToCheck: string) => {
-      if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
-      return (
-        pathToCheck.startsWith(`${workspacePathLinux}/.git/`) || pathToCheck.startsWith(`${workspacePathLinux}/.bit/`)
-      );
-    };
+  private shouldIgnoreFromLocalScopeChokidar(pathToCheck: string) {
+    if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
+    return (
+      pathToCheck.startsWith(`${this.workspacePathLinux}/.git/`) || pathToCheck.startsWith(`${this.workspacePathLinux}/.bit/`)
+    );
+  }
+
+  private shouldIgnoreFromLocalScopeParcel(pathToCheck: string) {
+    if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
+    return pathToCheck.startsWith(join(this.workspace.path, '.git') + sep)
+     || pathToCheck.startsWith(join(this.workspace.path, '.bit') + sep);
+  }
+
+  private async createChokidarWatcher() {
     const chokidarOpts = await this.watcherMain.getChokidarWatchOptions();
     // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
     // (windows-style backslashes are converted to forward slashes)
-    chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', ignoreLocalScope];
-    this.fsWatcher = chokidar.watch(this.workspace.path, chokidarOpts);
+    chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', this.shouldIgnoreFromLocalScopeChokidar.bind(this)];
+    this.chokidarWatcher = chokidar.watch(this.workspace.path, chokidarOpts);
     if (this.verbose) {
-      logger.console(`${chalk.bold('chokidar.options:\n')} ${JSON.stringify(this.fsWatcher.options, undefined, 2)}`);
+      logger.console(`${chalk.bold('chokidar.options:\n')} ${JSON.stringify(this.chokidarWatcher.options, undefined, 2)}`);
     }
+  }
+
+  private async onParcelWatch(err: Error | null, allEvents: Event[]) {
+    const events = allEvents.filter((event) => !this.shouldIgnoreFromLocalScopeParcel(event.path));
+    if (!events.length) {
+      return;
+    }
+
+    const msgs = this.msgs;
+    if (this.verbose) {
+      if (msgs?.onAll) events.forEach((event) => msgs.onAll(event.type, event.path));
+    }
+    if (err) {
+      msgs?.onError(err);
+      if (err.message.includes('Error starting FSEvents stream')) {
+        throw new Error(`failed to start the watcher: ${err.message}.
+try rerunning the command. if that doesn't help, please refer to this Watchman troubleshooting guide:
+https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-register_with_server-error-f2d_register_rpc--null--21`);
+      }
+      // don't throw on other errors, just log them.
+      // for example, when running "bit install" on a big project, it might error out with:
+      // "Error: Events were dropped by the FSEvents client. File system must be re-scanned."
+      // but it still works for the future events.
+    }
+    const startTime = new Date().getTime();
+    await mapSeries(events, async (event) => {
+      const { files, results, debounced, irrelevant, failureMsg } = await this.handleChange(event.path);
+      if (debounced || irrelevant) {
+        return;
+      }
+      const duration = new Date().getTime() - startTime;
+      msgs?.onChange(files, results, this.verbose, duration, failureMsg);
+    });
   }
 
   private async setRootDirs() {
