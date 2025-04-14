@@ -836,6 +836,19 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     return hasChanged;
   }
 
+  /**
+   * when tagging/snapping a component, its config data is written to the staged config. it helps for "bit reset" to
+   * revert it back.
+   * this method removes entries from that files. used by "bit export" and "bit remove".
+   * in case the component is not found in the staged config, it doesn't throw an error. it simply ignores it.
+   */
+  async removeFromStagedConfig(ids: ComponentID[]) {
+    this.logger.debug(`removeFromStagedConfig, ${ids.length} ids`);
+    const stagedConfig = await this.scope.getStagedConfig();
+    ids.map((compId) => stagedConfig.removeComponentConfig(compId));
+    await stagedConfig.write();
+  }
+
   async triggerOnComponentChange(
     id: ComponentID,
     files: PathOsBasedAbsolute[],
@@ -2226,7 +2239,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       this.componentPathsRegExps = [];
       return;
     }
-    
+
     const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
     const packageManager = this.dependencyResolver.packageManagerName;
     const isPnpmEnabled = typeof packageManager === 'undefined' || packageManager.includes('pnpm');

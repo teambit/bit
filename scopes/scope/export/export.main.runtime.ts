@@ -221,7 +221,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     const updatedIds = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);
     // re-generate the package.json, this way, it has the correct data in the componentId prop.
     await linkToNodeModulesByIds(this.workspace, updatedIds, true);
-    await this.removeFromStagedConfig(exported);
+    await this.workspace.removeFromStagedConfig(exported);
     // ideally we should delete the staged-snaps only for the exported snaps. however, it's not easy, and it's ok to
     // delete them all because this file is mainly an optimization for the import process.
     await this.workspace.scope.legacyScope.stagedSnaps.deleteFile();
@@ -672,13 +672,6 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
 
     // return true if one of the versions has changed or the component itself
     return hasComponentChanged;
-  }
-
-  private async removeFromStagedConfig(ids: ComponentID[]) {
-    this.logger.debug(`removeFromStagedConfig, ${ids.length} ids`);
-    const stagedConfig = await this.workspace.scope.getStagedConfig();
-    ids.map((compId) => stagedConfig.removeComponentConfig(compId));
-    await stagedConfig.write();
   }
 
   private async getComponentsToExport(
