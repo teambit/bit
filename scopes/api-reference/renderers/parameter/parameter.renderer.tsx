@@ -29,7 +29,7 @@ function ParameterComponent(props: APINodeRenderProps) {
   const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
   const typeRef = type.name
     ? apiRefModel.apiByName.get(type.name) ||
-      apiRefModel.apiByName.get(apiRefModel.generateInternalAPIKey(type.location.filePath, type.name))
+    apiRefModel.apiByName.get(apiRefModel.generateInternalAPIKey(type.location.filePath, type.name))
     : undefined;
   const headings = ['name', 'type', 'default', 'description'];
 
@@ -43,8 +43,15 @@ function ParameterComponent(props: APINodeRenderProps) {
             const matchesAlias = (_bindingNode as any).alias && node.name === (_bindingNode as any).alias;
             return matchesName || matchesAlias;
           });
+
           const isTypeRefCorrespondingNodeReference =
             (typeRefCorrespondingNode as any)?.type?.__schema === TypeRefSchema.name;
+
+          const typeRefBindingNode = isTypeRefCorrespondingNodeReference
+            ? (typeRefCorrespondingNode as any).type as TypeRefSchema : undefined;
+
+          // @todo - temp fix. This should be fixed at the schema extractor level
+          const doesTypeHaveIncorrectName = typeRefBindingNode && typeRefBindingNode.name !== _bindingNode.name;
 
           const bindingNode = isTypeRefCorrespondingNodeReference
             ? (typeRefCorrespondingNode as any).type
@@ -62,8 +69,6 @@ function ParameterComponent(props: APINodeRenderProps) {
             />
           )) || <div className={nodeStyles.node}>{bindingNode.toString()}</div>;
 
-          // const customBindingNodeTypeRow = <div className={nodeStyles.node}>{bindingNode.toString()}</div>;
-
           return (
             <TableRow
               key={`${bindingNode.name}-param`}
@@ -74,8 +79,8 @@ function ParameterComponent(props: APINodeRenderProps) {
               }}
               className={styles.paramRow}
               row={{
-                name: bindingNode.name || '',
-                description: bindingNode.doc?.comment || bindingNode.doc?.raw ||  bindingNode.doc?.tags?.join() || '',
+                name: doesTypeHaveIncorrectName ? _bindingNode.name : (bindingNode.name || ''),
+                description: bindingNode.doc?.comment || bindingNode.doc?.raw || bindingNode.doc?.tags?.join() || '',
                 required:
                   (typeRefCorrespondingNode as any)?.isOptional !== undefined &&
                   !(typeRefCorrespondingNode as any)?.isOptional,
@@ -129,7 +134,7 @@ function ParameterComponent(props: APINodeRenderProps) {
           }}
           row={{
             name: paramNode.name || '',
-            description: paramNode.doc?.comment || paramNode.doc?.raw ||  paramNode.doc?.tags?.join() || '',
+            description: paramNode.doc?.comment || paramNode.doc?.raw || paramNode.doc?.tags?.join() || '',
             required: paramNode.isOptional !== undefined && !paramNode.isOptional,
             type: '',
             default: {
