@@ -204,25 +204,22 @@ export class UIServer {
       this.logger.error(e.message);
     });
 
-    const proxyEntries = await this.getProxyFromPlugins();
-
     server.on('upgrade', (req, socket, head) => {
       const reqUrl = req.url?.replace(/\?.+$/, '') || '';
       const path = stripTrailingChar(reqUrl, '/');
-
+      const proxyEntries = this.getProxyFromPlugins();
       const entry = proxyEntries.find((proxy) =>
         proxy.context.some((item) => item === stripTrailingChar(path, '/'))
       );
-
       if (!entry) {
         return;
       }
-
       proxyServer.ws(req, socket, head, {
         target: entry.target,
       });
     });
 
+    const proxyEntries = this.getProxyFromPlugins();
     proxyEntries.forEach((entry) => {
       entry.context.forEach((route) => {
         this._proxyRoutes.add(route);
@@ -304,16 +301,15 @@ export class UIServer {
     return Port.getPortFromRange(portRange || [3100, 3200]);
   }
 
-  private async getProxyFromPlugins(): Promise<ProxyEntry[]> {
-    const proxiesByPlugin = this.plugins.map((plugin) => {
+  private getProxyFromPlugins() {
+    const proxiesByPlugin = this.plugins.flatMap((plugin) => {
       return plugin.getProxy ? plugin.getProxy() : [];
     });
-
-    return flatten(await Promise.all(proxiesByPlugin));
+    return proxiesByPlugin;
   }
 
   private async getProxy(port = 4000) {
-    const proxyEntries = await this.getProxyFromPlugins();
+    const proxyEntries = this.getProxyFromPlugins();
     const catchAllProxies: ProxyEntry[] = [
       {
         context: ['/preview'],
@@ -339,7 +335,6 @@ export class UIServer {
         ws: true,
       },
     ];
-
     return gqlProxies.concat(proxyEntries).concat(catchAllProxies);
   }
 

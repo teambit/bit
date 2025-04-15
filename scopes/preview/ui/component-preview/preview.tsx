@@ -5,7 +5,7 @@ import { compact } from 'lodash';
 import { connectToChild } from 'penpal';
 import { usePubSubIframe } from '@teambit/pubsub';
 import { ComponentModel } from '@teambit/component';
-import { LOAD_EVENT } from '@teambit/ui-foundation.ui.rendering.html';
+import { ERROR_EVENT, LOAD_EVENT } from '@teambit/ui-foundation.ui.rendering.html';
 import { toPreviewUrl } from './urls';
 import { computePreviewScale } from './compute-preview-scale';
 import { useIframeContentHeight } from './use-iframe-content-height';
@@ -76,6 +76,11 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
    * is preview being rendered in full height and should fit view height to content.
    */
   fullContentHeight?: boolean;
+
+  /**
+   * propagate error to the parent window from the iframe
+   */
+  propagateError?: boolean;
 }
 
 /**
@@ -97,6 +102,7 @@ export function ComponentPreview({
   onLoad,
   style,
   sandbox,
+  propagateError,
   ...rest
 }: ComponentPreviewProps) {
   const [heightIframeRef, iframeHeight] = useIframeContentHeight({ skip: false, viewport });
@@ -113,16 +119,41 @@ export function ComponentPreview({
   // pubsubContext?.connect(iframeHeight);
 
   useEffect(() => {
-    const handleLoad = (event) => {
-      if (event.data && (event.data.event === LOAD_EVENT || event.data.event === 'webpackInvalid')) {
+    const handleMessage = (event) => {
+      if ((event.data && event.data.event === LOAD_EVENT) ||
+        (event.data && event.data.event === 'webpackInvalid')
+      ) {
         onLoad && onLoad(event);
       }
+
+      if (event.data && event.data.event === ERROR_EVENT) {
+        const errorData = event.data.payload;
+
+        if (propagateError && window.parent && window !== window.parent) {
+          try {
+            window.parent.postMessage({
+              event: ERROR_EVENT,
+              payload: {
+                ...errorData,
+                forwardedFrom: {
+                  component: component.id,
+                  preview: previewName,
+                }
+              }
+            }, '*');
+          } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('failed to propagate error to parent', err);
+          }
+        }
+      }
     };
-    window.addEventListener('message', handleLoad);
+
+    window.addEventListener('message', handleMessage);
     return () => {
-      window.removeEventListener('message', handleLoad);
+      window.removeEventListener('message', handleMessage);
     };
-  }, []);
+  }, [component.id.toString(), onLoad, propagateError]);
 
   useEffect(() => {
     if (!iframeRef.current) return;
