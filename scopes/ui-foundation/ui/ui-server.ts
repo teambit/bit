@@ -1,4 +1,3 @@
-import { flatten } from 'lodash';
 import { ExpressMain } from '@teambit/express';
 import { GraphqlMain } from '@teambit/graphql';
 import { Logger } from '@teambit/logger';
