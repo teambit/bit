@@ -171,6 +171,7 @@ If you understand the risks and wish to proceed with the removal, please use the
       await removeComponentsFromNodeModules(consumer, removedComponents);
       await consumer.cleanFromBitMap(idsToCleanFromWorkspace);
       await workspace.cleanFromConfig(idsToCleanFromWorkspace);
+      await workspace.removeFromStagedConfig(idsToCleanFromWorkspace);
     }
   }
   return new RemovedLocalObjects(

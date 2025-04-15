@@ -302,7 +302,13 @@ export default class CommandHelper {
   removeComponent(id: string, flags = '') {
     return this.runCmd(`bit remove ${id} --silent ${flags}`);
   }
+  /**
+   * @deprecated use deleteComponent instead
+   */
   softRemoveComponent(id: string, flags = '') {
+    return this.deleteComponent(id, flags);
+  }
+  deleteComponent(id: string, flags = '') {
     return this.runCmd(`bit delete ${id} --silent ${flags}`);
   }
   removeComponentFromRemote(id: string, flags = '') {

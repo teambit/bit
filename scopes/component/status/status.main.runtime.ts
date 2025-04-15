@@ -197,8 +197,7 @@ export class StatusMain {
   private async addRemovedStagedIfNeeded(stagedComponents: ModelComponent[]) {
     const removedStagedIds = await this.remove.getRemovedStaged();
     if (!removedStagedIds.length) return;
-    const removedStagedBitIds = removedStagedIds.map((id) => id);
-    const nonExistsInStaged = removedStagedBitIds.filter(
+    const nonExistsInStaged = removedStagedIds.filter(
       (id) => !stagedComponents.find((c) => c.toComponentId().isEqualWithoutVersion(id))
     );
     if (!nonExistsInStaged.length) return;
