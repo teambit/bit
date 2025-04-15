@@ -159,7 +159,7 @@ export function ComponentPreview({
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, [component.id.toString(), onLoad, propagateError]);
+  }, [component.id.toString(), onLoad, propagateError, onPreviewError]);
 
   useEffect(() => {
     if (!iframeRef.current) return;
