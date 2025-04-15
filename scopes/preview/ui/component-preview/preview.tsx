@@ -12,7 +12,6 @@ import { useIframeContentHeight } from './use-iframe-content-height';
 import styles from './preview.module.scss';
 
 export type OnPreviewLoadProps = { height?: string; width?: string };
-
 // omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
 export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'src' | 'referrerPolicy'> {
   /**
@@ -81,6 +80,11 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
    * propagate error to the parent window from the iframe
    */
   propagateError?: boolean;
+
+  /**
+   * custom error handler for preview errors
+   */
+  onPreviewError?: (errorData: any) => void;
 }
 
 /**
@@ -103,6 +107,7 @@ export function ComponentPreview({
   style,
   sandbox,
   propagateError,
+  onPreviewError,
   ...rest
 }: ComponentPreviewProps) {
   const [heightIframeRef, iframeHeight] = useIframeContentHeight({ skip: false, viewport });
@@ -128,6 +133,7 @@ export function ComponentPreview({
 
       if (event.data && event.data.event === ERROR_EVENT) {
         const errorData = event.data.payload;
+        onPreviewError?.(errorData)
 
         if (propagateError && window.parent && window !== window.parent) {
           try {
