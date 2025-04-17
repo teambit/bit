@@ -504,7 +504,10 @@ export class Watcher {
       if (msgs?.onAll) events.forEach((event) => msgs.onAll(event.type, event.path));
     }
     if (err) {
-      msgs?.onError(err);
+      if (!err.message.includes('Events were dropped by the FSEvents client')) {
+        // the message above shows up too many times and it doesn't affect the watcher.
+        msgs?.onError(err);
+      }
       if (err.message.includes('Error starting FSEvents stream')) {
         throw new Error(`failed to start the watcher: ${err.message}.
 try rerunning the command. if that doesn't help, please refer to this Watchman troubleshooting guide:
