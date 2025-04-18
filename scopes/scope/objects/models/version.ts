@@ -466,9 +466,9 @@ export default class Version extends BitObject {
         docs: this.docs,
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),
-        // flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toObject()),
+        flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toObject()),
         // @todo: uncomment this in the future, once all remotes are updated to support the backward compatibility.
-        flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toString()),
+        // flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toString()),
         flattenedEdges: this.flattenedEdgesRef ? undefined : this.flattenedEdges.map((f) => Version.depEdgeToObject(f)),
         flattenedEdgesRef: this.flattenedEdgesRef?.toString(),
         dependenciesGraphRef: this.dependenciesGraphRef?.toString(),
