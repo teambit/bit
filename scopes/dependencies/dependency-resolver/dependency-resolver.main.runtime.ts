@@ -1379,11 +1379,13 @@ export class DependencyResolverMain {
 
   validateAspectData(data: DependencyResolverComponentData) {
     const errorPrefix = `failed validating ${DependencyResolverAspect.id} aspect-data.`;
+    const allowedPrefixes = ['https://', 'git:', 'git+ssh://', 'git+https://'];
     let errorMsg: undefined | string;
     data.dependencies?.forEach((dep) => {
       const isVersionValid = Boolean(semver.valid(dep.version) || semver.validRange(dep.version));
       if (isVersionValid) return;
       if (dep.__type === COMPONENT_DEP_TYPE && isSnap(dep.version)) return;
+      if (allowedPrefixes.some((prefix) => dep.version.startsWith(prefix))) return; // some packages are installed from https/git
       errorMsg = `${errorPrefix} the dependency version "${dep.version}" of ${dep.id} is not a valid semver version or range`;
     });
     data.policy?.forEach((policy) => {

@@ -163,24 +163,27 @@ export function getAnotherInstallRequiredOutput(recurringInstall = false, oldNon
 }
 
 function extractPackageName(packageString: string): string {
+  if (!packageString) return '';
+
+  // Handle https and git protocols. We don't allow "file" protocol here. It won't work for the consumer.
+  const allowedPrefixes = ['https://', 'git:', 'git+ssh://', 'git+https://'];
+  if (allowedPrefixes.some((prefix) => packageString.startsWith(prefix))) {
+    return packageString;
+  }
+
+  // If it's a scoped package
+  if (packageString.startsWith('@')) {
+    // Find the second '@' (first is for scope, second is for version/tag)
+    const atIndex = packageString.indexOf('@', 1);
+    if (atIndex === -1) return packageString;
+    const possibleVersion = packageString.slice(atIndex + 1);
+    // If the part after the second '@' contains a slash, it's not a version/tag
+    if (possibleVersion.includes('/')) return packageString;
+    return packageString.slice(0, atIndex);
+  }
+
+  // For unscoped packages, split at the last '@'
   const lastAtIndex = packageString.lastIndexOf('@');
-
-  // If no '@' is present, or it's at the start (meaning it's just a scope),
-  // we can assume there's no separate version part to remove.
-  if (lastAtIndex <= 0) {
-    return packageString;
-  }
-
-  // Get everything after the last '@'
-  const afterLastAt = packageString.slice(lastAtIndex + 1);
-
-  // If the substring after the last '@' contains a slash, it's part of the scoped package name,
-  // not a version. In that case, do not remove anything.
-  if (afterLastAt.includes('/')) {
-    return packageString;
-  }
-
-  // Otherwise, we assume that last '@' starts the version,
-  // so we remove that part.
+  if (lastAtIndex <= 0) return packageString;
   return packageString.slice(0, lastAtIndex);
 }
