@@ -452,4 +452,33 @@ describe('dependency-resolver extension', function () {
       });
     });
   });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('component range support', () => {
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+
+      helper.fixtures.populateComponents(3);
+
+      helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '^');
+
+      helper.command.tagAllComponents();
+      helper.command.export();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.scopeHelper.destroy();
+    });
+    it('installing a component should have the dependencies with range in the package.json', () => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      const comp1Pkg = helper.general.getPackageNameByCompName('comp1');
+      helper.command.install(comp1Pkg);
+      const pkgJson = helper.fs.readJsonFile(`node_modules/${comp1Pkg}/package.json`);
+      expect(pkgJson.dependencies[helper.general.getPackageNameByCompName('comp2')]).to.equal('^0.0.1');
+    });
+  });
 });

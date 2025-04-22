@@ -25,6 +25,8 @@ export async function updateDependenciesVersions(
   const autoDetectConfigMerge = workspace.getAutoDetectConfigMerge(component.id) || {};
   const currentLane = await workspace.getCurrentLaneObject();
 
+  const depsResolverConfig = depsResolver.config;
+  const componentRangePrefix  = depsResolverConfig.componentRangePrefix;
   updateDependencies(component.dependencies, 'dependencies');
   updateDependencies(component.devDependencies, 'devDependencies');
   updateDependencies(component.peerDependencies, 'peerDependencies');
@@ -97,6 +99,9 @@ export async function updateDependenciesVersions(
     const resolvedVersion = resolveVersion(id, depType, packageName);
     if (resolvedVersion) {
       dependency.id = dependency.id.changeVersion(resolvedVersion);
+      if (componentRangePrefix) {
+        dependency.versionRange = `${componentRangePrefix}${resolvedVersion}`;
+      }
     }
   }
   function updateDependencies(dependencies: Dependencies, depType: DepType) {

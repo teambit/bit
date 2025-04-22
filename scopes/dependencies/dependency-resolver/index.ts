@@ -25,7 +25,7 @@ export type {
   ProxyConfig as PackageManagerProxyConfig,
   NetworkConfig as PackageManagerNetworkConfig,
 } from './dependency-resolver.main.runtime';
-export { DependencyList, BaseDependency, ComponentDependency, KEY_NAME_BY_LIFECYCLE_TYPE } from './dependencies';
+export { DependencyList, BaseDependency, ComponentDependency, KEY_NAME_BY_LIFECYCLE_TYPE, COMPONENT_DEP_TYPE } from './dependencies';
 export type {
   DependencyLifecycleType,
   WorkspaceDependencyLifecycleType,

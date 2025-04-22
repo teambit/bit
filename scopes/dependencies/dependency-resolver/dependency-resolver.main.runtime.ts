@@ -28,7 +28,6 @@ import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { DetectorHook } from '@teambit/dependencies';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/scope.network';
-import { onTagIdTransformer } from '@teambit/snapping';
 import {
   ConsumerComponent as LegacyComponent,
   Dependency as LegacyDependency,
@@ -1252,28 +1251,6 @@ export class DependencyResolverMain {
     return envPolicy?.selfPolicy;
   }
 
-  updateDepsOnLegacyTag(component: LegacyComponent, idTransformer: onTagIdTransformer): LegacyComponent {
-    const entry = component.extensions.findCoreExtension(DependencyResolverAspect.id);
-    if (!entry) {
-      return component;
-    }
-    const dependencies = get(entry, ['data', 'dependencies'], []);
-    dependencies.forEach((dep) => {
-      if (dep.__type === COMPONENT_DEP_TYPE) {
-        // @todo: it's unclear why "dep.componentId" randomly becomes a ComponentID instance.
-        // this check is added because on Ripple in some scenarios it was throwing:
-        // "ComponentID.fromObject expect to get an object, got an instance of ComponentID" (locally it didn't happen)
-        const depId =
-          dep.componentId instanceof ComponentID ? dep.componentId : ComponentID.fromObject(dep.componentId);
-        const newDepId = idTransformer(depId);
-        dep.componentId = (newDepId || depId).serialize();
-        dep.id = (newDepId || depId).toString();
-        dep.version = (newDepId || depId).version;
-      }
-    });
-    return component;
-  }
-
   /**
    * Register a new dependency detector. Detectors allow to extend Bit's dependency detection
    * mechanism to support new file extensions and types.
@@ -1571,6 +1548,13 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       updatedVariants,
       updatedComponents,
     };
+  }
+
+  supportComponentRanges(): boolean {
+    return Boolean(this.config.enableComponentRanges);
+  }
+  componentRangePrefix(): string | undefined {
+    return this.config.componentRangePrefix;
   }
 
   static runtime = MainRuntime;

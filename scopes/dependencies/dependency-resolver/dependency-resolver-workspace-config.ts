@@ -208,4 +208,17 @@ export interface DependencyResolverWorkspaceConfig {
    * Tells pnpm to automatically install peer dependencies. It is true by default.
    */
   autoInstallPeers?: boolean;
+
+  /**
+   * When true, dependencies will be saved with range in the package.json.
+   * The range is determined by the "componentRangePrefix" config. In case the workspace.jsonc has a policy,
+   * the range is determined by the policy.
+   */
+  enableComponentRanges?: boolean;
+
+  /**
+   * This config works in conjunction with the "enableComponentRanges" config.
+   * It determines the prefix (for the range) to use for the dependencies when generating the package.json.
+   */
+  componentRangePrefix?: string;
 }
