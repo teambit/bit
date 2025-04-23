@@ -981,18 +981,6 @@ export class InstallMain {
     return Array.from(envs.values());
   }
 
-  async getAllDedupedDirectDependencies(): Promise<CurrentPkg[]> {
-    const componentPolicies = await this._getComponentsWithDependencyPolicies();
-    const variantPatterns = this.variants.raw();
-    const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
-    const components = await this.workspace.list();
-    return this.dependencyResolver.getAllDedupedDirectDependencies({
-      variantPoliciesByPatterns,
-      componentPolicies,
-      components,
-    });
-  }
-
   /**
    * Updates out-of-date dependencies in the workspace.
    *
@@ -1003,9 +991,9 @@ export class InstallMain {
     patterns?: string[];
     all: boolean;
   }): Promise<ComponentMap<string> | null> {
-    const componentPolicies = await this._getComponentsWithDependencyPolicies();
+    const componentPolicies = await this.workspace._getComponentsWithDependencyPolicies();
     const variantPatterns = this.variants.raw();
-    const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
+    const variantPoliciesByPatterns = this.workspace._variantPatternsToDepPolicesDict(variantPatterns);
     const components = await this.workspace.list();
     const outdatedPkgs = await this.dependencyResolver.getOutdatedPkgsFromPolicies({
       rootDir: this.workspace.path,
@@ -1055,33 +1043,6 @@ export class InstallMain {
         component.state.issues.getOrCreate(IssuesClasses.DuplicateComponentAndPackage).data = found.dependencyId;
       }
     });
-  }
-
-  private async _getComponentsWithDependencyPolicies() {
-    const allComponentIds = this.workspace.listIds();
-    const componentPolicies = [] as Array<{ componentId: ComponentID; policy: any }>;
-    (
-      await Promise.all<ComponentConfigFile | undefined>(
-        allComponentIds.map((componentId) => this.workspace.componentConfigFile(componentId))
-      )
-    ).forEach((componentConfigFile, index) => {
-      if (!componentConfigFile) return;
-      const depResolverConfig = componentConfigFile.aspects.get(DependencyResolverAspect.id);
-      if (!depResolverConfig) return;
-      const componentId = allComponentIds[index];
-      componentPolicies.push({ componentId, policy: depResolverConfig.config.policy });
-    });
-    return componentPolicies;
-  }
-
-  private _variantPatternsToDepPolicesDict(variantPatterns: Patterns): Record<string, VariantPolicyConfigObject> {
-    const variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject> = {};
-    for (const [variantPattern, extensions] of Object.entries(variantPatterns)) {
-      if (extensions[DependencyResolverAspect.id]?.policy) {
-        variantPoliciesByPatterns[variantPattern] = extensions[DependencyResolverAspect.id]?.policy;
-      }
-    }
-    return variantPoliciesByPatterns;
   }
 
   private async _updateComponentsConfig(updatedComponents: UpdatedComponent[]) {

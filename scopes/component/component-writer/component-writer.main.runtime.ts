@@ -81,7 +81,7 @@ export class ComponentWriterMain {
     let compilationError: Error | undefined;
     let workspaceConfigUpdateResult: WorkspaceConfigUpdateResult | undefined;
     if (opts.writeDeps) {
-      const allDeps = await this.installer.getAllDedupedDirectDependencies();
+      const allDeps = await this.workspace.getAllDedupedDirectDependencies();
       const updatedWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
       for (const dep of allDeps) {
         updatedWorkspacePolicyEntries.push({

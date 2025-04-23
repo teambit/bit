@@ -17,10 +17,12 @@ import {
 import { BitError } from '@teambit/bit-error';
 import { ComponentScopeDirMap, ConfigMain, WorkspaceConfig } from '@teambit/config';
 import {
+  CurrentPkg,
   DependencyResolverMain,
   DependencyResolverAspect,
   VariantPolicy,
   DependencyList,
+  VariantPolicyConfigObject,
   VariantPolicyConfigArr,
 } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect, EnvJsonc } from '@teambit/envs';
@@ -29,7 +31,7 @@ import { Harmony } from '@teambit/harmony';
 import { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
-import type { VariantsMain } from '@teambit/variants';
+import type { VariantsMain, Patterns } from '@teambit/variants';
 import { ComponentID, ComponentIdList, ComponentIdObj } from '@teambit/component-id';
 import { InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName, BitId } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
@@ -2326,6 +2328,45 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
   listLocalOnly(): ComponentIdList {
     return ComponentIdList.fromArray(this.bitMap.listLocalOnly());
+  }
+
+  async getAllDedupedDirectDependencies(): Promise<CurrentPkg[]> {
+    const componentPolicies = await this._getComponentsWithDependencyPolicies();
+    const variantPatterns = this.variants.raw();
+    const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
+    const components = await this.list();
+    return this.dependencyResolver.getAllDedupedDirectDependencies({
+      variantPoliciesByPatterns,
+      componentPolicies,
+      components,
+    });
+  }
+
+  _variantPatternsToDepPolicesDict(variantPatterns: Patterns): Record<string, VariantPolicyConfigObject> {
+    const variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject> = {};
+    for (const [variantPattern, extensions] of Object.entries(variantPatterns)) {
+      if (extensions[DependencyResolverAspect.id]?.policy) {
+        variantPoliciesByPatterns[variantPattern] = extensions[DependencyResolverAspect.id]?.policy;
+      }
+    }
+    return variantPoliciesByPatterns;
+  }
+
+  async _getComponentsWithDependencyPolicies() {
+    const allComponentIds = this.listIds();
+    const componentPolicies = [] as Array<{ componentId: ComponentID; policy: any }>;
+    (
+      await Promise.all<ComponentConfigFile | undefined>(
+        allComponentIds.map((componentId) => this.componentConfigFile(componentId))
+      )
+    ).forEach((componentConfigFile, index) => {
+      if (!componentConfigFile) return;
+      const depResolverConfig = componentConfigFile.aspects.get(DependencyResolverAspect.id);
+      if (!depResolverConfig) return;
+      const componentId = allComponentIds[index];
+      componentPolicies.push({ componentId, policy: depResolverConfig.config.policy });
+    });
+    return componentPolicies;
   }
 }
 
