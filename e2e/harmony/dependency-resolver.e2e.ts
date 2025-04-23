@@ -454,6 +454,7 @@ describe('dependency-resolver extension', function () {
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('component range support', () => {
     let npmCiRegistry: NpmCiRegistry;
+    let wsAfterExport: string;
     before(async () => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -467,6 +468,7 @@ describe('dependency-resolver extension', function () {
 
       helper.command.tagAllComponents();
       helper.command.export();
+      wsAfterExport = helper.scopeHelper.cloneWorkspace();
     });
     after(() => {
       npmCiRegistry.destroy();
@@ -489,6 +491,30 @@ describe('dependency-resolver extension', function () {
         helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '^');
 
         helper.command.tagAllComponents('--unmodified');
+      });
+      it('should keep the dependency with the range', () => {
+        const comp1 = helper.command.catComponent('comp1@latest');
+        const pkgExtensionData = helper.command.getAspectsData(comp1, Extensions.pkg).data;
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+        expect(pkgExtensionData.pkgJson.dependencies).to.have.property(comp2Pkg);
+        expect(pkgExtensionData.pkgJson.dependencies[comp2Pkg]).to.equal(`^0.0.1`);
+      });
+    });
+    describe('component-package exists in workspace.jsonc', () => {
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(wsAfterExport);
+        helper.command.tagAllComponents('--ver 2.0.0 --unmodified');
+        helper.command.export();
+
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        npmCiRegistry.setResolver();
+        helper.command.importComponent('comp1');
+        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '^');
+        helper.workspaceJsonc.addKeyValToDependencyResolver('enableComponentRanges', true);
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+        helper.command.install(`${comp2Pkg}@^0.0.1`);
+        helper.command.tagAllComponents();
       });
       it('should keep the dependency with the range', () => {
         const comp1 = helper.command.catComponent('comp1@latest');
