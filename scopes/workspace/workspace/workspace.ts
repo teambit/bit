@@ -24,6 +24,7 @@ import {
   DependencyList,
   VariantPolicyConfigObject,
   VariantPolicyConfigArr,
+  WorkspacePolicyEntry,
 } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect, EnvJsonc } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
@@ -2330,10 +2331,27 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return ComponentIdList.fromArray(this.bitMap.listLocalOnly());
   }
 
+  async writeDependencies() {
+    const allDeps = await this.getAllDedupedDirectDependencies();
+    const updatedWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
+    for (const dep of allDeps) {
+      updatedWorkspacePolicyEntries.push({
+        dependencyId: dep.name,
+        value: {
+          version: dep.currentRange,
+        },
+        lifecycleType: 'runtime',
+      });
+    }
+    this.dependencyResolver.addToRootPolicy(updatedWorkspacePolicyEntries, {
+      updateExisting: true,
+    });
+    await this.dependencyResolver.persistConfig('Write dependencies');
+  }
+
   async getAllDedupedDirectDependencies(): Promise<CurrentPkg[]> {
     const componentPolicies = await this._getComponentsWithDependencyPolicies();
-    const variantPatterns = this.variants.raw();
-    const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
+    const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict();
     const components = await this.list();
     return this.dependencyResolver.getAllDedupedDirectDependencies({
       variantPoliciesByPatterns,
@@ -2342,7 +2360,8 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     });
   }
 
-  _variantPatternsToDepPolicesDict(variantPatterns: Patterns): Record<string, VariantPolicyConfigObject> {
+  _variantPatternsToDepPolicesDict(): Record<string, VariantPolicyConfigObject> {
+    const variantPatterns = this.variants.raw();
     const variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject> = {};
     for (const [variantPattern, extensions] of Object.entries(variantPatterns)) {
       if (extensions[DependencyResolverAspect.id]?.policy) {

@@ -7,6 +7,7 @@ import { ComponentIdGraph } from '@teambit/graph';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { generateDependenciesInfoTable } from './template';
 import { DependenciesMain } from './dependencies.main.runtime';
+import { Workspace } from '@teambit/workspace';
 
 type GetDependenciesFlags = {
   tree: boolean;
@@ -366,3 +367,20 @@ export class UnsetPeerCmd implements Command {
     return `${chalk.green('successfully marked the component as not a peer component')}`;
   }
 }
+
+export class DependenciesWriteCmd implements Command {
+  name = 'write';
+  arguments = [];
+  group = 'info';
+  description = 'write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions';
+  alias = '';
+  options = [] as CommandOptions;
+
+  constructor(private workspace: Workspace) {}
+
+  async report() {
+    await this.workspace.writeDependencies();
+    return '';
+  }
+}
+

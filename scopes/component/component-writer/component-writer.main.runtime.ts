@@ -1,11 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
-import {
-  DependencyResolverAspect,
-  DependencyResolverMain,
-  WorkspacePolicyEntry,
-} from '@teambit/dependency-resolver'
 import { InstallAspect, InstallMain } from '@teambit/install';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
@@ -62,8 +57,7 @@ export class ComponentWriterMain {
     private workspace: Workspace,
     private logger: Logger,
     private mover: MoverMain,
-    private configMerge: ConfigMergerMain,
-    private depsResolver: DependencyResolverMain
+    private configMerge: ConfigMergerMain
   ) {}
 
   get consumer(): Consumer {
@@ -81,21 +75,7 @@ export class ComponentWriterMain {
     let compilationError: Error | undefined;
     let workspaceConfigUpdateResult: WorkspaceConfigUpdateResult | undefined;
     if (opts.writeDeps) {
-      const allDeps = await this.workspace.getAllDedupedDirectDependencies();
-      const updatedWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
-      for (const dep of allDeps) {
-        updatedWorkspacePolicyEntries.push({
-          dependencyId: dep.name,
-          value: {
-            version: dep.currentRange,
-          },
-          lifecycleType: 'runtime',
-        });
-      }
-      this.depsResolver.addToRootPolicy(updatedWorkspacePolicyEntries, {
-        updateExisting: true,
-      });
-      await this.depsResolver.persistConfig('Write dependencies');
+      await this.workspace.writeDependencies();
     }
     if (opts.shouldUpdateWorkspaceConfig) {
       workspaceConfigUpdateResult = await this.configMerge.updateDepsInWorkspaceConfig(
@@ -345,19 +325,18 @@ either use --path to specify a different directory or modify "defaultDirectory" 
   }
 
   static slots = [];
-  static dependencies = [InstallAspect, CompilerAspect, LoggerAspect, WorkspaceAspect, MoverAspect, ConfigMergerAspect, DependencyResolverAspect];
+  static dependencies = [InstallAspect, CompilerAspect, LoggerAspect, WorkspaceAspect, MoverAspect, ConfigMergerAspect];
   static runtime = MainRuntime;
-  static async provider([install, compiler, loggerMain, workspace, mover, configMerger, depsResolver]: [
+  static async provider([install, compiler, loggerMain, workspace, mover, configMerger]: [
     InstallMain,
     CompilerMain,
     LoggerMain,
     Workspace,
     MoverMain,
     ConfigMergerMain,
-    DependencyResolverMain,
   ]) {
     const logger = loggerMain.createLogger(ComponentWriterAspect.id);
-    return new ComponentWriterMain(install, compiler, workspace, logger, mover, configMerger, depsResolver);
+    return new ComponentWriterMain(install, compiler, workspace, logger, mover, configMerger);
   }
 }
 
