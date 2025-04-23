@@ -480,5 +480,23 @@ describe('dependency-resolver extension', function () {
       const pkgJson = helper.fs.readJsonFile(`node_modules/${comp1Pkg}/package.json`);
       expect(pkgJson.dependencies[helper.general.getPackageNameByCompName('comp2')]).to.equal('^0.0.1');
     });
+    describe('workspace with only the dependent', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        npmCiRegistry.setResolver();
+        helper.command.importComponent('comp1');
+        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '^');
+
+        helper.command.tagAllComponents('--unmodified');
+      });
+      it('should keep the dependency with the range', () => {
+        const comp1 = helper.command.catComponent('comp1@latest');
+        const pkgExtensionData = helper.command.getAspectsData(comp1, Extensions.pkg).data;
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+        expect(pkgExtensionData.pkgJson.dependencies).to.have.property(comp2Pkg);
+        expect(pkgExtensionData.pkgJson.dependencies[comp2Pkg]).to.equal(`^0.0.1`);
+      });
+    });
   });
 });
