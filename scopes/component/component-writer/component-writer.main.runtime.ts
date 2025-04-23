@@ -1,6 +1,11 @@
 import { MainRuntime } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
+import {
+  DependencyResolverAspect,
+  DependencyResolverMain,
+  WorkspacePolicyEntry,
+} from '@teambit/dependency-resolver'
 import { InstallAspect, InstallMain } from '@teambit/install';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
@@ -41,6 +46,7 @@ export interface ManyComponentsWriterParams {
   reasonForBitmapChange?: string; // optional. will be written in the bitmap-history-metadata
   shouldUpdateWorkspaceConfig?: boolean; // whether it should update dependencies policy (or leave conflicts) in workspace.jsonc
   mergeStrategy?: MergeStrategy; // needed for workspace.jsonc conflicts
+  writeDeps?: 'package.json' | 'workspace.jsonc';
 }
 
 export type ComponentWriterResults = {
@@ -56,7 +62,8 @@ export class ComponentWriterMain {
     private workspace: Workspace,
     private logger: Logger,
     private mover: MoverMain,
-    private configMerge: ConfigMergerMain
+    private configMerge: ConfigMergerMain,
+    private depsResolver: DependencyResolverMain
   ) {}
 
   get consumer(): Consumer {
@@ -73,6 +80,23 @@ export class ComponentWriterMain {
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
     let workspaceConfigUpdateResult: WorkspaceConfigUpdateResult | undefined;
+    if (opts.writeDeps) {
+      const allDeps = await this.installer.getAllDedupedDirectDependencies();
+      const updatedWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
+      for (const dep of allDeps) {
+        updatedWorkspacePolicyEntries.push({
+          dependencyId: dep.name,
+          value: {
+            version: dep.currentRange,
+          },
+          lifecycleType: 'runtime',
+        });
+      }
+      this.depsResolver.addToRootPolicy(updatedWorkspacePolicyEntries, {
+        updateExisting: true,
+      });
+      await this.depsResolver.persistConfig('Write dependencies');
+    }
     if (opts.shouldUpdateWorkspaceConfig) {
       workspaceConfigUpdateResult = await this.configMerge.updateDepsInWorkspaceConfig(
         opts.components,
@@ -321,18 +345,19 @@ either use --path to specify a different directory or modify "defaultDirectory" 
   }
 
   static slots = [];
-  static dependencies = [InstallAspect, CompilerAspect, LoggerAspect, WorkspaceAspect, MoverAspect, ConfigMergerAspect];
+  static dependencies = [InstallAspect, CompilerAspect, LoggerAspect, WorkspaceAspect, MoverAspect, ConfigMergerAspect, DependencyResolverAspect];
   static runtime = MainRuntime;
-  static async provider([install, compiler, loggerMain, workspace, mover, configMerger]: [
+  static async provider([install, compiler, loggerMain, workspace, mover, configMerger, depsResolver]: [
     InstallMain,
     CompilerMain,
     LoggerMain,
     Workspace,
     MoverMain,
     ConfigMergerMain,
+    DependencyResolverMain,
   ]) {
     const logger = loggerMain.createLogger(ComponentWriterAspect.id);
-    return new ComponentWriterMain(install, compiler, workspace, logger, mover, configMerger);
+    return new ComponentWriterMain(install, compiler, workspace, logger, mover, configMerger, depsResolver);
   }
 }
 

@@ -41,6 +41,7 @@ import {
   MergedOutdatedPkg,
   WorkspacePolicy,
   UpdatedComponent,
+  CurrentPkg,
 } from '@teambit/dependency-resolver';
 import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -978,6 +979,18 @@ export class InstallMain {
       envs.set(envId.toString(), envId);
     });
     return Array.from(envs.values());
+  }
+
+  async getAllDedupedDirectDependencies(): Promise<CurrentPkg[]> {
+    const componentPolicies = await this._getComponentsWithDependencyPolicies();
+    const variantPatterns = this.variants.raw();
+    const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
+    const components = await this.workspace.list();
+    return this.dependencyResolver.getAllDedupedDirectDependencies({
+      variantPoliciesByPatterns,
+      componentPolicies,
+      components,
+    });
   }
 
   /**

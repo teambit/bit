@@ -54,7 +54,7 @@ import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DepLinkerContext, DependencyLinker, LinkingOptions } from './dependency-linker';
 import { DependencyResolverWorkspaceConfig, NodeLinker } from './dependency-resolver-workspace-config';
-import { ComponentModelVersion, getAllPolicyPkgs, OutdatedPkg, CurrentPkgSource } from './get-all-policy-pkgs';
+import { ComponentModelVersion, getAllPolicyPkgs, CurrentPkg, OutdatedPkg, CurrentPkgSource } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
@@ -1431,36 +1431,10 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     patterns?: string[];
     forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible';
   }): Promise<MergedOutdatedPkg[] | null> {
-    const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
-    const componentModelVersions: ComponentModelVersion[] = (
-      await Promise.all(
-        components.map(async (component) => {
-          const depList = await this.getDependencies(component);
-          return depList
-            .filter(
-              (dep) =>
-                typeof dep.getPackageName === 'function' &&
-                // If the dependency is referenced not via a valid range it means that it wasn't yet published to the registry
-                semver.validRange(dep.version) != null &&
-                !dep['isExtension'] && // eslint-disable-line
-                dep.lifecycle !== 'peer' &&
-                !localComponentPkgNames.has(dep.getPackageName())
-            )
-            .map((dep) => ({
-              name: dep.getPackageName!(), // eslint-disable-line
-              version: dep.version,
-              isAuto: dep.source === 'auto',
-              componentId: component.id,
-              lifecycleType: dep.lifecycle,
-            }));
-        })
-      )
-    ).flat();
-    let allPkgs = getAllPolicyPkgs({
-      rootPolicy: this.getWorkspacePolicyFromConfig(),
+    let allPkgs = this.getAllDependencies({
       variantPoliciesByPatterns,
       componentPolicies,
-      componentModelVersions,
+      components,
     });
     if (patterns?.length) {
       const selectedPkgNames = new Set(
@@ -1476,6 +1450,83 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     }
     const outdatedPkgs = await this.getOutdatedPkgs({ rootDir, forceVersionBump }, allPkgs);
     return mergeOutdatedPkgs(outdatedPkgs);
+  }
+
+  getAllDependencies({
+    variantPoliciesByPatterns,
+    componentPolicies,
+    components,
+  }: {
+    variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
+    componentPolicies: Array<{ componentId: ComponentID; policy: any }>;
+    components: Component[];
+  }): CurrentPkg[] {
+    const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
+    const componentModelVersions: ComponentModelVersion[] = components.map((component) => {
+      const depList = this.getDependencies(component);
+      return depList
+        .filter(
+          (dep) =>
+            typeof dep.getPackageName === 'function' &&
+            // If the dependency is referenced not via a valid range it means that it wasn't yet published to the registry
+            semver.validRange(dep.version) != null &&
+            !dep['isExtension'] && // eslint-disable-line
+            dep.lifecycle !== 'peer' &&
+            !localComponentPkgNames.has(dep.getPackageName())
+        )
+        .map((dep) => ({
+          name: dep.getPackageName!(), // eslint-disable-line
+          version: dep.version,
+          isAuto: dep.source === 'auto',
+          componentId: component.id,
+          lifecycleType: dep.lifecycle,
+        }));
+    }).flat();
+    return getAllPolicyPkgs({
+      rootPolicy: this.getWorkspacePolicyFromConfig(),
+      variantPoliciesByPatterns,
+      componentPolicies,
+      componentModelVersions,
+    });
+  }
+
+  getAllDedupedDirectDependencies(opts: {
+    variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
+    componentPolicies: Array<{ componentId: ComponentID; policy: any }>;
+    components: Component[];
+  }): CurrentPkg[] {
+    const allDeps = this.getAllDependencies(opts);
+    const mergedDeps: Record<string, CurrentPkg> = {};
+    for (const dep of allDeps) {
+      if (mergedDeps[dep.name]) {
+        if (mergedDeps[dep.name].source === 'rootPolicy') {
+          if (dep.source !== 'rootPolicy') {
+            continue;
+          }
+          if (this.isRange1GreaterThanRange2Naively(dep.currentRange, mergedDeps[dep.name].currentRange)) {
+            mergedDeps[dep.name] = dep;
+          }
+        } else if (dep.source === 'rootPolicy' || this.isRange1GreaterThanRange2Naively(dep.currentRange, mergedDeps[dep.name].currentRange)) {
+          mergedDeps[dep.name] = dep;
+        }
+      } else {
+        mergedDeps[dep.name] = dep;
+      }
+    }
+    return Object.values(mergedDeps);
+  }
+
+  /**
+   * if both versions are ranges, it's hard to check which one is bigger. sometimes it's even impossible.
+   * remember that a range can be something like `1.2 <1.2.9 || >2.0.0`.
+   * this check is naive in a way that it assumes the range is simple, such as "^1.2.3" or "~1.2.3.
+   * in this case, it's possible to check for the minimum version and compare it.
+   */
+  private isRange1GreaterThanRange2Naively(range1: string, range2: string) {
+    const minVersion1 = semver.minVersion(range1);
+    const minVersion2 = semver.minVersion(range2);
+    if (!minVersion1 || !minVersion2) return false;
+    return semver.gt(minVersion1, minVersion2);
   }
 
   /**
