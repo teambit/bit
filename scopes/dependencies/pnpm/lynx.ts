@@ -581,7 +581,7 @@ export async function resolveRemoteVersion(
     const parsedPackage = parsePackageName(packageName);
     const wantedDep: WantedDependency = {
       alias: parsedPackage.name,
-      pref: parsedPackage.version,
+      bareSpecifier: parsedPackage.version,
     };
     const val = await resolve(wantedDep, resolveOpts);
     if (!val.manifest) {
@@ -605,18 +605,18 @@ export async function resolveRemoteVersion(
     // The provided package is probably a git url or path to a folder
     const wantedDep: WantedDependency = {
       alias: undefined,
-      pref: packageName,
+      bareSpecifier: packageName,
     };
     const val = await resolve(wantedDep, resolveOpts);
     if (!val.manifest) {
       throw new BitError('The resolved package has no manifest');
     }
-    if (!val.normalizedPref) {
+    if (!val.normalizedBareSpecifier) {
       throw new BitError('The resolved package has no version');
     }
     return {
       packageName: val.manifest.name,
-      version: val.normalizedPref,
+      version: val.normalizedBareSpecifier,
       isSemver: false,
       resolvedVia: val.resolvedVia,
       manifest: val.manifest,

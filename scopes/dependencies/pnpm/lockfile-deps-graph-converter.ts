@@ -295,7 +295,7 @@ export async function convertGraphToLockfile(
     if (lockfile.packages[pkgToResolve.pkgId].resolution == null) {
       const { resolution } = await resolve({
         alias: pkgToResolve.name,
-        pref: pkgToResolve.version,
+        bareSpecifier: pkgToResolve.version,
       }, {
         lockfileDir: '',
         projectDir: '',
