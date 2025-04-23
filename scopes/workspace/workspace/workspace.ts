@@ -30,7 +30,7 @@ import { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import type { VariantsMain } from '@teambit/variants';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { ComponentID, ComponentIdList, ComponentIdObj } from '@teambit/component-id';
 import { InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName, BitId } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy.consumer';
@@ -52,7 +52,6 @@ import {
   MergeConfigFilename,
   BIT_ROOTS_DIR,
   CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS,
-  CFG_USER_TOKEN_KEY,
 } from '@teambit/legacy.constants';
 import path from 'path';
 import { ConsumerComponent, Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
@@ -65,7 +64,6 @@ import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { isHash } from '@teambit/component-version';
 import { GlobalConfigMain } from '@teambit/global-config';
-import { getAuthHeader, fetchWithAgent as fetch } from '@teambit/scope.network';
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,
@@ -836,6 +834,19 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     const hasChanged = wereIdsRemoved.some((isRemoved) => isRemoved);
     if (hasChanged) await workspaceConfig.write({ reasonForChange: 'remove components' });
     return hasChanged;
+  }
+
+  /**
+   * when tagging/snapping a component, its config data is written to the staged config. it helps for "bit reset" to
+   * revert it back.
+   * this method removes entries from that files. used by "bit export" and "bit remove".
+   * in case the component is not found in the staged config, it doesn't throw an error. it simply ignores it.
+   */
+  async removeFromStagedConfig(ids: ComponentID[]) {
+    this.logger.debug(`removeFromStagedConfig, ${ids.length} ids`);
+    const stagedConfig = await this.scope.getStagedConfig();
+    ids.map((compId) => stagedConfig.removeComponentConfig(compId));
+    await stagedConfig.write();
   }
 
   async triggerOnComponentChange(
@@ -1818,24 +1829,16 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     packageName: string,
     errMsgPrefix: string
   ): Promise<ComponentID | undefined> {
-    const url = `https://node-registry.bit.cloud/${packageName}`;
-    const token = this.configStore.getConfig(CFG_USER_TOKEN_KEY);
-    const headers = token ? getAuthHeader(token) : {};
-    const res = await fetch(url, { headers });
-    if (!res.ok) {
+    const manifest = await this.dependencyResolver.fetchFullPackageManifest(packageName);
+    if (!manifest) {
       return undefined;
     }
-    const data = await res.json();
-    const latest = data['dist-tags'].latest;
-    if (!latest) throw new BitError(`${errMsgPrefix}the "dist-tags" has no latest field`);
-    const version = data.versions[latest];
-    if (!version) throw new BitError(`${errMsgPrefix}the "versions" is missing the latest "${latest}" field`);
-    const compId = version.componentId;
-    if (!compId)
+    if (!('componentId' in manifest)) {
       throw new BitError(
-        `${errMsgPrefix}the package.json of version "${latest}" has no componentId field, it's probably not a component`
+        `${errMsgPrefix}the package.json of version "${manifest.version}" has no componentId field, it's probably not a component`
       );
-    return ComponentID.fromObject(compId).changeVersion(undefined);
+    }
+    return ComponentID.fromObject(manifest.componentId as ComponentIdObj).changeVersion(undefined);
   }
 
   private async resolveComponentIdFromPackageJsonInNM(
@@ -2232,6 +2235,11 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
   async setComponentPathsRegExps() {
     const workspaceComponents = await this.list();
+    if(!workspaceComponents.length) {
+      this.componentPathsRegExps = [];
+      return;
+    }
+
     const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
     const packageManager = this.dependencyResolver.packageManagerName;
     const isPnpmEnabled = typeof packageManager === 'undefined' || packageManager.includes('pnpm');

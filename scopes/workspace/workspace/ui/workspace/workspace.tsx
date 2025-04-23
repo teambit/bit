@@ -106,6 +106,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
     </WorkspaceProvider>
   );
 }
+
 function useComponentNotifications() {
   const notifications = useNotifications();
 
@@ -118,7 +119,6 @@ function useComponentNotifications() {
         );
         setTimeout(() => notifications.dismiss(notificationId), 12 * 1000);
       },
-
       onComponentRemoved: (ids: ComponentID[]) => {
         const notificationId = notifications.log(
           `removed ${pluralize('component', ids.length)} ${ids.map((id) => id.toString()).join(', ')}`

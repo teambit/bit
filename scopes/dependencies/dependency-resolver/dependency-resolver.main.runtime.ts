@@ -37,7 +37,7 @@ import fs from 'fs-extra';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
 import { SourceFile } from '@teambit/component.sources';
-import { ProjectManifest } from '@pnpm/types';
+import { ProjectManifest, DependencyManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
@@ -1379,11 +1379,13 @@ export class DependencyResolverMain {
 
   validateAspectData(data: DependencyResolverComponentData) {
     const errorPrefix = `failed validating ${DependencyResolverAspect.id} aspect-data.`;
+    const allowedPrefixes = ['https://', 'git:', 'git+ssh://', 'git+https://'];
     let errorMsg: undefined | string;
     data.dependencies?.forEach((dep) => {
       const isVersionValid = Boolean(semver.valid(dep.version) || semver.validRange(dep.version));
       if (isVersionValid) return;
       if (dep.__type === COMPONENT_DEP_TYPE && isSnap(dep.version)) return;
+      if (allowedPrefixes.some((prefix) => dep.version.startsWith(prefix))) return; // some packages are installed from https/git
       errorMsg = `${errorPrefix} the dependency version "${dep.version}" of ${dep.id} is not a valid semver version or range`;
     });
     data.policy?.forEach((policy) => {
@@ -1474,6 +1476,22 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     }
     const outdatedPkgs = await this.getOutdatedPkgs({ rootDir, forceVersionBump }, allPkgs);
     return mergeOutdatedPkgs(outdatedPkgs);
+  }
+
+  /**
+   * Fetching the package manifest from the full package document.
+   * By default, we always request the abbreviated package document,
+   * which is much smaller in size but doesn't include all the fields published in the package's package.json file.
+   */
+  async fetchFullPackageManifest(packageName: string): Promise<DependencyManifest | undefined> {
+    const pm = this.getSystemPackageManager();
+    const { manifest } = await pm.resolveRemoteVersion(packageName, {
+      cacheRootDir: this.configStore.getConfig(CFG_PACKAGE_MANAGER_CACHE),
+      fullMetadata: true,
+      // We can set anything here. The rootDir option is ignored, when resolving npm-hosted packages.
+      rootDir: process.cwd(),
+    });
+    return manifest;
   }
 
   /**

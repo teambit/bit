@@ -88,11 +88,13 @@ export async function generateResolverAndFetcher({
   registries,
   proxyConfig,
   networkConfig,
+  fullMetadata,
 }: {
   cacheDir: string;
   registries: Registries;
   proxyConfig?: PackageManagerProxyConfig;
   networkConfig?: PackageManagerNetworkConfig;
+  fullMetadata?: boolean;
 }) {
   const pnpmConfig = await readConfig();
   const authConfig = getAuthConfig(registries);
@@ -119,6 +121,7 @@ export async function generateResolverAndFetcher({
       retries: networkConfig.fetchRetries,
     },
     registries: registries.toMap(),
+    fullMetadata,
   };
   const result = createClient(opts);
   return result;
@@ -545,13 +548,29 @@ function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>, opts: { up
 
 export async function resolveRemoteVersion(
   packageName: string,
-  rootDir: string,
-  cacheDir: string,
-  registries: Registries,
-  proxyConfig: PackageManagerProxyConfig = {},
-  networkConfig: PackageManagerNetworkConfig = {}
+  {
+    rootDir,
+    cacheDir,
+    fullMetadata,
+    registries,
+    proxyConfig,
+    networkConfig,
+  }: {
+    rootDir: string;
+    cacheDir: string;
+    fullMetadata?: boolean;
+    registries: Registries;
+    proxyConfig?: PackageManagerProxyConfig;
+    networkConfig?: PackageManagerNetworkConfig;
+  }
 ): Promise<ResolvedPackageVersion> {
-  const { resolve } = await generateResolverAndFetcher({ cacheDir, registries, proxyConfig, networkConfig });
+  const { resolve } = await generateResolverAndFetcher({
+    cacheDir,
+    fullMetadata,
+    networkConfig,
+    proxyConfig,
+    registries,
+  });
   const resolveOpts = {
     lockfileDir: rootDir,
     preferredVersions: {},
@@ -577,6 +596,7 @@ export async function resolveRemoteVersion(
       wantedRange,
       isSemver: true,
       resolvedVia: val.resolvedVia,
+      manifest: val.manifest,
     };
   } catch (e: any) {
     if (!e.message?.includes('is not a valid string')) {
@@ -599,6 +619,7 @@ export async function resolveRemoteVersion(
       version: val.normalizedPref,
       isSemver: false,
       resolvedVia: val.resolvedVia,
+      manifest: val.manifest,
     };
   }
 }

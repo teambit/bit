@@ -256,7 +256,14 @@ export class PnpmPackageManager implements PackageManager {
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { config } = await this.readConfig(options.packageManagerConfigRootDir);
-    return resolveRemoteVersion(packageName, options.rootDir, config.cacheDir, registries, proxyConfig, networkConfig);
+    return resolveRemoteVersion(packageName, {
+      rootDir: options.rootDir,
+      cacheDir: config.cacheDir,
+      registries,
+      proxyConfig,
+      networkConfig,
+      fullMetadata: options.fullMetadata,
+    });
   }
 
   async getProxyConfig?(): Promise<PackageManagerProxyConfig> {

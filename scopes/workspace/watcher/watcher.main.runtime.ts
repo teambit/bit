@@ -10,7 +10,7 @@ import { CFG_WATCH_USE_POLLING } from '@teambit/legacy.constants';
 import { WorkspaceAspect, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
 import pMapSeries from 'p-map-series';
 import { WatchCommand } from './watch.cmd';
-import { Watcher, WatchOptions } from './watcher';
+import { EventMessages, Watcher, WatchOptions } from './watcher';
 import { WatcherAspect } from './watcher.aspect';
 import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
 
@@ -28,9 +28,9 @@ export class WatcherMain {
     readonly configStore: ConfigStoreMain
   ) {}
 
-  async watch(opts: WatchOptions) {
+  async watch(opts: WatchOptions, msgs?: EventMessages) {
     if (!this.workspace) throw new OutsideWorkspaceError();
-    const watcher = new Watcher(this.workspace, this.pubsub, this, opts);
+    const watcher = new Watcher(this.workspace, this.pubsub, this, opts, msgs);
     await watcher.watch();
   }
 

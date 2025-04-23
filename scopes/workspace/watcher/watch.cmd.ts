@@ -83,7 +83,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
     }
   };
 
-  async report(cliArgs: [], watchCmdOpts: WatchCmdOpts) {
+  async wait(cliArgs: [], watchCmdOpts: WatchCmdOpts) {
     const { verbose, checkTypes, import: importIfNeeded, skipImport, trigger } = watchCmdOpts;
     if (importIfNeeded) {
       this.logger.consoleWarning('the "--import" flag is deprecated and is now the default behavior');
@@ -103,7 +103,6 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
       }
     };
     const watchOpts: WatchOptions = {
-      msgs: getMessages(this.logger),
       verbose,
       compile: true,
       preCompile: !watchCmdOpts.skipPreCompilation,
@@ -113,8 +112,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
       trigger: trigger ? ComponentID.fromString(trigger) : undefined,
       generateTypes: watchCmdOpts.generateTypes,
     };
-    await this.watcher.watch(watchOpts);
-    return 'watcher terminated';
+    await this.watcher.watch(watchOpts, getMessages(this.logger));
   }
 }
 
