@@ -1177,7 +1177,7 @@ export class IsolatorMain {
         const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
         const entry = dep.toManifest();
         if (entry) {
-          manifest[keyName][entry.packageName] = keyName === 'peerDependencies' ? dep.versionRange : version;
+          manifest[keyName][entry.packageName] = keyName === 'peerDependencies' && dep.versionRange !== '+' ? dep.versionRange : version;
         }
       });
       await Promise.all(promises);
