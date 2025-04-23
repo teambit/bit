@@ -293,8 +293,9 @@ describe('peer-dependencies functionality', function () {
       const pkgJson = fs.readJsonSync(
         path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1@${head}/package.json`)
       );
+      const comp2Head = helper.command.getHead('comp2');
       expect(pkgJson.peerDependencies).to.deep.equal({
-        [`@${helper.scopes.remote}/comp2`]: '+',
+        [`@${helper.scopes.remote}/comp2`]: `0.0.0-${comp2Head}`, // it can't be `+` as it's invalid in package.json.
       });
     });
   });
