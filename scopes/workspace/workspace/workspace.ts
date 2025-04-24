@@ -32,7 +32,7 @@ import { Harmony } from '@teambit/harmony';
 import { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
-import type { VariantsMain, Patterns } from '@teambit/variants';
+import type { VariantsMain } from '@teambit/variants';
 import { ComponentID, ComponentIdList, ComponentIdObj } from '@teambit/component-id';
 import { InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName, BitId } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';

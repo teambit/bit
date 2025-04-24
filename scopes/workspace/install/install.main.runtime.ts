@@ -5,13 +5,13 @@ import { getRootComponentDir, linkPkgsToRootComponents } from '@teambit/workspac
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
-import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { compact, mapValues, omit, uniq, intersection, groupBy } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import { GenerateResult, GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
-import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
+import { VariantsMain, VariantsAspect } from '@teambit/variants';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
@@ -33,7 +33,6 @@ import {
   DependencyResolverAspect,
   PackageManagerInstallOptions,
   ComponentDependency,
-  VariantPolicyConfigObject,
   WorkspacePolicyEntry,
   LinkingOptions,
   LinkResults,
@@ -41,7 +40,6 @@ import {
   MergedOutdatedPkg,
   WorkspacePolicy,
   UpdatedComponent,
-  CurrentPkg,
 } from '@teambit/dependency-resolver';
 import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -1026,7 +1024,7 @@ export class InstallMain {
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgsToUpdate, {
       variantPoliciesByPatterns,
     });
-    await this._updateVariantsPolicies(variantPatterns, updatedVariants);
+    await this._updateVariantsPolicies(updatedVariants);
     await this._updateComponentsConfig(updatedComponents);
     await this.workspace._reloadConsumer();
     return this._installModules({ dedupe: true });
@@ -1057,7 +1055,8 @@ export class InstallMain {
     await this.workspace.bitMap.write('update (dependencies)');
   }
 
-  private async _updateVariantsPolicies(variantPatterns: Record<string, any>, updateVariantPolicies: string[]) {
+  private async _updateVariantsPolicies(updateVariantPolicies: string[]) {
+    const variantPatterns = this.variants.raw();
     for (const variantPattern of updateVariantPolicies) {
       this.variants.setExtension(
         variantPattern,
