@@ -22,18 +22,35 @@ describe('dependencies write', function () {
     helper.command.install('--add-missing-deps');
     helper.command.tagAllComponents('--skip-tests');
     helper.command.export();
-
-    helper.scopeHelper.reInitWorkspace();
-    helper.scopeHelper.addRemoteScope();
-    helper.command.import(`${helper.scopes.remote}/comp1@latest`);
-
-    helper.command.dependenciesWrite();
   });
   after(() => {
     helper.scopeHelper.destroy();
   });
-  it('should add dependencies to workspace.jsonc', () => {
-    expect(helper.workspaceJsonc.getPolicyFromDependencyResolver().dependencies['is-odd']).to.eq('1.0.0');
+  describe('using deps write command', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.import(`${helper.scopes.remote}/comp1@latest`);
+
+      helper.command.dependenciesWrite();
+      helper.command.dependenciesWrite('--target=package.json');
+    });
+    it('should add dependencies to workspace.jsonc', () => {
+      expect(helper.workspaceJsonc.getPolicyFromDependencyResolver().dependencies['is-odd']).to.eq('1.0.0');
+    });
+    it('should add dependencies to package.json', () => {
+      expect(helper.packageJson.read().dependencies['is-odd']).to.eq('1.0.0');
+    });
+  });
+  describe('using import command', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.import(`${helper.scopes.remote}/comp1@latest --write-deps=package.json`);
+    });
+    it('should add dependencies to package.json', () => {
+      expect(helper.packageJson.read().dependencies['is-odd']).to.eq('1.0.0');
+    });
   });
 });
 
