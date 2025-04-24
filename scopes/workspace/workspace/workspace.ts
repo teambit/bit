@@ -1,5 +1,4 @@
 /* eslint-disable max-lines */
-import util from 'util';
 import { parse } from 'comment-json';
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -61,7 +60,7 @@ import path from 'path';
 import { ConsumerComponent, Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog } from '@teambit/objects';
-import { SourceFile, DataToPersist, JsonVinyl } from '@teambit/component.sources';
+import { SourceFile, DataToPersist, JsonVinyl, PackageJsonFile } from '@teambit/component.sources';
 import { ScopeComponentsImporter } from '@teambit/legacy.scope';
 import { Lane } from '@teambit/objects';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
@@ -2359,23 +2358,13 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   async writeDependenciesToPackageJson(): Promise<void> {
-    const packageJsonPath = path.join(this.path, 'package.json');
-    let pkgJson: any;
-    try {
-      pkgJson = await fs.readJson(packageJsonPath);
-    } catch (error) {
-      if (util.types.isNativeError(error) && 'code' in error && error.code === 'ENOENT') {
-        pkgJson = {};
-      } else {
-        throw error;
-      }
-    }
+    const pkgJson = await PackageJsonFile.load(this.path);
     const allDeps = await this.getAllDedupedDirectDependencies();
-    pkgJson.dependencies ??= {};
+    pkgJson.packageJsonObject.dependencies ??= {};
     for (const dep of allDeps) {
-      pkgJson.dependencies[dep.name] = dep.currentRange;
+      pkgJson.packageJsonObject.dependencies[dep.name] = dep.currentRange;
     }
-    await fs.writeJson(packageJsonPath, pkgJson);
+    await pkgJson.write();
   }
 
   async getAllDedupedDirectDependencies(): Promise<CurrentPkg[]> {
