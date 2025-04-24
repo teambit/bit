@@ -5,6 +5,7 @@ import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-t
 import { MainRuntime } from '@teambit/cli';
 import { getRootComponentDir } from '@teambit/workspace.root-components';
 import { ComponentAspect, Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
+import { isRange1GreaterThanRange2Naively } from '@teambit/pkg.modules.semver-helper';
 import type { ConfigMain } from '@teambit/config';
 import { join, relative } from 'path';
 import { compact, get, pick, uniq, omit, cloneDeep } from 'lodash';
@@ -1503,10 +1504,10 @@ as an alternative, you can use "+" to keep the same version installed in the wor
           if (dep.source !== 'rootPolicy') {
             continue;
           }
-          if (this.isRange1GreaterThanRange2Naively(dep.currentRange, mergedDeps[dep.name].currentRange)) {
+          if (isRange1GreaterThanRange2Naively(dep.currentRange, mergedDeps[dep.name].currentRange)) {
             mergedDeps[dep.name] = dep;
           }
-        } else if (dep.source === 'rootPolicy' || this.isRange1GreaterThanRange2Naively(dep.currentRange, mergedDeps[dep.name].currentRange)) {
+        } else if (dep.source === 'rootPolicy' || isRange1GreaterThanRange2Naively(dep.currentRange, mergedDeps[dep.name].currentRange)) {
           mergedDeps[dep.name] = dep;
         }
       } else {
@@ -1514,19 +1515,6 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       }
     }
     return Object.values(mergedDeps);
-  }
-
-  /**
-   * if both versions are ranges, it's hard to check which one is bigger. sometimes it's even impossible.
-   * remember that a range can be something like `1.2 <1.2.9 || >2.0.0`.
-   * this check is naive in a way that it assumes the range is simple, such as "^1.2.3" or "~1.2.3.
-   * in this case, it's possible to check for the minimum version and compare it.
-   */
-  private isRange1GreaterThanRange2Naively(range1: string, range2: string) {
-    const minVersion1 = semver.minVersion(range1);
-    const minVersion2 = semver.minVersion(range2);
-    if (!minVersion1 || !minVersion2) return false;
-    return semver.gt(minVersion1, minVersion2);
   }
 
   /**
