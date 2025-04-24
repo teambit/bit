@@ -52,7 +52,7 @@ import {
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DepLinkerContext, DependencyLinker, LinkingOptions } from './dependency-linker';
-import { DependencyResolverWorkspaceConfig, NodeLinker } from './dependency-resolver-workspace-config';
+import { ComponentRangePrefix, DependencyResolverWorkspaceConfig, NodeLinker } from './dependency-resolver-workspace-config';
 import { ComponentModelVersion, getAllPolicyPkgs, OutdatedPkg, CurrentPkgSource } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
@@ -1223,6 +1223,7 @@ export class DependencyResolverMain {
     });
     const currentExtension = configuredExtensions.findExtension(DependencyResolverAspect.id);
     const currentConfig = currentExtension?.config as unknown as DependencyResolverVariantConfig;
+
     if (currentConfig && currentConfig.policy) {
       policiesFromConfig = VariantPolicy.fromConfigObject(currentConfig.policy, { source: 'config' });
     }
@@ -1235,6 +1236,7 @@ export class DependencyResolverMain {
       policiesFromSlots,
       policiesFromConfig,
     ]);
+
     return result;
   }
 
@@ -1550,11 +1552,11 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     };
   }
 
-  supportComponentRanges(): boolean {
-    return Boolean(this.config.enableComponentRanges);
-  }
-  componentRangePrefix(): string | undefined {
+  componentRangePrefix(): ComponentRangePrefix | undefined {
     return this.config.componentRangePrefix;
+  }
+  supportComponentRange(): boolean {
+    return Boolean(this.config.componentRangePrefix && this.config.componentRangePrefix !== '-');
   }
 
   static runtime = MainRuntime;

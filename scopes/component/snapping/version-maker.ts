@@ -496,6 +496,7 @@ export class VersionMaker {
       });
     };
     const componentRangePrefix = this.dependencyResolver.componentRangePrefix();
+    const supportComponentRange = this.dependencyResolver.supportComponentRange();
     const updateDepsResolverData = (component: ConsumerComponent) => {
       const entry = component.extensions.findCoreExtension(DependencyResolverAspect.id);
       if (!entry) {
@@ -515,8 +516,12 @@ export class VersionMaker {
         dep.componentId = (newDepId || depId).serialize();
         dep.id = (newDepId || depId).toString();
         dep.version = (newDepId || depId).version;
-        if (!componentRangePrefix) return;
-        dep.versionRange = `${componentRangePrefix}${dep.version}`;
+        if (!supportComponentRange) return;
+        // if dep.versionRange exists, it was resolved previously by the dependency-loader.
+        // @todo: maybe this part can be removed, and the dependency-loader already takes care of what needed.
+        if (!dep.versionRange && (componentRangePrefix === '^' || componentRangePrefix === '~')) {
+          dep.versionRange = `${componentRangePrefix}${dep.version}`;
+        }
       });
       return component;
     }

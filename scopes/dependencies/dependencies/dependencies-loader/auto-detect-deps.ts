@@ -399,12 +399,12 @@ export class AutoDetectDeps {
         depDebug.importSource = 'env.jsonc';
       }
       const getVersionFromPkgJson = (): string | null => {
-        const versionFromDependencyPkgJson = getValidVersion(compDep.concreteVersion);
+        const { version: versionFromDependencyPkgJson } = getValidComponentVersion(compDep.concreteVersion);
         if (versionFromDependencyPkgJson) {
           depDebug.versionResolvedFrom = 'DependencyPkgJson';
           return versionFromDependencyPkgJson;
         }
-        const versionFromDependentPkgJson = getValidVersion(compDep.versionUsedByDependent);
+        const { version: versionFromDependentPkgJson } = getValidComponentVersion(compDep.versionUsedByDependent);
         if (versionFromDependentPkgJson) {
           depDebug.versionResolvedFrom = 'DependentPkgJson';
           return versionFromDependentPkgJson;
@@ -764,30 +764,34 @@ export class AutoDetectDeps {
   }
 }
 
-export function getValidVersion(version: string | undefined) {
+/**
+ * this is not necessarily a valid semver version. in case of a snap, it returns the hash only, not a valid semver.
+ * this is for the ComponentID.version.
+ */
+export function getValidComponentVersion(version?: string): { version?: string, range?: string }  {
   if (!version) {
-    return null;
+    return { version: undefined };
   }
   if (version.startsWith(SNAP_VERSION_PREFIX)) {
     const versionWithoutSnapPrefix = version.replace(SNAP_VERSION_PREFIX, '');
     if (isSnap(versionWithoutSnapPrefix)) {
-      return versionWithoutSnapPrefix;
+      return { version: versionWithoutSnapPrefix };
     }
   }
   if (semver.valid(version)) {
     // this takes care of pre-releases as well, as they're considered valid semver.
-    return version;
+    return { version };
   }
   if (semver.validRange(version)) {
     // if this is a range, e.g. ^1.0.0, return a valid version: 1.0.0.
     const coerced = semver.coerce(version);
     if (coerced) {
-      return coerced.version;
+      return { version: coerced.version, range: version };
     }
   }
   if (isSnap(version)) {
-    return version;
+    return { version };
   }
   // it's probably a relative path to the component
-  return null;
+  return { version: undefined };
 }

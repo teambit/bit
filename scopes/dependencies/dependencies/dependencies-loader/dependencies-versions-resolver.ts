@@ -8,7 +8,7 @@ import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
 import OverridesDependencies from './overrides-dependencies';
-import { DebugComponentsDependency, getValidVersion } from './auto-detect-deps';
+import { DebugComponentsDependency, getValidComponentVersion } from './auto-detect-deps';
 
 type DepType = 'dependencies' | 'devDependencies' | 'peerDependencies';
 
@@ -24,9 +24,8 @@ export async function updateDependenciesVersions(
   const consumer: Consumer = workspace.consumer;
   const autoDetectConfigMerge = workspace.getAutoDetectConfigMerge(component.id) || {};
   const currentLane = await workspace.getCurrentLaneObject();
-
-  const depsResolverConfig = depsResolver.config;
-  const componentRangePrefix  = depsResolverConfig.componentRangePrefix;
+  const componentRangePrefix  = depsResolver.componentRangePrefix();
+  const supportComponentRange = depsResolver.supportComponentRange();
   updateDependencies(component.dependencies, 'dependencies');
   updateDependencies(component.devDependencies, 'devDependencies');
   updateDependencies(component.peerDependencies, 'peerDependencies');
@@ -40,7 +39,7 @@ export async function updateDependenciesVersions(
    * running bit link --rewire).
    * 2: this gets called for extension-id.
    */
-  function resolveVersion(id: ComponentID, depType: DepType, pkg?: string): string | undefined {
+  function resolveVersion(id: ComponentID, depType: DepType, pkg?: string): { version?: string, range?: string} {
     const idFromBitMap = getIdFromBitMap(id);
     const idFromComponentConfig = getIdFromComponentConfig(id);
     const getFromComponentConfig = () => idFromComponentConfig;
@@ -79,28 +78,32 @@ export async function updateDependenciesVersions(
 
     for (const strategy of strategies) {
       const strategyId = strategy();
-      if (strategyId) {
-        logger.trace(
-          `found dependency version ${strategyId.version} for ${id.toString()} in strategy ${strategy.name}`
-        );
-        if (debugDep) {
-          debugDep.versionResolvedFrom = strategy.name.replace('getFrom', '');
-          debugDep.version = strategyId.version;
-        }
-
-        return strategyId.version;
+      if (!strategyId) continue;
+      const version = strategyId instanceof ComponentID ? strategyId.version : strategyId.compId?.version;
+      if (!version) continue;
+      logger.trace(
+        `found dependency version ${version} for ${id.toString()} in strategy ${strategy.name}`
+      );
+      if (debugDep) {
+        debugDep.versionResolvedFrom = strategy.name.replace('getFrom', '');
+        debugDep.version = version;
       }
+
+      return { version, range: strategyId instanceof ComponentID ? undefined : strategyId.range };
     }
-    return undefined;
+    return {};
   }
 
   function updateDependency(dependency: Dependency, depType: DepType) {
     const { id, packageName } = dependency;
-    const resolvedVersion = resolveVersion(id, depType, packageName);
+    const { version: resolvedVersion, range } = resolveVersion(id, depType, packageName);
     if (resolvedVersion) {
       dependency.id = dependency.id.changeVersion(resolvedVersion);
-      if (componentRangePrefix) {
-        dependency.versionRange = `${componentRangePrefix}${resolvedVersion}`;
+      if (supportComponentRange) {
+        if (range) dependency.versionRange = range;
+        else if (componentRangePrefix === '^' || componentRangePrefix === '~') {
+          dependency.versionRange = `${componentRangePrefix}${resolvedVersion}`;
+        }
       } else if (dependency.versionRange && depType !== 'peerDependencies' && dependency.versionRange !== '+') {
         dependency.versionRange = undefined;
       }
@@ -112,7 +115,7 @@ export async function updateDependenciesVersions(
 
   function updateExtension(extension: ExtensionDataEntry) {
     if (extension.extensionId) {
-      const resolvedVersion = resolveVersion(extension.extensionId, 'devDependencies');
+      const { version: resolvedVersion } = resolveVersion(extension.extensionId, 'devDependencies');
       if (resolvedVersion) {
         extension.extensionId = extension.extensionId.changeVersion(resolvedVersion);
       }
@@ -148,13 +151,18 @@ export async function updateDependenciesVersions(
     return componentId.changeVersion(dependencies[dependency]);
   }
 
-  function resolveFromOverrides(id: ComponentID, depType: DepType, pkgName?: string): ComponentID | undefined {
+  /**
+   * config in .bitmap or component.json are resolved here.
+   */
+  function resolveFromOverrides(id: ComponentID, depType: DepType, pkgName?: string):
+  { compId?: ComponentID; range?: string } | undefined {
     if (!pkgName) return undefined;
     const dependencies = overridesDependencies.getDependenciesToAddManually();
     const found = dependencies?.[depType]?.[pkgName];
     if (!found) return undefined;
-    const validVersion = getValidVersion(found);
-    return validVersion ? id.changeVersion(validVersion) : undefined;
+    const { version: validVersion, range } = getValidComponentVersion(found);
+    const compId = validVersion ? id.changeVersion(validVersion) : undefined;
+    return { compId, range };
   }
 
   function isPkgInAutoDetectOverrides(pkgName: string): boolean {
@@ -172,9 +180,9 @@ export async function updateDependenciesVersions(
     DEPENDENCIES_FIELDS.forEach((field) => {
       if (autoDetectConfigMerge[field]?.[pkgName]) {
         foundVersion = autoDetectConfigMerge[field]?.[pkgName];
-        foundVersion = foundVersion ? getValidVersion(foundVersion) : null;
       }
     });
-    return foundVersion ? id.changeVersion(foundVersion) : undefined;
+    const foundValidVersion = foundVersion ? getValidComponentVersion(foundVersion) : undefined;
+    return foundValidVersion?.version ? id.changeVersion(foundValidVersion.version) : undefined;
   }
 }

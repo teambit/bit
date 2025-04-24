@@ -539,4 +539,39 @@ describe('dependency-resolver extension', function () {
       });
     });
   });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('component range as "+"', () => {
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      npmCiRegistry.setResolver();
+      helper.command.importComponent('comp1');
+
+      const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+      helper.command.dependenciesSet('comp1', `${comp2Pkg}@~0.0.1`);
+      helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '+');
+
+      helper.command.tagAllComponents('--unmodified');
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.scopeHelper.destroy();
+    });
+    it('should save the prefix according to how the user saved it via bit-deps-set', () => {
+      const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+      const depsData = helper.command.showDependenciesData('comp1');
+      const comp2Dep = depsData.find((d) => d.packageName === comp2Pkg);
+      expect(comp2Dep).to.have.property('versionRange');
+      expect(comp2Dep!.versionRange).to.equal('~0.0.1')
+    });
+  });
 });

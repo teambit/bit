@@ -4,6 +4,8 @@ import { PackageImportMethod } from './package-manager';
 
 export type NodeLinker = 'hoisted' | 'isolated';
 
+export type ComponentRangePrefix = '~' | '^' | '+' | '-';
+
 export interface DependencyResolverWorkspaceConfig {
   policy: WorkspacePolicyConfigObject;
   /**
@@ -210,15 +212,12 @@ export interface DependencyResolverWorkspaceConfig {
   autoInstallPeers?: boolean;
 
   /**
-   * When true, dependencies will be saved with range in the package.json.
-   * The range is determined by the "componentRangePrefix" config. In case the workspace.jsonc has a policy,
-   * the range is determined by the policy.
+   * By default, Bit saves component dependencies with exact versions (pinned) in the package.json,
+   * even if the dependency-resolver policy specifies a version range.
+   *
+   * To preserve the range defined in the policy, set this value to "+".
+   * To apply a predefined range ("~" or "^") to other component dependencies not covered by the policy,
+   * set this to the desired range symbol.
    */
-  enableComponentRanges?: boolean;
-
-  /**
-   * This config works in conjunction with the "enableComponentRanges" config.
-   * It determines the prefix (for the range) to use for the dependencies when generating the package.json.
-   */
-  componentRangePrefix?: string;
+  componentRangePrefix?: ComponentRangePrefix;
 }
