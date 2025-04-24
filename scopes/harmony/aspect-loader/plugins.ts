@@ -65,7 +65,7 @@ export class Plugins {
     const module = await esmLoader(realPath, true);
     const defaultModule = module.default;
     if (!defaultModule) {
-      throw new Error(`Failed to load plugin. Ensure you use "export default" in your index.ts file`);
+      throw new Error(`Failed to load plugin. Ensure you use "export default" in your index.ts file. \nPath: ${path}`);
     }
     defaultModule.__path = path;
     defaultModule.__resolvedPath = resolvedPathFromRealPath;
