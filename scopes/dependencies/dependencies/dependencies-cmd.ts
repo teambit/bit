@@ -382,7 +382,7 @@ export class DependenciesWriteCmd implements Command {
 
   constructor(private workspace: Workspace) {}
 
-  async report([]: [], options: DependenciesWriteCmdOptions) {
+  async report(_, options: DependenciesWriteCmdOptions) {
     await this.workspace.writeDependencies(options.target);
     return '';
   }
