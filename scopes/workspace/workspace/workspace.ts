@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import util from 'util';
 import { parse } from 'comment-json';
 import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -2331,7 +2332,15 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return ComponentIdList.fromArray(this.bitMap.listLocalOnly());
   }
 
-  async writeDependencies() {
+  async writeDependencies(target?: 'workspace.jsonc' | 'package.json') {
+    if (target === 'package.json') {
+      await this.writeDependenciesToPackageJson();
+    } else {
+      await this.writeDependenciesToWorkspaceJsonc();
+    }
+  }
+
+  async writeDependenciesToWorkspaceJsonc(): Promise<void> {
     const allDeps = await this.getAllDedupedDirectDependencies();
     const updatedWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
     for (const dep of allDeps) {
@@ -2347,6 +2356,26 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       updateExisting: true,
     });
     await this.dependencyResolver.persistConfig('Write dependencies');
+  }
+
+  async writeDependenciesToPackageJson(): Promise<void> {
+    const packageJsonPath = path.join(this.path, 'package.json');
+    let pkgJson: any;
+    try {
+      pkgJson = await fs.readJson(packageJsonPath);
+    } catch (error) {
+      if (util.types.isNativeError(error) && 'code' in error && error.code === 'ENOENT') {
+        pkgJson = {};
+      } else {
+        throw error;
+      }
+    }
+    const allDeps = await this.getAllDedupedDirectDependencies();
+    pkgJson.dependencies ??= {};
+    for (const dep of allDeps) {
+      pkgJson.dependencies[dep.name] = dep.currentRange;
+    }
+    await fs.writeJson(packageJsonPath, pkgJson);
   }
 
   async getAllDedupedDirectDependencies(): Promise<CurrentPkg[]> {

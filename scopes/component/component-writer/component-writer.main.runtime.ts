@@ -75,7 +75,7 @@ export class ComponentWriterMain {
     let compilationError: Error | undefined;
     let workspaceConfigUpdateResult: WorkspaceConfigUpdateResult | undefined;
     if (opts.writeDeps) {
-      await this.workspace.writeDependencies();
+      await this.workspace.writeDependencies(opts.writeDeps);
     }
     if (opts.shouldUpdateWorkspaceConfig) {
       workspaceConfigUpdateResult = await this.configMerge.updateDepsInWorkspaceConfig(
