@@ -474,6 +474,13 @@ describe('dependency-resolver extension', function () {
       npmCiRegistry.destroy();
       helper.scopeHelper.destroy();
     });
+    it('should save the dependencies with rangePrefix', () => {
+      const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+      const depsData = helper.command.showDependenciesData('comp1');
+      const comp2Dep = depsData.find((d) => d.packageName === comp2Pkg);
+      expect(comp2Dep).to.have.property('versionRange');
+      expect(comp2Dep!.versionRange).to.equal('^0.0.1');
+    });
     it('installing a component should have the dependencies with range in the package.json', () => {
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
@@ -571,7 +578,7 @@ describe('dependency-resolver extension', function () {
       const depsData = helper.command.showDependenciesData('comp1');
       const comp2Dep = depsData.find((d) => d.packageName === comp2Pkg);
       expect(comp2Dep).to.have.property('versionRange');
-      expect(comp2Dep!.versionRange).to.equal('~0.0.1')
+      expect(comp2Dep!.versionRange).to.equal('~0.0.1');
     });
   });
 });

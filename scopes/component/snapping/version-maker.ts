@@ -495,8 +495,10 @@ export class VersionMaker {
         }
       });
     };
+    // in case we update dependencies according to the currently tagged component, we want to keep the versionRange
+    // up to date with the new tags. e.g. 0.0.1 -> 0.0.2, will change the versionRange to ^0.0.2 or ~0.0.2.
+    // in case componentRangePrefix is "+", we care only about packages in workspace.jsonc. so it won't be relevant.
     const componentRangePrefix = this.dependencyResolver.componentRangePrefix();
-    const supportComponentRange = this.dependencyResolver.supportComponentRange();
     const updateDepsResolverData = (component: ConsumerComponent) => {
       const entry = component.extensions.findCoreExtension(DependencyResolverAspect.id);
       if (!entry) {
@@ -516,10 +518,9 @@ export class VersionMaker {
         dep.componentId = (newDepId || depId).serialize();
         dep.id = (newDepId || depId).toString();
         dep.version = (newDepId || depId).version;
-        if (!supportComponentRange) return;
-        // if dep.versionRange exists, it was resolved previously by the dependency-loader.
-        // @todo: maybe this part can be removed, and the dependency-loader already takes care of what needed.
-        if (!dep.versionRange && (componentRangePrefix === '^' || componentRangePrefix === '~')) {
+        // if newDepId, then it means the dependency is in the current workspace and currently being tagged.
+        // the versionRange needs to be updated to the new version.
+        if (newDepId && (componentRangePrefix === '^' || componentRangePrefix === '~')) {
           dep.versionRange = `${componentRangePrefix}${dep.version}`;
         }
       });
@@ -531,7 +532,9 @@ export class VersionMaker {
         const newDepId = getNewDependencyVersion(dependency.id);
         if (!newDepId) return;
         dependency.id = newDepId;
-        if (componentRangePrefix) {
+        // if componentRangePrefix === '+', then, only it only saves packages in workspace.jsonc.
+        // in this case, these dependencies are in .bitmap. not in workspace.jsonc. so it's not relevant.
+        if (componentRangePrefix === '^' || componentRangePrefix === '~') {
           dependency.versionRange = `${componentRangePrefix}${newDepId.version}`;
         }
       });

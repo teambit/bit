@@ -101,7 +101,7 @@ export async function updateDependenciesVersions(
       dependency.id = dependency.id.changeVersion(resolvedVersion);
       if (supportComponentRange) {
         if (range) dependency.versionRange = range;
-        else if (componentRangePrefix === '^' || componentRangePrefix === '~') {
+        else if (resolvedVersion !== 'latest' && (componentRangePrefix === '^' || componentRangePrefix === '~')) {
           dependency.versionRange = `${componentRangePrefix}${resolvedVersion}`;
         }
       } else if (dependency.versionRange && depType !== 'peerDependencies' && dependency.versionRange !== '+') {
