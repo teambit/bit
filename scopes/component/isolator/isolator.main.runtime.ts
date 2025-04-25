@@ -1290,7 +1290,7 @@ export class IsolatorMain {
           return acc;
         }
         const fromDepsResolver = compDeps.find((dep) => dep.componentId.isEqualWithoutVersion(depId));
-        const versionWithRange = fromDepsResolver?.source === 'auto' && fromDepsResolver?.versionRange;
+        const versionWithRange = fromDepsResolver?.versionRange;
 
         const packageDependency = depId.version;
         const packageName = componentIdToPackageName({
