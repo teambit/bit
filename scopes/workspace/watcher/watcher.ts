@@ -117,8 +117,14 @@ export class Watcher {
       });
     } catch (err: any) {
       if (err.message.includes('Error starting FSEvents stream')) {
-        throw new Error(`failed to start the watcher: ${err.message}.
-try rerunning the command or close other watchers (bit-watch/bit-start/vscode). if that doesn't help, please refer to this Watchman troubleshooting guide:
+        throw new Error(`Failed to start the watcher: ${err.message}
+This is usually caused by too many watchers running in the same workspace (e.g., bit-watch, bit-start, bit-run, or VSCode with the Bit plugin).
+Try closing the other watchers and re-running the command.
+
+In general, if you're using "bit start" or "bit run", you don't need to run "bit watch" as well.
+Similarly, if you're using VSCode with the Bit extension, you can enable "Compile on Change" instead of running a watcher manually.
+
+If the issue persists, please refer to the Watchman troubleshooting guide:
 https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-register_with_server-error-f2d_register_rpc--null--21`);
       }
     }
