@@ -5,13 +5,13 @@ import { getRootComponentDir, linkPkgsToRootComponents } from '@teambit/workspac
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
-import { WorkspaceAspect, Workspace, ComponentConfigFile } from '@teambit/workspace';
+import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { compact, mapValues, omit, uniq, intersection, groupBy } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
 import { GenerateResult, GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
-import { VariantsMain, Patterns, VariantsAspect } from '@teambit/variants';
+import { VariantsMain, VariantsAspect } from '@teambit/variants';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
@@ -33,7 +33,6 @@ import {
   DependencyResolverAspect,
   PackageManagerInstallOptions,
   ComponentDependency,
-  VariantPolicyConfigObject,
   WorkspacePolicyEntry,
   LinkingOptions,
   LinkResults,
@@ -990,9 +989,8 @@ export class InstallMain {
     patterns?: string[];
     all: boolean;
   }): Promise<ComponentMap<string> | null> {
-    const componentPolicies = await this._getComponentsWithDependencyPolicies();
-    const variantPatterns = this.variants.raw();
-    const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict(variantPatterns);
+    const componentPolicies = await this.workspace.getComponentsWithDependencyPolicies();
+    const variantPoliciesByPatterns = this.workspace.variantPatternsToDepPolicesDict();
     const components = await this.workspace.list();
     const outdatedPkgs = await this.dependencyResolver.getOutdatedPkgsFromPolicies({
       rootDir: this.workspace.path,
@@ -1026,7 +1024,7 @@ export class InstallMain {
     const { updatedVariants, updatedComponents } = this.dependencyResolver.applyUpdates(outdatedPkgsToUpdate, {
       variantPoliciesByPatterns,
     });
-    await this._updateVariantsPolicies(variantPatterns, updatedVariants);
+    await this._updateVariantsPolicies(updatedVariants);
     await this._updateComponentsConfig(updatedComponents);
     await this.workspace._reloadConsumer();
     return this._installModules({ dedupe: true });
@@ -1044,33 +1042,6 @@ export class InstallMain {
     });
   }
 
-  private async _getComponentsWithDependencyPolicies() {
-    const allComponentIds = this.workspace.listIds();
-    const componentPolicies = [] as Array<{ componentId: ComponentID; policy: any }>;
-    (
-      await Promise.all<ComponentConfigFile | undefined>(
-        allComponentIds.map((componentId) => this.workspace.componentConfigFile(componentId))
-      )
-    ).forEach((componentConfigFile, index) => {
-      if (!componentConfigFile) return;
-      const depResolverConfig = componentConfigFile.aspects.get(DependencyResolverAspect.id);
-      if (!depResolverConfig) return;
-      const componentId = allComponentIds[index];
-      componentPolicies.push({ componentId, policy: depResolverConfig.config.policy });
-    });
-    return componentPolicies;
-  }
-
-  private _variantPatternsToDepPolicesDict(variantPatterns: Patterns): Record<string, VariantPolicyConfigObject> {
-    const variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject> = {};
-    for (const [variantPattern, extensions] of Object.entries(variantPatterns)) {
-      if (extensions[DependencyResolverAspect.id]?.policy) {
-        variantPoliciesByPatterns[variantPattern] = extensions[DependencyResolverAspect.id]?.policy;
-      }
-    }
-    return variantPoliciesByPatterns;
-  }
-
   private async _updateComponentsConfig(updatedComponents: UpdatedComponent[]) {
     if (updatedComponents.length === 0) return;
     await Promise.all(
@@ -1084,7 +1055,8 @@ export class InstallMain {
     await this.workspace.bitMap.write('update (dependencies)');
   }
 
-  private async _updateVariantsPolicies(variantPatterns: Record<string, any>, updateVariantPolicies: string[]) {
+  private async _updateVariantsPolicies(updateVariantPolicies: string[]) {
+    const variantPatterns = this.variants.raw();
     for (const variantPattern of updateVariantPolicies) {
       this.variants.setExtension(
         variantPattern,

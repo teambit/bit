@@ -17,11 +17,14 @@ import {
 import { BitError } from '@teambit/bit-error';
 import { ComponentScopeDirMap, ConfigMain, WorkspaceConfig } from '@teambit/config';
 import {
+  CurrentPkg,
   DependencyResolverMain,
   DependencyResolverAspect,
   VariantPolicy,
   DependencyList,
+  VariantPolicyConfigObject,
   VariantPolicyConfigArr,
+  WorkspacePolicyEntry,
 } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect, EnvJsonc } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
@@ -57,7 +60,7 @@ import path from 'path';
 import { ConsumerComponent, Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog } from '@teambit/objects';
-import { SourceFile, DataToPersist, JsonVinyl } from '@teambit/component.sources';
+import { SourceFile, DataToPersist, JsonVinyl, PackageJsonFile } from '@teambit/component.sources';
 import { ScopeComponentsImporter } from '@teambit/legacy.scope';
 import { Lane } from '@teambit/objects';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
@@ -2326,6 +2329,81 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
   listLocalOnly(): ComponentIdList {
     return ComponentIdList.fromArray(this.bitMap.listLocalOnly());
+  }
+
+  async writeDependencies(target?: 'workspace.jsonc' | 'package.json') {
+    if (target === 'package.json') {
+      await this.writeDependenciesToPackageJson();
+    } else {
+      await this.writeDependenciesToWorkspaceJsonc();
+    }
+  }
+
+  async writeDependenciesToWorkspaceJsonc(): Promise<void> {
+    const allDeps = await this.getAllDedupedDirectDependencies();
+    const updatedWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
+    for (const dep of allDeps) {
+      updatedWorkspacePolicyEntries.push({
+        dependencyId: dep.name,
+        value: {
+          version: dep.currentRange,
+        },
+        lifecycleType: 'runtime',
+      });
+    }
+    this.dependencyResolver.addToRootPolicy(updatedWorkspacePolicyEntries, {
+      updateExisting: true,
+    });
+    await this.dependencyResolver.persistConfig('Write dependencies');
+  }
+
+  async writeDependenciesToPackageJson(): Promise<void> {
+    const pkgJson = await PackageJsonFile.load(this.path);
+    const allDeps = await this.getAllDedupedDirectDependencies();
+    pkgJson.packageJsonObject.dependencies ??= {};
+    for (const dep of allDeps) {
+      pkgJson.packageJsonObject.dependencies[dep.name] = dep.currentRange;
+    }
+    await pkgJson.write();
+  }
+
+  async getAllDedupedDirectDependencies(): Promise<CurrentPkg[]> {
+    const componentPolicies = await this.getComponentsWithDependencyPolicies();
+    const variantPoliciesByPatterns = this.variantPatternsToDepPolicesDict();
+    const components = await this.list();
+    return this.dependencyResolver.getAllDedupedDirectDependencies({
+      variantPoliciesByPatterns,
+      componentPolicies,
+      components,
+    });
+  }
+
+  variantPatternsToDepPolicesDict(): Record<string, VariantPolicyConfigObject> {
+    const variantPatterns = this.variants.raw();
+    const variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject> = {};
+    for (const [variantPattern, extensions] of Object.entries(variantPatterns)) {
+      if (extensions[DependencyResolverAspect.id]?.policy) {
+        variantPoliciesByPatterns[variantPattern] = extensions[DependencyResolverAspect.id]?.policy;
+      }
+    }
+    return variantPoliciesByPatterns;
+  }
+
+  async getComponentsWithDependencyPolicies(): Promise<Array<{ componentId: ComponentID; policy: any }>> {
+    const allComponentIds = this.listIds();
+    const componentPolicies = [] as Array<{ componentId: ComponentID; policy: any }>;
+    (
+      await Promise.all<ComponentConfigFile | undefined>(
+        allComponentIds.map((componentId) => this.componentConfigFile(componentId))
+      )
+    ).forEach((componentConfigFile, index) => {
+      if (!componentConfigFile) return;
+      const depResolverConfig = componentConfigFile.aspects.get(DependencyResolverAspect.id);
+      if (!depResolverConfig) return;
+      const componentId = allComponentIds[index];
+      componentPolicies.push({ componentId, policy: depResolverConfig.config.policy });
+    });
+    return componentPolicies;
   }
 }
 
