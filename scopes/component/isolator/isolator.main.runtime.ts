@@ -1177,7 +1177,7 @@ export class IsolatorMain {
         const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
         const entry = dep.toManifest();
         if (entry) {
-          manifest[keyName][entry.packageName] = keyName === 'peerDependencies' && dep.versionRange !== '+' ? dep.versionRange : version;
+          manifest[keyName][entry.packageName] = dep.versionRange && dep.versionRange !== '+' ? dep.versionRange : version;
         }
       });
       await Promise.all(promises);
@@ -1218,7 +1218,7 @@ export class IsolatorMain {
     const packageJson = this.preparePackageJsonToWrite(
       component,
       writeToPath,
-      ids // this.ignoreBitDependencies,
+      ids
     );
     if (!legacyComp.id.hasVersion()) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -1279,21 +1279,26 @@ export class IsolatorMain {
   private preparePackageJsonToWrite(
     component: Component,
     bitDir: string,
-    ignoreBitDependencies: ComponentIdList | boolean = true
+    componentDepsToIgnore: ComponentIdList
   ): PackageJsonFile {
     const legacyComp: ConsumerComponent = component.state._consumer;
+    const compDeps = this.dependencyResolver.getComponentDependencies(component);
     this.logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}.`);
     const getBitDependencies = (dependencies: ComponentIdList) => {
-      if (ignoreBitDependencies === true) return {};
       return dependencies.reduce((acc, depId: ComponentID) => {
-        if (Array.isArray(ignoreBitDependencies) && ignoreBitDependencies.searchWithoutVersion(depId)) return acc;
+        if (componentDepsToIgnore.searchWithoutVersion(depId)) {
+          return acc;
+        }
+        const fromDepsResolver = compDeps.find((dep) => dep.componentId.isEqualWithoutVersion(depId));
+        const versionWithRange = fromDepsResolver?.versionRange;
+
         const packageDependency = depId.version;
         const packageName = componentIdToPackageName({
           ...legacyComp,
           id: depId,
           isDependency: true,
         });
-        acc[packageName] = packageDependency;
+        acc[packageName] = versionWithRange || packageDependency;
         return acc;
       }, {});
     };

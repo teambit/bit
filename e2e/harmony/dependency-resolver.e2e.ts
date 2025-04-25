@@ -452,4 +452,169 @@ describe('dependency-resolver extension', function () {
       });
     });
   });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('component range support', () => {
+    let npmCiRegistry: NpmCiRegistry;
+    let wsAfterExport: string;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+
+      helper.fixtures.populateComponents(3);
+
+      helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '^');
+
+      helper.command.tagAllComponents();
+      helper.command.export();
+      wsAfterExport = helper.scopeHelper.cloneWorkspace();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.scopeHelper.destroy();
+    });
+    it('should save the dependencies with rangePrefix', () => {
+      const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+      const depsData = helper.command.showDependenciesData('comp1');
+      const comp2Dep = depsData.find((d) => d.packageName === comp2Pkg);
+      expect(comp2Dep).to.have.property('versionRange');
+      expect(comp2Dep!.versionRange).to.equal('^0.0.1');
+    });
+    it('installing a component should have the dependencies with range in the package.json', () => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      const comp1Pkg = helper.general.getPackageNameByCompName('comp1');
+      helper.command.install(comp1Pkg);
+      const pkgJson = helper.fs.readJsonFile(`node_modules/${comp1Pkg}/package.json`);
+      expect(pkgJson.dependencies[helper.general.getPackageNameByCompName('comp2')]).to.equal('^0.0.1');
+    });
+    describe('workspace with only the dependent', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        npmCiRegistry.setResolver();
+        helper.command.importComponent('comp1');
+        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '^');
+
+        helper.command.tagAllComponents('--unmodified');
+      });
+      it('should keep the dependency with the range', () => {
+        const comp1 = helper.command.catComponent('comp1@latest');
+        const pkgExtensionData = helper.command.getAspectsData(comp1, Extensions.pkg).data;
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+        expect(pkgExtensionData.pkgJson.dependencies).to.have.property(comp2Pkg);
+        expect(pkgExtensionData.pkgJson.dependencies[comp2Pkg]).to.equal(`^0.0.1`);
+      });
+    });
+    describe('component-package exists in workspace.jsonc', () => {
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(wsAfterExport);
+        helper.command.tagAllComponents('--ver 2.0.0 --unmodified');
+        helper.command.export();
+
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        npmCiRegistry.setResolver();
+        helper.command.importComponent('comp1');
+        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '^');
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+        helper.command.install(`${comp2Pkg}@^0.0.1`);
+        helper.command.tagAllComponents();
+      });
+      it('should keep the dependency with the range', () => {
+        const comp1 = helper.command.catComponent('comp1@latest');
+        const pkgExtensionData = helper.command.getAspectsData(comp1, Extensions.pkg).data;
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+        expect(pkgExtensionData.pkgJson.dependencies).to.have.property(comp2Pkg);
+        expect(pkgExtensionData.pkgJson.dependencies[comp2Pkg]).to.equal(`^0.0.1`);
+      });
+    });
+    describe('revert the range', () => {
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(wsAfterExport);
+        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '');
+        helper.command.tagComponent('comp1', undefined, '--ver 3.0.0 --unmodified');
+      });
+      it('should save the dependency without the range', () => {
+        const comp1 = helper.command.catComponent('comp1@latest');
+        const pkgExtensionData = helper.command.getAspectsData(comp1, Extensions.pkg).data;
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+        expect(pkgExtensionData.pkgJson.dependencies).to.have.property(comp2Pkg);
+        expect(pkgExtensionData.pkgJson.dependencies[comp2Pkg]).to.equal(`0.0.1`);
+      });
+    });
+    describe('range in config conflicts the actual range in policy', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        npmCiRegistry.setResolver();
+        helper.command.importComponent('comp1');
+        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '^');
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+        helper.command.install(`${comp2Pkg}@~0.0.1`);
+        helper.command.tagAllWithoutBuild('--unmodified');
+      });
+      it('the range in policy should win', () => {
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+        const depsData = helper.command.showDependenciesData('comp1');
+        const comp2Dep = depsData.find((d) => d.packageName === comp2Pkg);
+        expect(comp2Dep).to.have.property('versionRange');
+        expect(comp2Dep!.versionRange).to.equal('~0.0.1');
+      });
+    });
+  });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('component range as "+"', () => {
+    let npmCiRegistry: NpmCiRegistry;
+    let wsAfterExport: string;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllComponents();
+      helper.command.export();
+      wsAfterExport = helper.scopeHelper.cloneWorkspace();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.scopeHelper.destroy();
+    });
+    describe('tagging the dependent only', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        npmCiRegistry.setResolver();
+        helper.command.importComponent('comp1');
+
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+        helper.command.dependenciesSet('comp1', `${comp2Pkg}@~0.0.1`);
+        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '+');
+
+        helper.command.tagAllWithoutBuild('--unmodified');
+      });
+      it('should save the prefix according to how the user saved it via bit-deps-set', () => {
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+        const depsData = helper.command.showDependenciesData('comp1');
+        const comp2Dep = depsData.find((d) => d.packageName === comp2Pkg);
+        expect(comp2Dep).to.have.property('versionRange');
+        expect(comp2Dep!.versionRange).to.equal('~0.0.1');
+      });
+    });
+    describe('tagging both the dependent and the dependency', () => {
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(wsAfterExport);
+        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '+');
+        helper.command.tagAllWithoutBuild('--unmodified');
+      });
+      it('should not save any prefix', () => {
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+        const depsData = helper.command.showDependenciesData('comp1');
+        const comp2Dep = depsData.find((d) => d.packageName === comp2Pkg);
+        expect(comp2Dep).to.not.have.property('versionRange');
+      });
+    });
+  });
 });

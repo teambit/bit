@@ -116,6 +116,7 @@ import {
 } from './workspace-component/component-status-loader';
 import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
 import { ConfigStoreAspect, ConfigStoreMain, Store } from '@teambit/config-store';
+import type { DependenciesOverridesData } from '@teambit/legacy.consumer-config';
 
 export type EjectConfResult = {
   configPath: string;
@@ -2267,12 +2268,17 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     );
   }
 
+  /**
+   * the dependencies returned from this method will override the auto-detected dependencies. (done by "applyAutoDetectOverridesOnComponent")
+   * to calculate this, we merge several sources: env, env-for-itself, config from variant, and the merge-config.
+   * keep in mind that component-config (coming from .bitmap or component.json) is not included in this merge.
+   */
   async getAutoDetectOverrides(
     configuredExtensions: ExtensionDataList,
     id: ComponentID,
     legacyFiles: SourceFile[],
     envExtendedDeps?: LegacyDependency[]
-  ) {
+  ): Promise<DependenciesOverridesData> {
     let policy = await this.dependencyResolver.mergeVariantPolicies(
       configuredExtensions,
       id,

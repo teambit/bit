@@ -29,7 +29,6 @@ import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { DetectorHook } from '@teambit/dependencies';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/scope.network';
-import { onTagIdTransformer } from '@teambit/snapping';
 import {
   ConsumerComponent as LegacyComponent,
   Dependency as LegacyDependency,
@@ -54,7 +53,7 @@ import {
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DepLinkerContext, DependencyLinker, LinkingOptions } from './dependency-linker';
-import { DependencyResolverWorkspaceConfig, NodeLinker } from './dependency-resolver-workspace-config';
+import { ComponentRangePrefix, DependencyResolverWorkspaceConfig, NodeLinker } from './dependency-resolver-workspace-config';
 import { ComponentModelVersion, getAllPolicyPkgs, CurrentPkg, OutdatedPkg, CurrentPkgSource } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
@@ -1225,6 +1224,7 @@ export class DependencyResolverMain {
     });
     const currentExtension = configuredExtensions.findExtension(DependencyResolverAspect.id);
     const currentConfig = currentExtension?.config as unknown as DependencyResolverVariantConfig;
+
     if (currentConfig && currentConfig.policy) {
       policiesFromConfig = VariantPolicy.fromConfigObject(currentConfig.policy, { source: 'config' });
     }
@@ -1237,6 +1237,7 @@ export class DependencyResolverMain {
       policiesFromSlots,
       policiesFromConfig,
     ]);
+
     return result;
   }
 
@@ -1251,28 +1252,6 @@ export class DependencyResolverMain {
   ): Promise<VariantPolicy | undefined> {
     const envPolicy = await this.getEnvPolicyFromEnvId(id, legacyFiles, envExtendsDeps);
     return envPolicy?.selfPolicy;
-  }
-
-  updateDepsOnLegacyTag(component: LegacyComponent, idTransformer: onTagIdTransformer): LegacyComponent {
-    const entry = component.extensions.findCoreExtension(DependencyResolverAspect.id);
-    if (!entry) {
-      return component;
-    }
-    const dependencies = get(entry, ['data', 'dependencies'], []);
-    dependencies.forEach((dep) => {
-      if (dep.__type === COMPONENT_DEP_TYPE) {
-        // @todo: it's unclear why "dep.componentId" randomly becomes a ComponentID instance.
-        // this check is added because on Ripple in some scenarios it was throwing:
-        // "ComponentID.fromObject expect to get an object, got an instance of ComponentID" (locally it didn't happen)
-        const depId =
-          dep.componentId instanceof ComponentID ? dep.componentId : ComponentID.fromObject(dep.componentId);
-        const newDepId = idTransformer(depId);
-        dep.componentId = (newDepId || depId).serialize();
-        dep.id = (newDepId || depId).toString();
-        dep.version = (newDepId || depId).version;
-      }
-    });
-    return component;
   }
 
   /**
@@ -1625,6 +1604,13 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       updatedVariants,
       updatedComponents,
     };
+  }
+
+  componentRangePrefix(): ComponentRangePrefix | undefined {
+    return this.config.componentRangePrefix;
+  }
+  supportComponentRange(): boolean {
+    return Boolean(this.config.componentRangePrefix && this.config.componentRangePrefix !== '-');
   }
 
   static runtime = MainRuntime;

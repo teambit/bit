@@ -1,5 +1,5 @@
 import mapSeries from 'p-map-series';
-import { compact } from 'lodash';
+import { compact, get } from 'lodash';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 import { BitError } from '@teambit/bit-error';
@@ -17,15 +17,13 @@ import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { BuilderMain, OnTagOpts } from '@teambit/builder';
 import { ModelComponent, Log, DependenciesGraph, Lane } from '@teambit/objects';
 import { MessagePerComponent, MessagePerComponentFetcher } from './message-per-component';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain, COMPONENT_DEP_TYPE } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace, AutoTagResult } from '@teambit/workspace';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 import { LaneId } from '@teambit/lane-id';
 import { DETACH_HEAD, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
-
-export type onTagIdTransformer = (id: ComponentID) => ComponentID | null;
 
 export type BasicTagSnapParams = {
   message: string;
@@ -171,7 +169,6 @@ export class VersionMaker {
     if (this.workspace) {
       await this.workspace.scope.legacyScope.stagedSnaps.write();
     }
-
     const publishedPackages: string[] = [];
     const harmonyCompsToTag = await (this.workspace || this.scope).getManyByLegacy(this.allComponentsToTag);
     // this is not necessarily the same as the previous allComponentsToTag. although it should be, because
@@ -498,17 +495,51 @@ export class VersionMaker {
         }
       });
     };
+    // in case we update dependencies according to the currently tagged component, we want to keep the versionRange
+    // up to date with the new tags. e.g. 0.0.1 -> 0.0.2, will change the versionRange to ^0.0.2 or ~0.0.2.
+    // in case componentRangePrefix is "+", we care only about packages in workspace.jsonc. so it won't be relevant.
+    const componentRangePrefix = this.dependencyResolver.componentRangePrefix();
+    const updateDepsResolverData = (component: ConsumerComponent) => {
+      const entry = component.extensions.findCoreExtension(DependencyResolverAspect.id);
+      if (!entry) {
+        return component;
+      }
+      const dependencies = get(entry, ['data', 'dependencies'], []);
+      dependencies.forEach((dep) => {
+        if (dep.__type !== COMPONENT_DEP_TYPE) {
+          return;
+        }
+        // @todo: it's unclear why "dep.componentId" randomly becomes a ComponentID instance.
+        // this check is added because on Ripple in some scenarios it was throwing:
+        // "ComponentID.fromObject expect to get an object, got an instance of ComponentID" (locally it didn't happen)
+        const depId =
+          dep.componentId instanceof ComponentID ? dep.componentId : ComponentID.fromObject(dep.componentId);
+        const newDepId = getNewDependencyVersion(depId);
+        dep.componentId = (newDepId || depId).serialize();
+        dep.id = (newDepId || depId).toString();
+        dep.version = (newDepId || depId).version;
+        // if newDepId, then it means the dependency is in the current workspace and currently being tagged.
+        // the versionRange needs to be updated to the new version.
+        if (newDepId && (componentRangePrefix === '^' || componentRangePrefix === '~')) {
+          dep.versionRange = `${componentRangePrefix}${dep.version}`;
+        }
+      });
+      return component;
+    }
 
     componentsToTag.forEach((oneComponentToTag) => {
       oneComponentToTag.getAllDependencies().forEach((dependency) => {
         const newDepId = getNewDependencyVersion(dependency.id);
-        if (newDepId) dependency.id = newDepId;
+        if (!newDepId) return;
+        dependency.id = newDepId;
+        // if componentRangePrefix === '+', then, only it only saves packages in workspace.jsonc.
+        // in this case, these dependencies are in .bitmap. not in workspace.jsonc. so it's not relevant.
+        if (componentRangePrefix === '^' || componentRangePrefix === '~') {
+          dependency.versionRange = `${componentRangePrefix}${newDepId.version}`;
+        }
       });
       changeExtensionsVersion(oneComponentToTag);
-      oneComponentToTag = this.dependencyResolver.updateDepsOnLegacyTag(
-        oneComponentToTag,
-        getNewDependencyVersion.bind(this)
-      );
+      oneComponentToTag = updateDepsResolverData(oneComponentToTag);
     });
   }
 
