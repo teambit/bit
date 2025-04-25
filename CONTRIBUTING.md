@@ -9,31 +9,19 @@ the setup process is more involving than expected because we write bit using bit
 
 ### installation
 
-- make sure you have `bit` installed via `bvm` (see [instructions](https://bit.dev/docs/quick-start/#install){:target="\_blank" rel="noopener"}), then run:
+- make sure you have `bit` installed via `bvm` (see [instructions](https://bit.dev/docs/getting-started/installing-bit/installing-bit)), then run:
 
 ```bash
   npm run full-setup
 ```
 
-the script does the following:
-
-1. runs `bit install` to install all dependencies.
-2. runs `bit compile` to compile all components in the workspace.
-
-install command globally and link (in order to use the "bit-dev" command globally and always use the
-latest development build)
+to make bit command available globally to always use this repo, the following command will create an alias "bit-dev".
 
 ```bash
   npm run dev-link
 ```
 
-if you want your command to be different then the default (bit-dev) just add your favorite command name as an argument to the script
-
-```bash
-  npm run dev-link my-bit-dev-cmd-name
-```
-
-for example:
+if you want your command to be different then the default (bit-dev) just add your favorite command name as an argument to the script, for example
 
 ```bash
   npm run dev-link bd
@@ -69,13 +57,8 @@ If you are using Linux and getting "System limit for number of file watchers rea
   echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
 ```
 
-### Unit Tests
+If you use the vscode with Bit extension, you can configure in to compile on change instead of running "bit watch".
 
-- run the unit tests
-
-```bash
-  npm test
-```
 
 ### End to End Tests
 
@@ -101,13 +84,15 @@ Keep in mind that running the e2e-tests locally may take hours to complete, it's
 
 ### Debugging
 
-The code is heavy on promises, as such, some errors don't have a useful stack trace. Bluebird enables the long stack trace when the env is development or when `BLUEBIRD_DEBUG` is set. Normally, the full stack trace is not shown on the console but logged in the debug.log file. (located at /Users/your-use/Library/Caches/Bit/logs/debug.log on Mac).
+In case of an error, the full stack trace is not shown on the console but logged in the debug.log file. (located at /Users/your-use/Library/Caches/Bit/logs/debug.log on Mac).
 
 In some cases, you might get very helpful info by prefixing Bit command with `BIT_LOG=*`. For now, this helps to get more info about why a component is shown as modified and it also shows the events for `bit watch`.
 
 To print the log messages on the console, prefix your command with `BIT_LOG=<debug-level>`, e.g. `BIT_LOG=error`.
 
-The log level written to the log file is by default "debug". To change it, run `bit config set log_level <level>`, e.g. `bit config set log_level info`.
+The log level written to the log file is by default "debug". To change it, run `bit config set log_level <level>`, e.g. `bit config set log_level info`. The options are ['trace', 'debug', 'info', 'warn', 'error'].
+
+To find the debug.log file, run `bit globals` and notice the "Log file" line.
 
 ### Lint
 
@@ -123,19 +108,18 @@ We actively welcome your pull requests.
 
 1. Fork the repo and create your branch from `master`.
 2. If you've added code that should be tested, add tests.
-3. Ensure the test suite passes.
-4. Make sure your code lints.
-5. Add your change to the CHANGELOG.md file at the [unreleased] section.
+3. Ensure the test suite passes and your code lints, or let Circle do it for you.
+
 
 ## Understanding the code
 
-The bootstrap process (in Harmony) in general is as follows:
+The bootstrap process in general is as follows:
 
 1. A user enters Bit command.
 2. Bit builds a graph of all core-aspects and aspects entered in the workspace.jsonc file.
 3. Once the graph is ready, it loads them all (calls their provider), so then all aspects instances are ready in-memory.
 4. An aspect can register to the CLI slot (`cli.register()`) and pass `Command` instances. (that's the main reason why all aspects must be loaded before anything else happen. Otherwise, commands won't be registered and the user will get an error about a non-exist command)
-5. `yargs` package is used for parsing the commands. All `Command` instances are registered by `yargs`. It finds the currently entered command and runs either `report()` to return a result to the CLI as plain text or `render()` to paint the output as a React component using `Ink`.
+5. `yargs` package is used for parsing the commands. All `Command` instances are registered by `yargs`. It finds the currently entered command and runs one of the following: `report()` for plain text output, `json()`, or `wait()` for long running processes.
 
 ### Workspace
 
@@ -147,12 +131,12 @@ When the user adds a new component (using `bit add` command), it is done on the 
 
 ### Scope
 
-The model / objects. The scope root is located at `<workspace-root>.bit` or `<workspace-root>/.git/.bit`.
+The model / objects. The scope root is located at `<workspace-root>/.bit` or `<workspace-root>/.git/bit`.
 When a new component is tagged (using `bit tag` command), Bit compresses the component files and save them along with metadata about the component in the scope.
 
 The file names are the hashes of the files/metadata. Think about it as .git in Git world.
 
-See src/scope/README.md for more data about the scope.
+See components/legacy/scope/README.md for more data about the scope.
 
 ## License
 
