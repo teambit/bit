@@ -518,7 +518,6 @@ describe('dependency-resolver extension', function () {
         npmCiRegistry.setResolver();
         helper.command.importComponent('comp1');
         helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '^');
-        helper.workspaceJsonc.addKeyValToDependencyResolver('enableComponentRanges', true);
         const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
         helper.command.install(`${comp2Pkg}@^0.0.1`);
         helper.command.tagAllComponents();
@@ -543,6 +542,25 @@ describe('dependency-resolver extension', function () {
         const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
         expect(pkgExtensionData.pkgJson.dependencies).to.have.property(comp2Pkg);
         expect(pkgExtensionData.pkgJson.dependencies[comp2Pkg]).to.equal(`0.0.1`);
+      });
+    });
+    describe('range in config conflicts the actual range in policy', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        npmCiRegistry.setResolver();
+        helper.command.importComponent('comp1');
+        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '^');
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+        helper.command.install(`${comp2Pkg}@~0.0.1`);
+        helper.command.tagAllWithoutBuild('--unmodified');
+      });
+      it('the range in policy should win', () => {
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+        const depsData = helper.command.showDependenciesData('comp1');
+        const comp2Dep = depsData.find((d) => d.packageName === comp2Pkg);
+        expect(comp2Dep).to.have.property('versionRange');
+        expect(comp2Dep!.versionRange).to.equal('~0.0.1');
       });
     });
   });

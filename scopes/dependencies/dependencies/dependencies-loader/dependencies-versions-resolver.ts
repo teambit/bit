@@ -1,4 +1,5 @@
 import { ComponentID } from '@teambit/component-id';
+import semver from 'semver';
 import { Consumer } from '@teambit/legacy.consumer';
 import { Workspace } from '@teambit/workspace';
 import { logger } from '@teambit/legacy.logger';
@@ -52,8 +53,15 @@ export async function updateDependenciesVersions(
     const getFromDepPackageJson = () => (id.hasVersion() ? id : null);
     // In case it's resolved from the node_modules, and it's also in the ws policy or variants,
     // use the resolved version from the node_modules / package folder
-    const getFromDepPackageJsonDueToWorkspacePolicy = () =>
-      pkg && id.hasVersion() && isPkgInWorkspacePolicies(pkg) ? id : null;
+    const getFromDepPackageJsonDueToWorkspacePolicy = () => {
+      if (!pkg || !id.hasVersion()) return null;
+      const fromPolicy = pkgVersionFromWorkspacePolicies(pkg);
+      if (!fromPolicy) return null;
+      return {
+        compId: id,
+        range: supportComponentRange && semver.validRange(fromPolicy) ? fromPolicy : undefined,
+      }
+    }
     // merge config here is only auto-detected ones. their priority is less then the ws policy
     // otherwise, imagine you merge a lane, you don't like the dependency you got from the other lane, you run
     // bit-install to change it, but it won't do anything.
@@ -171,7 +179,7 @@ export async function updateDependenciesVersions(
     );
   }
 
-  function isPkgInWorkspacePolicies(pkgName: string) {
+  function pkgVersionFromWorkspacePolicies(pkgName: string): string | undefined {
     return depsResolver.getWorkspacePolicyManifest().dependencies?.[pkgName];
   }
 
