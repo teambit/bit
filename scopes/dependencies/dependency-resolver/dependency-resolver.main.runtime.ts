@@ -1521,14 +1521,15 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       }
       return isRootPolicy(incoming) || isRange1GreaterThanRange2Naively(incoming.currentRange, existing.currentRange);
     }
-
-    function isRootPolicy(dep: CurrentPkg): boolean {
-      return dep.source === 'rootPolicy';
-    }
   }
 
   private warnAboutOverwrite(originalPkg: CurrentPkg, newPkg: CurrentPkg) {
-    this.logger.warn(`${originalPkg.name}@${originalPkg.currentRange} from ${originalPkg.source} overwritten by ${newPkg.currentRange} from ${newPkg.source}`);
+    const message = `${originalPkg.name}@${originalPkg.currentRange} from ${originalPkg.source} overwritten by ${newPkg.currentRange} from ${newPkg.source}`;
+    if (isRootPolicy(newPkg)) {
+      this.logger.info(message);
+    } else {
+      this.logger.warn(message);
+    }
   }
 
   /**
@@ -1896,4 +1897,8 @@ function rangeToVersion(range: string) {
     return range.substring(1);
   }
   return range;
+}
+
+function isRootPolicy(dep: CurrentPkg): boolean {
+  return dep.source === 'rootPolicy';
 }
