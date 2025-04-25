@@ -989,8 +989,8 @@ export class InstallMain {
     patterns?: string[];
     all: boolean;
   }): Promise<ComponentMap<string> | null> {
-    const componentPolicies = await this.workspace._getComponentsWithDependencyPolicies();
-    const variantPoliciesByPatterns = this.workspace._variantPatternsToDepPolicesDict();
+    const componentPolicies = await this.workspace.getComponentsWithDependencyPolicies();
+    const variantPoliciesByPatterns = this.workspace.variantPatternsToDepPolicesDict();
     const components = await this.workspace.list();
     const outdatedPkgs = await this.dependencyResolver.getOutdatedPkgsFromPolicies({
       rootDir: this.workspace.path,

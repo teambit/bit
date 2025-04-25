@@ -2368,8 +2368,8 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   async getAllDedupedDirectDependencies(): Promise<CurrentPkg[]> {
-    const componentPolicies = await this._getComponentsWithDependencyPolicies();
-    const variantPoliciesByPatterns = this._variantPatternsToDepPolicesDict();
+    const componentPolicies = await this.getComponentsWithDependencyPolicies();
+    const variantPoliciesByPatterns = this.variantPatternsToDepPolicesDict();
     const components = await this.list();
     return this.dependencyResolver.getAllDedupedDirectDependencies({
       variantPoliciesByPatterns,
@@ -2378,7 +2378,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     });
   }
 
-  _variantPatternsToDepPolicesDict(): Record<string, VariantPolicyConfigObject> {
+  variantPatternsToDepPolicesDict(): Record<string, VariantPolicyConfigObject> {
     const variantPatterns = this.variants.raw();
     const variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject> = {};
     for (const [variantPattern, extensions] of Object.entries(variantPatterns)) {
@@ -2389,7 +2389,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return variantPoliciesByPatterns;
   }
 
-  async _getComponentsWithDependencyPolicies() {
+  async getComponentsWithDependencyPolicies(): Promise<Array<{ componentId: ComponentID; policy: any }>> {
     const allComponentIds = this.listIds();
     const componentPolicies = [] as Array<{ componentId: ComponentID; policy: any }>;
     (
