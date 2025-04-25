@@ -1499,22 +1499,36 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     const allDeps = this.getAllDependencies(opts);
     const mergedDeps: Record<string, CurrentPkg> = {};
     for (const dep of allDeps) {
-      if (mergedDeps[dep.name]) {
-        if (mergedDeps[dep.name].source === 'rootPolicy') {
-          if (dep.source !== 'rootPolicy') {
-            continue;
-          }
-          if (isRange1GreaterThanRange2Naively(dep.currentRange, mergedDeps[dep.name].currentRange)) {
-            mergedDeps[dep.name] = dep;
-          }
-        } else if (dep.source === 'rootPolicy' || isRange1GreaterThanRange2Naively(dep.currentRange, mergedDeps[dep.name].currentRange)) {
+      const existing = mergedDeps[dep.name];
+      if (existing) {
+        if (existing.currentRange === dep.currentRange) continue;
+        if (shouldOverwrite(existing, dep)) {
+          this.warnAboutOverwrite(existing, dep);
           mergedDeps[dep.name] = dep;
+        } else {
+          this.warnAboutOverwrite(dep, existing);
         }
       } else {
         mergedDeps[dep.name] = dep;
       }
     }
     return Object.values(mergedDeps);
+
+    function shouldOverwrite(existing: CurrentPkg, incoming: CurrentPkg): boolean {
+      if (isRootPolicy(existing)) {
+        if (!isRootPolicy(incoming)) return false;
+        return isRange1GreaterThanRange2Naively(incoming.currentRange, existing.currentRange);
+      }
+      return isRootPolicy(incoming) || isRange1GreaterThanRange2Naively(incoming.currentRange, existing.currentRange);
+    }
+
+    function isRootPolicy(dep: CurrentPkg): boolean {
+      return dep.source === 'rootPolicy';
+    }
+  }
+
+  private warnAboutOverwrite(originalPkg: CurrentPkg, newPkg: CurrentPkg) {
+    this.logger.warn(`${originalPkg.name}@${originalPkg.currentRange} from ${originalPkg.source} overwritten by ${newPkg.currentRange} from ${newPkg.source}`);
   }
 
   /**
