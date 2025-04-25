@@ -356,6 +356,9 @@ export default class CommandHelper {
   dependenciesUsage(depName: string) {
     return this.runCmd(`bit dependencies usage ${depName}`);
   }
+  dependenciesWrite(flags = '') {
+    return this.runCmd(`bit dependencies write ${flags}`);
+  }
   setPeer(componentId: string, range = '') {
     return this.runCmd(`bit set-peer ${componentId} ${range}`);
   }

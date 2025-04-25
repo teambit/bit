@@ -5,6 +5,7 @@ import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-t
 import { MainRuntime } from '@teambit/cli';
 import { getRootComponentDir } from '@teambit/workspace.root-components';
 import { ComponentAspect, Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
+import { isRange1GreaterThanRange2Naively } from '@teambit/pkg.modules.semver-helper';
 import type { ConfigMain } from '@teambit/config';
 import { join, relative } from 'path';
 import { compact, get, pick, uniq, omit, cloneDeep } from 'lodash';
@@ -53,7 +54,7 @@ import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DepLinkerContext, DependencyLinker, LinkingOptions } from './dependency-linker';
 import { ComponentRangePrefix, DependencyResolverWorkspaceConfig, NodeLinker } from './dependency-resolver-workspace-config';
-import { ComponentModelVersion, getAllPolicyPkgs, OutdatedPkg, CurrentPkgSource } from './get-all-policy-pkgs';
+import { ComponentModelVersion, getAllPolicyPkgs, CurrentPkg, OutdatedPkg, CurrentPkgSource } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
@@ -1410,36 +1411,10 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     patterns?: string[];
     forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible';
   }): Promise<MergedOutdatedPkg[] | null> {
-    const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
-    const componentModelVersions: ComponentModelVersion[] = (
-      await Promise.all(
-        components.map(async (component) => {
-          const depList = await this.getDependencies(component);
-          return depList
-            .filter(
-              (dep) =>
-                typeof dep.getPackageName === 'function' &&
-                // If the dependency is referenced not via a valid range it means that it wasn't yet published to the registry
-                semver.validRange(dep.version) != null &&
-                !dep['isExtension'] && // eslint-disable-line
-                dep.lifecycle !== 'peer' &&
-                !localComponentPkgNames.has(dep.getPackageName())
-            )
-            .map((dep) => ({
-              name: dep.getPackageName!(), // eslint-disable-line
-              version: dep.version,
-              isAuto: dep.source === 'auto',
-              componentId: component.id,
-              lifecycleType: dep.lifecycle,
-            }));
-        })
-      )
-    ).flat();
-    let allPkgs = getAllPolicyPkgs({
-      rootPolicy: this.getWorkspacePolicyFromConfig(),
+    let allPkgs = this.getAllDependencies({
       variantPoliciesByPatterns,
       componentPolicies,
-      componentModelVersions,
+      components,
     });
     if (patterns?.length) {
       const selectedPkgNames = new Set(
@@ -1455,6 +1430,85 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     }
     const outdatedPkgs = await this.getOutdatedPkgs({ rootDir, forceVersionBump }, allPkgs);
     return mergeOutdatedPkgs(outdatedPkgs);
+  }
+
+  getAllDependencies({
+    variantPoliciesByPatterns,
+    componentPolicies,
+    components,
+  }: {
+    variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
+    componentPolicies: Array<{ componentId: ComponentID; policy: any }>;
+    components: Component[];
+  }): CurrentPkg[] {
+    const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
+    const componentModelVersions: ComponentModelVersion[] = components.map((component) => {
+      const depList = this.getDependencies(component);
+      return depList
+        .filter(
+          (dep) =>
+            typeof dep.getPackageName === 'function' &&
+            // If the dependency is referenced not via a valid range it means that it wasn't yet published to the registry
+            semver.validRange(dep.version) != null &&
+            !dep['isExtension'] && // eslint-disable-line
+            dep.lifecycle !== 'peer' &&
+            !localComponentPkgNames.has(dep.getPackageName())
+        )
+        .map((dep) => ({
+          name: dep.getPackageName!(), // eslint-disable-line
+          version: dep.version,
+          isAuto: dep.source === 'auto',
+          componentId: component.id,
+          lifecycleType: dep.lifecycle,
+        }));
+    }).flat();
+    return getAllPolicyPkgs({
+      rootPolicy: this.getWorkspacePolicyFromConfig(),
+      variantPoliciesByPatterns,
+      componentPolicies,
+      componentModelVersions,
+    });
+  }
+
+  getAllDedupedDirectDependencies(opts: {
+    variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
+    componentPolicies: Array<{ componentId: ComponentID; policy: any }>;
+    components: Component[];
+  }): CurrentPkg[] {
+    const allDeps = this.getAllDependencies(opts);
+    const mergedDeps: Record<string, CurrentPkg> = {};
+    for (const dep of allDeps) {
+      const existing = mergedDeps[dep.name];
+      if (existing) {
+        if (existing.currentRange === dep.currentRange) continue;
+        if (shouldOverwrite(existing, dep)) {
+          this.warnAboutOverwrite(existing, dep);
+          mergedDeps[dep.name] = dep;
+        } else {
+          this.warnAboutOverwrite(dep, existing);
+        }
+      } else {
+        mergedDeps[dep.name] = dep;
+      }
+    }
+    return Object.values(mergedDeps);
+
+    function shouldOverwrite(existing: CurrentPkg, incoming: CurrentPkg): boolean {
+      if (isRootPolicy(existing)) {
+        if (!isRootPolicy(incoming)) return false;
+        return isRange1GreaterThanRange2Naively(incoming.currentRange, existing.currentRange);
+      }
+      return isRootPolicy(incoming) || isRange1GreaterThanRange2Naively(incoming.currentRange, existing.currentRange);
+    }
+  }
+
+  private warnAboutOverwrite(originalPkg: CurrentPkg, newPkg: CurrentPkg) {
+    const message = `${originalPkg.name}@${originalPkg.currentRange} from ${originalPkg.source} overwritten by ${newPkg.currentRange} from ${newPkg.source}`;
+    if (isRootPolicy(newPkg)) {
+      this.logger.info(message);
+    } else {
+      this.logger.warn(message);
+    }
   }
 
   /**
@@ -1829,4 +1883,8 @@ function rangeToVersion(range: string) {
     return range.substring(1);
   }
   return range;
+}
+
+function isRootPolicy(dep: CurrentPkg): boolean {
+  return dep.source === 'rootPolicy';
 }
