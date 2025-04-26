@@ -671,6 +671,16 @@ see also "bit deps remove"
 | ------------------ | :--------------: | ----------------------------------------- |
 | `--depth <number>` |                  | max display depth of the dependency graph |
 
+### deps write
+
+**Usage**: `deps write`
+
+**Description**: write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions
+
+| **Option**                 | **Option alias** | **Description** |
+| -------------------------- | :--------------: | --------------- | ---------------------------------------------------------------------------------------------- |
+| `--target <workspace.jsonc |  package.json>`  |                 | specify where the dependencies should be written. By default they are saved to workspace.jsonc |
+
 ---
 
 ## diff
@@ -982,7 +992,7 @@ bit export => export all staged snaps/tags of components to their remote scope. 
 | `component-patterns...` | component IDs or component patterns (separated by space). Use patterns to import groups of components using a common scope or namespace. E.g., "utils/\*" (wrap with double quotes) |
 
 | **Option**                       | **Option alias** | **Description**                                                                                                                                                                   |
-| -------------------------------- | :--------------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -------------------------------- | :--------------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--path <path>`                  |       `-p`       | import components into a specific directory (a relative path in the workspace)                                                                                                    |
 | `--objects`                      |       `-o`       | import components objects to the local scope without checkout (without writing them to the file system). This is the default behavior for import with no id argument              |
 | `--override`                     |       `-O`       | override local changes                                                                                                                                                            |
@@ -1002,6 +1012,7 @@ bit export => export all staged snaps/tags of components to their remote scope. 
 | `--save-in-lane`                 |                  | when checked out to a lane and the component is not on the remote-lane, save it in the lane (defaults to save on main)                                                            |
 | `--all-history`                  |                  | relevant for fetching all components objects. avoid optimizations, fetch all history versions, always                                                                             |
 | `--fetch-deps`                   |                  | fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data                             |
+| `--write-deps <workspace.jsonc   |  package.json>`  |                                                                                                                                                                                   | write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions |
 | `--track-only`                   |                  | do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap |
 | `--include-deprecated`           |                  | when importing with patterns, include deprecated components (default to exclude them)                                                                                             |
 

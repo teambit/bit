@@ -2299,6 +2299,11 @@
       ],
       [
         "",
+        "write-deps <workspace.jsonc|package.json>",
+        "write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions"
+      ],
+      [
+        "",
         "track-only",
         "do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap"
       ],
@@ -2677,6 +2682,22 @@
             "description": "package-name. for components, you can use either component-id or package-name. if version is specified, it will search for the exact version"
           }
         ]
+      },
+      {
+        "name": "write",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "target <workspace.jsonc|package.json>",
+            "specify where the dependencies should be written. By default they are saved to workspace.jsonc"
+          ]
+        ],
+        "description": "write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions",
+        "extendedDescription": "",
+        "group": "info",
+        "private": false,
+        "arguments": []
       }
     ]
   },
