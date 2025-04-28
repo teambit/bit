@@ -103,6 +103,7 @@ export interface DependencyResolverComponentData {
   packageName: string;
   policy: SerializedVariantPolicy;
   dependencies: SerializedDependency[];
+  componentRangePrefix?: ComponentRangePrefix;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -152,6 +153,12 @@ const defaultCreateFromComponentsOptions: CreateFromComponentsOptions = {
   createManifestForComponentsWithoutDependencies: true,
 };
 
+/**
+ * see @teambit/dependencies.aspect-docs.dependency-resolver for more information about this aspect.
+ *
+ * The data of this aspect gets saved in workspace-component-loader.ts, `executeLoadSlot()`.
+ * The type of the data is `DependencyResolverComponentData`.
+ */
 export class DependencyResolverMain {
   /**
    * cache the workspace policy to improve performance. when workspace.jsonc is changed, this gets cleared.
@@ -1606,12 +1613,29 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     };
   }
 
-  componentRangePrefix(): ComponentRangePrefix | undefined {
+  getWorkspaceComponentRangePrefix(): ComponentRangePrefix | undefined {
     return this.config.componentRangePrefix;
   }
-  supportComponentRange(): boolean {
-    return Boolean(this.config.componentRangePrefix && this.config.componentRangePrefix !== '-');
+  calcComponentRangePrefixByConsumerComponent(component: LegacyComponent): ComponentRangePrefix | undefined {
+    const data = component.extensions?.findCoreExtension(DependencyResolverAspect.id)?.data;
+    if (data?.componentRangePrefix) { // was calculated already
+      return data.componentRangePrefix;
+    }
+    const fromWs = this.getWorkspaceComponentRangePrefix();
+    if (fromWs) {
+      return fromWs;
+    }
+    const modelComp: LegacyComponent | undefined = component.componentFromModel;
+    if (!modelComp) {
+      return undefined;
+    }
+    const modelData = modelComp.extensions.findCoreExtension(DependencyResolverAspect.id);
+    if (modelData?.data?.componentRangePrefix) {
+      return modelData.data.componentRangePrefix;
+    }
+    return undefined;
   }
+
 
   static runtime = MainRuntime;
   static dependencies = [
