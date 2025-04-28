@@ -1617,21 +1617,17 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     return this.config.componentRangePrefix;
   }
   calcComponentRangePrefixByConsumerComponent(component: LegacyComponent): ComponentRangePrefix | undefined {
-    const data = component.extensions?.findCoreExtension(DependencyResolverAspect.id)?.data;
-    if (data?.componentRangePrefix) { // was calculated already
-      return data.componentRangePrefix;
-    }
     const fromWs = this.getWorkspaceComponentRangePrefix();
     if (fromWs) {
       return fromWs;
     }
-    const modelComp: LegacyComponent | undefined = component.componentFromModel;
-    if (!modelComp) {
-      return undefined;
-    }
-    const modelData = modelComp.extensions.findCoreExtension(DependencyResolverAspect.id);
+    const modelData = component.componentFromModel?.extensions.findCoreExtension(DependencyResolverAspect.id);
     if (modelData?.data?.componentRangePrefix) {
       return modelData.data.componentRangePrefix;
+    }
+    const currentData = component.extensions?.findCoreExtension(DependencyResolverAspect.id)?.data;
+    if (currentData?.componentRangePrefix) {
+      return currentData.componentRangePrefix;
     }
     return undefined;
   }
