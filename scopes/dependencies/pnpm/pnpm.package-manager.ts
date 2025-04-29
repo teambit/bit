@@ -1,5 +1,7 @@
 import { CloudMain } from '@teambit/cloud';
+import { ComponentMap } from '@teambit/component';
 import {
+  type ComponentIdByPkgName,
   DependencyResolverMain,
   extendWithComponentsFromDir,
   InstallationContext,
@@ -14,11 +16,11 @@ import {
 } from '@teambit/dependency-resolver';
 import { Registries, Registry } from '@teambit/pkg.entities.registry';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
-import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
+import { DEPS_GRAPH, COMPS_UPDATE, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { Logger } from '@teambit/logger';
 import { type LockfileFileV9 } from '@pnpm/lockfile.types';
 import fs from 'fs';
-import { memoize, omit } from 'lodash';
+import { memoize, omit, isEqual } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
 import { Config } from '@pnpm/config';
@@ -30,6 +32,7 @@ import {
   createPackagesSearcher,
   PackageNode,
 } from '@pnpm/reviewing.dependencies-hierarchy';
+import * as dp from '@pnpm/dependency-path';
 import { renderTree } from '@pnpm/list';
 import {
   readWantedLockfile,
@@ -39,10 +42,10 @@ import {
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
 import { ServerSendOutStream } from '@teambit/legacy.logger';
 import { join } from 'path';
-import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
+import { lockfileToGraphForComponent, convertGraphToLockfile, convertLockfileToGraph } from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
-import { generateResolverAndFetcher, RebuildFn } from './lynx';
+import { generateResolverAndFetcher, RebuildFn, type PnpmInstallOptions } from './lynx';
 import { type DependenciesGraph } from '@teambit/objects';
 
 export type { RebuildFn };
@@ -115,7 +118,7 @@ export class PnpmPackageManager implements PackageManager {
   }
 
   async install(
-    { rootDir, manifests }: InstallationContext,
+    { rootDir, manifests, componentDirectoryMap }: InstallationContext,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<InstallResult> {
     // require it dynamically for performance purpose. the pnpm package require many files - do not move to static import
@@ -126,19 +129,29 @@ export class PnpmPackageManager implements PackageManager {
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { config } = await this.readConfig(installOptions.packageManagerConfigRootDir);
+    const dependenciesGraph = await this.mergeGraphFromModelWithGraphFromLockfile({
+      graphFromModel: installOptions.dependenciesGraph,
+      rootDir,
+      componentDirectoryMap
+    });
     if (
       installOptions.dependenciesGraph &&
       isFeatureEnabled(DEPS_GRAPH) &&
       (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
     ) {
-      await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
-        manifests,
-        rootDir,
-        registries,
-        proxyConfig,
-        networkConfig,
-        cacheDir: config.cacheDir,
-      });
+      try {
+        await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
+          manifests,
+          rootDir,
+          registries,
+          proxyConfig,
+          networkConfig,
+          cacheDir: config.cacheDir,
+        });
+      } catch (error) {
+        // If the lockfile could not be created for some reason, it will be created later during installation.
+        this.logger.error((error as Error).message);
+      }
     }
 
     this.logger.debug(`running installation in root dir ${rootDir}`);
@@ -163,56 +176,36 @@ export class PnpmPackageManager implements PackageManager {
       });
     }
     this.modulesManifestCache.delete(rootDir);
-    const { dependenciesChanged, rebuild, storeDir, depsRequiringBuild } = await install(
-      rootDir,
+    const pnpmInstallOptions = this.calcPnpmInstallOptions(installOptions, config, dependenciesGraph, manifests);
+    const runInstall = install.bind(null, rootDir,
       manifests,
       config.storeDir,
       config.cacheDir,
       registries,
       proxyConfig,
-      networkConfig,
-      {
-        autoInstallPeers: installOptions.autoInstallPeers ?? true,
-        enableModulesDir: installOptions.enableModulesDir,
-        engineStrict: installOptions.engineStrict ?? config.engineStrict,
-        excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
-        lockfileOnly: installOptions.lockfileOnly,
-        neverBuiltDependencies: installOptions.neverBuiltDependencies,
-        nodeLinker: installOptions.nodeLinker,
-        nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
-        includeOptionalDeps: installOptions.includeOptionalDeps,
-        ignorePackageManifest: installOptions.ignorePackageManifest,
-        dedupeInjectedDeps: installOptions.dedupeInjectedDeps ?? false,
-        dryRun: installOptions.dependenciesGraph == null && installOptions.dryRun,
-        overrides: installOptions.overrides,
-        hoistPattern: installOptions.hoistPatterns ?? config.hoistPattern,
-        publicHoistPattern: config.shamefullyHoist
-          ? ['*']
-          : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
-        hoistWorkspacePackages: installOptions.hoistWorkspacePackages ?? false,
-        hoistInjectedDependencies: installOptions.hoistInjectedDependencies,
-        packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
-        preferOffline: installOptions.preferOffline,
-        rootComponents: installOptions.rootComponents,
-        rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
-        sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
-        sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
-        pnpmHomeDir: config.pnpmHomeDir,
-        updateAll: installOptions.updateAll,
-        hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
-        reportOptions: {
-          appendOnly: installOptions.optimizeReportForNonTerminal,
-          process: process.env.BIT_CLI_SERVER_NO_TTY ? { ...process, stdout: new ServerSendOutStream() } : undefined,
-          throttleProgress: installOptions.throttleProgress,
-          hideProgressPrefix: installOptions.hideProgressPrefix,
-          hideLifecycleOutput: installOptions.hideLifecycleOutput,
-          peerDependencyRules: installOptions.peerDependencyRules,
-        },
-        returnListOfDepsRequiringBuild: installOptions.returnListOfDepsRequiringBuild,
-        forcedHarmonyVersion: installOptions.forcedHarmonyVersion,
-      },
-      this.logger
+      networkConfig
     );
+    const {
+      dependenciesChanged,
+      rebuild,
+      storeDir,
+      depsRequiringBuild,
+    } = await runInstall(pnpmInstallOptions, this.logger);
+    if (isFeatureEnabled(COMPS_UPDATE)) {
+      const graphFromLockfile = await this.createGraphFromLockfileIfExists(rootDir, componentDirectoryMap);
+      if (graphFromLockfile) {
+        const newOverrides = forceLatestOverrides(graphFromLockfile, manifests, pnpmInstallOptions.overrides ?? {});
+        // If the overrides have changed it means that we need to run installation again.
+        if (!isEqual(pnpmInstallOptions.overrides, newOverrides)) {
+          await runInstall({
+              ...pnpmInstallOptions,
+              overrides: newOverrides,
+            },
+            this.logger
+          );
+        }
+      }
+    }
     if (!installOptions.hidePackageManagerOutput) {
       this.logger.on();
       // Make a divider row to improve output
@@ -220,6 +213,106 @@ export class PnpmPackageManager implements PackageManager {
       // this.logger.consoleSuccess('installing dependencies using pnpm');
     }
     return { dependenciesChanged, rebuild, storeDir, depsRequiringBuild };
+  }
+
+  calcPnpmInstallOptions(
+    installOptions: PackageManagerInstallOptions,
+    config: Config,
+    dependenciesGraph: DependenciesGraph | undefined,
+    manifests: Record<string, ProjectManifest>
+  ): PnpmInstallOptions {
+    let overrides = { ...installOptions.overrides };
+    if (isFeatureEnabled(COMPS_UPDATE)) {
+      for (const manifest of Object.values(manifests)) {
+        if (manifest.name != null && manifest.name !== 'workspace') {
+          overrides[manifest.name] = 'workspace:*'
+        }
+      }
+      if (dependenciesGraph) {
+        overrides = forceLatestOverrides(dependenciesGraph, manifests, overrides);
+      }
+    }
+    const reportOptions = {
+      appendOnly: installOptions.optimizeReportForNonTerminal,
+      process: process.env.BIT_CLI_SERVER_NO_TTY
+        ? { ...process, stdout: new ServerSendOutStream() } as NodeJS.Process : undefined,
+      throttleProgress: installOptions.throttleProgress,
+      hideProgressPrefix: installOptions.hideProgressPrefix,
+      hideLifecycleOutput: installOptions.hideLifecycleOutput,
+      peerDependencyRules: installOptions.peerDependencyRules,
+    };
+    return {
+      autoInstallPeers: installOptions.autoInstallPeers ?? true,
+      enableModulesDir: installOptions.enableModulesDir,
+      engineStrict: installOptions.engineStrict ?? config.engineStrict,
+      excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile,
+      lockfileOnly: installOptions.lockfileOnly,
+      neverBuiltDependencies: installOptions.neverBuiltDependencies,
+      nodeLinker: installOptions.nodeLinker,
+      nodeVersion: installOptions.nodeVersion ?? config.nodeVersion,
+      includeOptionalDeps: installOptions.includeOptionalDeps,
+      ignorePackageManifest: installOptions.ignorePackageManifest,
+      dedupeInjectedDeps: installOptions.dedupeInjectedDeps ?? false,
+      dryRun: installOptions.dependenciesGraph == null && installOptions.dryRun,
+      overrides,
+      hoistPattern: installOptions.hoistPatterns ?? config.hoistPattern,
+      publicHoistPattern: config.shamefullyHoist
+        ? ['*']
+        : ['@eslint/plugin-*', '*eslint-plugin*', '@prettier/plugin-*', '*prettier-plugin-*'],
+      hoistWorkspacePackages: installOptions.hoistWorkspacePackages ?? false,
+      hoistInjectedDependencies: installOptions.hoistInjectedDependencies,
+      packageImportMethod: installOptions.packageImportMethod ?? config.packageImportMethod,
+      preferOffline: installOptions.preferOffline,
+      rootComponents: installOptions.rootComponents,
+      rootComponentsForCapsules: installOptions.rootComponentsForCapsules,
+      sideEffectsCacheRead: installOptions.sideEffectsCache ?? true,
+      sideEffectsCacheWrite: installOptions.sideEffectsCache ?? true,
+      pnpmHomeDir: config.pnpmHomeDir,
+      updateAll: installOptions.updateAll,
+      hidePackageManagerOutput: installOptions.hidePackageManagerOutput,
+      reportOptions,
+      returnListOfDepsRequiringBuild: installOptions.returnListOfDepsRequiringBuild,
+      forcedHarmonyVersion: installOptions.forcedHarmonyVersion,
+    }
+  }
+
+  async mergeGraphFromModelWithGraphFromLockfile({
+    graphFromModel,
+    rootDir,
+    componentDirectoryMap,
+  }: {
+    graphFromModel: DependenciesGraph | undefined,
+    rootDir: string,
+    componentDirectoryMap: ComponentMap<string>
+  }): Promise<DependenciesGraph | undefined> {
+    const graphFromLockfile = await this.createGraphFromLockfileIfExists(rootDir, componentDirectoryMap);
+    if (graphFromLockfile == null) {
+      return graphFromModel;
+    }
+    if (graphFromModel == null) {
+      return graphFromLockfile;
+    }
+    graphFromModel.merge(graphFromLockfile);
+    return graphFromModel;
+  }
+
+  async createGraphFromLockfileIfExists(
+    rootDir: string,
+    componentDirectoryMap: ComponentMap<string>
+  ): Promise<DependenciesGraph | undefined> {
+    const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: false });
+    if (!lockfile) return undefined;
+    const lockfileFile = convertLockfileObjectToLockfileFile(lockfile, { forceSharedFormat: true })
+    const componentIdByPkgName = this.getComponentIdByPkgNameMap(componentDirectoryMap);
+    return convertLockfileToGraph(lockfileFile, { componentIdByPkgName });
+  }
+
+  getComponentIdByPkgNameMap(componentDirectoryMap: ComponentMap<string>): ComponentIdByPkgName {
+    const componentIdByPkgName: ComponentIdByPkgName = new Map();
+    componentDirectoryMap.forEach((_, component) => {
+      componentIdByPkgName.set(this.depResolver.getPackageName(component), component.id);
+    });
+    return componentIdByPkgName;
   }
 
   async getPeerDependencyIssues(
@@ -457,7 +550,7 @@ export class PnpmPackageManager implements PackageManager {
       }),
       { forceSharedFormat: true }
     );
-    const graph = convertLockfileToGraph(partialLockfile, opts);
+    const graph = lockfileToGraphForComponent(partialLockfile, opts);
     return graph;
   }
 }
@@ -491,4 +584,36 @@ function tryReadPackageJson(pkgDir: string) {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * Finds all possible paths to components from the workspace that are also present as dependencies.
+ * The packages in the paths are forced to be "latest" via overrides.
+ */
+function forceLatestOverrides(
+  graph: DependenciesGraph,
+  manifests: Record<string, ProjectManifest>,
+  existingOverrides: Record<string, string>
+): Record<string, string> {
+  const workspacePackageNames: string[] = [];
+  for (const manifest of Object.values(manifests)) {
+    if (manifest.name != null && manifest.name !== 'workspace') {
+      workspacePackageNames.push(manifest.name);
+    }
+  }
+  const paths = graph.findPathsToPackages(workspacePackageNames);
+  const newOverrides = { ...existingOverrides };
+  for (const allEdgeIds of Object.values(paths)) {
+    for (const edgeIds of allEdgeIds) {
+      // Exclude the last edge as it's the target package
+      const intermediateEdges = edgeIds.slice(0, -1);
+      for (const edgeId of intermediateEdges) {
+        const parsed = dp.parse(edgeId);
+        if (parsed.name && existingOverrides[parsed.name] != 'workspace:*') {
+          newOverrides[parsed.name] = 'latest';
+        }
+      }
+    }
+  }
+  return newOverrides;
 }

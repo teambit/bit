@@ -52,6 +52,23 @@ function importerDepsToNeighbours(
 
 export function convertLockfileToGraph(
   lockfile: BitLockfileFile,
+  { componentIdByPkgName }: Pick<CalcDepsGraphOptions, 'componentIdByPkgName'>
+) {
+  const directDependencies: DependencyNeighbour[] = [];
+  for (const importer of Object.values(lockfile.importers ?? {})) {
+    for (const depType of ['dependencies' as const, 'optionalDependencies' as const, 'devDependencies' as const]) {
+      if (importer[depType] != null) {
+        const lifecycle = depType === 'devDependencies' ? 'dev' : 'runtime';
+        const optional = depType === 'optionalDependencies';
+        directDependencies.push(...importerDepsToNeighbours(importer[depType]!, lifecycle, optional));
+      }
+    }
+  }
+  return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
+}
+
+export function lockfileToGraphForComponent(
+  lockfile: BitLockfileFile,
   { pkgName, componentRootDir, componentRelativeDir, componentIdByPkgName }: Omit<CalcDepsGraphOptions, 'rootDir'>
 ): DependenciesGraph {
   if (componentRootDir == null || pkgName == null) {
@@ -145,6 +162,8 @@ function extractDependenciesFromSnapshot(snapshot: any): DependencyNeighbour[] {
       const subDepPath = dp.refToRelative(ref, name);
       if (subDepPath != null) {
         dependencies.push({ id: subDepPath, optional });
+      } else {
+        dependencies.push({ id: `${name}@${ref}`, name, optional });
       }
     }
   }
