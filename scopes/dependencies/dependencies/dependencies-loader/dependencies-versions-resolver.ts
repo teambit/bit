@@ -25,8 +25,8 @@ export async function updateDependenciesVersions(
   const consumer: Consumer = workspace.consumer;
   const autoDetectConfigMerge = workspace.getAutoDetectConfigMerge(component.id) || {};
   const currentLane = await workspace.getCurrentLaneObject();
-  const componentRangePrefix  = depsResolver.componentRangePrefix();
-  const supportComponentRange = depsResolver.supportComponentRange();
+  const componentRangePrefix  = depsResolver.calcComponentRangePrefixByConsumerComponent(component);
+  const supportComponentRange = componentRangePrefix && componentRangePrefix !== '-';
   updateDependencies(component.dependencies, 'dependencies');
   updateDependencies(component.devDependencies, 'devDependencies');
   updateDependencies(component.peerDependencies, 'peerDependencies');

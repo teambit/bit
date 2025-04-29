@@ -530,11 +530,25 @@ describe('dependency-resolver extension', function () {
         expect(pkgExtensionData.pkgJson.dependencies[comp2Pkg]).to.equal(`^0.0.1`);
       });
     });
-    describe('revert the range', () => {
+    describe('removing componentRangePrefix from the workspace', () => {
       before(() => {
         helper.scopeHelper.getClonedWorkspace(wsAfterExport);
         helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '');
         helper.command.tagComponent('comp1', undefined, '--ver 3.0.0 --unmodified');
+      });
+      it('should keep the dependency with the range', () => {
+        const comp1 = helper.command.catComponent('comp1@latest');
+        const pkgExtensionData = helper.command.getAspectsData(comp1, Extensions.pkg).data;
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2');
+        expect(pkgExtensionData.pkgJson.dependencies).to.have.property(comp2Pkg);
+        expect(pkgExtensionData.pkgJson.dependencies[comp2Pkg]).to.equal(`^0.0.1`);
+      });
+    });
+    describe('revert the range by setting the prefix to minus', () => {
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(wsAfterExport);
+        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '-');
+        helper.command.tagComponent('comp1', undefined, '--ver 4.0.0 --unmodified');
       });
       it('should save the dependency without the range', () => {
         const comp1 = helper.command.catComponent('comp1@latest');

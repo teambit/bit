@@ -14,7 +14,7 @@ export type {
   CalcDepsGraphOptions,
   ComponentIdByPkgName,
 } from './package-manager';
-export type { DependencyResolverWorkspaceConfig, NodeLinker } from './dependency-resolver-workspace-config';
+export type { DependencyResolverWorkspaceConfig, NodeLinker, ComponentRangePrefix } from './dependency-resolver-workspace-config';
 export type {
   DependencyResolverMain,
   DependencyResolverVariantConfig,
