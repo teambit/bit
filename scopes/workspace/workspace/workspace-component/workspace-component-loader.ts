@@ -938,6 +938,8 @@ export class WorkspaceComponentLoader {
       packageName: this.dependencyResolver.calcPackageName(component),
       dependencies: dependenciesList.serialize(),
       policy: policy.serialize(),
+      componentRangePrefix: this.dependencyResolver
+        .calcComponentRangePrefixByConsumerComponent(component.state._consumer),
     };
 
     // Make sure we are adding the envs / deps data first because other on load events might depend on it

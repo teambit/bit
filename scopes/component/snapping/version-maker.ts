@@ -17,7 +17,7 @@ import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { BuilderMain, OnTagOpts } from '@teambit/builder';
 import { ModelComponent, Log, DependenciesGraph, Lane } from '@teambit/objects';
 import { MessagePerComponent, MessagePerComponentFetcher } from './message-per-component';
-import { DependencyResolverAspect, DependencyResolverMain, COMPONENT_DEP_TYPE } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, DependencyResolverMain, COMPONENT_DEP_TYPE, ComponentRangePrefix } from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace, AutoTagResult } from '@teambit/workspace';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
@@ -498,8 +498,7 @@ export class VersionMaker {
     // in case we update dependencies according to the currently tagged component, we want to keep the versionRange
     // up to date with the new tags. e.g. 0.0.1 -> 0.0.2, will change the versionRange to ^0.0.2 or ~0.0.2.
     // in case componentRangePrefix is "+", we care only about packages in workspace.jsonc. so it won't be relevant.
-    const componentRangePrefix = this.dependencyResolver.componentRangePrefix();
-    const updateDepsResolverData = (component: ConsumerComponent) => {
+    const updateDepsResolverData = (component: ConsumerComponent, componentRangePrefix?: ComponentRangePrefix) => {
       const entry = component.extensions.findCoreExtension(DependencyResolverAspect.id);
       if (!entry) {
         return component;
@@ -528,6 +527,8 @@ export class VersionMaker {
     }
 
     componentsToTag.forEach((oneComponentToTag) => {
+      const componentRangePrefix = this.dependencyResolver
+        .calcComponentRangePrefixByConsumerComponent(oneComponentToTag);
       oneComponentToTag.getAllDependencies().forEach((dependency) => {
         const newDepId = getNewDependencyVersion(dependency.id);
         if (!newDepId) return;
