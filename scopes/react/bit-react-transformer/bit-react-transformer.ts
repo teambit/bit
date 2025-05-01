@@ -2,7 +2,7 @@ import type { Visitor, PluginObj, PluginPass, NodePath } from '@babel/core';
 import { readFileSync } from 'fs-extra';
 import memoize from 'memoizee';
 import type * as Types from '@babel/types'; // @babel/types, not @types/babel!
-import {
+.import {
   ComponentMeta,
   componentMetaField,
   componentMetaProperties,
@@ -22,7 +22,7 @@ type Api = { types: typeof Types };
  * the bit babel transformer adds a `componentId` property on React components
  * for showcase and debugging purposes.
  */
-export function createBitReactTransformer(api: Api, opts: BitReactTransformerOptions) {
+export function createBitReactTransformer(api: Api, opts: BitReactTransformerOptions = {}) {
   let componentMap: Record<string, ComponentMeta>;
   const types = api.types;
 
@@ -52,7 +52,9 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
       )
     );
 
-    path.insertAfter(componentIdStaticProp);
+    // always append *after the nearest statement*, never inside an expression
+    const stmtParent = path.getStatementParent() ?? path;
+    stmtParent.insertAfter(componentIdStaticProp);
   }
 
   const visitor: Visitor<PluginPass> = {
@@ -65,7 +67,7 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
       const meta = extractMeta(filename);
       if (!meta) return;
 
-      const deceleration = metaToDeceleration(meta, types);
+      const deceleration = metaToDeclaration(meta, types);
 
       // inserts to the top of file
       path.unshiftContainer('body', deceleration);
@@ -148,7 +150,7 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
   return Plugin;
 }
 
-function metaToDeceleration(meta: ComponentMeta, types: typeof Types) {
+function metaToDeclaration(meta: ComponentMeta, types: typeof Types) {
   const properties = [
     // e.g. "id": "teambit.base-ui/input/button@0.6.10"
     types.objectProperty(types.identifier(componentMetaProperties.componentId), types.stringLiteral(meta.id)),
