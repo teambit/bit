@@ -53,8 +53,8 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     );
 
     // always append *after the nearest statement*, never inside an expression
-    const stmtParent = path.getStatementParent() ?? path;
-    stmtParent.insertAfter(componentIdStaticProp);
+    const parentStatement = path.getStatementParent() ?? path;
+    parentStatement.insertAfter(componentIdStaticProp);
   }
 
   const visitor: Visitor<PluginPass> = {
