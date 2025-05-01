@@ -2,7 +2,7 @@ import type { Visitor, PluginObj, PluginPass, NodePath } from '@babel/core';
 import { readFileSync } from 'fs-extra';
 import memoize from 'memoizee';
 import type * as Types from '@babel/types'; // @babel/types, not @types/babel!
-.import {
+import {
   ComponentMeta,
   componentMetaField,
   componentMetaProperties,
