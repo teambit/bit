@@ -131,14 +131,14 @@ export function ComponentPreview({
         onLoad && onLoad(event);
       }
 
-      if (event.data && event.data.event === ERROR_EVENT) {
+      if (event.data && (event.data.event === ERROR_EVENT || event.data.event === 'AI_FIX_REQUEST')) {
         const errorData = event.data.payload;
         onPreviewError?.(errorData)
 
         if (propagateError && window.parent && window !== window.parent) {
           try {
             window.parent.postMessage({
-              event: ERROR_EVENT,
+              event: event.data.event,
               payload: {
                 ...errorData,
                 forwardedFrom: {
