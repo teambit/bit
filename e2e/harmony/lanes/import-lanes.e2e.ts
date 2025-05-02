@@ -43,7 +43,7 @@ describe('import lanes', function () {
         expect(Object.keys(bitMap)).to.have.lengthOf(0);
       });
       it('should import components objects on that lane', () => {
-        const list = helper.command.listLocalScopeParsed('--scope');
+        const list = helper.command.listLocalScopeParsed();
         expect(list).to.have.lengthOf(3);
       });
       it('bit status should show a clean state', () => {
