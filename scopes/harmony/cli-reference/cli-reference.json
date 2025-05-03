@@ -1286,9 +1286,14 @@
         "show only component ids, unformatted"
       ],
       [
-        "s",
-        "scope",
+        "l",
+        "local-scope",
         "show only components stored in the local scope, including indirect dependencies"
+      ],
+      [
+        "s",
+        "scope <string>",
+        "filter components by their scope name (e.g., teambit.workspace)"
       ],
       [
         "o",
@@ -1308,7 +1313,7 @@
       [
         "n",
         "namespace <string>",
-        "show only components in the specified namespace/s e.g. '-n ui' or '*/ui'"
+        "filter components by their namespace (a logical grouping within a scope, e.g., 'ui', '*/ui')"
       ]
     ],
     "description": "list components on a workspace or a remote scope (with flag).",
@@ -3172,10 +3177,6 @@
       {
         "name": "component-pattern",
         "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      },
-      {
-        "name": "component-version",
-        "description": "the version to untag (semver for tags. hash for snaps)"
       }
     ]
   },

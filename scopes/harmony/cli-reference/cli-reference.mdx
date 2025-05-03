@@ -1472,11 +1472,12 @@ this command does the following:
 | **Option**             | **Option alias** | **Description**                                                                               |
 | ---------------------- | :--------------: | --------------------------------------------------------------------------------------------- |
 | `--ids`                |       `-i`       | show only component ids, unformatted                                                          |
-| `--scope`              |       `-s`       | show only components stored in the local scope, including indirect dependencies               |
+| `--local-scope`        |       `-l`       | show only components stored in the local scope, including indirect dependencies               |
+| `--scope <string>`     |       `-s`       | filter components by their scope name (e.g., teambit.workspace)                               |
 | `--outdated`           |       `-o`       | highlight outdated components, in comparison with their latest remote version (if one exists) |
 | `--include-deleted`    |       `-d`       | EXPERIMENTAL. show also deleted components                                                    |
 | `--json`               |       `-j`       | show the output in JSON format                                                                |
-| `--namespace <string>` |       `-n`       | show only components in the specified namespace/s e.g. '-n ui' or '\*/ui'                     |
+| `--namespace <string>` |       `-n`       | filter components by their namespace (a logical grouping within a scope, e.g., 'ui', '\*/ui') |
 
 ---
 
@@ -1830,7 +1831,6 @@ https://bit.dev/components/tags#undoing-a-tag
 | **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
 | ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
-| `component-version` |                                                                                                                                                                                             the version to untag (semver for tags. hash for snaps)                                                                                                                                                                                              |
 
 | **Option**         | **Option alias** | **Description**                                                                                                 |
 | ------------------ | :--------------: | --------------------------------------------------------------------------------------------------------------- |
