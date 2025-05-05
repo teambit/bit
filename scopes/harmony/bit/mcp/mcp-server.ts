@@ -2726,11 +2726,13 @@ export async function startMcpServer() {
       {
         ...cwdSchema,
         component: z.string().describe('Component name or id to show dependencies for'),
-        json: z.boolean().optional().describe('Return the output as JSON'),
+        scope: z.boolean().optional().describe('Get the data from the scope instead of the workspace'),
+        tree: z.boolean().optional().describe('Render dependencies as a tree, similar to "npm ls"'),
       },
-      async ({ cwd, component, json }) => {
+      async ({ cwd, component, scope, tree }) => {
         const args = ['deps', 'get', component];
-        if (json) args.push('--json');
+        if (scope) args.push('--scope');
+        if (tree) args.push('--tree');
         return runBit(cwd, args);
       }
     );
@@ -2743,9 +2745,13 @@ export async function startMcpServer() {
         ...cwdSchema,
         componentPattern: z.string().describe('Component pattern to match components'),
         packages: z.array(z.string()).describe('Packages to remove'),
+        dev: z.boolean().optional().describe('Remove from devDependencies'),
+        peer: z.boolean().optional().describe('Remove from peerDependencies'),
       },
-      async ({ cwd, componentPattern, packages }) => {
+      async ({ cwd, componentPattern, packages, dev, peer }) => {
         const args = ['deps', 'remove', componentPattern, ...packages];
+        if (dev) args.push('--dev');
+        if (peer) args.push('--peer');
         return runBit(cwd, args);
       }
     );
@@ -2758,9 +2764,13 @@ export async function startMcpServer() {
         ...cwdSchema,
         componentPattern: z.string().describe('Component pattern to match components'),
         packages: z.array(z.string()).describe('Packages to unset'),
+        dev: z.boolean().optional().describe('Unset from devDependencies'),
+        peer: z.boolean().optional().describe('Unset from peerDependencies'),
       },
-      async ({ cwd, componentPattern, packages }) => {
+      async ({ cwd, componentPattern, packages, dev, peer }) => {
         const args = ['deps', 'unset', componentPattern, ...packages];
+        if (dev) args.push('--dev');
+        if (peer) args.push('--peer');
         return runBit(cwd, args);
       }
     );
@@ -2772,11 +2782,9 @@ export async function startMcpServer() {
       {
         ...cwdSchema,
         component: z.string().describe('Component name or id to debug dependencies for'),
-        json: z.boolean().optional().describe('Return the output as JSON'),
       },
-      async ({ cwd, component, json }) => {
+      async ({ cwd, component }) => {
         const args = ['deps', 'debug', component];
-        if (json) args.push('--json');
         return runBit(cwd, args);
       }
     );
@@ -2789,9 +2797,15 @@ export async function startMcpServer() {
         ...cwdSchema,
         componentPattern: z.string().describe('Component pattern to match components'),
         packages: z.array(z.string()).describe('Packages to set as dependencies'),
+        dev: z.boolean().optional().describe('Add to the devDependencies'),
+        optional: z.boolean().optional().describe('Add to the optionalDependencies'),
+        peer: z.boolean().optional().describe('Add to the peerDependencies'),
       },
-      async ({ cwd, componentPattern, packages }) => {
+      async ({ cwd, componentPattern, packages, dev, optional, peer }) => {
         const args = ['deps', 'set', componentPattern, ...packages];
+        if (dev) args.push('--dev');
+        if (optional) args.push('--optional');
+        if (peer) args.push('--peer');
         return runBit(cwd, args);
       }
     );
@@ -2846,22 +2860,27 @@ export async function startMcpServer() {
       {
         ...cwdSchema,
         dependency: z.string().describe('Dependency name'),
+        depth: z.string().optional().describe('Max display depth of the dependency graph'),
       },
-      async ({ cwd, dependency }) => {
+      async ({ cwd, dependency, depth }) => {
         const args = ['deps', 'usage', dependency];
+        if (depth) args.push('--depth', depth);
         return runBit(cwd, args);
       }
     );
 
+  // --- bit_deps_write ---
   if (shouldRegisterTool('bit_deps_write'))
     server.tool(
       'bit_deps_write',
       'Write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions.',
       {
         ...cwdSchema,
+        target: z.string().optional().describe('Specify where the dependencies should be written.'),
       },
-      async ({ cwd }) => {
+      async ({ cwd, target }) => {
         const args = ['deps', 'write'];
+        if (target) args.push('--target', target);
         return runBit(cwd, args);
       }
     );
