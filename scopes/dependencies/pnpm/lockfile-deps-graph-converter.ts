@@ -280,43 +280,30 @@ export async function convertGraphToLockfile(
       }
     }
   }
-  const pkgsToResolve: Array<{ name: string; version: string; pkgId: string }> = [];
-  const pkgsInTheWorkspaces = new Map<string, string>();
-  for (const { name, version } of Object.values(manifests)) {
-    if (name && version) {
-      pkgsInTheWorkspaces.set(name, version);
-    }
-  }
-  for (const [pkgId, pkg] of Object.entries(lockfile.packages)) {
-    if (pkg.resolution == null || 'type' in pkg.resolution && pkg.resolution.type === 'directory') {
-      const parsed = dp.parse(pkgId)
-      if (parsed.name && parsed.version && (!pkgsInTheWorkspaces.has(parsed.name) || pkgsInTheWorkspaces.get(parsed.name) !== parsed.version)) {
-        pkgsToResolve.push({
-          name: parsed.name,
-          version: parsed.version,
-          pkgId,
-        })
+  const pkgsToResolve = getPkgsToResolve(lockfile, manifests);
+  await Promise.all(
+    pkgsToResolve.map(async (pkgToResolve) => {
+      if (lockfile.packages[pkgToResolve.pkgId].resolution == null) {
+        const { resolution } = await resolve(
+          {
+            alias: pkgToResolve.name,
+            pref: pkgToResolve.version,
+          },
+          {
+            lockfileDir: '',
+            projectDir: '',
+            registry: pickRegistryForPackage(registries, pkgToResolve.name),
+            preferredVersions: {},
+          }
+        );
+        if ('integrity' in resolution && resolution.integrity) {
+          lockfile.packages[pkgToResolve.pkgId].resolution = {
+            integrity: resolution.integrity,
+          };
+        }
       }
-    }
-  }
-  await Promise.all(pkgsToResolve.map(async (pkgToResolve) => {
-    if (lockfile.packages[pkgToResolve.pkgId].resolution == null) {
-      const { resolution } = await resolve({
-        alias: pkgToResolve.name,
-        pref: pkgToResolve.version,
-      }, {
-        lockfileDir: '',
-        projectDir: '',
-        registry: pickRegistryForPackage(registries, pkgToResolve.name),
-        preferredVersions: {},
-      })
-      if ('integrity' in resolution && resolution.integrity) {
-        lockfile.packages[pkgToResolve.pkgId].resolution = {
-          integrity: resolution.integrity,
-        };
-      }
-    }
-  }));
+    })
+  );
   return lockfile;
 
   function convertToDeps(neighbours: DependencyNeighbour[]) {
@@ -331,6 +318,39 @@ export async function convertGraphToLockfile(
     }
     return deps;
   }
+}
+
+interface PkgToResolve {
+  name: string;
+  version: string;
+  pkgId: string;
+}
+
+function getPkgsToResolve(lockfile: BitLockfileFile, manifests: Record<string, ProjectManifest>): PkgToResolve[] {
+  const pkgsToResolve: PkgToResolve[] = [];
+  const pkgsInTheWorkspaces = new Map<string, string>();
+  for (const { name, version } of Object.values(manifests)) {
+    if (name && version) {
+      pkgsInTheWorkspaces.set(name, version);
+    }
+  }
+  for (const [pkgId, pkg] of Object.entries(lockfile.packages ?? {})) {
+    if (pkg.resolution == null || ('type' in pkg.resolution && pkg.resolution.type === 'directory')) {
+      const parsed = dp.parse(pkgId);
+      if (
+        parsed.name &&
+        parsed.version &&
+        (!pkgsInTheWorkspaces.has(parsed.name) || pkgsInTheWorkspaces.get(parsed.name) !== parsed.version)
+      ) {
+        pkgsToResolve.push({
+          name: parsed.name,
+          version: parsed.version,
+          pkgId,
+        });
+      }
+    }
+  }
+  return pkgsToResolve;
 }
 
 function depPathToRef(depPath: dp.DependencyPath): string {
