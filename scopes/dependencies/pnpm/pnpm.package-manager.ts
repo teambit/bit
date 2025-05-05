@@ -131,14 +131,19 @@ export class PnpmPackageManager implements PackageManager {
       isFeatureEnabled(DEPS_GRAPH) &&
       (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
     ) {
-      await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
-        manifests,
-        rootDir,
-        registries,
-        proxyConfig,
-        networkConfig,
-        cacheDir: config.cacheDir,
-      });
+      try {
+        await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
+          manifests,
+          rootDir,
+          registries,
+          proxyConfig,
+          networkConfig,
+          cacheDir: config.cacheDir,
+        });
+      } catch (error) {
+        // If the lockfile could not be created for some reason, it will be created later during installation.
+        this.logger.error((error as Error).message);
+      }
     }
 
     this.logger.debug(`running installation in root dir ${rootDir}`);

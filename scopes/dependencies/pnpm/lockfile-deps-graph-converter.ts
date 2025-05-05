@@ -281,11 +281,10 @@ export async function convertGraphToLockfile(
     }
   }
   const pkgsToResolve: Array<{ name: string; version: string; pkgId: string }> = [];
-  const pkgsInTheWorkspaces = new Set(Object.values(manifests).map(({ name }) => name));
   for (const [pkgId, pkg] of Object.entries(lockfile.packages)) {
     if (pkg.resolution == null || 'type' in pkg.resolution && pkg.resolution.type === 'directory') {
       const parsed = dp.parse(pkgId)
-      if (parsed.name && parsed.version && !pkgsInTheWorkspaces.has(parsed.name)) {
+      if (parsed.name && parsed.version) {
         pkgsToResolve.push({
           name: parsed.name,
           version: parsed.version,
