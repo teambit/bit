@@ -20,6 +20,7 @@ import { runCLI } from './load-bit';
 import { autocomplete } from './autocomplete';
 import { ServerCommander, shouldUseBitServer } from './server-commander';
 import { spawnPTY } from './server-forever';
+import { startMcpServer } from './mcp/mcp-server';
 
 /**
  * run bit cli tool
@@ -30,7 +31,11 @@ export async function runBit(additionalAspects?: Aspect[]) {
     autocomplete();
     process.exit(0);
   }
-
+  if (process.argv.includes('mcp-server')) {
+    await startMcpServer();
+    // don't exit the process, keep it running
+    await new Promise(() => {});
+  }
   if (process.argv.includes('server-forever')) {
     spawnPTY();
   } else if (shouldUseBitServer()) {
