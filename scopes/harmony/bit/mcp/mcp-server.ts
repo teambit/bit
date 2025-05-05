@@ -9,21 +9,21 @@ import { z } from 'zod';
 import { GLOBAL_LOGS } from '@teambit/legacy.constants';
 import execa from 'execa';
 import fs from 'fs';
-import path from 'path';
+import pathLib from 'path';
 
 /**
  * Writes a debug message to mcp-server-debug.log in the cwd if --debug is present in process.argv.
  */
-function debug(message: string) {
+function debugLog(message: string) {
   if (!process.argv.includes('--debug')) return;
-  const logPath = path.join(GLOBAL_LOGS, 'mcp-server-debug.log');
+  const logPath = pathLib.join(GLOBAL_LOGS, 'mcp-server-debug.log');
   const line = `[${new Date().toISOString()}] ${message}\n`;
   fs.appendFileSync(logPath, line, { encoding: 'utf8' });
 }
 
 // eslint-disable-next-line complexity
 export async function startMcpServer() {
-  debug(
+  debugLog(
     `Starting mcp server. Process ID: ${process.pid}, CWD: ${process.cwd()}, Args: ${JSON.stringify(process.argv)}`
   );
   const server = new McpServer({
@@ -42,7 +42,7 @@ export async function startMcpServer() {
   }
 
   async function runBit(cwd: string, args: string[]): Promise<CallToolResult> {
-    debug(`Running "${bitBin} ${args.join(' ')}" in "${cwd}"`);
+    debugLog(`Running "${bitBin} ${args.join(' ')}" in "${cwd}"`);
     try {
       const { stdout } = await execa(bitBin, args, { cwd });
       const data = stdout.trim();
