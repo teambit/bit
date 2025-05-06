@@ -221,7 +221,7 @@ to delete them eventually from main, use "--update-main" flag and make sure to r
       const compId = bitMapEntry.id;
       const comp = await this.workspace.get(compId);
       const removeInfo = await this.getRemoveInfo(comp);
-      if (!removeInfo.removed && !removeInfo.range) {
+      if (!removeInfo.removed && !removeInfo.range && !removeInfo.snaps) {
         return false;
       }
       await setAsRemovedFalse(compId);
