@@ -37,9 +37,13 @@ export type RemoveInfo = {
    * Semver range to mark specific versions as deleted
    */
   range?: string;
+  /**
+   * Array of snap hashes to mark as deleted
+   */
+  snaps?: string[];
 };
 
-export type DeleteOpts = { updateMain?: boolean; range?: string };
+export type DeleteOpts = { updateMain?: boolean; range?: string; snaps?: string[] };
 
 export class RemoveMain {
   constructor(
@@ -103,10 +107,13 @@ export class RemoveMain {
     return results;
   }
 
-  private async markRemoveComps(componentIds: ComponentID[], { updateMain, range }: DeleteOpts): Promise<Component[]> {
+  private async markRemoveComps(
+    componentIds: ComponentID[],
+    { updateMain, range, snaps }: DeleteOpts
+  ): Promise<Component[]> {
     const allComponentsToMarkDeleted = await this.workspace.getMany(componentIds);
 
-    const componentsToDeleteFromFs = range ? [] : allComponentsToMarkDeleted;
+    const componentsToDeleteFromFs = range || snaps ? [] : allComponentsToMarkDeleted;
     const componentsIdsToDeleteFromFs = ComponentIdList.fromArray(componentsToDeleteFromFs.map((c) => c.id));
     await removeComponentsFromNodeModules(
       this.workspace.consumer,
@@ -118,9 +125,10 @@ export class RemoveMain {
     // the reason is that if we set it to true, then, the component is considered as "deleted" for *all* versions.
     // remember that this config is always passed to the next version and if we set removed: true, it'll be copied
     // to the next version even when that version is not in the range.
-    const config: RemoveInfo = { removed: !range };
+    const config: RemoveInfo = { removed: !(range || snaps) };
     if (updateMain) config.removeOnMain = true;
     if (range) config.range = range;
+    if (snaps && snaps.length) config.snaps = snaps;
     componentIds.forEach((compId) => this.workspace.bitMap.addComponentConfig(compId, RemoveAspect.id, config));
     await this.workspace.bitMap.write('delete');
     await deleteComponentsFiles(this.workspace.consumer, componentsIdsToDeleteFromFs);
@@ -271,10 +279,15 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
       const currentTag = component.getTag();
       return Boolean(currentTag && semver.satisfies(currentTag.version, data.range));
     };
+    const isDeletedBySnaps = () => {
+      if (!data?.snaps || !component.id.version) return false;
+      return data.snaps.includes(component.id.version);
+    };
 
     return {
-      removed: data?.removed || isDeletedByRange() || false,
+      removed: data?.removed || isDeletedByRange() || isDeletedBySnaps() || false,
       range: data?.range,
+      snaps: data?.snaps,
     };
   }
 
