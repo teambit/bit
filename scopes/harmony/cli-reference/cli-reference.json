@@ -2442,6 +2442,11 @@
         "f",
         "force",
         "relevant for --hard. allow the deletion even if used as a dependency. WARNING: components that depend on this component will corrupt"
+      ],
+      [
+        "",
+        "snaps <string>",
+        "comma-separated list of snap hashes to mark as deleted (e.g. --snaps \"hash1,hash2,hash3\")"
       ]
     ],
     "description": "mark components as deleted on the remote",
