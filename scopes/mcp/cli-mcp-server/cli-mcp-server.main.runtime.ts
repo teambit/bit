@@ -45,9 +45,15 @@ export class CliMcpServerMain {
       const schema: Record<string, any> = {};
       argsData.forEach(arg => {
         const desc = arg.description || `Positional argument: ${arg.nameRaw}`;
-        schema[arg.nameCamelCase] = arg.required
-          ? z.string().describe(desc)
-          : z.string().optional().describe(desc);
+        if (arg.isArray) {
+          schema[arg.nameCamelCase] = arg.required
+            ? z.array(z.string()).describe(desc)
+            : z.array(z.string()).optional().describe(desc);
+        } else {
+          schema[arg.nameCamelCase] = arg.required
+            ? z.string().describe(desc)
+            : z.string().optional().describe(desc);
+        }
       });
 
       const flagsData = getFlagsData(cmd);
@@ -68,7 +74,14 @@ export class CliMcpServerMain {
           // Add positional arguments in order
           argsData.forEach((arg) => {
             const val = params[arg.nameCamelCase];
-            if (val) argsToRun.push(val);
+            if (val === undefined) return;
+
+            if (arg.isArray && Array.isArray(val)) {
+              // For array arguments, add each value separately
+              val.forEach(item => argsToRun.push(item));
+            } else {
+              argsToRun.push(val);
+            }
           });
           // Add options as flags
           flagsData.forEach((flag) => {
