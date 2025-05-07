@@ -86,7 +86,8 @@ export class CliMcpServerMain {
   }
 
   private buildCommandArgs(config: CommandConfig, params: any): string[] {
-    const args: string[] = [config.name];
+    // Split the command name on spaces to properly handle subcommands
+    const args: string[] = config.name.split(' ');
 
     // Add positional arguments in order
     config.argsData.forEach((arg) => {
