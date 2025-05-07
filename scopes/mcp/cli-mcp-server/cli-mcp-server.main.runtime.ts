@@ -21,12 +21,17 @@ export class CliMcpServerMain {
       'status', 'list', 'add', 'init', 'show', 'tag', 'snap', 'import', 'export', 'remove', 'log', 'test', 'diff',
       'install', 'lane show', 'lane create', 'lane switch', 'lane merge', 'create', 'templates', 'reset', 'checkout',
     ]);
+    const excludeTools = new Set([
+      'login', 'logout', 'completion', 'mcp-server', 'start', 'run-action', 'watch', 'run', 'resume-export',
+      'server', 'serve-preview'
+    ]);
     const server = new McpServer({
       name: 'bit-cli-mcp',
       version: '0.0.1',
     });
     commands.forEach((cmd) => {
       const cmdName = getCommandName(cmd);
+      if (excludeTools.has(cmdName)) return;
       if (!extended && !defaultTools.has(cmdName)) return;
       this.registerTool(server, cmd);
     });
@@ -60,9 +65,10 @@ export class CliMcpServerMain {
           : z.boolean().optional().describe(flag.description);
     });
     const cmdName = getCommandName(cmd);
+    const toolName = `bit_${cmdName}`;
 
     server.tool(
-      cmdName,
+      toolName,
       cmd.description,
       schema,
       async (params: any) => {
