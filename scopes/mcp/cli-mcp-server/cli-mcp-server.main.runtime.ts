@@ -121,7 +121,8 @@ export class CliMcpServerMain {
       ? `${getCommandName(parentCmd)} ${getCommandName(cmd)}`
       : getCommandName(cmd);
 
-    const toolName = `bit_${cmdName}`.replace(/-/g, '_');
+    // replace white spaces (\s) and dashes (-) with underscores (_)
+    const toolName = `bit_${cmdName}`.replace(/[-\s]/g, '_');
 
     const config: CommandConfig = {
       name: cmdName,
