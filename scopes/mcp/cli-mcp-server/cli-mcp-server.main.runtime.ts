@@ -2,7 +2,7 @@
 /* eslint-disable import/no-unresolved */
 
 
-import CLIAspect, { CLIMain, Command, getArgsData, getCommandName, getFlagsData, MainRuntime } from '@teambit/cli';
+import { CLIAspect, CLIMain, Command, getArgsData, getCommandName, getFlagsData, MainRuntime } from '@teambit/cli';
 import execa from 'execa';
 import { CliMcpServerAspect } from './cli-mcp-server.aspect';
 import { McpServerCmd } from './mcp-server.cmd';
