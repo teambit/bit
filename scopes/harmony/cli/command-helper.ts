@@ -43,7 +43,7 @@ type FlagData = {
   alias?: string;
   description: string;
   type: 'string' | 'boolean';
-  valueRequired: boolean; // a value is required after the flag. e.g. 'message <message>'
+  requiresArg: boolean; // a value is required after the flag. e.g. 'message <message>'
 }
 
 export function getFlagsData(cmd: Command): FlagData[] {
@@ -53,14 +53,14 @@ export function getFlagsData(cmd: Command): FlagData[] {
     const [alias, flag, description] = opt;
     const name = flag.split(' ')[0];
     const type = flag.includes('<') || flag.includes('[') ? 'string' : 'boolean';
-    const valueRequired = flag.includes('<');
+    const requiresArg = flag.includes('<');
 
     return {
       name,
       alias,
       description,
       type,
-      valueRequired,
+      requiresArg,
     }
   });
 }

@@ -1,9 +1,9 @@
 import { Command } from './command';
 import { Arguments, CommandModule, Argv, Options } from 'yargs';
 import { TOKEN_FLAG } from '@teambit/legacy.constants';
-import { camelCase } from 'lodash';
 import { CommandRunner } from './command-runner';
 import { OnCommandStartSlot } from './cli.main.runtime';
+import { getArgsData, getFlagsData } from './command-helper';
 
 export const GLOBAL_GROUP = 'Global';
 export const STANDARD_GROUP = 'Options';
@@ -36,8 +36,8 @@ export class YargsAdapter implements CommandModule {
   }
 
   handler(argv: Arguments) {
-    const enteredArgs = getArgsFromCommandName(this.commanderCommand.name);
-    const argsValues = enteredArgs.map((a) => argv[a]) as any[];
+    const commandArgs = getArgsData(this.commanderCommand).map((arg) => arg.nameCamelCase);
+    const argsValues = commandArgs.map((a) => argv[a]) as any[];
     // a workaround to get a flag syntax such as "--all [version]" work with yargs.
     const flags = Object.keys(argv).reduce((acc, current) => {
       if (current === '_' || current === '$0' || current === '--') return acc;
@@ -57,17 +57,18 @@ export class YargsAdapter implements CommandModule {
   }
 
   static optionsToBuilder(command: Command): { [key: string]: Options } {
-    const option = command.options.reduce((acc, [alias, opt, desc]) => {
-      const optName = opt.split(' ')[0];
-      acc[optName] = {
-        alias,
-        describe: desc,
+    const flagsData = getFlagsData(command);
+    const option = flagsData.reduce((acc, flag) => {
+      acc[flag.name] = {
+        alias: flag.alias,
+        describe: flag.description,
         group: STANDARD_GROUP,
-        type: opt.includes(' ') ? 'string' : 'boolean',
-        requiresArg: opt.includes('<'),
+        type: flag.type,
+        requiresArg: flag.requiresArg,
       } as Options;
       return acc;
     }, {});
+
     const globalOptions = YargsAdapter.getGlobalOptions(command);
 
     return { ...option, ...globalOptions };
@@ -93,20 +94,4 @@ export class YargsAdapter implements CommandModule {
     };
     return globalOptions;
   }
-}
-
-function getArgsFromCommandName(commandName: string): string[] {
-  const commandSplit = commandName.split(' ');
-  commandSplit.shift(); // remove the first element, it's the command-name
-
-  return commandSplit.map((existArg) => {
-    const trimmed = existArg.trim();
-    if ((!trimmed.startsWith('<') && !trimmed.startsWith('[')) || (!trimmed.endsWith('>') && !trimmed.endsWith(']'))) {
-      throw new Error(`expect arg "${trimmed}" of "${commandName}" to be wrapped with "[]" or "<>"`);
-    }
-    // remove the opening and closing brackets
-    const withoutBrackets = trimmed.slice(1, -1);
-
-    return camelCase(withoutBrackets);
-  });
 }
