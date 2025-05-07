@@ -12,8 +12,136 @@ import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 
+interface CommandFilterOptions {
+  defaultTools: Set<string>;
+  additionalCommandsSet?: Set<string>;
+  userExcludeSet?: Set<string>;
+  alwaysExcludeTools: Set<string>;
+  extended: boolean;
+  includeOnlySet?: Set<string>;
+}
+
+interface CommandConfig {
+  name: string;
+  description: string;
+  argsData: ReturnType<typeof getArgsData>;
+  flagsData: ReturnType<typeof getFlagsData>;
+}
+
 export class CliMcpServerMain {
   constructor(private cli: CLIMain, private logger: Logger){}
+
+  private shouldIncludeCommand(cmdName: string, options: CommandFilterOptions): boolean {
+    // Always exclude certain commands
+    if (options.alwaysExcludeTools.has(cmdName)) return false;
+
+    // User-specified exclude takes precedence
+    if (options.userExcludeSet?.has(cmdName)) {
+      this.logger.debug(`[MCP-DEBUG] Excluding command due to --exclude flag: ${cmdName}`);
+      return false;
+    }
+
+    // If includeOnly is specified, only include those specific commands
+    if (options.includeOnlySet) {
+      const shouldInclude = options.includeOnlySet.has(cmdName);
+      if (shouldInclude) {
+        this.logger.debug(`[MCP-DEBUG] Including command due to --include-only flag: ${cmdName}`);
+      }
+      return shouldInclude;
+    }
+
+    // Extended mode includes all commands except excluded ones
+    if (options.extended) return true;
+
+    // Default mode: include default tools + any additional specified
+    return options.defaultTools.has(cmdName) ||
+           (options.additionalCommandsSet?.has(cmdName) ?? false);
+  }
+
+  private buildZodSchema(config: CommandConfig): Record<string, any> {
+    const schema: Record<string, any> = {};
+
+    config.argsData.forEach(arg => {
+      const desc = arg.description || `Positional argument: ${arg.nameRaw}`;
+      if (arg.isArray) {
+        schema[arg.nameCamelCase] = arg.required
+          ? z.array(z.string()).describe(desc)
+          : z.array(z.string()).optional().describe(desc);
+      } else {
+        schema[arg.nameCamelCase] = arg.required
+          ? z.string().describe(desc)
+          : z.string().optional().describe(desc);
+      }
+    });
+
+    config.flagsData.forEach(flag => {
+      const type = flag.type;
+      schema[flag.name] =
+        type === 'string'
+          ? z.string().optional().describe(flag.description)
+          : z.boolean().optional().describe(flag.description);
+    });
+
+    return schema;
+  }
+
+  private buildCommandArgs(config: CommandConfig, params: any): string[] {
+    const args: string[] = [config.name];
+
+    // Add positional arguments in order
+    config.argsData.forEach((arg) => {
+      const val = params[arg.nameCamelCase];
+      if (val === undefined) return;
+
+      if (arg.isArray && Array.isArray(val)) {
+        val.forEach(item => args.push(item));
+      } else {
+        args.push(val);
+      }
+    });
+
+    // Add options as flags
+    config.flagsData.forEach((flag) => {
+      const name = flag.name;
+      const type = flag.type;
+      const val = params[name];
+      if (val === undefined) return;
+      if (type === 'boolean' && val) {
+        args.push(`--${name}`);
+      } else if (type === 'string' && val) {
+        args.push(`--${name}`, val);
+      }
+    });
+
+    return args;
+  }
+
+  private registerToolForCommand(server: McpServer, cmd: Command, parentCmd?: Command) {
+    const cmdName = parentCmd
+      ? `${getCommandName(parentCmd)} ${getCommandName(cmd)}`
+      : getCommandName(cmd);
+
+    const toolName = `bit_${cmdName}`.replace(/-/g, '_');
+
+    const config: CommandConfig = {
+      name: cmdName,
+      description: cmd.description,
+      argsData: getArgsData(cmd),
+      flagsData: getFlagsData(cmd)
+    };
+
+    const schema = this.buildZodSchema(config);
+
+    server.tool(
+      toolName,
+      config.description,
+      schema,
+      async (params: any) => {
+        const argsToRun = this.buildCommandArgs(config, params);
+        return this.runBit(argsToRun);
+      }
+    );
+  }
 
   async runMcpServer(options: {
     extended?: boolean;
@@ -66,48 +194,25 @@ export class CliMcpServerMain {
       version: '0.0.1',
     });
 
+    const filterOptions: CommandFilterOptions = {
+      defaultTools,
+      additionalCommandsSet,
+      userExcludeSet,
+      alwaysExcludeTools,
+      extended,
+      includeOnlySet
+    };
+
     commands.forEach((cmd) => {
       const cmdName = getCommandName(cmd);
 
-      // Always exclude certain commands
-      if (alwaysExcludeTools.has(cmdName)) return;
-
-      // User-specified exclude takes precedence
-      if (userExcludeSet && userExcludeSet.has(cmdName)) {
-        this.logger.debug(`[MCP-DEBUG] Excluding command due to --exclude flag: ${cmdName}`);
-        return;
-      }
-
-      // If includeOnly is specified, only include those specific commands
-      if (includeOnlySet) {
-        if (includeOnlySet.has(cmdName)) {
-          this.logger.debug(`[MCP-DEBUG] Including command due to --include-only flag: ${cmdName}`);
-          this.registerTool(server, cmd);
-        }
-        return;
-      }
-
-      // Extended mode includes all commands except excluded ones
-      if (extended) {
-        this.registerTool(server, cmd);
-        return;
-      }
-
-      // Default mode: include default tools + any additional specified
-      if (defaultTools.has(cmdName) || (additionalCommandsSet && additionalCommandsSet.has(cmdName))) {
-        this.registerTool(server, cmd);
+      if (this.shouldIncludeCommand(cmdName, filterOptions)) {
+        this.registerToolForCommand(server, cmd);
       }
 
       // Process sub-commands
       if (cmd.commands && cmd.commands.length) {
-        this.processSubCommands(server, cmd, {
-          defaultTools,
-          additionalCommandsSet,
-          userExcludeSet,
-          alwaysExcludeTools,
-          extended,
-          includeOnlySet
-        });
+        this.processSubCommands(server, cmd, filterOptions);
       }
     });
 
@@ -117,14 +222,7 @@ export class CliMcpServerMain {
   private processSubCommands(
     server: McpServer,
     parentCmd: Command,
-    options: {
-      defaultTools: Set<string>,
-      additionalCommandsSet?: Set<string>,
-      userExcludeSet?: Set<string>,
-      alwaysExcludeTools: Set<string>,
-      extended: boolean,
-      includeOnlySet?: Set<string>
-    }
+    options: CommandFilterOptions
   ) {
     const parentCmdName = getCommandName(parentCmd);
 
@@ -132,174 +230,10 @@ export class CliMcpServerMain {
       const subCmdName = getCommandName(subCmd);
       const fullCmdName = `${parentCmdName} ${subCmdName}`;
 
-      // Always exclude certain commands
-      if (options.alwaysExcludeTools.has(fullCmdName)) return;
-
-      // User-specified exclude takes precedence
-      if (options.userExcludeSet && options.userExcludeSet.has(fullCmdName)) {
-        this.logger.debug(`[MCP-DEBUG] Excluding sub-command due to --exclude flag: ${fullCmdName}`);
-        return;
-      }
-
-      // If includeOnly is specified, only include those specific commands
-      if (options.includeOnlySet) {
-        if (options.includeOnlySet.has(fullCmdName)) {
-          this.logger.debug(`[MCP-DEBUG] Including sub-command due to --include-only flag: ${fullCmdName}`);
-          this.registerSubCommandTool(server, parentCmd, subCmd);
-        }
-        return;
-      }
-
-      // Extended mode includes all commands except excluded ones
-      if (options.extended) {
-        this.registerSubCommandTool(server, parentCmd, subCmd);
-        return;
-      }
-
-      // Default mode: include default tools + any additional specified
-      if (options.defaultTools.has(fullCmdName) ||
-          (options.additionalCommandsSet && options.additionalCommandsSet.has(fullCmdName))) {
-        this.registerSubCommandTool(server, parentCmd, subCmd);
+      if (this.shouldIncludeCommand(fullCmdName, options)) {
+        this.registerToolForCommand(server, subCmd, parentCmd);
       }
     });
-  }
-
-  private registerSubCommandTool(server: McpServer, parentCmd: Command, subCmd: Command) {
-    const parentCmdName = getCommandName(parentCmd);
-    const subCmdName = getCommandName(subCmd);
-    const fullCmdName = `${parentCmdName} ${subCmdName}`;
-
-    const argsData = getArgsData(subCmd);
-    const flagsData = getFlagsData(subCmd);
-
-    // Build zod schema
-    const schema: Record<string, any> = {};
-    argsData.forEach(arg => {
-      const desc = arg.description || `Positional argument: ${arg.nameRaw}`;
-      if (arg.isArray) {
-        schema[arg.nameCamelCase] = arg.required
-          ? z.array(z.string()).describe(desc)
-          : z.array(z.string()).optional().describe(desc);
-      } else {
-        schema[arg.nameCamelCase] = arg.required
-          ? z.string().describe(desc)
-          : z.string().optional().describe(desc);
-      }
-    });
-
-    flagsData.forEach(flag => {
-      const type = flag.type;
-      schema[flag.name] =
-        type === 'string'
-          ? z.string().optional().describe(flag.description)
-          : z.boolean().optional().describe(flag.description);
-    });
-
-    const toolName = `bit_${parentCmdName}_${subCmdName}`.replace(/-/g, '_');
-
-    this.logger.debug(`[MCP-DEBUG] Registering sub-command MCP tool: ${fullCmdName} as ${toolName}`);
-
-    server.tool(
-      toolName,
-      subCmd.description,
-      schema,
-      async (params: any) => {
-        const argsToRun: string[] = [parentCmdName, subCmdName];
-
-        // Add positional arguments in order
-        argsData.forEach((arg) => {
-          const val = params[arg.nameCamelCase];
-          if (val === undefined) return;
-
-          if (arg.isArray && Array.isArray(val)) {
-            // For array arguments, add each value separately
-            val.forEach(item => argsToRun.push(item));
-          } else {
-            argsToRun.push(val);
-          }
-        });
-
-        // Add options as flags
-        flagsData.forEach((flag) => {
-          const name = flag.name;
-          const type = flag.type;
-          const val = params[name];
-          if (val === undefined) return;
-          if (type === 'boolean' && val) {
-            argsToRun.push(`--${name}`);
-          } else if (type === 'string' && val) {
-            argsToRun.push(`--${name}`, val);
-          }
-        });
-
-        return this.runBit(argsToRun);
-      }
-    );
-  }
-
-  private registerTool(server: McpServer, cmd: Command) {
-    const argsData = getArgsData(cmd);
-
-    // Build zod schema
-    const schema: Record<string, any> = {};
-    argsData.forEach(arg => {
-      const desc = arg.description || `Positional argument: ${arg.nameRaw}`;
-      if (arg.isArray) {
-        schema[arg.nameCamelCase] = arg.required
-          ? z.array(z.string()).describe(desc)
-          : z.array(z.string()).optional().describe(desc);
-      } else {
-        schema[arg.nameCamelCase] = arg.required
-          ? z.string().describe(desc)
-          : z.string().optional().describe(desc);
-      }
-    });
-
-    const flagsData = getFlagsData(cmd);
-    flagsData.forEach(flag => {
-      const type = flag.type;
-      schema[flag.name] =
-        type === 'string'
-          ? z.string().optional().describe(flag.description)
-          : z.boolean().optional().describe(flag.description);
-    });
-    const cmdName = getCommandName(cmd);
-    const toolName = `bit_${cmdName}`.replace(/-/g, '_');
-
-    server.tool(
-      toolName,
-      cmd.description,
-      schema,
-      async (params: any) => {
-        const argsToRun: string[] = [cmdName];
-        // Add positional arguments in order
-        argsData.forEach((arg) => {
-          const val = params[arg.nameCamelCase];
-          if (val === undefined) return;
-
-          if (arg.isArray && Array.isArray(val)) {
-            // For array arguments, add each value separately
-            val.forEach(item => argsToRun.push(item));
-          } else {
-            argsToRun.push(val);
-          }
-        });
-        // Add options as flags
-        flagsData.forEach((flag) => {
-          const name = flag.name;
-          const type = flag.type
-          const val = params[name];
-          if (val === undefined) return;
-          if (type === 'boolean' && val) {
-            argsToRun.push(`--${name}`);
-          } else if (type === 'string' && val) {
-            argsToRun.push(`--${name}`, val);
-          }
-        });
-
-        return this.runBit(argsToRun);
-      }
-    );
   }
 
   private async runBit(args: string[]): Promise<CallToolResult> {
