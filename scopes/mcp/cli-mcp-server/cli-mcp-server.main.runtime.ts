@@ -1,6 +1,7 @@
 /* eslint-disable import/extensions */
 /* eslint-disable import/no-unresolved */
 
+
 import CLIAspect, { CLIMain, Command, getArgsData, getCommandName, getFlagsData, MainRuntime } from '@teambit/cli';
 import execa from 'execa';
 import { CliMcpServerAspect } from './cli-mcp-server.aspect';
@@ -96,9 +97,144 @@ export class CliMcpServerMain {
       if (defaultTools.has(cmdName) || (additionalCommandsSet && additionalCommandsSet.has(cmdName))) {
         this.registerTool(server, cmd);
       }
+
+      // Process sub-commands
+      if (cmd.commands && cmd.commands.length) {
+        this.processSubCommands(server, cmd, {
+          defaultTools,
+          additionalCommandsSet,
+          userExcludeSet,
+          alwaysExcludeTools,
+          extended,
+          includeOnlySet
+        });
+      }
     });
 
     await server.connect(new StdioServerTransport());
+  }
+
+  private processSubCommands(
+    server: McpServer,
+    parentCmd: Command,
+    options: {
+      defaultTools: Set<string>,
+      additionalCommandsSet?: Set<string>,
+      userExcludeSet?: Set<string>,
+      alwaysExcludeTools: Set<string>,
+      extended: boolean,
+      includeOnlySet?: Set<string>
+    }
+  ) {
+    const parentCmdName = getCommandName(parentCmd);
+
+    parentCmd.commands?.forEach(subCmd => {
+      const subCmdName = getCommandName(subCmd);
+      const fullCmdName = `${parentCmdName} ${subCmdName}`;
+
+      // Always exclude certain commands
+      if (options.alwaysExcludeTools.has(fullCmdName)) return;
+
+      // User-specified exclude takes precedence
+      if (options.userExcludeSet && options.userExcludeSet.has(fullCmdName)) {
+        this.logger.debug(`[MCP-DEBUG] Excluding sub-command due to --exclude flag: ${fullCmdName}`);
+        return;
+      }
+
+      // If includeOnly is specified, only include those specific commands
+      if (options.includeOnlySet) {
+        if (options.includeOnlySet.has(fullCmdName)) {
+          this.logger.debug(`[MCP-DEBUG] Including sub-command due to --include-only flag: ${fullCmdName}`);
+          this.registerSubCommandTool(server, parentCmd, subCmd);
+        }
+        return;
+      }
+
+      // Extended mode includes all commands except excluded ones
+      if (options.extended) {
+        this.registerSubCommandTool(server, parentCmd, subCmd);
+        return;
+      }
+
+      // Default mode: include default tools + any additional specified
+      if (options.defaultTools.has(fullCmdName) ||
+          (options.additionalCommandsSet && options.additionalCommandsSet.has(fullCmdName))) {
+        this.registerSubCommandTool(server, parentCmd, subCmd);
+      }
+    });
+  }
+
+  private registerSubCommandTool(server: McpServer, parentCmd: Command, subCmd: Command) {
+    const parentCmdName = getCommandName(parentCmd);
+    const subCmdName = getCommandName(subCmd);
+    const fullCmdName = `${parentCmdName} ${subCmdName}`;
+
+    const argsData = getArgsData(subCmd);
+    const flagsData = getFlagsData(subCmd);
+
+    // Build zod schema
+    const schema: Record<string, any> = {};
+    argsData.forEach(arg => {
+      const desc = arg.description || `Positional argument: ${arg.nameRaw}`;
+      if (arg.isArray) {
+        schema[arg.nameCamelCase] = arg.required
+          ? z.array(z.string()).describe(desc)
+          : z.array(z.string()).optional().describe(desc);
+      } else {
+        schema[arg.nameCamelCase] = arg.required
+          ? z.string().describe(desc)
+          : z.string().optional().describe(desc);
+      }
+    });
+
+    flagsData.forEach(flag => {
+      const type = flag.type;
+      schema[flag.name] =
+        type === 'string'
+          ? z.string().optional().describe(flag.description)
+          : z.boolean().optional().describe(flag.description);
+    });
+
+    const toolName = `bit_${parentCmdName}_${subCmdName}`.replace(/-/g, '_');
+
+    this.logger.debug(`[MCP-DEBUG] Registering sub-command MCP tool: ${fullCmdName} as ${toolName}`);
+
+    server.tool(
+      toolName,
+      subCmd.description,
+      schema,
+      async (params: any) => {
+        const argsToRun: string[] = [parentCmdName, subCmdName];
+
+        // Add positional arguments in order
+        argsData.forEach((arg) => {
+          const val = params[arg.nameCamelCase];
+          if (val === undefined) return;
+
+          if (arg.isArray && Array.isArray(val)) {
+            // For array arguments, add each value separately
+            val.forEach(item => argsToRun.push(item));
+          } else {
+            argsToRun.push(val);
+          }
+        });
+
+        // Add options as flags
+        flagsData.forEach((flag) => {
+          const name = flag.name;
+          const type = flag.type;
+          const val = params[name];
+          if (val === undefined) return;
+          if (type === 'boolean' && val) {
+            argsToRun.push(`--${name}`);
+          } else if (type === 'string' && val) {
+            argsToRun.push(`--${name}`, val);
+          }
+        });
+
+        return this.runBit(argsToRun);
+      }
+    );
   }
 
   private registerTool(server: McpServer, cmd: Command) {
@@ -128,7 +264,7 @@ export class CliMcpServerMain {
           : z.boolean().optional().describe(flag.description);
     });
     const cmdName = getCommandName(cmd);
-    const toolName = `bit_${cmdName}`;
+    const toolName = `bit_${cmdName}`.replace(/-/g, '_');
 
     server.tool(
       toolName,
