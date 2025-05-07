@@ -130,7 +130,7 @@ When started with the `--extended` flag, the server exposes nearly all Bit CLI c
 - Analysis tools (insight, deps, why)
 - And many more
 
-> **Note:** Some tools in extended mode may occasionally fail with "400 Bad Request" or "500 Server Error" responses. If you encounter these errors, try using default mode instead or exclude specific problematic commands.
+> **Note:** When using extended mode, some AI models (particularly Gemini and ChatGPT) may struggle with the high number of available tools and respond with "400 Bad Request" or "500 Server Error" errors. This is not due to any issue with specific tools, but rather with how these models handle large tool sets. Claude Sonnet tends to handle extended mode better. If you encounter these errors, try using default mode or selectively adding only the tools you need via the `--include-additional` flag.
 
 ## Tool Parameters
 
