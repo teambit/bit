@@ -17,6 +17,6 @@ export class McpServerCmd implements Command {
   ) {}
 
   async wait(args: CLIArgs, flags: Flags): Promise<void> {
-    await this.mcpServer.registerTools(flags);
+    await this.mcpServer.runMcpServer(flags);
   }
 }
