@@ -14,27 +14,90 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 export class CliMcpServerMain {
   constructor(private cli: CLIMain, private logger: Logger){}
 
-  async runMcpServer(options: { extended?: boolean; }) {
+  async runMcpServer(options: {
+    extended?: boolean;
+    includeOnly?: string;
+    includeAdditional?: string;
+    exclude?: string;
+  }) {
     const commands = this.cli.commands;
     const extended = Boolean(options.extended);
+
+    // Default set of tools to include
     const defaultTools = new Set([
       'status', 'list', 'add', 'init', 'show', 'tag', 'snap', 'import', 'export', 'remove', 'log', 'test', 'diff',
       'install', 'lane show', 'lane create', 'lane switch', 'lane merge', 'create', 'templates', 'reset', 'checkout',
     ]);
-    const excludeTools = new Set([
+
+    // Tools to always exclude
+    const alwaysExcludeTools = new Set([
       'login', 'logout', 'completion', 'mcp-server', 'start', 'run-action', 'watch', 'run', 'resume-export',
       'server', 'serve-preview'
     ]);
+
+    // Parse command strings from flag options
+    let includeOnlySet: Set<string> | undefined;
+    if (options.includeOnly) {
+      includeOnlySet = new Set(
+        options.includeOnly.split(',').map(cmd => cmd.trim())
+      );
+      this.logger.debug(`[MCP-DEBUG] Including only commands: ${Array.from(includeOnlySet).join(', ')}`);
+    }
+
+    let additionalCommandsSet: Set<string> | undefined;
+    if (options.includeAdditional) {
+      additionalCommandsSet = new Set(
+        options.includeAdditional.split(',').map(cmd => cmd.trim())
+      );
+      this.logger.debug(`[MCP-DEBUG] Including additional commands: ${Array.from(additionalCommandsSet).join(', ')}`);
+    }
+
+    let userExcludeSet: Set<string> | undefined;
+    if (options.exclude) {
+      userExcludeSet = new Set(
+        options.exclude.split(',').map(cmd => cmd.trim())
+      );
+      this.logger.debug(`[MCP-DEBUG] Excluding commands: ${Array.from(userExcludeSet).join(', ')}`);
+    }
+
     const server = new McpServer({
       name: 'bit-cli-mcp',
       version: '0.0.1',
     });
+
     commands.forEach((cmd) => {
       const cmdName = getCommandName(cmd);
-      if (excludeTools.has(cmdName)) return;
-      if (!extended && !defaultTools.has(cmdName)) return;
-      this.registerTool(server, cmd);
+
+      // Always exclude certain commands
+      if (alwaysExcludeTools.has(cmdName)) return;
+
+      // User-specified exclude takes precedence
+      if (userExcludeSet && userExcludeSet.has(cmdName)) {
+        this.logger.debug(`[MCP-DEBUG] Excluding command due to --exclude flag: ${cmdName}`);
+        return;
+      }
+
+      // If includeOnly is specified, only include those specific commands
+      if (includeOnlySet) {
+        if (includeOnlySet.has(cmdName)) {
+          this.logger.debug(`[MCP-DEBUG] Including command due to --include-only flag: ${cmdName}`);
+          this.registerTool(server, cmd);
+        }
+        return;
+      }
+
+      // Extended mode includes all commands except excluded ones
+      if (extended) {
+        this.registerTool(server, cmd);
+        return;
+      }
+
+      // Default mode: include default tools + any additional specified
+      if (defaultTools.has(cmdName) || (additionalCommandsSet && additionalCommandsSet.has(cmdName))) {
+        this.registerTool(server, cmd);
+      }
     });
+
     await server.connect(new StdioServerTransport());
   }
 
