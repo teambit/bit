@@ -95,7 +95,7 @@ export class YargsAdapter implements CommandModule {
   }
 }
 
-function getArgsFromCommandName(commandName: string) {
+function getArgsFromCommandName(commandName: string): string[] {
   const commandSplit = commandName.split(' ');
   commandSplit.shift(); // remove the first element, it's the command-name
 
