@@ -11,11 +11,12 @@ export class RemoveFragment implements ShowFragment {
     const isRemoved = removedInfo.removed;
     const isRemovedStr = isRemoved.toString();
     const range = removedInfo.range ? ` (range: ${removedInfo.range})` : '';
+    const snaps = removedInfo.snaps && removedInfo.snaps.length ? ` (snaps: ${removedInfo.snaps.join(', ')})` : '';
 
     return {
       title: this.title,
       // when it's not removed, set as an empty string so then it won't be shown in bit-show
-      content: isRemoved || range ? isRemovedStr + range : '',
+      content: isRemoved || range || snaps ? isRemovedStr + range + snaps : '',
     };
   }
 
