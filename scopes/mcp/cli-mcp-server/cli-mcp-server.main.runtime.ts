@@ -124,10 +124,10 @@ export class CliMcpServerMain {
 
     // replace white spaces (\s) and dashes (-) with underscores (_)
     const toolName = `bit_${cmdName}`.replace(/[-\s]/g, '_');
-
+    const description = `${cmd.description}${cmd.extendedDescription ? `.\n(${cmd.extendedDescription})` : ''}`;
     const config: CommandConfig = {
       name: cmdName,
-      description: cmd.description,
+      description,
       argsData: getArgsData(cmd),
       flagsData: getFlagsData(cmd),
     };
