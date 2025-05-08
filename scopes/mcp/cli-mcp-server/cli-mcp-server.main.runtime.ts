@@ -60,7 +60,10 @@ export class CliMcpServerMain {
   }
 
   private buildZodSchema(config: CommandConfig): Record<string, any> {
-    const schema: Record<string, any> = {};
+    const schema: Record<string, any> = {
+      // Add cwd parameter as mandatory to all commands
+      cwd: z.string().describe('Path to workspace'),
+    };
 
     config.argsData.forEach((arg) => {
       const desc = arg.description || `Positional argument: ${arg.nameRaw}`;
@@ -133,7 +136,7 @@ export class CliMcpServerMain {
 
     server.tool(toolName, config.description, schema, async (params: any) => {
       const argsToRun = this.buildCommandArgs(config, params);
-      return this.runBit(argsToRun);
+      return this.runBit(argsToRun, params.cwd);
     });
   }
 
@@ -143,6 +146,7 @@ export class CliMcpServerMain {
     includeAdditional?: string;
     exclude?: string;
   }) {
+    this.logger.debug(`[MCP-DEBUG] Starting MCP server with options: ${JSON.stringify(options)}`);
     const commands = this.cli.commands;
     const extended = Boolean(options.extended);
 
@@ -249,11 +253,11 @@ export class CliMcpServerMain {
     });
   }
 
-  private async runBit(args: string[]): Promise<CallToolResult> {
-    this.logger.debug(`[MCP-DEBUG] Running: bit ${args.join(' ')}`);
+  private async runBit(args: string[], cwd: string): Promise<CallToolResult> {
+    this.logger.debug(`[MCP-DEBUG] Running: bit ${args.join(' ')} in ${cwd}`);
     const cmd = `bit ${args.join(' ')}`;
     try {
-      const cmdOutput = childProcess.execSync(cmd, { cwd: process.cwd() });
+      const cmdOutput = childProcess.execSync(cmd, { cwd });
       this.logger.debug(`[MCP-DEBUG] result. stdout: ${cmdOutput}`);
 
       return { content: [{ type: 'text', text: cmdOutput.toString() }] };
