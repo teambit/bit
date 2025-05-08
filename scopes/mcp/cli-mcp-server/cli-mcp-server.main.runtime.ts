@@ -112,7 +112,13 @@ export class CliMcpServerMain {
       if (type === 'boolean' && val) {
         args.push(`--${name}`);
       } else if (type === 'string' && val) {
-        args.push(`--${name}`, val);
+        // Check if the string value contains spaces and quote it if necessary
+        const stringValue = String(val);
+        if (stringValue.includes(' ')) {
+          args.push(`--${name}`, `"${stringValue}"`);
+        } else {
+          args.push(`--${name}`, stringValue);
+        }
       }
     });
 
