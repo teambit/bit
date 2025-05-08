@@ -52,7 +52,7 @@ export class ComponentCompareMain {
     private depResolver: DependencyResolverMain,
     private importer: ImporterMain,
     private workspace?: Workspace
-  ) { }
+  ) {}
 
   async compare(baseIdStr: string, compareIdStr: string): Promise<ComponentCompareResult> {
     const host = this.componentAspect.getHost();
@@ -72,20 +72,22 @@ export class ComponentCompareMain {
     const baseVersion = baseCompId.version as string;
     const compareVersion = compareCompId.version as string;
 
-    const components = await host.getMany([baseCompId, compareCompId])
+    const components = await host.getMany([baseCompId, compareCompId]);
     const baseComponent = components?.[0];
     const compareComponent = components?.[1];
-    const componentWithoutVersion = await host.get((baseCompId || compareCompId).changeVersion(undefined))
+    const componentWithoutVersion = await host.get((baseCompId || compareCompId).changeVersion(undefined));
 
     const diff = componentWithoutVersion
       ? await this.computeDiff(
-        componentWithoutVersion,
-        comparingWithLocalChanges ? undefined : baseVersion,
-        comparingWithLocalChanges ? undefined : compareVersion, {})
+          componentWithoutVersion,
+          comparingWithLocalChanges ? undefined : baseVersion,
+          comparingWithLocalChanges ? undefined : compareVersion,
+          {}
+        )
       : {
-        filesDiff: [],
-        fieldsDiff: []
-      };
+          filesDiff: [],
+          fieldsDiff: [],
+        };
 
     const baseTestFiles =
       (baseComponent && (await this.tester.getTestFiles(baseComponent).map((file) => file.relative))) || [];
@@ -117,7 +119,7 @@ export class ComponentCompareMain {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const ids = pattern ? await this.workspace.idsByPattern(pattern) : await this.workspace.listTagPendingIds();
     const consumer = this.workspace.consumer;
-  if (!ids.length) {
+    if (!ids.length) {
       return [];
     }
     const diffResults = await this.componentsDiff(ids, version, toVersion, {
@@ -191,7 +193,7 @@ export class ComponentCompareMain {
     const modelComponent =
       consumerComponent.modelComponent || (await this.scope.legacyScope.getModelComponentIfExist(component.id));
 
-    if (!modelComponent || !consumerComponent.componentFromModel) {
+    if (!modelComponent) {
       if (version || toVersion) {
         throw new BitError(`component ${component.id.toString()} doesn't have any version yet`);
       }
