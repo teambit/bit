@@ -282,6 +282,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli"
     },
+    "cli-mcp-server": {
+        "name": "cli-mcp-server",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.mcp",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mcp/cli-mcp-server",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@0.0.69": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
+    },
     "cli-table": {
         "name": "cli-table",
         "scope": "teambit.toolbox",

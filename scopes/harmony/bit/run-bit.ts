@@ -30,7 +30,6 @@ export async function runBit(additionalAspects?: Aspect[]) {
     autocomplete();
     process.exit(0);
   }
-
   if (process.argv.includes('server-forever')) {
     spawnPTY();
   } else if (shouldUseBitServer()) {
