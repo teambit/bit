@@ -181,7 +181,11 @@ export class ComponentCompareMain {
     return componentsDiffResults;
   }
 
-  // eslint-disable-next-line complexity
+  /**
+   * this method operates in two modes:
+   * 1. workspace mode - the version and toVersion can be undefined.
+   * 2. scope mode - the version and toVersion are mandatory.
+   */
   private async computeDiff(
     component: Component,
     version: string | undefined,
@@ -222,8 +226,8 @@ export class ComponentCompareMain {
     if (diffOpts.compareToParent) {
       if (!version) throw new BitError('--parent flag expects to get version');
       if (toVersion) throw new BitError('--parent flag expects to get only one version');
-      const versionObject = version ? await modelComponent.loadVersion(version, repository) : undefined;
-      const parent = versionObject!.parents[0];
+      const versionObject = await modelComponent.loadVersion(version, repository);
+      const parent = versionObject.parents[0];
       toVersion = version;
       version = parent ? modelComponent.getTagOfRefIfExists(parent) : undefined;
     }
@@ -232,12 +236,16 @@ export class ComponentCompareMain {
     const fromVersionFiles = await fromVersionObject?.modelFilesToSourceFiles(repository);
     const toVersionFiles = await toVersionObject?.modelFilesToSourceFiles(repository);
 
-    const fromFiles = fromVersionFiles || consumerComponent.componentFromModel.files;
+    const fromFiles = fromVersionFiles || consumerComponent.componentFromModel?.files;
+    if (!fromFiles)
+      throw new Error(
+        `computeDiff: fromFiles must be defined. if on workspace, consumerComponent.componentFromModel must be set. if on scope, fromVersionFiles must be set`
+      );
     const toFiles = toVersionFiles || consumerComponent.files;
     const fromVersionLabel = version || component.id.version;
     const toVersionLabel = toVersion || component.id.version;
 
-    diffResult.filesDiff = await getFilesDiff(fromFiles, toFiles, fromVersionLabel, toVersionLabel);
+    diffResult.filesDiff = await getFilesDiff(fromFiles!, toFiles, fromVersionLabel, toVersionLabel);
     const fromVersionComponent = version
       ? await modelComponent.toConsumerComponent(version, this.scope.legacyScope.name, repository)
       : consumerComponent.componentFromModel;
@@ -245,6 +253,11 @@ export class ComponentCompareMain {
     const toVersionComponent = toVersion
       ? await modelComponent.toConsumerComponent(toVersion, this.scope.legacyScope.name, repository)
       : consumerComponent;
+
+    if (!fromVersionComponent)
+      throw new Error(
+        `computeDiff: fromVersionComponent must be defined. if on workspace, consumerComponent.componentFromModel must be set. if on scope, "version" must be set`
+      );
     await updateFieldsDiff(fromVersionComponent, toVersionComponent, diffResult, diffOpts);
 
     return diffResult;
