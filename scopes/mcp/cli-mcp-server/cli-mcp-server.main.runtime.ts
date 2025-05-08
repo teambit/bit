@@ -1,9 +1,8 @@
 /* eslint-disable import/extensions */
 /* eslint-disable import/no-unresolved */
 
-
 import { CLIAspect, CLIMain, Command, getArgsData, getCommandName, getFlagsData, MainRuntime } from '@teambit/cli';
-import execa from 'execa';
+import childProcess from 'child_process';
 import { CliMcpServerAspect } from './cli-mcp-server.aspect';
 import { McpServerCmd } from './mcp-server.cmd';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -29,7 +28,10 @@ interface CommandConfig {
 }
 
 export class CliMcpServerMain {
-  constructor(private cli: CLIMain, private logger: Logger){}
+  constructor(
+    private cli: CLIMain,
+    private logger: Logger
+  ) {}
 
   private shouldIncludeCommand(cmdName: string, options: CommandFilterOptions): boolean {
     // Always exclude certain commands
@@ -54,27 +56,27 @@ export class CliMcpServerMain {
     if (options.extended) return true;
 
     // Default mode: include default tools + any additional specified
-    return options.defaultTools.has(cmdName) ||
-           (options.additionalCommandsSet?.has(cmdName) ?? false);
+    return options.defaultTools.has(cmdName) || (options.additionalCommandsSet?.has(cmdName) ?? false);
   }
 
   private buildZodSchema(config: CommandConfig): Record<string, any> {
-    const schema: Record<string, any> = {};
+    const schema: Record<string, any> = {
+      // Add cwd parameter as mandatory to all commands
+      cwd: z.string().describe('Path to workspace'),
+    };
 
-    config.argsData.forEach(arg => {
+    config.argsData.forEach((arg) => {
       const desc = arg.description || `Positional argument: ${arg.nameRaw}`;
       if (arg.isArray) {
         schema[arg.nameCamelCase] = arg.required
           ? z.array(z.string()).describe(desc)
           : z.array(z.string()).optional().describe(desc);
       } else {
-        schema[arg.nameCamelCase] = arg.required
-          ? z.string().describe(desc)
-          : z.string().optional().describe(desc);
+        schema[arg.nameCamelCase] = arg.required ? z.string().describe(desc) : z.string().optional().describe(desc);
       }
     });
 
-    config.flagsData.forEach(flag => {
+    config.flagsData.forEach((flag) => {
       const type = flag.type;
       schema[flag.name] =
         type === 'string'
@@ -95,7 +97,7 @@ export class CliMcpServerMain {
       if (val === undefined) return;
 
       if (arg.isArray && Array.isArray(val)) {
-        val.forEach(item => args.push(item));
+        val.forEach((item) => args.push(item));
       } else {
         args.push(val);
       }
@@ -118,31 +120,24 @@ export class CliMcpServerMain {
   }
 
   private registerToolForCommand(server: McpServer, cmd: Command, parentCmd?: Command) {
-    const cmdName = parentCmd
-      ? `${getCommandName(parentCmd)} ${getCommandName(cmd)}`
-      : getCommandName(cmd);
+    const cmdName = parentCmd ? `${getCommandName(parentCmd)} ${getCommandName(cmd)}` : getCommandName(cmd);
 
     // replace white spaces (\s) and dashes (-) with underscores (_)
     const toolName = `bit_${cmdName}`.replace(/[-\s]/g, '_');
-
+    const description = `${cmd.description}${cmd.extendedDescription ? `.\n(${cmd.extendedDescription})` : ''}`;
     const config: CommandConfig = {
       name: cmdName,
-      description: cmd.description,
+      description,
       argsData: getArgsData(cmd),
-      flagsData: getFlagsData(cmd)
+      flagsData: getFlagsData(cmd),
     };
 
     const schema = this.buildZodSchema(config);
 
-    server.tool(
-      toolName,
-      config.description,
-      schema,
-      async (params: any) => {
-        const argsToRun = this.buildCommandArgs(config, params);
-        return this.runBit(argsToRun);
-      }
-    );
+    server.tool(toolName, config.description, schema, async (params: any) => {
+      const argsToRun = this.buildCommandArgs(config, params);
+      return this.runBit(argsToRun, params.cwd);
+    });
   }
 
   async runMcpServer(options: {
@@ -151,43 +146,67 @@ export class CliMcpServerMain {
     includeAdditional?: string;
     exclude?: string;
   }) {
+    this.logger.debug(`[MCP-DEBUG] Starting MCP server with options: ${JSON.stringify(options)}`);
     const commands = this.cli.commands;
     const extended = Boolean(options.extended);
 
     // Default set of tools to include
     const defaultTools = new Set([
-      'status', 'list', 'add', 'init', 'show', 'tag', 'snap', 'import', 'export', 'remove', 'log', 'test', 'diff',
-      'install', 'lane show', 'lane create', 'lane switch', 'lane merge', 'create', 'templates', 'reset', 'checkout',
+      'status',
+      'list',
+      'add',
+      'init',
+      'show',
+      'tag',
+      'snap',
+      'import',
+      'export',
+      'remove',
+      'log',
+      'test',
+      'diff',
+      'install',
+      'lane show',
+      'lane create',
+      'lane switch',
+      'lane merge',
+      'create',
+      'templates',
+      'reset',
+      'checkout',
     ]);
 
     // Tools to always exclude
     const alwaysExcludeTools = new Set([
-      'login', 'logout', 'completion', 'mcp-server', 'start', 'run-action', 'watch', 'run', 'resume-export',
-      'server', 'serve-preview'
+      'login',
+      'logout',
+      'completion',
+      'mcp-server',
+      'start',
+      'run-action',
+      'watch',
+      'run',
+      'resume-export',
+      'server',
+      'serve-preview',
     ]);
 
     // Parse command strings from flag options
     let includeOnlySet: Set<string> | undefined;
     if (options.includeOnly) {
-      includeOnlySet = new Set(
-        options.includeOnly.split(',').map(cmd => cmd.trim())
-      );
+      includeOnlySet = new Set(options.includeOnly.split(',').map((cmd) => cmd.trim()));
       this.logger.debug(`[MCP-DEBUG] Including only commands: ${Array.from(includeOnlySet).join(', ')}`);
     }
 
     let additionalCommandsSet: Set<string> | undefined;
     if (options.includeAdditional) {
-      additionalCommandsSet = new Set(
-        options.includeAdditional.split(',').map(cmd => cmd.trim())
-      );
+      additionalCommandsSet = new Set(options.includeAdditional.split(',').map((cmd) => cmd.trim()));
       this.logger.debug(`[MCP-DEBUG] Including additional commands: ${Array.from(additionalCommandsSet).join(', ')}`);
     }
 
     let userExcludeSet: Set<string> | undefined;
     if (options.exclude) {
-      userExcludeSet = new Set(
-        options.exclude.split(',').map(cmd => cmd.trim())
-      );
+      userExcludeSet = new Set(options.exclude.split(',').map((cmd) => cmd.trim()));
       this.logger.debug(`[MCP-DEBUG] Excluding commands: ${Array.from(userExcludeSet).join(', ')}`);
     }
 
@@ -202,7 +221,7 @@ export class CliMcpServerMain {
       userExcludeSet,
       alwaysExcludeTools,
       extended,
-      includeOnlySet
+      includeOnlySet,
     };
 
     commands.forEach((cmd) => {
@@ -221,14 +240,10 @@ export class CliMcpServerMain {
     await server.connect(new StdioServerTransport());
   }
 
-  private processSubCommands(
-    server: McpServer,
-    parentCmd: Command,
-    options: CommandFilterOptions
-  ) {
+  private processSubCommands(server: McpServer, parentCmd: Command, options: CommandFilterOptions) {
     const parentCmdName = getCommandName(parentCmd);
 
-    parentCmd.commands?.forEach(subCmd => {
+    parentCmd.commands?.forEach((subCmd) => {
       const subCmdName = getCommandName(subCmd);
       const fullCmdName = `${parentCmdName} ${subCmdName}`;
 
@@ -238,13 +253,18 @@ export class CliMcpServerMain {
     });
   }
 
-  private async runBit(args: string[]): Promise<CallToolResult> {
-    this.logger.debug(`[MCP-DEBUG] Running: bit ${args.join(' ')}`)
+  private async runBit(args: string[], cwd: string): Promise<CallToolResult> {
+    this.logger.debug(`[MCP-DEBUG] Running: bit ${args.join(' ')} in ${cwd}`);
+    const cmd = `bit ${args.join(' ')}`;
     try {
-      const { stdout } = await execa('bit', args);
-      return { content: [{ type: 'text', text: stdout.trim() }] };
+      const cmdOutput = childProcess.execSync(cmd, { cwd });
+      this.logger.debug(`[MCP-DEBUG] result. stdout: ${cmdOutput}`);
+
+      return { content: [{ type: 'text', text: cmdOutput.toString() }] };
     } catch (error: any) {
-      return { content: [{ type: 'text', text: `Error running bit ${args[0]}: ${error}` }] };
+      this.logger.error(`[MCP-DEBUG] Error executing ${cmd}`, error);
+
+      return { content: [{ type: 'text', text: error.message }] };
     }
   }
 
