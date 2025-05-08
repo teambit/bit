@@ -216,12 +216,14 @@ export class LanesMain {
   async revertHistory(historyId: string, options?: LaneCheckoutOpts) {
     const historyItem = await this.getHistoryItemOfCurrentLane(historyId);
     const ids = historyItem.components.map((id) => ComponentID.fromString(id));
+    const lane = await this.getCurrentLane();
     const results = await this.checkout.checkout({
       ids: ids.map((id) => id.changeVersion(undefined)),
       versionPerId: ids,
       allowAddingComponentsFromScope: true,
       revert: true,
       skipNpmInstall: options?.skipDependencyInstallation,
+      lane,
     });
     return results;
   }
@@ -498,12 +500,14 @@ please create a new lane instead, which will include all components of this lane
       throw new BitError(`unable to eject a component outside of Bit workspace`);
     }
     const ids = await this.workspace.idsByPattern(pattern);
-    await Promise.all(ids.map(async (id) => {
-      const modelComp = await this.scope.getBitObjectModelComponent(id, true);
-      if (!modelComp!.head) {
-        throw new BitError(`unable to eject "${id.toString()}" as it has no main version`);
-      }
-    }));
+    await Promise.all(
+      ids.map(async (id) => {
+        const modelComp = await this.scope.getBitObjectModelComponent(id, true);
+        if (!modelComp!.head) {
+          throw new BitError(`unable to eject "${id.toString()}" as it has no main version`);
+        }
+      })
+    );
 
     const deletedComps = await this.remove.deleteComps(pattern);
     const packages = deletedComps.map((c) => c.getPackageName());
