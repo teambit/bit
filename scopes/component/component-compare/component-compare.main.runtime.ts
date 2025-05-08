@@ -52,7 +52,7 @@ export class ComponentCompareMain {
     private depResolver: DependencyResolverMain,
     private importer: ImporterMain,
     private workspace?: Workspace
-  ) { }
+  ) {}
 
   async compare(baseIdStr: string, compareIdStr: string): Promise<ComponentCompareResult> {
     const host = this.componentAspect.getHost();
@@ -72,20 +72,22 @@ export class ComponentCompareMain {
     const baseVersion = baseCompId.version as string;
     const compareVersion = compareCompId.version as string;
 
-    const components = await host.getMany([baseCompId, compareCompId])
+    const components = await host.getMany([baseCompId, compareCompId]);
     const baseComponent = components?.[0];
     const compareComponent = components?.[1];
-    const componentWithoutVersion = await host.get((baseCompId || compareCompId).changeVersion(undefined))
+    const componentWithoutVersion = await host.get((baseCompId || compareCompId).changeVersion(undefined));
 
     const diff = componentWithoutVersion
       ? await this.computeDiff(
-        componentWithoutVersion,
-        comparingWithLocalChanges ? undefined : baseVersion,
-        comparingWithLocalChanges ? undefined : compareVersion, {})
+          componentWithoutVersion,
+          comparingWithLocalChanges ? undefined : baseVersion,
+          comparingWithLocalChanges ? undefined : compareVersion,
+          {}
+        )
       : {
-        filesDiff: [],
-        fieldsDiff: []
-      };
+          filesDiff: [],
+          fieldsDiff: [],
+        };
 
     const baseTestFiles =
       (baseComponent && (await this.tester.getTestFiles(baseComponent).map((file) => file.relative))) || [];
@@ -117,7 +119,7 @@ export class ComponentCompareMain {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const ids = pattern ? await this.workspace.idsByPattern(pattern) : await this.workspace.listTagPendingIds();
     const consumer = this.workspace.consumer;
-  if (!ids.length) {
+    if (!ids.length) {
       return [];
     }
     const diffResults = await this.componentsDiff(ids, version, toVersion, {
@@ -179,7 +181,11 @@ export class ComponentCompareMain {
     return componentsDiffResults;
   }
 
-  // eslint-disable-next-line complexity
+  /**
+   * this method operates in two modes:
+   * 1. workspace mode - the version and toVersion can be undefined.
+   * 2. scope mode - the version and toVersion are mandatory.
+   */
   private async computeDiff(
     component: Component,
     version: string | undefined,
@@ -191,7 +197,7 @@ export class ComponentCompareMain {
     const modelComponent =
       consumerComponent.modelComponent || (await this.scope.legacyScope.getModelComponentIfExist(component.id));
 
-    if (!modelComponent || !consumerComponent.componentFromModel) {
+    if (!modelComponent) {
       if (version || toVersion) {
         throw new BitError(`component ${component.id.toString()} doesn't have any version yet`);
       }
@@ -220,8 +226,8 @@ export class ComponentCompareMain {
     if (diffOpts.compareToParent) {
       if (!version) throw new BitError('--parent flag expects to get version');
       if (toVersion) throw new BitError('--parent flag expects to get only one version');
-      const versionObject = version ? await modelComponent.loadVersion(version, repository) : undefined;
-      const parent = versionObject!.parents[0];
+      const versionObject = await modelComponent.loadVersion(version, repository);
+      const parent = versionObject.parents[0];
       toVersion = version;
       version = parent ? modelComponent.getTagOfRefIfExists(parent) : undefined;
     }
@@ -230,12 +236,16 @@ export class ComponentCompareMain {
     const fromVersionFiles = await fromVersionObject?.modelFilesToSourceFiles(repository);
     const toVersionFiles = await toVersionObject?.modelFilesToSourceFiles(repository);
 
-    const fromFiles = fromVersionFiles || consumerComponent.componentFromModel.files;
+    const fromFiles = fromVersionFiles || consumerComponent.componentFromModel?.files;
+    if (!fromFiles)
+      throw new Error(
+        `computeDiff: fromFiles must be defined. if on workspace, consumerComponent.componentFromModel must be set. if on scope, fromVersionFiles must be set`
+      );
     const toFiles = toVersionFiles || consumerComponent.files;
     const fromVersionLabel = version || component.id.version;
     const toVersionLabel = toVersion || component.id.version;
 
-    diffResult.filesDiff = await getFilesDiff(fromFiles, toFiles, fromVersionLabel, toVersionLabel);
+    diffResult.filesDiff = await getFilesDiff(fromFiles!, toFiles, fromVersionLabel, toVersionLabel);
     const fromVersionComponent = version
       ? await modelComponent.toConsumerComponent(version, this.scope.legacyScope.name, repository)
       : consumerComponent.componentFromModel;
@@ -243,6 +253,11 @@ export class ComponentCompareMain {
     const toVersionComponent = toVersion
       ? await modelComponent.toConsumerComponent(toVersion, this.scope.legacyScope.name, repository)
       : consumerComponent;
+
+    if (!fromVersionComponent)
+      throw new Error(
+        `computeDiff: fromVersionComponent must be defined. if on workspace, consumerComponent.componentFromModel must be set. if on scope, "version" must be set`
+      );
     await updateFieldsDiff(fromVersionComponent, toVersionComponent, diffResult, diffOpts);
 
     return diffResult;
