@@ -376,9 +376,16 @@ export class DependenciesWriteCmd implements Command {
   name = 'write';
   arguments = [];
   group = 'info';
-  description = 'write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions';
+  description =
+    'write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions';
   alias = '';
-  options = [['', 'target <workspace.jsonc|package.json>', 'specify where the dependencies should be written. By default they are saved to workspace.jsonc']] as CommandOptions;
+  options = [
+    [
+      '',
+      'target <workspace.jsonc|package.json>',
+      'specify where the dependencies should be written. By default they are saved to workspace.jsonc',
+    ],
+  ] as CommandOptions;
 
   constructor(private workspace: Workspace) {}
 

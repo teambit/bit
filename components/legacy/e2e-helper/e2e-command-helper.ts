@@ -757,8 +757,9 @@ export default class CommandHelper {
     return show.find((_) => _.title === 'configuration').json.find((_) => _.id === aspectId);
   }
 
-  showDependenciesData(compId: string): Array<{ id: string; version: string; packageName: string;
-    versionRange?: string }> {
+  showDependenciesData(
+    compId: string
+  ): Array<{ id: string; version: string; packageName: string; versionRange?: string }> {
     const showConfig = this.showAspectConfig(compId, Extensions.dependencyResolver);
     return showConfig.data.dependencies;
   }
@@ -774,7 +775,7 @@ export default class CommandHelper {
     return aspectConf.data.dependencies.map((dep) => dep.id);
   }
 
-  getCompDepsDataFromData(compId: string): {id: string, version: string, lifecycle: string, source: string}[] {
+  getCompDepsDataFromData(compId: string): { id: string; version: string; lifecycle: string; source: string }[] {
     const aspectConf = this.showAspectConfig(compId, Extensions.dependencyResolver);
     return aspectConf.data.dependencies;
   }

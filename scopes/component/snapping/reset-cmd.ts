@@ -11,7 +11,7 @@ export default class ResetCmd implements Command {
     {
       name: 'component-pattern',
       description: COMPONENT_PATTERN_HELP,
-    }
+    },
   ];
   group = 'development';
   extendedDescription = `${BASE_DOCS_DOMAIN}components/tags#undoing-a-tag`;

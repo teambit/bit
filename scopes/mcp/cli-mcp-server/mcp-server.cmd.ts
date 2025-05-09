@@ -10,20 +10,31 @@ export type McpServerCmdOptions = {
 
 export class McpServerCmd implements Command {
   name = 'mcp-server';
-  description = 'Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.';
+  description =
+    'Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.';
   alias = '';
   group = 'development';
   loader = false;
   options = [
     ['e', 'extended', 'Enable the full set of Bit CLI commands as MCP tools'],
-    ['' , 'include-only <commands>', 'Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. "status,install,compile"'],
-    ['', 'include-additional <commands>', 'Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used'],
-    ['', 'exclude <commands>', 'Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes'],
+    [
+      '',
+      'include-only <commands>',
+      'Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. "status,install,compile"',
+    ],
+    [
+      '',
+      'include-additional <commands>',
+      'Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used',
+    ],
+    [
+      '',
+      'exclude <commands>',
+      'Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes',
+    ],
   ] as CommandOptions;
 
-  constructor(
-    private mcpServer: CliMcpServerMain
-  ) {}
+  constructor(private mcpServer: CliMcpServerMain) {}
 
   async wait(args: CLIArgs, flags: McpServerCmdOptions): Promise<void> {
     await this.mcpServer.runMcpServer(flags);

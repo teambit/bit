@@ -526,7 +526,8 @@ export class ApplyOverrides {
         const existsInCompsPeerDeps = this.allDependencies.peerDependencies.find((dep) => dep.packageName === pkgName);
 
         // Validate it was auto detected, we only affect stuff that were detected
-        const isAutoDetected = existsInCompsDeps ||
+        const isAutoDetected =
+          existsInCompsDeps ||
           existsInCompsDevDeps ||
           existsInCompsPeerDeps ||
           // We are checking originAllPackagesDependencies instead of allPackagesDependencies
@@ -549,7 +550,7 @@ export class ApplyOverrides {
           // in that case we might remove it before getting to the devDeps then we will think that it wasn't required in the component
           // which is incorrect
           originallyExists.includes(pkgName) ||
-          missingPackages.includes(pkgName)
+          missingPackages.includes(pkgName);
 
         if (!isAutoDetected) {
           return;
