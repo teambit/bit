@@ -101,6 +101,7 @@
   "teambit.harmony/doctor",
   "teambit.scope/objects",
   "teambit.harmony/config-store",
+  "teambit.mcp/cli-mcp-server",
   "teambit.harmony/bit",
   "teambit.harmony/config"
 ]

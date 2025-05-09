@@ -1581,6 +1581,21 @@ this command does the following:
 
 ---
 
+## mcp-server
+
+**Description**: Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.
+
+`bit mcp-server`
+
+| **Option**                        | **Option alias** | **Description**                                                                                                                  |
+| --------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------- |
+| `--extended`                      |       `-e`       | Enable the full set of Bit CLI commands as MCP tools                                                                             |
+| `--include-only <commands>`       |                  | Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. "status,install,compile"           |
+| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used |
+| `--exclude <commands>`            |                  | Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes                                    |
+
+---
+
 ## merge
 
 **Description**: merge changes of the remote head into local - auto-snaps all merged components  
