@@ -502,6 +502,7 @@ unless the '--hard' flag is used (not recommended!), in which case, the componen
 | `--silent`         |       `-s`       | skip confirmation                                                                                                                                           |
 | `--hard`           |                  | NOT-RECOMMENDED. delete a component completely from a remote scope. careful! this is a permanent change that could corrupt dependents.                      |
 | `--force`          |       `-f`       | relevant for --hard. allow the deletion even if used as a dependency. WARNING: components that depend on this component will corrupt                        |
+| `--snaps <string>` |                  | comma-separated list of snap hashes to mark as deleted (e.g. --snaps "hash1,hash2,hash3")                                                                   |
 
 ---
 
@@ -670,6 +671,16 @@ see also "bit deps remove"
 | **Option**         | **Option alias** | **Description**                           |
 | ------------------ | :--------------: | ----------------------------------------- |
 | `--depth <number>` |                  | max display depth of the dependency graph |
+
+### deps write
+
+**Usage**: `deps write`
+
+**Description**: write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions
+
+| **Option**                 | **Option alias** | **Description** |
+| -------------------------- | :--------------: | --------------- | ---------------------------------------------------------------------------------------------- |
+| `--target <workspace.jsonc |  package.json>`  |                 | specify where the dependencies should be written. By default they are saved to workspace.jsonc |
 
 ---
 
@@ -982,7 +993,7 @@ bit export => export all staged snaps/tags of components to their remote scope. 
 | `component-patterns...` | component IDs or component patterns (separated by space). Use patterns to import groups of components using a common scope or namespace. E.g., "utils/\*" (wrap with double quotes) |
 
 | **Option**                       | **Option alias** | **Description**                                                                                                                                                                   |
-| -------------------------------- | :--------------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -------------------------------- | :--------------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--path <path>`                  |       `-p`       | import components into a specific directory (a relative path in the workspace)                                                                                                    |
 | `--objects`                      |       `-o`       | import components objects to the local scope without checkout (without writing them to the file system). This is the default behavior for import with no id argument              |
 | `--override`                     |       `-O`       | override local changes                                                                                                                                                            |
@@ -1002,6 +1013,7 @@ bit export => export all staged snaps/tags of components to their remote scope. 
 | `--save-in-lane`                 |                  | when checked out to a lane and the component is not on the remote-lane, save it in the lane (defaults to save on main)                                                            |
 | `--all-history`                  |                  | relevant for fetching all components objects. avoid optimizations, fetch all history versions, always                                                                             |
 | `--fetch-deps`                   |                  | fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data                             |
+| `--write-deps <workspace.jsonc   |  package.json>`  |                                                                                                                                                                                   | write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions |
 | `--track-only`                   |                  | do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap |
 | `--include-deprecated`           |                  | when importing with patterns, include deprecated components (default to exclude them)                                                                                             |
 
@@ -1461,11 +1473,12 @@ this command does the following:
 | **Option**             | **Option alias** | **Description**                                                                               |
 | ---------------------- | :--------------: | --------------------------------------------------------------------------------------------- |
 | `--ids`                |       `-i`       | show only component ids, unformatted                                                          |
-| `--scope`              |       `-s`       | show only components stored in the local scope, including indirect dependencies               |
+| `--local-scope`        |       `-l`       | show only components stored in the local scope, including indirect dependencies               |
+| `--scope <string>`     |       `-s`       | filter components by their scope name (e.g., teambit.workspace)                               |
 | `--outdated`           |       `-o`       | highlight outdated components, in comparison with their latest remote version (if one exists) |
 | `--include-deleted`    |       `-d`       | EXPERIMENTAL. show also deleted components                                                    |
 | `--json`               |       `-j`       | show the output in JSON format                                                                |
-| `--namespace <string>` |       `-n`       | show only components in the specified namespace/s e.g. '-n ui' or '\*/ui'                     |
+| `--namespace <string>` |       `-n`       | filter components by their namespace (a logical grouping within a scope, e.g., 'ui', '\*/ui') |
 
 ---
 
@@ -1565,6 +1578,21 @@ this command does the following:
 **Description**: log the CLI out of Bit
 
 `bit logout`
+
+---
+
+## mcp-server
+
+**Description**: Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.
+
+`bit mcp-server`
+
+| **Option**                        | **Option alias** | **Description**                                                                                                                  |
+| --------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------- |
+| `--extended`                      |       `-e`       | Enable the full set of Bit CLI commands as MCP tools                                                                             |
+| `--include-only <commands>`       |                  | Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. "status,install,compile"           |
+| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used |
+| `--exclude <commands>`            |                  | Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes                                    |
 
 ---
 
@@ -1819,7 +1847,6 @@ https://bit.dev/components/tags#undoing-a-tag
 | **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
 | ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
-| `component-version` |                                                                                                                                                                                             the version to untag (semver for tags. hash for snaps)                                                                                                                                                                                              |
 
 | **Option**         | **Option alias** | **Description**                                                                                                 |
 | ------------------ | :--------------: | --------------------------------------------------------------------------------------------------------------- |

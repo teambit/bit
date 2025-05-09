@@ -50,7 +50,11 @@ export class ApplyOverrides {
   processedFiles: string[];
   overridesDependencies: OverridesDependencies;
   debugDependenciesData: DebugDependencies;
-  autoDetectOverrides: Record<string, any> | undefined;
+  /**
+   * see workspace.getAutoDetectOverrides docs.
+   * these overrides are from env/variants/merge-config. not ones with "force: true".
+   */
+  public autoDetectOverrides: Record<string, any> | undefined;
   constructor(
     private component: Component,
     private depsResolver: DependencyResolverMain,
@@ -513,31 +517,27 @@ export class ApplyOverrides {
     }
     ['dependencies', 'devDependencies', 'peerDependencies'].forEach((field) => {
       forEach(autoDetectOverrides[field], (pkgVal, pkgName) => {
-        if (this.overridesDependencies.shouldIgnorePeerPackage(pkgName)) return;
+        if (this.overridesDependencies.shouldIgnorePeerPackage(pkgName)) {
+          return;
+        }
+
+        const existsInCompsDeps = this.allDependencies.dependencies.find((dep) => dep.packageName === pkgName);
+        const existsInCompsDevDeps = this.allDependencies.devDependencies.find((dep) => dep.packageName === pkgName);
+        const existsInCompsPeerDeps = this.allDependencies.peerDependencies.find((dep) => dep.packageName === pkgName);
+
         // Validate it was auto detected, we only affect stuff that were detected
-        const existsInCompsDeps = this.allDependencies.dependencies.find((dep) => {
-          return dep.packageName === pkgName;
-        });
-
-        const existsInCompsDevDeps = this.allDependencies.devDependencies.find((dep) => {
-          return dep.packageName === pkgName;
-        });
-
-        const existsInCompsPeerDeps = this.allDependencies.peerDependencies.find((dep) => {
-          return dep.packageName === pkgName;
-        });
-        if (
+        const isAutoDetected =
+          existsInCompsDeps ||
+          existsInCompsDevDeps ||
+          existsInCompsPeerDeps ||
           // We are checking originAllPackagesDependencies instead of allPackagesDependencies
           // as it might be already removed from allPackagesDependencies at this point if it was set with
           // "-" in runtime/dev
           // in such case we still want to apply it here
-          !this.originAllPackagesDependencies.packageDependencies[pkgName] &&
-          !this.originAllPackagesDependencies.devPackageDependencies[pkgName] &&
-          !this.originAllPackagesDependencies.peerPackageDependencies[pkgName] &&
-          !existsInCompsDeps &&
-          !existsInCompsDevDeps &&
-          !existsInCompsPeerDeps &&
-          // Check if it was orignally exists in the component
+          this.originAllPackagesDependencies.packageDependencies[pkgName] ||
+          this.originAllPackagesDependencies.devPackageDependencies[pkgName] ||
+          this.originAllPackagesDependencies.peerPackageDependencies[pkgName] ||
+          // Check if it was originally exists in the component
           // as we might have a policy which looks like this:
           // "components": {
           //   "dependencies": {
@@ -549,9 +549,10 @@ export class ApplyOverrides {
           // }
           // in that case we might remove it before getting to the devDeps then we will think that it wasn't required in the component
           // which is incorrect
-          !originallyExists.includes(pkgName) &&
-          !missingPackages.includes(pkgName)
-        ) {
+          originallyExists.includes(pkgName) ||
+          missingPackages.includes(pkgName);
+
+        if (!isAutoDetected) {
           return;
         }
         originallyExists.push(pkgName);

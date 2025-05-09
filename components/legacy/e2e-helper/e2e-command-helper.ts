@@ -182,10 +182,10 @@ export default class CommandHelper {
     return JSON.parse(output);
   }
   listLocalScope(options = '') {
-    return this.runCmd(`bit list --scope ${options}`);
+    return this.runCmd(`bit list --local-scope ${options}`);
   }
   listLocalScopeParsed(options = ''): Record<string, any>[] {
-    const output = this.runCmd(`bit list --scope --json ${options}`);
+    const output = this.runCmd(`bit list --local-scope --json ${options}`);
     return JSON.parse(output);
   }
   listRemoteScopeParsed(options = '') {
@@ -355,6 +355,9 @@ export default class CommandHelper {
   }
   dependenciesUsage(depName: string) {
     return this.runCmd(`bit dependencies usage ${depName}`);
+  }
+  dependenciesWrite(flags = '') {
+    return this.runCmd(`bit dependencies write ${flags}`);
   }
   setPeer(componentId: string, range = '') {
     return this.runCmd(`bit set-peer ${componentId} ${range}`);
@@ -754,7 +757,9 @@ export default class CommandHelper {
     return show.find((_) => _.title === 'configuration').json.find((_) => _.id === aspectId);
   }
 
-  showDependenciesData(compId: string): Array<{ id: string; version: string; packageName: string }> {
+  showDependenciesData(
+    compId: string
+  ): Array<{ id: string; version: string; packageName: string; versionRange?: string }> {
     const showConfig = this.showAspectConfig(compId, Extensions.dependencyResolver);
     return showConfig.data.dependencies;
   }
@@ -770,7 +775,7 @@ export default class CommandHelper {
     return aspectConf.data.dependencies.map((dep) => dep.id);
   }
 
-  getCompDepsDataFromData(compId: string): {id: string, version: string, lifecycle: string, source: string}[] {
+  getCompDepsDataFromData(compId: string): { id: string; version: string; lifecycle: string; source: string }[] {
     const aspectConf = this.showAspectConfig(compId, Extensions.dependencyResolver);
     return aspectConf.data.dependencies;
   }

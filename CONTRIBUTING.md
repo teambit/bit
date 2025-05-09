@@ -1,53 +1,43 @@
 # CONTRIBUTING
 
-Contributions are always welcome, no matter how large or small. Before contributing,
-please read the [code of conduct](CODE_OF_CONDUCT.md).
+Thank you for your interest in improving Bit! We welcome contributions of any size.  
+Before you begin, please read our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Setup
 
-the setup process is more involving than expected because we write bit using bit (dogfooding), this is done by having a previous version of bit installed and using it to build the current code.
+The setup process is a bit more involved than you might expect because we **dog-food** Bit: we use a previously released version of Bit to build the current codebase.
 
 ### installation
 
-- make sure you have `bit` installed via `bvm` (see [instructions](https://bit.dev/docs/quick-start/#install){:target="\_blank" rel="noopener"}), then run:
+1. Install **Bit** via **bvm** (see the [installation guide](https://bit.dev/docs/getting-started/installing-bit/installing-bit)).
+2. From the root of this repository, run:
 
 ```bash
   npm run full-setup
 ```
 
-the script does the following:
-
-1. runs `bit install` to install all dependencies.
-2. runs `bit compile` to compile all components in the workspace.
-
-install command globally and link (in order to use the "bit-dev" command globally and always use the
-latest development build)
+To expose the Bit binary in this repo as a global command, run:
 
 ```bash
   npm run dev-link
 ```
 
-if you want your command to be different then the default (bit-dev) just add your favorite command name as an argument to the script
-
-```bash
-  npm run dev-link my-bit-dev-cmd-name
-```
-
-for example:
+The default binary is "bit-dev".
+Want a different alias? Pass the desired name as an argument:
 
 ```bash
   npm run dev-link bd
 ```
 
-bit will install these commands in `/usr/local/bin/` directory, so in order to remove them just use the bash `rm` command.
+Aliases are placed in `/usr/local/bin/`. Remove one with:
 
 ```bash
-  rm /usr/local/bin/my-bit-dev-cmd-name
+  rm /usr/local/bin/<alias-name>
 ```
 
 ### Build
 
-- build bit Harmony code
+- build bit code
 
 ```bash
   bit compile
@@ -55,45 +45,38 @@ bit will install these commands in `/usr/local/bin/` directory, so in order to r
 
 ### Watch
 
-It's easier to leave the watch process running instead of re-build for every change.
-
-- watch bit Harmony code
+For faster feedback, keep the watcher running instead of rebuilding after each change:
 
 ```bash
   bit watch
 ```
 
-If you are using Linux and getting "System limit for number of file watchers reached" errors, increase the max number of allowed watchers:
+Linux users: If you hit “System limit for number of file watchers reached”, raise the limit:
 
 ```bash
-  echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
+  echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
+  sudo sysctl -p
 ```
 
-### Unit Tests
-
-- run the unit tests
-
-```bash
-  npm test
-```
+If you use VS Code with the Bit extension, you can configure it to compile on file changes instead of running bit watch.
 
 ### End to End Tests
 
-Keep in mind that running the e2e-tests locally may take hours to complete, it's faster to create a new PR and let CircleCI run them. Circle is configured to run multiple tests in parallel and complete them much faster.
+Running the full e2e suite locally can take hours. It’s usually faster to push a PR and let CircleCI handle it (tests run in parallel there).
 
-- run the e2e tests (with default 'bit' command)
+- run e2e tests with the default bit binary
 
 ```bash
   npm run e2e-test
 ```
 
-- run e2e tests using bit-dev command
+- Run e2e tests with the bit-dev alias
 
 ```bash
   npm run e2e-test --bit_bin=bit-dev
 ```
 
-- run e2e-tests for debugging (shows output and doesn't delete the workspaces)
+- Debug mode: keeps workspaces and prints output
 
 ```bash
   npm run e2e-test:debug
@@ -101,17 +84,15 @@ Keep in mind that running the e2e-tests locally may take hours to complete, it's
 
 ### Debugging
 
-The code is heavy on promises, as such, some errors don't have a useful stack trace. Bluebird enables the long stack trace when the env is development or when `BLUEBIRD_DEBUG` is set. Normally, the full stack trace is not shown on the console but logged in the debug.log file. (located at /Users/your-use/Library/Caches/Bit/logs/debug.log on Mac).
+- Stack traces are written to debug.log (macOS: ~/Library/Caches/Bit/logs/debug.log).
+- For verbose logging, prefix any Bit command with BIT_LOG=\*. (For now, this helps to get more info about why a component is shown as modified and it also shows the events for `bit watch`).
+- To print logs to the console at a specific level, prefix your command with `BIT_LOG=<debug-level>`, e.g. `BIT_LOG=error`.
+- The log level written to the log file is by default "debug". To change it, run `bit config set log_level <level>`, e.g. `bit config set log_level info`. The options are ['trace', 'debug', 'info', 'warn', 'error'].
+- Locate debug.log at any time with: `bit globals`.
 
-In some cases, you might get very helpful info by prefixing Bit command with `BIT_LOG=*`. For now, this helps to get more info about why a component is shown as modified and it also shows the events for `bit watch`.
+### Linting
 
-To print the log messages on the console, prefix your command with `BIT_LOG=<debug-level>`, e.g. `BIT_LOG=error`.
-
-The log level written to the log file is by default "debug". To change it, run `bit config set log_level <level>`, e.g. `bit config set log_level info`.
-
-### Lint
-
-Run eslint and tsc (for type checking)
+Run ESLint and tsc (for type checking)
 
 ```bash
   npm run lint
@@ -119,40 +100,33 @@ Run eslint and tsc (for type checking)
 
 ## Pull Requests
 
-We actively welcome your pull requests.
-
 1. Fork the repo and create your branch from `master`.
-2. If you've added code that should be tested, add tests.
-3. Ensure the test suite passes.
-4. Make sure your code lints.
-5. Add your change to the CHANGELOG.md file at the [unreleased] section.
+2. Add or update tests when your code needs them.
+3. Ensure tests and linting pass locally — or rely on CircleCI to do it for you.
 
-## Understanding the code
+## Understanding the Codebase
 
-The bootstrap process (in Harmony) in general is as follows:
+### Bootstrap flow
 
-1. A user enters Bit command.
-2. Bit builds a graph of all core-aspects and aspects entered in the workspace.jsonc file.
-3. Once the graph is ready, it loads them all (calls their provider), so then all aspects instances are ready in-memory.
-4. An aspect can register to the CLI slot (`cli.register()`) and pass `Command` instances. (that's the main reason why all aspects must be loaded before anything else happen. Otherwise, commands won't be registered and the user will get an error about a non-exist command)
-5. `yargs` package is used for parsing the commands. All `Command` instances are registered by `yargs`. It finds the currently entered command and runs either `report()` to return a result to the CLI as plain text or `render()` to paint the output as a React component using `Ink`.
+1. A user runs a Bit command.
+2. Bit builds a graph of all core-aspects plus any aspects listed in `workspace.jsonc`.
+3. After the graph is ready, Bit loads every aspect (calls its provider), so they’re all instantiated in memory.
+4. Aspects register CLI commands via `cli.register()`. All aspects must load before command parsing so each command is available.
+5. Bit uses **yargs**: it registers every Command instance, parses the CLI input, and executes either `report()` (plain text), `json()`, or `wait()` (for long-running tasks).
 
 ### Workspace
 
-The user workspace. It has a .bitmap file where it stores all the components locations on the filesystem.
-
-It also has a workspace.jsonc file where it stores the user configuration, such as what environments are used.
-
-When the user adds a new component (using `bit add` command), it is done on the workspace part only. The files are added to the .bitmap file and it doesn't involve the scope.
+- Stores component locations in .bitmap.
+- Stores user configuration (e.g., environments) in workspace.jsonc.
+- Adding components, whether with `bit add` or `bit create`, affects only the workspace; the scope remains untouched.
 
 ### Scope
 
-The model / objects. The scope root is located at `<workspace-root>.bit` or `<workspace-root>/.git/.bit`.
-When a new component is tagged (using `bit tag` command), Bit compresses the component files and save them along with metadata about the component in the scope.
+- The model / objects. The scope root is located at `<workspace-root>/.bit` or `<workspace-root>/.git/bit`.
+- When a new component is tagged/snapped, Bit compresses the component files and save them along with metadata about the component in the scope.
+- File names are content hashes—similar to Git’s object store.
 
-The file names are the hashes of the files/metadata. Think about it as .git in Git world.
-
-See src/scope/README.md for more data about the scope.
+For more details, see components/legacy/scope/README.md.
 
 ## License
 

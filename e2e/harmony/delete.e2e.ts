@@ -192,6 +192,81 @@ describe('bit delete command', function () {
       });
     });
   });
+  describe('delete specific snaps', () => {
+    let firstSnapHash: string;
+    let secondSnapHash: string;
+    let beforeDeleting: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.snapAllComponentsWithoutBuild();
+      firstSnapHash = helper.command.getHead('comp2');
+
+      helper.fixtures.populateComponents(2, undefined, 'version2');
+      helper.command.snapAllComponentsWithoutBuild();
+      secondSnapHash = helper.command.getHead('comp2');
+      beforeDeleting = helper.scopeHelper.cloneWorkspace();
+      helper.command.deleteComponent('comp2', `--snaps "${firstSnapHash}"`);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+    });
+    it('should not show the current snap as deleted', () => {
+      const deletionData = helper.command.showComponentParsedHarmonyByTitle('comp2', 'removed');
+      expect(deletionData.removed).to.be.false;
+      expect(deletionData.snaps).to.include(firstSnapHash);
+    });
+    it('should show the specific snap as deleted in bit log', () => {
+      const log = helper.command.logParsed('comp2');
+      const deletedSnap = log.find((l) => l.hash === firstSnapHash);
+      expect(deletedSnap.deleted).to.be.true;
+
+      const notDeletedSnap = log.find((l) => l.hash === secondSnapHash);
+      expect(notDeletedSnap.deleted).to.be.false;
+    });
+    it('bit list should show the component, because it is not deleted in head', () => {
+      const list = helper.command.listParsed();
+      const comp2 = list.find((c) => c.id === `${helper.scopes.remote}/comp2`);
+      expect(comp2).to.be.ok;
+    });
+    it('recovering the component should remove the snaps data', () => {
+      helper.command.recover('comp2');
+
+      const deletionData = helper.command.showComponentParsedHarmonyByTitle('comp2', 'removed');
+      expect(deletionData.removed).to.be.false;
+      expect(deletionData).to.not.have.property('snaps');
+    });
+    describe('multiple snaps deletion', () => {
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(beforeDeleting);
+
+        // Delete both snaps using comma-separated list
+        helper.command.deleteComponent('comp2', `--snaps "${firstSnapHash},${secondSnapHash}"`);
+        helper.command.snapAllComponentsWithoutBuild();
+      });
+      it('should mark multiple snaps as deleted', () => {
+        const log = helper.command.logParsed('comp2');
+        const firstSnap = log.find((l) => l.hash === firstSnapHash);
+        const secondSnap = log.find((l) => l.hash === secondSnapHash);
+
+        expect(firstSnap.deleted).to.be.true;
+        expect(secondSnap.deleted).to.be.true;
+      });
+    });
+    describe('importing deleted snaps', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+      });
+      it('should show deleted status for the specific snap when imported', () => {
+        const output = helper.command.importComponent(`comp2@${firstSnapHash}`, '-x --override');
+        expect(output).to.have.string('deleted');
+      });
+      it('should not show deleted status for non-deleted snaps', () => {
+        const output = helper.command.importComponent(`comp2@${secondSnapHash}`, '-x --override');
+        expect(output).to.not.have.string('deleted');
+      });
+    });
+  });
   describe('delete previous versions', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();

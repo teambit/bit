@@ -5,6 +5,7 @@ import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-t
 import { MainRuntime } from '@teambit/cli';
 import { getRootComponentDir } from '@teambit/workspace.root-components';
 import { ComponentAspect, Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
+import { isRange1GreaterThanRange2Naively } from '@teambit/pkg.modules.semver-helper';
 import type { ConfigMain } from '@teambit/config';
 import { join, relative } from 'path';
 import { compact, get, pick, uniq, omit, cloneDeep } from 'lodash';
@@ -28,7 +29,6 @@ import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { DetectorHook } from '@teambit/dependencies';
 import { Http, ProxyConfig, NetworkConfig } from '@teambit/scope.network';
-import { onTagIdTransformer } from '@teambit/snapping';
 import {
   ConsumerComponent as LegacyComponent,
   Dependency as LegacyDependency,
@@ -53,8 +53,18 @@ import {
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DepLinkerContext, DependencyLinker, LinkingOptions } from './dependency-linker';
-import { DependencyResolverWorkspaceConfig, NodeLinker } from './dependency-resolver-workspace-config';
-import { ComponentModelVersion, getAllPolicyPkgs, OutdatedPkg, CurrentPkgSource } from './get-all-policy-pkgs';
+import {
+  ComponentRangePrefix,
+  DependencyResolverWorkspaceConfig,
+  NodeLinker,
+} from './dependency-resolver-workspace-config';
+import {
+  ComponentModelVersion,
+  getAllPolicyPkgs,
+  CurrentPkg,
+  OutdatedPkg,
+  CurrentPkgSource,
+} from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
@@ -103,6 +113,7 @@ export interface DependencyResolverComponentData {
   packageName: string;
   policy: SerializedVariantPolicy;
   dependencies: SerializedDependency[];
+  componentRangePrefix?: ComponentRangePrefix;
 }
 
 export interface DependencyResolverVariantConfig {
@@ -152,6 +163,12 @@ const defaultCreateFromComponentsOptions: CreateFromComponentsOptions = {
   createManifestForComponentsWithoutDependencies: true,
 };
 
+/**
+ * see @teambit/dependencies.aspect-docs.dependency-resolver for more information about this aspect.
+ *
+ * The data of this aspect gets saved in workspace-component-loader.ts, `executeLoadSlot()`.
+ * The type of the data is `DependencyResolverComponentData`.
+ */
 export class DependencyResolverMain {
   /**
    * cache the workspace policy to improve performance. when workspace.jsonc is changed, this gets cleared.
@@ -201,7 +218,7 @@ export class DependencyResolverMain {
 
     private postInstallSlot: PostInstallSlot,
 
-    private addPackagesToLinkSlot: AddPackagesToLinkSlot,
+    private addPackagesToLinkSlot: AddPackagesToLinkSlot
   ) {}
 
   /**
@@ -673,8 +690,11 @@ export class DependencyResolverMain {
    */
   getLinker(options: GetLinkerOptions = {}) {
     const additionalPackagesToLink = this.getAdditionalPackagesToLink();
-    const linkingOptions = Object.assign({ additionalPackagesToLink },
-      defaultLinkingOptions, options?.linkingOptions || {});
+    const linkingOptions = Object.assign(
+      { additionalPackagesToLink },
+      defaultLinkingOptions,
+      options?.linkingOptions || {}
+    );
     // TODO: we should somehow pass the cache root dir to the package manager constructor
     return new DependencyLinker(
       this,
@@ -1224,6 +1244,7 @@ export class DependencyResolverMain {
     });
     const currentExtension = configuredExtensions.findExtension(DependencyResolverAspect.id);
     const currentConfig = currentExtension?.config as unknown as DependencyResolverVariantConfig;
+
     if (currentConfig && currentConfig.policy) {
       policiesFromConfig = VariantPolicy.fromConfigObject(currentConfig.policy, { source: 'config' });
     }
@@ -1236,6 +1257,7 @@ export class DependencyResolverMain {
       policiesFromSlots,
       policiesFromConfig,
     ]);
+
     return result;
   }
 
@@ -1250,28 +1272,6 @@ export class DependencyResolverMain {
   ): Promise<VariantPolicy | undefined> {
     const envPolicy = await this.getEnvPolicyFromEnvId(id, legacyFiles, envExtendsDeps);
     return envPolicy?.selfPolicy;
-  }
-
-  updateDepsOnLegacyTag(component: LegacyComponent, idTransformer: onTagIdTransformer): LegacyComponent {
-    const entry = component.extensions.findCoreExtension(DependencyResolverAspect.id);
-    if (!entry) {
-      return component;
-    }
-    const dependencies = get(entry, ['data', 'dependencies'], []);
-    dependencies.forEach((dep) => {
-      if (dep.__type === COMPONENT_DEP_TYPE) {
-        // @todo: it's unclear why "dep.componentId" randomly becomes a ComponentID instance.
-        // this check is added because on Ripple in some scenarios it was throwing:
-        // "ComponentID.fromObject expect to get an object, got an instance of ComponentID" (locally it didn't happen)
-        const depId =
-          dep.componentId instanceof ComponentID ? dep.componentId : ComponentID.fromObject(dep.componentId);
-        const newDepId = idTransformer(depId);
-        dep.componentId = (newDepId || depId).serialize();
-        dep.id = (newDepId || depId).toString();
-        dep.version = (newDepId || depId).version;
-      }
-    });
-    return component;
   }
 
   /**
@@ -1393,16 +1393,15 @@ export class DependencyResolverMain {
       const allowedSpecialChars = ['+', '-'];
       if (policyVersion === '*') {
         // this is only valid for packages, not for components.
-        const isComp = data.dependencies.find(d => d.__type === COMPONENT_DEP_TYPE
-          && d.packageName === policy.dependencyId);
+        const isComp = data.dependencies.find(
+          (d) => d.__type === COMPONENT_DEP_TYPE && d.packageName === policy.dependencyId
+        );
         if (!isComp) return;
         errorMsg = `${errorPrefix} the policy version "${policyVersion}" of ${policy.dependencyId} is not valid for components, only for packages.
 as an alternative, you can use "+" to keep the same version installed in the workspace`;
       }
       const isVersionValid = Boolean(
-        semver.valid(policyVersion) ||
-          semver.validRange(policyVersion) ||
-          allowedSpecialChars.includes(policyVersion)
+        semver.valid(policyVersion) || semver.validRange(policyVersion) || allowedSpecialChars.includes(policyVersion)
       );
       if (isVersionValid) return;
       errorMsg = `${errorPrefix} the policy version "${policyVersion}" of ${policy.dependencyId} is not a valid semver version or range`;
@@ -1431,36 +1430,10 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     patterns?: string[];
     forceVersionBump?: 'major' | 'minor' | 'patch' | 'compatible';
   }): Promise<MergedOutdatedPkg[] | null> {
-    const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
-    const componentModelVersions: ComponentModelVersion[] = (
-      await Promise.all(
-        components.map(async (component) => {
-          const depList = await this.getDependencies(component);
-          return depList
-            .filter(
-              (dep) =>
-                typeof dep.getPackageName === 'function' &&
-                // If the dependency is referenced not via a valid range it means that it wasn't yet published to the registry
-                semver.validRange(dep.version) != null &&
-                !dep['isExtension'] && // eslint-disable-line
-                dep.lifecycle !== 'peer' &&
-                !localComponentPkgNames.has(dep.getPackageName())
-            )
-            .map((dep) => ({
-              name: dep.getPackageName!(), // eslint-disable-line
-              version: dep.version,
-              isAuto: dep.source === 'auto',
-              componentId: component.id,
-              lifecycleType: dep.lifecycle,
-            }));
-        })
-      )
-    ).flat();
-    let allPkgs = getAllPolicyPkgs({
-      rootPolicy: this.getWorkspacePolicyFromConfig(),
+    let allPkgs = this.getAllDependencies({
       variantPoliciesByPatterns,
       componentPolicies,
-      componentModelVersions,
+      components,
     });
     if (patterns?.length) {
       const selectedPkgNames = new Set(
@@ -1476,6 +1449,87 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     }
     const outdatedPkgs = await this.getOutdatedPkgs({ rootDir, forceVersionBump }, allPkgs);
     return mergeOutdatedPkgs(outdatedPkgs);
+  }
+
+  getAllDependencies({
+    variantPoliciesByPatterns,
+    componentPolicies,
+    components,
+  }: {
+    variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
+    componentPolicies: Array<{ componentId: ComponentID; policy: any }>;
+    components: Component[];
+  }): CurrentPkg[] {
+    const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
+    const componentModelVersions: ComponentModelVersion[] = components
+      .map((component) => {
+        const depList = this.getDependencies(component);
+        return depList
+          .filter(
+            (dep) =>
+              typeof dep.getPackageName === 'function' &&
+              // If the dependency is referenced not via a valid range it means that it wasn't yet published to the registry
+              semver.validRange(dep.version) != null &&
+              !dep['isExtension'] && // eslint-disable-line
+              dep.lifecycle !== 'peer' &&
+              !localComponentPkgNames.has(dep.getPackageName())
+          )
+          .map((dep) => ({
+            name: dep.getPackageName!(), // eslint-disable-line
+            version: dep.version,
+            isAuto: dep.source === 'auto',
+            componentId: component.id,
+            lifecycleType: dep.lifecycle,
+          }));
+      })
+      .flat();
+    return getAllPolicyPkgs({
+      rootPolicy: this.getWorkspacePolicyFromConfig(),
+      variantPoliciesByPatterns,
+      componentPolicies,
+      componentModelVersions,
+    });
+  }
+
+  getAllDedupedDirectDependencies(opts: {
+    variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject>;
+    componentPolicies: Array<{ componentId: ComponentID; policy: any }>;
+    components: Component[];
+  }): CurrentPkg[] {
+    const allDeps = this.getAllDependencies(opts);
+    const mergedDeps: Record<string, CurrentPkg> = {};
+    for (const dep of allDeps) {
+      const existing = mergedDeps[dep.name];
+      if (existing) {
+        if (existing.currentRange === dep.currentRange) continue;
+        if (shouldOverwrite(existing, dep)) {
+          this.warnAboutOverwrite(existing, dep);
+          mergedDeps[dep.name] = dep;
+        } else {
+          this.warnAboutOverwrite(dep, existing);
+        }
+      } else {
+        mergedDeps[dep.name] = dep;
+      }
+    }
+    return Object.values(mergedDeps);
+
+    function shouldOverwrite(existing: CurrentPkg, incoming: CurrentPkg): boolean {
+      if (isRootPolicy(existing)) {
+        if (!isRootPolicy(incoming)) return false;
+        return isRange1GreaterThanRange2Naively(incoming.currentRange, existing.currentRange);
+      }
+      return isRootPolicy(incoming) || isRange1GreaterThanRange2Naively(incoming.currentRange, existing.currentRange);
+    }
+  }
+
+  private warnAboutOverwrite(originalPkg: CurrentPkg, newPkg: CurrentPkg) {
+    const message = `${originalPkg.name}@${originalPkg.currentRange} from ${originalPkg.source} overwritten by ${newPkg.currentRange} from ${newPkg.source}`;
+    if (isRootPolicy(newPkg)) {
+      this.logger.info(message);
+    } else {
+      this.logger.warn(message);
+    }
   }
 
   /**
@@ -1573,6 +1627,25 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     };
   }
 
+  getWorkspaceComponentRangePrefix(): ComponentRangePrefix | undefined {
+    return this.config.componentRangePrefix;
+  }
+  calcComponentRangePrefixByConsumerComponent(component: LegacyComponent): ComponentRangePrefix | undefined {
+    const fromWs = this.getWorkspaceComponentRangePrefix();
+    if (fromWs) {
+      return fromWs;
+    }
+    const modelData = component.componentFromModel?.extensions.findCoreExtension(DependencyResolverAspect.id);
+    if (modelData?.data?.componentRangePrefix) {
+      return modelData.data.componentRangePrefix;
+    }
+    const currentData = component.extensions?.findCoreExtension(DependencyResolverAspect.id)?.data;
+    if (currentData?.componentRangePrefix) {
+      return currentData.componentRangePrefix;
+    }
+    return undefined;
+  }
+
   static runtime = MainRuntime;
   static dependencies = [
     EnvsAspect,
@@ -1647,7 +1720,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       dependencyFactorySlot,
       preInstallSlot,
       postInstallSlot,
-      addPackagesToLinkSlot,
+      addPackagesToLinkSlot
     );
 
     const envJsoncDetector = envs.getEnvJsoncDetector();
@@ -1843,4 +1916,8 @@ function rangeToVersion(range: string) {
     return range.substring(1);
   }
   return range;
+}
+
+function isRootPolicy(dep: CurrentPkg): boolean {
+  return dep.source === 'rootPolicy';
 }

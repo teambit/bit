@@ -1,0 +1,163 @@
+# Bit CLI MCP Server
+
+The Bit CLI MCP Server provides a [Model Context Protocol (MCP)](https://github.com/modelcontextprotocol/mcp) interface to Bit's command-line functionality, enabling programmatic access to Bit workspace and component management operations. This server exposes Bit CLI commands as MCP tools, making it possible to automate, script, or integrate Bit operations with other tools and platforms.
+
+## Overview
+
+This server acts as a bridge between MCP clients (such as VS Code, AI tools, or your own applications) and the Bit CLI. It translates MCP tool calls into Bit CLI commands, runs them, and returns the results in a format that MCP clients can understand.
+
+## Installation
+
+### Prerequisites
+
+- Node.js (v18 or later recommended)
+- Bit CLI installed and available in your PATH
+
+### Getting Started
+
+The Bit CLI MCP Server is included with Bit. If you have Bit installed, you can run the server using:
+
+```
+bit mcp-server
+```
+
+## Usage
+
+### Command-Line Options
+
+```
+bit mcp-server [options]
+```
+
+Options:
+
+- `-e, --extended`: Enable the full set of Bit CLI commands as MCP tools
+- `--include-only <commands>`: Specify a subset of commands to expose as MCP tools (comma-separated list)
+- `--include-additional <commands>`: Add specific commands to the default set (comma-separated list)
+- `--exclude <commands>`: Prevent specific commands from being exposed (comma-separated list)
+
+### Integrating with VS Code
+
+To use this MCP server in VS Code:
+
+1. Open VS Code settings (JSON) by pressing `Ctrl + Shift + P` and typing `Preferences: Open Settings (JSON)`
+2. Add the following JSON block:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "bit-cli": {
+        "command": "bit",
+        "args": ["mcp-server"]
+      }
+    }
+  }
+}
+```
+
+For extended mode with all commands available:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "bit-cli": {
+        "command": "bit",
+        "args": ["mcp-server", "--extended"]
+      }
+    }
+  }
+}
+```
+
+### Programmatic Usage
+
+```javascript
+import { McpClient } from '@modelcontextprotocol/sdk/client';
+
+async function example() {
+  const client = await McpClient.spawn('bit', ['mcp-server']);
+
+  // Call a Bit CLI tool via MCP
+  const result = await client.callTool('bit_status', { cwd: '/path/to/workspace' });
+  console.log(result.content[0].text);
+
+  // Close the connection when done
+  await client.close();
+}
+```
+
+## Available Tools
+
+The Bit CLI MCP Server operates in two modes:
+
+### Default Mode
+
+In default mode, the server exposes a focused set of essential Bit CLI commands (~20 tools). This ensures optimal performance and safety. These are the most commonly used Bit operations:
+
+- `bit_status`: Show component status and potential issues
+- `bit_list`: List components in a workspace or remote scope
+- `bit_add`: Track directories as components
+- `bit_init`: Create or initialize a workspace
+- `bit_show`: Display component information
+- `bit_tag`: Create an immutable, exportable component version
+- `bit_snap`: Create a non-release component snapshot
+- `bit_import`: Import components from remote scopes
+- `bit_export`: Export components to remote scopes
+- `bit_remove`: Remove components from workspace
+- `bit_log`: Show component version history
+- `bit_test`: Test components
+- `bit_diff`: Show differences between component versions
+- `bit_install`: Install dependencies
+- `bit_lane_show`: Display lane details
+- `bit_lane_create`: Create a new development lane
+- `bit_lane_switch`: Switch between lanes
+- `bit_lane_merge`: Merge lane changes
+- `bit_create`: Generate components from templates
+- `bit_templates`: List available templates
+- `bit_reset`: Revert tags or snaps
+- `bit_checkout`: Switch versions or remove changes
+
+### Extended Mode (--extended)
+
+When started with the `--extended` flag, the server exposes nearly all Bit CLI commands as MCP tools, including:
+
+- All lane sub-commands (remove, alias, rename, diff, change-scope, import, fetch, eject, history, etc.)
+- Development tools (build, lint, format)
+- Package management (uninstall, update)
+- Component operations (recover, fork, rename)
+- Workspace management (ws-config, stash, aspect)
+- Analysis tools (insight, deps, why)
+- And many more
+
+> **Note:** When using extended mode, some AI models (particularly Gemini and ChatGPT) may struggle with the high number of available tools and respond with "400 Bad Request" or "500 Server Error" errors. This is not due to any issue with specific tools, but rather with how these models handle large tool sets. Claude Sonnet tends to handle extended mode better. If you encounter these errors, try using default mode or selectively adding only the tools you need via the `--include-additional` flag.
+
+## Tool Parameters
+
+All tools accept a `cwd` parameter specifying the workspace path. Additional parameters vary by command.
+
+Example tool call for `bit_status`:
+
+```json
+{
+  "cwd": "/path/to/workspace",
+  "warnings": true,
+  "json": true
+}
+```
+
+## Custom Tool Selection
+
+To customize the available tools beyond the default set or extended mode:
+
+```
+# Include only specific tools
+bit mcp-server --include-only "status,show,tag,snap,import,export"
+
+# Add specific tools to the default set
+bit mcp-server --include-additional "build,lint,format"
+
+# Exclude specific tools from being available
+bit mcp-server --extended --exclude "checkout,remove"
+```

@@ -10,5 +10,8 @@ export const defaultErrorHandler = cjsModule.defaultErrorHandler;
 export const globalFlags = cjsModule.globalFlags;
 export const CLIParser = cjsModule.CLIParser;
 export const YargsExitWorkaround = cjsModule.YargsExitWorkaround;
+export const getArgsData = cjsModule.getArgsData;
+export const getCommandName = cjsModule.getCommandName;
+export const getFlagsData = cjsModule.getFlagsData;
 
 export default cjsModule;

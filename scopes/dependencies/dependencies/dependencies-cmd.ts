@@ -7,6 +7,7 @@ import { ComponentIdGraph } from '@teambit/graph';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { generateDependenciesInfoTable } from './template';
 import { DependenciesMain } from './dependencies.main.runtime';
+import { Workspace } from '@teambit/workspace';
 
 type GetDependenciesFlags = {
   tree: boolean;
@@ -364,5 +365,32 @@ export class UnsetPeerCmd implements Command {
   async report([componentId]: [string]) {
     await this.deps.unsetPeer(componentId);
     return `${chalk.green('successfully marked the component as not a peer component')}`;
+  }
+}
+
+type DependenciesWriteCmdOptions = {
+  target?: 'workspace.jsonc' | 'package.json';
+};
+
+export class DependenciesWriteCmd implements Command {
+  name = 'write';
+  arguments = [];
+  group = 'info';
+  description =
+    'write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions';
+  alias = '';
+  options = [
+    [
+      '',
+      'target <workspace.jsonc|package.json>',
+      'specify where the dependencies should be written. By default they are saved to workspace.jsonc',
+    ],
+  ] as CommandOptions;
+
+  constructor(private workspace: Workspace) {}
+
+  async report(_, options: DependenciesWriteCmdOptions) {
+    await this.workspace.writeDependencies(options.target);
+    return '';
   }
 }

@@ -7,6 +7,7 @@ export { handleUnhandledRejection, handleErrorAndExit, setExitOnUnhandledRejecti
 export { globalFlags };
 export { defaultErrorHandler };
 export type { Command, CLIArgs, Flags, GenericObject, CommandOptions } from './command';
+export { getArgsData, getCommandName, getFlagsData } from './command-helper';
 export * from './exceptions';
 
 export { CLIAspect as default, MainRuntime, CLIAspect };

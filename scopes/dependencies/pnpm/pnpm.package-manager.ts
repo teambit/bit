@@ -130,14 +130,19 @@ export class PnpmPackageManager implements PackageManager {
       isFeatureEnabled(DEPS_GRAPH) &&
       (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
     ) {
-      await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
-        manifests,
-        rootDir,
-        registries,
-        proxyConfig,
-        networkConfig,
-        cacheDir: config.cacheDir,
-      });
+      try {
+        await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
+          manifests,
+          rootDir,
+          registries,
+          proxyConfig,
+          networkConfig,
+          cacheDir: config.cacheDir,
+        });
+      } catch (error) {
+        // If the lockfile could not be created for some reason, it will be created later during installation.
+        this.logger.error((error as Error).message);
+      }
     }
 
     this.logger.debug(`running installation in root dir ${rootDir}`);
@@ -435,7 +440,13 @@ export class PnpmPackageManager implements PackageManager {
       filterByImporterIds.push(opts.componentRootDir as ProjectId);
     }
     for (const importerId of filterByImporterIds) {
-      for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies', 'specifiers', 'dependenciesMeta']) {
+      for (const depType of [
+        'dependencies',
+        'devDependencies',
+        'optionalDependencies',
+        'specifiers',
+        'dependenciesMeta',
+      ]) {
         for (const workspacePkgName of opts.componentIdByPkgName.keys()) {
           if (workspacePkgName !== opts.pkgName) {
             delete lockfile.importers[importerId]?.[depType]?.[workspacePkgName];

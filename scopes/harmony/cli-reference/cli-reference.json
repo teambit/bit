@@ -75,6 +75,36 @@
     "private": false
   },
   {
+    "name": "mcp-server",
+    "alias": "",
+    "options": [
+      [
+        "e",
+        "extended",
+        "Enable the full set of Bit CLI commands as MCP tools"
+      ],
+      [
+        "",
+        "include-only <commands>",
+        "Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. \"status,install,compile\""
+      ],
+      [
+        "",
+        "include-additional <commands>",
+        "Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used"
+      ],
+      [
+        "",
+        "exclude <commands>",
+        "Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes"
+      ]
+    ],
+    "description": "Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.",
+    "extendedDescription": "",
+    "group": "development",
+    "private": false
+  },
+  {
     "name": "config",
     "alias": "",
     "options": [],
@@ -1286,9 +1316,14 @@
         "show only component ids, unformatted"
       ],
       [
-        "s",
-        "scope",
+        "l",
+        "local-scope",
         "show only components stored in the local scope, including indirect dependencies"
+      ],
+      [
+        "s",
+        "scope <string>",
+        "filter components by their scope name (e.g., teambit.workspace)"
       ],
       [
         "o",
@@ -1308,7 +1343,7 @@
       [
         "n",
         "namespace <string>",
-        "show only components in the specified namespace/s e.g. '-n ui' or '*/ui'"
+        "filter components by their namespace (a logical grouping within a scope, e.g., 'ui', '*/ui')"
       ]
     ],
     "description": "list components on a workspace or a remote scope (with flag).",
@@ -2299,6 +2334,11 @@
       ],
       [
         "",
+        "write-deps <workspace.jsonc|package.json>",
+        "write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions"
+      ],
+      [
+        "",
         "track-only",
         "do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap"
       ],
@@ -2432,6 +2472,11 @@
         "f",
         "force",
         "relevant for --hard. allow the deletion even if used as a dependency. WARNING: components that depend on this component will corrupt"
+      ],
+      [
+        "",
+        "snaps <string>",
+        "comma-separated list of snap hashes to mark as deleted (e.g. --snaps \"hash1,hash2,hash3\")"
       ]
     ],
     "description": "mark components as deleted on the remote",
@@ -2677,6 +2722,22 @@
             "description": "package-name. for components, you can use either component-id or package-name. if version is specified, it will search for the exact version"
           }
         ]
+      },
+      {
+        "name": "write",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "target <workspace.jsonc|package.json>",
+            "specify where the dependencies should be written. By default they are saved to workspace.jsonc"
+          ]
+        ],
+        "description": "write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions",
+        "extendedDescription": "",
+        "group": "info",
+        "private": false,
+        "arguments": []
       }
     ]
   },
@@ -3151,10 +3212,6 @@
       {
         "name": "component-pattern",
         "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      },
-      {
-        "name": "component-version",
-        "description": "the version to untag (semver for tags. hash for snaps)"
       }
     ]
   },

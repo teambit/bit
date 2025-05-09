@@ -205,7 +205,7 @@ describe('harmony extension config', function () {
           helper.command.importComponent('bar/foo');
         });
         it('should auto-import the extensions as well', () => {
-          const scopeList = helper.command.listLocalScopeParsed('--scope');
+          const scopeList = helper.command.listLocalScopeParsed();
           const ids = scopeList.map((entry) => entry.id);
           expect(ids).to.include(`${helper.scopes.remote}/dummy-extension-without-logs`);
         });

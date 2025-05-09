@@ -34,6 +34,7 @@
         "@lydell/node-pty": "^1.0.0",
         "@mdx-js/mdx": "1.6.21",
         "@mdx-js/react": "1.6.22",
+        "@modelcontextprotocol/sdk": "^1.11.0",
         "@monaco-editor/react": "4.4.6",
         "@parcel/watcher": "^2.5.1",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
@@ -233,9 +234,9 @@
         "@teambit/mdx.ui.mdx-scope-context": "^1.0.5",
         "@teambit/node.deps-detectors.detective-es6": "~0.0.5",
         "@teambit/node.utils.esm-loader": "^0.0.7",
-        "@teambit/pkg.config.auth": "^0.0.2",
+        "@teambit/pkg.config.auth": "^0.0.3",
         "@teambit/pkg.content.packages-overview": "1.96.9",
-        "@teambit/pkg.entities.registry": "^0.0.2",
+        "@teambit/pkg.entities.registry": "^0.0.3",
         "@teambit/pkg.package-json.validator": "0.0.1",
         "@teambit/preview.cli.dev-server-events-listener": "^0.0.1",
         "@teambit/preview.modules.preview-modules": "^1.0.3",
@@ -593,7 +594,8 @@
         "yaml": "1.10.2",
         "yargs": "17.0.1",
         "yesno": "0.4.0",
-        "yn": "2.0.0"
+        "yn": "2.0.0",
+        "zod": "^3.24.4"
       },
       "peerDependencies": {
         "@apollo/client": "^3.6.0",

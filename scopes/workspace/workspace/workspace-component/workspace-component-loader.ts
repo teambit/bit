@@ -308,15 +308,15 @@ export class WorkspaceComponentLoader {
 
     // This is a special use case mostly for the bit core repo
     const envsOfCoreAspectEnv = ['teambit.harmony/envs/core-aspect-env', 'teambit.harmony/envs/core-aspect-env-jest'];
-    const coreAspectEnvGroup = {ids: [], core: true, aspects: true, seeders: true, envs: true};
+    const coreAspectEnvGroup = { ids: [], core: true, aspects: true, seeders: true, envs: true };
     layeredEnvsGroups.forEach((group) => {
       const filteredIds = group.ids.filter((id) => envsOfCoreAspectEnv.includes(id.toStringWithoutVersion()));
-      if (filteredIds.length){
+      if (filteredIds.length) {
         // @ts-ignore
         coreAspectEnvGroup.ids.push(...filteredIds);
       }
-    })
-    if (coreAspectEnvGroup.ids.length){
+    });
+    if (coreAspectEnvGroup.ids.length) {
       // enter first in the list
       groupsToHandle.unshift(coreAspectEnvGroup);
     }
@@ -938,6 +938,9 @@ export class WorkspaceComponentLoader {
       packageName: this.dependencyResolver.calcPackageName(component),
       dependencies: dependenciesList.serialize(),
       policy: policy.serialize(),
+      componentRangePrefix: this.dependencyResolver.calcComponentRangePrefixByConsumerComponent(
+        component.state._consumer
+      ),
     };
 
     // Make sure we are adding the envs / deps data first because other on load events might depend on it
