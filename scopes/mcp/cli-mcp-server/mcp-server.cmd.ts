@@ -6,6 +6,7 @@ export type McpServerCmdOptions = {
   includeOnly?: string;
   includeAdditional?: string;
   exclude?: string;
+  bitBin?: string;
 };
 
 export class McpServerCmd implements Command {
@@ -19,6 +20,7 @@ export class McpServerCmd implements Command {
     ['' , 'include-only <commands>', 'Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. "status,install,compile"'],
     ['', 'include-additional <commands>', 'Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used'],
     ['', 'exclude <commands>', 'Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes'],
+    ['', 'bit-bin <binary>', 'Specify the binary to use for running Bit commands (default: "bit")'],
   ] as CommandOptions;
 
   constructor(

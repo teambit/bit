@@ -28,10 +28,112 @@ interface CommandConfig {
 }
 
 export class CliMcpServerMain {
+  private bitBin = 'bit';
   constructor(
     private cli: CLIMain,
     private logger: Logger
   ) {}
+
+  async runMcpServer(options: {
+    extended?: boolean;
+    includeOnly?: string;
+    includeAdditional?: string;
+    exclude?: string;
+    bitBin?: string;
+  }) {
+    this.logger.debug(`[MCP-DEBUG] Starting MCP server with options: ${JSON.stringify(options)}`);
+    const commands = this.cli.commands;
+    const extended = Boolean(options.extended);
+    this.bitBin = options.bitBin || this.bitBin;
+    // Default set of tools to include
+    const defaultTools = new Set([
+      'status',
+      'list',
+      'add',
+      'init',
+      'show',
+      'tag',
+      'snap',
+      'import',
+      'export',
+      'remove',
+      'log',
+      'test',
+      'diff',
+      'install',
+      'lane show',
+      'lane create',
+      'lane switch',
+      'lane merge',
+      'create',
+      'templates',
+      'reset',
+      'checkout',
+    ]);
+
+    // Tools to always exclude
+    const alwaysExcludeTools = new Set([
+      'login',
+      'logout',
+      'completion',
+      'mcp-server',
+      'start',
+      'run-action',
+      'watch',
+      'run',
+      'resume-export',
+      'server',
+      'serve-preview',
+    ]);
+
+    // Parse command strings from flag options
+    let includeOnlySet: Set<string> | undefined;
+    if (options.includeOnly) {
+      includeOnlySet = new Set(options.includeOnly.split(',').map((cmd) => cmd.trim()));
+      this.logger.debug(`[MCP-DEBUG] Including only commands: ${Array.from(includeOnlySet).join(', ')}`);
+    }
+
+    let additionalCommandsSet: Set<string> | undefined;
+    if (options.includeAdditional) {
+      additionalCommandsSet = new Set(options.includeAdditional.split(',').map((cmd) => cmd.trim()));
+      this.logger.debug(`[MCP-DEBUG] Including additional commands: ${Array.from(additionalCommandsSet).join(', ')}`);
+    }
+
+    let userExcludeSet: Set<string> | undefined;
+    if (options.exclude) {
+      userExcludeSet = new Set(options.exclude.split(',').map((cmd) => cmd.trim()));
+      this.logger.debug(`[MCP-DEBUG] Excluding commands: ${Array.from(userExcludeSet).join(', ')}`);
+    }
+
+    const server = new McpServer({
+      name: 'bit-cli-mcp',
+      version: '0.0.1',
+    });
+
+    const filterOptions: CommandFilterOptions = {
+      defaultTools,
+      additionalCommandsSet,
+      userExcludeSet,
+      alwaysExcludeTools,
+      extended,
+      includeOnlySet,
+    };
+
+    commands.forEach((cmd) => {
+      const cmdName = getCommandName(cmd);
+
+      if (this.shouldIncludeCommand(cmdName, filterOptions)) {
+        this.registerToolForCommand(server, cmd);
+      }
+
+      // Process sub-commands
+      if (cmd.commands && cmd.commands.length) {
+        this.processSubCommands(server, cmd, filterOptions);
+      }
+    });
+
+    await server.connect(new StdioServerTransport());
+  }
 
   private shouldIncludeCommand(cmdName: string, options: CommandFilterOptions): boolean {
     // Always exclude certain commands
@@ -146,106 +248,6 @@ export class CliMcpServerMain {
     });
   }
 
-  async runMcpServer(options: {
-    extended?: boolean;
-    includeOnly?: string;
-    includeAdditional?: string;
-    exclude?: string;
-  }) {
-    this.logger.debug(`[MCP-DEBUG] Starting MCP server with options: ${JSON.stringify(options)}`);
-    const commands = this.cli.commands;
-    const extended = Boolean(options.extended);
-
-    // Default set of tools to include
-    const defaultTools = new Set([
-      'status',
-      'list',
-      'add',
-      'init',
-      'show',
-      'tag',
-      'snap',
-      'import',
-      'export',
-      'remove',
-      'log',
-      'test',
-      'diff',
-      'install',
-      'lane show',
-      'lane create',
-      'lane switch',
-      'lane merge',
-      'create',
-      'templates',
-      'reset',
-      'checkout',
-    ]);
-
-    // Tools to always exclude
-    const alwaysExcludeTools = new Set([
-      'login',
-      'logout',
-      'completion',
-      'mcp-server',
-      'start',
-      'run-action',
-      'watch',
-      'run',
-      'resume-export',
-      'server',
-      'serve-preview',
-    ]);
-
-    // Parse command strings from flag options
-    let includeOnlySet: Set<string> | undefined;
-    if (options.includeOnly) {
-      includeOnlySet = new Set(options.includeOnly.split(',').map((cmd) => cmd.trim()));
-      this.logger.debug(`[MCP-DEBUG] Including only commands: ${Array.from(includeOnlySet).join(', ')}`);
-    }
-
-    let additionalCommandsSet: Set<string> | undefined;
-    if (options.includeAdditional) {
-      additionalCommandsSet = new Set(options.includeAdditional.split(',').map((cmd) => cmd.trim()));
-      this.logger.debug(`[MCP-DEBUG] Including additional commands: ${Array.from(additionalCommandsSet).join(', ')}`);
-    }
-
-    let userExcludeSet: Set<string> | undefined;
-    if (options.exclude) {
-      userExcludeSet = new Set(options.exclude.split(',').map((cmd) => cmd.trim()));
-      this.logger.debug(`[MCP-DEBUG] Excluding commands: ${Array.from(userExcludeSet).join(', ')}`);
-    }
-
-    const server = new McpServer({
-      name: 'bit-cli-mcp',
-      version: '0.0.1',
-    });
-
-    const filterOptions: CommandFilterOptions = {
-      defaultTools,
-      additionalCommandsSet,
-      userExcludeSet,
-      alwaysExcludeTools,
-      extended,
-      includeOnlySet,
-    };
-
-    commands.forEach((cmd) => {
-      const cmdName = getCommandName(cmd);
-
-      if (this.shouldIncludeCommand(cmdName, filterOptions)) {
-        this.registerToolForCommand(server, cmd);
-      }
-
-      // Process sub-commands
-      if (cmd.commands && cmd.commands.length) {
-        this.processSubCommands(server, cmd, filterOptions);
-      }
-    });
-
-    await server.connect(new StdioServerTransport());
-  }
-
   private processSubCommands(server: McpServer, parentCmd: Command, options: CommandFilterOptions) {
     const parentCmdName = getCommandName(parentCmd);
 
@@ -260,8 +262,8 @@ export class CliMcpServerMain {
   }
 
   private async runBit(args: string[], cwd: string): Promise<CallToolResult> {
-    this.logger.debug(`[MCP-DEBUG] Running: bit ${args.join(' ')} in ${cwd}`);
-    const cmd = `bit ${args.join(' ')}`;
+    this.logger.debug(`[MCP-DEBUG] Running: ${this.bitBin} ${args.join(' ')} in ${cwd}`);
+    const cmd = `${this.bitBin} ${args.join(' ')}`;
     try {
       const cmdOutput = childProcess.execSync(cmd, { cwd });
       this.logger.debug(`[MCP-DEBUG] result. stdout: ${cmdOutput}`);
