@@ -97,6 +97,11 @@
         "",
         "exclude <commands>",
         "Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes"
+      ],
+      [
+        "",
+        "bit-bin <binary>",
+        "Specify the binary to use for running Bit commands (default: \"bit\")"
       ]
     ],
     "description": "Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.",
