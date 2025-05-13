@@ -80,6 +80,7 @@ export class CliMcpServerMain {
       'reset',
       'checkout',
       'remote-search',
+      'remote-get-schema',
     ]);
 
     // Tools to always exclude
@@ -143,8 +144,12 @@ export class CliMcpServerMain {
       }
     });
 
-    this.registerRemoteSearchTool(server);
-    this.registerGetSchemaTool(server);
+    const remoteCommands = ['remote-search', 'remote-get-schema'];
+    remoteCommands.forEach((cmdName) => {
+      if (this.shouldIncludeCommand(cmdName, filterOptions)) {
+        this.registerToolForRemote(server, cmdName);
+      }
+    });
 
     await server.connect(new StdioServerTransport());
   }
@@ -263,6 +268,14 @@ export class CliMcpServerMain {
       const argsToRun = this.buildCommandArgs(config, params);
       return this.runBit(argsToRun, params.cwd);
     });
+  }
+
+  private registerToolForRemote(server: McpServer, name: string) {
+    if (name === 'remote-search') {
+      this.registerRemoteSearchTool(server);
+    } else if (name === 'remote-get-schema') {
+      this.registerGetSchemaTool(server);
+    }
   }
 
   private registerRemoteSearchTool(server: McpServer) {
