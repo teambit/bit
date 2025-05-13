@@ -144,6 +144,7 @@ export class CliMcpServerMain {
     });
 
     this.registerRemoteSearchTool(server);
+    this.registerGetSchemaTool(server);
 
     await server.connect(new StdioServerTransport());
   }
@@ -282,6 +283,19 @@ export class CliMcpServerMain {
         text: result,
       }));
       return { content: formattedResults } as CallToolResult;
+    });
+  }
+
+  private registerGetSchemaTool(server: McpServer) {
+    const toolName = this.getToolName('remote-get-schema');
+    const description = 'Get the schema of a component from the remote scope. (the schema is the API of the component)';
+    const schema: Record<string, any> = {
+      id: z.string().describe('Component ID'),
+    };
+    server.tool(toolName, description, schema, async (params: any) => {
+      const http = await this.getHttp();
+      const response = await http.getSchema(params.id);
+      return { content: [{ type: 'text', text: JSON.stringify(response) }] } as CallToolResult;
     });
   }
 
