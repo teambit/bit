@@ -712,6 +712,41 @@ export class Http implements Network {
     return { components, lanes, organizations, scopes };
   }
 
+  async getSchema(
+    id: string,
+    skipInternals: boolean = true
+  ): Promise<{
+    __schema: string;
+    location: any;
+    module: {
+      __schema: string;
+      location: any;
+      exports: Array<any>;
+      internals: any[];
+    };
+    internals: any[];
+    componentId: {
+      scope: string;
+      name: string;
+      version: string;
+    };
+    taggedModuleExports: any[];
+  }> {
+    const GET_SCHEMA = gql`
+      query GetComponentSchema($componentId: String!, $skipInternals: Boolean) {
+        getHost {
+          getSchema(id: $componentId, skipInternals: $skipInternals)
+        }
+      }
+    `;
+    const res = await this.graphClientRequest(GET_SCHEMA, Verb.READ, {
+      componentId: id,
+      skipInternals,
+    });
+
+    return res.getHost.getSchema;
+  }
+
   async hasObjects(hashes: string[]): Promise<string[]> {
     const HAS_OBJECTS = gql`
       query hasObjects($hashes: [String!]) {
