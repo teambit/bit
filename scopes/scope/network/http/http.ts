@@ -149,7 +149,7 @@ export class Http implements Network {
     const getAsNumber = (key: string): number | undefined => {
       const val = obj[key];
       return isNil(val) ? undefined : Number(val);
-    }
+    };
 
     // Reading strictSSL from both network.strict-ssl and network.strict_ssl for backward compatibility.
     const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj['network.strict_ssl'] ?? obj[CFG_PROXY_STRICT_SSL];
@@ -261,7 +261,7 @@ export class Http implements Network {
     errors: { [scopeName: string]: string };
     metadata?: { jobs?: string[] };
   }> {
-    const { results ,response } = await retry(
+    const { results, response } = await retry(
       async () => {
         const route = 'api/put';
         logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
@@ -278,7 +278,7 @@ export class Http implements Network {
 
         // @ts-ignore TODO: need to fix this
         const _results = await this.readPutCentralStream(_response.body);
-        return { results: _results , response: _response };
+        return { results: _results, response: _response };
       },
       {
         retries: 3,
@@ -684,6 +684,32 @@ export class Http implements Network {
         head: laneCompId.version,
       })),
     }));
+  }
+
+  async search(
+    queryStr: string
+  ): Promise<{ components?: string[]; lanes?: string[]; organizations?: string[]; scopes?: string[] }> {
+    const SEARCH = gql`
+      query SUGGEST($queryStr: String, $limit: Int, $attributes: String) {
+        suggest(queryStr: $queryStr, limit: $limit, attributes: $attributes) {
+          queryString
+          suggestions {
+            searchTypeName
+            entries {
+              id
+            }
+          }
+        }
+      }
+    `;
+    const res = await this.graphClientRequest(SEARCH, Verb.READ, { queryStr });
+    const result = res.suggest.suggestions;
+    const components = result.find((r) => r.searchTypeName === 'component')?.entries.map((e) => e.id);
+    const lanes = result.find((r) => r.searchTypeName === 'lane')?.entries.map((e) => e.id);
+    const organizations = result.find((r) => r.searchTypeName === 'organization')?.entries.map((e) => e.id);
+    const scopes = result.find((r) => r.searchTypeName === 'scope')?.entries.map((e) => e.id);
+
+    return { components, lanes, organizations, scopes };
   }
 
   async hasObjects(hashes: string[]): Promise<string[]> {
