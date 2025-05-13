@@ -10,6 +10,8 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import { Http } from '@teambit/scope.network';
+import { CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 
 interface CommandFilterOptions {
   defaultTools: Set<string>;
@@ -29,10 +31,18 @@ interface CommandConfig {
 
 export class CliMcpServerMain {
   private bitBin = 'bit';
+  private _http: Http;
   constructor(
     private cli: CLIMain,
     private logger: Logger
   ) {}
+
+  async getHttp(): Promise<Http> {
+    if (!this._http) {
+      this._http = await Http.connect(SYMPHONY_GRAPHQL, CENTRAL_BIT_HUB_NAME);
+    }
+    return this._http;
+  }
 
   async runMcpServer(options: {
     extended?: boolean;
@@ -69,6 +79,7 @@ export class CliMcpServerMain {
       'templates',
       'reset',
       'checkout',
+      'remote-search',
     ]);
 
     // Tools to always exclude
@@ -131,6 +142,8 @@ export class CliMcpServerMain {
         this.processSubCommands(server, cmd, filterOptions);
       }
     });
+
+    this.registerRemoteSearchTool(server);
 
     await server.connect(new StdioServerTransport());
   }
@@ -227,11 +240,14 @@ export class CliMcpServerMain {
     return args;
   }
 
+  private getToolName(name: string): string {
+    // replace white spaces (\s) and dashes (-) with underscores (_)
+    return `bit_${name}`.replace(/[-\s]/g, '_');
+  }
+
   private registerToolForCommand(server: McpServer, cmd: Command, parentCmd?: Command) {
     const cmdName = parentCmd ? `${getCommandName(parentCmd)} ${getCommandName(cmd)}` : getCommandName(cmd);
-
-    // replace white spaces (\s) and dashes (-) with underscores (_)
-    const toolName = `bit_${cmdName}`.replace(/[-\s]/g, '_');
+    const toolName = this.getToolName(cmdName);
     const description = `${cmd.description}${cmd.extendedDescription ? `.\n(${cmd.extendedDescription})` : ''}`;
     const config: CommandConfig = {
       name: cmdName,
@@ -245,6 +261,27 @@ export class CliMcpServerMain {
     server.tool(toolName, config.description, schema, async (params: any) => {
       const argsToRun = this.buildCommandArgs(config, params);
       return this.runBit(argsToRun, params.cwd);
+    });
+  }
+
+  private registerRemoteSearchTool(server: McpServer) {
+    const toolName = this.getToolName('remote-search');
+    const description = 'Search for components in remote scopes';
+    const schema: Record<string, any> = {
+      queryStr: z.string().describe('Search query string'),
+    };
+    server.tool(toolName, description, schema, async (params: any) => {
+      const http = await this.getHttp();
+      const results = await http.search(params.queryStr);
+      this.logger.debug(`[MCP-DEBUG] Search results: ${JSON.stringify(results)}`);
+      if (!results?.components || results.components.length === 0) {
+        return { content: [{ type: 'text', text: 'No results found' }] };
+      }
+      const formattedResults = results.components.map((result) => ({
+        type: 'text',
+        text: result,
+      }));
+      return { content: formattedResults } as CallToolResult;
     });
   }
 
