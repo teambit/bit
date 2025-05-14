@@ -7,139 +7,8 @@ import { Tooltip } from '@teambit/design.ui.tooltip';
 import { useNavigate, useLocation } from '@teambit/base-react.navigation.link';
 import { Composition } from '../../composition';
 import styles from './compositions-panel.module.scss';
-
-export type SelectOption =
-  | string
-  | {
-      label: string;
-      value: string;
-    };
-
-export type ControlBase = {
-  id: string;
-  input: any;
-  label?: string;
-};
-
-export type ControlUnknown = {
-  defaultValue?: boolean;
-};
-
-export type ControlBoolean = {
-  input: 'boolean'; // <input type="checkbox">
-  defaultValue?: boolean;
-};
-
-export type ControlSelect = {
-  input: 'select'; // <select>
-  options: Array<SelectOption>;
-  defaultValue?: string;
-  inline?: boolean; // <input type="radio"> x n
-};
-
-export type ControlMultiSelect = {
-  input: 'multiselect'; // <select multiple>
-  options: Array<SelectOption>;
-  defaultValue?: Array<string>;
-  inline?: boolean; // <input type="checkbox"> x n
-};
-
-export type ControlText = {
-  input: 'text'; // <input type="text">
-  defaultValue?: string;
-};
-
-export type ControlLongText = {
-  input: 'longtext'; // <textarea>
-  defaultValue?: string;
-};
-
-export type ControlNumber = {
-  input: 'number'; // <input type="number">
-  defaultValue?: number;
-};
-
-export type ControlRange = {
-  input: 'range'; // <input type="range">
-  defaultValue?: number;
-  min?: number;
-  max?: number;
-  step?: number;
-};
-
-export type ControlColor = {
-  input: 'color'; // <input type="color">
-  defaultValue?: string;
-};
-
-export type ControlCustom<RenderFn = any, ValueType = any> = {
-  input: 'custom';
-  defaultValue?: ValueType;
-  render: RenderFn;
-  renderOptions?: Record<string, any>;
-};
-
-export type Control = ControlBase &
-  (
-    | ControlBoolean
-    | ControlSelect
-    | ControlMultiSelect
-    | ControlText
-    | ControlLongText
-    | ControlNumber
-    | ControlRange
-    | ControlColor
-    | ControlCustom
-    | ControlUnknown
-  );
-
-export type InputProps = {
-  id: string;
-  value: any;
-  onChange: (v: any) => void;
-  info: Control;
-};
-
-function InputText(inputProps: InputProps) {
-  const { id, value, onChange } = inputProps;
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value);
-  };
-
-  return <input id={id} type="text" value={value} onChange={handleChange} />;
-}
-
-function InputNumber(inputProps: InputProps) {
-  const { id, value, onChange } = inputProps;
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value);
-  };
-  return <input id={id} type="number" value={value} onChange={handleChange} />;
-}
-
-function InputBoolean(inputProps: InputProps) {
-  const { id, value, onChange } = inputProps;
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.checked);
-  };
-  return <input id={id} type="checkbox" checked={value} onChange={handleChange} />;
-}
-
-export function getInputType(field: Control): React.ComponentType<InputProps> {
-  // TODO: implement this function
-  field;
-  switch (field.input) {
-    case 'text':
-      return InputText;
-    case 'number':
-      return InputNumber;
-    case 'boolean':
-      return InputBoolean;
-    default:
-      return InputText;
-  }
-}
+import { type LiveControlReadyEventData, type LiveControlUpdateEventData } from './live-control.type';
+import { LiveControls } from './live-control-input';
 
 export type CompositionsPanelProps = {
   /**
@@ -179,8 +48,8 @@ export function CompositionsPanel({
   className,
   ...rest
 }: CompositionsPanelProps) {
+  // setup from props
   const shouldAddNameParam = useNameParam || (isScaling && includesEnvTemplate === false);
-
   const handleSelect = useCallback(
     (selected: Composition) => {
       onSelect && onSelect(selected);
@@ -188,47 +57,19 @@ export function CompositionsPanel({
     [onSelect]
   );
 
+  // current composition state
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const versionFromQueryParams = searchParams.get('version');
   const navigate = useNavigate();
 
+  // live control state
   const [controlsTimestamp, setControlsTimestamp] = useState(0);
-  const [controlsDef, setControlsDef] = useState<any>(null);
+  const [controlsDefs, setControlsDefs] = useState<any>(null);
   const [consolesValues, setConsolesValues] = useState<any>({});
   const [mounter, setMounter] = useState<Window>();
 
-  useEffect(() => {
-    function handleCompositionControlsInit(e: MessageEvent) {
-      if (!e.data || e.data.type !== 'composition-controls:ready') return () => {};
-      // eslint-disable-next-line no-console
-      console.log('handleCompositionControlsInit', JSON.stringify(e.data, null, 2));
-      const { controls, values, timestamp } = e.data.payload;
-      const iframeWindow = e.source;
-      setMounter(iframeWindow as Window);
-      setControlsDef(controls);
-      setConsolesValues(values);
-      setControlsTimestamp(timestamp);
-    }
-    window.addEventListener('message', handleCompositionControlsInit);
-    return () => {
-      window.removeEventListener('message', handleCompositionControlsInit);
-    };
-  }, []);
-
-  const consolesUpdate = useCallback(
-    (key: string, value: any) => {
-      if (mounter) {
-        mounter.postMessage({
-          type: 'composition-controls:update',
-          payload: { key, value, timestamp: controlsTimestamp },
-        });
-      }
-      setConsolesValues((prev: any) => ({ ...prev, [key]: value }));
-    },
-    [mounter, consolesValues, controlsTimestamp]
-  );
-
+  // composition navigation action
   const onCompositionCodeClicked = useCallback(
     (composition: Composition) => (e: React.MouseEvent<HTMLDivElement>) => {
       e.preventDefault();
@@ -241,6 +82,42 @@ export function CompositionsPanel({
       navigate(`${basePath}/~code/${composition.filepath}?${queryParams.toString()}#search=${composition.identifier}`);
     },
     [location?.pathname, versionFromQueryParams]
+  );
+
+  // listen to the mounter for live control updates
+  useEffect(() => {
+    function onLiveControlsSetup(e: MessageEvent<LiveControlReadyEventData>) {
+      if (!e.data || e.data.type !== 'composition-controls:ready') return () => {};
+      const { controls, values, timestamp } = JSON.parse(JSON.stringify(e.data.payload));
+      const iframeWindow = e.source;
+      setMounter(iframeWindow as Window);
+      setControlsDefs(controls);
+      setConsolesValues(values);
+      setControlsTimestamp(timestamp);
+    }
+    window.addEventListener('message', onLiveControlsSetup);
+    return () => {
+      window.removeEventListener('message', onLiveControlsSetup);
+    };
+  }, []);
+
+  // sync live control updates back to the mounter
+  const onLiveControlsUpdate = useCallback(
+    (key: string, value: any) => {
+      if (mounter) {
+        const data: LiveControlUpdateEventData = {
+          type: 'composition-controls:update',
+          payload: {
+            key,
+            value: JSON.parse(JSON.stringify(value)),
+            timestamp: controlsTimestamp,
+          },
+        };
+        mounter.postMessage(data);
+      }
+      setConsolesValues((prev: any) => ({ ...prev, [key]: value }));
+    },
+    [mounter, consolesValues, controlsTimestamp]
   );
 
   return (
@@ -277,30 +154,7 @@ export function CompositionsPanel({
         })}
       </ul>
       {controlsTimestamp && (
-        <div>
-          <div>Controls</div>
-          <div>
-            {controlsDef.map((field) => {
-              const key = field.id;
-              const Input = getInputType(field);
-              return (
-                <div key={key}>
-                  <div>
-                    <label htmlFor={`control-${key}`}>{field.label || field.id}</label>
-                  </div>
-                  <div>
-                    <Input
-                      id={`control-${key}`}
-                      value={consolesValues[key]}
-                      onChange={(v: any) => consolesUpdate(key, v)}
-                      info={field}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <LiveControls defs={controlsDefs} values={consolesValues} onChange={onLiveControlsUpdate} />
       )}
     </div>
   );
