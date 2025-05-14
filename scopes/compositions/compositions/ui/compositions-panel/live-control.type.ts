@@ -29,8 +29,10 @@ export type SelectOption =
 
 export type ControlBase = {
   id: string;
-  input: any;
+  input?: string;
+  defaultValue?: any;
   label?: string;
+  type?: any;
 };
 
 export type ControlUnknown = {

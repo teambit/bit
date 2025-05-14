@@ -45,6 +45,14 @@ export function getInputType(field: Control): React.ComponentType<InputProps> {
     case 'boolean':
       return InputBoolean;
     default:
+      switch (typeof field.type) {
+        case 'string':
+          return InputText;
+        case 'number':
+          return InputNumber;
+        case 'boolean':
+          return InputBoolean;
+      }
       return InputText;
   }
 }
