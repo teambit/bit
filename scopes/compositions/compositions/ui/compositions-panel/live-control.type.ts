@@ -1,7 +1,7 @@
 // TODO: put the whole file into a sharable Bit component for custom preview mounters
 
 export type LiveControlUpdateEventData = {
-  type: 'composition-controls:update';
+  type: 'composition-live-controls:update';
   payload: {
     key: string;
     value: any;
@@ -10,7 +10,7 @@ export type LiveControlUpdateEventData = {
 };
 
 export type LiveControlReadyEventData = {
-  type: 'composition-controls:ready';
+  type: 'composition-live-controls:ready';
   payload: {
     controls: Array<Control>;
     values: Record<string, any>;

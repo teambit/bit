@@ -87,7 +87,7 @@ export function CompositionsPanel({
   // listen to the mounter for live control updates
   useEffect(() => {
     function onLiveControlsSetup(e: MessageEvent<LiveControlReadyEventData>) {
-      if (!e.data || e.data.type !== 'composition-controls:ready') return () => {};
+      if (!e.data || e.data.type !== 'composition-live-controls:ready') return () => {};
       const { controls, values, timestamp } = JSON.parse(JSON.stringify(e.data.payload));
       const iframeWindow = e.source;
       setMounter(iframeWindow as Window);
@@ -106,7 +106,7 @@ export function CompositionsPanel({
     (key: string, value: any) => {
       if (mounter) {
         const data: LiveControlUpdateEventData = {
-          type: 'composition-controls:update',
+          type: 'composition-live-controls:update',
           payload: {
             key,
             value: JSON.parse(JSON.stringify(value)),
