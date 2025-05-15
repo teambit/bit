@@ -79,8 +79,8 @@ export class CliMcpServerMain {
       'templates',
       'reset',
       'checkout',
+      'schema',
       'remote-search',
-      'remote-get-schema',
     ]);
 
     // Tools to always exclude
@@ -144,7 +144,7 @@ export class CliMcpServerMain {
       }
     });
 
-    const remoteCommands = ['remote-search', 'remote-get-schema'];
+    const remoteCommands = ['remote-search'];
     remoteCommands.forEach((cmdName) => {
       if (this.shouldIncludeCommand(cmdName, filterOptions)) {
         this.registerToolForRemote(server, cmdName);
@@ -273,8 +273,6 @@ export class CliMcpServerMain {
   private registerToolForRemote(server: McpServer, name: string) {
     if (name === 'remote-search') {
       this.registerRemoteSearchTool(server);
-    } else if (name === 'remote-get-schema') {
-      this.registerGetSchemaTool(server);
     }
   }
 
@@ -296,19 +294,6 @@ export class CliMcpServerMain {
         text: result,
       }));
       return { content: formattedResults } as CallToolResult;
-    });
-  }
-
-  private registerGetSchemaTool(server: McpServer) {
-    const toolName = this.getToolName('remote-get-schema');
-    const description = 'Get the schema of a component from the remote scope. (the schema is the API of the component)';
-    const schema: Record<string, any> = {
-      id: z.string().describe('Component ID'),
-    };
-    server.tool(toolName, description, schema, async (params: any) => {
-      const http = await this.getHttp();
-      const response = await http.getSchema(params.id);
-      return { content: [{ type: 'text', text: JSON.stringify(response) }] } as CallToolResult;
     });
   }
 
