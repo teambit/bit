@@ -50,12 +50,6 @@ export function CompositionsPanel({
 }: CompositionsPanelProps) {
   // setup from props
   const shouldAddNameParam = useNameParam || (isScaling && includesEnvTemplate === false);
-  const handleSelect = useCallback(
-    (selected: Composition) => {
-      onSelect && onSelect(selected);
-    },
-    [onSelect]
-  );
 
   // current composition state
   const location = useLocation();
@@ -70,6 +64,13 @@ export function CompositionsPanel({
   const [mounter, setMounter] = useState<Window>();
 
   // composition navigation action
+  const handleSelect = useCallback(
+    (selected: Composition) => {
+      onSelect && onSelect(selected);
+      setControlsTimestamp(0);
+    },
+    [onSelect]
+  );
   const onCompositionCodeClicked = useCallback(
     (composition: Composition) => (e: React.MouseEvent<HTMLDivElement>) => {
       e.preventDefault();
@@ -95,6 +96,8 @@ export function CompositionsPanel({
       setConsolesValues(values);
       setControlsTimestamp(timestamp);
     }
+    // LATER
+    // function onLiveControlsDestroy(e: MessageEvent<LiveControlReadyEventData>) {}
     window.addEventListener('message', onLiveControlsSetup);
     return () => {
       window.removeEventListener('message', onLiveControlsSetup);
