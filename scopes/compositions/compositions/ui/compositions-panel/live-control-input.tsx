@@ -2,6 +2,12 @@
 
 import React from 'react';
 import { type Control } from './live-control.type';
+// import '@teambit/design.inputs.input-text';
+// import '@teambit/design.inputs.text-area';
+// import '@teambit/design.inputs.dropdown';
+// import '@teambit/design.ui.input.color-picker';
+// import '@teambit/design.inputs.date-picker';
+// import '@teambit/design.inputs.toggle-switch';
 
 export type InputProps = {
   id: string;
@@ -68,23 +74,20 @@ export function LiveControls({
 }) {
   return (
     <div>
-      <div>Controls</div>
-      <div>
-        {defs.map((field) => {
-          const key = field.id;
-          const Input = getInputType(field);
-          return (
-            <div key={key}>
-              <div>
-                <label htmlFor={`control-${key}`}>{field.label || field.id}</label>
-              </div>
-              <div>
-                <Input id={`control-${key}`} value={values[key]} onChange={(v: any) => onChange(key, v)} info={field} />
-              </div>
+      {defs.map((field) => {
+        const key = field.id;
+        const Input = getInputType(field);
+        return (
+          <div key={key}>
+            <div>
+              <label htmlFor={`control-${key}`}>{field.label || field.id}</label>
             </div>
-          );
-        })}
-      </div>
+            <div>
+              <Input id={`control-${key}`} value={values[key]} onChange={(v: any) => onChange(key, v)} info={field} />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
