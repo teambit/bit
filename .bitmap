@@ -215,15 +215,9 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "1.10.11",
+        "version": "1.11.0",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/bit",
-        "nextVersion": {
-            "version": "minor",
-            "message": "bumping minor version",
-            "username": "shohamgilad",
-            "email": "shoham.gilad@gmail.com"
-        }
+        "rootDir": "scopes/harmony/bit"
     },
     "bit-map": {
         "name": "bit-map",
