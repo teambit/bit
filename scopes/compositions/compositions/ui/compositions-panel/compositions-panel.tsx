@@ -9,7 +9,7 @@ import { useNavigate, useLocation } from '@teambit/base-react.navigation.link';
 import { Composition } from '../../composition';
 import styles from './compositions-panel.module.scss';
 import { type LiveControlReadyEventData, type LiveControlUpdateEventData } from './live-control.type';
-import { LiveControls } from './live-control-input';
+import { LiveControls } from './live-control-panel';
 
 export type CompositionsPanelProps = {
   /**
@@ -102,6 +102,8 @@ export function CompositionsPanel({
     function onLiveControlsSetup(e: MessageEvent<LiveControlReadyEventData>) {
       if (!e.data || e.data.type !== 'composition-live-controls:ready') return () => {};
       const { controls, values, timestamp } = JSON.parse(JSON.stringify(e.data.payload));
+      // eslint-disable-next-line no-console
+      console.log('onLiveControlsSetup', controls, values, timestamp);
       const iframeWindow = e.source;
       setMounter(iframeWindow as Window);
       setControlsDefs(controls);

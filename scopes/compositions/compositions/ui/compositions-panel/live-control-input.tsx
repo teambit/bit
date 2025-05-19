@@ -1,93 +1,147 @@
 // TODO: replace this with a better-implemented live control component set
 
 import React from 'react';
-import { type Control } from './live-control.type';
-// import '@teambit/design.inputs.input-text';
-// import '@teambit/design.inputs.text-area';
-// import '@teambit/design.inputs.dropdown';
-// import '@teambit/design.ui.input.color-picker';
-// import '@teambit/design.inputs.date-picker';
-// import '@teambit/design.inputs.toggle-switch';
 
-export type InputProps = {
+import { InputText } from '@teambit/design.inputs.input-text';
+import { TextArea } from '@teambit/design.inputs.text-area';
+import { Dropdown } from '@teambit/design.inputs.dropdown';
+import { MenuItem } from '@teambit/design.inputs.selectors.menu-item';
+import { ColorPicker } from '@teambit/design.ui.input.color-picker';
+import { DatePicker } from '@teambit/design.inputs.date-picker';
+import { Toggle } from '@teambit/design.inputs.toggle-switch';
+
+type InputComponentProps = {
   id: string;
   value: any;
-  onChange: (v: any) => void;
-  info: Control;
+  onChange: (value: any) => void;
+  meta?: any;
 };
 
-function InputText(inputProps: InputProps) {
-  const { id, value, onChange } = inputProps;
+type InputComponent = React.FC<InputComponentProps>;
 
+function ShortTextInput({ id, value, onChange }: InputComponentProps) {
+  const [inputValue, setInputValue] = React.useState(value);
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value);
+    const newValue = e.target.value;
+    onChange(newValue);
+    setInputValue(newValue);
   };
-
-  return <input id={id} type="text" value={value} onChange={handleChange} />;
+  return <InputText id={id} value={inputValue} onChange={handleChange} />;
 }
 
-function InputNumber(inputProps: InputProps) {
-  const { id, value, onChange } = inputProps;
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value);
+function LongTextInput({ id, value, onChange }: InputComponentProps) {
+  const [inputValue, setInputValue] = React.useState(value);
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    onChange(newValue);
+    setInputValue(newValue);
   };
-  return <input id={id} type="number" value={value} onChange={handleChange} />;
+  return <TextArea id={id} value={inputValue} onChange={handleChange} />;
 }
 
-function InputBoolean(inputProps: InputProps) {
-  const { id, value, onChange } = inputProps;
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.checked);
+function SelectInput({ id, value, onChange, meta }: InputComponentProps) {
+  const [selectedValue, setSelectedValue] = React.useState(value);
+  const handleChange = (newValue: any) => {
+    onChange(newValue);
+    setSelectedValue(newValue);
   };
-  return <input id={id} type="checkbox" checked={value} onChange={handleChange} />;
-}
-
-export function getInputType(field: Control): React.ComponentType<InputProps> {
-  switch (field.input) {
-    case 'text':
-      return InputText;
-    case 'number':
-      return InputNumber;
-    case 'boolean':
-      return InputBoolean;
-    default:
-      switch (typeof field.type) {
-        case 'string':
-          return InputText;
-        case 'number':
-          return InputNumber;
-        case 'boolean':
-          return InputBoolean;
-      }
-      return InputText;
-  }
-}
-
-export function LiveControls({
-  defs,
-  values,
-  onChange,
-}: {
-  defs: Array<Control>;
-  values: Record<string, any>;
-  onChange: (key: string, value: any) => void;
-}) {
+  const placeholderContent = meta.options.find((o: any) => o.value === selectedValue)?.label;
   return (
-    <div>
-      {defs.map((field) => {
-        const key = field.id;
-        const Input = getInputType(field);
-        return (
-          <div key={key}>
-            <div>
-              <label htmlFor={`control-${key}`}>{field.label || field.id}</label>
-            </div>
-            <div>
-              <Input id={`control-${key}`} value={values[key]} onChange={(v: any) => onChange(key, v)} info={field} />
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    <Dropdown id={id} placeholderContent={placeholderContent}>
+      {meta.options.map((option: any) => (
+        <MenuItem active={option.value === selectedValue} key={option.value} onClick={() => handleChange(option.value)}>
+          {option.label}
+        </MenuItem>
+      ))}
+    </Dropdown>
   );
+}
+
+function NumberInput({ id, value, onChange }: InputComponentProps) {
+  const [inputValue, setInputValue] = React.useState(value);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    if (!isNaN(Number(newValue))) {
+      onChange(Number(newValue));
+      setInputValue(Number(newValue));
+    } else {
+      // TODO: render error message
+      // eslint-disable-next-line no-console
+      console.error('Invalid number input', newValue);
+    }
+  };
+  return <InputText id={id} type="number" value={inputValue} onChange={handleChange} />;
+}
+
+function ColorInput({ id, value, onChange }: InputComponentProps) {
+  const [inputValue, setInputValue] = React.useState(value);
+  const handleChange = (newValue: string) => {
+    onChange(newValue);
+    setInputValue(newValue);
+  };
+  return <ColorPicker id={id} value={inputValue} onColorSelect={handleChange} />;
+}
+
+function DateInput({ id, value, onChange }: InputComponentProps) {
+  const [inputValue, setInputValue] = React.useState<Date | null>(new Date(value));
+  const handleChange = (newValue: Date | null) => {
+    if (newValue) {
+      onChange(newValue.toISOString().split('T')[0]);
+    }
+    setInputValue(newValue);
+  };
+  return <DatePicker id={id} date={inputValue} onChange={handleChange} />;
+}
+
+function ToggleInput({ id, value, onChange }: InputComponentProps) {
+  const [isChecked, setIsChecked] = React.useState(value);
+  const handleChange = () => {
+    setIsChecked(!isChecked);
+    onChange(!isChecked);
+  };
+  return <Toggle id={id} defaultChecked={isChecked} onChange={handleChange} />;
+}
+
+function JsonInput({ id, value, onChange }: InputComponentProps) {
+  const [inputValue, setInputValue] = React.useState(JSON.stringify(value, null, 2));
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    try {
+      const parsedValue = JSON.parse(newValue);
+      onChange(parsedValue);
+    } catch (error) {
+      // TODO: render error message
+      // eslint-disable-next-line no-console
+      console.error('Invalid JSON input', newValue);
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
+    setInputValue(newValue);
+  };
+  return <TextArea id={id} value={inputValue} onChange={handleChange} />;
+}
+
+export function getInputComponent(type: string): InputComponent {
+  switch (type) {
+    case 'text':
+      return ShortTextInput;
+    case 'longtext':
+      return LongTextInput;
+    case 'select':
+      return SelectInput;
+    case 'number':
+      return NumberInput;
+    case 'color':
+      return ColorInput;
+    case 'date':
+      return DateInput;
+    case 'boolean':
+      return ToggleInput;
+    case 'json':
+      return JsonInput;
+    default:
+      // eslint-disable-next-line no-console
+      console.warn(`Unknown input type: ${type}`);
+      return ShortTextInput;
+  }
 }

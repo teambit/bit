@@ -163,6 +163,7 @@
         "@teambit/design.inputs.date-picker": "^0.0.2",
         "@teambit/design.inputs.dropdown": "^1.3.1",
         "@teambit/design.inputs.input-text": "^1.1.2",
+        "@teambit/design.inputs.selectors.menu-item": "^1.1.0",
         "@teambit/design.inputs.selectors.multi-select": "0.0.20",
         "@teambit/design.inputs.text-area": "^0.0.18",
         "@teambit/design.inputs.toggle-button": "0.0.9",
