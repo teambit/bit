@@ -251,6 +251,14 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       .concat(componentAuxiliaryFiles)
       .concat(componentPreviewFiles)
       .concat(componentPreviewAuxiliaryFiles);
+
+    for (const file of assets) {
+      // If the file is not already in the files array, add it
+      if (!files.some((f) => f.name === file.name)) {
+        files.push(file);
+      }
+    }
+
     return files;
   }
 
