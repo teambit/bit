@@ -1104,7 +1104,7 @@
     "modules/generate-style-loaders": {
         "name": "modules/generate-style-loaders",
         "scope": "teambit.webpack",
-        "version": "1.0.18",
+        "version": "1.0.19",
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/modules/generate-style-loaders"
     },
