@@ -20,6 +20,8 @@ interface CommandFilterOptions {
   alwaysExcludeTools: Set<string>;
   extended: boolean;
   includeOnlySet?: Set<string>;
+  consumerProject: boolean;
+  consumerProjectTools: Set<string>;
 }
 
 interface CommandConfig {
@@ -50,6 +52,7 @@ export class CliMcpServerMain {
     includeAdditional?: string;
     exclude?: string;
     bitBin?: string;
+    consumerProject?: boolean;
   }) {
     this.logger.debug(`[MCP-DEBUG] Starting MCP server with options: ${JSON.stringify(options)}`);
     const commands = this.cli.commands;
@@ -122,13 +125,37 @@ export class CliMcpServerMain {
       version: '0.0.1',
     });
 
+    // Set of tools for consumer projects (non-Bit workspaces)
+    const consumerProjectTools = new Set(['schema', 'show', 'remote-search']);
+
+    const consumerProject = Boolean(options.consumerProject);
+
+    // Validate flags combination
+    if (consumerProject) {
+      this.logger.debug(
+        `[MCP-DEBUG] Running MCP server in consumer project mode (for non-Bit workspaces) with tools: ${Array.from(consumerProjectTools).join(', ')}`
+      );
+      if (options.includeAdditional) {
+        this.logger.debug(
+          `[MCP-DEBUG] Additional tools enabled in consumer project mode: ${options.includeAdditional}`
+        );
+      }
+      if (extended) {
+        this.logger.warn(
+          '[MCP-DEBUG] Warning: --consumer-project and --extended flags were both provided. The --extended flag will be ignored.'
+        );
+      }
+    }
+
     const filterOptions: CommandFilterOptions = {
       defaultTools,
       additionalCommandsSet,
       userExcludeSet,
       alwaysExcludeTools,
-      extended,
+      extended: consumerProject ? false : extended, // Ignore extended when consumerProject is true
       includeOnlySet,
+      consumerProject,
+      consumerProjectTools,
     };
 
     commands.forEach((cmd) => {
@@ -175,6 +202,16 @@ export class CliMcpServerMain {
 
     // Extended mode includes all commands except excluded ones
     if (options.extended) return true;
+
+    // Consumer project mode: only include consumer project tools + any additional specified
+    if (options.consumerProject) {
+      const shouldInclude =
+        options.consumerProjectTools.has(cmdName) || (options.additionalCommandsSet?.has(cmdName) ?? false);
+      if (shouldInclude) {
+        this.logger.debug(`[MCP-DEBUG] Including command in consumer project mode: ${cmdName}`);
+      }
+      return shouldInclude;
+    }
 
     // Default mode: include default tools + any additional specified
     return options.defaultTools.has(cmdName) || (options.additionalCommandsSet?.has(cmdName) ?? false);
