@@ -8,7 +8,10 @@ import { Tooltip } from '@teambit/design.ui.tooltip';
 import { useNavigate, useLocation } from '@teambit/base-react.navigation.link';
 import { Composition } from '../../composition';
 import styles from './compositions-panel.module.scss';
-import { type LiveControlReadyEventData, type LiveControlUpdateEventData } from './live-control.type';
+import {
+  type LiveControlReadyEventData,
+  type LiveControlUpdateEventData,
+} from './live-control.type';
 import { LiveControls } from './live-control-panel';
 
 export type CompositionsPanelProps = {
@@ -72,7 +75,7 @@ export function CompositionsPanel({
   // live control state
   const [controlsTimestamp, setControlsTimestamp] = useState(0);
   const [controlsDefs, setControlsDefs] = useState<any>(null);
-  const [consolesValues, setConsolesValues] = useState<any>({});
+  const [controlsValues, setControlsValues] = useState<any>({});
   const [mounter, setMounter] = useState<Window>();
 
   // composition navigation action
@@ -102,12 +105,10 @@ export function CompositionsPanel({
     function onLiveControlsSetup(e: MessageEvent<LiveControlReadyEventData>) {
       if (!e.data || e.data.type !== 'composition-live-controls:ready') return () => {};
       const { controls, values, timestamp } = JSON.parse(JSON.stringify(e.data.payload));
-      // eslint-disable-next-line no-console
-      console.log('onLiveControlsSetup', controls, values, timestamp);
       const iframeWindow = e.source;
       setMounter(iframeWindow as Window);
       setControlsDefs(controls);
-      setConsolesValues(values);
+      setControlsValues(values);
       setControlsTimestamp(timestamp);
     }
     // LATER
@@ -132,9 +133,9 @@ export function CompositionsPanel({
         };
         mounter.postMessage(data);
       }
-      setConsolesValues((prev: any) => ({ ...prev, [key]: value }));
+      setControlsValues((prev: any) => ({ ...prev, [key]: value }));
     },
-    [mounter, consolesValues, controlsTimestamp]
+    [mounter, controlsValues, controlsTimestamp]
   );
 
   return (
@@ -184,7 +185,7 @@ export function CompositionsPanel({
         name="LIVE CONTROLS"
       >
         {controlsTimestamp ? (
-          <LiveControls defs={controlsDefs} values={consolesValues} onChange={onLiveControlsUpdate} />
+          <LiveControls defs={controlsDefs} values={controlsValues} onChange={onLiveControlsUpdate} />
         ) : (
           <div className={styles.noLiveControls}>No live controls available for this composition</div>
         )}

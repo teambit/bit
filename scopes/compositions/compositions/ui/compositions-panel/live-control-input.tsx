@@ -1,6 +1,7 @@
 // TODO: replace this with a better-implemented live control component set
 
 import React from 'react';
+import classNames from 'classnames';
 
 import { InputText } from '@teambit/design.inputs.input-text';
 import { TextArea } from '@teambit/design.inputs.text-area';
@@ -9,6 +10,8 @@ import { MenuItem } from '@teambit/design.inputs.selectors.menu-item';
 import { ColorPicker } from '@teambit/design.ui.input.color-picker';
 import { DatePicker } from '@teambit/design.inputs.date-picker';
 import { Toggle } from '@teambit/design.inputs.toggle-switch';
+
+import styles from './live-control-input.module.scss';
 
 type InputComponentProps = {
   id: string;
@@ -47,13 +50,19 @@ function SelectInput({ id, value, onChange, meta }: InputComponentProps) {
   };
   const placeholderContent = meta.options.find((o: any) => o.value === selectedValue)?.label;
   return (
-    <Dropdown id={id} placeholderContent={placeholderContent}>
-      {meta.options.map((option: any) => (
-        <MenuItem active={option.value === selectedValue} key={option.value} onClick={() => handleChange(option.value)}>
-          {option.label}
-        </MenuItem>
-      ))}
-    </Dropdown>
+    <p className={classNames(styles.wrapper)}>
+      <Dropdown id={id} placeholderContent={placeholderContent}>
+        {meta.options.map((option: any) => (
+          <MenuItem
+            active={option.value === selectedValue}
+            key={option.value}
+            onClick={() => handleChange(option.value)}
+          >
+            {option.label}
+          </MenuItem>
+        ))}
+      </Dropdown>
+    </p>
   );
 }
 
@@ -79,7 +88,11 @@ function ColorInput({ id, value, onChange }: InputComponentProps) {
     onChange(newValue);
     setInputValue(newValue);
   };
-  return <ColorPicker id={id} value={inputValue} onColorSelect={handleChange} />;
+  return (
+    <p className={classNames(styles.wrapper)}>
+      <ColorPicker id={id} value={inputValue} onColorSelect={handleChange} />
+    </p>
+  );
 }
 
 function DateInput({ id, value, onChange }: InputComponentProps) {
@@ -90,7 +103,11 @@ function DateInput({ id, value, onChange }: InputComponentProps) {
     }
     setInputValue(newValue);
   };
-  return <DatePicker id={id} date={inputValue} onChange={handleChange} />;
+  return (
+    <p className={classNames(styles.wrapper)}>
+      <DatePicker id={id} date={inputValue} onChange={handleChange} />
+    </p>
+  );
 }
 
 function ToggleInput({ id, value, onChange }: InputComponentProps) {
@@ -99,26 +116,33 @@ function ToggleInput({ id, value, onChange }: InputComponentProps) {
     setIsChecked(!isChecked);
     onChange(!isChecked);
   };
-  return <Toggle id={id} defaultChecked={isChecked} onChange={handleChange} />;
+  return (
+    <p className={classNames(styles.wrapper)}>
+      <Toggle id={id} defaultChecked={isChecked} onChange={handleChange} />
+    </p>
+  );
 }
 
 function JsonInput({ id, value, onChange }: InputComponentProps) {
   const [inputValue, setInputValue] = React.useState(JSON.stringify(value, null, 2));
+  const [message, setMessage] = React.useState('');
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     try {
       const parsedValue = JSON.parse(newValue);
       onChange(parsedValue);
+      setMessage('');
     } catch (error) {
-      // TODO: render error message
-      // eslint-disable-next-line no-console
-      console.error('Invalid JSON input', newValue);
-      // eslint-disable-next-line no-console
-      console.error(error);
+      setMessage('Invalid JSON');
     }
     setInputValue(newValue);
   };
-  return <TextArea id={id} value={inputValue} onChange={handleChange} />;
+  return (
+    <div>
+      <TextArea id={id} value={inputValue} onChange={handleChange} />
+      {message && <div style={{ color: 'red' }}>{message}</div>}
+    </div>
+  );
 }
 
 export function getInputComponent(type: string): InputComponent {
