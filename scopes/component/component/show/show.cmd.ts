@@ -47,6 +47,11 @@ to see the legacy bit show, please use "--legacy" flag`);
       return component;
     }
     const host = this.component.getHost();
+    if (!host) {
+      throw new Error(
+        'Could not find a workspace or scope. Consider using --remote or run inside a valid workspace or scope.'
+      );
+    }
     const id = await host.resolveComponentId(idStr);
     const component = await host.get(id);
     if (!component) throw new MissingBitMapComponent(idStr);
