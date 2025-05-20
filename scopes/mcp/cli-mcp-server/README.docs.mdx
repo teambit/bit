@@ -32,6 +32,7 @@ bit mcp-server [options]
 Options:
 
 - `-e, --extended`: Enable the full set of Bit CLI commands as MCP tools
+- `--consumer-project`: For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote-search" tools and automatically adds the "--remote" flag to relevant commands.
 - `--include-only <commands>`: Specify a subset of commands to expose as MCP tools (comma-separated list)
 - `--include-additional <commands>`: Add specific commands to the default set (comma-separated list)
 - `--exclude <commands>`: Prevent specific commands from being exposed (comma-separated list)
@@ -71,6 +72,21 @@ For extended mode with all commands available:
 }
 ```
 
+For consumer projects that only use Bit component packages:
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "bit-cli": {
+        "command": "bit",
+        "args": ["mcp-server", "--consumer-project"]
+      }
+    }
+  }
+}
+```
+
 ### Programmatic Usage
 
 ```javascript
@@ -90,7 +106,7 @@ async function example() {
 
 ## Available Tools
 
-The Bit CLI MCP Server operates in two modes:
+The Bit CLI MCP Server operates in three modes:
 
 ### Default Mode
 
@@ -120,6 +136,31 @@ In default mode, the server exposes a focused set of essential Bit CLI commands 
 - `bit_checkout`: Switch versions or remove changes
 - `bit_schema`: Retrieve component API schema from workspace or remote scopes
 - `bit_remote_search`: Search for components in remote scopes
+
+### Consumer Project Mode (--consumer-project)
+
+This mode is designed for non-Bit workspaces that only consume Bit component packages. It exposes a minimal set of tools needed for interacting with remote Bit components:
+
+- `bit_schema`: Retrieve component API schema from remote scopes
+- `bit_show`: Display component information
+- `bit_remote_search`: Search for components in remote scopes
+
+This mode is perfect for projects that use Bit components as dependencies but don't develop or manage Bit components themselves. It provides access to component documentation, API schemas, and search capabilities without the overhead of full workspace management tools.
+
+### Consumer Project Mode (--consumer-project)
+
+This mode is designed for applications or projects that are not Bit workspaces but need to consume or work with Bit components as packages. It provides a minimal set of tools focused on component discovery and information:
+
+- `bit_schema`: Retrieves component API schema from remote scopes (automatically adds `--remote` flag)
+- `bit_show`: Displays component information from remote scopes (automatically adds `--remote` flag)
+- `bit_remote_search`: Searches for components in remote scopes
+
+In this mode:
+
+1. You don't need a Bit workspace initialization
+2. The `--remote` flag is automatically added to `show` and `schema` commands
+3. The `cwd` parameter is still required but can be any directory (not necessarily a Bit workspace)
+4. You can still add additional tools with the `--include-additional` flag
 
 ### Extended Mode (--extended)
 
@@ -159,6 +200,12 @@ bit mcp-server --include-only "status,show,tag,snap,import,export"
 
 # Add specific tools to the default set
 bit mcp-server --include-additional "build,lint,format"
+
+# For consumer projects (non-Bit workspaces)
+bit mcp-server --consumer-project
+
+# Add specific tools to the consumer project set
+bit mcp-server --consumer-project --include-additional "deps,get,preview"
 
 # Exclude specific tools from being available
 bit mcp-server --extended --exclude "checkout,remove"
