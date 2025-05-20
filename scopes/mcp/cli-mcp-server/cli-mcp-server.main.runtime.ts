@@ -34,6 +34,7 @@ interface CommandConfig {
 export class CliMcpServerMain {
   private bitBin = 'bit';
   private _http: Http;
+  private isConsumerProjectMode: boolean = false;
   constructor(
     private cli: CLIMain,
     private logger: Logger
@@ -129,6 +130,9 @@ export class CliMcpServerMain {
     const consumerProjectTools = new Set(['schema', 'show', 'remote-search']);
 
     const consumerProject = Boolean(options.consumerProject);
+
+    // Store consumer project mode globally in the class
+    this.isConsumerProjectMode = consumerProject;
 
     // Validate flags combination
     if (consumerProject) {
@@ -291,7 +295,13 @@ export class CliMcpServerMain {
   private registerToolForCommand(server: McpServer, cmd: Command, parentCmd?: Command) {
     const cmdName = parentCmd ? `${getCommandName(parentCmd)} ${getCommandName(cmd)}` : getCommandName(cmd);
     const toolName = this.getToolName(cmdName);
-    const description = `${cmd.description}${cmd.extendedDescription ? `.\n(${cmd.extendedDescription})` : ''}`;
+
+    // Modify description for show and schema commands in consumer project mode
+    let description = `${cmd.description}${cmd.extendedDescription ? `.\n(${cmd.extendedDescription})` : ''}`;
+    if (this.isConsumerProjectMode && (cmdName === 'show' || cmdName === 'schema')) {
+      description += `\n(In consumer project mode, --remote flag is automatically added)`;
+    }
+
     const config: CommandConfig = {
       name: cmdName,
       description,
@@ -303,6 +313,19 @@ export class CliMcpServerMain {
 
     server.tool(toolName, config.description, schema, async (params: any) => {
       const argsToRun = this.buildCommandArgs(config, params);
+
+      // Special handling for consumer projects - auto-add --remote flag for show and schema commands
+      if (this.isConsumerProjectMode && (cmdName === 'show' || cmdName === 'schema')) {
+        if (!argsToRun.includes('--remote')) {
+          this.logger.debug(`[MCP-DEBUG] Auto-adding --remote flag for ${cmdName} in consumer project mode`);
+          argsToRun.push('--remote');
+        }
+        if (cmdName === 'show' && !argsToRun.includes('--legacy')) {
+          this.logger.debug(`[MCP-DEBUG] Auto-adding --legacy flag for ${cmdName} in consumer project mode`);
+          argsToRun.push('--legacy');
+        }
+      }
+
       return this.runBit(argsToRun, params.cwd);
     });
   }

@@ -32,7 +32,7 @@ bit mcp-server [options]
 Options:
 
 - `-e, --extended`: Enable the full set of Bit CLI commands as MCP tools
-- `--consumer-project`: For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote-search" tools
+- `--consumer-project`: For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote-search" tools and automatically adds the "--remote" flag to relevant commands.
 - `--include-only <commands>`: Specify a subset of commands to expose as MCP tools (comma-separated list)
 - `--include-additional <commands>`: Add specific commands to the default set (comma-separated list)
 - `--exclude <commands>`: Prevent specific commands from being exposed (comma-separated list)
@@ -146,6 +146,21 @@ This mode is designed for non-Bit workspaces that only consume Bit component pac
 - `bit_remote_search`: Search for components in remote scopes
 
 This mode is perfect for projects that use Bit components as dependencies but don't develop or manage Bit components themselves. It provides access to component documentation, API schemas, and search capabilities without the overhead of full workspace management tools.
+
+### Consumer Project Mode (--consumer-project)
+
+This mode is designed for applications or projects that are not Bit workspaces but need to consume or work with Bit components as packages. It provides a minimal set of tools focused on component discovery and information:
+
+- `bit_schema`: Retrieves component API schema from remote scopes (automatically adds `--remote` flag)
+- `bit_show`: Displays component information from remote scopes (automatically adds `--remote` flag)
+- `bit_remote_search`: Searches for components in remote scopes
+
+In this mode:
+
+1. You don't need a Bit workspace initialization
+2. The `--remote` flag is automatically added to `show` and `schema` commands
+3. The `cwd` parameter is still required but can be any directory (not necessarily a Bit workspace)
+4. You can still add additional tools with the `--include-additional` flag
 
 ### Extended Mode (--extended)
 
