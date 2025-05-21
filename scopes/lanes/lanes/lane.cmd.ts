@@ -317,6 +317,7 @@ if you want to fork the lane from a certain point in history, use "lane checkout
   alias = '';
   options = [
     ['x', 'skip-dependency-installation', 'do not install dependencies of the checked out components'],
+    ['j', 'json', 'return the revert result in json format'],
   ] as CommandOptions;
   loader = true;
 
@@ -326,37 +327,137 @@ if you want to fork the lane from a certain point in history, use "lane checkout
     const result = await this.lanes.revertHistory(historyId, opts);
     return checkoutOutput(result, {}, `successfully reverted according to history-id: ${historyId}`);
   }
+
+  async json([historyId]: [string], opts: LaneCheckoutOpts) {
+    const result = await this.lanes.revertHistory(historyId, opts);
+    return {
+      components: result.components?.map((component) => ({
+        id: component.id.toString(),
+        filesStatus: Object.entries(component.filesStatus || {}).reduce(
+          (acc, [filePath, status]) => {
+            acc[filePath] = status;
+            return acc;
+          },
+          {} as Record<string, string>
+        ),
+      })),
+      removedComponents: result.removedComponents?.map((id) => id.toString()),
+      addedComponents: result.addedComponents?.map((id) => id.toString()),
+      newComponents: result.newComponents?.map((id) => id.toString()),
+      failedComponents: result.failedComponents?.map((component) => ({
+        id: component.id.toString(),
+        unchangedMessage: component.unchangedMessage,
+        unchangedLegitimately: component.unchangedLegitimately,
+      })),
+      leftUnresolvedConflicts: result.leftUnresolvedConflicts,
+      newFromLane: result.newFromLane,
+      newFromLaneAdded: result.newFromLaneAdded,
+      version: result.version,
+      resolvedComponents: result.resolvedComponents?.map((component) => component.id.toString()),
+      abortedComponents: result.abortedComponents?.map((component) => ({
+        id: component.id.toString(),
+        filesStatus: Object.entries(component.filesStatus || {}).reduce(
+          (acc, [filePath, status]) => {
+            acc[filePath] = status;
+            return acc;
+          },
+          {} as Record<string, string>
+        ),
+      })),
+      installationError: result.installationError?.message,
+      compilationError: result.compilationError?.message,
+      mergeSnapError: result.mergeSnapError?.message,
+      mergeSnapResults: result.mergeSnapResults
+        ? {
+            snappedComponents: result.mergeSnapResults.snappedComponents?.map((component) => component.id.toString()),
+            removedComponents: result.mergeSnapResults.removedComponents?.toStringArray(),
+            exportedIds: result.mergeSnapResults.exportedIds?.map((id) => id.toString()),
+          }
+        : null,
+      workspaceConfigUpdateResult: result.workspaceConfigUpdateResult
+        ? {
+            logs: result.workspaceConfigUpdateResult.logs,
+          }
+        : undefined,
+      historyId,
+    };
+  }
 }
 
 export class LaneHistoryCmd implements Command {
   name = 'history [lane-name]';
   description = 'EXPERIMENTAL. show lane history, default to the current lane';
+  extendedDescription = `list from the oldest to the newest history items`;
   alias = '';
-  options = [['', 'id <string>', 'show a specific history item']] as CommandOptions;
+  options = [
+    ['', 'id <string>', 'show a specific history item'],
+    ['j', 'json', 'return the lane history in json format'],
+  ] as CommandOptions;
   loader = true;
 
   constructor(private lanes: LanesMain) {}
 
-  async report([laneName]: [string], { id }: { id?: string }): Promise<string> {
+  private async getHistoryData(laneName?: string, id?: string) {
     const laneId = laneName ? await this.lanes.parseLaneId(laneName) : this.lanes.getCurrentLaneId();
     if (!laneId || laneId.isDefault()) throw new BitError(`unable to show history of the default lane (main)`);
     await this.lanes.importLaneHistory(laneId);
     const laneHistory = await this.lanes.getLaneHistory(laneId);
     const history = laneHistory.getHistory();
+
     if (id) {
       const historyItem = history[id];
       if (!historyItem) throw new Error(`history id ${id} was not found`);
-      const date = new Date(parseInt(historyItem.log.date)).toLocaleString();
+      return { historyItem, id, history, singleItem: true };
+    }
+
+    return { history, singleItem: false };
+  }
+
+  private getDateString(date: string) {
+    return new Date(parseInt(date)).toLocaleString();
+  }
+
+  async report([laneName]: [string], { id }: { id?: string }): Promise<string> {
+    const { history, historyItem, singleItem } = await this.getHistoryData(laneName, id);
+
+    if (singleItem && historyItem) {
+      const date = this.getDateString(historyItem.log.date);
       const message = historyItem.log.message;
       return `${id} ${date} ${historyItem.log.username} ${message}\n\n${historyItem.components.join('\n')}`;
     }
+
     const items = Object.keys(history).map((uuid) => {
-      const historyItem = history[uuid];
-      const date = new Date(parseInt(historyItem.log.date)).toLocaleString();
-      const message = historyItem.log.message;
-      return `${uuid} ${date} ${historyItem.log.username} ${message}`;
+      const item = history[uuid];
+      const date = this.getDateString(item.log.date);
+      const message = item.log.message;
+      return `${uuid} ${date} ${item.log.username} ${message}`;
     });
     return items.join('\n');
+  }
+
+  async json([laneName]: [string], { id }: { id?: string }) {
+    const { history, historyItem, id: historyId, singleItem } = await this.getHistoryData(laneName, id);
+
+    if (singleItem && historyItem) {
+      return {
+        id: historyId,
+        date: historyItem.log.date,
+        username: historyItem.log.username,
+        message: historyItem.log.message,
+        components: historyItem.components,
+      };
+    }
+
+    return Object.keys(history).map((uuid) => {
+      const item = history[uuid];
+      return {
+        id: uuid,
+        date: item.log.date,
+        username: item.log.username,
+        message: item.log.message,
+        components: item.components,
+      };
+    });
   }
 }
 
