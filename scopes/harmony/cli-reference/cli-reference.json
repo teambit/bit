@@ -102,6 +102,11 @@
         "",
         "bit-bin <binary>",
         "Specify the binary to use for running Bit commands (default: \"bit\")"
+      ],
+      [
+        "",
+        "consumer-project",
+        "For non-Bit workspaces that only consume Bit component packages. Enables only \"schema\", \"show\", and \"remote_search\" tools"
       ]
     ],
     "description": "Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.",
