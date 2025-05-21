@@ -1278,11 +1278,13 @@ workspace, but also mark it as deleted from the lane, so it won't be merged late
 
 **Usage**: `lane history [lane-name]`
 
-**Description**: EXPERIMENTAL. show lane history, default to the current lane
+**Description**: EXPERIMENTAL. show lane history, default to the current lane  
+list from the oldest to the newest history items
 
-| **Option**      | **Option alias** | **Description**              |
-| --------------- | :--------------: | ---------------------------- |
-| `--id <string>` |                  | show a specific history item |
+| **Option**      | **Option alias** | **Description**                        |
+| --------------- | :--------------: | -------------------------------------- |
+| `--id <string>` |                  | show a specific history item           |
+| `--json`        |       `-j`       | return the lane history in json format |
 
 ### lane history-diff
 
@@ -1327,6 +1329,7 @@ if you want to fork the lane from a certain point in history, use "lane checkout
 | **Option**                       | **Option alias** | **Description**                                           |
 | -------------------------------- | :--------------: | --------------------------------------------------------- |
 | `--skip-dependency-installation` |       `-x`       | do not install dependencies of the checked out components |
+| `--json`                         |       `-j`       | return the revert result in json format                   |
 
 ### lane merge
 

@@ -4112,10 +4112,15 @@
             "",
             "id <string>",
             "show a specific history item"
+          ],
+          [
+            "j",
+            "json",
+            "return the lane history in json format"
           ]
         ],
         "description": "EXPERIMENTAL. show lane history, default to the current lane",
-        "extendedDescription": "",
+        "extendedDescription": "list from the oldest to the newest history items",
         "group": "ungrouped",
         "private": false
       },
@@ -4168,6 +4173,11 @@
             "x",
             "skip-dependency-installation",
             "do not install dependencies of the checked out components"
+          ],
+          [
+            "j",
+            "json",
+            "return the revert result in json format"
           ]
         ],
         "description": "EXPERIMENTAL. revert to a previous history of the current lane. see also \"bit lane checkout\"",
