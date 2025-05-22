@@ -139,16 +139,6 @@ In default mode, the server exposes a focused set of essential Bit CLI commands 
 
 ### Consumer Project Mode (--consumer-project)
 
-This mode is designed for non-Bit workspaces that only consume Bit component packages. It exposes a minimal set of tools needed for interacting with remote Bit components:
-
-- `bit_schema`: Retrieve component API schema from remote scopes
-- `bit_show`: Display component information
-- `bit_remote_search`: Search for components in remote scopes
-
-This mode is perfect for projects that use Bit components as dependencies but don't develop or manage Bit components themselves. It provides access to component documentation, API schemas, and search capabilities without the overhead of full workspace management tools.
-
-### Consumer Project Mode (--consumer-project)
-
 This mode is designed for applications or projects that are not Bit workspaces but need to consume or work with Bit components as packages. It provides a minimal set of tools focused on component discovery and information:
 
 - `bit_schema`: Retrieves component API schema from remote scopes (automatically adds `--remote` flag)
