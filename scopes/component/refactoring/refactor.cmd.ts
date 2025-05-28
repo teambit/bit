@@ -9,7 +9,7 @@ export class DependencyNameRefactorCmd implements Command {
   name = 'dependency-name <old-id> <new-id>';
   description = "replace the dependency's old package-name with a new one in the code";
   options = [] as CommandOptions;
-  group = 'dev-tools';
+  group = 'workspace-tools';
   // extendedDescription = `${PATTERN_HELP('refactor dependency-name')}`;
   extendedDescription = `the \`<old-id>\` and \`<new-id>\` arguments can be either a component-id or a package-name.`;
 
@@ -38,7 +38,7 @@ export class RefactorCmd implements Command {
   alias = '';
   description = 'source code refactoring / codemod';
   options = [];
-  group = 'dev-tools';
+  group = 'workspace-tools';
   commands: Command[] = [];
 
   async report([unrecognizedSubcommand]: [string]) {

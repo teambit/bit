@@ -27,7 +27,7 @@ export class WsConfigCmd implements Command {
   alias = 'workspace-config';
   description = 'manage workspace config files';
   options = [];
-  group = 'dev-tools';
+  group = 'workspace-tools';
   commands: Command[] = [];
   // helpUrl = '';
 
@@ -42,7 +42,7 @@ export class WsConfigWriteCmd implements Command {
   name = 'write';
   description = 'write config files in the workspace. useful for IDEs';
   alias = '';
-  group = 'dev-tools';
+  group = 'workspace-tools';
   options = [
     [
       'c',
@@ -118,7 +118,7 @@ export class WsConfigCleanCmd implements Command {
   name = 'clean';
   description = 'clean (delete) written config files in the workspace. useful for IDEs';
   alias = '';
-  group = 'dev-tools';
+  group = 'workspace-tools';
   options = [
     ['s', 'silent', 'do not prompt for confirmation'],
     [
@@ -155,7 +155,7 @@ export class WsConfigListCmd implements Command {
   name = 'list';
   description = 'list config writers';
   alias = '';
-  group = 'dev-tools';
+  group = 'workspace-tools';
   options = [['j', 'json', 'json format']] as CommandOptions;
 
   constructor(private workspaceConfigFilesMain: WorkspaceConfigFilesMain) {}

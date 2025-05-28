@@ -8,7 +8,7 @@ export class GitCmd implements Command {
   alias = '';
   description = 'perform git operations';
   options = [];
-  group = 'git';
+  group = 'workspace-tools';
   commands: Command[] = [];
   // helpUrl = '';
 

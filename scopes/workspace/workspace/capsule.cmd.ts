@@ -19,7 +19,7 @@ export class CapsuleCreateCmd implements Command {
   name = 'create [component-id...]';
   description = `create capsules for components`;
   helpUrl = 'reference/build-pipeline/capsule';
-  group = 'capsules';
+  group = 'workspace-tools';
   alias = '';
   options = [
     [
@@ -111,7 +111,7 @@ export class CapsuleCreateCmd implements Command {
 export class CapsuleListCmd implements Command {
   name = 'list';
   description = `list the capsules generated for this workspace`;
-  group = 'capsules';
+  group = 'workspace-tools';
   alias = '';
   options = [['j', 'json', 'json format']] as CommandOptions;
 
@@ -167,7 +167,7 @@ export class CapsuleDeleteCmd implements Command {
   name = 'delete';
   description = `delete capsules`;
   extendedDescription = `with no args, only workspace's capsules are deleted`;
-  group = 'capsules';
+  group = 'workspace-tools';
   alias = '';
   options = [
     ['', 'scope-aspects', 'delete scope-aspects capsules'],
@@ -203,7 +203,7 @@ normally, capsules are created during the build process, the component files are
 via the configured package-manager. the purpose is to compile/test them in isolation to make sure they will work for
 other users after publishing/exporting them.`;
   alias = '';
-  group = 'capsules';
+  group = 'workspace-tools';
   commands: Command[] = [];
   options = [['j', 'json', 'json format']] as CommandOptions;
 
