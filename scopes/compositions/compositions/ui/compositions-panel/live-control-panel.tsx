@@ -1,9 +1,10 @@
-// TODO: replace this with a better-implemented live control component set
-
 import React from 'react';
 import classNames from 'classnames';
+
 import styles from './live-control-panel.module.scss';
-import { Control } from './live-control.type';
+// TODO: replace the specifier after the CR is merged
+// https://bit.cloud/teambit/react.mounter/~change-requests/preview-control-20250515-2
+import { type Control } from './live-control.type';
 import { getInputComponent } from './live-control-input';
 
 export function LiveControls({

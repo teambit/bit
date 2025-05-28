@@ -1,5 +1,3 @@
-// TODO: replace this with a better-implemented live control component set
-
 import React from 'react';
 import classNames from 'classnames';
 
@@ -132,7 +130,7 @@ function JsonInput({ id, value, onChange }: InputComponentProps) {
       const parsedValue = JSON.parse(newValue);
       onChange(parsedValue);
       setMessage('');
-    } catch (error) {
+    } catch {
       setMessage('Invalid JSON');
     }
     setInputValue(newValue);
