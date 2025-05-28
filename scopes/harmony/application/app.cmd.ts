@@ -34,7 +34,7 @@ export class AppCmd implements Command {
   description = 'Manages apps';
   helpUrl = 'docs/getting-started/composing/create-apps';
   alias = 'apps';
-  group = 'apps';
+  group = 'run-serve';
   commands: Command[] = [];
   options = [] as CommandOptions;
 

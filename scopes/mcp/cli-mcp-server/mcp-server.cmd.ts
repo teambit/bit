@@ -15,7 +15,7 @@ export class McpServerCmd implements Command {
   description =
     'Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.';
   alias = '';
-  group = 'dev-tools';
+  group = 'advanced';
   loader = false;
   options = [
     ['e', 'extended', 'Enable the full set of Bit CLI commands as MCP tools'],

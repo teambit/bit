@@ -13,6 +13,7 @@ if source and target snaps are provided, the command will use them to calculate 
   options = [] as CommandOptions;
   loader = true;
   private = true;
+  group = 'advanced';
 
   constructor(
     private scope: ScopeMain,
