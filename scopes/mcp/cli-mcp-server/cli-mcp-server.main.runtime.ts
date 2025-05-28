@@ -361,6 +361,9 @@ export class CliMcpServerMain {
     // Register the bit_workspace_info tool
     this.registerWorkspaceInfoTool(server);
 
+    // Register the bit_component_details tool
+    this.registerComponentDetailsTool(server);
+
     await server.connect(new StdioServerTransport());
   }
 
@@ -543,7 +546,7 @@ export class CliMcpServerMain {
     const schema: Record<string, any> = {
       cwd: z.string().describe('Path to workspace directory'),
       includeStatus: z.boolean().optional().describe('Include workspace status (default: true)'),
-      includeList: z.boolean().optional().describe('Include components list (default: false)'),
+      includeList: z.boolean().optional().describe('Include components list (default: true)'),
       includeApps: z.boolean().optional().describe('Include apps list (default: false)'),
       includeTemplates: z.boolean().optional().describe('Include templates list (default: false)'),
       includeGraph: z.boolean().optional().describe('Include dependency graph (default: false)'),
@@ -552,7 +555,7 @@ export class CliMcpServerMain {
     server.tool(toolName, description, schema, async (params: any) => {
       try {
         const includeStatus = params.includeStatus !== false; // Default to true
-        const includeList = params.includeList === true;
+        const includeList = params.includeList !== false; // Default to true
         const includeApps = params.includeApps === true;
         const includeTemplates = params.includeTemplates === true;
         const includeGraph = params.includeGraph === true;
@@ -628,6 +631,73 @@ export class CliMcpServerMain {
             {
               type: 'text',
               text: `Error getting workspace info: ${(error as Error).message}`,
+            },
+          ],
+        } as CallToolResult;
+      }
+    });
+  }
+
+  private registerComponentDetailsTool(server: McpServer) {
+    const toolName = 'bit_component_details';
+    const description =
+      'Get detailed information about a specific component including basic info and optionally its public API schema';
+    const schema: Record<string, any> = {
+      cwd: z.string().describe('Path to workspace directory'),
+      componentName: z.string().describe('Component name or component ID to get details for'),
+      includeSchema: z.boolean().optional().describe('Include component public API schema (default: false)'),
+      remote: z.boolean().optional().describe('Get details from remote scope (default: false)'),
+    };
+
+    server.tool(toolName, description, schema, async (params: any) => {
+      try {
+        const includeSchema = params.includeSchema === true;
+        const remote = params.remote === true;
+        const componentName = params.componentName;
+
+        const componentDetails: any = {};
+
+        // Get basic component information using bit show
+        try {
+          const showFlags: Record<string, any> = { json: true };
+          if (remote) {
+            showFlags.remote = true;
+          }
+
+          const showResult = await this.callBitServerAPI('show', [componentName], showFlags, params.cwd);
+          componentDetails.show = showResult;
+          this.logger.debug(`[MCP-DEBUG] Successfully retrieved component show info via bit-server`);
+        } catch (error) {
+          this.logger.warn(`[MCP-DEBUG] Failed to get component show info via bit-server: ${(error as Error).message}`);
+          componentDetails.show = { error: `Failed to get component show info: ${(error as Error).message}` };
+        }
+
+        // Get component schema (public API) if requested
+        if (includeSchema) {
+          try {
+            const schemaFlags: Record<string, any> = { json: true };
+            if (remote) {
+              schemaFlags.remote = true;
+            }
+
+            const schemaResult = await this.callBitServerAPI('schema', [componentName], schemaFlags, params.cwd);
+            componentDetails.schema = schemaResult;
+            this.logger.debug(`[MCP-DEBUG] Successfully retrieved component schema via bit-server`);
+          } catch (error) {
+            this.logger.warn(`[MCP-DEBUG] Failed to get component schema via bit-server: ${(error as Error).message}`);
+            componentDetails.schema = { error: `Failed to get component schema: ${(error as Error).message}` };
+          }
+        }
+
+        const formattedOutput = JSON.stringify(componentDetails, null, 2);
+        return { content: [{ type: 'text', text: formattedOutput }] } as CallToolResult;
+      } catch (error) {
+        this.logger.error(`[MCP-DEBUG] Error in bit_component_details tool: ${(error as Error).message}`);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error getting component details: ${(error as Error).message}`,
             },
           ],
         } as CallToolResult;
