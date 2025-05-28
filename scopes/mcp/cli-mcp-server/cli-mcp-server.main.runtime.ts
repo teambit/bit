@@ -167,10 +167,15 @@ export class CliMcpServerMain {
   }
 
   /**
-   * Call bit-server API endpoint
+   * Call bit-server API endpoint using cli-raw route
    */
-  private async callBitServerAPI(endpoint: string, body: any, isReTrying = false): Promise<any> {
-    const cwd = body.cwd;
+  private async callBitServerAPI(
+    command: string,
+    args: string[] = [],
+    flags: Record<string, any> = {},
+    cwd: string,
+    isReTrying = false
+  ): Promise<any> {
     if (!this.serverPort) {
       if (!cwd) throw new Error('CWD is required to call bit-server API');
       this.serverPort = await this.getBitServerPort(cwd);
@@ -191,8 +196,29 @@ export class CliMcpServerMain {
       throw new Error('Unable to connect to bit-server. Please ensure you are in a valid Bit workspace.');
     }
 
+    // Build the command array: [command, ...args, ...flagsAsArgs]
+    const commandArray = [command, ...args];
+
+    // Convert flags to command line arguments
+    for (const [key, value] of Object.entries(flags)) {
+      if (value === true) {
+        commandArray.push(`--${key}`);
+      } else if (value !== false && value !== undefined) {
+        commandArray.push(`--${key}`, String(value));
+      }
+    }
+
+    // Resolve the real path to handle symlinks (e.g., /tmp -> /private/tmp on macOS)
+    const fs = require('fs');
+    const realCwd = fs.realpathSync(cwd);
+
+    const body = {
+      command: commandArray,
+      pwd: realCwd,
+    };
+
     try {
-      const response = await fetch(`${this.serverUrl}/${endpoint}`, {
+      const response = await fetch(`${this.serverUrl}/cli-raw`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -216,7 +242,7 @@ export class CliMcpServerMain {
         this.serverPort = undefined;
         this.serverUrl = undefined;
         this.logger.debug('[MCP-DEBUG] Connection refused, attempting to restart bit-server');
-        return this.callBitServerAPI(endpoint, body, true);
+        return this.callBitServerAPI(command, args, flags, cwd, true);
       }
       throw err;
     }
@@ -512,28 +538,26 @@ export class CliMcpServerMain {
 
   private registerWorkspaceInfoTool(server: McpServer) {
     const toolName = 'bit_workspace_info';
-    const description = 'Get comprehensive workspace information including status and components list';
+    const description = 'Get comprehensive workspace information including status, components list, and apps';
     const schema: Record<string, any> = {
       cwd: z.string().describe('Path to workspace directory'),
       includeStatus: z.boolean().optional().describe('Include workspace status (default: true)'),
       includeList: z.boolean().optional().describe('Include components list (default: false)'),
+      includeApps: z.boolean().optional().describe('Include apps list (default: false)'),
     };
 
     server.tool(toolName, description, schema, async (params: any) => {
       try {
         const includeStatus = params.includeStatus !== false; // Default to true
         const includeList = params.includeList === true;
+        const includeApps = params.includeApps === true;
 
         const workspaceInfo: any = {};
 
         // Get workspace status using bit-server API
         if (includeStatus) {
           try {
-            const statusResult = await this.callBitServerAPI('cli/status', {
-              args: [],
-              flags: {},
-              cwd: params.cwd,
-            });
+            const statusResult = await this.callBitServerAPI('status', [], { json: true }, params.cwd);
             workspaceInfo.status = statusResult;
             this.logger.debug(`[MCP-DEBUG] Successfully retrieved workspace status via bit-server`);
           } catch (error) {
@@ -545,16 +569,24 @@ export class CliMcpServerMain {
         // Get components list if requested
         if (includeList) {
           try {
-            const listResult = await this.callBitServerAPI('cli/list', {
-              args: [],
-              flags: {},
-              cwd: params.cwd,
-            });
+            const listResult = await this.callBitServerAPI('list', [], { json: true }, params.cwd);
             workspaceInfo.list = listResult;
             this.logger.debug(`[MCP-DEBUG] Successfully retrieved components list via bit-server`);
           } catch (error) {
             this.logger.warn(`[MCP-DEBUG] Failed to get list via bit-server: ${(error as Error).message}`);
             workspaceInfo.list = { error: `Failed to get list: ${(error as Error).message}` };
+          }
+        }
+
+        // Get apps list if requested
+        if (includeApps) {
+          try {
+            const appsResult = await this.callBitServerAPI('app', ['list'], { json: true }, params.cwd);
+            workspaceInfo.apps = appsResult;
+            this.logger.debug(`[MCP-DEBUG] Successfully retrieved apps list via bit-server`);
+          } catch (error) {
+            this.logger.warn(`[MCP-DEBUG] Failed to get apps via bit-server: ${(error as Error).message}`);
+            workspaceInfo.apps = { error: `Failed to get apps: ${(error as Error).message}` };
           }
         }
 
