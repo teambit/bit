@@ -538,12 +538,14 @@ export class CliMcpServerMain {
 
   private registerWorkspaceInfoTool(server: McpServer) {
     const toolName = 'bit_workspace_info';
-    const description = 'Get comprehensive workspace information including status, components list, and apps';
+    const description =
+      'Get comprehensive workspace information including status, components list, apps, and templates';
     const schema: Record<string, any> = {
       cwd: z.string().describe('Path to workspace directory'),
       includeStatus: z.boolean().optional().describe('Include workspace status (default: true)'),
       includeList: z.boolean().optional().describe('Include components list (default: false)'),
       includeApps: z.boolean().optional().describe('Include apps list (default: false)'),
+      includeTemplates: z.boolean().optional().describe('Include templates list (default: false)'),
     };
 
     server.tool(toolName, description, schema, async (params: any) => {
@@ -551,6 +553,7 @@ export class CliMcpServerMain {
         const includeStatus = params.includeStatus !== false; // Default to true
         const includeList = params.includeList === true;
         const includeApps = params.includeApps === true;
+        const includeTemplates = params.includeTemplates === true;
 
         const workspaceInfo: any = {};
 
@@ -587,6 +590,18 @@ export class CliMcpServerMain {
           } catch (error) {
             this.logger.warn(`[MCP-DEBUG] Failed to get apps via bit-server: ${(error as Error).message}`);
             workspaceInfo.apps = { error: `Failed to get apps: ${(error as Error).message}` };
+          }
+        }
+
+        // Get templates list if requested
+        if (includeTemplates) {
+          try {
+            const templatesResult = await this.callBitServerAPI('templates', [], {}, params.cwd);
+            workspaceInfo.templates = templatesResult;
+            this.logger.debug(`[MCP-DEBUG] Successfully retrieved templates list via bit-server`);
+          } catch (error) {
+            this.logger.warn(`[MCP-DEBUG] Failed to get templates via bit-server: ${(error as Error).message}`);
+            workspaceInfo.templates = { error: `Failed to get templates: ${(error as Error).message}` };
           }
         }
 
