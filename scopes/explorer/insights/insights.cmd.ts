@@ -6,7 +6,7 @@ import { InsightsMain } from './insights.main.runtime';
 export default class InsightsCmd implements Command {
   name = 'insights [names...]';
   description = 'Insights on component graph';
-  group = 'discover';
+  group = 'info-analysis';
   private = true;
   options = [
     ['l', 'list', 'list all insights'],

@@ -25,7 +25,7 @@ export type RemoveDependenciesFlags = SetDependenciesFlags;
 export class DependenciesGetCmd implements Command {
   name = 'get <component-name>';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
-  group = 'discover';
+  group = 'info-analysis';
   description = 'show direct and indirect dependencies of the given component';
   alias = '';
   options = [
@@ -70,7 +70,7 @@ try running "bit cat-component ${results.id.toStringWithoutVersion()}" to see wh
 export class DependenciesDebugCmd implements Command {
   name = 'debug <component-name>';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
-  group = 'discover';
+  group = 'info-analysis';
   description = 'show the immediate dependencies and how their versions were determined';
   alias = '';
   options = [] as CommandOptions;
@@ -235,7 +235,7 @@ export class DependenciesBlameCmd implements Command {
       description: 'package-name. for components, you can use either component-id or package-name',
     },
   ];
-  group = 'discover';
+  group = 'info-analysis';
   description = 'find out which snap/tag changed a dependency version';
   alias = '';
   options = [] as CommandOptions;

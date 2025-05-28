@@ -6,7 +6,7 @@ import { ComponentCompareMain } from './component-compare.main.runtime';
 
 export class DiffCmd implements Command {
   name = 'diff [component-pattern] [version] [to-version]';
-  group = 'discover';
+  group = 'info-analysis';
   description =
     "show the diff between the components' current source files and config, and their latest snapshot or tag";
   helpUrl = 'docs/components/merging-changes#compare-component-snaps';

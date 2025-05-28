@@ -22,7 +22,7 @@ export const groups = {
   dependencies: 'Dependencies & Packages',
   'version-control': 'Version Control',
   testing: 'Testing & Quality',
-  'dev-tools': 'Development Tools',
+  'run-serve': 'Run & Serve',
   system: 'System & Utility',
   auth: 'Authentication & Cloud',
   advanced: 'Advanced/Debug',

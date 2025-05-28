@@ -47,7 +47,7 @@ export class VersionHistoryBuildCmd implements Command {
     ['', 'delete-existing', 'delete the existing version history before building it'],
     ['', 'remote <scope>', 'make the change on the remote scope'],
   ] as CommandOptions;
-  group = 'discover';
+  group = 'info-analysis';
 
   constructor(private versionHistoryMain: VersionHistoryMain) {}
 
@@ -90,7 +90,7 @@ export class VersionHistoryGraphCmd implements Command {
     ],
     ['', 'limit <number>', 'limit the number of nodes in the graph (starting from the heads)'],
   ] as CommandOptions;
-  group = 'discover';
+  group = 'info-analysis';
   commands: Command[] = [];
 
   constructor(private versionHistoryMain: VersionHistoryMain) {}
@@ -140,7 +140,7 @@ export class VersionHistoryShowCmd implements Command {
     ['s', 'short-hash', 'show only 9 chars of the hash'],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
-  group = 'discover';
+  group = 'info-analysis';
   commands: Command[] = [];
 
   constructor(private versionHistoryMain: VersionHistoryMain) {}

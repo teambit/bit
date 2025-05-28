@@ -14,7 +14,7 @@ export class ShowCmd implements Command {
   name = 'show <component-name>';
   description = "display the component's essential information";
   alias = '';
-  group = 'discover';
+  group = 'info-analysis';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
   options = [
     ['j', 'json', 'return the component data in json format'],

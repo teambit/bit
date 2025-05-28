@@ -16,7 +16,7 @@ export class ListAspectCmd implements Command {
     },
   ];
   options = [['d', 'debug', 'show the origins where the aspects were taken from']] as CommandOptions;
-  group = 'discover';
+  group = 'info-analysis';
 
   constructor(private aspect: AspectMain) {}
 
@@ -49,7 +49,7 @@ export class ListCoreAspectCmd implements Command {
     },
   ];
   options = [['j', 'json', 'format as json']] as CommandOptions;
-  group = 'discover';
+  group = 'info-analysis';
 
   constructor(private aspect: AspectMain) {}
 
@@ -179,7 +179,7 @@ export class GetAspectCmd implements Command {
     ['d', 'debug', 'show the origins where the aspects were taken from'],
     ['j', 'json', 'format as json'],
   ] as CommandOptions;
-  group = 'discover';
+  group = 'info-analysis';
 
   constructor(private aspect: AspectMain) {}
 

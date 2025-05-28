@@ -35,7 +35,7 @@ to match a state and another criteria, use " AND " keyword. e.g. '$modified AND 
     { cmd: "bit pattern 'bar, foo'", description: 'matches two components: bar and foo' },
     { cmd: "bit pattern 'my-scope.org/**'", description: 'matches all components of the scope "my-scope.org"' },
   ];
-  group = 'discover';
+  group = 'info-analysis';
   private = false;
   options = [['j', 'json', 'return the output as JSON']] as CommandOptions;
 

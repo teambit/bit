@@ -19,7 +19,7 @@ export class GeneratePreviewCmd implements Command {
       description: COMPONENT_PATTERN_HELP,
     },
   ];
-  group = 'dev-tools';
+  group = 'run-serve';
   options = [['n', 'name <name>', 'name for the preview']] as CommandOptions;
   private = true;
 
