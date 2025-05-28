@@ -48,7 +48,7 @@ the "--rewrite" flag ensures the component files are fresh, and the "--tasks" en
   ];
   helpUrl = 'reference/build-pipeline/builder-overview';
   alias = '';
-  group = 'dev-tools';
+  group = 'component-development';
   options = [
     ['u', 'unmodified', 'include unmodified components (by default, only new and modified components are built)'],
     ['d', 'dev', 'run the pipeline in dev mode'],

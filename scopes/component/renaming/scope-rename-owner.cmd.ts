@@ -18,7 +18,7 @@ export class ScopeRenameOwnerCmd implements Command {
     ],
     ['', 'ast', 'use ast to transform files instead of regex'],
   ] as CommandOptions;
-  group = 'dev-tools';
+  group = 'component-config';
 
   constructor(private renaming: RenamingMain) {}
 

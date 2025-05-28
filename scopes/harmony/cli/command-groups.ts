@@ -1,14 +1,24 @@
+const oldGroups = {
+  start: 'Start a working area',
+  development: 'Develop components',
+  discover: 'Explore components',
+  info: 'View components',
+  general: 'Workspace commands',
+  ungrouped: 'Ungrouped',
+};
+
 /**
  * these are the main group. legacy commands use only these groups.
  * Harmony commands can create new groups by calling `cliMain.registerGroup()`.
  */
 export const groups = {
-  start: 'Workspace & Project Setup',
+  ...oldGroups,
+  'workspace-setup': 'Workspace & Project Setup',
   collaborate: 'Collaboration & Remote',
-  discover: 'Information & Analysis',
-  general: 'Workspace Tools',
-  ungrouped: 'Ungrouped',
+  'info-analysis': 'Information & Analysis',
+  'workspace-tools': 'Workspace Tools',
   'component-config': 'Component Configuration',
+  'component-development': 'Component Development',
   dependencies: 'Dependencies & Packages',
   'version-control': 'Version Control',
   testing: 'Testing & Quality',

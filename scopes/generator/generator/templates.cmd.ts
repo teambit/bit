@@ -16,7 +16,7 @@ export class TemplatesCmd implements Command {
     'list components templates when inside bit-workspace (for bit-create), otherwise, list workspace templates (for bit-new)';
   alias = '';
   loader = true;
-  group = 'discover';
+  group = 'component-development';
   options = [
     ['s', 'show-all', 'show hidden templates'],
     ['a', 'aspect <aspect-id>', 'show templates provided by the aspect-id'],

@@ -29,7 +29,7 @@ export class ScopeForkCmd implements Command {
     ['', 'ast', 'use ast to transform files instead of regex'],
     ['x', 'skip-dependency-installation', 'do not install packages of the imported components'],
   ] as CommandOptions;
-  group = 'collaborate';
+  group = 'component-config';
 
   constructor(private forking: ForkingMain) {}
 

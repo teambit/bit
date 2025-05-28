@@ -7,7 +7,7 @@ export class ServerCmd implements Command {
   description = 'communicate with bit cli program via http requests';
   alias = '';
   commands: Command[] = [];
-  group = 'system';
+  group = 'workspace-setup';
   options = [
     ['p', 'port [port]', 'port to run the server on'],
     ['c', 'compile', 'compile components during the watch process'],
