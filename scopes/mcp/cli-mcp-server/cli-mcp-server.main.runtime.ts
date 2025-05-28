@@ -261,7 +261,7 @@ export class CliMcpServerMain {
     const extended = Boolean(options.extended);
     this.bitBin = options.bitBin || this.bitBin;
     // Default set of tools to include
-    const defaultTools = new Set(['show', 'create', 'templates', 'schema', 'remote-search']);
+    const defaultTools = new Set(['create', 'schema', 'remote-search']);
 
     // Tools to always exclude
     const alwaysExcludeTools = new Set([
