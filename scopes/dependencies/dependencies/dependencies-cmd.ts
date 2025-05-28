@@ -290,7 +290,7 @@ export class DependenciesUsageCmd implements Command {
         'package-name. for components, you can use either component-id or package-name. if version is specified, it will search for the exact version',
     },
   ];
-  group = 'discover';
+  group = 'dependencies';
   description = 'find components that use the specified dependency';
   alias = '';
   options = [['', 'depth <number>', 'max display depth of the dependency graph']] as CommandOptions;

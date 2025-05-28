@@ -10,7 +10,7 @@ export class VersionHistoryCmd implements Command {
   alias = 'vh';
   description = 'manage the version-history of components';
   options = [];
-  group = 'discover';
+  group = 'version-control';
   commands: Command[] = [];
 
   async report([unrecognizedSubcommand]: [string]) {
