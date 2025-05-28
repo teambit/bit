@@ -6,12 +6,12 @@ import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { useNavigate, useLocation } from '@teambit/base-react.navigation.link';
-import { Composition } from '../../composition';
+
 import styles from './compositions-panel.module.scss';
-import {
-  type LiveControlReadyEventData,
-  type LiveControlUpdateEventData,
-} from './live-control.type';
+import { Composition } from '../../composition';
+// TODO: replace the specifier after the CR is merged
+// https://bit.cloud/teambit/react.mounter/~change-requests/preview-control-20250515-2
+import { type LiveControlReadyEventData, type LiveControlUpdateEventData } from './live-control.type';
 import { LiveControls } from './live-control-panel';
 
 export type CompositionsPanelProps = {

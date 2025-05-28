@@ -1,4 +1,18 @@
-// TODO: put the whole file into a sharable Bit component for custom preview mounters
+// TODO: remove this file after the CR below is merged
+// https://bit.cloud/teambit/react.mounter/~change-requests/preview-control-20250515-2
+
+export type ControlInputType =
+  | 'text'
+  | 'longtext'
+  | 'number'
+  | 'range'
+  | 'boolean'
+  | 'select'
+  | 'multiselect'
+  | 'date'
+  | 'color'
+  | 'json'
+  | 'custom';
 
 export type SelectOption =
   | string
@@ -16,7 +30,7 @@ export type ControlBase = {
 };
 
 export type ControlUnknown = {
-  defaultValue?: boolean;
+  defaultValue?: any;
 };
 
 export type ControlBoolean = {
@@ -101,7 +115,7 @@ export type Control = ControlBase &
 
 export type Controls = Array<Control> | Record<string, Omit<Control, 'id'>>;
 
-export function resolveControls(controls: Controls): Control[] {
+function resolveControlMap(controls: Controls): Control[] {
   if (Array.isArray(controls)) {
     return controls;
   }
@@ -114,12 +128,80 @@ export function resolveControls(controls: Controls): Control[] {
   return [];
 }
 
-export function resolveValues(props: Record<string, any>, control: Control[]): Record<string, any> {
+function resolveControlInput(control: Control): Control {
+  const { type } = control;
+  let newInput = control.input;
+  if (!newInput) {
+    if (type === Boolean) {
+      newInput = 'boolean';
+    } else if (type === String) {
+      newInput = 'text';
+    } else if (type === Number) {
+      newInput = 'number';
+    } else if (type === Date) {
+      newInput = 'date';
+    } else if (type === Object) {
+      newInput = 'json';
+    } else {
+      newInput = 'text';
+    }
+  }
+  return { ...control, input: newInput };
+}
+
+/**
+ * Controls can be an array or a map.
+ * This function is designed to resolve controls into array.
+ */
+export function resolveControls(controls: Controls): Control[] {
+  return resolveControlMap(controls).map(resolveControlInput);
+}
+
+function getTypeFromValue(value: any): any {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value === 'string') {
+    return String;
+  }
+  if (typeof value === 'number') {
+    return Number;
+  }
+  if (typeof value === 'boolean') {
+    return Boolean;
+  }
+  if (value instanceof Date) {
+    return Date;
+  }
+  if (Array.isArray(value)) {
+    return Array;
+  }
+  if (typeof value === 'object') {
+    return Object;
+  }
+  return String;
+}
+
+export function resolveControlsFromValues(values: Record<string, any>): Control[] {
+  return Object.keys(values).map((key) => {
+    const control: Control = {
+      id: key,
+      input: 'unknown',
+      type: getTypeFromValue(values[key]),
+    };
+    return resolveControlInput(control);
+  });
+}
+
+/**
+ * Applies default values from controls to props.
+ */
+export function resolveValues(values: Record<string, any>, controls: Control[]): Record<string, any> {
   const initValue: Record<string, any> = {};
-  control.forEach((field) => {
-    const { id, defaultValue } = field;
-    if (id in props) {
-      initValue[id] = props[id];
+  controls.forEach((control) => {
+    const { id, defaultValue } = control;
+    if (id in values) {
+      initValue[id] = values[id];
     } else {
       initValue[id] = defaultValue;
     }
@@ -220,10 +302,14 @@ export function getDestroyListener(
   callback(JSON.parse(JSON.stringify(event.data.payload)));
 }
 
-export type LiveComposition<ComponentType = any, RenderingResult = any> = {
-  live: boolean;
-  Comp: ComponentType;
+export type LiveComposition<Component = any, RenderResult = any> = {
+  live?: boolean;
+  Comp: Component;
   props: Record<string, any>;
-  controls?: Array<Control> | Record<string, Omit<Control, 'id'>>;
-  render?: (args: any, component: ComponentType) => RenderingResult;
+  controls?: Controls;
+  render?: (args: Record<string, any>, Comp: Component) => RenderResult;
 };
+
+export type LivePreviewProps<T = React.ComponentType, N = React.ReactNode> = LiveComposition<T, N>;
+
+export type ReactLiveComposition = LivePreviewProps;
