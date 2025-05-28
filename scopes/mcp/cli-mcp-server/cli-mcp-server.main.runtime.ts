@@ -539,13 +539,14 @@ export class CliMcpServerMain {
   private registerWorkspaceInfoTool(server: McpServer) {
     const toolName = 'bit_workspace_info';
     const description =
-      'Get comprehensive workspace information including status, components list, apps, and templates';
+      'Get comprehensive workspace information including status, components list, apps, templates, and dependency graph';
     const schema: Record<string, any> = {
       cwd: z.string().describe('Path to workspace directory'),
       includeStatus: z.boolean().optional().describe('Include workspace status (default: true)'),
       includeList: z.boolean().optional().describe('Include components list (default: false)'),
       includeApps: z.boolean().optional().describe('Include apps list (default: false)'),
       includeTemplates: z.boolean().optional().describe('Include templates list (default: false)'),
+      includeGraph: z.boolean().optional().describe('Include dependency graph (default: false)'),
     };
 
     server.tool(toolName, description, schema, async (params: any) => {
@@ -554,6 +555,7 @@ export class CliMcpServerMain {
         const includeList = params.includeList === true;
         const includeApps = params.includeApps === true;
         const includeTemplates = params.includeTemplates === true;
+        const includeGraph = params.includeGraph === true;
 
         const workspaceInfo: any = {};
 
@@ -596,12 +598,24 @@ export class CliMcpServerMain {
         // Get templates list if requested
         if (includeTemplates) {
           try {
-            const templatesResult = await this.callBitServerAPI('templates', [], {}, params.cwd);
+            const templatesResult = await this.callBitServerAPI('templates', [], { json: true }, params.cwd);
             workspaceInfo.templates = templatesResult;
             this.logger.debug(`[MCP-DEBUG] Successfully retrieved templates list via bit-server`);
           } catch (error) {
             this.logger.warn(`[MCP-DEBUG] Failed to get templates via bit-server: ${(error as Error).message}`);
             workspaceInfo.templates = { error: `Failed to get templates: ${(error as Error).message}` };
+          }
+        }
+
+        // Get dependency graph if requested
+        if (includeGraph) {
+          try {
+            const graphResult = await this.callBitServerAPI('graph', [], { json: true }, params.cwd);
+            workspaceInfo.graph = graphResult;
+            this.logger.debug(`[MCP-DEBUG] Successfully retrieved dependency graph via bit-server`);
+          } catch (error) {
+            this.logger.warn(`[MCP-DEBUG] Failed to get dependency graph via bit-server: ${(error as Error).message}`);
+            workspaceInfo.graph = { error: `Failed to get dependency graph: ${(error as Error).message}` };
           }
         }
 
