@@ -13,7 +13,7 @@ export class InitCmd implements Command {
   skipWorkspace = true;
   description = 'create or reinitialize an empty workspace';
   helpUrl = 'reference/workspace/creating-workspaces/?new_existing_project=1';
-  group = 'start';
+  group = 'workspace-setup';
   extendedDescription =
     'if the current directory is already a workspace, it validates that bit files are correct and rewrite them if needed.';
   alias = '';

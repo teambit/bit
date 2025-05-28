@@ -10,7 +10,7 @@ export class VersionHistoryCmd implements Command {
   alias = 'vh';
   description = 'manage the version-history of components';
   options = [];
-  group = 'info';
+  group = 'version-control';
   commands: Command[] = [];
 
   async report([unrecognizedSubcommand]: [string]) {
@@ -47,7 +47,7 @@ export class VersionHistoryBuildCmd implements Command {
     ['', 'delete-existing', 'delete the existing version history before building it'],
     ['', 'remote <scope>', 'make the change on the remote scope'],
   ] as CommandOptions;
-  group = 'info';
+  group = 'info-analysis';
 
   constructor(private versionHistoryMain: VersionHistoryMain) {}
 
@@ -90,7 +90,7 @@ export class VersionHistoryGraphCmd implements Command {
     ],
     ['', 'limit <number>', 'limit the number of nodes in the graph (starting from the heads)'],
   ] as CommandOptions;
-  group = 'info';
+  group = 'info-analysis';
   commands: Command[] = [];
 
   constructor(private versionHistoryMain: VersionHistoryMain) {}
@@ -119,9 +119,11 @@ export class VersionHistoryGraphCmd implements Command {
 
     try {
       return await visualDependencyGraph.render(png ? 'png' : 'svg');
-    } catch(err) {
+    } catch (err) {
       if (err instanceof RangeError) {
-        throw new Error('failed to render the graph, the graph is too big. try to limit the number of nodes by using "--limit" flag');
+        throw new Error(
+          'failed to render the graph, the graph is too big. try to limit the number of nodes by using "--limit" flag'
+        );
       }
       throw err;
     }
@@ -138,7 +140,7 @@ export class VersionHistoryShowCmd implements Command {
     ['s', 'short-hash', 'show only 9 chars of the hash'],
     ['j', 'json', 'json format'],
   ] as CommandOptions;
-  group = 'info';
+  group = 'info-analysis';
   commands: Command[] = [];
 
   constructor(private versionHistoryMain: VersionHistoryMain) {}

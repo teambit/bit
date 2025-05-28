@@ -5,7 +5,7 @@ import { CloudMain } from './cloud.main.runtime';
 export class LogoutCmd implements Command {
   name = 'logout';
   description = 'log the CLI out of Bit';
-  group = 'general';
+  group = 'auth';
   alias = '';
   options = [];
   loader = true;

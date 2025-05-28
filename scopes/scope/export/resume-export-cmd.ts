@@ -11,7 +11,7 @@ alternatively, exporting to any one of the failed scopes, throws server-is-busy 
   alias = '';
   options = [] as CommandOptions;
   loader = true;
-  group = 'collaborate';
+  group = 'advanced';
   private = true;
   remoteOp = true;
 

@@ -6,7 +6,7 @@ export class VersionCmd implements Command {
   description = 'shows bit version';
   alias = '';
   loader = false;
-  group = 'general';
+  group = 'system';
   options = [['j', 'json', 'return the version in json format']] as CommandOptions;
 
   async report() {

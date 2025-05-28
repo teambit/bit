@@ -14,7 +14,7 @@ export class DependentsCmd implements Command {
     },
   ];
   description = 'show dependents of the given component';
-  group = 'info';
+  group = 'dependencies';
   alias = '';
   options = [['j', 'json', 'return the dependents in JSON format']] as CommandOptions;
 

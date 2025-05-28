@@ -19,7 +19,7 @@ export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
   description = 'create an immutable and exportable component snapshot (non-release version)';
   extendedDescription: string;
-  group = 'development';
+  group = 'version-control';
   arguments = [
     {
       name: 'component-pattern',

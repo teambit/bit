@@ -18,7 +18,7 @@ type ListFlags = {
 export class ListCmd implements Command {
   name = 'list [remote-scope]';
   description = 'list components on a workspace or a remote scope (with flag).';
-  group = 'discover';
+  group = 'info-analysis';
   helpUrl = 'reference/reference/cli-reference#list';
   alias = 'ls';
   options = [
@@ -28,7 +28,11 @@ export class ListCmd implements Command {
     ['o', 'outdated', 'highlight outdated components, in comparison with their latest remote version (if one exists)'],
     ['d', 'include-deleted', 'EXPERIMENTAL. show also deleted components'],
     ['j', 'json', 'show the output in JSON format'],
-    ['n', 'namespace <string>', "filter components by their namespace (a logical grouping within a scope, e.g., 'ui', '*/ui')"],
+    [
+      'n',
+      'namespace <string>',
+      "filter components by their namespace (a logical grouping within a scope, e.g., 'ui', '*/ui')",
+    ],
   ] as CommandOptions;
   loader = true;
   skipWorkspace = true;
