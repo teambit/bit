@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Http } from '@teambit/scope.network';
 import { CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
+import fetch from 'node-fetch';
 
 interface CommandFilterOptions {
   defaultTools: Set<string>;
@@ -35,6 +36,10 @@ export class CliMcpServerMain {
   private bitBin = 'bit';
   private _http: Http;
   private isConsumerProjectMode: boolean = false;
+  private serverPort?: number;
+  private serverUrl?: string;
+  private serverProcess: childProcess.ChildProcess | null = null;
+
   constructor(
     private cli: CLIMain,
     private logger: Logger
@@ -45,6 +50,176 @@ export class CliMcpServerMain {
       this._http = await Http.connect(SYMPHONY_GRAPHQL, CENTRAL_BIT_HUB_NAME);
     }
     return this._http;
+  }
+
+  private async getBitServerPort(cwd: string, skipValidatePortFlag = false): Promise<number | undefined> {
+    try {
+      const existingPort = childProcess
+        .execSync(`${this.bitBin} cli-server-port ${skipValidatePortFlag}`, {
+          cwd,
+          env: { ...process.env, BIT_CLI_SERVER: 'true' },
+        })
+        .toString()
+        .trim();
+      if (!existingPort) return undefined;
+      return parseInt(existingPort, 10);
+    } catch (err: any) {
+      this.logger.error(`[MCP-DEBUG] error getting existing port from bit server at ${cwd}. err: ${err.message}`);
+      return undefined;
+    }
+  }
+
+  /**
+   * Start a new bit-server process
+   */
+  private async startBitServer(cwd: string): Promise<number | null> {
+    this.logger.debug('[MCP-DEBUG] Starting new bit-server process');
+
+    return new Promise((resolve, reject) => {
+      try {
+        const serverProcess = childProcess.spawn(this.bitBin, ['server'], {
+          cwd,
+          stdio: ['pipe', 'pipe', 'pipe'],
+          detached: false,
+        });
+
+        this.serverProcess = serverProcess;
+
+        let serverStarted = false;
+        let outputBuffer = '';
+
+        const timeout = setTimeout(() => {
+          if (!serverStarted) {
+            this.logger.error('[MCP-DEBUG] Timeout waiting for bit-server to start');
+            serverProcess.kill();
+            resolve(null);
+          }
+        }, 30000); // 30 second timeout
+
+        serverProcess.stdout?.on('data', (data) => {
+          const output = data.toString();
+          outputBuffer += output;
+          this.logger.debug(`[MCP-DEBUG] bit-server stdout: ${output}`);
+          if (output.includes('listening on port')) {
+            clearTimeout(timeout);
+            if (!serverStarted) {
+              serverStarted = true;
+              // Extract the port from the output
+              const portMatch = output.match(/listening on port (\d+)/);
+              if (portMatch && portMatch[1]) {
+                const port = parseInt(portMatch[1], 10);
+                this.logger.debug(`[MCP-DEBUG] bit-server started on port ${port}`);
+                this.serverPort = port;
+                this.serverUrl = `http://localhost:${port}/api`;
+                resolve(port);
+              }
+            }
+          }
+        });
+
+        serverProcess.stderr?.on('data', (data) => {
+          const error = data.toString();
+          outputBuffer += error;
+          this.logger.debug(`[MCP-DEBUG] bit-server stderr: ${error}`);
+        });
+
+        serverProcess.on('error', (err) => {
+          clearTimeout(timeout);
+          this.logger.error(`[MCP-DEBUG] Failed to start bit-server: ${err.message}`);
+          reject(err);
+        });
+
+        serverProcess.on('exit', (code, signal) => {
+          clearTimeout(timeout);
+          if (!serverStarted) {
+            this.logger.error(`[MCP-DEBUG] bit-server exited with code ${code}, signal ${signal}`);
+            this.logger.debug(`[MCP-DEBUG] bit-server output: ${outputBuffer}`);
+            resolve(null);
+          }
+        });
+
+        const killServerProcess = () => {
+          if (this.serverProcess && !this.serverProcess.killed) {
+            this.logger.debug('[MCP-DEBUG] Killing bit-server process');
+            this.serverProcess.kill();
+          }
+        };
+
+        // Handle process cleanup
+        process.on('exit', () => {
+          killServerProcess();
+        });
+
+        process.on('SIGINT', () => {
+          killServerProcess();
+          process.exit();
+        });
+
+        process.on('SIGTERM', () => {
+          killServerProcess();
+          process.exit();
+        });
+      } catch (err) {
+        this.logger.error(`[MCP-DEBUG] Error spawning bit-server: ${(err as Error).message}`);
+        reject(err);
+      }
+    });
+  }
+
+  /**
+   * Call bit-server API endpoint
+   */
+  private async callBitServerAPI(endpoint: string, body: any, isReTrying = false): Promise<any> {
+    const cwd = body.cwd;
+    if (!this.serverPort) {
+      if (!cwd) throw new Error('CWD is required to call bit-server API');
+      this.serverPort = await this.getBitServerPort(cwd);
+      if (this.serverPort) {
+        this.serverUrl = `http://localhost:${this.serverPort}/api`;
+      } else {
+        // No server running, try to start one
+        this.logger.debug('[MCP-DEBUG] No bit-server found, attempting to start one');
+        const startedPort = await this.startBitServer(cwd);
+        if (startedPort) {
+          this.serverPort = startedPort;
+          this.serverUrl = `http://localhost:${this.serverPort}/api`;
+        }
+      }
+    }
+
+    if (!this.serverUrl) {
+      throw new Error('Unable to connect to bit-server. Please ensure you are in a valid Bit workspace.');
+    }
+
+    try {
+      const response = await fetch(`${this.serverUrl}/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        try {
+          const errorJson = await response.json();
+          errorMessage = errorJson.message || errorMessage;
+        } catch {
+          // Ignore JSON parse errors
+        }
+        throw new Error(errorMessage);
+      }
+
+      return await response.json();
+    } catch (err: any) {
+      if (err.code === 'ECONNREFUSED' && !isReTrying) {
+        // Server is no longer running, reset cached values and try to restart
+        this.serverPort = undefined;
+        this.serverUrl = undefined;
+        this.logger.debug('[MCP-DEBUG] Connection refused, attempting to restart bit-server');
+        return this.callBitServerAPI(endpoint, body, true);
+      }
+      throw err;
+    }
   }
 
   async runMcpServer(options: {
@@ -60,32 +235,7 @@ export class CliMcpServerMain {
     const extended = Boolean(options.extended);
     this.bitBin = options.bitBin || this.bitBin;
     // Default set of tools to include
-    const defaultTools = new Set([
-      'status',
-      'list',
-      'add',
-      'init',
-      'show',
-      'tag',
-      'snap',
-      'import',
-      'export',
-      'remove',
-      'log',
-      'test',
-      'diff',
-      'install',
-      'lane show',
-      'lane create',
-      'lane switch',
-      'lane merge',
-      'create',
-      'templates',
-      'reset',
-      'checkout',
-      'schema',
-      'remote-search',
-    ]);
+    const defaultTools = new Set(['show', 'create', 'templates', 'schema', 'remote-search']);
 
     // Tools to always exclude
     const alwaysExcludeTools = new Set([
@@ -181,6 +331,9 @@ export class CliMcpServerMain {
         this.registerToolForRemote(server, cmdName);
       }
     });
+
+    // Register the bit_workspace_info tool
+    this.registerWorkspaceInfoTool(server);
 
     await server.connect(new StdioServerTransport());
   }
@@ -354,6 +507,70 @@ export class CliMcpServerMain {
         text: result,
       }));
       return { content: formattedResults } as CallToolResult;
+    });
+  }
+
+  private registerWorkspaceInfoTool(server: McpServer) {
+    const toolName = 'bit_workspace_info';
+    const description = 'Get comprehensive workspace information including status and components list';
+    const schema: Record<string, any> = {
+      cwd: z.string().describe('Path to workspace directory'),
+      includeStatus: z.boolean().optional().describe('Include workspace status (default: true)'),
+      includeList: z.boolean().optional().describe('Include components list (default: false)'),
+    };
+
+    server.tool(toolName, description, schema, async (params: any) => {
+      try {
+        const includeStatus = params.includeStatus !== false; // Default to true
+        const includeList = params.includeList === true;
+
+        const workspaceInfo: any = {};
+
+        // Get workspace status using bit-server API
+        if (includeStatus) {
+          try {
+            const statusResult = await this.callBitServerAPI('cli/status', {
+              args: [],
+              flags: {},
+              cwd: params.cwd,
+            });
+            workspaceInfo.status = statusResult;
+            this.logger.debug(`[MCP-DEBUG] Successfully retrieved workspace status via bit-server`);
+          } catch (error) {
+            this.logger.warn(`[MCP-DEBUG] Failed to get status via bit-server: ${(error as Error).message}`);
+            workspaceInfo.status = { error: `Failed to get status: ${(error as Error).message}` };
+          }
+        }
+
+        // Get components list if requested
+        if (includeList) {
+          try {
+            const listResult = await this.callBitServerAPI('cli/list', {
+              args: [],
+              flags: {},
+              cwd: params.cwd,
+            });
+            workspaceInfo.list = listResult;
+            this.logger.debug(`[MCP-DEBUG] Successfully retrieved components list via bit-server`);
+          } catch (error) {
+            this.logger.warn(`[MCP-DEBUG] Failed to get list via bit-server: ${(error as Error).message}`);
+            workspaceInfo.list = { error: `Failed to get list: ${(error as Error).message}` };
+          }
+        }
+
+        const formattedOutput = JSON.stringify(workspaceInfo, null, 2);
+        return { content: [{ type: 'text', text: formattedOutput }] } as CallToolResult;
+      } catch (error) {
+        this.logger.error(`[MCP-DEBUG] Error in bit_workspace_info tool: ${(error as Error).message}`);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error getting workspace info: ${(error as Error).message}`,
+            },
+          ],
+        } as CallToolResult;
+      }
     });
   }
 
