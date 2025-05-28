@@ -25,7 +25,7 @@ export type RemoveDependenciesFlags = SetDependenciesFlags;
 export class DependenciesGetCmd implements Command {
   name = 'get <component-name>';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
-  group = 'info';
+  group = 'discover';
   description = 'show direct and indirect dependencies of the given component';
   alias = '';
   options = [
@@ -70,7 +70,7 @@ try running "bit cat-component ${results.id.toStringWithoutVersion()}" to see wh
 export class DependenciesDebugCmd implements Command {
   name = 'debug <component-name>';
   arguments = [{ name: 'component-name', description: 'component name or component id' }];
-  group = 'info';
+  group = 'discover';
   description = 'show the immediate dependencies and how their versions were determined';
   alias = '';
   options = [] as CommandOptions;
@@ -93,7 +93,7 @@ export class DependenciesSetCmd implements Command {
         'package name with or without a version, e.g. "lodash@1.0.0" or just "lodash" which will be resolved to the latest',
     },
   ];
-  group = 'info';
+  group = 'dependencies';
   description = 'set a dependency to component(s)';
   alias = '';
   options = [
@@ -126,7 +126,7 @@ export class DependenciesRemoveCmd implements Command {
         'package name with or without a version, e.g. "lodash@1.0.0" or just "lodash" which will remove all lodash instances of any version',
     },
   ];
-  group = 'info';
+  group = 'dependencies';
   description = 'remove a dependency from one or more components';
   extendedDescription = `this command removes the dependency whether it was set by 'bit deps set'/variants or by auto-detection.
 if the dependency was auto-detected, it will be marked with a minus sign in the .bitmap file.
@@ -164,7 +164,7 @@ export class DependenciesUnsetCmd implements Command {
         'package name with or without a version, e.g. "lodash@1.0.0" or just "lodash" which will remove all lodash instances of any version',
     },
   ];
-  group = 'info';
+  group = 'dependencies';
   description = 'unset a dependency to component(s) that was set via config (e.g. "bit deps set" or variants)';
   extendedDescription = `this command removes the dependency only when it was set by config not if it was auto detected.
 in the .bitmap file, the config is written without the dependency.
@@ -194,7 +194,7 @@ see also "bit deps remove"`;
 export class DependenciesResetCmd implements Command {
   name = 'reset <component-pattern>';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
-  group = 'info';
+  group = 'dependencies';
   description = 'reset dependencies to the default values (revert any previously "bit deps set")';
   alias = '';
   options = [] as CommandOptions;
@@ -212,7 +212,7 @@ export class DependenciesResetCmd implements Command {
 export class DependenciesEjectCmd implements Command {
   name = 'eject <component-pattern>';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
-  group = 'info';
+  group = 'dependencies';
   description = 'write dependencies that were previously set via "bit deps set" into .bitmap';
   alias = '';
   options = [] as CommandOptions;
@@ -235,7 +235,7 @@ export class DependenciesBlameCmd implements Command {
       description: 'package-name. for components, you can use either component-id or package-name',
     },
   ];
-  group = 'info';
+  group = 'discover';
   description = 'find out which snap/tag changed a dependency version';
   alias = '';
   options = [] as CommandOptions;
@@ -290,7 +290,7 @@ export class DependenciesUsageCmd implements Command {
         'package-name. for components, you can use either component-id or package-name. if version is specified, it will search for the exact version',
     },
   ];
-  group = 'info';
+  group = 'discover';
   description = 'find components that use the specified dependency';
   alias = '';
   options = [['', 'depth <number>', 'max display depth of the dependency graph']] as CommandOptions;
@@ -319,7 +319,7 @@ export class DependenciesCmd implements Command {
   alias = 'dependencies';
   description = 'manage dependencies';
   options = [];
-  group = 'info';
+  group = 'dependencies';
   commands: Command[] = [];
   helpUrl = 'reference/dependencies/configuring-dependencies';
 
@@ -339,7 +339,7 @@ export class SetPeerCmd implements Command {
       description: 'the default range to use for the componnent, when added to peerDependencies',
     },
   ];
-  group = 'info';
+  group = 'dependencies';
   description = 'set a component as always peer';
   alias = '';
   options = [];
@@ -355,7 +355,7 @@ export class SetPeerCmd implements Command {
 export class UnsetPeerCmd implements Command {
   name = 'unset-peer <component-id>';
   arguments = [{ name: 'component-id', description: 'the component to unset as always peer' }];
-  group = 'info';
+  group = 'dependencies';
   description = 'unset a component as always peer';
   alias = '';
   options = [];
@@ -375,10 +375,17 @@ type DependenciesWriteCmdOptions = {
 export class DependenciesWriteCmd implements Command {
   name = 'write';
   arguments = [];
-  group = 'info';
-  description = 'write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions';
+  group = 'dependencies';
+  description =
+    'write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions';
   alias = '';
-  options = [['', 'target <workspace.jsonc|package.json>', 'specify where the dependencies should be written. By default they are saved to workspace.jsonc']] as CommandOptions;
+  options = [
+    [
+      '',
+      'target <workspace.jsonc|package.json>',
+      'specify where the dependencies should be written. By default they are saved to workspace.jsonc',
+    ],
+  ] as CommandOptions;
 
   constructor(private workspace: Workspace) {}
 

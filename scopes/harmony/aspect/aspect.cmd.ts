@@ -16,7 +16,7 @@ export class ListAspectCmd implements Command {
     },
   ];
   options = [['d', 'debug', 'show the origins where the aspects were taken from']] as CommandOptions;
-  group = 'development';
+  group = 'discover';
 
   constructor(private aspect: AspectMain) {}
 
@@ -49,7 +49,7 @@ export class ListCoreAspectCmd implements Command {
     },
   ];
   options = [['j', 'json', 'format as json']] as CommandOptions;
-  group = 'development';
+  group = 'discover';
 
   constructor(private aspect: AspectMain) {}
 
@@ -83,7 +83,7 @@ export class SetAspectCmd implements Command {
   options = [
     ['m', 'merge', 'merge with an existing config if exits. (by default, it replaces overlapping existing configs)'],
   ] as CommandOptions;
-  group = 'development';
+  group = 'component-config';
 
   constructor(private aspect: AspectMain) {}
 
@@ -122,7 +122,7 @@ export class UpdateAspectCmd implements Command {
     },
   ];
   options = [];
-  group = 'development';
+  group = 'component-config';
 
   constructor(private aspect: AspectMain) {}
 
@@ -154,7 +154,7 @@ export class UnsetAspectCmd implements Command {
     },
   ];
   options = [];
-  group = 'development';
+  group = 'component-config';
 
   constructor(private aspect: AspectMain) {}
 
@@ -179,7 +179,7 @@ export class GetAspectCmd implements Command {
     ['d', 'debug', 'show the origins where the aspects were taken from'],
     ['j', 'json', 'format as json'],
   ] as CommandOptions;
-  group = 'development';
+  group = 'discover';
 
   constructor(private aspect: AspectMain) {}
 
@@ -266,7 +266,7 @@ export class AspectCmd implements Command {
   alias = '';
   description = 'manage aspects';
   options = [];
-  group = 'development';
+  group = 'component-config';
   commands: Command[] = [];
 
   async report([unrecognizedSubcommand]: [string]) {

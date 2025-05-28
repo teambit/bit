@@ -6,7 +6,7 @@ export class ComponentIssuesCmd implements Command {
   name = 'component-issues';
   description = 'list available component-issues';
   alias = '';
-  group = 'development';
+  group = 'discover';
   options = [['j', 'json', 'output issues in json format']] as CommandOptions;
   loader = true;
   private = true;

@@ -51,7 +51,7 @@ export class CreateCmd implements Command {
         "creates a component named 'ui/button' from the teambit.react/react-env env and sets it to use the 'community-react' env. \n(the template's default env is 'teambit.react/react-env').",
     },
   ];
-  group = 'development';
+  group = 'discover';
   options = [
     ['n', 'namespace <string>', `sets the component's namespace and nested dirs inside the scope`],
     ['s', 'scope <string>', `sets the component's scope-name. if not entered, the default-scope will be used`],

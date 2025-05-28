@@ -22,7 +22,7 @@ as a result of this change`;
     ],
     ['', 'deprecate', 'for exported components, instead of deleting the original components, deprecating them'],
   ] as CommandOptions;
-  group = 'development';
+  group = 'dev-tools';
 
   constructor(private renaming: RenamingMain) {}
 

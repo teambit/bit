@@ -20,7 +20,7 @@ this command only checks source code changes, it doesn't check for config/aspect
       description: COMPONENT_PATTERN_HELP,
     },
   ];
-  group = 'development';
+  group = 'discover';
   alias = 'ms';
   options = [
     ['', 'show-issues', 'show component issues (slows down the command)'],

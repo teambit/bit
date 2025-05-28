@@ -17,7 +17,7 @@ export default class LogCmd implements Command {
   description = 'show components(s) version history';
   helpUrl = 'reference/components/navigating-history';
   extendedDescription: string;
-  group = 'info';
+  group = 'discover';
   alias = '';
   options = [
     ['r', 'remote', 'show log of a remote component'],

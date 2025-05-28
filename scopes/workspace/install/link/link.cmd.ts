@@ -24,7 +24,7 @@ export class LinkCommand implements Command {
   description = 'create links in the node_modules directory, to core aspects and to components in the workspace';
   helpUrl = 'reference/workspace/component-links';
   extendedDescription: string;
-  group = 'development';
+  group = 'dependencies';
   private = false;
   arguments = [{ name: 'component-names...', description: 'names or IDs of the components to link' }];
   options = [
@@ -79,7 +79,16 @@ export class LinkCommand implements Command {
     });
     const targetLinks = linkToDir(linkResults.linkToDirResults);
     const footer = `Finished. ${timeDiff}`;
-    return compact([title, coreLinks, nonCorePackagesLinks, compsLinks, rewireRow, nestedLinks, targetLinks, footer]).join('\n');
+    return compact([
+      title,
+      coreLinks,
+      nonCorePackagesLinks,
+      compsLinks,
+      rewireRow,
+      nestedLinks,
+      targetLinks,
+      footer,
+    ]).join('\n');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

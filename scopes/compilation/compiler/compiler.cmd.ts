@@ -18,7 +18,7 @@ export class CompileCmd implements Command {
     },
   ];
   alias = '';
-  group = 'development';
+  group = 'dev-tools';
   options = [
     ['c', 'changed', 'compile only new and modified components'],
     ['v', 'verbose', 'show more data, such as, dist paths'],

@@ -7,7 +7,7 @@ export class UIBuildCmd implements Command {
   name = 'ui-build [type]';
   description = 'build production assets for deployment.';
   alias = 'c';
-  group = 'development';
+  group = 'dev-tools';
   options = [];
   private = true;
 

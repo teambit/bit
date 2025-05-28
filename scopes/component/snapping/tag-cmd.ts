@@ -95,7 +95,7 @@ export type TagParams = {
 
 export class TagCmd implements Command {
   name = 'tag [component-patterns...]';
-  group = 'development';
+  group = 'version-control';
   description = 'create an immutable and exportable component snapshot, tagged with a release version.';
   extendedDescription = `if no patterns are provided, it will tag all new and modified components.
 if patterns are entered, you can specify a version per pattern using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major`;

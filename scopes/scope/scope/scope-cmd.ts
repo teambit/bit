@@ -6,7 +6,7 @@ export class ScopeCmd implements Command {
   alias = '';
   description = 'manage the scope-name for components';
   options = [];
-  group = 'development';
+  group = 'component-config';
   commands: Command[] = [];
 
   async report([unrecognizedSubcommand]: [string]) {

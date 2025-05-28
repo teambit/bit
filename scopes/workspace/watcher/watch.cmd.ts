@@ -28,7 +28,7 @@ export class WatchCommand implements Command {
 if this doesn't work well for you, run "bit config set watch_use_polling true" to use polling.`;
   helpUrl = 'reference/compiling/compiler-overview';
   alias = '';
-  group = 'development';
+  group = 'dev-tools';
   options = [
     ['v', 'verbose', 'show all watch events and compiler verbose output'],
     ['', 'skip-pre-compilation', 'skip compilation step before starting to watch'],

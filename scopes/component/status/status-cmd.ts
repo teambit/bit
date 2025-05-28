@@ -67,7 +67,7 @@ type StatusJsonResults = {
 export class StatusCmd implements Command {
   name = 'status';
   description = 'present the current status of components in the workspace, including indication of detected issues';
-  group = 'development';
+  group = 'discover';
   extendedDescription: string;
   alias = 's';
   options = [

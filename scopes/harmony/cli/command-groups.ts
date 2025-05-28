@@ -3,13 +3,19 @@
  * Harmony commands can create new groups by calling `cliMain.registerGroup()`.
  */
 export const groups = {
-  start: 'Start a working area',
-  development: 'Develop components',
-  collaborate: 'Collaborate on components',
-  discover: 'Explore components',
-  info: 'View components',
-  general: 'Workspace commands',
+  start: 'Workspace & Project Setup',
+  collaborate: 'Collaboration & Remote',
+  discover: 'Information & Analysis',
+  general: 'Workspace Tools',
   ungrouped: 'Ungrouped',
+  'component-config': 'Component Configuration',
+  dependencies: 'Dependencies & Packages',
+  'version-control': 'Version Control',
+  testing: 'Testing & Quality',
+  'dev-tools': 'Development Tools',
+  system: 'System & Utility',
+  auth: 'Authentication & Cloud',
+  advanced: 'Advanced/Debug',
 };
 
 export type Group = keyof typeof groups;

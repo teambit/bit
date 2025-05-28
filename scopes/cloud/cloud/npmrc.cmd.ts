@@ -7,7 +7,7 @@ import { CloudMain } from './cloud.main.runtime';
 export class NpmrcGenerateCmd implements Command {
   name = 'generate';
   description = 'update npmrc file with scope, registry, and token information from bit.cloud';
-  group = 'cloud';
+  group = 'auth';
   alias = '';
   options = [
     ['', 'dry-run', 'show the .npmrc file content that will be written'],
@@ -91,7 +91,7 @@ Modification: ${chalk.green(conflict.modifications)}`
 export class NpmrcCmd implements Command {
   name = 'npmrc [sub-command]';
   description = 'manage npmrc file with scope, registry, and token information from bit.cloud';
-  group = 'cloud';
+  group = 'auth';
   alias = '';
   options = [];
   loader = true;

@@ -6,7 +6,7 @@ import { getEmptyTableWithoutStyle, paintAuthor } from './log-cmd';
 export class LogFileCmd implements Command {
   name = 'log-file <filepath>';
   description = 'EXPERIMENTAL. show file history';
-  group = 'info';
+  group = 'discover';
   alias = '';
   options = [['o', 'one-line', 'show each log entry in one line']] as CommandOptions;
   arguments = [{ name: 'filepath', description: 'file path relative to the workspace' }];

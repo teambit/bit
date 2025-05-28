@@ -23,7 +23,7 @@ type AddResults = {
 export class AddCmd implements Command {
   name = 'add [path...]';
   description = 'track one or more directories as new components';
-  group = 'development';
+  group = 'component-config';
   extendedDescription = 'Learn the recommended workflow for tracking directories as components, in the link below.';
   helpUrl = 'reference/workspace/component-directory';
   alias = 'a';

@@ -14,7 +14,7 @@ export class SchemaCommand implements Command {
 Shows detailed information about exported elements including classes, interfaces, functions, types, and enums with their respective signatures and documentation.
 
 ${PATTERN_HELP('schema')}`;
-  group = 'development';
+  group = 'discover';
   options = [
     ['r', 'remote', 'fetch schema from remote scope (works for components not in workspace)'],
     ['j', 'json', 'return the component schema in json format'],
