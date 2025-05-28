@@ -140,6 +140,7 @@
         "@teambit/component.ui.version-label": "^0.0.509",
         "@teambit/compositions.ui.composition-compare": "^0.0.258",
         "@teambit/compositions.ui.composition-compare-section": "^0.0.101",
+        "@teambit/compositions.ui.composition-live-controls": "^0.0.1",
         "@teambit/compositions.ui.compositions-menu-bar": "^0.0.177",
         "@teambit/compositions.ui.compositions-overview": "^0.0.10",
         "@teambit/compositions.ui.hooks.use-composition": "^0.0.177",

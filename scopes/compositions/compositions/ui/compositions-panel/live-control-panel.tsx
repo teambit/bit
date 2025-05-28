@@ -1,10 +1,8 @@
 import React from 'react';
 import classNames from 'classnames';
+import { type Control } from '@teambit/compositions.ui.composition-live-controls';
 
 import styles from './live-control-panel.module.scss';
-// TODO: replace the specifier after the CR is merged
-// https://bit.cloud/teambit/react.mounter/~change-requests/preview-control-20250515-2
-import { type Control } from './live-control.type';
 import { getInputComponent } from './live-control-input';
 
 export function LiveControls({
