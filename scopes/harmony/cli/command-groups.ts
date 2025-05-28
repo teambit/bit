@@ -1,15 +1,17 @@
+/**
+ * They might be needed for backward compatibility.
+ */
 const oldGroups = {
   start: 'Start a working area',
   development: 'Develop components',
   discover: 'Explore components',
   info: 'View components',
   general: 'Workspace commands',
-  ungrouped: 'Ungrouped',
 };
 
 /**
- * these are the main group. legacy commands use only these groups.
- * Harmony commands can create new groups by calling `cliMain.registerGroup()`.
+ * These are the main group.
+ * It's possible to create new groups by calling `cliMain.registerGroup()`.
  */
 export const groups = {
   ...oldGroups,
@@ -26,6 +28,7 @@ export const groups = {
   system: 'System & Utility',
   auth: 'Authentication & Cloud',
   advanced: 'Advanced/Debug',
+  ungrouped: 'Ungrouped',
 };
 
 export type Group = keyof typeof groups;
