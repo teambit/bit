@@ -34,7 +34,7 @@
         "@lydell/node-pty": "^1.0.0",
         "@mdx-js/mdx": "1.6.21",
         "@mdx-js/react": "1.6.22",
-        "@modelcontextprotocol/sdk": "^1.11.0",
+        "@modelcontextprotocol/sdk": "^1.12.0",
         "@monaco-editor/react": "4.4.6",
         "@parcel/watcher": "^2.5.1",
         "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",

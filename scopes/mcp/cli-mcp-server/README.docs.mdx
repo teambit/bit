@@ -4,7 +4,7 @@ The Bit CLI MCP Server provides a [Model Context Protocol (MCP)](https://github.
 
 ## Overview
 
-This server acts as a bridge between MCP clients (such as VS Code, AI tools, or your own applications) and the Bit CLI. It translates MCP tool calls into Bit CLI commands, runs them, and returns the results in a format that MCP clients can understand.
+This server acts as a bridge between MCP clients (such as VS Code, AI tools, or your own applications) and the Bit CLI. It leverages the Bit server API for efficient communication and provides both individual CLI command tools and specialized composite tools for common workflows. The server automatically manages a Bit server instance in the background for optimal performance.
 
 ## Installation
 
@@ -106,36 +106,27 @@ async function example() {
 
 ## Available Tools
 
-The Bit CLI MCP Server operates in three modes:
+The Bit CLI MCP Server operates in three modes and provides several specialized tools:
 
 ### Default Mode
 
-In default mode, the server exposes a focused set of essential Bit CLI commands (~22 tools). This ensures optimal performance and safety. These are the most commonly used Bit operations:
+In default mode, the server exposes a minimal set of essential tools focused on component discovery and creation. This ensures optimal performance and safety:
 
-- `bit_status`: Show component status and potential issues
-- `bit_list`: List components in a workspace or remote scope
-- `bit_add`: Track directories as components
-- `bit_init`: Create or initialize a workspace
-- `bit_show`: Display component information
-- `bit_tag`: Create an immutable, exportable component version
-- `bit_snap`: Create a non-release component snapshot
-- `bit_import`: Import components from remote scopes
-- `bit_export`: Export components to remote scopes
-- `bit_remove`: Remove components from workspace
-- `bit_log`: Show component version history
-- `bit_test`: Test components
-- `bit_diff`: Show differences between component versions
-- `bit_install`: Install dependencies
-- `bit_lane_show`: Display lane details
-- `bit_lane_create`: Create a new development lane
-- `bit_lane_switch`: Switch between lanes
-- `bit_lane_merge`: Merge lane changes
-- `bit_create`: Generate components from templates
-- `bit_templates`: List available templates
-- `bit_reset`: Revert tags or snaps
-- `bit_checkout`: Switch versions or remove changes
-- `bit_schema`: Retrieve component API schema from workspace or remote scopes
-- `bit_remote_search`: Search for components in remote scopes
+- **Individual CLI Command Tools:**
+
+  - `bit_create`: Generate components from templates
+  - `bit_schema`: Retrieve component API schema from workspace or remote scopes
+  - `bit_remote_search`: Search for components in remote scopes
+
+- **Specialized Composite Tools:**
+
+  - `bit_workspace_info`: Get comprehensive workspace information including status, components list, apps, templates, and dependency graph
+  - `bit_component_details`: Get detailed information about a specific component including basic info and optionally its public API schema
+  - `bit_commands_info`: Get information about available Bit commands and their groups
+
+- **Generic Execution Tools:**
+  - `bit_query`: Execute read-only Bit commands that safely inspect workspace and component state without making modifications
+  - `bit_execute`: Execute any Bit command, including those that modify workspace or repository state (use with caution)
 
 ### Consumer Project Mode (--consumer-project)
 
