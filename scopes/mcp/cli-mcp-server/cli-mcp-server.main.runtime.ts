@@ -724,84 +724,39 @@ export class CliMcpServerMain {
 
     server.tool(toolName, description, schema, async (params: any) => {
       try {
-        const extendedDescription = params.extendedDescription === true;
-        const internal = params.internal === true;
-        const specificCommand = params.command;
-        const specificSubcommand = params.subcommand;
-
-        const commands = this.cli.commands;
+        const {
+          extendedDescription = false,
+          internal = false,
+          command: specificCommand,
+          subcommand: specificSubcommand,
+        } = params;
         const commandsInfo: any[] = [];
 
-        // Helper function to extract command info
-        const extractCommandInfo = (cmd: Command, parentName?: string, parentGroup?: string) => {
-          const cmdName = parentName ? `${parentName} ${getCommandName(cmd)}` : getCommandName(cmd);
-
-          // Skip private commands unless internal flag is set
-          if (cmd.private && !internal) {
-            return null;
-          }
-
-          const cmdDescription = cmd.description || '';
-          const cmdExtendedDescription = cmd.extendedDescription || '';
-
-          const commandInfo: any = {
-            name: cmdName,
-            description: cmdDescription,
-          };
-
-          if (extendedDescription && cmdExtendedDescription) {
-            commandInfo.extendedDescription = cmdExtendedDescription;
-          }
-
-          // Add alias information if available
-          if (cmd.alias) {
-            commandInfo.alias = cmd.alias;
-          }
-
-          // Add group information if available (helpful for LLM categorization)
-          // Use parent group if subcommand doesn't have its own group
-          const groupKey = cmd.group || parentGroup;
-          if (groupKey) {
-            commandInfo.group = this.cli.groups[groupKey] || groupKey; // Use full description or fallback to key
-          }
-
-          return commandInfo;
+        const shouldSkipCommand = (cmd: Command): boolean => {
+          return Boolean((cmd.private && !internal) || cmd.description.startsWith('DEPRECATED'));
         };
 
-        // Helper function to extract detailed command info (for specific command lookup)
-        const extractDetailedCommandInfo = (cmd: Command, parentName?: string, parentGroup?: string) => {
-          const cmdName = parentName ? `${parentName} ${getCommandName(cmd)}` : getCommandName(cmd);
+        const buildCommandInfo = (cmd: Command, parentName?: string, parentGroup?: string, detailed = false) => {
+          if (shouldSkipCommand(cmd)) return null;
 
-          // For detailed extraction (specific command lookup), show private commands without requiring internal flag
-          // Skip private commands only in general listing mode when internal flag is not set
+          const cmdName = parentName ? `${parentName} ${getCommandName(cmd)}` : getCommandName(cmd);
+          const groupKey = cmd.group || parentGroup;
 
           const commandInfo: any = {
             name: cmdName,
             description: cmd.description || '',
           };
 
-          // Add extended description
-          if (cmd.extendedDescription) {
+          if (extendedDescription && cmd.extendedDescription) {
             commandInfo.extendedDescription = cmd.extendedDescription;
           }
+          if (groupKey) commandInfo.group = this.cli.groups[groupKey] || groupKey;
 
-          // Add alias
-          if (cmd.alias) {
-            commandInfo.alias = cmd.alias;
-          }
+          if (!detailed) return commandInfo;
 
-          // Add group - use parent group if subcommand doesn't have its own group
-          const groupKey = cmd.group || parentGroup;
-          if (groupKey) {
-            commandInfo.group = this.cli.groups[groupKey] || groupKey; // Use full description or fallback to key
-          }
+          // Add detailed information
+          if (cmd.helpUrl) commandInfo.helpUrl = cmd.helpUrl;
 
-          // Add help URL
-          if (cmd.helpUrl) {
-            commandInfo.helpUrl = cmd.helpUrl;
-          }
-
-          // Add arguments data
           const argsData = getArgsData(cmd);
           if (argsData.length > 0) {
             commandInfo.arguments = argsData.map((arg) => ({
@@ -812,146 +767,94 @@ export class CliMcpServerMain {
             }));
           }
 
-          // Add flags/options data
-          const flagsData = getFlagsData(cmd);
-          if (flagsData.length > 0) {
-            commandInfo.options = flagsData.map((flag) => ({
-              name: flag.name,
-              alias: flag.alias || '',
-              description: flag.description,
-              type: flag.type,
-              requiresArg: flag.requiresArg,
-            }));
-          }
+          commandInfo.options = getFlagsData(cmd);
+          commandInfo.examples = cmd.examples;
 
-          // Add examples if available
-          if (cmd.examples && cmd.examples.length > 0) {
-            commandInfo.examples = cmd.examples.map((example) => ({
-              command: example.cmd,
-              description: example.description,
-            }));
-          }
-
-          // Add subcommands if available
           if (cmd.commands && cmd.commands.length > 0) {
-            commandInfo.subcommands = cmd.commands.map((subCmd) => {
-              const subCmdName = getCommandName(subCmd);
-              return {
-                name: `${cmdName} ${subCmdName}`,
+            commandInfo.subcommands = cmd.commands
+              .filter((subCmd) => !shouldSkipCommand(subCmd))
+              .map((subCmd) => ({
+                name: `${cmdName} ${getCommandName(subCmd)}`,
                 description: subCmd.description || '',
                 alias: subCmd.alias || '',
-                private: subCmd.private || false,
-              };
-            });
+                private: Boolean(subCmd.private),
+              }));
           }
 
           return commandInfo;
         };
 
-        // Process main commands and their subcommands
-        commands.forEach((cmd) => {
-          const mainCommandName = getCommandName(cmd);
-
-          // If both command and subcommand are specified
-          if (specificCommand && specificSubcommand) {
-            if (mainCommandName === specificCommand && cmd.commands?.length) {
+        // Handle specific command + subcommand lookup
+        if (specificCommand && specificSubcommand) {
+          this.cli.commands.forEach((cmd) => {
+            if (getCommandName(cmd) === specificCommand && cmd.commands) {
+              const subCmd = cmd.commands.find((sub) => getCommandName(sub) === specificSubcommand);
+              if (subCmd) {
+                const info = buildCommandInfo(subCmd, specificCommand, cmd.group, true);
+                if (info) commandsInfo.push(info);
+              }
+            }
+          });
+        }
+        // Handle subcommand-only lookup
+        else if (specificSubcommand && !specificCommand) {
+          this.cli.commands.forEach((cmd) => {
+            if (getCommandName(cmd) === specificSubcommand && cmd.commands) {
               cmd.commands.forEach((subCmd) => {
-                const subCmdName = getCommandName(subCmd);
-                if (subCmdName === specificSubcommand) {
-                  const subCmdInfo = extractDetailedCommandInfo(subCmd, mainCommandName, cmd.group);
-                  if (subCmdInfo) {
-                    commandsInfo.push(subCmdInfo);
-                  }
-                }
+                const info = buildCommandInfo(subCmd, specificSubcommand, cmd.group);
+                if (info) commandsInfo.push(info);
               });
             }
-            return; // Skip other processing when both parameters are specified
-          }
+          });
+        }
+        // Handle specific command lookup or general listing
+        else {
+          const isDetailedMode = Boolean(specificCommand);
 
-          // If searching for subcommands of a specific main command only
-          if (specificSubcommand && !specificCommand) {
-            if (mainCommandName === specificSubcommand && cmd.commands?.length) {
+          this.cli.commands.forEach((cmd) => {
+            const mainCmdName = getCommandName(cmd);
+
+            // Process main command
+            if (!specificCommand || mainCmdName === specificCommand) {
+              const info = buildCommandInfo(cmd, undefined, undefined, isDetailedMode);
+              if (info && (!specificCommand || info.name === specificCommand)) {
+                commandsInfo.push(info);
+              }
+            }
+
+            // Process subcommands
+            if (cmd.commands) {
               cmd.commands.forEach((subCmd) => {
-                const subCmdInfo = extractCommandInfo(subCmd, mainCommandName, cmd.group);
-                if (subCmdInfo) {
+                const subCmdInfo = buildCommandInfo(subCmd, mainCmdName, cmd.group, isDetailedMode);
+                if (subCmdInfo && (!specificCommand || subCmdInfo.name === specificCommand)) {
                   commandsInfo.push(subCmdInfo);
                 }
               });
             }
-            return; // Skip processing main commands when searching for subcommands
-          }
-
-          // If specific command is requested, use detailed extraction
-          if (specificCommand) {
-            const cmdInfo = extractDetailedCommandInfo(cmd);
-            if (cmdInfo && cmdInfo.name === specificCommand) {
-              commandsInfo.push(cmdInfo);
-            }
-
-            // Also check sub-commands for specific command match
-            if (cmd.commands?.length) {
-              cmd.commands.forEach((subCmd) => {
-                const subCmdInfo = extractDetailedCommandInfo(subCmd, mainCommandName, cmd.group);
-                if (subCmdInfo && subCmdInfo.name === specificCommand) {
-                  commandsInfo.push(subCmdInfo);
-                }
-              });
-            }
-          } else {
-            // Regular listing mode - use simple extraction
-            const cmdInfo = extractCommandInfo(cmd);
-            if (cmdInfo) {
-              commandsInfo.push(cmdInfo);
-            }
-
-            // Process sub-commands
-            if (cmd.commands?.length) {
-              cmd.commands.forEach((subCmd) => {
-                const subCmdInfo = extractCommandInfo(subCmd, mainCommandName, cmd.group);
-                if (subCmdInfo) {
-                  commandsInfo.push(subCmdInfo);
-                }
-              });
-            }
-          }
-        });
-
-        // Sort commands alphabetically
-        commandsInfo.sort((a, b) => a.name.localeCompare(b.name));
-
-        let resultText: string;
-        if (commandsInfo.length === 0) {
-          if (specificCommand && specificSubcommand) {
-            resultText = `No subcommand "${specificSubcommand}" found for command: ${specificCommand}`;
-          } else if (specificCommand) {
-            resultText = `No command found with name: ${specificCommand}`;
-          } else if (specificSubcommand) {
-            resultText = `No subcommands found for command: ${specificSubcommand}`;
-          } else {
-            resultText = 'No commands found';
-          }
-        } else {
-          resultText = JSON.stringify(
-            {
-              total: commandsInfo.length,
-              commands: commandsInfo,
-            },
-            null,
-            2
-          );
+          });
         }
 
+        commandsInfo.sort((a, b) => a.name.localeCompare(b.name));
+
+        if (commandsInfo.length === 0) {
+          let errorMessage = 'No commands found';
+          if (specificCommand && specificSubcommand) {
+            errorMessage = `No subcommand "${specificSubcommand}" found for command: ${specificCommand}`;
+          } else if (specificCommand) {
+            errorMessage = `No command found with name: ${specificCommand}`;
+          } else if (specificSubcommand) {
+            errorMessage = `No subcommands found for command: ${specificSubcommand}`;
+          }
+          return { content: [{ type: 'text', text: errorMessage }] } as CallToolResult;
+        }
+
+        const result = JSON.stringify({ total: commandsInfo.length, commands: commandsInfo }, null, 2);
         this.logger.debug(`[MCP-DEBUG] Successfully retrieved commands info. Total: ${commandsInfo.length}`);
-        return { content: [{ type: 'text', text: resultText }] } as CallToolResult;
+        return { content: [{ type: 'text', text: result }] } as CallToolResult;
       } catch (error) {
         this.logger.error(`[MCP-DEBUG] Error in bit_commands_info tool: ${(error as Error).message}`);
         return {
-          content: [
-            {
-              type: 'text',
-              text: `Error getting commands info: ${(error as Error).message}`,
-            },
-          ],
+          content: [{ type: 'text', text: `Error getting commands info: ${(error as Error).message}` }],
         } as CallToolResult;
       }
     });
