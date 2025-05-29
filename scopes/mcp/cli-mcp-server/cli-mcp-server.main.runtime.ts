@@ -710,7 +710,7 @@ export class CliMcpServerMain {
 
   private registerCommandsInfoTool(server: McpServer) {
     const toolName = 'bit_commands_info';
-    const description = 'Get information about Bit commands';
+    const description = 'Get information about Bit commands. Specify command or subcommand to get detailed info.';
     const schema: Record<string, any> = {
       extendedDescription: z
         .boolean()
@@ -764,10 +764,8 @@ export class CliMcpServerMain {
         const extractDetailedCommandInfo = (cmd: Command, parentName?: string) => {
           const cmdName = parentName ? `${parentName} ${getCommandName(cmd)}` : getCommandName(cmd);
 
-          // Skip private commands unless internal flag is set
-          if (cmd.private && !internal) {
-            return null;
-          }
+          // For detailed extraction (specific command lookup), show private commands without requiring internal flag
+          // Skip private commands only in general listing mode when internal flag is not set
 
           const commandInfo: any = {
             name: cmdName,
