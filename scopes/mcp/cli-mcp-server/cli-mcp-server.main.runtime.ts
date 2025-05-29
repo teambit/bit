@@ -364,6 +364,9 @@ export class CliMcpServerMain {
     // Register the bit_component_details tool
     this.registerComponentDetailsTool(server);
 
+    // Register the bit_commands_info tool
+    this.registerCommandsInfoTool(server);
+
     await server.connect(new StdioServerTransport());
   }
 
@@ -698,6 +701,248 @@ export class CliMcpServerMain {
             {
               type: 'text',
               text: `Error getting component details: ${(error as Error).message}`,
+            },
+          ],
+        } as CallToolResult;
+      }
+    });
+  }
+
+  private registerCommandsInfoTool(server: McpServer) {
+    const toolName = 'bit_commands_info';
+    const description = 'Get information about Bit commands';
+    const schema: Record<string, any> = {
+      extendedDescription: z
+        .boolean()
+        .optional()
+        .describe('Include extended descriptions for commands (default: false)'),
+      internal: z.boolean().optional().describe('Include internal/debug commands (default: false)'),
+      command: z.string().optional().describe('Get info for a specific command only'),
+      subcommand: z.string().optional().describe('Get info for subcommands of a specific main command'),
+    };
+
+    server.tool(toolName, description, schema, async (params: any) => {
+      try {
+        const extendedDescription = params.extendedDescription === true;
+        const internal = params.internal === true;
+        const specificCommand = params.command;
+        const specificSubcommand = params.subcommand;
+
+        const commands = this.cli.commands;
+        const commandsInfo: any[] = [];
+
+        // Helper function to extract command info
+        const extractCommandInfo = (cmd: Command, parentName?: string) => {
+          const cmdName = parentName ? `${parentName} ${getCommandName(cmd)}` : getCommandName(cmd);
+
+          // Skip private commands unless internal flag is set
+          if (cmd.private && !internal) {
+            return null;
+          }
+
+          const cmdDescription = cmd.description || '';
+          const cmdExtendedDescription = cmd.extendedDescription || '';
+
+          const commandInfo: any = {
+            name: cmdName,
+            description: cmdDescription,
+          };
+
+          if (extendedDescription && cmdExtendedDescription) {
+            commandInfo.extendedDescription = cmdExtendedDescription;
+          }
+
+          // Add alias information if available
+          if (cmd.alias) {
+            commandInfo.alias = cmd.alias;
+          }
+
+          return commandInfo;
+        };
+
+        // Helper function to extract detailed command info (for specific command lookup)
+        const extractDetailedCommandInfo = (cmd: Command, parentName?: string) => {
+          const cmdName = parentName ? `${parentName} ${getCommandName(cmd)}` : getCommandName(cmd);
+
+          // Skip private commands unless internal flag is set
+          if (cmd.private && !internal) {
+            return null;
+          }
+
+          const commandInfo: any = {
+            name: cmdName,
+            description: cmd.description || '',
+          };
+
+          // Add extended description
+          if (cmd.extendedDescription) {
+            commandInfo.extendedDescription = cmd.extendedDescription;
+          }
+
+          // Add alias
+          if (cmd.alias) {
+            commandInfo.alias = cmd.alias;
+          }
+
+          // Add group
+          if (cmd.group) {
+            commandInfo.group = cmd.group;
+          }
+
+          // Add help URL
+          if (cmd.helpUrl) {
+            commandInfo.helpUrl = cmd.helpUrl;
+          }
+
+          // Add arguments data
+          const argsData = getArgsData(cmd);
+          if (argsData.length > 0) {
+            commandInfo.arguments = argsData.map((arg) => ({
+              name: arg.nameRaw,
+              description: arg.description || '',
+              required: arg.required,
+              isArray: arg.isArray,
+            }));
+          }
+
+          // Add flags/options data
+          const flagsData = getFlagsData(cmd);
+          if (flagsData.length > 0) {
+            commandInfo.options = flagsData.map((flag) => ({
+              name: flag.name,
+              alias: flag.alias || '',
+              description: flag.description,
+              type: flag.type,
+              requiresArg: flag.requiresArg,
+            }));
+          }
+
+          // Add examples if available
+          if (cmd.examples && cmd.examples.length > 0) {
+            commandInfo.examples = cmd.examples.map((example) => ({
+              command: example.cmd,
+              description: example.description,
+            }));
+          }
+
+          // Add subcommands if available
+          if (cmd.commands && cmd.commands.length > 0) {
+            commandInfo.subcommands = cmd.commands.map((subCmd) => {
+              const subCmdName = getCommandName(subCmd);
+              return {
+                name: `${cmdName} ${subCmdName}`,
+                description: subCmd.description || '',
+                alias: subCmd.alias || '',
+                private: subCmd.private || false,
+              };
+            });
+          }
+
+          return commandInfo;
+        };
+
+        // Process main commands and their subcommands
+        commands.forEach((cmd) => {
+          const mainCommandName = getCommandName(cmd);
+
+          // If both command and subcommand are specified
+          if (specificCommand && specificSubcommand) {
+            if (mainCommandName === specificCommand && cmd.commands?.length) {
+              cmd.commands.forEach((subCmd) => {
+                const subCmdName = getCommandName(subCmd);
+                if (subCmdName === specificSubcommand) {
+                  const subCmdInfo = extractDetailedCommandInfo(subCmd, mainCommandName);
+                  if (subCmdInfo) {
+                    commandsInfo.push(subCmdInfo);
+                  }
+                }
+              });
+            }
+            return; // Skip other processing when both parameters are specified
+          }
+
+          // If searching for subcommands of a specific main command only
+          if (specificSubcommand && !specificCommand) {
+            if (mainCommandName === specificSubcommand && cmd.commands?.length) {
+              cmd.commands.forEach((subCmd) => {
+                const subCmdInfo = extractCommandInfo(subCmd, mainCommandName);
+                if (subCmdInfo) {
+                  commandsInfo.push(subCmdInfo);
+                }
+              });
+            }
+            return; // Skip processing main commands when searching for subcommands
+          }
+
+          // If specific command is requested, use detailed extraction
+          if (specificCommand) {
+            const cmdInfo = extractDetailedCommandInfo(cmd);
+            if (cmdInfo && cmdInfo.name === specificCommand) {
+              commandsInfo.push(cmdInfo);
+            }
+
+            // Also check sub-commands for specific command match
+            if (cmd.commands?.length) {
+              cmd.commands.forEach((subCmd) => {
+                const subCmdInfo = extractDetailedCommandInfo(subCmd, mainCommandName);
+                if (subCmdInfo && subCmdInfo.name === specificCommand) {
+                  commandsInfo.push(subCmdInfo);
+                }
+              });
+            }
+          } else {
+            // Regular listing mode - use simple extraction
+            const cmdInfo = extractCommandInfo(cmd);
+            if (cmdInfo) {
+              commandsInfo.push(cmdInfo);
+            }
+
+            // Process sub-commands
+            if (cmd.commands?.length) {
+              cmd.commands.forEach((subCmd) => {
+                const subCmdInfo = extractCommandInfo(subCmd, mainCommandName);
+                if (subCmdInfo) {
+                  commandsInfo.push(subCmdInfo);
+                }
+              });
+            }
+          }
+        });
+
+        // Sort commands alphabetically
+        commandsInfo.sort((a, b) => a.name.localeCompare(b.name));
+
+        let resultText: string;
+        if (commandsInfo.length === 0) {
+          if (specificCommand && specificSubcommand) {
+            resultText = `No subcommand "${specificSubcommand}" found for command: ${specificCommand}`;
+          } else if (specificCommand) {
+            resultText = `No command found with name: ${specificCommand}`;
+          } else if (specificSubcommand) {
+            resultText = `No subcommands found for command: ${specificSubcommand}`;
+          } else {
+            resultText = 'No commands found';
+          }
+        } else {
+          resultText = JSON.stringify(
+            {
+              total: commandsInfo.length,
+              commands: commandsInfo,
+            },
+            null,
+            2
+          );
+        }
+
+        this.logger.debug(`[MCP-DEBUG] Successfully retrieved commands info. Total: ${commandsInfo.length}`);
+        return { content: [{ type: 'text', text: resultText }] } as CallToolResult;
+      } catch (error) {
+        this.logger.error(`[MCP-DEBUG] Error in bit_commands_info tool: ${(error as Error).message}`);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error getting commands info: ${(error as Error).message}`,
             },
           ],
         } as CallToolResult;
