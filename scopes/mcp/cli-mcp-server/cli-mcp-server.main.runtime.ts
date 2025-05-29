@@ -40,6 +40,39 @@ export class CliMcpServerMain {
   private serverUrl?: string;
   private serverProcess: childProcess.ChildProcess | null = null;
 
+  // Whitelist of commands that are considered read-only/query operations
+  private readonly readOnlyCommands = new Set([
+    'status',
+    'list',
+    'info',
+    'show',
+    'schema',
+    'artifacts',
+    'diff',
+    'log',
+    'graph',
+    'deps get',
+    'deps blame',
+    'why',
+    'config get',
+    'envs list',
+    'envs get',
+    'remote list',
+    'templates',
+    'cat-component',
+    'cat-lane',
+    'cat-object',
+    'cat-scope',
+    'lane show',
+    'lane list',
+    'lane diff',
+    'lane history',
+    'lane history-diff',
+    'test',
+    'help',
+    'version',
+  ]);
+
   constructor(
     private cli: CLIMain,
     private logger: Logger
@@ -367,6 +400,10 @@ export class CliMcpServerMain {
     // Register the bit_commands_info tool
     this.registerCommandsInfoTool(server);
 
+    // Register arbitrary command execution tools
+    this.registerQueryTool(server);
+    this.registerExecuteTool(server);
+
     await server.connect(new StdioServerTransport());
   }
 
@@ -565,78 +602,75 @@ export class CliMcpServerMain {
 
         const workspaceInfo: any = {};
 
-        // Get workspace status using bit-server API
+        // Get workspace status using bit-server API with error handling
         if (includeStatus) {
-          try {
-            const statusResult = await this.callBitServerAPI('status', [], { json: true }, params.cwd);
-            workspaceInfo.status = statusResult;
-            this.logger.debug(`[MCP-DEBUG] Successfully retrieved workspace status via bit-server`);
-          } catch (error) {
-            this.logger.warn(`[MCP-DEBUG] Failed to get status via bit-server: ${(error as Error).message}`);
-            workspaceInfo.status = { error: `Failed to get status: ${(error as Error).message}` };
-          }
+          const statusExecution = await this.safeBitCommandExecution(
+            'status',
+            [],
+            { json: true },
+            params.cwd,
+            'get workspace status',
+            true
+          );
+          workspaceInfo.status = statusExecution.result;
         }
 
         // Get components list if requested
         if (includeList) {
-          try {
-            const listResult = await this.callBitServerAPI('list', [], { json: true }, params.cwd);
-            workspaceInfo.list = listResult;
-            this.logger.debug(`[MCP-DEBUG] Successfully retrieved components list via bit-server`);
-          } catch (error) {
-            this.logger.warn(`[MCP-DEBUG] Failed to get list via bit-server: ${(error as Error).message}`);
-            workspaceInfo.list = { error: `Failed to get list: ${(error as Error).message}` };
-          }
+          const listExecution = await this.safeBitCommandExecution(
+            'list',
+            [],
+            { json: true },
+            params.cwd,
+            'get components list',
+            true
+          );
+          workspaceInfo.list = listExecution.result;
         }
 
         // Get apps list if requested
         if (includeApps) {
-          try {
-            const appsResult = await this.callBitServerAPI('app', ['list'], { json: true }, params.cwd);
-            workspaceInfo.apps = appsResult;
-            this.logger.debug(`[MCP-DEBUG] Successfully retrieved apps list via bit-server`);
-          } catch (error) {
-            this.logger.warn(`[MCP-DEBUG] Failed to get apps via bit-server: ${(error as Error).message}`);
-            workspaceInfo.apps = { error: `Failed to get apps: ${(error as Error).message}` };
-          }
+          const appsExecution = await this.safeBitCommandExecution(
+            'app',
+            ['list'],
+            { json: true },
+            params.cwd,
+            'get apps list',
+            true
+          );
+          workspaceInfo.apps = appsExecution.result;
         }
 
         // Get templates list if requested
         if (includeTemplates) {
-          try {
-            const templatesResult = await this.callBitServerAPI('templates', [], { json: true }, params.cwd);
-            workspaceInfo.templates = templatesResult;
-            this.logger.debug(`[MCP-DEBUG] Successfully retrieved templates list via bit-server`);
-          } catch (error) {
-            this.logger.warn(`[MCP-DEBUG] Failed to get templates via bit-server: ${(error as Error).message}`);
-            workspaceInfo.templates = { error: `Failed to get templates: ${(error as Error).message}` };
-          }
+          const templatesExecution = await this.safeBitCommandExecution(
+            'templates',
+            [],
+            { json: true },
+            params.cwd,
+            'get templates list',
+            true
+          );
+          workspaceInfo.templates = templatesExecution.result;
         }
 
         // Get dependency graph if requested
         if (includeGraph) {
-          try {
-            const graphResult = await this.callBitServerAPI('graph', [], { json: true }, params.cwd);
-            workspaceInfo.graph = graphResult;
-            this.logger.debug(`[MCP-DEBUG] Successfully retrieved dependency graph via bit-server`);
-          } catch (error) {
-            this.logger.warn(`[MCP-DEBUG] Failed to get dependency graph via bit-server: ${(error as Error).message}`);
-            workspaceInfo.graph = { error: `Failed to get dependency graph: ${(error as Error).message}` };
-          }
+          const graphExecution = await this.safeBitCommandExecution(
+            'graph',
+            [],
+            { json: true },
+            params.cwd,
+            'get dependency graph',
+            true
+          );
+          workspaceInfo.graph = graphExecution.result;
         }
 
-        const formattedOutput = JSON.stringify(workspaceInfo, null, 2);
-        return { content: [{ type: 'text', text: formattedOutput }] } as CallToolResult;
+        return this.formatAsCallToolResult(workspaceInfo);
       } catch (error) {
         this.logger.error(`[MCP-DEBUG] Error in bit_workspace_info tool: ${(error as Error).message}`);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error getting workspace info: ${(error as Error).message}`,
-            },
-          ],
-        } as CallToolResult;
+        return this.formatErrorAsCallToolResult(error as Error, 'getting workspace info');
       }
     });
   }
@@ -661,49 +695,43 @@ export class CliMcpServerMain {
         const componentDetails: any = {};
 
         // Get basic component information using bit show
-        try {
-          const showFlags: Record<string, any> = { json: true };
-          if (remote) {
-            showFlags.remote = true;
-          }
-
-          const showResult = await this.callBitServerAPI('show', [componentName], showFlags, params.cwd);
-          componentDetails.show = showResult;
-          this.logger.debug(`[MCP-DEBUG] Successfully retrieved component show info via bit-server`);
-        } catch (error) {
-          this.logger.warn(`[MCP-DEBUG] Failed to get component show info via bit-server: ${(error as Error).message}`);
-          componentDetails.show = { error: `Failed to get component show info: ${(error as Error).message}` };
+        const showFlags: Record<string, any> = { json: true };
+        if (remote) {
+          showFlags.remote = true;
         }
+
+        const showExecution = await this.safeBitCommandExecution(
+          'show',
+          [componentName],
+          showFlags,
+          params.cwd,
+          'get component show info',
+          true
+        );
+        componentDetails.show = showExecution.result;
 
         // Get component schema (public API) if requested
         if (includeSchema) {
-          try {
-            const schemaFlags: Record<string, any> = { json: true };
-            if (remote) {
-              schemaFlags.remote = true;
-            }
-
-            const schemaResult = await this.callBitServerAPI('schema', [componentName], schemaFlags, params.cwd);
-            componentDetails.schema = schemaResult;
-            this.logger.debug(`[MCP-DEBUG] Successfully retrieved component schema via bit-server`);
-          } catch (error) {
-            this.logger.warn(`[MCP-DEBUG] Failed to get component schema via bit-server: ${(error as Error).message}`);
-            componentDetails.schema = { error: `Failed to get component schema: ${(error as Error).message}` };
+          const schemaFlags: Record<string, any> = { json: true };
+          if (remote) {
+            schemaFlags.remote = true;
           }
+
+          const schemaExecution = await this.safeBitCommandExecution(
+            'schema',
+            [componentName],
+            schemaFlags,
+            params.cwd,
+            'get component schema',
+            true
+          );
+          componentDetails.schema = schemaExecution.result;
         }
 
-        const formattedOutput = JSON.stringify(componentDetails, null, 2);
-        return { content: [{ type: 'text', text: formattedOutput }] } as CallToolResult;
+        return this.formatAsCallToolResult(componentDetails);
       } catch (error) {
         this.logger.error(`[MCP-DEBUG] Error in bit_component_details tool: ${(error as Error).message}`);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error getting component details: ${(error as Error).message}`,
-            },
-          ],
-        } as CallToolResult;
+        return this.formatErrorAsCallToolResult(error as Error, 'getting component details');
       }
     });
   }
@@ -845,17 +873,99 @@ export class CliMcpServerMain {
           } else if (specificSubcommand) {
             errorMessage = `No subcommands found for command: ${specificSubcommand}`;
           }
-          return { content: [{ type: 'text', text: errorMessage }] } as CallToolResult;
+          return this.formatAsCallToolResult(errorMessage);
         }
 
         const result = JSON.stringify({ total: commandsInfo.length, commands: commandsInfo }, null, 2);
         this.logger.debug(`[MCP-DEBUG] Successfully retrieved commands info. Total: ${commandsInfo.length}`);
-        return { content: [{ type: 'text', text: result }] } as CallToolResult;
+        return this.formatAsCallToolResult(result);
       } catch (error) {
         this.logger.error(`[MCP-DEBUG] Error in bit_commands_info tool: ${(error as Error).message}`);
-        return {
-          content: [{ type: 'text', text: `Error getting commands info: ${(error as Error).message}` }],
-        } as CallToolResult;
+        return this.formatErrorAsCallToolResult(error as Error, 'getting commands info');
+      }
+    });
+  }
+
+  private registerQueryTool(server: McpServer) {
+    const toolName = 'bit_query';
+    const description =
+      'Execute read-only Bit commands that safely inspect workspace and component state without making modifications. Only whitelisted query commands are allowed for safety.';
+    const schema: Record<string, any> = {
+      cwd: z.string().describe('Path to workspace directory'),
+      command: z.string().describe('The Bit command to execute (e.g., "status", "show", "list")'),
+      args: z.array(z.string()).optional().describe('Arguments to pass to the command'),
+      flags: z
+        .record(z.union([z.string(), z.boolean()]))
+        .optional()
+        .describe('Flags to pass to the command as key-value pairs'),
+    };
+
+    server.tool(toolName, description, schema, async (params: any) => {
+      try {
+        const { command, args = [], flags = {}, cwd } = params;
+
+        // Check if command is in the read-only whitelist
+        // Support both single commands and subcommands (e.g., "lane show")
+        const fullCommand = args.length > 0 ? `${command} ${args[0]}` : command;
+        const isAllowed = this.readOnlyCommands.has(command) || this.readOnlyCommands.has(fullCommand);
+
+        if (!isAllowed) {
+          const allowedCommands = Array.from(this.readOnlyCommands).sort().join(', ');
+          return this.formatAsCallToolResult(
+            `Error: Command "${command}" is not allowed in query mode. Allowed read-only commands: ${allowedCommands}`
+          );
+        }
+
+        // Build command arguments
+        const commandArgs = [command, ...args];
+
+        // Add flags to arguments
+        Object.entries(flags).forEach(([key, value]) => {
+          if (typeof value === 'boolean' && value) {
+            commandArgs.push(`--${key}`);
+          } else if (typeof value === 'string' && value) {
+            commandArgs.push(`--${key}`);
+            commandArgs.push(value);
+          }
+        });
+
+        this.logger.debug(`[MCP-DEBUG] Executing query command: ${command} with args: ${JSON.stringify(commandArgs)}`);
+
+        const result = await this.callBitServerAPI(command, args, flags, cwd);
+
+        return this.formatAsCallToolResult(result);
+      } catch (error) {
+        this.logger.error(`[MCP-DEBUG] Error in bit_query tool: ${(error as Error).message}`);
+        return this.formatErrorAsCallToolResult(error as Error, 'executing query command');
+      }
+    });
+  }
+
+  private registerExecuteTool(server: McpServer) {
+    const toolName = 'bit_execute';
+    const description =
+      'Execute any Bit command, including those that modify workspace or repository state. ⚠️ Use with caution as this can make permanent changes to your project. Consider using bit_query for read-only operations.';
+    const schema: Record<string, any> = {
+      cwd: z.string().describe('Path to workspace directory'),
+      command: z.string().describe('The Bit command to execute (e.g., "add", "tag", "export", "remove")'),
+      args: z.array(z.string()).optional().describe('Arguments to pass to the command'),
+      flags: z
+        .record(z.union([z.string(), z.boolean()]))
+        .optional()
+        .describe('Flags to pass to the command as key-value pairs'),
+    };
+
+    server.tool(toolName, description, schema, async (params: any) => {
+      try {
+        const { command, args = [], flags = {}, cwd } = params;
+        this.logger.debug(
+          `[MCP-DEBUG] Executing command: ${command} with args: ${JSON.stringify(args)} and flags: ${JSON.stringify(flags)}`
+        );
+        const result = await this.callBitServerAPI(command, args, flags, cwd);
+        return this.formatAsCallToolResult(result);
+      } catch (error) {
+        this.logger.error(`[MCP-DEBUG] Error in bit_execute tool: ${(error as Error).message}`);
+        return this.formatErrorAsCallToolResult(error as Error, 'executing command');
       }
     });
   }
@@ -885,6 +995,80 @@ export class CliMcpServerMain {
       this.logger.error(`[MCP-DEBUG] Error executing ${cmd}`, error);
 
       return { content: [{ type: 'text', text: error.message }] };
+    }
+  }
+
+  /**
+   * Helper method to execute a bit-server API call with standardized error handling
+   */
+  private async executeBitServerCommand(
+    command: string,
+    args: string[] = [],
+    flags: Record<string, any> = {},
+    cwd: string,
+    operationName: string
+  ): Promise<any> {
+    try {
+      const result = await this.callBitServerAPI(command, args, flags, cwd);
+      this.logger.debug(`[MCP-DEBUG] Successfully executed ${operationName} via bit-server`);
+      return result;
+    } catch (error) {
+      this.logger.warn(`[MCP-DEBUG] Failed to execute ${operationName} via bit-server: ${(error as Error).message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Helper method to format any result as CallToolResult
+   */
+  private formatAsCallToolResult(result: any): CallToolResult {
+    if (typeof result === 'string') {
+      return { content: [{ type: 'text', text: result }] } as CallToolResult;
+    } else if (typeof result === 'object') {
+      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] } as CallToolResult;
+    } else {
+      return { content: [{ type: 'text', text: String(result) }] } as CallToolResult;
+    }
+  }
+
+  /**
+   * Helper method to format error as CallToolResult
+   */
+  private formatErrorAsCallToolResult(error: Error, operation: string): CallToolResult {
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Error ${operation}: ${error.message}`,
+        },
+      ],
+    } as CallToolResult;
+  }
+
+  /**
+   * Helper method to safely execute a bit command with error handling
+   */
+  private async safeBitCommandExecution(
+    command: string,
+    args: string[] = [],
+    flags: Record<string, any> = {},
+    cwd: string,
+    operationName: string,
+    includeErrorInResult = false
+  ): Promise<{ success: boolean; result: any; error?: string }> {
+    try {
+      const result = await this.executeBitServerCommand(command, args, flags, cwd, operationName);
+      return { success: true, result };
+    } catch (error) {
+      if (includeErrorInResult) {
+        return {
+          success: false,
+          result: { error: `Failed to ${operationName}: ${(error as Error).message}` },
+          error: (error as Error).message,
+        };
+      } else {
+        throw error;
+      }
     }
   }
 
