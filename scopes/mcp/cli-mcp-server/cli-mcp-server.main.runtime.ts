@@ -710,7 +710,8 @@ export class CliMcpServerMain {
 
   private registerCommandsInfoTool(server: McpServer) {
     const toolName = 'bit_commands_info';
-    const description = 'Get information about Bit commands. Specify command or subcommand to get detailed info.';
+    const description =
+      'Get information about Bit commands and their groups. Specify command or subcommand to get detailed info.';
     const schema: Record<string, any> = {
       extendedDescription: z
         .boolean()
@@ -732,7 +733,7 @@ export class CliMcpServerMain {
         const commandsInfo: any[] = [];
 
         // Helper function to extract command info
-        const extractCommandInfo = (cmd: Command, parentName?: string) => {
+        const extractCommandInfo = (cmd: Command, parentName?: string, parentGroup?: string) => {
           const cmdName = parentName ? `${parentName} ${getCommandName(cmd)}` : getCommandName(cmd);
 
           // Skip private commands unless internal flag is set
@@ -757,11 +758,18 @@ export class CliMcpServerMain {
             commandInfo.alias = cmd.alias;
           }
 
+          // Add group information if available (helpful for LLM categorization)
+          // Use parent group if subcommand doesn't have its own group
+          const groupKey = cmd.group || parentGroup;
+          if (groupKey) {
+            commandInfo.group = this.cli.groups[groupKey] || groupKey; // Use full description or fallback to key
+          }
+
           return commandInfo;
         };
 
         // Helper function to extract detailed command info (for specific command lookup)
-        const extractDetailedCommandInfo = (cmd: Command, parentName?: string) => {
+        const extractDetailedCommandInfo = (cmd: Command, parentName?: string, parentGroup?: string) => {
           const cmdName = parentName ? `${parentName} ${getCommandName(cmd)}` : getCommandName(cmd);
 
           // For detailed extraction (specific command lookup), show private commands without requiring internal flag
@@ -782,9 +790,10 @@ export class CliMcpServerMain {
             commandInfo.alias = cmd.alias;
           }
 
-          // Add group
-          if (cmd.group) {
-            commandInfo.group = cmd.group;
+          // Add group - use parent group if subcommand doesn't have its own group
+          const groupKey = cmd.group || parentGroup;
+          if (groupKey) {
+            commandInfo.group = this.cli.groups[groupKey] || groupKey; // Use full description or fallback to key
           }
 
           // Add help URL
@@ -849,7 +858,7 @@ export class CliMcpServerMain {
               cmd.commands.forEach((subCmd) => {
                 const subCmdName = getCommandName(subCmd);
                 if (subCmdName === specificSubcommand) {
-                  const subCmdInfo = extractDetailedCommandInfo(subCmd, mainCommandName);
+                  const subCmdInfo = extractDetailedCommandInfo(subCmd, mainCommandName, cmd.group);
                   if (subCmdInfo) {
                     commandsInfo.push(subCmdInfo);
                   }
@@ -863,7 +872,7 @@ export class CliMcpServerMain {
           if (specificSubcommand && !specificCommand) {
             if (mainCommandName === specificSubcommand && cmd.commands?.length) {
               cmd.commands.forEach((subCmd) => {
-                const subCmdInfo = extractCommandInfo(subCmd, mainCommandName);
+                const subCmdInfo = extractCommandInfo(subCmd, mainCommandName, cmd.group);
                 if (subCmdInfo) {
                   commandsInfo.push(subCmdInfo);
                 }
@@ -882,7 +891,7 @@ export class CliMcpServerMain {
             // Also check sub-commands for specific command match
             if (cmd.commands?.length) {
               cmd.commands.forEach((subCmd) => {
-                const subCmdInfo = extractDetailedCommandInfo(subCmd, mainCommandName);
+                const subCmdInfo = extractDetailedCommandInfo(subCmd, mainCommandName, cmd.group);
                 if (subCmdInfo && subCmdInfo.name === specificCommand) {
                   commandsInfo.push(subCmdInfo);
                 }
@@ -898,7 +907,7 @@ export class CliMcpServerMain {
             // Process sub-commands
             if (cmd.commands?.length) {
               cmd.commands.forEach((subCmd) => {
-                const subCmdInfo = extractCommandInfo(subCmd, mainCommandName);
+                const subCmdInfo = extractCommandInfo(subCmd, mainCommandName, cmd.group);
                 if (subCmdInfo) {
                   commandsInfo.push(subCmdInfo);
                 }
