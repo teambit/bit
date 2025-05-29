@@ -16,7 +16,7 @@ export default class UpdateCmd implements Command {
   description = 'update dependencies. By default, dependencies are updated to the highest semver compatible versions.';
   helpUrl = 'reference/dependencies/configuring-dependencies/#update-dependencies';
   alias = 'up';
-  group = 'development';
+  group = 'dependencies';
   arguments = [
     {
       name: 'package-patterns...',

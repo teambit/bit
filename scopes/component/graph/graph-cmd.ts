@@ -21,7 +21,7 @@ export class GraphCmd implements Command {
   name = 'graph [id]';
   description = "generate an SVG image file with the components' dependencies graph";
   extendedDescription: 'black arrow is a runtime dependency. red arrow is either dev or peer';
-  group = 'discover';
+  group = 'info-analysis';
   alias = '';
   options = [
     ['r', 'remote [remoteName]', 'remote name (name is optional, leave empty when id is specified)'],

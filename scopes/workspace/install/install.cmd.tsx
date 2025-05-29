@@ -41,7 +41,7 @@ export default class InstallCmd implements Command {
   helpUrl = 'reference/dependencies/dependency-installation';
   arguments = [{ name: 'packages...', description: 'a list of packages to install (separated by spaces)' }];
   alias = 'in';
-  group = 'development';
+  group = 'dependencies';
   options = [
     ['t', 'type [lifecycleType]', '"runtime" (default) or "peer" (dev is not a valid option)'],
     ['u', 'update', 'update all dependencies to latest version according to their semver range'],

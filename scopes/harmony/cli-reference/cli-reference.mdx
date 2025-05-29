@@ -1631,27 +1631,6 @@ optionally use '--abort' to revert the last merge. to revert a lane merge, use "
 
 ---
 
-## mini-status
-
-**Alias**: `ms`  
-**Description**: basic status for fast execution  
-shows only modified/new components with code changes. for the full status, use "bit status".  
-this command only checks source code changes, it doesn't check for config/aspect/dependency changes
-
-`bit mini-status [component-pattern]`
-
-| **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
-| ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
-
-| **Option**                       | **Option alias** | **Description**                                                                                              |
-| -------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------ |
-| `--show-issues`                  |                  | show component issues (slows down the command)                                                               |
-| `--ignore-circular-dependencies` |       `-c`       | do not check for circular dependencies to get the results quicker (relevant when --show-issues flag is used) |
-| `--json`                         |       `-j`       | json format                                                                                                  |
-
----
-
 ## move
 
 **Alias**: `mv`  
@@ -2242,6 +2221,7 @@ list components templates when inside bit-workspace (for bit-create), otherwise,
 | ---------------------- | :--------------: | ---------------------------------------- |
 | `--show-all`           |       `-s`       | show hidden templates                    |
 | `--aspect <aspect-id>` |       `-a`       | show templates provided by the aspect-id |
+| `--json`               |       `-j`       | return templates in json format          |
 
 ---
 

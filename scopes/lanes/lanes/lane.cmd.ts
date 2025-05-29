@@ -272,6 +272,7 @@ export class CatLaneHistoryCmd implements Command {
   alias = 'clh';
   options = [] as CommandOptions;
   loader = true;
+  group = 'advanced';
 
   constructor(private lanes: LanesMain) {}
 
