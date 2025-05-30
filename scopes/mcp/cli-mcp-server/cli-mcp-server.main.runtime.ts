@@ -717,7 +717,6 @@ export class CliMcpServerMain {
       cwd: z.string().describe('Path to workspace directory'),
       componentName: z.string().describe('Component name or component ID to get details for'),
       includeSchema: z.boolean().optional().describe('Include component public API schema (default: false)'),
-      remote: z.boolean().optional().describe('Get details from remote scope (default: false)'),
     };
 
     server.tool(toolName, description, schema, async (params: any) => {
@@ -725,18 +724,17 @@ export class CliMcpServerMain {
         const includeSchema = params.includeSchema === true;
         const componentName = params.componentName;
 
-        // Get component details using IDE API
-        const ideApiResult = await this.callBitServerIDEAPI('getCompDetails', [componentName], params.cwd);
+        // Get component details using IDE API with includeSchema parameter
+        const ideApiResult = await this.callBitServerIDEAPI(
+          'getCompDetails',
+          [componentName, includeSchema],
+          params.cwd
+        );
 
         // IDE API returns the result directly, not wrapped in success/error structure
         const componentDetails: any = {
           show: ideApiResult,
         };
-
-        // If schema is not requested, remove the publicAPI from the result
-        if (!includeSchema && componentDetails.show && componentDetails.show.publicAPI) {
-          delete componentDetails.show.publicAPI;
-        }
 
         return this.formatAsCallToolResult(componentDetails);
       } catch (error) {

@@ -577,10 +577,11 @@ export class APIForIDE {
     return (results?.snappedComponents || []).map((c) => c.id.toString());
   }
 
-  async getCompDetails(id: string) {
+  async getCompDetails(id: string, includeSchema = false) {
     const compId = await this.workspace.resolveComponentId(id);
+    const existsLocally = this.workspace.hasId(compId);
     const getComp = async () => {
-      if (this.workspace.hasId(compId)) {
+      if (existsLocally) {
         return this.workspace.get(compId);
       }
       const comp = await this.scope.get(compId);
@@ -598,8 +599,18 @@ export class APIForIDE {
         showResults[result.title] = result.json;
       })
     );
-    const schema = await this.schema.getSchema(comp);
-    showResults.publicAPI = schema.toStringPerType();
+
+    if (includeSchema) {
+      try {
+        const schema = existsLocally
+          ? await this.schema.getSchema(comp)
+          : await this.schema.getSchemaFromRemote(comp.id.toString());
+        showResults.publicAPI = schema.toStringPerType();
+      } catch (error) {
+        // If schema fails, add error info instead of crashing
+        showResults.publicAPI = `Error fetching schema: ${(error as Error).message}`;
+      }
+    }
 
     return showResults;
   }
