@@ -613,16 +613,16 @@ export class APIForIDE {
       }
     }
 
-    // Add docs content if available
+    // Add docs content if available from teambit.docs/docs aspect
     try {
-      const docsFiles = comp.filesystem.files.filter(
-        (file) => file.relative.endsWith('.docs.mdx') || file.relative.endsWith('.docs.md')
-      );
-
-      if (docsFiles.length > 0) {
+      const docsAspectFiles = showResults['dev files']?.[`teambit.docs/docs`];
+      if (docsAspectFiles && Array.isArray(docsAspectFiles) && docsAspectFiles.length > 0) {
         showResults.docs = {};
-        docsFiles.forEach((file) => {
-          showResults.docs[file.relative] = file.contents.toString();
+        docsAspectFiles.forEach((relativePath: string) => {
+          const file = comp.filesystem.files.find((f) => f.relative === relativePath);
+          if (file) {
+            showResults.docs[relativePath] = file.contents.toString();
+          }
         });
       }
     } catch (error) {
