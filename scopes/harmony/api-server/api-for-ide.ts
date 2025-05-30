@@ -25,6 +25,9 @@ import { DeprecationMain } from '@teambit/deprecation';
 import { EnvsMain } from '@teambit/envs';
 import fetch from 'node-fetch';
 import { GraphMain } from '@teambit/graph';
+import { ComponentNotFound, ScopeMain } from '@teambit/scope';
+import { ComponentMain } from '@teambit/component';
+import { SchemaMain } from '@teambit/schema';
 
 const FILES_HISTORY_DIR = 'files-history';
 const ENV_ICONS_DIR = 'env-icons';
@@ -95,6 +98,9 @@ export class APIForIDE {
     private deprecation: DeprecationMain,
     private envs: EnvsMain,
     private graph: GraphMain,
+    private scope: ScopeMain,
+    private component: ComponentMain,
+    private schema: SchemaMain
   ) {}
 
   async logStartCmdHistory(op: string) {
@@ -569,6 +575,33 @@ export class APIForIDE {
     const params = { message, build: false };
     const results = await this.snapping.snap(params);
     return (results?.snappedComponents || []).map((c) => c.id.toString());
+  }
+
+  async getCompDetails(id: string) {
+    const compId = await this.workspace.resolveComponentId(id);
+    const getComp = async () => {
+      if (this.workspace.hasId(compId)) {
+        return this.workspace.get(compId);
+      }
+      const comp = await this.scope.get(compId);
+      if (comp) return comp;
+      throw new ComponentNotFound(compId);
+    };
+    const comp = await getComp();
+    const fragments = this.component.getShowFragments();
+    const titlesToInclude = ['id', 'env', 'package name', 'files', 'dev files', 'dependencies', 'deprecated'];
+    const showResults: Record<string, any> = {};
+    await Promise.all(
+      fragments.map(async (fragment) => {
+        const result = fragment.json ? await fragment.json(comp) : undefined;
+        if (!result || !titlesToInclude.includes(result.title)) return;
+        showResults[result.title] = result.json;
+      })
+    );
+    const schema = await this.schema.getSchema(comp);
+    showResults.publicAPI = schema.toStringPerType();
+
+    return showResults;
   }
 }
 

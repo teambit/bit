@@ -209,6 +209,28 @@ export class CliMcpServerMain {
     cwd: string,
     isReTrying = false
   ): Promise<any> {
+    return this.callBitServerAPIWithRoute('cli-raw', command, args, flags, cwd, isReTrying);
+  }
+
+  /**
+   * Call bit-server API endpoint using IDE route
+   */
+  private async callBitServerIDEAPI(method: string, args: any[] = [], cwd: string, isReTrying = false): Promise<any> {
+    return this.callBitServerAPIWithRoute('ide', method, args, {}, cwd, isReTrying, true);
+  }
+
+  /**
+   * Generic method to call bit-server API with different routes
+   */
+  private async callBitServerAPIWithRoute(
+    route: string,
+    commandOrMethod: string,
+    argsOrParams: any[] = [],
+    flags: Record<string, any> = {},
+    cwd: string,
+    isReTrying = false,
+    isIDERoute = false
+  ): Promise<any> {
     if (!this.serverPort) {
       if (!cwd) throw new Error('CWD is required to call bit-server API');
       this.serverPort = await this.getBitServerPort(cwd);
@@ -229,29 +251,41 @@ export class CliMcpServerMain {
       throw new Error('Unable to connect to bit-server. Please ensure you are in a valid Bit workspace.');
     }
 
-    // Build the command array: [command, ...args, ...flagsAsArgs]
-    const commandArray = [command, ...args];
-
-    // Convert flags to command line arguments
-    for (const [key, value] of Object.entries(flags)) {
-      if (value === true) {
-        commandArray.push(`--${key}`);
-      } else if (value !== false && value !== undefined) {
-        commandArray.push(`--${key}`, String(value));
-      }
-    }
-
     // Resolve the real path to handle symlinks (e.g., /tmp -> /private/tmp on macOS)
     const fs = require('fs');
     const realCwd = fs.realpathSync(cwd);
 
-    const body = {
-      command: commandArray,
-      pwd: realCwd,
-    };
+    let body: any;
+    let url: string;
+
+    if (isIDERoute) {
+      // For IDE route, use the method name and args directly
+      body = {
+        args: argsOrParams,
+      };
+      url = `${this.serverUrl}/${route}/${commandOrMethod}`;
+    } else {
+      // For CLI route, build command array with flags
+      const commandArray = [commandOrMethod, ...argsOrParams];
+
+      // Convert flags to command line arguments
+      for (const [key, value] of Object.entries(flags)) {
+        if (value === true) {
+          commandArray.push(`--${key}`);
+        } else if (value !== false && value !== undefined) {
+          commandArray.push(`--${key}`, String(value));
+        }
+      }
+
+      body = {
+        command: commandArray,
+        pwd: realCwd,
+      };
+      url = `${this.serverUrl}/${route}`;
+    }
 
     try {
-      const response = await fetch(`${this.serverUrl}/cli-raw`, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -275,7 +309,7 @@ export class CliMcpServerMain {
         this.serverPort = undefined;
         this.serverUrl = undefined;
         this.logger.debug('[MCP-DEBUG] Connection refused, attempting to restart bit-server');
-        return this.callBitServerAPI(command, args, flags, cwd, true);
+        return this.callBitServerAPIWithRoute(route, commandOrMethod, argsOrParams, flags, cwd, true, isIDERoute);
       }
       throw err;
     }
@@ -689,43 +723,19 @@ export class CliMcpServerMain {
     server.tool(toolName, description, schema, async (params: any) => {
       try {
         const includeSchema = params.includeSchema === true;
-        const remote = params.remote === true;
         const componentName = params.componentName;
 
-        const componentDetails: any = {};
+        // Get component details using IDE API
+        const ideApiResult = await this.callBitServerIDEAPI('getCompDetails', [componentName], params.cwd);
 
-        // Get basic component information using bit show
-        const showFlags: Record<string, any> = { json: true };
-        if (remote) {
-          showFlags.remote = true;
-        }
+        // IDE API returns the result directly, not wrapped in success/error structure
+        const componentDetails: any = {
+          show: ideApiResult,
+        };
 
-        const showExecution = await this.safeBitCommandExecution(
-          'show',
-          [componentName],
-          showFlags,
-          params.cwd,
-          'get component show info',
-          true
-        );
-        componentDetails.show = showExecution.result;
-
-        // Get component schema (public API) if requested
-        if (includeSchema) {
-          const schemaFlags: Record<string, any> = { json: true };
-          if (remote) {
-            schemaFlags.remote = true;
-          }
-
-          const schemaExecution = await this.safeBitCommandExecution(
-            'schema',
-            [componentName],
-            schemaFlags,
-            params.cwd,
-            'get component schema',
-            true
-          );
-          componentDetails.schema = schemaExecution.result;
+        // If schema is not requested, remove the publicAPI from the result
+        if (!includeSchema && componentDetails.show && componentDetails.show.publicAPI) {
+          delete componentDetails.show.publicAPI;
         }
 
         return this.formatAsCallToolResult(componentDetails);
