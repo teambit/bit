@@ -589,6 +589,7 @@ export class APIForIDE {
       throw new ComponentNotFound(compId);
     };
     const comp = await getComp();
+
     const fragments = this.component.getShowFragments();
     const titlesToInclude = ['id', 'env', 'package name', 'files', 'dev files', 'dependencies', 'deprecated'];
     const showResults: Record<string, any> = {};
@@ -610,6 +611,23 @@ export class APIForIDE {
         // If schema fails, add error info instead of crashing
         showResults.publicAPI = `Error fetching schema: ${(error as Error).message}`;
       }
+    }
+
+    // Add docs content if available
+    try {
+      const docsFiles = comp.filesystem.files.filter(
+        (file) => file.relative.endsWith('.docs.mdx') || file.relative.endsWith('.docs.md')
+      );
+
+      if (docsFiles.length > 0) {
+        showResults.docs = {};
+        docsFiles.forEach((file) => {
+          showResults.docs[file.relative] = file.contents.toString();
+        });
+      }
+    } catch (error) {
+      // If docs extraction fails, add error info but don't crash
+      showResults.docs = `Error fetching docs: ${(error as Error).message}`;
     }
 
     return showResults;
