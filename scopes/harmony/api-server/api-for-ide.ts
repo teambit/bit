@@ -630,6 +630,24 @@ export class APIForIDE {
       showResults.docs = `Error fetching docs: ${(error as Error).message}`;
     }
 
+    // Add usage examples from teambit.compositions/compositions aspect
+    try {
+      const compositionsAspectFiles = showResults['dev files']?.[`teambit.compositions/compositions`];
+      if (compositionsAspectFiles && Array.isArray(compositionsAspectFiles) && compositionsAspectFiles.length > 0) {
+        showResults.usageExamples = {};
+        compositionsAspectFiles.forEach((relativePath: string) => {
+          const file = comp.filesystem.files.find((f) => f.relative === relativePath);
+          if (file) {
+            const fileContent = file.contents.toString();
+            showResults.usageExamples[relativePath] = fileContent;
+          }
+        });
+      }
+    } catch (error) {
+      // If composition extraction fails, add error info but don't crash
+      showResults.usageExamples = `Error fetching usage examples: ${(error as Error).message}`;
+    }
+
     return showResults;
   }
 }
