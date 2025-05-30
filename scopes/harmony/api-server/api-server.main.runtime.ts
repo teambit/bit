@@ -15,7 +15,7 @@ import { ExportAspect, ExportMain } from '@teambit/export';
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { InstallAspect, InstallMain } from '@teambit/install';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
-import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 import cors from 'cors';
