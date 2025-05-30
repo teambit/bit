@@ -25,6 +25,9 @@ import { DeprecationMain } from '@teambit/deprecation';
 import { EnvsMain } from '@teambit/envs';
 import fetch from 'node-fetch';
 import { GraphMain } from '@teambit/graph';
+import { ComponentNotFound, ScopeMain } from '@teambit/scope';
+import { ComponentMain } from '@teambit/component';
+import { SchemaMain } from '@teambit/schema';
 
 const FILES_HISTORY_DIR = 'files-history';
 const ENV_ICONS_DIR = 'env-icons';
@@ -95,6 +98,9 @@ export class APIForIDE {
     private deprecation: DeprecationMain,
     private envs: EnvsMain,
     private graph: GraphMain,
+    private scope: ScopeMain,
+    private component: ComponentMain,
+    private schema: SchemaMain
   ) {}
 
   async logStartCmdHistory(op: string) {
@@ -569,6 +575,80 @@ export class APIForIDE {
     const params = { message, build: false };
     const results = await this.snapping.snap(params);
     return (results?.snappedComponents || []).map((c) => c.id.toString());
+  }
+
+  async getCompDetails(id: string, includeSchema = false) {
+    const compId = await this.workspace.resolveComponentId(id);
+    const existsLocally = this.workspace.hasId(compId);
+    const getComp = async () => {
+      if (existsLocally) {
+        return this.workspace.get(compId);
+      }
+      const comp = await this.scope.get(compId);
+      if (comp) return comp;
+      throw new ComponentNotFound(compId);
+    };
+    const comp = await getComp();
+
+    const fragments = this.component.getShowFragments();
+    const titlesToInclude = ['id', 'env', 'package name', 'files', 'dev files', 'dependencies', 'deprecated'];
+    const showResults: Record<string, any> = {};
+    await Promise.all(
+      fragments.map(async (fragment) => {
+        const result = fragment.json ? await fragment.json(comp) : undefined;
+        if (!result || !titlesToInclude.includes(result.title)) return;
+        showResults[result.title] = result.json;
+      })
+    );
+
+    if (includeSchema) {
+      try {
+        const schema = existsLocally
+          ? await this.schema.getSchema(comp)
+          : await this.schema.getSchemaFromRemote(comp.id.toString());
+        showResults.publicAPI = schema.toStringPerType();
+      } catch (error) {
+        // If schema fails, add error info instead of crashing
+        showResults.publicAPI = `Error fetching schema: ${(error as Error).message}`;
+      }
+    }
+
+    // Add docs content if available from teambit.docs/docs aspect
+    try {
+      const docsAspectFiles = showResults['dev files']?.[`teambit.docs/docs`];
+      if (docsAspectFiles && Array.isArray(docsAspectFiles) && docsAspectFiles.length > 0) {
+        showResults.docs = {};
+        docsAspectFiles.forEach((relativePath: string) => {
+          const file = comp.filesystem.files.find((f) => f.relative === relativePath);
+          if (file) {
+            showResults.docs[relativePath] = file.contents.toString();
+          }
+        });
+      }
+    } catch (error) {
+      // If docs extraction fails, add error info but don't crash
+      showResults.docs = `Error fetching docs: ${(error as Error).message}`;
+    }
+
+    // Add usage examples from teambit.compositions/compositions aspect
+    try {
+      const compositionsAspectFiles = showResults['dev files']?.[`teambit.compositions/compositions`];
+      if (compositionsAspectFiles && Array.isArray(compositionsAspectFiles) && compositionsAspectFiles.length > 0) {
+        showResults.usageExamples = {};
+        compositionsAspectFiles.forEach((relativePath: string) => {
+          const file = comp.filesystem.files.find((f) => f.relative === relativePath);
+          if (file) {
+            const fileContent = file.contents.toString();
+            showResults.usageExamples[relativePath] = fileContent;
+          }
+        });
+      }
+    } catch (error) {
+      // If composition extraction fails, add error info but don't crash
+      showResults.usageExamples = `Error fetching usage examples: ${(error as Error).message}`;
+    }
+
+    return showResults;
   }
 }
 

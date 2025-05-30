@@ -15,7 +15,7 @@ import { ExportAspect, ExportMain } from '@teambit/export';
 import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { InstallAspect, InstallMain } from '@teambit/install';
 import { ImporterAspect, ImporterMain } from '@teambit/importer';
-import { Component } from '@teambit/component';
+import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 import cors from 'cors';
@@ -34,6 +34,8 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { DEFAULT_AUTH_TYPE, Http } from '@teambit/scope.network';
 import { getSymphonyUrl } from '@teambit/legacy.constants';
 import { GraphAspect, GraphMain } from '@teambit/graph';
+import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import { SchemaAspect, SchemaMain } from '@teambit/schema';
 
 export class ApiServerMain {
   constructor(
@@ -228,6 +230,9 @@ export class ApiServerMain {
     DeprecationAspect,
     EnvsAspect,
     GraphAspect,
+    ScopeAspect,
+    ComponentAspect,
+    SchemaAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -251,6 +256,9 @@ export class ApiServerMain {
     deprecation,
     envs,
     graph,
+    scope,
+    component,
+    schema,
   ]: [
     CLIMain,
     Workspace,
@@ -272,6 +280,9 @@ export class ApiServerMain {
     DeprecationMain,
     EnvsMain,
     GraphMain,
+    ScopeMain,
+    ComponentMain,
+    SchemaMain,
   ]) {
     const logger = loggerMain.createLogger(ApiServerAspect.id);
     const apiServer = new ApiServerMain(workspace, logger, express, watcher, installer, importer);
@@ -292,7 +303,10 @@ export class ApiServerMain {
       application,
       deprecation,
       envs,
-      graph
+      graph,
+      scope,
+      component,
+      schema
     );
     const cliRoute = new CLIRoute(logger, cli, apiForIDE);
     const cliRawRoute = new CLIRawRoute(logger, cli, apiForIDE);
