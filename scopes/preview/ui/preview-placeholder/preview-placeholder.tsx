@@ -56,7 +56,7 @@ export function PreviewPlaceholder({
   useEffect(() => {
     if (prevServerUrlRef.current !== serverUrl && shouldShowPreview) {
       prevServerUrlRef.current = serverUrl;
-      setForceRender(prev => prev + 1);
+      setForceRender((prev) => prev + 1);
     }
   }, [serverUrl, shouldShowPreview]);
 
@@ -83,7 +83,7 @@ export function PreviewPlaceholder({
 
   const name = component.id.toString();
 
-  if (!serverUrl || (!shouldShowPreview && (component.buildStatus === 'pending')))
+  if (!serverUrl || (!shouldShowPreview && component.buildStatus === 'pending'))
     return (
       <div className={styles.previewPlaceholder} data-tip="" data-for={name}>
         <div className={styles.skeletonContainer}>
@@ -101,6 +101,7 @@ export function PreviewPlaceholder({
         includeEnv={true}
         loading={'lazy'}
         viewport={1280}
+        queryParams={'disableCta=true'}
       />
       <div className={styles.previewOverlay} />
     </div>
