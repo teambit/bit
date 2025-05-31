@@ -3421,6 +3421,26 @@
     ]
   },
   {
+    "name": "schema <pattern>",
+    "alias": "",
+    "options": [
+      [
+        "r",
+        "remote",
+        "fetch schema from remote scope (works for components not in workspace)"
+      ],
+      [
+        "j",
+        "json",
+        "return the component schema in json format"
+      ]
+    ],
+    "description": "extracts and displays the API schema (types, functions, classes, interfaces) of the specified component/s.",
+    "extendedDescription": "Extracts TypeScript definitions to provide a comprehensive view of a component's public API.\nShows detailed information about exported elements including classes, interfaces, functions, types, and enums with their respective signatures and documentation.\n\nyou can use a `<pattern>` for multiple component ids, such as `bit schema \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
+    "group": "info-analysis",
+    "private": false
+  },
+  {
     "name": "test [component-pattern]",
     "alias": "at",
     "options": [
@@ -4893,26 +4913,6 @@
         "description": "the name for the new component (component name without scope, e.g. name/spaces/my-button). to set a different scope, use the '--scope' flag"
       }
     ]
-  },
-  {
-    "name": "schema <pattern>",
-    "alias": "",
-    "options": [
-      [
-        "r",
-        "remote",
-        "fetch schema from remote scope (works for components not in workspace)"
-      ],
-      [
-        "j",
-        "json",
-        "return the component schema in json format"
-      ]
-    ],
-    "description": "extracts and displays the API schema (types, functions, classes, interfaces) of the specified component/s.",
-    "extendedDescription": "Extracts TypeScript definitions to provide a comprehensive view of a component's public API.\nShows detailed information about exported elements including classes, interfaces, functions, types, and enums with their respective signatures and documentation.\n\nyou can use a `<pattern>` for multiple component ids, such as `bit schema \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
-    "group": "info-analysis",
-    "private": false
   },
   {
     "name": "check-types [component-pattern]",
