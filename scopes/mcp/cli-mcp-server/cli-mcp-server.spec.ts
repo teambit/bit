@@ -7,6 +7,9 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents } from '@teambit/component.testing.mock-components';
+import fs from 'fs-extra';
+import path from 'path';
+import { tmpdir } from 'os';
 
 describe('CliMcpServer Integration Tests', function () {
   this.timeout(30000); // Increased timeout for MCP server operations
@@ -301,6 +304,309 @@ describe('CliMcpServer Integration Tests', function () {
       // Should return error information
       const content = (result.content[0] as any).text;
       expect(content).to.be.a('string');
+    });
+  });
+
+  describe('bit mcp-server setup command', () => {
+    let tempDir: string;
+
+    beforeEach(async () => {
+      // Create a temporary directory for testing VS Code settings
+      tempDir = await fs.mkdtemp(path.join(tmpdir(), 'bit-mcp-setup-test-'));
+    });
+
+    afterEach(async () => {
+      // Clean up temporary directory
+      if (tempDir) {
+        await fs.remove(tempDir);
+      }
+    });
+
+    it('should setup VS Code MCP integration for workspace', async () => {
+      // Use bit_execute to run the setup command
+      const result = (await mcpClient.callTool({
+        name: 'bit_execute',
+        arguments: {
+          cwd: workspacePath,
+          command: 'mcp-server',
+          args: ['setup', 'vscode'],
+          flags: {},
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
+
+      const content = (result.content[0] as any).text;
+      expect(content).to.be.a('string');
+      expect(content).to.include('Successfully configured VS Code MCP integration');
+      expect(content).to.include('workspace');
+
+      // Verify that the settings.json file was created in the workspace
+      const vscodeSettingsPath = path.join(workspacePath, '.vscode', 'settings.json');
+      const settingsExists = await fs.pathExists(vscodeSettingsPath);
+      expect(settingsExists).to.be.true;
+
+      // Verify the content of the settings file
+      const settings = await fs.readJson(vscodeSettingsPath);
+      expect(settings).to.have.property('mcp');
+      expect(settings.mcp).to.have.property('servers');
+      expect(settings.mcp.servers).to.have.property('bit-cli');
+      expect(settings.mcp.servers['bit-cli']).to.deep.equal({
+        command: 'bit',
+        args: ['mcp-server'],
+      });
+    });
+
+    it('should setup VS Code MCP integration with extended flag', async () => {
+      const result = (await mcpClient.callTool({
+        name: 'bit_execute',
+        arguments: {
+          cwd: workspacePath,
+          command: 'mcp-server',
+          args: ['setup', 'vscode'],
+          flags: {
+            extended: true,
+          },
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
+
+      const content = (result.content[0] as any).text;
+      expect(content).to.include('Successfully configured VS Code MCP integration');
+
+      // Verify the settings file contains the extended flag
+      const vscodeSettingsPath = path.join(workspacePath, '.vscode', 'settings.json');
+      const settings = await fs.readJson(vscodeSettingsPath);
+      expect(settings.mcp.servers['bit-cli'].args).to.include('--extended');
+    });
+
+    it('should setup VS Code MCP integration with consumer-project flag', async () => {
+      const result = (await mcpClient.callTool({
+        name: 'bit_execute',
+        arguments: {
+          cwd: workspacePath,
+          command: 'mcp-server',
+          args: ['setup', 'vscode'],
+          flags: {
+            'consumer-project': true,
+          },
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
+
+      const content = (result.content[0] as any).text;
+      expect(content).to.include('Successfully configured VS Code MCP integration');
+
+      // Verify the settings file contains the consumer-project flag
+      const vscodeSettingsPath = path.join(workspacePath, '.vscode', 'settings.json');
+      const settings = await fs.readJson(vscodeSettingsPath);
+      expect(settings.mcp.servers['bit-cli'].args).to.include('--consumer-project');
+    });
+
+    it('should setup VS Code MCP integration with include-only flag', async () => {
+      const result = (await mcpClient.callTool({
+        name: 'bit_execute',
+        arguments: {
+          cwd: workspacePath,
+          command: 'mcp-server',
+          args: ['setup', 'vscode'],
+          flags: {
+            'include-only': 'status,show,list',
+          },
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
+
+      const content = (result.content[0] as any).text;
+      expect(content).to.include('Successfully configured VS Code MCP integration');
+
+      // Verify the settings file contains the include-only flag
+      const vscodeSettingsPath = path.join(workspacePath, '.vscode', 'settings.json');
+      const settings = await fs.readJson(vscodeSettingsPath);
+      expect(settings.mcp.servers['bit-cli'].args).to.include('--include-only');
+      expect(settings.mcp.servers['bit-cli'].args).to.include('status,show,list');
+    });
+
+    it('should setup VS Code MCP integration with include-additional flag', async () => {
+      const result = (await mcpClient.callTool({
+        name: 'bit_execute',
+        arguments: {
+          cwd: workspacePath,
+          command: 'mcp-server',
+          args: ['setup', 'vscode'],
+          flags: {
+            'include-additional': 'build,lint',
+          },
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
+
+      const content = (result.content[0] as any).text;
+      expect(content).to.include('Successfully configured VS Code MCP integration');
+
+      // Verify the settings file contains the include-additional flag
+      const vscodeSettingsPath = path.join(workspacePath, '.vscode', 'settings.json');
+      const settings = await fs.readJson(vscodeSettingsPath);
+      expect(settings.mcp.servers['bit-cli'].args).to.include('--include-additional');
+      expect(settings.mcp.servers['bit-cli'].args).to.include('build,lint');
+    });
+
+    it('should setup VS Code MCP integration with exclude flag', async () => {
+      const result = (await mcpClient.callTool({
+        name: 'bit_execute',
+        arguments: {
+          cwd: workspacePath,
+          command: 'mcp-server',
+          args: ['setup', 'vscode'],
+          flags: {
+            exclude: 'remove,delete',
+          },
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
+
+      const content = (result.content[0] as any).text;
+      expect(content).to.include('Successfully configured VS Code MCP integration');
+
+      // Verify the settings file contains the exclude flag
+      const vscodeSettingsPath = path.join(workspacePath, '.vscode', 'settings.json');
+      const settings = await fs.readJson(vscodeSettingsPath);
+      expect(settings.mcp.servers['bit-cli'].args).to.include('--exclude');
+      expect(settings.mcp.servers['bit-cli'].args).to.include('remove,delete');
+    });
+
+    it('should merge with existing VS Code settings', async () => {
+      // First, create existing settings
+      const vscodeSettingsPath = path.join(workspacePath, '.vscode', 'settings.json');
+      await fs.ensureDir(path.dirname(vscodeSettingsPath));
+      await fs.writeJson(vscodeSettingsPath, {
+        'editor.formatOnSave': true,
+        'typescript.preferences.includePackageJsonAutoImports': 'off',
+      });
+
+      // Run setup command
+      const result = (await mcpClient.callTool({
+        name: 'bit_execute',
+        arguments: {
+          cwd: workspacePath,
+          command: 'mcp-server',
+          args: ['setup', 'vscode'],
+          flags: {},
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      const content = (result.content[0] as any).text;
+      expect(content).to.include('Successfully configured VS Code MCP integration');
+
+      // Verify that existing settings are preserved and MCP config is added
+      const settings = await fs.readJson(vscodeSettingsPath);
+      expect(settings).to.have.property('editor.formatOnSave', true);
+      expect(settings).to.have.property('typescript.preferences.includePackageJsonAutoImports', 'off');
+      expect(settings).to.have.property('mcp');
+      expect(settings.mcp.servers['bit-cli']).to.deep.equal({
+        command: 'bit',
+        args: ['mcp-server'],
+      });
+    });
+
+    it('should handle unsupported editor gracefully', async () => {
+      const result = (await mcpClient.callTool({
+        name: 'bit_execute',
+        arguments: {
+          cwd: workspacePath,
+          command: 'mcp-server',
+          args: ['setup', 'unsupported-editor'],
+          flags: {},
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
+
+      const content = (result.content[0] as any).text;
+      expect(content).to.include('Error: Editor "unsupported-editor" is not supported yet');
+      expect(content).to.include('Currently supported: vscode, cursor, windsurf');
+    });
+
+    it('should default to vscode when no editor is specified', async () => {
+      const result = (await mcpClient.callTool({
+        name: 'bit_execute',
+        arguments: {
+          cwd: workspacePath,
+          command: 'mcp-server',
+          args: ['setup'],
+          flags: {},
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
+
+      const content = (result.content[0] as any).text;
+      expect(content).to.include('Successfully configured VS Code MCP integration');
+
+      // Verify VS Code settings were created
+      const vscodeSettingsPath = path.join(workspacePath, '.vscode', 'settings.json');
+      const settingsExists = await fs.pathExists(vscodeSettingsPath);
+      expect(settingsExists).to.be.true;
+    });
+
+    it('should update existing MCP configuration', async () => {
+      // First setup with basic configuration
+      await mcpClient.callTool({
+        name: 'bit_execute',
+        arguments: {
+          cwd: workspacePath,
+          command: 'mcp-server',
+          args: ['setup', 'vscode'],
+          flags: {},
+        },
+      });
+
+      // Then update with extended configuration
+      const result = (await mcpClient.callTool({
+        name: 'bit_execute',
+        arguments: {
+          cwd: workspacePath,
+          command: 'mcp-server',
+          args: ['setup', 'vscode'],
+          flags: {
+            extended: true,
+            'include-additional': 'build',
+          },
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      const content = (result.content[0] as any).text;
+      expect(content).to.include('Successfully configured VS Code MCP integration');
+
+      // Verify the updated configuration
+      const vscodeSettingsPath = path.join(workspacePath, '.vscode', 'settings.json');
+      const settings = await fs.readJson(vscodeSettingsPath);
+      expect(settings.mcp.servers['bit-cli'].args).to.include('--extended');
+      expect(settings.mcp.servers['bit-cli'].args).to.include('--include-additional');
+      expect(settings.mcp.servers['bit-cli'].args).to.include('build');
     });
   });
 });
