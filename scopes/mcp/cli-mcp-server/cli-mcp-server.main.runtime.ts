@@ -13,6 +13,8 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Http } from '@teambit/scope.network';
 import { CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 import fetch from 'node-fetch';
+import { McpSetupCmd } from './setup-cmd';
+import { StartCmd } from './start-cmd';
 
 interface CommandFilterOptions {
   defaultTools: Set<string>;
@@ -1086,7 +1088,9 @@ export class CliMcpServerMain {
   static async provider([cli, loggerMain]: [CLIMain, LoggerMain]) {
     const logger = loggerMain.createLogger(CliMcpServerAspect.id);
     const mcpServer = new CliMcpServerMain(cli, logger);
-    cli.register(new McpServerCmd(mcpServer));
+    const mcpServerCmd = new McpServerCmd(mcpServer);
+    mcpServerCmd.commands = [new StartCmd(mcpServer), new McpSetupCmd()];
+    cli.register(mcpServerCmd);
     return mcpServer;
   }
 }

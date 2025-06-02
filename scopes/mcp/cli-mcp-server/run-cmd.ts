@@ -1,7 +1,7 @@
 import { CLIArgs, Command, CommandOptions } from '@teambit/cli';
 import { CliMcpServerMain } from './cli-mcp-server.main.runtime';
 
-export type McpServerCmdOptions = {
+export type RunCmdOptions = {
   extended?: boolean;
   includeOnly?: string;
   includeAdditional?: string;
@@ -10,10 +10,10 @@ export type McpServerCmdOptions = {
   consumerProject?: boolean;
 };
 
-export class McpServerCmd implements Command {
-  name = 'mcp-server <sub-command>';
-  description =
-    'Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.';
+export class RunCmd implements Command {
+  name = 'run';
+  description = 'Run the MCP server';
+  extendedDescription = 'Start the Model Context Protocol (MCP) server with the specified configuration';
   alias = '';
   group = 'advanced';
   loader = false;
@@ -41,18 +41,10 @@ export class McpServerCmd implements Command {
       'For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools',
     ],
   ] as CommandOptions;
-  commands: Command[] = [];
 
   constructor(private mcpServer: CliMcpServerMain) {}
 
-  async wait(args: CLIArgs, flags: McpServerCmdOptions): Promise<void> {
+  async wait(args: CLIArgs, flags: RunCmdOptions): Promise<void> {
     await this.mcpServer.runMcpServer(flags);
-  }
-
-  async report([unrecognizedSubcommand]: [string]) {
-    const chalk = (await import('chalk')).default;
-    return chalk.red(
-      `"${unrecognizedSubcommand}" is not a subcommand of "mcp-server", please run "bit mcp-server --help" to list the subcommands`
-    );
   }
 }
