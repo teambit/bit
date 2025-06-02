@@ -256,7 +256,6 @@ export class CliMcpServerMain {
     }
 
     // Resolve the real path to handle symlinks (e.g., /tmp -> /private/tmp on macOS)
-    const fs = require('fs');
     const realCwd = fs.realpathSync(cwd);
 
     let body: any;
@@ -1335,7 +1334,7 @@ export class CliMcpServerMain {
     const logger = loggerMain.createLogger(CliMcpServerAspect.id);
     const mcpServer = new CliMcpServerMain(cli, logger);
     const mcpServerCmd = new McpServerCmd(mcpServer);
-    mcpServerCmd.commands = [new McpStartCmd(mcpServer), new McpSetupCmd()];
+    mcpServerCmd.commands = [new McpStartCmd(mcpServer), new McpSetupCmd(mcpServer)];
     cli.register(mcpServerCmd);
     return mcpServer;
   }
