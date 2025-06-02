@@ -45,6 +45,10 @@ export class McpSetupCmd implements Command {
     ['g', 'global', 'Setup global configuration (default: workspace-specific)'],
   ] as CommandOptions;
 
+  private getEditorDisplayName(editor: string): string {
+    return editor === 'vscode' ? 'VS Code' : 'Cursor';
+  }
+
   async report(
     [editor = 'vscode']: [string],
     { extended, consumerProject, includeOnly, includeAdditional, exclude, global: isGlobal = false }: McpSetupCmdOptions
@@ -80,42 +84,22 @@ export class McpSetupCmd implements Command {
       }
 
       const scope = isGlobal ? 'global' : 'workspace';
-      const editorName = editorLower === 'vscode' ? 'VS Code' : 'Cursor';
+      const editorName = this.getEditorDisplayName(editorLower);
       return chalk.green(`✓ Successfully configured ${editorName} MCP integration (${scope})`);
     } catch (error) {
-      const editorName = editorLower === 'vscode' ? 'VS Code' : 'Cursor';
+      const editorName = this.getEditorDisplayName(editorLower);
       return chalk.red(`Error setting up ${editorName} integration: ${(error as Error).message}`);
     }
   }
 
-  private async setupVSCode(options: {
+  private buildMcpServerArgs(options: {
     extended?: boolean;
     consumerProject?: boolean;
     includeOnly?: string;
     includeAdditional?: string;
     exclude?: string;
-    isGlobal: boolean;
-  }): Promise<void> {
-    const { extended, consumerProject, includeOnly, includeAdditional, exclude, isGlobal } = options;
-
-    // Determine settings.json path
-    const settingsPath = this.getVSCodeSettingsPath(isGlobal);
-
-    // Ensure directory exists
-    await fs.ensureDir(path.dirname(settingsPath));
-
-    // Read existing settings or create empty object
-    let settings: any = {};
-    if (await fs.pathExists(settingsPath)) {
-      try {
-        const content = await fs.readFile(settingsPath, 'utf8');
-        settings = JSON.parse(content);
-      } catch (error) {
-        throw new Error(`Failed to parse existing settings.json: ${(error as Error).message}`);
-      }
-    }
-
-    // Build MCP server args
+  }): string[] {
+    const { extended, consumerProject, includeOnly, includeAdditional, exclude } = options;
     const args = ['mcp-server'];
 
     if (extended) {
@@ -137,6 +121,44 @@ export class McpSetupCmd implements Command {
     if (exclude) {
       args.push('--exclude', exclude);
     }
+
+    return args;
+  }
+
+  private async readJsonFile(filePath: string): Promise<any> {
+    if (!(await fs.pathExists(filePath))) {
+      return {};
+    }
+
+    try {
+      const content = await fs.readFile(filePath, 'utf8');
+      return JSON.parse(content);
+    } catch (error) {
+      throw new Error(`Failed to parse ${path.basename(filePath)}: ${(error as Error).message}`);
+    }
+  }
+
+  private async setupVSCode(options: {
+    extended?: boolean;
+    consumerProject?: boolean;
+    includeOnly?: string;
+    includeAdditional?: string;
+    exclude?: string;
+    isGlobal: boolean;
+  }): Promise<void> {
+    const { isGlobal } = options;
+
+    // Determine settings.json path
+    const settingsPath = this.getVSCodeSettingsPath(isGlobal);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(settingsPath));
+
+    // Read existing settings or create empty object
+    const settings = await this.readJsonFile(settingsPath);
+
+    // Build MCP server args
+    const args = this.buildMcpServerArgs(options);
 
     // Create or update MCP configuration
     if (!settings.mcp) {
@@ -185,7 +207,7 @@ export class McpSetupCmd implements Command {
     exclude?: string;
     isGlobal: boolean;
   }): Promise<void> {
-    const { extended, consumerProject, includeOnly, includeAdditional, exclude, isGlobal } = options;
+    const { isGlobal } = options;
 
     // Determine mcp.json path
     const mcpConfigPath = this.getCursorSettingsPath(isGlobal);
@@ -194,38 +216,10 @@ export class McpSetupCmd implements Command {
     await fs.ensureDir(path.dirname(mcpConfigPath));
 
     // Read existing MCP configuration or create empty object
-    let mcpConfig: any = {};
-    if (await fs.pathExists(mcpConfigPath)) {
-      try {
-        const content = await fs.readFile(mcpConfigPath, 'utf8');
-        mcpConfig = JSON.parse(content);
-      } catch (error) {
-        throw new Error(`Failed to parse existing mcp.json: ${(error as Error).message}`);
-      }
-    }
+    const mcpConfig = await this.readJsonFile(mcpConfigPath);
 
     // Build MCP server args
-    const args = ['mcp-server'];
-
-    if (extended) {
-      args.push('--extended');
-    }
-
-    if (consumerProject) {
-      args.push('--consumer-project');
-    }
-
-    if (includeOnly) {
-      args.push('--include-only', includeOnly);
-    }
-
-    if (includeAdditional) {
-      args.push('--include-additional', includeAdditional);
-    }
-
-    if (exclude) {
-      args.push('--exclude', exclude);
-    }
+    const args = this.buildMcpServerArgs(options);
 
     // Create or update MCP configuration for Cursor
     if (!mcpConfig.mcpServers) {
