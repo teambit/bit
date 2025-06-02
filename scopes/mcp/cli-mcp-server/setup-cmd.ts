@@ -187,20 +187,20 @@ export class McpSetupCmd implements Command {
   }): Promise<void> {
     const { extended, consumerProject, includeOnly, includeAdditional, exclude, isGlobal } = options;
 
-    // Determine settings.json path
-    const settingsPath = this.getCursorSettingsPath(isGlobal);
+    // Determine mcp.json path
+    const mcpConfigPath = this.getCursorSettingsPath(isGlobal);
 
     // Ensure directory exists
-    await fs.ensureDir(path.dirname(settingsPath));
+    await fs.ensureDir(path.dirname(mcpConfigPath));
 
-    // Read existing settings or create empty object
-    let settings: any = {};
-    if (await fs.pathExists(settingsPath)) {
+    // Read existing MCP configuration or create empty object
+    let mcpConfig: any = {};
+    if (await fs.pathExists(mcpConfigPath)) {
       try {
-        const content = await fs.readFile(settingsPath, 'utf8');
-        settings = JSON.parse(content);
+        const content = await fs.readFile(mcpConfigPath, 'utf8');
+        mcpConfig = JSON.parse(content);
       } catch (error) {
-        throw new Error(`Failed to parse existing settings.json: ${(error as Error).message}`);
+        throw new Error(`Failed to parse existing mcp.json: ${(error as Error).message}`);
       }
     }
 
@@ -227,42 +227,39 @@ export class McpSetupCmd implements Command {
       args.push('--exclude', exclude);
     }
 
-    // Create or update MCP configuration
-    if (!settings.mcp) {
-      settings.mcp = {};
+    // Create or update MCP configuration for Cursor
+    if (!mcpConfig.mcpServers) {
+      mcpConfig.mcpServers = {};
     }
 
-    if (!settings.mcp.servers) {
-      settings.mcp.servers = {};
-    }
-
-    settings.mcp.servers['bit-cli'] = {
+    mcpConfig.mcpServers.bit = {
+      type: 'stdio',
       command: 'bit',
       args: args,
     };
 
-    // Write updated settings
-    await fs.writeFile(settingsPath, JSON.stringify(settings, null, 2));
+    // Write updated MCP configuration
+    await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
   }
 
   private getCursorSettingsPath(isGlobal: boolean): string {
     if (isGlobal) {
-      // Global Cursor settings
+      // Global Cursor MCP configuration
       const platform = process.platform;
       switch (platform) {
         case 'win32':
-          return path.join(homedir(), 'AppData', 'Roaming', 'Cursor', 'User', 'settings.json');
+          return path.join(homedir(), 'AppData', 'Roaming', 'Cursor', 'User', 'mcp.json');
         case 'darwin':
-          return path.join(homedir(), 'Library', 'Application Support', 'Cursor', 'User', 'settings.json');
+          return path.join(homedir(), 'Library', 'Application Support', 'Cursor', 'User', 'mcp.json');
         case 'linux':
-          return path.join(homedir(), '.config', 'Cursor', 'User', 'settings.json');
+          return path.join(homedir(), '.config', 'Cursor', 'User', 'mcp.json');
         default:
           throw new Error(`Unsupported platform: ${platform}`);
       }
     } else {
-      // Workspace-specific settings
+      // Workspace-specific MCP configuration
       const workspaceDir = process.cwd();
-      return path.join(workspaceDir, '.cursor', 'settings.json');
+      return path.join(workspaceDir, '.cursor', 'mcp.json');
     }
   }
 }
