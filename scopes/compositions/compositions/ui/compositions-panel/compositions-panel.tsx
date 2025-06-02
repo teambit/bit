@@ -8,7 +8,8 @@ import { Tooltip } from '@teambit/design.ui.tooltip';
 import { useNavigate, useLocation } from '@teambit/base-react.navigation.link';
 import {
   type LiveControlReadyEventData,
-  type LiveControlUpdateEventData,
+  getReadyListener,
+  broadcastUpdate,
 } from '@teambit/compositions.ui.composition-live-controls';
 
 import styles from './compositions-panel.module.scss';
@@ -83,6 +84,7 @@ export function CompositionsPanel({
   const handleSelect = useCallback(
     (selected: Composition) => {
       onSelect && onSelect(selected);
+      if (selected === active) return;
       setControlsTimestamp(0);
     },
     [onSelect]
@@ -104,13 +106,13 @@ export function CompositionsPanel({
   // listen to the mounter for live control updates
   useEffect(() => {
     function onLiveControlsSetup(e: MessageEvent<LiveControlReadyEventData>) {
-      if (!e.data || e.data.type !== 'composition-live-controls:ready') return () => {};
-      const { controls, values, timestamp } = JSON.parse(JSON.stringify(e.data.payload));
-      const iframeWindow = e.source;
-      setMounter(iframeWindow as Window);
-      setControlsDefs(controls);
-      setControlsValues(values);
-      setControlsTimestamp(timestamp);
+      getReadyListener(e, ({ controls, values, timestamp }) => {
+        const iframeWindow = e.source;
+        setMounter(iframeWindow as Window);
+        setControlsDefs(controls);
+        setControlsValues(values);
+        setControlsTimestamp(timestamp);
+      });
     }
     // LATER
     // function onLiveControlsDestroy(e: MessageEvent<LiveControlReadyEventData>) {}
@@ -124,15 +126,10 @@ export function CompositionsPanel({
   const onLiveControlsUpdate = useCallback(
     (key: string, value: any) => {
       if (mounter) {
-        const data: LiveControlUpdateEventData = {
-          type: 'composition-live-controls:update',
-          payload: {
-            key,
-            value: JSON.parse(JSON.stringify(value)),
-            timestamp: controlsTimestamp,
-          },
-        };
-        mounter.postMessage(data);
+        broadcastUpdate(mounter, controlsTimestamp, {
+          key,
+          value,
+        });
       }
       setControlsValues((prev: any) => ({ ...prev, [key]: value }));
     },
