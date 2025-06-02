@@ -15,13 +15,13 @@ export type McpSetupCmdOptions = {
 
 export class McpSetupCmd implements Command {
   name = 'setup [editor]';
-  description = 'Setup MCP integration with VS Code, Cursor, or other editors';
+  description = 'Setup MCP integration with VS Code, Cursor, Windsurf, or other editors';
   extendedDescription =
-    'Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code and Cursor.';
+    'Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, and Windsurf.';
   arguments = [
     {
       name: 'editor',
-      description: 'Editor to setup (default: vscode). Available: vscode, cursor',
+      description: 'Editor to setup (default: vscode). Available: vscode, cursor, windsurf',
     },
   ];
   options = [
@@ -46,14 +46,23 @@ export class McpSetupCmd implements Command {
   ] as CommandOptions;
 
   private getEditorDisplayName(editor: string): string {
-    return editor === 'vscode' ? 'VS Code' : 'Cursor';
+    switch (editor) {
+      case 'vscode':
+        return 'VS Code';
+      case 'cursor':
+        return 'Cursor';
+      case 'windsurf':
+        return 'Windsurf';
+      default:
+        return editor;
+    }
   }
 
   async report(
     [editor = 'vscode']: [string],
     { extended, consumerProject, includeOnly, includeAdditional, exclude, global: isGlobal = false }: McpSetupCmdOptions
   ): Promise<string> {
-    const supportedEditors = ['vscode', 'cursor'];
+    const supportedEditors = ['vscode', 'cursor', 'windsurf'];
     const editorLower = editor.toLowerCase();
 
     if (!supportedEditors.includes(editorLower)) {
@@ -74,6 +83,15 @@ export class McpSetupCmd implements Command {
         });
       } else if (editorLower === 'cursor') {
         await this.setupCursor({
+          extended,
+          consumerProject,
+          includeOnly,
+          includeAdditional,
+          exclude,
+          isGlobal,
+        });
+      } else if (editorLower === 'windsurf') {
+        await this.setupWindsurf({
           extended,
           consumerProject,
           includeOnly,
@@ -244,6 +262,54 @@ export class McpSetupCmd implements Command {
       // Workspace-specific MCP configuration
       const workspaceDir = process.cwd();
       return path.join(workspaceDir, '.cursor', 'mcp.json');
+    }
+  }
+
+  private async setupWindsurf(options: {
+    extended?: boolean;
+    consumerProject?: boolean;
+    includeOnly?: string;
+    includeAdditional?: string;
+    exclude?: string;
+    isGlobal: boolean;
+  }): Promise<void> {
+    const { isGlobal } = options;
+
+    // Determine mcp.json path
+    const mcpConfigPath = this.getWindsurfSettingsPath(isGlobal);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(mcpConfigPath));
+
+    // Read existing MCP configuration or create empty object
+    const mcpConfig = await this.readJsonFile(mcpConfigPath);
+
+    // Build MCP server args
+    const args = this.buildMcpServerArgs(options);
+
+    // Create or update MCP configuration for Windsurf
+    if (!mcpConfig.mcpServers) {
+      mcpConfig.mcpServers = {};
+    }
+
+    mcpConfig.mcpServers.bit = {
+      type: 'stdio',
+      command: 'bit',
+      args: args,
+    };
+
+    // Write updated MCP configuration
+    await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
+  }
+
+  private getWindsurfSettingsPath(isGlobal: boolean): string {
+    if (isGlobal) {
+      // Global Windsurf MCP configuration
+      return path.join(homedir(), '.windsurf', 'mcp.json');
+    } else {
+      // Workspace-specific MCP configuration
+      const workspaceDir = process.cwd();
+      return path.join(workspaceDir, '.windsurf', 'mcp.json');
     }
   }
 }
