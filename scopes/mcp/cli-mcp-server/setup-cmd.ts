@@ -245,17 +245,7 @@ export class McpSetupCmd implements Command {
   private getCursorSettingsPath(isGlobal: boolean): string {
     if (isGlobal) {
       // Global Cursor MCP configuration
-      const platform = process.platform;
-      switch (platform) {
-        case 'win32':
-          return path.join(homedir(), 'AppData', 'Roaming', 'Cursor', 'User', 'mcp.json');
-        case 'darwin':
-          return path.join(homedir(), 'Library', 'Application Support', 'Cursor', 'User', 'mcp.json');
-        case 'linux':
-          return path.join(homedir(), '.config', 'Cursor', 'User', 'mcp.json');
-        default:
-          throw new Error(`Unsupported platform: ${platform}`);
-      }
+      return path.join(homedir(), '.cursor', 'mcp.json');
     } else {
       // Workspace-specific MCP configuration
       const workspaceDir = process.cwd();
