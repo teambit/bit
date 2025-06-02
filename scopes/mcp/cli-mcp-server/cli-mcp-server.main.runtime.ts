@@ -4,7 +4,7 @@
 import { CLIAspect, CLIMain, Command, getArgsData, getCommandName, getFlagsData, MainRuntime } from '@teambit/cli';
 import childProcess from 'child_process';
 import { CliMcpServerAspect } from './cli-mcp-server.aspect';
-import { McpServerCmd } from './mcp-server.cmd';
+import { McpServerCmd, McpStartCmd } from './mcp-server.cmd';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
@@ -14,7 +14,6 @@ import { Http } from '@teambit/scope.network';
 import { CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 import fetch from 'node-fetch';
 import { McpSetupCmd } from './setup-cmd';
-import { StartCmd } from './start-cmd';
 
 interface CommandFilterOptions {
   defaultTools: Set<string>;
@@ -1089,7 +1088,7 @@ export class CliMcpServerMain {
     const logger = loggerMain.createLogger(CliMcpServerAspect.id);
     const mcpServer = new CliMcpServerMain(cli, logger);
     const mcpServerCmd = new McpServerCmd(mcpServer);
-    mcpServerCmd.commands = [new StartCmd(mcpServer), new McpSetupCmd()];
+    mcpServerCmd.commands = [new McpStartCmd(mcpServer), new McpSetupCmd()];
     cli.register(mcpServerCmd);
     return mcpServer;
   }
