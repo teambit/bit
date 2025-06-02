@@ -15,13 +15,13 @@ export type McpSetupCmdOptions = {
 
 export class McpSetupCmd implements Command {
   name = 'setup [editor]';
-  description = 'Setup MCP integration with VS Code or other editors';
+  description = 'Setup MCP integration with VS Code, Cursor, or other editors';
   extendedDescription =
-    'Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code.';
+    'Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code and Cursor.';
   arguments = [
     {
       name: 'editor',
-      description: 'Editor to setup (default: vscode). Available: vscode',
+      description: 'Editor to setup (default: vscode). Available: vscode, cursor',
     },
   ];
   options = [
@@ -49,24 +49,42 @@ export class McpSetupCmd implements Command {
     [editor = 'vscode']: [string],
     { extended, consumerProject, includeOnly, includeAdditional, exclude, global: isGlobal = false }: McpSetupCmdOptions
   ): Promise<string> {
-    if (editor.toLowerCase() !== 'vscode') {
-      return chalk.red(`Error: Editor "${editor}" is not supported yet. Currently supported: vscode`);
+    const supportedEditors = ['vscode', 'cursor'];
+    const editorLower = editor.toLowerCase();
+
+    if (!supportedEditors.includes(editorLower)) {
+      return chalk.red(
+        `Error: Editor "${editor}" is not supported yet. Currently supported: ${supportedEditors.join(', ')}`
+      );
     }
 
     try {
-      await this.setupVSCode({
-        extended,
-        consumerProject,
-        includeOnly,
-        includeAdditional,
-        exclude,
-        isGlobal,
-      });
+      if (editorLower === 'vscode') {
+        await this.setupVSCode({
+          extended,
+          consumerProject,
+          includeOnly,
+          includeAdditional,
+          exclude,
+          isGlobal,
+        });
+      } else if (editorLower === 'cursor') {
+        await this.setupCursor({
+          extended,
+          consumerProject,
+          includeOnly,
+          includeAdditional,
+          exclude,
+          isGlobal,
+        });
+      }
 
       const scope = isGlobal ? 'global' : 'workspace';
-      return chalk.green(`✓ Successfully configured VS Code MCP integration (${scope})`);
+      const editorName = editorLower === 'vscode' ? 'VS Code' : 'Cursor';
+      return chalk.green(`✓ Successfully configured ${editorName} MCP integration (${scope})`);
     } catch (error) {
-      return chalk.red(`Error setting up VS Code integration: ${(error as Error).message}`);
+      const editorName = editorLower === 'vscode' ? 'VS Code' : 'Cursor';
+      return chalk.red(`Error setting up ${editorName} integration: ${(error as Error).message}`);
     }
   }
 
@@ -156,6 +174,95 @@ export class McpSetupCmd implements Command {
       // Workspace-specific settings
       const workspaceDir = process.cwd();
       return path.join(workspaceDir, '.vscode', 'settings.json');
+    }
+  }
+
+  private async setupCursor(options: {
+    extended?: boolean;
+    consumerProject?: boolean;
+    includeOnly?: string;
+    includeAdditional?: string;
+    exclude?: string;
+    isGlobal: boolean;
+  }): Promise<void> {
+    const { extended, consumerProject, includeOnly, includeAdditional, exclude, isGlobal } = options;
+
+    // Determine settings.json path
+    const settingsPath = this.getCursorSettingsPath(isGlobal);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(settingsPath));
+
+    // Read existing settings or create empty object
+    let settings: any = {};
+    if (await fs.pathExists(settingsPath)) {
+      try {
+        const content = await fs.readFile(settingsPath, 'utf8');
+        settings = JSON.parse(content);
+      } catch (error) {
+        throw new Error(`Failed to parse existing settings.json: ${(error as Error).message}`);
+      }
+    }
+
+    // Build MCP server args
+    const args = ['mcp-server'];
+
+    if (extended) {
+      args.push('--extended');
+    }
+
+    if (consumerProject) {
+      args.push('--consumer-project');
+    }
+
+    if (includeOnly) {
+      args.push('--include-only', includeOnly);
+    }
+
+    if (includeAdditional) {
+      args.push('--include-additional', includeAdditional);
+    }
+
+    if (exclude) {
+      args.push('--exclude', exclude);
+    }
+
+    // Create or update MCP configuration
+    if (!settings.mcp) {
+      settings.mcp = {};
+    }
+
+    if (!settings.mcp.servers) {
+      settings.mcp.servers = {};
+    }
+
+    settings.mcp.servers['bit-cli'] = {
+      command: 'bit',
+      args: args,
+    };
+
+    // Write updated settings
+    await fs.writeFile(settingsPath, JSON.stringify(settings, null, 2));
+  }
+
+  private getCursorSettingsPath(isGlobal: boolean): string {
+    if (isGlobal) {
+      // Global Cursor settings
+      const platform = process.platform;
+      switch (platform) {
+        case 'win32':
+          return path.join(homedir(), 'AppData', 'Roaming', 'Cursor', 'User', 'settings.json');
+        case 'darwin':
+          return path.join(homedir(), 'Library', 'Application Support', 'Cursor', 'User', 'settings.json');
+        case 'linux':
+          return path.join(homedir(), '.config', 'Cursor', 'User', 'settings.json');
+        default:
+          throw new Error(`Unsupported platform: ${platform}`);
+      }
+    } else {
+      // Workspace-specific settings
+      const workspaceDir = process.cwd();
+      return path.join(workspaceDir, '.cursor', 'settings.json');
     }
   }
 }
