@@ -9,7 +9,7 @@ import { useNavigate, useLocation } from '@teambit/base-react.navigation.link';
 import {
   type LiveControlReadyEventData,
   getReadyListener,
-  broadcastUpdate,
+  // broadcastUpdate,
 } from '@teambit/compositions.ui.composition-live-controls';
 
 import styles from './compositions-panel.module.scss';
@@ -114,8 +114,6 @@ export function CompositionsPanel({
         setControlsTimestamp(timestamp);
       });
     }
-    // LATER
-    // function onLiveControlsDestroy(e: MessageEvent<LiveControlReadyEventData>) {}
     window.addEventListener('message', onLiveControlsSetup);
     return () => {
       window.removeEventListener('message', onLiveControlsSetup);
@@ -126,9 +124,20 @@ export function CompositionsPanel({
   const onLiveControlsUpdate = useCallback(
     (key: string, value: any) => {
       if (mounter) {
-        broadcastUpdate(mounter, controlsTimestamp, {
-          key,
-          value,
+        // TODO:
+        // broadcastUpdate(mounter, controlsTimestamp, {
+        //   key,
+        //   value,
+        // });
+        mounter.postMessage({
+          type: 'composition-live-controls:update',
+          payload: JSON.parse(
+            JSON.stringify({
+              timestamp: controlsTimestamp,
+              key,
+              value,
+            })
+          ),
         });
       }
       setControlsValues((prev: any) => ({ ...prev, [key]: value }));
