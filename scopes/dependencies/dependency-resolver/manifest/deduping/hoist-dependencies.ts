@@ -450,7 +450,7 @@ function groupByRangeOrVersion(indexItems: PackageNameIndexComponentItem[]): Ite
 export function isRange(version: string, compIdStr: string) {
   const validRange = semver.validRange(version);
   if (!validRange) {
-    if (!isHash(version) && !version.startsWith('workspace:')) {
+    if (!isHash(version) && !version.startsWith('workspace:') && !version.startsWith('npm:')) {
       throw new Error(
         `fatal: the version "${version}" originated from a dependent "${compIdStr}" is invalid semver range and not a hash`
       );
