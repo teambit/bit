@@ -12,6 +12,7 @@ export interface SetupOptions {
   includeAdditional?: string;
   exclude?: string;
   isGlobal: boolean;
+  workspaceDir?: string;
 }
 
 /**
@@ -83,7 +84,7 @@ export class McpSetupUtils {
   /**
    * Get VS Code settings.json path based on global/workspace scope
    */
-  static getVSCodeSettingsPath(isGlobal: boolean): string {
+  static getVSCodeSettingsPath(isGlobal: boolean, workspaceDir?: string): string {
     if (isGlobal) {
       // Global VS Code settings
       const platform = process.platform;
@@ -99,8 +100,8 @@ export class McpSetupUtils {
       }
     } else {
       // Workspace-specific settings
-      const workspaceDir = process.cwd();
-      return path.join(workspaceDir, '.vscode', 'settings.json');
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.vscode', 'settings.json');
     }
   }
 
@@ -108,10 +109,10 @@ export class McpSetupUtils {
    * Setup VS Code MCP integration
    */
   static async setupVSCode(options: SetupOptions): Promise<void> {
-    const { isGlobal } = options;
+    const { isGlobal, workspaceDir } = options;
 
     // Determine settings.json path
-    const settingsPath = this.getVSCodeSettingsPath(isGlobal);
+    const settingsPath = this.getVSCodeSettingsPath(isGlobal, workspaceDir);
 
     // Ensure directory exists
     await fs.ensureDir(path.dirname(settingsPath));
@@ -143,14 +144,14 @@ export class McpSetupUtils {
   /**
    * Get Cursor mcp.json path based on global/workspace scope
    */
-  static getCursorSettingsPath(isGlobal: boolean): string {
+  static getCursorSettingsPath(isGlobal: boolean, workspaceDir?: string): string {
     if (isGlobal) {
       // Global Cursor MCP configuration
       return path.join(homedir(), '.cursor', 'mcp.json');
     } else {
       // Workspace-specific MCP configuration
-      const workspaceDir = process.cwd();
-      return path.join(workspaceDir, '.cursor', 'mcp.json');
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.cursor', 'mcp.json');
     }
   }
 
@@ -158,10 +159,10 @@ export class McpSetupUtils {
    * Setup Cursor MCP integration
    */
   static async setupCursor(options: SetupOptions): Promise<void> {
-    const { isGlobal } = options;
+    const { isGlobal, workspaceDir } = options;
 
     // Determine mcp.json path
-    const mcpConfigPath = this.getCursorSettingsPath(isGlobal);
+    const mcpConfigPath = this.getCursorSettingsPath(isGlobal, workspaceDir);
 
     // Ensure directory exists
     await fs.ensureDir(path.dirname(mcpConfigPath));
@@ -190,14 +191,14 @@ export class McpSetupUtils {
   /**
    * Get Windsurf mcp.json path based on global/workspace scope
    */
-  static getWindsurfSettingsPath(isGlobal: boolean): string {
+  static getWindsurfSettingsPath(isGlobal: boolean, workspaceDir?: string): string {
     if (isGlobal) {
       // Global Windsurf MCP configuration
       return path.join(homedir(), '.windsurf', 'mcp.json');
     } else {
       // Workspace-specific MCP configuration
-      const workspaceDir = process.cwd();
-      return path.join(workspaceDir, '.windsurf', 'mcp.json');
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.windsurf', 'mcp.json');
     }
   }
 
@@ -205,10 +206,10 @@ export class McpSetupUtils {
    * Setup Windsurf MCP integration
    */
   static async setupWindsurf(options: SetupOptions): Promise<void> {
-    const { isGlobal } = options;
+    const { isGlobal, workspaceDir } = options;
 
     // Determine mcp.json path
-    const mcpConfigPath = this.getWindsurfSettingsPath(isGlobal);
+    const mcpConfigPath = this.getWindsurfSettingsPath(isGlobal, workspaceDir);
 
     // Ensure directory exists
     await fs.ensureDir(path.dirname(mcpConfigPath));

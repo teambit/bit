@@ -1087,7 +1087,7 @@ export class CliMcpServerMain {
     return McpSetupUtils.getEditorDisplayName(editor);
   }
 
-  async setupEditor(editor: string, options: SetupOptions): Promise<void> {
+  async setupEditor(editor: string, options: SetupOptions, workspaceDir?: string): Promise<void> {
     const supportedEditors = ['vscode', 'cursor', 'windsurf'];
     const editorLower = editor.toLowerCase();
 
@@ -1095,12 +1095,18 @@ export class CliMcpServerMain {
       throw new Error(`Editor "${editor}" is not supported yet. Currently supported: ${supportedEditors.join(', ')}`);
     }
 
+    // Add workspaceDir to options if provided
+    const setupOptions: SetupOptions = { ...options };
+    if (workspaceDir) {
+      setupOptions.workspaceDir = workspaceDir;
+    }
+
     if (editorLower === 'vscode') {
-      await McpSetupUtils.setupVSCode(options);
+      await McpSetupUtils.setupVSCode(setupOptions);
     } else if (editorLower === 'cursor') {
-      await McpSetupUtils.setupCursor(options);
+      await McpSetupUtils.setupCursor(setupOptions);
     } else if (editorLower === 'windsurf') {
-      await McpSetupUtils.setupWindsurf(options);
+      await McpSetupUtils.setupWindsurf(setupOptions);
     }
   }
 

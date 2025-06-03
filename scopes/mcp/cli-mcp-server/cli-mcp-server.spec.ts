@@ -10,7 +10,7 @@ import { mockComponents } from '@teambit/component.testing.mock-components';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import fs from 'fs-extra';
 import path from 'path';
-import { tmpdir } from 'os';
+
 import { CliMcpServerAspect } from './cli-mcp-server.aspect';
 import { CliMcpServerMain } from './cli-mcp-server.main.runtime';
 
@@ -333,17 +333,24 @@ describe('CliMcpServer Direct Aspect Tests', function () {
   });
 
   describe('Setup Editor Methods', () => {
-    let tempDir: string;
+    let setupWorkspaceData: WorkspaceData;
+    let setupWorkspacePath: string;
+    let setupMcpServer: CliMcpServerMain;
 
     beforeEach(async () => {
-      // Create a temporary directory for testing VS Code settings
-      tempDir = await fs.mkdtemp(path.join(tmpdir(), 'bit-mcp-direct-test-'));
+      // Create a separate mock workspace for setup testing
+      setupWorkspaceData = mockWorkspace();
+      setupWorkspacePath = setupWorkspaceData.workspacePath;
+      await mockComponents(setupWorkspacePath);
+
+      // Load the aspect for this workspace
+      setupMcpServer = await loadAspect(CliMcpServerAspect, setupWorkspacePath);
     });
 
     afterEach(async () => {
-      // Clean up temporary directory
-      if (tempDir) {
-        await fs.remove(tempDir);
+      // Clean up the setup workspace
+      if (setupWorkspaceData) {
+        await destroyWorkspace(setupWorkspaceData);
       }
     });
 
@@ -361,153 +368,128 @@ describe('CliMcpServer Direct Aspect Tests', function () {
     });
 
     it('should setup VS Code integration directly', async () => {
-      // Change to temp directory for setup to work correctly
-      const currentCwd = process.cwd();
-      process.chdir(tempDir);
-
-      try {
-        await mcpServer.setupEditor('vscode', {
+      await setupMcpServer.setupEditor(
+        'vscode',
+        {
           isGlobal: false,
-        });
+        },
+        setupWorkspacePath
+      );
 
-        // Verify that the settings.json file was created in the temp directory
-        const vscodeSettingsPath = path.join(tempDir, '.vscode', 'settings.json');
-        const settingsExists = await fs.pathExists(vscodeSettingsPath);
-        expect(settingsExists).to.be.true;
+      // Verify that the settings.json file was created in the workspace directory
+      const vscodeSettingsPath = path.join(setupWorkspacePath, '.vscode', 'settings.json');
+      const settingsExists = await fs.pathExists(vscodeSettingsPath);
+      expect(settingsExists).to.be.true;
 
-        // Verify the content of the settings file
-        const settings = await fs.readJson(vscodeSettingsPath);
-        expect(settings).to.have.property('mcp');
-        expect(settings.mcp).to.have.property('servers');
-        expect(settings.mcp.servers).to.have.property('bit-cli');
-        expect(settings.mcp.servers['bit-cli']).to.deep.equal({
-          command: 'bit',
-          args: ['mcp-server'],
-        });
-      } finally {
-        // Always restore original cwd
-        process.chdir(currentCwd);
-      }
+      // Verify the content of the settings file
+      const settings = await fs.readJson(vscodeSettingsPath);
+      expect(settings).to.have.property('mcp');
+      expect(settings.mcp).to.have.property('servers');
+      expect(settings.mcp.servers).to.have.property('bit-cli');
+      expect(settings.mcp.servers['bit-cli']).to.deep.equal({
+        command: 'bit',
+        args: ['mcp-server'],
+      });
     });
 
     it('should setup VS Code integration with extended options', async () => {
-      // Change to temp directory for setup to work correctly
-      const currentCwd = process.cwd();
-      process.chdir(tempDir);
-
-      try {
-        await mcpServer.setupEditor('vscode', {
+      await setupMcpServer.setupEditor(
+        'vscode',
+        {
           extended: true,
           consumerProject: true,
           includeOnly: 'status,list',
           isGlobal: false,
-        });
+        },
+        setupWorkspacePath
+      );
 
-        const vscodeSettingsPath = path.join(tempDir, '.vscode', 'settings.json');
-        const settings = await fs.readJson(vscodeSettingsPath);
+      const vscodeSettingsPath = path.join(setupWorkspacePath, '.vscode', 'settings.json');
+      const settings = await fs.readJson(vscodeSettingsPath);
 
-        expect(settings.mcp.servers['bit-cli'].args).to.include('--extended');
-        expect(settings.mcp.servers['bit-cli'].args).to.include('--consumer-project');
-        expect(settings.mcp.servers['bit-cli'].args).to.include('--include-only');
-        expect(settings.mcp.servers['bit-cli'].args).to.include('status,list');
-      } finally {
-        // Always restore original cwd
-        process.chdir(currentCwd);
-      }
+      expect(settings.mcp.servers['bit-cli'].args).to.include('--extended');
+      expect(settings.mcp.servers['bit-cli'].args).to.include('--consumer-project');
+      expect(settings.mcp.servers['bit-cli'].args).to.include('--include-only');
+      expect(settings.mcp.servers['bit-cli'].args).to.include('status,list');
     });
 
     it('should setup Cursor integration directly', async () => {
-      // Change to temp directory for setup to work correctly
-      const currentCwd = process.cwd();
-      process.chdir(tempDir);
-
-      try {
-        await mcpServer.setupEditor('cursor', {
+      await setupMcpServer.setupEditor(
+        'cursor',
+        {
           isGlobal: false,
-        });
+        },
+        setupWorkspacePath
+      );
 
-        // Verify that the mcp.json file was created in the temp directory
-        const cursorConfigPath = path.join(tempDir, '.cursor', 'mcp.json');
-        const configExists = await fs.pathExists(cursorConfigPath);
-        expect(configExists).to.be.true;
+      // Verify that the mcp.json file was created in the workspace directory
+      const cursorConfigPath = path.join(setupWorkspacePath, '.cursor', 'mcp.json');
+      const configExists = await fs.pathExists(cursorConfigPath);
+      expect(configExists).to.be.true;
 
-        // Verify the content of the config file
-        const config = await fs.readJson(cursorConfigPath);
-        expect(config).to.have.property('mcpServers');
-        expect(config.mcpServers).to.have.property('bit');
-        expect(config.mcpServers.bit).to.deep.equal({
-          type: 'stdio',
-          command: 'bit',
-          args: ['mcp-server'],
-        });
-      } finally {
-        // Always restore original cwd
-        process.chdir(currentCwd);
-      }
+      // Verify the content of the config file
+      const config = await fs.readJson(cursorConfigPath);
+      expect(config).to.have.property('mcpServers');
+      expect(config.mcpServers).to.have.property('bit');
+      expect(config.mcpServers.bit).to.deep.equal({
+        type: 'stdio',
+        command: 'bit',
+        args: ['mcp-server'],
+      });
     });
 
     it('should setup Windsurf integration directly', async () => {
-      // Change to temp directory for setup to work correctly
-      const currentCwd = process.cwd();
-      process.chdir(tempDir);
-
-      try {
-        await mcpServer.setupEditor('windsurf', {
+      await setupMcpServer.setupEditor(
+        'windsurf',
+        {
           isGlobal: false,
-        });
+        },
+        setupWorkspacePath
+      );
 
-        // Verify that the mcp.json file was created in the temp directory
-        const windsurfConfigPath = path.join(tempDir, '.windsurf', 'mcp.json');
-        const configExists = await fs.pathExists(windsurfConfigPath);
-        expect(configExists).to.be.true;
+      // Verify that the mcp.json file was created in the workspace directory
+      const windsurfConfigPath = path.join(setupWorkspacePath, '.windsurf', 'mcp.json');
+      const configExists = await fs.pathExists(windsurfConfigPath);
+      expect(configExists).to.be.true;
 
-        // Verify the content of the config file
-        const config = await fs.readJson(windsurfConfigPath);
-        expect(config).to.have.property('mcpServers');
-        expect(config.mcpServers).to.have.property('bit');
-        expect(config.mcpServers.bit).to.deep.equal({
-          type: 'stdio',
-          command: 'bit',
-          args: ['mcp-server'],
-        });
-      } finally {
-        // Always restore original cwd
-        process.chdir(currentCwd);
-      }
+      // Verify the content of the config file
+      const config = await fs.readJson(windsurfConfigPath);
+      expect(config).to.have.property('mcpServers');
+      expect(config.mcpServers).to.have.property('bit');
+      expect(config.mcpServers.bit).to.deep.equal({
+        type: 'stdio',
+        command: 'bit',
+        args: ['mcp-server'],
+      });
     });
 
     it('should merge with existing VS Code settings', async () => {
-      // Change to temp directory for setup to work correctly
-      const currentCwd = process.cwd();
-      process.chdir(tempDir);
+      // First, create existing settings
+      const vscodeSettingsPath = path.join(setupWorkspacePath, '.vscode', 'settings.json');
+      await fs.ensureDir(path.dirname(vscodeSettingsPath));
+      await fs.writeJson(vscodeSettingsPath, {
+        'editor.formatOnSave': true,
+        'typescript.preferences.includePackageJsonAutoImports': 'off',
+      });
 
-      try {
-        // First, create existing settings
-        const vscodeSettingsPath = path.join(tempDir, '.vscode', 'settings.json');
-        await fs.ensureDir(path.dirname(vscodeSettingsPath));
-        await fs.writeJson(vscodeSettingsPath, {
-          'editor.formatOnSave': true,
-          'typescript.preferences.includePackageJsonAutoImports': 'off',
-        });
-
-        // Run setup
-        await mcpServer.setupEditor('vscode', {
+      // Run setup
+      await setupMcpServer.setupEditor(
+        'vscode',
+        {
           isGlobal: false,
-        });
+        },
+        setupWorkspacePath
+      );
 
-        // Verify that existing settings are preserved and MCP config is added
-        const settings = await fs.readJson(vscodeSettingsPath);
-        expect(settings).to.have.property('editor.formatOnSave', true);
-        expect(settings).to.have.property('typescript.preferences.includePackageJsonAutoImports', 'off');
-        expect(settings).to.have.property('mcp');
-        expect(settings.mcp.servers['bit-cli']).to.deep.equal({
-          command: 'bit',
-          args: ['mcp-server'],
-        });
-      } finally {
-        // Always restore original cwd
-        process.chdir(currentCwd);
-      }
+      // Verify that existing settings are preserved and MCP config is added
+      const settings = await fs.readJson(vscodeSettingsPath);
+      expect(settings).to.have.property('editor.formatOnSave', true);
+      expect(settings).to.have.property('typescript.preferences.includePackageJsonAutoImports', 'off');
+      expect(settings).to.have.property('mcp');
+      expect(settings.mcp.servers['bit-cli']).to.deep.equal({
+        command: 'bit',
+        args: ['mcp-server'],
+      });
     });
   });
 });
