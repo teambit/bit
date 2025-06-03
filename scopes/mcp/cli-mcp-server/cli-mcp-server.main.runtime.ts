@@ -954,10 +954,10 @@ export class CliMcpServerMain {
   private registerExecuteTool(server: McpServer) {
     const toolName = 'bit_execute';
     const description =
-      'Execute any Bit command, including those that modify workspace or repository state. ⚠️ Use with caution as this can make permanent changes to your project. Consider using bit_query for read-only operations.';
+      'Execute Bit commands that make changes to workspace or components (not read-only).';
     const schema: Record<string, any> = {
       cwd: z.string().describe('Path to workspace directory'),
-      command: z.string().describe('The Bit command to execute (e.g., "add", "tag", "export", "remove")'),
+      command: z.string().describe('The Bit command to execute (e.g., "import", "tag", "export", "remove")'),
       args: z.array(z.string()).optional().describe('Arguments to pass to the command'),
       flags: z
         .record(z.union([z.string(), z.boolean()]))
@@ -967,7 +967,16 @@ export class CliMcpServerMain {
 
     server.tool(toolName, description, schema, async (params: any) => {
       try {
-        const { command, args = [], flags = {}, cwd } = params;
+        let { command, args = [] } = params;
+        const { flags = {}, cwd } = params;
+
+        // Handle sub-commands: if command has multiple words, move the second word to args
+        const commandParts = command.trim().split(/\s+/);
+        if (commandParts.length > 1) {
+          command = commandParts[0];
+          args = [commandParts[1], ...args];
+        }
+
         this.logger.debug(
           `[MCP-DEBUG] Executing command: ${command} with args: ${JSON.stringify(args)} and flags: ${JSON.stringify(flags)}`
         );
