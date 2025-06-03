@@ -748,7 +748,8 @@ export class CliMcpServerMain {
 
   private registerCommandsListTool(server: McpServer) {
     const toolName = 'bit_commands_list';
-    const description = 'Get all available Bit commands with descriptions and groups. Use this to discover what commands are available.';
+    const description =
+      'Get all available Bit commands with descriptions and groups. Use this to discover what commands are available.';
     const schema: Record<string, any> = {
       extendedDescription: z
         .boolean()
@@ -813,10 +814,14 @@ export class CliMcpServerMain {
 
   private registerCommandHelpTool(server: McpServer) {
     const toolName = 'bit_command_help';
-    const description = 'Get detailed help for a specific Bit command including syntax, arguments, flags, and usage examples. Use this to understand exactly how to use a command.';
+    const description =
+      'Get detailed help for a specific Bit command including syntax, arguments, flags, and usage examples. Use this to understand exactly how to use a command.';
     const schema: Record<string, any> = {
       command: z.string().describe('The command name to get help for (e.g., "status", "install", "create")'),
-      subcommand: z.string().optional().describe('Optional subcommand name (e.g., for "lane show", use command="lane" and subcommand="show")'),
+      subcommand: z
+        .string()
+        .optional()
+        .describe('Optional subcommand name (e.g., for "lane show", use command="lane" and subcommand="show")'),
     };
 
     server.tool(toolName, description, schema, async (params: any) => {
@@ -824,13 +829,7 @@ export class CliMcpServerMain {
         const { command: requestedCommand, subcommand: requestedSubcommand } = params;
         let commandInfo: any = null;
 
-        const shouldSkipCommand = (cmd: Command): boolean => {
-          return Boolean(cmd.private || cmd.description.startsWith('DEPRECATED'));
-        };
-
         const buildDetailedCommandInfo = (cmd: Command, parentName?: string) => {
-          if (shouldSkipCommand(cmd)) return null;
-
           const cmdName = parentName ? `${parentName} ${getCommandName(cmd)}` : getCommandName(cmd);
 
           const info: any = {
@@ -838,8 +837,9 @@ export class CliMcpServerMain {
             description: cmd.description || '',
             extendedDescription: cmd.extendedDescription || '',
             alias: cmd.alias || '',
-            group: cmd.group ? (this.cli.groups[cmd.group] || cmd.group) : '',
+            group: cmd.group ? this.cli.groups[cmd.group] || cmd.group : '',
             helpUrl: cmd.helpUrl || '',
+            private: cmd.private || false,
           };
 
           // Add arguments information
@@ -861,15 +861,13 @@ export class CliMcpServerMain {
             info.examples = cmd.examples;
           }
 
-          // Add subcommands if available
+          // Add subcommands if available (including private ones for help purposes)
           if (cmd.commands && cmd.commands.length > 0) {
-            info.subcommands = cmd.commands
-              .filter((subCmd) => !shouldSkipCommand(subCmd))
-              .map((subCmd) => ({
-                name: getCommandName(subCmd),
-                description: subCmd.description || '',
-                alias: subCmd.alias || '',
-              }));
+            info.subcommands = cmd.commands.map((subCmd) => ({
+              name: getCommandName(subCmd),
+              description: subCmd.description || '',
+              alias: subCmd.alias || '',
+            }));
           }
 
           return info;
@@ -967,8 +965,7 @@ export class CliMcpServerMain {
 
   private registerExecuteTool(server: McpServer) {
     const toolName = 'bit_execute';
-    const description =
-      'Execute Bit commands that make changes to workspace or components (not read-only).';
+    const description = 'Execute Bit commands that make changes to workspace or components (not read-only).';
     const schema: Record<string, any> = {
       cwd: z.string().describe('Path to workspace directory'),
       command: z.string().describe('The Bit command to execute (e.g., "import", "tag", "export", "remove")'),
