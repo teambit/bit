@@ -141,7 +141,10 @@ In default mode, the server exposes a minimal set of essential tools focused on 
 
   - `bit_workspace_info`: Get comprehensive workspace information including status, components list, apps, templates, and dependency graph
   - `bit_component_details`: Get detailed information about a specific component including basic info and optionally its public API schema
-  - `bit_commands_info`: Get information about available Bit commands and their groups
+  - `bit_commands_list`: Get all available Bit commands with descriptions and groups (for command discovery)
+  - `bit_command_help`: Get detailed help for a specific Bit command including syntax, arguments, flags, and usage examples
+
+> **Command Discovery vs. Command Help**: Use `bit_commands_list` to discover what commands are available in Bit, then use `bit_command_help` with a specific command name to get detailed usage information including arguments, flags, and examples.
 
 - **Generic Execution Tools:**
   - `bit_query`: Execute read-only Bit commands that safely inspect workspace and component state without making modifications

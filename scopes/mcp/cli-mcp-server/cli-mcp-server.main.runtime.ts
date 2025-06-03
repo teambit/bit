@@ -433,10 +433,10 @@ export class CliMcpServerMain {
     // Register the bit_component_details tool
     this.registerComponentDetailsTool(server);
 
-    // Register the bit_commands_info tool
-    this.registerCommandsInfoTool(server);
+    // Register command discovery and help tools
+    this.registerCommandsListTool(server);
+    this.registerCommandHelpTool(server);
 
-    // Register arbitrary command execution tools
     this.registerQueryTool(server);
     this.registerExecuteTool(server);
 
@@ -746,58 +746,106 @@ export class CliMcpServerMain {
     });
   }
 
-  private registerCommandsInfoTool(server: McpServer) {
-    const toolName = 'bit_commands_info';
-    const description =
-      'Get information about Bit commands and their groups. Specify command or subcommand to get detailed info.';
+  private registerCommandsListTool(server: McpServer) {
+    const toolName = 'bit_commands_list';
+    const description = 'Get all available Bit commands with descriptions and groups. Use this to discover what commands are available.';
     const schema: Record<string, any> = {
       extendedDescription: z
         .boolean()
         .optional()
         .describe('Include extended descriptions for commands (default: false)'),
       internal: z.boolean().optional().describe('Include internal/debug commands (default: false)'),
-      command: z.string().optional().describe('Get info for a specific command only'),
-      subcommand: z.string().optional().describe('Get info for subcommands of a specific main command'),
     };
 
     server.tool(toolName, description, schema, async (params: any) => {
       try {
-        const {
-          extendedDescription = false,
-          internal = false,
-          command: specificCommand,
-          subcommand: specificSubcommand,
-        } = params;
+        const { extendedDescription = false, internal = false } = params;
         const commandsInfo: any[] = [];
 
         const shouldSkipCommand = (cmd: Command): boolean => {
           return Boolean((cmd.private && !internal) || cmd.description.startsWith('DEPRECATED'));
         };
 
-        const buildCommandInfo = (cmd: Command, parentName?: string, parentGroup?: string, detailed = false) => {
-          if (shouldSkipCommand(cmd)) return null;
+        // Build list of all commands
+        this.cli.commands.forEach((cmd) => {
+          if (shouldSkipCommand(cmd)) return;
 
-          const cmdName = parentName ? `${parentName} ${getCommandName(cmd)}` : getCommandName(cmd);
-          const groupKey = cmd.group || parentGroup;
+          const mainCmdName = getCommandName(cmd);
+          const groupKey = cmd.group;
 
           const commandInfo: any = {
-            name: cmdName,
+            name: mainCmdName,
             description: cmd.description || '',
+            alias: cmd.alias || '',
           };
 
           if (extendedDescription && cmd.extendedDescription) {
             commandInfo.extendedDescription = cmd.extendedDescription;
           }
           if (groupKey) commandInfo.group = this.cli.groups[groupKey] || groupKey;
-
-          if (!detailed) return commandInfo;
-
-          // Add detailed information
           if (cmd.helpUrl) commandInfo.helpUrl = cmd.helpUrl;
 
+          // Add subcommands summary
+          if (cmd.commands && cmd.commands.length > 0) {
+            commandInfo.subcommands = cmd.commands
+              .filter((subCmd) => !shouldSkipCommand(subCmd))
+              .map((subCmd) => ({
+                name: getCommandName(subCmd),
+                description: subCmd.description || '',
+                alias: subCmd.alias || '',
+              }));
+          }
+
+          commandsInfo.push(commandInfo);
+        });
+
+        commandsInfo.sort((a, b) => a.name.localeCompare(b.name));
+
+        const result = JSON.stringify({ total: commandsInfo.length, commands: commandsInfo }, null, 2);
+        this.logger.debug(`[MCP-DEBUG] Successfully retrieved commands list. Total: ${commandsInfo.length}`);
+        return this.formatAsCallToolResult(result);
+      } catch (error) {
+        this.logger.error(`[MCP-DEBUG] Error in bit_commands_list tool: ${(error as Error).message}`);
+        return this.formatErrorAsCallToolResult(error as Error, 'getting commands list');
+      }
+    });
+  }
+
+  private registerCommandHelpTool(server: McpServer) {
+    const toolName = 'bit_command_help';
+    const description = 'Get detailed help for a specific Bit command including syntax, arguments, flags, and usage examples. Use this to understand exactly how to use a command.';
+    const schema: Record<string, any> = {
+      command: z.string().describe('The command name to get help for (e.g., "status", "install", "create")'),
+      subcommand: z.string().optional().describe('Optional subcommand name (e.g., for "lane show", use command="lane" and subcommand="show")'),
+    };
+
+    server.tool(toolName, description, schema, async (params: any) => {
+      try {
+        const { command: requestedCommand, subcommand: requestedSubcommand } = params;
+        let commandInfo: any = null;
+
+        const shouldSkipCommand = (cmd: Command): boolean => {
+          return Boolean(cmd.private || cmd.description.startsWith('DEPRECATED'));
+        };
+
+        const buildDetailedCommandInfo = (cmd: Command, parentName?: string) => {
+          if (shouldSkipCommand(cmd)) return null;
+
+          const cmdName = parentName ? `${parentName} ${getCommandName(cmd)}` : getCommandName(cmd);
+
+          const info: any = {
+            name: cmdName,
+            description: cmd.description || '',
+            extendedDescription: cmd.extendedDescription || '',
+            alias: cmd.alias || '',
+            group: cmd.group ? (this.cli.groups[cmd.group] || cmd.group) : '',
+            helpUrl: cmd.helpUrl || '',
+          };
+
+          // Add arguments information
           const argsData = getArgsData(cmd);
           if (argsData.length > 0) {
-            commandInfo.arguments = argsData.map((arg) => ({
+            info.arguments = argsData.map((arg) => ({
               name: arg.nameRaw,
               description: arg.description || '',
               required: arg.required,
@@ -805,93 +853,59 @@ export class CliMcpServerMain {
             }));
           }
 
-          commandInfo.options = getFlagsData(cmd);
-          commandInfo.examples = cmd.examples;
+          // Add options/flags information
+          info.options = getFlagsData(cmd);
 
+          // Add examples if available
+          if (cmd.examples) {
+            info.examples = cmd.examples;
+          }
+
+          // Add subcommands if available
           if (cmd.commands && cmd.commands.length > 0) {
-            commandInfo.subcommands = cmd.commands
+            info.subcommands = cmd.commands
               .filter((subCmd) => !shouldSkipCommand(subCmd))
               .map((subCmd) => ({
-                name: `${cmdName} ${getCommandName(subCmd)}`,
+                name: getCommandName(subCmd),
                 description: subCmd.description || '',
                 alias: subCmd.alias || '',
-                private: Boolean(subCmd.private),
               }));
           }
 
-          return commandInfo;
+          return info;
         };
 
-        // Handle specific command + subcommand lookup
-        if (specificCommand && specificSubcommand) {
-          this.cli.commands.forEach((cmd) => {
-            if (getCommandName(cmd) === specificCommand && cmd.commands) {
-              const subCmd = cmd.commands.find((sub) => getCommandName(sub) === specificSubcommand);
+        // Search for the requested command
+        this.cli.commands.forEach((cmd) => {
+          const mainCmdName = getCommandName(cmd);
+
+          if (requestedSubcommand) {
+            // Looking for a subcommand
+            if (mainCmdName === requestedCommand && cmd.commands) {
+              const subCmd = cmd.commands.find((sub) => getCommandName(sub) === requestedSubcommand);
               if (subCmd) {
-                const info = buildCommandInfo(subCmd, specificCommand, cmd.group, true);
-                if (info) commandsInfo.push(info);
+                commandInfo = buildDetailedCommandInfo(subCmd, requestedCommand);
               }
             }
-          });
-        }
-        // Handle subcommand-only lookup
-        else if (specificSubcommand && !specificCommand) {
-          this.cli.commands.forEach((cmd) => {
-            if (getCommandName(cmd) === specificSubcommand && cmd.commands) {
-              cmd.commands.forEach((subCmd) => {
-                const info = buildCommandInfo(subCmd, specificSubcommand, cmd.group);
-                if (info) commandsInfo.push(info);
-              });
+          } else {
+            // Looking for a main command
+            if (mainCmdName === requestedCommand) {
+              commandInfo = buildDetailedCommandInfo(cmd);
             }
-          });
-        }
-        // Handle specific command lookup or general listing
-        else {
-          const isDetailedMode = Boolean(specificCommand);
-
-          this.cli.commands.forEach((cmd) => {
-            const mainCmdName = getCommandName(cmd);
-
-            // Process main command
-            if (!specificCommand || mainCmdName === specificCommand) {
-              const info = buildCommandInfo(cmd, undefined, undefined, isDetailedMode);
-              if (info && (!specificCommand || info.name === specificCommand)) {
-                commandsInfo.push(info);
-              }
-            }
-
-            // Process subcommands
-            if (cmd.commands) {
-              cmd.commands.forEach((subCmd) => {
-                const subCmdInfo = buildCommandInfo(subCmd, mainCmdName, cmd.group, isDetailedMode);
-                if (subCmdInfo && (!specificCommand || subCmdInfo.name === specificCommand)) {
-                  commandsInfo.push(subCmdInfo);
-                }
-              });
-            }
-          });
-        }
-
-        commandsInfo.sort((a, b) => a.name.localeCompare(b.name));
-
-        if (commandsInfo.length === 0) {
-          let errorMessage = 'No commands found';
-          if (specificCommand && specificSubcommand) {
-            errorMessage = `No subcommand "${specificSubcommand}" found for command: ${specificCommand}`;
-          } else if (specificCommand) {
-            errorMessage = `No command found with name: ${specificCommand}`;
-          } else if (specificSubcommand) {
-            errorMessage = `No subcommands found for command: ${specificSubcommand}`;
           }
-          return this.formatAsCallToolResult(errorMessage);
+        });
+
+        if (!commandInfo) {
+          const commandFullName = requestedSubcommand ? `${requestedCommand} ${requestedSubcommand}` : requestedCommand;
+          return this.formatAsCallToolResult(`Command not found: ${commandFullName}`);
         }
 
-        const result = JSON.stringify({ total: commandsInfo.length, commands: commandsInfo }, null, 2);
-        this.logger.debug(`[MCP-DEBUG] Successfully retrieved commands info. Total: ${commandsInfo.length}`);
+        const result = JSON.stringify(commandInfo, null, 2);
+        this.logger.debug(`[MCP-DEBUG] Successfully retrieved command help for: ${commandInfo.name}`);
         return this.formatAsCallToolResult(result);
       } catch (error) {
-        this.logger.error(`[MCP-DEBUG] Error in bit_commands_info tool: ${(error as Error).message}`);
-        return this.formatErrorAsCallToolResult(error as Error, 'getting commands info');
+        this.logger.error(`[MCP-DEBUG] Error in bit_command_help tool: ${(error as Error).message}`);
+        return this.formatErrorAsCallToolResult(error as Error, 'getting command help');
       }
     });
   }
