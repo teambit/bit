@@ -37,12 +37,61 @@ Options:
 - `--include-additional <commands>`: Add specific commands to the default set (comma-separated list)
 - `--exclude <commands>`: Prevent specific commands from being exposed (comma-separated list)
 
-### Integrating with VS Code
+### Integrating with IDEs
 
-To use this MCP server in VS Code:
+The easiest way to integrate the MCP server with your IDE is to use the `setup` command:
 
-1. Open VS Code settings (JSON) by pressing `Ctrl + Shift + P` and typing `Preferences: Open Settings (JSON)`
-2. Add the following JSON block:
+```bash
+# Basic setup for VS Code (default)
+bit mcp-server setup
+```
+
+This will automatically configure your VS Code settings to use the Bit MCP server. See the [Automatic Setup](#automatic-integration-setup) section below for more options.
+
+### Automatic Integration Setup
+
+The **recommended way** to integrate the MCP server with your IDE is using the `setup` command:
+
+```bash
+bit mcp-server setup [vscode|cursor|windsurf] [options]
+```
+
+This command automatically configures the MCP server settings in your chosen editor. If no editor is specified, it defaults to VS Code.
+
+#### Supported Editors
+
+- **VS Code**: `bit mcp-server setup vscode` (or just `bit mcp-server setup`)
+- **Cursor**: `bit mcp-server setup cursor`
+- **Windsurf**: `bit mcp-server setup windsurf`
+
+#### Configuration Options
+
+- `--global`: Apply configuration globally (user settings) instead of workspace settings
+- `--extended`: Configure with extended mode enabled
+- `--consumer-project`: Configure for consumer projects
+- `--include-only <commands>`: Specify subset of commands to expose
+- `--include-additional <commands>`: Add specific commands to the default set
+- `--exclude <commands>`: Prevent specific commands from being exposed
+
+#### Examples
+
+```bash
+# Basic VS Code setup (workspace level)
+bit mcp-server setup
+
+# Global setup for Cursor with extended mode
+bit mcp-server setup cursor --global --extended
+
+# Setup for Windsurf with consumer project mode
+bit mcp-server setup windsurf --consumer-project
+```
+
+#### Manual Configuration
+
+If you need to manually configure the settings, here's a basic example for VS Code:
+
+1. Open VS Code settings (JSON) by pressing `Ctrl + Shift + P` (or `Cmd + Shift + P` on macOS) and typing `Preferences: Open Settings (JSON)`
+2. Add the following configuration:
 
 ```json
 {
@@ -51,36 +100,6 @@ To use this MCP server in VS Code:
       "bit-cli": {
         "command": "bit",
         "args": ["mcp-server"]
-      }
-    }
-  }
-}
-```
-
-For extended mode with all commands available:
-
-```json
-{
-  "mcp": {
-    "servers": {
-      "bit-cli": {
-        "command": "bit",
-        "args": ["mcp-server", "--extended"]
-      }
-    }
-  }
-}
-```
-
-For consumer projects that only use Bit component packages:
-
-```json
-{
-  "mcp": {
-    "servers": {
-      "bit-cli": {
-        "command": "bit",
-        "args": ["mcp-server", "--consumer-project"]
       }
     }
   }
