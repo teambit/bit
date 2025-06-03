@@ -3,8 +3,9 @@
 
 import { CLIAspect, CLIMain, Command, getArgsData, getCommandName, getFlagsData, MainRuntime } from '@teambit/cli';
 import childProcess from 'child_process';
+import fs from 'fs-extra';
 import { CliMcpServerAspect } from './cli-mcp-server.aspect';
-import { McpServerCmd } from './mcp-server.cmd';
+import { McpServerCmd, McpStartCmd } from './mcp-server.cmd';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
@@ -13,6 +14,8 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Http } from '@teambit/scope.network';
 import { CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 import fetch from 'node-fetch';
+import { McpSetupCmd } from './setup-cmd';
+import { McpSetupUtils, SetupOptions } from './setup-utils';
 
 interface CommandFilterOptions {
   defaultTools: Set<string>;
@@ -252,7 +255,6 @@ export class CliMcpServerMain {
     }
 
     // Resolve the real path to handle symlinks (e.g., /tmp -> /private/tmp on macOS)
-    const fs = require('fs');
     const realCwd = fs.realpathSync(cwd);
 
     let body: any;
@@ -1080,13 +1082,43 @@ export class CliMcpServerMain {
     }
   }
 
+  // Setup command business logic methods
+  getEditorDisplayName(editor: string): string {
+    return McpSetupUtils.getEditorDisplayName(editor);
+  }
+
+  async setupEditor(editor: string, options: SetupOptions, workspaceDir?: string): Promise<void> {
+    const supportedEditors = ['vscode', 'cursor', 'windsurf'];
+    const editorLower = editor.toLowerCase();
+
+    if (!supportedEditors.includes(editorLower)) {
+      throw new Error(`Editor "${editor}" is not supported yet. Currently supported: ${supportedEditors.join(', ')}`);
+    }
+
+    // Add workspaceDir to options if provided
+    const setupOptions: SetupOptions = { ...options };
+    if (workspaceDir) {
+      setupOptions.workspaceDir = workspaceDir;
+    }
+
+    if (editorLower === 'vscode') {
+      await McpSetupUtils.setupVSCode(setupOptions);
+    } else if (editorLower === 'cursor') {
+      await McpSetupUtils.setupCursor(setupOptions);
+    } else if (editorLower === 'windsurf') {
+      await McpSetupUtils.setupWindsurf(setupOptions);
+    }
+  }
+
   static slots = [];
   static dependencies = [CLIAspect, LoggerAspect];
   static runtime = MainRuntime;
   static async provider([cli, loggerMain]: [CLIMain, LoggerMain]) {
     const logger = loggerMain.createLogger(CliMcpServerAspect.id);
     const mcpServer = new CliMcpServerMain(cli, logger);
-    cli.register(new McpServerCmd(mcpServer));
+    const mcpServerCmd = new McpServerCmd(mcpServer);
+    mcpServerCmd.commands = [new McpStartCmd(mcpServer), new McpSetupCmd(mcpServer)];
+    cli.register(mcpServerCmd);
     return mcpServer;
   }
 }
