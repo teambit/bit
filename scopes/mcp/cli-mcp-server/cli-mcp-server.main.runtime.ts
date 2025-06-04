@@ -581,10 +581,10 @@ export class CliMcpServerMain {
   }
 
   private registerRemoteSearchTool(server: McpServer) {
-    const toolName = this.getToolName('remote-search');
-    const description = 'Search for components in remote scopes';
+    const toolName = 'bit_remote_search';
+    const description = 'Search for components in remote scopes. Use this tool to find existing components before creating new ones. Essential for component reuse and discovery. Returns component IDs that can be converted to package names for installation (e.g., "teambit.design/ui/button" becomes "@teambit/design.ui.button"). Use broad keywords rather than multiple specific terms for better results.';
     const schema: Record<string, any> = {
-      queryStr: z.string().describe('Search query string'),
+      queryStr: z.string().describe('Search query string - use broad keywords like "button", "form", "card" rather than multiple specific terms'),
     };
     server.tool(toolName, description, schema, async (params: any) => {
       const http = await this.getHttp();
