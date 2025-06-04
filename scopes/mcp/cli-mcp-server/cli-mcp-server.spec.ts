@@ -71,7 +71,7 @@ describe('CliMcpServer Integration Tests', function () {
       const toolNames = response.tools.map((tool) => tool.name);
       expect(toolNames).to.include('bit_workspace_info');
       expect(toolNames).to.include('bit_component_details');
-      expect(toolNames).to.include('bit_commands_info');
+      expect(toolNames).to.include('bit_commands_list');
       expect(toolNames).to.include('bit_query');
       expect(toolNames).to.include('bit_execute');
     });
@@ -174,10 +174,10 @@ describe('CliMcpServer Integration Tests', function () {
     });
   });
 
-  describe('bit_commands_info tool', () => {
-    it('should get basic commands info', async () => {
+  describe('bit_commands_list tool', () => {
+    it('should get basic commands list', async () => {
       const result = (await mcpClient.callTool({
-        name: 'bit_commands_info',
+        name: 'bit_commands_list',
         arguments: {},
       })) as CallToolResult;
 
@@ -198,7 +198,7 @@ describe('CliMcpServer Integration Tests', function () {
 
     it('should get extended commands info', async () => {
       const result = (await mcpClient.callTool({
-        name: 'bit_commands_info',
+        name: 'bit_commands_list',
         arguments: {
           extendedDescription: true,
           internal: false,
@@ -214,10 +214,12 @@ describe('CliMcpServer Integration Tests', function () {
       expect(content.commands).to.be.an('array');
       expect(content.commands.length).to.be.greaterThan(0);
     });
+  });
 
-    it('should get specific command info', async () => {
+  describe('bit_command_help tool', () => {
+    it('should get help for a main command', async () => {
       const result = (await mcpClient.callTool({
-        name: 'bit_commands_info',
+        name: 'bit_command_help',
         arguments: {
           command: 'status',
         },
@@ -228,13 +230,84 @@ describe('CliMcpServer Integration Tests', function () {
       expect(result.content[0]).to.have.property('type', 'text');
 
       const content = JSON.parse((result.content[0] as any).text);
-      expect(content).to.have.property('commands');
-      expect(content.commands).to.be.an('array');
+      expect(content).to.have.property('name', 'status');
+      expect(content).to.have.property('description');
+      expect(content).to.have.property('options');
+    });
 
-      // Should contain status command info
-      const statusCommand = content.commands.find((cmd: any) => cmd.name === 'status');
-      expect(statusCommand).to.exist;
-      expect(statusCommand).to.have.property('description');
+    it('should get help for lane switch subcommand (private command)', async () => {
+      const result = (await mcpClient.callTool({
+        name: 'bit_command_help',
+        arguments: {
+          command: 'lane',
+          subcommand: 'switch',
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
+
+      const content = JSON.parse((result.content[0] as any).text);
+      expect(content).to.have.property('name', 'lane switch');
+      expect(content).to.have.property('description');
+      expect(content.description).to.include('switch to the specified lane');
+      expect(content).to.have.property('private', true);
+      expect(content).to.have.property('arguments');
+      expect(content.arguments).to.be.an('array');
+      expect(content.arguments[0]).to.have.property('name', 'lane');
+      expect(content.arguments[0]).to.have.property('description');
+    });
+
+    it('should get help for a subcommand that exists', async () => {
+      const result = (await mcpClient.callTool({
+        name: 'bit_command_help',
+        arguments: {
+          command: 'lane',
+          subcommand: 'show',
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
+
+      const content = JSON.parse((result.content[0] as any).text);
+      expect(content).to.have.property('name', 'lane show');
+      expect(content).to.have.property('description');
+    });
+
+    it('should return error for non-existent command', async () => {
+      const result = (await mcpClient.callTool({
+        name: 'bit_command_help',
+        arguments: {
+          command: 'nonexistent',
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
+
+      const content = (result.content[0] as any).text;
+      expect(content).to.include('Command not found: nonexistent');
+    });
+
+    it('should return error for non-existent subcommand', async () => {
+      const result = (await mcpClient.callTool({
+        name: 'bit_command_help',
+        arguments: {
+          command: 'lane',
+          subcommand: 'nonexistent',
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
+
+      const content = (result.content[0] as any).text;
+      expect(content).to.include('Command not found: lane nonexistent');
     });
   });
 
