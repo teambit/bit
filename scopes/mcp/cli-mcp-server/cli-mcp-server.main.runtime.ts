@@ -18,7 +18,6 @@ import { McpSetupCmd } from './setup-cmd';
 import { McpSetupUtils, SetupOptions } from './setup-utils';
 
 interface CommandFilterOptions {
-  defaultTools: Set<string>;
   additionalCommandsSet?: Set<string>;
   userExcludeSet?: Set<string>;
   alwaysExcludeTools: Set<string>;
@@ -329,8 +328,6 @@ export class CliMcpServerMain {
     const commands = this.cli.commands;
     const extended = Boolean(options.extended);
     this.bitBin = options.bitBin || this.bitBin;
-    // Default set of tools to include
-    const defaultTools = new Set(['create', 'schema', 'remote-search']);
 
     // Tools to always exclude
     const alwaysExcludeTools = new Set([
@@ -372,7 +369,7 @@ export class CliMcpServerMain {
     });
 
     // Set of tools for consumer projects (non-Bit workspaces)
-    const consumerProjectTools = new Set(['schema', 'show', 'remote-search']);
+    const consumerProjectTools = new Set(['schema', 'show']);
 
     const consumerProject = Boolean(options.consumerProject);
 
@@ -382,7 +379,7 @@ export class CliMcpServerMain {
     // Validate flags combination
     if (consumerProject) {
       this.logger.debug(
-        `[MCP-DEBUG] Running MCP server in consumer project mode (for non-Bit workspaces) with tools: ${Array.from(consumerProjectTools).join(', ')}`
+        `[MCP-DEBUG] Running MCP server in consumer project mode (for non-Bit workspaces) with tools: ${Array.from(consumerProjectTools).join(', ')} + remote-search (always available)`
       );
       if (options.includeAdditional) {
         this.logger.debug(
@@ -397,7 +394,6 @@ export class CliMcpServerMain {
     }
 
     const filterOptions: CommandFilterOptions = {
-      defaultTools,
       additionalCommandsSet,
       userExcludeSet,
       alwaysExcludeTools,
@@ -420,12 +416,8 @@ export class CliMcpServerMain {
       }
     });
 
-    const remoteCommands = ['remote-search'];
-    remoteCommands.forEach((cmdName) => {
-      if (this.shouldIncludeCommand(cmdName, filterOptions)) {
-        this.registerToolForRemote(server, cmdName);
-      }
-    });
+    // Always register remote-search tool
+    this.registerRemoteSearchTool(server);
 
     // Register the bit_workspace_info tool
     this.registerWorkspaceInfoTool(server);
@@ -475,8 +467,8 @@ export class CliMcpServerMain {
       return shouldInclude;
     }
 
-    // Default mode: include default tools + any additional specified
-    return options.defaultTools.has(cmdName) || (options.additionalCommandsSet?.has(cmdName) ?? false);
+    // Default mode: only include additional specified commands (no default tools anymore)
+    return options.additionalCommandsSet?.has(cmdName) ?? false;
   }
 
   private buildZodSchema(config: CommandConfig): Record<string, any> {
@@ -586,12 +578,6 @@ export class CliMcpServerMain {
 
       return this.runBit(argsToRun, params.cwd);
     });
-  }
-
-  private registerToolForRemote(server: McpServer, name: string) {
-    if (name === 'remote-search') {
-      this.registerRemoteSearchTool(server);
-    }
   }
 
   private registerRemoteSearchTool(server: McpServer) {
