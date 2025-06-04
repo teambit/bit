@@ -1588,7 +1588,43 @@ this command does the following:
 
 **Description**: Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.
 
-`bit mcp-server`
+`bit mcp-server [sub-command]`
+
+### mcp-server start
+
+**Usage**: `mcp-server start`
+
+**Description**: Start the MCP server  
+Start the Model Context Protocol (MCP) server with the specified configuration
+
+| **Option**                        | **Option alias** | **Description**                                                                                                                  |
+| --------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------- |
+| `--extended`                      |       `-e`       | Enable the full set of Bit CLI commands as MCP tools                                                                             |
+| `--include-only <commands>`       |                  | Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. "status,install,compile"           |
+| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used |
+| `--exclude <commands>`            |                  | Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes                                    |
+| `--bit-bin <binary>`              |                  | Specify the binary to use for running Bit commands (default: "bit")                                                              |
+| `--consumer-project`              |                  | For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools        |
+
+### mcp-server setup
+
+**Usage**: `mcp-server setup [editor]`
+
+**Description**: Setup MCP integration with VS Code, Cursor, Windsurf, or other editors  
+Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, and Windsurf.
+
+| **Arg**  |                            **Description**                             |
+| -------- | :--------------------------------------------------------------------: |
+| `editor` | Editor to setup (default: vscode). Available: vscode, cursor, windsurf |
+
+| **Option**                        | **Option alias** | **Description**                                                                               |
+| --------------------------------- | :--------------: | --------------------------------------------------------------------------------------------- |
+| `--extended`                      |       `-e`       | Enable the full set of Bit CLI commands as MCP tools                                          |
+| `--consumer-project`              |                  | Configure for non-Bit workspaces that only consume Bit component packages                     |
+| `--include-only <commands>`       |                  | Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes       |
+| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes        |
+| `--exclude <commands>`            |                  | Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes |
+| `--global`                        |       `-g`       | Setup global configuration (default: workspace-specific)                                      |
 
 | **Option**                        | **Option alias** | **Description**                                                                                                                  |
 | --------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------- |
@@ -1770,6 +1806,16 @@ for example: "http://localhost:3000", "file:///tmp/local-scope"
 | **Option** | **Option alias** | **Description**                           |
 | ---------- | :--------------: | ----------------------------------------- |
 | `--global` |       `-g`       | remove a globally configured remote scope |
+
+### remote list
+
+**Usage**: `remote list`
+
+**Description**: list all configured remotes
+
+| **Option** | **Option alias** | **Description**                 |
+| ---------- | :--------------: | ------------------------------- |
+| `--global` |       `-g`       | see globally configured remotes |
 
 | **Option** | **Option alias** | **Description**                 |
 | ---------- | :--------------: | ------------------------------- |

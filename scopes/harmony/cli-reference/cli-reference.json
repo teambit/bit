@@ -75,7 +75,7 @@
     "private": false
   },
   {
-    "name": "mcp-server",
+    "name": "mcp-server [sub-command]",
     "alias": "",
     "options": [
       [
@@ -112,7 +112,95 @@
     "description": "Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.",
     "extendedDescription": "",
     "group": "advanced",
-    "private": false
+    "private": false,
+    "commands": [
+      {
+        "name": "start",
+        "alias": "",
+        "options": [
+          [
+            "e",
+            "extended",
+            "Enable the full set of Bit CLI commands as MCP tools"
+          ],
+          [
+            "",
+            "include-only <commands>",
+            "Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. \"status,install,compile\""
+          ],
+          [
+            "",
+            "include-additional <commands>",
+            "Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used"
+          ],
+          [
+            "",
+            "exclude <commands>",
+            "Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes"
+          ],
+          [
+            "",
+            "bit-bin <binary>",
+            "Specify the binary to use for running Bit commands (default: \"bit\")"
+          ],
+          [
+            "",
+            "consumer-project",
+            "For non-Bit workspaces that only consume Bit component packages. Enables only \"schema\", \"show\", and \"remote_search\" tools"
+          ]
+        ],
+        "description": "Start the MCP server",
+        "extendedDescription": "Start the Model Context Protocol (MCP) server with the specified configuration",
+        "group": "advanced",
+        "private": false
+      },
+      {
+        "name": "setup [editor]",
+        "alias": "",
+        "options": [
+          [
+            "e",
+            "extended",
+            "Enable the full set of Bit CLI commands as MCP tools"
+          ],
+          [
+            "",
+            "consumer-project",
+            "Configure for non-Bit workspaces that only consume Bit component packages"
+          ],
+          [
+            "",
+            "include-only <commands>",
+            "Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes"
+          ],
+          [
+            "",
+            "include-additional <commands>",
+            "Add specific commands to the default MCP tools set. Use comma-separated list in quotes"
+          ],
+          [
+            "",
+            "exclude <commands>",
+            "Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes"
+          ],
+          [
+            "g",
+            "global",
+            "Setup global configuration (default: workspace-specific)"
+          ]
+        ],
+        "description": "Setup MCP integration with VS Code, Cursor, Windsurf, or other editors",
+        "extendedDescription": "Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, and Windsurf.",
+        "group": "ungrouped",
+        "private": false,
+        "arguments": [
+          {
+            "name": "editor",
+            "description": "Editor to setup (default: vscode). Available: vscode, cursor, windsurf"
+          }
+        ]
+      }
+    ]
   },
   {
     "name": "config",
@@ -600,6 +688,21 @@
         "description": "remove a tracked bit remote",
         "extendedDescription": "",
         "group": "ungrouped",
+        "private": false
+      },
+      {
+        "name": "list",
+        "alias": "",
+        "options": [
+          [
+            "g",
+            "global",
+            "see globally configured remotes"
+          ]
+        ],
+        "description": "list all configured remotes",
+        "extendedDescription": "",
+        "group": "collaborate",
         "private": false
       }
     ]
@@ -2407,7 +2510,7 @@
     ],
     "description": "fetch remote objects and store locally",
     "extendedDescription": "for lanes, use \"/\" as a separator between the remote and the lane name, e.g. teambit.ui/fix-button",
-    "group": "ungrouped",
+    "group": "collaborate",
     "private": true
   },
   {
