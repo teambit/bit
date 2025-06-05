@@ -300,6 +300,16 @@ export class APIForIDE {
     return svg;
   }
 
+  async getWorkspaceDependencies(): Promise<{ [pkgName: string]: string }> {
+    const allDeps = await this.workspace.getAllDedupedDirectDependencies();
+    const allDepsObj = {};
+    for (const dep of allDeps) {
+      allDepsObj[dep.name] = dep.currentRange;
+    }
+
+    return allDepsObj;
+  }
+
   async getCompFilesDirPathFromLastSnap(id: string): Promise<{ [relativePath: string]: string }> {
     const compId = await this.workspace.resolveComponentId(id);
     if (!compId.hasVersion()) return {}; // it's a new component.
