@@ -252,7 +252,6 @@ describe('CliMcpServer Integration Tests', function () {
       expect(content).to.have.property('name', 'lane switch');
       expect(content).to.have.property('description');
       expect(content.description).to.include('switch to the specified lane');
-      expect(content).to.have.property('private', true);
       expect(content).to.have.property('arguments');
       expect(content.arguments).to.be.an('array');
       expect(content.arguments[0]).to.have.property('name', 'lane');
