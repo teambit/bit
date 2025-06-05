@@ -582,9 +582,9 @@ export class CliMcpServerMain {
 
   private registerRemoteSearchTool(server: McpServer) {
     const toolName = 'bit_remote_search';
-    const description = 'Search for components in remote scopes. Use this tool to find existing components before creating new ones. Essential for component reuse and discovery. Returns component IDs that can be converted to package names for installation (e.g., "teambit.design/ui/button" becomes "@teambit/design.ui.button"). Use broad keywords rather than multiple specific terms for better results.';
+    const description = `Search for components in remote scopes. Use this tool to find existing components before creating new ones. Essential for component reuse and discovery`;
     const schema: Record<string, any> = {
-      queryStr: z.string().describe('Search query string - use broad keywords like "button", "form", "card" rather than multiple specific terms'),
+      queryStr: z.string().describe(`Search query string - Don't try to search with too many keywords. It will try to find components that match all keywords, which is often too restrictive. Instead, search with a single keyword or a few broad keywords`),
     };
     server.tool(toolName, description, schema, async (params: any) => {
       const http = await this.getHttp();
@@ -763,14 +763,12 @@ export class CliMcpServerMain {
           const commandInfo: any = {
             name: mainCmdName,
             description: cmd.description || '',
-            alias: cmd.alias || '',
           };
 
           if (extendedDescription && cmd.extendedDescription) {
             commandInfo.extendedDescription = cmd.extendedDescription;
           }
           if (groupKey) commandInfo.group = this.cli.groups[groupKey] || groupKey;
-          if (cmd.helpUrl) commandInfo.helpUrl = cmd.helpUrl;
 
           // Add subcommands summary
           if (cmd.commands && cmd.commands.length > 0) {
@@ -779,7 +777,6 @@ export class CliMcpServerMain {
               .map((subCmd) => ({
                 name: getCommandName(subCmd),
                 description: subCmd.description || '',
-                alias: subCmd.alias || '',
               }));
           }
 
@@ -822,10 +819,7 @@ export class CliMcpServerMain {
             name: cmdName,
             description: cmd.description || '',
             extendedDescription: cmd.extendedDescription || '',
-            alias: cmd.alias || '',
             group: cmd.group ? this.cli.groups[cmd.group] || cmd.group : '',
-            helpUrl: cmd.helpUrl || '',
-            private: cmd.private || false,
           };
 
           // Add arguments information
@@ -852,7 +846,6 @@ export class CliMcpServerMain {
             info.subcommands = cmd.commands.map((subCmd) => ({
               name: getCommandName(subCmd),
               description: subCmd.description || '',
-              alias: subCmd.alias || '',
             }));
           }
 
