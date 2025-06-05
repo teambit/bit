@@ -4,6 +4,8 @@
 import { CLIAspect, CLIMain, Command, getArgsData, getCommandName, getFlagsData, MainRuntime } from '@teambit/cli';
 import childProcess from 'child_process';
 import fs from 'fs-extra';
+import { parse } from 'comment-json';
+import path from 'path';
 import { CliMcpServerAspect } from './cli-mcp-server.aspect';
 import { McpServerCmd, McpStartCmd } from './mcp-server.cmd';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -580,6 +582,52 @@ export class CliMcpServerMain {
     });
   }
 
+  /**
+   * Read and parse workspace.jsonc file from a given directory
+   */
+  private async readWorkspaceJsonc(workspaceDir: string): Promise<any> {
+    try {
+      const workspaceJsoncPath = path.join(workspaceDir, 'workspace.jsonc');
+      const fileExists = await fs.pathExists(workspaceJsoncPath);
+      if (!fileExists) {
+        return null;
+      }
+
+      const content = await fs.readFile(workspaceJsoncPath, 'utf-8');
+      return parse(content);
+    } catch (error) {
+      this.logger.debug(`[MCP-DEBUG] Failed to read workspace.jsonc: ${error}`);
+      return null;
+    }
+  }
+
+  /**
+   * Extract owner from defaultScope in workspace.jsonc
+   * If defaultScope contains a dot, split by dot and take the first part
+   */
+  private extractOwnerFromWorkspace(workspaceConfig: any): string | null {
+    try {
+      const workspaceSection = workspaceConfig?.['teambit.workspace/workspace'];
+      const defaultScope = workspaceSection?.defaultScope;
+
+      if (!defaultScope || typeof defaultScope !== 'string') {
+        return null;
+      }
+
+      // If defaultScope contains a dot, split by dot and take the first part (owner)
+      if (defaultScope.includes('.')) {
+        const parts = defaultScope.split('.');
+        return parts[0];
+      }
+
+      // If no dot, the entire defaultScope is treated as the owner
+      return defaultScope;
+    } catch (error) {
+      this.logger.debug(`[MCP-DEBUG] Failed to extract owner from workspace config: ${error}`);
+      return null;
+    }
+  }
+
   private registerRemoteSearchTool(server: McpServer) {
     const toolName = 'bit_remote_search';
     const description = `Search for components in remote scopes. Use this tool to find existing components before creating new ones. Essential for component reuse and discovery`;
@@ -589,10 +637,51 @@ export class CliMcpServerMain {
         .describe(
           `Search query string - Don't try to search with too many keywords. It will try to find components that match all keywords, which is often too restrictive. Instead, search with a single keyword or a few broad keywords`
         ),
+      owners: z
+        .array(z.string())
+        .optional()
+        .describe(
+          'Filter results by specific owners or organizations. Note: if not provided, the system will automatically try to extract the owner from workspace.jsonc defaultScope to improve search relevance'
+        ),
+      skipAutoOwner: z
+        .boolean()
+        .optional()
+        .describe(
+          'Set to true to disable automatic owner extraction from workspace.jsonc. When false or omitted, the system will try to automatically extract owner from workspace defaultScope'
+        ),
     };
     server.tool(toolName, description, schema, async (params: any) => {
       const http = await this.getHttp();
-      const results = await http.search(params.queryStr);
+
+      // Determine the owners to use for the search
+      let ownersToUse = params.owners && params.owners.length > 0 ? params.owners : undefined;
+
+      // If owners not explicitly provided and skipAutoOwner is not true, try to extract from workspace.jsonc
+      if (!ownersToUse && !params.skipAutoOwner) {
+        try {
+          // Try to determine workspace directory from current working directory
+          // This is a best-effort approach - in a real scenario, you might want to pass cwd as a parameter
+          this.logger.debug('[MCP-DEBUG] Attempting to auto-extract owner from workspace.jsonc');
+          const workspaceConfig = await this.readWorkspaceJsonc(process.cwd());
+          this.logger.debug(`[MCP-DEBUG] Read workspace.jsonc: ${JSON.stringify(workspaceConfig)}`);
+          if (workspaceConfig) {
+            const extractedOwner = this.extractOwnerFromWorkspace(workspaceConfig);
+            if (extractedOwner) {
+              ownersToUse = [extractedOwner];
+              this.logger.debug(`[MCP-DEBUG] Auto-extracted owner from workspace.jsonc: ${extractedOwner}`);
+            }
+          }
+        } catch (error) {
+          this.logger.debug(`[MCP-DEBUG] Failed to auto-extract owner: ${error}`);
+          // Continue without auto-extracted owner
+        }
+      } else {
+        this.logger.debug(
+          `[MCP-DEBUG] Using provided owners for search: ${ownersToUse ? ownersToUse.join(', ') : 'none'}`
+        );
+      }
+
+      const results = await http.search(params.queryStr, ownersToUse);
       this.logger.debug(`[MCP-DEBUG] Search results: ${JSON.stringify(results)}`);
       if (!results?.components || results.components.length === 0) {
         return { content: [{ type: 'text', text: 'No results found' }] };
