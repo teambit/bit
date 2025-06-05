@@ -584,7 +584,11 @@ export class CliMcpServerMain {
     const toolName = 'bit_remote_search';
     const description = `Search for components in remote scopes. Use this tool to find existing components before creating new ones. Essential for component reuse and discovery`;
     const schema: Record<string, any> = {
-      queryStr: z.string().describe(`Search query string - Don't try to search with too many keywords. It will try to find components that match all keywords, which is often too restrictive. Instead, search with a single keyword or a few broad keywords`),
+      queryStr: z
+        .string()
+        .describe(
+          `Search query string - Don't try to search with too many keywords. It will try to find components that match all keywords, which is often too restrictive. Instead, search with a single keyword or a few broad keywords`
+        ),
     };
     server.tool(toolName, description, schema, async (params: any) => {
       const http = await this.getHttp();
@@ -604,51 +608,41 @@ export class CliMcpServerMain {
   private registerWorkspaceInfoTool(server: McpServer) {
     const toolName = 'bit_workspace_info';
     const description =
-      'Get comprehensive workspace information including status, components list, apps, templates, and dependency graph';
+      'Get comprehensive workspace information including status, components list, apps, templates, dependency graph, and workspace dependencies';
     const schema: Record<string, any> = {
       cwd: z.string().describe('Path to workspace directory'),
-      includeStatus: z.boolean().optional().describe('Include workspace status (default: true)'),
-      includeList: z.boolean().optional().describe('Include components list (default: true)'),
       includeApps: z.boolean().optional().describe('Include apps list (default: false)'),
-      includeTemplates: z.boolean().optional().describe('Include templates list (default: false)'),
       includeGraph: z.boolean().optional().describe('Include dependency graph (default: false)'),
     };
 
     server.tool(toolName, description, schema, async (params: any) => {
       try {
-        const includeStatus = params.includeStatus !== false; // Default to true
-        const includeList = params.includeList !== false; // Default to true
         const includeApps = params.includeApps === true;
-        const includeTemplates = params.includeTemplates === true;
         const includeGraph = params.includeGraph === true;
 
         const workspaceInfo: any = {};
 
         // Get workspace status using bit-server API with error handling
-        if (includeStatus) {
-          const statusExecution = await this.safeBitCommandExecution(
-            'status',
-            [],
-            { json: true },
-            params.cwd,
-            'get workspace status',
-            true
-          );
-          workspaceInfo.status = statusExecution.result;
-        }
+        const statusExecution = await this.safeBitCommandExecution(
+          'status',
+          [],
+          { json: true },
+          params.cwd,
+          'get workspace status',
+          true
+        );
+        workspaceInfo.status = statusExecution.result;
 
         // Get components list if requested
-        if (includeList) {
-          const listExecution = await this.safeBitCommandExecution(
-            'list',
-            [],
-            { json: true },
-            params.cwd,
-            'get components list',
-            true
-          );
-          workspaceInfo.list = listExecution.result;
-        }
+        const listExecution = await this.safeBitCommandExecution(
+          'list',
+          [],
+          { json: true },
+          params.cwd,
+          'get components list',
+          true
+        );
+        workspaceInfo.list = listExecution.result;
 
         // Get apps list if requested
         if (includeApps) {
@@ -664,17 +658,15 @@ export class CliMcpServerMain {
         }
 
         // Get templates list if requested
-        if (includeTemplates) {
-          const templatesExecution = await this.safeBitCommandExecution(
-            'templates',
-            [],
-            { json: true },
-            params.cwd,
-            'get templates list',
-            true
-          );
-          workspaceInfo.templates = templatesExecution.result;
-        }
+        const templatesExecution = await this.safeBitCommandExecution(
+          'templates',
+          [],
+          { json: true },
+          params.cwd,
+          'get templates list',
+          true
+        );
+        workspaceInfo.templates = templatesExecution.result;
 
         // Get dependency graph if requested
         if (includeGraph) {
@@ -687,6 +679,17 @@ export class CliMcpServerMain {
             true
           );
           workspaceInfo.graph = graphExecution.result;
+        }
+
+        // Get workspace dependencies if requested
+        try {
+          const workspaceDependencies = await this.callBitServerIDEAPI('getWorkspaceDependencies', [], params.cwd);
+          workspaceInfo.workspaceDependencies = workspaceDependencies;
+        } catch (error) {
+          this.logger.error(`[MCP-DEBUG] Error getting workspace dependencies: ${(error as Error).message}`);
+          workspaceInfo.workspaceDependencies = {
+            error: `Failed to get workspace dependencies: ${(error as Error).message}`,
+          };
         }
 
         return this.formatAsCallToolResult(workspaceInfo);
