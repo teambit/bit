@@ -299,7 +299,7 @@ export class CliMcpServerMain {
         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         try {
           const errorJson = await response.json();
-          errorMessage = errorJson.message || errorMessage;
+          errorMessage = errorJson.message || errorJson || errorMessage;
         } catch {
           // Ignore JSON parse errors
         }
