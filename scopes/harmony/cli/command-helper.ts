@@ -13,7 +13,7 @@ type ArgData = {
   required: boolean;
   description?: string;
   isArray?: boolean;
-}
+};
 
 export function getArgsData(cmd: Command): ArgData[] {
   const commandSplit = cmd.name.split(' ');
@@ -34,7 +34,7 @@ export function getArgsData(cmd: Command): ArgData[] {
       required: trimmed.startsWith('<'),
       description: foundInArguments?.description,
       isArray: withoutBrackets.endsWith('...'),
-    }
+    };
   });
 }
 
@@ -44,7 +44,7 @@ type FlagData = {
   description: string;
   type: 'string' | 'boolean';
   requiresArg: boolean; // a value is required after the flag. e.g. 'message <message>'
-}
+};
 
 export function getFlagsData(cmd: Command): FlagData[] {
   const options = cmd.options;
@@ -61,7 +61,7 @@ export function getFlagsData(cmd: Command): FlagData[] {
       description,
       type,
       requiresArg,
-    }
+    };
   });
 }
 

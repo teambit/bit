@@ -14,7 +14,11 @@ export type {
   CalcDepsGraphOptions,
   ComponentIdByPkgName,
 } from './package-manager';
-export type { DependencyResolverWorkspaceConfig, NodeLinker, ComponentRangePrefix } from './dependency-resolver-workspace-config';
+export type {
+  DependencyResolverWorkspaceConfig,
+  NodeLinker,
+  ComponentRangePrefix,
+} from './dependency-resolver-workspace-config';
 export type {
   DependencyResolverMain,
   DependencyResolverVariantConfig,
@@ -25,7 +29,13 @@ export type {
   ProxyConfig as PackageManagerProxyConfig,
   NetworkConfig as PackageManagerNetworkConfig,
 } from './dependency-resolver.main.runtime';
-export { DependencyList, BaseDependency, ComponentDependency, KEY_NAME_BY_LIFECYCLE_TYPE, COMPONENT_DEP_TYPE } from './dependencies';
+export {
+  DependencyList,
+  BaseDependency,
+  ComponentDependency,
+  KEY_NAME_BY_LIFECYCLE_TYPE,
+  COMPONENT_DEP_TYPE,
+} from './dependencies';
 export type {
   DependencyLifecycleType,
   WorkspaceDependencyLifecycleType,
