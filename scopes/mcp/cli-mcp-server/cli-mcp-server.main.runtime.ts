@@ -795,6 +795,17 @@ export class CliMcpServerMain {
           };
         }
 
+        // Get current lane name with scope
+        try {
+          const laneId = await this.callBitServerIDEAPI('getCurrentLaneName', [true], params.cwd);
+          workspaceInfo.laneId = laneId;
+        } catch (error) {
+          this.logger.error(`[MCP-DEBUG] Error getting current lane name: ${(error as Error).message}`);
+          workspaceInfo.laneId = {
+            error: `Failed to get current lane name: ${(error as Error).message}`,
+          };
+        }
+
         return this.formatAsCallToolResult(workspaceInfo);
       } catch (error) {
         this.logger.error(`[MCP-DEBUG] Error in bit_workspace_info tool: ${(error as Error).message}`);
