@@ -1044,9 +1044,15 @@ export class CliMcpServerMain {
 
         this.logger.debug(`[MCP-DEBUG] Executing query command: ${command} with args: ${JSON.stringify(commandArgs)}`);
 
-        const result = await this.callBitServerAPI(command, args, flags, cwd);
+        const execution = await this.safeBitCommandExecution(
+          command,
+          args,
+          flags,
+          cwd,
+          `execute query command ${command}`
+        );
 
-        return this.formatAsCallToolResult(result);
+        return this.formatAsCallToolResult(execution.result);
       } catch (error) {
         this.logger.error(`[MCP-DEBUG] Error in bit_query tool: ${(error as Error).message}`);
         return this.formatErrorAsCallToolResult(error as Error, 'executing query command');
@@ -1082,8 +1088,10 @@ export class CliMcpServerMain {
         this.logger.debug(
           `[MCP-DEBUG] Executing command: ${command} with args: ${JSON.stringify(args)} and flags: ${JSON.stringify(flags)}`
         );
-        const result = await this.callBitServerAPI(command, args, flags, cwd);
-        return this.formatAsCallToolResult(result);
+
+        const execution = await this.safeBitCommandExecution(command, args, flags, cwd, `execute command ${command}`);
+
+        return this.formatAsCallToolResult(execution.result);
       } catch (error) {
         this.logger.error(`[MCP-DEBUG] Error in bit_execute tool: ${(error as Error).message}`);
         return this.formatErrorAsCallToolResult(error as Error, 'executing command');
