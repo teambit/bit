@@ -569,8 +569,11 @@ export class APIForIDE {
     return results;
   }
 
-  getCurrentLaneName(): string {
-    return this.workspace.getCurrentLaneId().name;
+  getCurrentLaneName(includeScope = false): string {
+    const currentLaneId = this.workspace.getCurrentLaneId();
+    if (!includeScope) return currentLaneId.name;
+    if (currentLaneId.isDefault()) return currentLaneId.name;
+    return currentLaneId.toString();
   }
 
   async tagOrSnap(message = '') {
