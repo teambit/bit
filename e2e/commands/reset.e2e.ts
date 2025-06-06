@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import { DETACH_HEAD } from '@teambit/harmony.modules.feature-toggle';
 
 describe('bit reset command', function () {
   this.timeout(0);
@@ -309,7 +308,6 @@ describe('bit reset command', function () {
   describe('when checked out to a non-head version with detach-head functionality', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.setFeatures(DETACH_HEAD);
       helper.fixtures.populateComponents(1, false);
       helper.command.tagWithoutBuild();
       helper.fixtures.populateComponents(1, false, 'version2');
