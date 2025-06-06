@@ -3,6 +3,7 @@
 
 import { CLIAspect, CLIMain, Command, getArgsData, getCommandName, getFlagsData, MainRuntime } from '@teambit/cli';
 import childProcess from 'child_process';
+import stripAnsi from 'strip-ansi';
 import fs from 'fs-extra';
 import { parse } from 'comment-json';
 import path from 'path';
@@ -700,33 +701,41 @@ export class CliMcpServerMain {
       'Get comprehensive workspace information including status, components list, apps, templates, dependency graph, and workspace dependencies';
     const schema: Record<string, any> = {
       cwd: z.string().describe('Path to workspace directory'),
+      includeTemplates: z.boolean().optional().describe('Include templates list (default: false)'),
       includeApps: z.boolean().optional().describe('Include apps list (default: false)'),
       includeGraph: z.boolean().optional().describe('Include dependency graph (default: false)'),
+      json: z
+        .boolean()
+        .optional()
+        .describe(
+          'Return output in JSON format - WARNING: This produces verbose output and should be used when structured data is specifically needed (default: false)'
+        ),
     };
 
     server.tool(toolName, description, schema, async (params: any) => {
       try {
+        const includeTemplates = params.includeTemplates === true; // default: false
         const includeApps = params.includeApps === true;
         const includeGraph = params.includeGraph === true;
+        const useJson = params.json === true;
 
         const workspaceInfo: any = {};
+        const flags = useJson ? { json: true } : {};
 
-        // Get workspace status using bit-server API with error handling
         const statusExecution = await this.safeBitCommandExecution(
           'status',
           [],
-          { json: true },
+          flags,
           params.cwd,
           'get workspace status',
           true
         );
         workspaceInfo.status = statusExecution.result;
 
-        // Get components list if requested
         const listExecution = await this.safeBitCommandExecution(
           'list',
           [],
-          { json: true },
+          flags,
           params.cwd,
           'get components list',
           true
@@ -738,7 +747,7 @@ export class CliMcpServerMain {
           const appsExecution = await this.safeBitCommandExecution(
             'app',
             ['list'],
-            { json: true },
+            flags,
             params.cwd,
             'get apps list',
             true
@@ -747,15 +756,17 @@ export class CliMcpServerMain {
         }
 
         // Get templates list if requested
-        const templatesExecution = await this.safeBitCommandExecution(
-          'templates',
-          [],
-          { json: true },
-          params.cwd,
-          'get templates list',
-          true
-        );
-        workspaceInfo.templates = templatesExecution.result;
+        if (includeTemplates) {
+          const templatesExecution = await this.safeBitCommandExecution(
+            'templates',
+            [],
+            flags,
+            params.cwd,
+            'get templates list',
+            true
+          );
+          workspaceInfo.templates = templatesExecution.result;
+        }
 
         // Get dependency graph if requested
         if (includeGraph) {
@@ -1158,7 +1169,19 @@ export class CliMcpServerMain {
     includeErrorInResult = false
   ): Promise<{ success: boolean; result: any; error?: string }> {
     try {
-      const result = await this.executeBitServerCommand(command, args, flags, cwd, operationName);
+      let result = await this.executeBitServerCommand(command, args, flags, cwd, operationName);
+
+      // Unwrap the result from data wrapper if it exists and we have a successful result
+      if (result && typeof result === 'object' && 'data' in result && result.data !== undefined) {
+        result = result.data;
+      }
+
+      // Clean up output by removing ANSI color codes when not using JSON format
+      const useJson = flags && flags.json === true;
+      if (!useJson && typeof result === 'string') {
+        result = stripAnsi(result);
+      }
+
       return { success: true, result };
     } catch (error) {
       if (includeErrorInResult) {
