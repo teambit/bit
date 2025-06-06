@@ -593,6 +593,7 @@ export class CliMcpServerMain {
       const workspaceJsoncPath = path.join(workspaceDir, 'workspace.jsonc');
       const fileExists = await fs.pathExists(workspaceJsoncPath);
       if (!fileExists) {
+        this.logger.debug(`[MCP-DEBUG] workspace.jsonc not found at ${workspaceJsoncPath}`);
         return null;
       }
 
@@ -640,6 +641,10 @@ export class CliMcpServerMain {
         .describe(
           `Search query string - Don't try to search with too many keywords. It will try to find components that match all keywords, which is often too restrictive. Instead, search with a single keyword or a few broad keywords`
         ),
+      cwd: z
+        .string()
+        .optional()
+        .describe('Path to workspace directory'),
       owners: z
         .array(z.string())
         .optional()
@@ -662,10 +667,10 @@ export class CliMcpServerMain {
       // If owners not explicitly provided and skipAutoOwner is not true, try to extract from workspace.jsonc
       if (!ownersToUse && !params.skipAutoOwner) {
         try {
-          // Try to determine workspace directory from current working directory
-          // This is a best-effort approach - in a real scenario, you might want to pass cwd as a parameter
-          this.logger.debug('[MCP-DEBUG] Attempting to auto-extract owner from workspace.jsonc');
-          const workspaceConfig = await this.readWorkspaceJsonc(process.cwd());
+          // Use provided cwd parameter or fall back to current working directory
+          const workspaceDir = params.cwd || process.cwd();
+          this.logger.debug(`[MCP-DEBUG] Attempting to auto-extract owner from workspace.jsonc in: ${workspaceDir}`);
+          const workspaceConfig = await this.readWorkspaceJsonc(workspaceDir);
           if (workspaceConfig) {
             const extractedOwner = this.extractOwnerFromWorkspace(workspaceConfig);
             if (extractedOwner) {
