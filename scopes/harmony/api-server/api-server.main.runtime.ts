@@ -306,7 +306,8 @@ export class ApiServerMain {
       graph,
       scope,
       component,
-      schema
+      schema,
+      logger
     );
     const cliRoute = new CLIRoute(logger, cli, apiForIDE);
     const cliRawRoute = new CLIRawRoute(logger, cli, apiForIDE);
