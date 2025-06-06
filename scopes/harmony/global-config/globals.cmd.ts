@@ -8,7 +8,7 @@ import { GlobalConfigMain } from './global-config.main.runtime';
 export class GlobalsCmd implements Command {
   name = 'globals';
   description = `list all globals`;
-  group = 'workspace';
+  group = 'system';
   helpUrl = 'reference/config/config-files';
   alias = '';
   options = [['j', 'json', 'json format']] as CommandOptions;

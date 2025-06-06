@@ -32,7 +32,7 @@ export class CheckoutCmd implements Command {
   ];
   description = 'switch between component versions or remove local changes';
   helpUrl = 'reference/components/merging-changes#checkout-snaps-to-the-working-directory';
-  group = 'development';
+  group = 'version-control';
   extendedDescription = `
 \`bit checkout <version> [component-pattern]\` => checkout the specified ids (or all components when --all is used) to the specified version
 \`bit checkout head [component-pattern]\` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all

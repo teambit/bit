@@ -10,6 +10,7 @@ export class SwitchCmd implements Command {
   description = `switch to the specified lane`;
   extendedDescription = ``;
   private = true;
+  group = 'collaborate';
   alias = '';
   arguments = [
     {

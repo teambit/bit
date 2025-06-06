@@ -8,7 +8,7 @@ import { getCommandId } from './get-command-id';
 const SPACE = ' ';
 const TITLE_LEFT_SPACES_NUMBER = 2;
 const COMMAND_LEFT_SPACES_NUMBER = 4;
-const NAME_WITH_SPACES_LENGTH = 15;
+const NAME_WITH_SPACES_LENGTH = 16;
 
 type HelpProps = {
   [groupName: string]: GroupContent;

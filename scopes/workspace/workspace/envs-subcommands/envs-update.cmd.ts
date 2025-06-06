@@ -33,7 +33,7 @@ export class EnvsUpdateCmd implements Command {
     },
   ];
   options = [];
-  group = 'development';
+  group = 'component-config';
 
   constructor(private workspace: Workspace) {}
 

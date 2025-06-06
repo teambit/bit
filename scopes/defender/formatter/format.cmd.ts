@@ -42,7 +42,7 @@ export class FormatCmd implements Command {
   name = 'format [component-pattern]';
   description = 'format components in the development workspace';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
-  group = 'development';
+  group = 'testing';
   helpUrl = 'reference/formatting/formatter-overview';
   options = [
     ['c', 'changed', 'format only new and modified components'],

@@ -24,7 +24,7 @@ export class NewCmd implements Command {
   ];
   alias = '';
   loader = true;
-  group = 'start';
+  group = 'workspace-setup';
   options = [
     [
       'a',

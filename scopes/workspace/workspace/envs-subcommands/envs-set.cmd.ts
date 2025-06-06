@@ -35,7 +35,7 @@ export class EnvsSetCmd implements Command {
     },
   ];
   options = [];
-  group = 'development';
+  group = 'component-config';
 
   constructor(private workspace: Workspace) {}
 

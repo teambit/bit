@@ -8,7 +8,7 @@ import { CloudMain } from './cloud.main.runtime';
 export class LoginCmd implements Command {
   name = 'login';
   description = 'log in to Bit cloud';
-  group = 'general';
+  group = 'auth';
   alias = '';
   options = [
     ['', 'skip-config-update', 'skip writing to the .npmrc file'],

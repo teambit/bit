@@ -1278,11 +1278,13 @@ workspace, but also mark it as deleted from the lane, so it won't be merged late
 
 **Usage**: `lane history [lane-name]`
 
-**Description**: EXPERIMENTAL. show lane history, default to the current lane
+**Description**: EXPERIMENTAL. show lane history, default to the current lane  
+list from the oldest to the newest history items
 
-| **Option**      | **Option alias** | **Description**              |
-| --------------- | :--------------: | ---------------------------- |
-| `--id <string>` |                  | show a specific history item |
+| **Option**      | **Option alias** | **Description**                        |
+| --------------- | :--------------: | -------------------------------------- |
+| `--id <string>` |                  | show a specific history item           |
+| `--json`        |       `-j`       | return the lane history in json format |
 
 ### lane history-diff
 
@@ -1327,6 +1329,7 @@ if you want to fork the lane from a certain point in history, use "lane checkout
 | **Option**                       | **Option alias** | **Description**                                           |
 | -------------------------------- | :--------------: | --------------------------------------------------------- |
 | `--skip-dependency-installation` |       `-x`       | do not install dependencies of the checked out components |
+| `--json`                         |       `-j`       | return the revert result in json format                   |
 
 ### lane merge
 
@@ -1585,7 +1588,14 @@ this command does the following:
 
 **Description**: Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.
 
-`bit mcp-server`
+`bit mcp-server [sub-command]`
+
+### mcp-server start
+
+**Usage**: `mcp-server start`
+
+**Description**: Start the MCP server  
+Start the Model Context Protocol (MCP) server with the specified configuration
 
 | **Option**                        | **Option alias** | **Description**                                                                                                                  |
 | --------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------- |
@@ -1594,6 +1604,36 @@ this command does the following:
 | `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used |
 | `--exclude <commands>`            |                  | Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes                                    |
 | `--bit-bin <binary>`              |                  | Specify the binary to use for running Bit commands (default: "bit")                                                              |
+| `--consumer-project`              |                  | For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools        |
+
+### mcp-server setup
+
+**Usage**: `mcp-server setup [editor]`
+
+**Description**: Setup MCP integration with VS Code, Cursor, Windsurf, or other editors  
+Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, and Windsurf.
+
+| **Arg**  |                            **Description**                             |
+| -------- | :--------------------------------------------------------------------: |
+| `editor` | Editor to setup (default: vscode). Available: vscode, cursor, windsurf |
+
+| **Option**                        | **Option alias** | **Description**                                                                               |
+| --------------------------------- | :--------------: | --------------------------------------------------------------------------------------------- |
+| `--extended`                      |       `-e`       | Enable the full set of Bit CLI commands as MCP tools                                          |
+| `--consumer-project`              |                  | Configure for non-Bit workspaces that only consume Bit component packages                     |
+| `--include-only <commands>`       |                  | Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes       |
+| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes        |
+| `--exclude <commands>`            |                  | Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes |
+| `--global`                        |       `-g`       | Setup global configuration (default: workspace-specific)                                      |
+
+| **Option**                        | **Option alias** | **Description**                                                                                                                  |
+| --------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------- |
+| `--extended`                      |       `-e`       | Enable the full set of Bit CLI commands as MCP tools                                                                             |
+| `--include-only <commands>`       |                  | Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. "status,install,compile"           |
+| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used |
+| `--exclude <commands>`            |                  | Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes                                    |
+| `--bit-bin <binary>`              |                  | Specify the binary to use for running Bit commands (default: "bit")                                                              |
+| `--consumer-project`              |                  | For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools        |
 
 ---
 
@@ -1624,27 +1664,6 @@ optionally use '--abort' to revert the last merge. to revert a lane merge, use "
 | `--verbose`                             |                  | show details of components that were not merged successfully                                                            |
 | `--skip-dependency-installation`        |       `-x`       | do not install new dependencies resulting from the merge                                                                |
 | `--message <message>`                   |       `-m`       | override the default message for the auto snap                                                                          |
-
----
-
-## mini-status
-
-**Alias**: `ms`  
-**Description**: basic status for fast execution  
-shows only modified/new components with code changes. for the full status, use "bit status".  
-this command only checks source code changes, it doesn't check for config/aspect/dependency changes
-
-`bit mini-status [component-pattern]`
-
-| **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
-| ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
-
-| **Option**                       | **Option alias** | **Description**                                                                                              |
-| -------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------ |
-| `--show-issues`                  |                  | show component issues (slows down the command)                                                               |
-| `--ignore-circular-dependencies` |       `-c`       | do not check for circular dependencies to get the results quicker (relevant when --show-issues flag is used) |
-| `--json`                         |       `-j`       | json format                                                                                                  |
 
 ---
 
@@ -1788,6 +1807,16 @@ for example: "http://localhost:3000", "file:///tmp/local-scope"
 | ---------- | :--------------: | ----------------------------------------- |
 | `--global` |       `-g`       | remove a globally configured remote scope |
 
+### remote list
+
+**Usage**: `remote list`
+
+**Description**: list all configured remotes
+
+| **Option** | **Option alias** | **Description**                 |
+| ---------- | :--------------: | ------------------------------- |
+| `--global` |       `-g`       | see globally configured remotes |
+
 | **Option** | **Option alias** | **Description**                 |
 | ---------- | :--------------: | ------------------------------- |
 | `--global` |       `-g`       | see globally configured remotes |
@@ -1900,7 +1929,10 @@ https://bit.dev/components/tags#undoing-a-tag
 
 ## schema
 
-**Description**: shows the API schema of the specified component/s.  
+**Description**: extracts and displays the API schema (types, functions, classes, interfaces) of the specified component/s.  
+Extracts TypeScript definitions to provide a comprehensive view of a component's public API.  
+Shows detailed information about exported elements including classes, interfaces, functions, types, and enums with their respective signatures and documentation.
+
 you can use a `<pattern>` for multiple component ids, such as `bit schema "org.scope/utils/**"`.  
 use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button'  
 use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.  
@@ -1909,9 +1941,10 @@ use `bit pattern --help` to understand patterns better and `bit pattern <pattern
 
 `bit schema <pattern>`
 
-| **Option** | **Option alias** | **Description**                            |
-| ---------- | :--------------: | ------------------------------------------ |
-| `--json`   |       `-j`       | return the component schema in json format |
+| **Option** | **Option alias** | **Description**                                                        |
+| ---------- | :--------------: | ---------------------------------------------------------------------- |
+| `--remote` |       `-r`       | fetch schema from remote scope (works for components not in workspace) |
+| `--json`   |       `-j`       | return the component schema in json format                             |
 
 ---
 
@@ -2234,6 +2267,7 @@ list components templates when inside bit-workspace (for bit-create), otherwise,
 | ---------------------- | :--------------: | ---------------------------------------- |
 | `--show-all`           |       `-s`       | show hidden templates                    |
 | `--aspect <aspect-id>` |       `-a`       | show templates provided by the aspect-id |
+| `--json`               |       `-j`       | return templates in json format          |
 
 ---
 
