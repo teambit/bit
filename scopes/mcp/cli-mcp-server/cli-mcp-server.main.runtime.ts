@@ -299,7 +299,7 @@ export class CliMcpServerMain {
         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         try {
           const errorJson = await response.json();
-          errorMessage = errorJson.message || errorMessage;
+          errorMessage = errorJson.message || errorJson || errorMessage;
         } catch {
           // Ignore JSON parse errors
         }
@@ -641,10 +641,7 @@ export class CliMcpServerMain {
         .describe(
           `Search query string - Don't try to search with too many keywords. It will try to find components that match all keywords, which is often too restrictive. Instead, search with a single keyword or a few broad keywords`
         ),
-      cwd: z
-        .string()
-        .optional()
-        .describe('Path to workspace directory'),
+      cwd: z.string().optional().describe('Path to workspace directory'),
       owners: z
         .array(z.string())
         .optional()
@@ -828,12 +825,7 @@ export class CliMcpServerMain {
           params.cwd
         );
 
-        // IDE API returns the result directly, not wrapped in success/error structure
-        const componentDetails: any = {
-          show: ideApiResult,
-        };
-
-        return this.formatAsCallToolResult(componentDetails);
+        return this.formatAsCallToolResult(ideApiResult);
       } catch (error) {
         this.logger.error(`[MCP-DEBUG] Error in bit_component_details tool: ${(error as Error).message}`);
         return this.formatErrorAsCallToolResult(error as Error, 'getting component details');

@@ -191,24 +191,23 @@ export class ComponentCompareMain {
     version: string | undefined,
     toVersion: string | undefined,
     diffOpts: DiffOptions
-  ) {
+  ): Promise<DiffResults> {
     const consumerComponent = component.state._consumer as ConsumerComponent;
+
     const diffResult: DiffResults = { id: component.id, hasDiff: false };
     const modelComponent =
       consumerComponent.modelComponent || (await this.scope.legacyScope.getModelComponentIfExist(component.id));
 
+    if (this.workspace && component.isDeleted()) {
+      // component exists in the model but not in the filesystem, show all files as deleted
+      const modelFiles = consumerComponent.files;
+      diffResult.filesDiff = await getFilesDiff(modelFiles, [], component.id.version, component.id.version);
+      if (hasDiff(diffResult)) diffResult.hasDiff = true;
+      return diffResult;
+    }
     if (!modelComponent) {
       if (version || toVersion) {
         throw new BitError(`component ${component.id.toString()} doesn't have any version yet`);
-      }
-      if (component.isDeleted()) {
-        // component exists in the model but not in the filesystem, show all files as deleted
-        // the reason it is loaded without componentFromModel is because it was loaded from the scope, not workspace.
-        // as a proof, consumerComponent.loadedFromFileSystem is false.
-        const modelFiles = consumerComponent.files;
-        diffResult.filesDiff = await getFilesDiff(modelFiles, [], component.id.version, component.id.version);
-        if (hasDiff(diffResult)) diffResult.hasDiff = true;
-        return diffResult;
       }
       // it's a new component. not modified. show all files as new.
       const fsFiles = consumerComponent.files;
@@ -239,7 +238,7 @@ export class ComponentCompareMain {
     const fromFiles = fromVersionFiles || consumerComponent.componentFromModel?.files;
     if (!fromFiles)
       throw new Error(
-        `computeDiff: fromFiles must be defined. if on workspace, consumerComponent.componentFromModel must be set. if on scope, fromVersionFiles must be set`
+        `computeDiff: fromFiles must be defined for ${component.id.toString()}. if on workspace, consumerComponent.componentFromModel must be set. if on scope, fromVersionFiles must be set`
       );
     const toFiles = toVersionFiles || consumerComponent.files;
     const fromVersionLabel = version || component.id.version;
@@ -254,10 +253,12 @@ export class ComponentCompareMain {
       ? await modelComponent.toConsumerComponent(toVersion, this.scope.legacyScope.name, repository)
       : consumerComponent;
 
-    if (!fromVersionComponent)
+    if (!fromVersionComponent) {
       throw new Error(
-        `computeDiff: fromVersionComponent must be defined. if on workspace, consumerComponent.componentFromModel must be set. if on scope, "version" must be set`
+        `computeDiff: fromVersionComponent must be defined for ${component.id.toString()}. if on workspace, consumerComponent.componentFromModel must be set. if on scope, "version" must be set`
       );
+    }
+
     await updateFieldsDiff(fromVersionComponent, toVersionComponent, diffResult, diffOpts);
 
     return diffResult;
