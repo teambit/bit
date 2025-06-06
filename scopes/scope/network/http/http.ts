@@ -686,10 +686,6 @@ export class Http implements Network {
     }));
   }
 
-  /**
-   * Fallback search method using the suggest endpoint
-   * Only used when searchComponents fails
-   */
   private async searchWithSuggest(
     queryStr: string
   ): Promise<{ components?: string[]; lanes?: string[]; organizations?: string[]; scopes?: string[] }> {

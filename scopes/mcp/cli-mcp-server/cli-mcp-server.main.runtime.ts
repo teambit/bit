@@ -327,7 +327,9 @@ export class CliMcpServerMain {
     bitBin?: string;
     consumerProject?: boolean;
   }) {
-    this.logger.debug(`[MCP-DEBUG] Starting MCP server with options: ${JSON.stringify(options)}`);
+    this.logger.debug(
+      `[MCP-DEBUG] Starting MCP server with options: ${JSON.stringify(options)}. CWD: ${process.cwd()}`
+    );
     const commands = this.cli.commands;
     const extended = Boolean(options.extended);
     this.bitBin = options.bitBin || this.bitBin;
@@ -664,7 +666,6 @@ export class CliMcpServerMain {
           // This is a best-effort approach - in a real scenario, you might want to pass cwd as a parameter
           this.logger.debug('[MCP-DEBUG] Attempting to auto-extract owner from workspace.jsonc');
           const workspaceConfig = await this.readWorkspaceJsonc(process.cwd());
-          this.logger.debug(`[MCP-DEBUG] Read workspace.jsonc: ${JSON.stringify(workspaceConfig)}`);
           if (workspaceConfig) {
             const extractedOwner = this.extractOwnerFromWorkspace(workspaceConfig);
             if (extractedOwner) {
@@ -687,11 +688,11 @@ export class CliMcpServerMain {
       if (!results?.components || results.components.length === 0) {
         return { content: [{ type: 'text', text: 'No results found' }] };
       }
-      const formattedResults = results.components.map((result) => ({
+      const formattedResults = {
         type: 'text',
-        text: result,
-      }));
-      return { content: formattedResults } as CallToolResult;
+        text: results.components.join('\n'),
+      };
+      return { content: [formattedResults] } as CallToolResult;
     });
   }
 
