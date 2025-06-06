@@ -644,7 +644,7 @@ export class CliMcpServerMain {
         .array(z.string())
         .optional()
         .describe(
-          'Filter results by specific owners or organizations. Note: if not provided, the system will automatically try to extract the owner from workspace.jsonc defaultScope to improve search relevance'
+          'Filter results by specific owners or organizations. AVOID using this parameter - let the system automatically extract the owner from workspace.jsonc defaultScope for better relevance. Only use when you need to override the automatic behavior or search across different owners'
         ),
       skipAutoOwner: z
         .boolean()
