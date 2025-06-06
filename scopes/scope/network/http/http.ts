@@ -686,7 +686,7 @@ export class Http implements Network {
     }));
   }
 
-  async search(
+  private async searchWithSuggest(
     queryStr: string
   ): Promise<{ components?: string[]; lanes?: string[]; organizations?: string[]; scopes?: string[] }> {
     const SEARCH = gql`
@@ -702,14 +702,71 @@ export class Http implements Network {
         }
       }
     `;
-    const res = await this.graphClientRequest(SEARCH, Verb.READ, { queryStr });
-    const result = res.suggest.suggestions;
-    const components = result.find((r) => r.searchTypeName === 'component')?.entries.map((e) => e.id);
-    const lanes = result.find((r) => r.searchTypeName === 'lane')?.entries.map((e) => e.id);
-    const organizations = result.find((r) => r.searchTypeName === 'organization')?.entries.map((e) => e.id);
-    const scopes = result.find((r) => r.searchTypeName === 'scope')?.entries.map((e) => e.id);
 
-    return { components, lanes, organizations, scopes };
+    try {
+      const res = await this.graphClientRequest(SEARCH, Verb.READ, { queryStr });
+      if (!res.suggest?.suggestions) {
+        return {};
+      }
+
+      const suggestions = res.suggest.suggestions;
+      const components = suggestions.find((r) => r.searchTypeName === 'component')?.entries?.map((e) => e.id);
+      const lanes = suggestions.find((r) => r.searchTypeName === 'lane')?.entries?.map((e) => e.id);
+      const organizations = suggestions.find((r) => r.searchTypeName === 'organization')?.entries?.map((e) => e.id);
+      const scopes = suggestions.find((r) => r.searchTypeName === 'scope')?.entries?.map((e) => e.id);
+
+      return { components, lanes, organizations, scopes };
+    } catch (error: any) {
+      logger.error(`Error in searchWithSuggest: ${error.message}`);
+      return {};
+    }
+  }
+
+  async search(
+    queryStr: string,
+    owners?: string[]
+  ): Promise<{ components?: string[]; lanes?: string[]; organizations?: string[]; scopes?: string[] }> {
+    // Always use searchComponents query for consistency
+    const SEARCH_COMPONENTS = gql`
+      query SearchComponents($query: ComponentSearchQuery) {
+        searchComponents(query: $query) {
+          results {
+            componentDescriptor {
+              id
+            }
+          }
+        }
+      }
+    `;
+
+    // Prepare the query, including owners filter if provided
+    const query: any = {
+      queryString: queryStr,
+      limit: 20,
+    };
+
+    // Add owners filter only if provided
+    if (owners?.length) {
+      query.filters = {
+        owners: {
+          list: owners,
+          operator: 'or',
+        },
+      };
+    }
+
+    try {
+      const res = await this.graphClientRequest(SEARCH_COMPONENTS, Verb.READ, { query });
+
+      // Extract component IDs from the response
+      const components = res.searchComponents?.results?.map((r) => r.componentDescriptor.id) || [];
+
+      return { components };
+    } catch (error: any) {
+      // Log error and fall back to suggest as a last resort
+      logger.error(`Error using searchComponents query: ${error.message}`);
+      return this.searchWithSuggest(queryStr);
+    }
   }
 
   async getSchema(
