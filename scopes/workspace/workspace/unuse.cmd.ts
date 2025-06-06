@@ -11,6 +11,7 @@ export class UnuseCmd implements Command {
   options = [] as CommandOptions;
   loader = true;
   remoteOp = true;
+  private = true;
 
   constructor(private workspace: Workspace) {}
 

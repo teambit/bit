@@ -76,5 +76,6 @@ ${chalk.yellow(`bit documentation: https://bit.dev/`)}`;
 }
 
 function getFooter(): string {
-  return `${chalk.yellow("please use 'bit <command> --help' for more information and guides on specific commands.")}`;
+  return chalk.yellow(`use 'bit <command> --help' for more information and guides on specific commands.
+use 'bit --internal' to show advanced commands.`);
 }
