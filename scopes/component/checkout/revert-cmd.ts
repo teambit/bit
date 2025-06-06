@@ -16,7 +16,7 @@ export class RevertCmd implements Command {
     },
   ];
   description = 'replace the current component files by the specified version, leave the version intact';
-  group = 'development';
+  group = 'version-control';
   alias = '';
   options = [
     ['v', 'verbose', 'showing verbose output for inspection'],

@@ -18,7 +18,7 @@ type ListFlags = {
 export class ListCmd implements Command {
   name = 'list [remote-scope]';
   description = 'list components on a workspace or a remote scope (with flag).';
-  group = 'discover';
+  group = 'info-analysis';
   helpUrl = 'reference/reference/cli-reference#list';
   alias = 'ls';
   options = [

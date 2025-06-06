@@ -573,9 +573,17 @@ export class ApplyOverrides {
             );
           }
         }
-        // delete this.allPackagesDependencies.packageDependencies[pkgName];
-        // delete this.allPackagesDependencies.devPackageDependencies[pkgName];
-        // delete this.allPackagesDependencies.peerPackageDependencies[pkgName];
+
+        // This was restored to fix an issue with a case where
+        // You have a package dep in env.jsonc under peers (like @testing-library/react)
+        // Then you change the env.jsonc and move it from peer to devDependencies
+        // the deps resolver data will be correct, but in the legacy data
+        // it will still be in the peerPackageDependencies, so we need to remove it from there
+        // to avoid having it in package.json as a peer dependency
+        // which then will affect the installation of the component
+        delete this.allPackagesDependencies.packageDependencies[pkgName];
+        delete this.allPackagesDependencies.devPackageDependencies[pkgName];
+        delete this.allPackagesDependencies.peerPackageDependencies[pkgName];
 
         // If it exists in comps deps / comp dev deps, we don't want to add it to the allPackagesDependencies
         // as it will make the same dep both a dev and runtime dep

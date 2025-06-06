@@ -17,6 +17,8 @@ import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Formatter } from '@teambit/formatter';
 import { SchemaNodeTransformer, SchemaTransformer } from '@teambit/typescript';
+import { CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
+import { Http } from '@teambit/scope.network';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import { SchemaExtractor } from './schema-extractor';
@@ -187,6 +189,23 @@ export class SchemaMain {
 
   getSchemaFromObject(obj: Record<string, any>): APISchema {
     return APISchema.fromObject(obj);
+  }
+
+  async getSchemaFromRemote(id: string): Promise<APISchema> {
+    const isPattern = ['*', ',', '!', '$', ':'].some((char) => id.includes(char));
+    if (isPattern) {
+      throw new Error(`remote schema command doesn't support pattern matching. please use a specific component id`);
+    }
+    const getId = async () => {
+      if (!id.startsWith('@')) return id;
+      if (!this.workspace) throw new Error(`Please provide a component ID. The ${id} recognized as a package name.`);
+      const compId = await this.workspace.resolveComponentIdFromPackageName(id);
+      return compId.toString();
+    };
+    const compIdStr = await getId();
+    const http = await Http.connect(SYMPHONY_GRAPHQL, CENTRAL_BIT_HUB_NAME);
+    const response = await http.getSchema(compIdStr);
+    return this.getSchemaFromObject(response);
   }
 
   /**

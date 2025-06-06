@@ -149,7 +149,7 @@ export class Http implements Network {
     const getAsNumber = (key: string): number | undefined => {
       const val = obj[key];
       return isNil(val) ? undefined : Number(val);
-    }
+    };
 
     // Reading strictSSL from both network.strict-ssl and network.strict_ssl for backward compatibility.
     const strictSSL = obj[CFG_NETWORK_STRICT_SSL] ?? obj['network.strict_ssl'] ?? obj[CFG_PROXY_STRICT_SSL];
@@ -261,7 +261,7 @@ export class Http implements Network {
     errors: { [scopeName: string]: string };
     metadata?: { jobs?: string[] };
   }> {
-    const { results ,response } = await retry(
+    const { results, response } = await retry(
       async () => {
         const route = 'api/put';
         logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
@@ -278,7 +278,7 @@ export class Http implements Network {
 
         // @ts-ignore TODO: need to fix this
         const _results = await this.readPutCentralStream(_response.body);
-        return { results: _results , response: _response };
+        return { results: _results, response: _response };
       },
       {
         retries: 3,
@@ -684,6 +684,124 @@ export class Http implements Network {
         head: laneCompId.version,
       })),
     }));
+  }
+
+  private async searchWithSuggest(
+    queryStr: string
+  ): Promise<{ components?: string[]; lanes?: string[]; organizations?: string[]; scopes?: string[] }> {
+    const SEARCH = gql`
+      query SUGGEST($queryStr: String, $limit: Int, $attributes: String) {
+        suggest(queryStr: $queryStr, limit: $limit, attributes: $attributes) {
+          queryString
+          suggestions {
+            searchTypeName
+            entries {
+              id
+            }
+          }
+        }
+      }
+    `;
+
+    try {
+      const res = await this.graphClientRequest(SEARCH, Verb.READ, { queryStr });
+      if (!res.suggest?.suggestions) {
+        return {};
+      }
+
+      const suggestions = res.suggest.suggestions;
+      const components = suggestions.find((r) => r.searchTypeName === 'component')?.entries?.map((e) => e.id);
+      const lanes = suggestions.find((r) => r.searchTypeName === 'lane')?.entries?.map((e) => e.id);
+      const organizations = suggestions.find((r) => r.searchTypeName === 'organization')?.entries?.map((e) => e.id);
+      const scopes = suggestions.find((r) => r.searchTypeName === 'scope')?.entries?.map((e) => e.id);
+
+      return { components, lanes, organizations, scopes };
+    } catch (error: any) {
+      logger.error(`Error in searchWithSuggest: ${error.message}`);
+      return {};
+    }
+  }
+
+  async search(
+    queryStr: string,
+    owners?: string[]
+  ): Promise<{ components?: string[]; lanes?: string[]; organizations?: string[]; scopes?: string[] }> {
+    // Always use searchComponents query for consistency
+    const SEARCH_COMPONENTS = gql`
+      query SearchComponents($query: ComponentSearchQuery) {
+        searchComponents(query: $query) {
+          results {
+            componentDescriptor {
+              id
+            }
+          }
+        }
+      }
+    `;
+
+    // Prepare the query, including owners filter if provided
+    const query: any = {
+      queryString: queryStr,
+      limit: 20,
+    };
+
+    // Add owners filter only if provided
+    if (owners?.length) {
+      query.filters = {
+        owners: {
+          list: owners,
+          operator: 'or',
+        },
+      };
+    }
+
+    try {
+      const res = await this.graphClientRequest(SEARCH_COMPONENTS, Verb.READ, { query });
+
+      // Extract component IDs from the response
+      const components = res.searchComponents?.results?.map((r) => r.componentDescriptor.id) || [];
+
+      return { components };
+    } catch (error: any) {
+      // Log error and fall back to suggest as a last resort
+      logger.error(`Error using searchComponents query: ${error.message}`);
+      return this.searchWithSuggest(queryStr);
+    }
+  }
+
+  async getSchema(
+    id: string,
+    skipInternals: boolean = true
+  ): Promise<{
+    __schema: string;
+    location: any;
+    module: {
+      __schema: string;
+      location: any;
+      exports: Array<any>;
+      internals: any[];
+    };
+    internals: any[];
+    componentId: {
+      scope: string;
+      name: string;
+      version: string;
+    };
+    taggedModuleExports: any[];
+  }> {
+    const GET_SCHEMA = gql`
+      query GetComponentSchema($componentId: String!, $skipInternals: Boolean) {
+        getHost {
+          getSchema(id: $componentId, skipInternals: $skipInternals)
+        }
+      }
+    `;
+    const res = await this.graphClientRequest(GET_SCHEMA, Verb.READ, {
+      componentId: id,
+      skipInternals,
+    });
+
+    return res.getHost.getSchema;
   }
 
   async hasObjects(hashes: string[]): Promise<string[]> {

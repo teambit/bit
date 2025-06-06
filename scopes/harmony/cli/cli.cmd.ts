@@ -48,7 +48,7 @@ export class CliCmd implements Command {
   alias = '';
   commands: Command[] = [];
   loader = false;
-  group = 'general';
+  group = 'system';
   options = [] as CommandOptions;
 
   constructor(private cliMain: CLIMain) {}

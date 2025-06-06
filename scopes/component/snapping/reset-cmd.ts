@@ -13,7 +13,7 @@ export default class ResetCmd implements Command {
       description: COMPONENT_PATTERN_HELP,
     },
   ];
-  group = 'development';
+  group = 'version-control';
   extendedDescription = `${BASE_DOCS_DOMAIN}components/tags#undoing-a-tag`;
   alias = '';
   options = [

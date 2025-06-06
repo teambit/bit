@@ -29,7 +29,7 @@ export class StartCmd implements Command {
     },
   ];
   alias = 'c';
-  group = 'development';
+  group = 'run-serve';
   options = [
     ['d', 'dev', 'start UI server in dev mode.'],
     ['p', 'port [port-number]', 'port of the UI server.'],

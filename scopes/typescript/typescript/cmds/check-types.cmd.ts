@@ -10,7 +10,7 @@ export class CheckTypesCmd implements Command {
   description = 'check typescript types';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   alias = '';
-  group = 'development';
+  group = 'testing';
   options = [
     ['a', 'all', 'check-types for all components, not only modified and new'],
     ['', 'strict', 'in case issues found, exit with code 1'],
@@ -61,10 +61,13 @@ export class CheckTypesCmd implements Command {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const components = await this.workspace.getComponentsByUserInput(all, pattern);
     const files = this.typescript.getSupportedFilesForTsserver(components);
-    await this.typescript.initTsserverClientFromWorkspace({
-      aggregateDiagnosticData: isJson,
-      printTypeErrors: !isJson
-    }, files);
+    await this.typescript.initTsserverClientFromWorkspace(
+      {
+        aggregateDiagnosticData: isJson,
+        printTypeErrors: !isJson,
+      },
+      files
+    );
     const tsserver = this.typescript.getTsserverClient();
     if (!tsserver) throw new Error(`unable to start tsserver`);
     await tsserver.getDiagnostic(files);

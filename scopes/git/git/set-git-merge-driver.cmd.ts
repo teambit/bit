@@ -13,7 +13,7 @@ export class SetGitMergeDriverCmd implements Command {
   alias = 'smd';
   description = `setup bit's git merge driver for bitmap files`;
   options = [['g', 'global', 'set the git merge driver globally']] as CommandOptions;
-  group = 'git';
+  group = 'workspace-tools';
   commands: Command[] = [];
   // helpUrl = '';
 

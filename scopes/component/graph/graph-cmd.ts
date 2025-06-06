@@ -21,7 +21,7 @@ export class GraphCmd implements Command {
   name = 'graph [id]';
   description = "generate an SVG image file with the components' dependencies graph";
   extendedDescription: 'black arrow is a runtime dependency. red arrow is either dev or peer';
-  group = 'discover';
+  group = 'info-analysis';
   alias = '';
   options = [
     ['r', 'remote [remoteName]', 'remote name (name is optional, leave empty when id is specified)'],
@@ -37,7 +37,10 @@ export class GraphCmd implements Command {
   ] as CommandOptions;
   remoteOp = true;
 
-  constructor(private componentAspect: ComponentMain, private graph: GraphMain) {}
+  constructor(
+    private componentAspect: ComponentMain,
+    private graph: GraphMain
+  ) {}
 
   async report([id]: [string], graphOpts: GraphOpt): Promise<string> {
     const { remote, layout, png } = graphOpts;
@@ -51,9 +54,9 @@ export class GraphCmd implements Command {
         return VisualDependencyGraph.loadFromGraphlib(graph, config);
       }
       const compId = id ? await host.resolveComponentId(id) : undefined;
-      const compIds = compId ? [compId] : undefined
+      const compIds = compId ? [compId] : undefined;
       return this.graph.getVisualGraphIds(compIds, graphOpts);
-    }
+    };
 
     const visualDependencyGraph = await getVisualGraph();
     const result = await visualDependencyGraph.render(png ? 'png' : 'svg');
@@ -65,7 +68,11 @@ export class GraphCmd implements Command {
     const host = this.componentAspect.getHost();
     if (!remote) {
       const graph = await this.graph.getGraphIds(id ? [await host.resolveComponentId(id)] : undefined);
-      return graph.toJson();
+      const jsonGraph = graph.toJson();
+      if (jsonGraph.nodes) {
+        jsonGraph.nodes = jsonGraph.nodes.map((node) => node.id);
+      }
+      return jsonGraph;
     }
     const graph = await this.generateGraphFromRemote(remote!, id);
     return GraphLib.json.write(graph);
@@ -79,10 +86,7 @@ export class GraphCmd implements Command {
     }
   }
 
-  private async generateGraphFromRemote(
-    remote: string | boolean,
-    id?: string,
-  ): Promise<GraphLib.Graph> {
+  private async generateGraphFromRemote(remote: string | boolean, id?: string): Promise<GraphLib.Graph> {
     const workspace = this.getWorkspaceIfExist();
     const compId = id ? ComponentID.fromString(id) : undefined;
     if (compId) {

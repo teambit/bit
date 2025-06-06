@@ -15,7 +15,7 @@ export class ScopeSetCmd implements Command {
     },
   ];
   options = [];
-  group = 'development';
+  group = 'component-config';
   extendedDescription = `default scopes for components are set in the bitmap file. the default scope for a workspace is set in the workspace.jsonc.
 a component is set with a scope (as oppose to default scope) only once it is versioned.'
 

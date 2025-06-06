@@ -19,7 +19,7 @@ export class MergeCmd implements Command {
   name = 'merge [component-pattern]';
   description = 'merge changes of the remote head into local - auto-snaps all merged components';
   helpUrl = 'reference/components/merging-changes';
-  group = 'development';
+  group = 'version-control';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   extendedDescription = `merge changes of the remote head into local when they are diverged. when on a lane, merge the remote head of the lane into the local
 and creates snaps for merged components that have diverged, on the lane.
