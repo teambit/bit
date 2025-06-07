@@ -4,7 +4,6 @@ import { uniq } from 'lodash';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { Extensions, statusWorkspaceIsCleanMsg } from '@teambit/legacy.constants';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
-import { DETACH_HEAD } from '@teambit/harmony.modules.feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -1707,7 +1706,6 @@ describe('merge lanes', function () {
     let headOnLane: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.setFeatures(DETACH_HEAD);
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild('--ver 1.0.0');
       commonSnap = helper.command.getHead('comp1');
