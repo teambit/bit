@@ -6,4 +6,5 @@ export class CompletionCmd implements Command {
   alias = '';
   group = 'system';
   options = [];
+  private = true;
 }
