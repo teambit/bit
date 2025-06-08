@@ -51,11 +51,7 @@ import { isPathInside } from '@teambit/toolbox.path.is-path-inside';
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact, uniqBy, uniq } from 'lodash';
-import {
-  MergeConfigFilename,
-  BIT_ROOTS_DIR,
-  CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS,
-} from '@teambit/legacy.constants';
+import { MergeConfigFilename, BIT_ROOTS_DIR, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy.constants';
 import path from 'path';
 import { ConsumerComponent, Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import { WatchOptions } from '@teambit/watcher';
@@ -359,12 +355,12 @@ export class Workspace implements ComponentFactory {
     return this.config.icon;
   }
 
-
   getConfigStore(): Store {
     return {
       list: () => this.getWorkspaceConfig().extension(ConfigStoreAspect.id, true) || {},
       set: (key: string, value: string) => {
-        this.getWorkspaceConfig().setExtension(ConfigStoreAspect.id,
+        this.getWorkspaceConfig().setExtension(
+          ConfigStoreAspect.id,
           { [key]: value },
           { ignoreVersion: true, mergeIntoExisting: true }
         );
@@ -372,11 +368,13 @@ export class Workspace implements ComponentFactory {
       del: (key: string) => {
         const current = this.getWorkspaceConfig().extension(ConfigStoreAspect.id, true) || {};
         delete current[key];
-        this.getWorkspaceConfig().setExtension(ConfigStoreAspect.id, current,
-          { ignoreVersion: true, overrideExisting: true });
+        this.getWorkspaceConfig().setExtension(ConfigStoreAspect.id, current, {
+          ignoreVersion: true,
+          overrideExisting: true,
+        });
       },
       write: async () => {
-        await this.getWorkspaceConfig().write({ reasonForChange: 'store-config changes' })
+        await this.getWorkspaceConfig().write({ reasonForChange: 'store-config changes' });
       },
       invalidateCache: async () => {
         // no need to invalidate anything.
@@ -384,7 +382,7 @@ export class Workspace implements ComponentFactory {
         // if this is another process, it'll react to "this.triggerOnWorkspaceConfigChange()" anyway.
       },
       getPath: () => this.getWorkspaceConfig().path,
-    }
+    };
   }
 
   async getAutoTagInfo(changedComponents: ComponentIdList) {
@@ -466,7 +464,7 @@ export class Workspace implements ComponentFactory {
   /**
    * whether the given component-id is part of the workspace. default to check for the exact version
    */
-  hasId(componentId: ComponentID, opts?: { includeDeleted?: boolean, ignoreVersion?: boolean }): boolean {
+  hasId(componentId: ComponentID, opts?: { includeDeleted?: boolean; ignoreVersion?: boolean }): boolean {
     const ids = opts?.includeDeleted ? this.listIdsIncludeRemoved() : this.listIds();
     return opts?.ignoreVersion ? ids.hasWithoutVersion(componentId) : ids.has(componentId);
   }
@@ -1629,15 +1627,12 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   private async componentConfigFileFromComponentDirAndName(
-    relativeComponentDir: PathOsBasedRelative,
+    relativeComponentDir: PathOsBasedRelative
   ): Promise<ComponentConfigFile | undefined> {
     let componentConfigFile;
     if (relativeComponentDir) {
       const absComponentDir = this.componentDirToAbsolute(relativeComponentDir);
-      componentConfigFile = await ComponentConfigFile.load(
-        absComponentDir,
-        this.createAspectList.bind(this),
-      );
+      componentConfigFile = await ComponentConfigFile.load(absComponentDir, this.createAspectList.bind(this));
     }
 
     return componentConfigFile;
@@ -2239,7 +2234,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
   async setComponentPathsRegExps() {
     const workspaceComponents = await this.list();
-    if(!workspaceComponents.length) {
+    if (!workspaceComponents.length) {
       this.componentPathsRegExps = [];
       return;
     }

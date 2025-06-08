@@ -768,7 +768,7 @@ export class AutoDetectDeps {
  * this is not necessarily a valid semver version. in case of a snap, it returns the hash only, not a valid semver.
  * this is for the ComponentID.version.
  */
-export function getValidComponentVersion(version?: string): { version?: string, range?: string }  {
+export function getValidComponentVersion(version?: string): { version?: string; range?: string } {
   if (!version) {
     return { version: undefined };
   }

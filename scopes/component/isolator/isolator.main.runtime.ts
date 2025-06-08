@@ -286,7 +286,7 @@ export class IsolatorMain {
     GlobalConfigAspect,
     AspectLoaderAspect,
     CLIAspect,
-    ConfigStoreAspect
+    ConfigStoreAspect,
   ];
   static slots = [Slot.withType<CapsuleTransferFn>()];
   static defaultConfig = {};
@@ -303,7 +303,7 @@ export class IsolatorMain {
       GlobalConfigMain,
       AspectLoaderMain,
       CLIMain,
-      ConfigStoreMain
+      ConfigStoreMain,
     ],
     _config,
     [capsuleTransferSlot]: [CapsuleTransferSlot]
@@ -708,9 +708,9 @@ export class IsolatorMain {
           })
         );
       } else {
-        const dependenciesGraph = opts.useDependenciesGraph ? await legacyScope?.getDependenciesGraphByComponentIds(
-          capsuleList.getAllComponentIDs()
-        ) : undefined;
+        const dependenciesGraph = opts.useDependenciesGraph
+          ? await legacyScope?.getDependenciesGraphByComponentIds(capsuleList.getAllComponentIDs())
+          : undefined;
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
@@ -1177,7 +1177,8 @@ export class IsolatorMain {
         const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
         const entry = dep.toManifest();
         if (entry) {
-          manifest[keyName][entry.packageName] = dep.versionRange && dep.versionRange !== '+' ? dep.versionRange : version;
+          manifest[keyName][entry.packageName] =
+            dep.versionRange && dep.versionRange !== '+' ? dep.versionRange : version;
         }
       });
       await Promise.all(promises);
@@ -1215,11 +1216,7 @@ export class IsolatorMain {
     clonedFiles.forEach((file) => file.updatePaths({ newBase: writeToPath }));
     dataToPersist.removePath(new RemovePath(writeToPath));
     clonedFiles.map((file) => dataToPersist.addFile(file));
-    const packageJson = this.preparePackageJsonToWrite(
-      component,
-      writeToPath,
-      ids
-    );
+    const packageJson = this.preparePackageJsonToWrite(component, writeToPath, ids);
     if (!legacyComp.id.hasVersion()) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       packageJson.addOrUpdateProperty('version', semver.inc(legacyComp.version!, 'prerelease') || '0.0.1-0');

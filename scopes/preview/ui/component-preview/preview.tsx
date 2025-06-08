@@ -125,28 +125,29 @@ export function ComponentPreview({
 
   useEffect(() => {
     const handleMessage = (event) => {
-      if ((event.data && event.data.event === LOAD_EVENT) ||
-        (event.data && event.data.event === 'webpackInvalid')
-      ) {
+      if ((event.data && event.data.event === LOAD_EVENT) || (event.data && event.data.event === 'webpackInvalid')) {
         onLoad && onLoad(event);
       }
 
       if (event.data && (event.data.event === ERROR_EVENT || event.data.event === 'AI_FIX_REQUEST')) {
         const errorData = event.data.payload;
-        onPreviewError?.(errorData)
+        onPreviewError?.(errorData);
 
         if (propagateError && window.parent && window !== window.parent) {
           try {
-            window.parent.postMessage({
-              event: event.data.event,
-              payload: {
-                ...errorData,
-                forwardedFrom: {
-                  component: component.id,
-                  preview: previewName,
-                }
-              }
-            }, '*');
+            window.parent.postMessage(
+              {
+                event: event.data.event,
+                payload: {
+                  ...errorData,
+                  forwardedFrom: {
+                    component: component.id,
+                    preview: previewName,
+                  },
+                },
+              },
+              '*'
+            );
           } catch (err) {
             // eslint-disable-next-line no-console
             console.error('failed to propagate error to parent', err);
