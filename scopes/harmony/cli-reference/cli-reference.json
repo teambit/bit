@@ -6,7 +6,7 @@
     "description": "enable bash/zsh-completion shortcuts for commands and options",
     "extendedDescription": "",
     "group": "system",
-    "private": false
+    "private": true
   },
   {
     "name": "cli",
@@ -40,7 +40,7 @@
         "description": "generate an .md file with all commands details",
         "extendedDescription": "",
         "group": "general",
-        "private": false
+        "private": true
       }
     ]
   },
@@ -1272,7 +1272,7 @@
     "description": "set aspects in the workspace/scope config to make them loadable by the workspace/scope",
     "extendedDescription": "",
     "group": "workspace-setup",
-    "private": false,
+    "private": true,
     "remoteOp": true,
     "arguments": [
       {
@@ -1288,7 +1288,7 @@
     "description": "unset aspects in the workspace config (opposite of \"use\" command)",
     "extendedDescription": "",
     "group": "workspace-setup",
-    "private": false,
+    "private": true,
     "remoteOp": true,
     "arguments": [
       {
@@ -4588,7 +4588,7 @@
     "description": "communicate with bit cli program via http requests",
     "extendedDescription": "",
     "group": "workspace-setup",
-    "private": false
+    "private": true
   },
   {
     "name": "pack <componentId> [scopePath]",

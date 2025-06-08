@@ -28,6 +28,8 @@ import { GraphMain } from '@teambit/graph';
 import { ComponentNotFound, ScopeMain } from '@teambit/scope';
 import { ComponentMain } from '@teambit/component';
 import { SchemaMain } from '@teambit/schema';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
+import { Logger } from '@teambit/logger';
 
 const FILES_HISTORY_DIR = 'files-history';
 const ENV_ICONS_DIR = 'env-icons';
@@ -100,7 +102,8 @@ export class APIForIDE {
     private graph: GraphMain,
     private scope: ScopeMain,
     private component: ComponentMain,
-    private schema: SchemaMain
+    private schema: SchemaMain,
+    private logger: Logger
   ) {}
 
   async logStartCmdHistory(op: string) {
@@ -566,8 +569,11 @@ export class APIForIDE {
     return results;
   }
 
-  getCurrentLaneName(): string {
-    return this.workspace.getCurrentLaneId().name;
+  getCurrentLaneName(includeScope = false): string {
+    const currentLaneId = this.workspace.getCurrentLaneId();
+    if (!includeScope) return currentLaneId.name;
+    if (currentLaneId.isDefault()) return currentLaneId.name;
+    return currentLaneId.toString();
   }
 
   async tagOrSnap(message = '') {
@@ -588,6 +594,7 @@ export class APIForIDE {
   }
 
   async getCompDetails(id: string, includeSchema = false) {
+    this.logger.debug(`getCompDetails(${id}, ${includeSchema})`);
     const compId = await this.workspace.resolveComponentId(id);
     const existsLocally = this.workspace.hasId(compId);
     const getComp = async () => {
@@ -601,15 +608,24 @@ export class APIForIDE {
     const comp = await getComp();
 
     const fragments = this.component.getShowFragments();
-    const titlesToInclude = ['id', 'env', 'package name', 'files', 'dev files', 'dependencies', 'deprecated'];
+    const titlesToInclude = ['id', 'env', 'package name', 'files', 'dev files', 'deprecated'];
     const showResults: Record<string, any> = {};
     await Promise.all(
       fragments.map(async (fragment) => {
         const result = fragment.json ? await fragment.json(comp) : undefined;
         if (!result || !titlesToInclude.includes(result.title)) return;
+        if (result.title === 'deprecated' && !result.json.isDeprecate) return; // skip if not deprecated
         showResults[result.title] = result.json;
       })
     );
+
+    const deps = comp.getDependencies();
+    showResults.dependencies = deps.map((dep) => {
+      const pkg = dep.getPackageName?.() || dep.id;
+      const pkgWithVer = `${pkg}@${dep.version}`;
+      const compIdStr = dep.type === 'component' ? `, component-id: ${dep.id}` : '';
+      return `${pkgWithVer} (lifecycle: ${dep.lifecycle}, type: ${dep.type}, source: ${dep.source}${compIdStr})`;
+    });
 
     if (includeSchema) {
       try {
@@ -657,6 +673,37 @@ export class APIForIDE {
       // If composition extraction fails, add error info but don't crash
       showResults.usageExamples = `Error fetching usage examples: ${(error as Error).message}`;
     }
+
+    showResults.url = ComponentUrl.toUrl(compId, { includeVersion: false });
+
+    // Add component location status
+    // Check if component exists as a package by looking it up in the pnpm lock file
+    const packageName = comp.getPackageName();
+    let componentLocation: string;
+
+    if (existsLocally) {
+      const compDir = this.workspace.componentDir(compId, { ignoreVersion: true }, { relative: true });
+      componentLocation = `exists locally in the workspace at '${compDir}'`;
+    } else {
+      let isInstalledAsPackage = false;
+
+      try {
+        const lockFilePath = path.join(this.workspace.path, 'node_modules', '.pnpm', 'lock.yaml');
+        if (await fs.pathExists(lockFilePath)) {
+          const lockFileContent = await fs.readFile(lockFilePath, 'utf8');
+          // Check if the package name exists in the lock file
+          isInstalledAsPackage = lockFileContent.includes(packageName);
+        }
+      } catch (error) {
+        this.logger.warn(`Error checking package existence for ${packageName}: ${(error as Error).message}`);
+        // If error occurs during package check, default to false
+        isInstalledAsPackage = false;
+      }
+
+      componentLocation = isInstalledAsPackage ? 'installed as a package' : 'a remote component';
+    }
+
+    showResults.componentLocation = componentLocation;
 
     return showResults;
   }

@@ -299,7 +299,7 @@ export class CliMcpServerMain {
         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         try {
           const errorJson = await response.json();
-          errorMessage = errorJson.message || errorMessage;
+          errorMessage = errorJson.message || errorJson || errorMessage;
         } catch {
           // Ignore JSON parse errors
         }
@@ -641,10 +641,7 @@ export class CliMcpServerMain {
         .describe(
           `Search query string - Don't try to search with too many keywords. It will try to find components that match all keywords, which is often too restrictive. Instead, search with a single keyword or a few broad keywords`
         ),
-      cwd: z
-        .string()
-        .optional()
-        .describe('Path to workspace directory'),
+      cwd: z.string().optional().describe('Path to workspace directory'),
       owners: z
         .array(z.string())
         .optional()
@@ -798,6 +795,17 @@ export class CliMcpServerMain {
           };
         }
 
+        // Get current lane name with scope
+        try {
+          const laneId = await this.callBitServerIDEAPI('getCurrentLaneName', [true], params.cwd);
+          workspaceInfo.laneId = laneId;
+        } catch (error) {
+          this.logger.error(`[MCP-DEBUG] Error getting current lane name: ${(error as Error).message}`);
+          workspaceInfo.laneId = {
+            error: `Failed to get current lane name: ${(error as Error).message}`,
+          };
+        }
+
         return this.formatAsCallToolResult(workspaceInfo);
       } catch (error) {
         this.logger.error(`[MCP-DEBUG] Error in bit_workspace_info tool: ${(error as Error).message}`);
@@ -828,12 +836,7 @@ export class CliMcpServerMain {
           params.cwd
         );
 
-        // IDE API returns the result directly, not wrapped in success/error structure
-        const componentDetails: any = {
-          show: ideApiResult,
-        };
-
-        return this.formatAsCallToolResult(componentDetails);
+        return this.formatAsCallToolResult(ideApiResult);
       } catch (error) {
         this.logger.error(`[MCP-DEBUG] Error in bit_component_details tool: ${(error as Error).message}`);
         return this.formatErrorAsCallToolResult(error as Error, 'getting component details');
@@ -1041,9 +1044,15 @@ export class CliMcpServerMain {
 
         this.logger.debug(`[MCP-DEBUG] Executing query command: ${command} with args: ${JSON.stringify(commandArgs)}`);
 
-        const result = await this.callBitServerAPI(command, args, flags, cwd);
+        const execution = await this.safeBitCommandExecution(
+          command,
+          args,
+          flags,
+          cwd,
+          `execute query command ${command}`
+        );
 
-        return this.formatAsCallToolResult(result);
+        return this.formatAsCallToolResult(execution.result);
       } catch (error) {
         this.logger.error(`[MCP-DEBUG] Error in bit_query tool: ${(error as Error).message}`);
         return this.formatErrorAsCallToolResult(error as Error, 'executing query command');
@@ -1079,8 +1088,10 @@ export class CliMcpServerMain {
         this.logger.debug(
           `[MCP-DEBUG] Executing command: ${command} with args: ${JSON.stringify(args)} and flags: ${JSON.stringify(flags)}`
         );
-        const result = await this.callBitServerAPI(command, args, flags, cwd);
-        return this.formatAsCallToolResult(result);
+
+        const execution = await this.safeBitCommandExecution(command, args, flags, cwd, `execute command ${command}`);
+
+        return this.formatAsCallToolResult(execution.result);
       } catch (error) {
         this.logger.error(`[MCP-DEBUG] Error in bit_execute tool: ${(error as Error).message}`);
         return this.formatErrorAsCallToolResult(error as Error, 'executing command');

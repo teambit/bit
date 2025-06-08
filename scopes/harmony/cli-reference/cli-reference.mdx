@@ -400,14 +400,6 @@ The following gets removed by this command:
 
 ---
 
-## completion
-
-**Description**: enable bash/zsh-completion shortcuts for commands and options
-
-`bit completion`
-
----
-
 ## config
 
 **Description**: config management  
@@ -2029,19 +2021,6 @@ optionally, provide [pattern] to limit the fork to specific components
 
 ---
 
-## server
-
-**Description**: communicate with bit cli program via http requests
-
-`bit server`
-
-| **Option**      | **Option alias** | **Description**                             |
-| --------------- | :--------------: | ------------------------------------------- |
-| `--port [port]` |       `-p`       | port to run the server on                   |
-| `--compile`     |       `-c`       | compile components during the watch process |
-
----
-
 ## set-peer
 
 **Description**: set a component as always peer
@@ -2326,18 +2305,6 @@ list components templates when inside bit-workspace (for bit-create), otherwise,
 
 ---
 
-## unuse
-
-**Description**: unset aspects in the workspace config (opposite of "use" command)
-
-`bit unuse <component-id>`
-
-| **Arg**        |        **Description**         |
-| -------------- | :----------------------------: |
-| `component-id` | the component ID of the aspect |
-
----
-
 ## update
 
 **Alias**: `up`  
@@ -2356,18 +2323,6 @@ list components templates when inside bit-workspace (for bit-create), otherwise,
 | `--minor`  |                  | update to the latest minor version. Semver rules are ignored                                                                                                                   |
 | `--major`  |                  | update to the latest major version. Semver rules are ignored                                                                                                                   |
 | `--semver` |                  | update to the newest version respecting semver                                                                                                                                 |
-
----
-
-## use
-
-**Description**: set aspects in the workspace/scope config to make them loadable by the workspace/scope
-
-`bit use <component-id>`
-
-| **Arg**        |        **Description**         |
-| -------------- | :----------------------------: |
-| `component-id` | the component ID of the aspect |
 
 ---
 

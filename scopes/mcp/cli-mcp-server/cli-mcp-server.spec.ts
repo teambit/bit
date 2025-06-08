@@ -132,7 +132,8 @@ describe('CliMcpServer Integration Tests', function () {
       expect(result.content[0]).to.have.property('type', 'text');
 
       const content = JSON.parse((result.content[0] as any).text);
-      expect(content).to.have.property('show');
+      expect(content).to.have.property('id');
+      expect(content).to.have.property('env');
     });
 
     it('should get component details with schema', async () => {
@@ -152,7 +153,8 @@ describe('CliMcpServer Integration Tests', function () {
       expect(result.content[0]).to.have.property('type', 'text');
 
       const content = JSON.parse((result.content[0] as any).text);
-      expect(content).to.have.property('show');
+      expect(content).to.have.property('id');
+      expect(content).to.have.property('publicAPI');
     });
 
     it('should handle non-existent component gracefully', async () => {
