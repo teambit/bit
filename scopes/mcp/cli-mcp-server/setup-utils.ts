@@ -13,6 +13,14 @@ export interface SetupOptions {
 }
 
 /**
+ * Options for writing rules/instructions files
+ */
+export interface RulesOptions {
+  isGlobal: boolean;
+  workspaceDir?: string;
+}
+
+/**
  * Utility class for setting up MCP server configurations across different editors
  */
 export class McpSetupUtils {
@@ -218,5 +226,118 @@ export class McpSetupUtils {
 
     // Write updated MCP configuration
     await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
+  }
+
+  /**
+   * Get VS Code prompts path based on global/workspace scope
+   */
+  static getVSCodePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Global VS Code prompts - there isn't a standard global prompts directory
+      // So we'll use the User directory with a .vscode/prompts subdirectory
+      const platform = process.platform;
+      switch (platform) {
+        case 'win32':
+          return path.join(homedir(), '.vscode', 'prompts', 'bit.instructions.md');
+        case 'darwin':
+          return path.join(homedir(), '.vscode', 'prompts', 'bit.instructions.md');
+        case 'linux':
+          return path.join(homedir(), '.vscode', 'prompts', 'bit.instructions.md');
+        default:
+          throw new Error(`Unsupported platform: ${platform}`);
+      }
+    } else {
+      // Workspace-specific prompts
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.vscode', 'prompts', 'bit.instructions.md');
+    }
+  }
+
+  /**
+   * Get Cursor prompts path based on global/workspace scope
+   */
+  static getCursorPromptsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Global Cursor rules - use bit.rules.md in home directory
+      return path.join(homedir(), '.cursor', 'bit.rules.md');
+    } else {
+      // Workspace-specific rules - use .cursorrules file for legacy compatibility
+      // This is the most widely supported format for Cursor rules
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.cursorrules');
+    }
+  }
+
+  /**
+   * Get Windsurf prompts path based on global/workspace scope
+   */
+  static getWindsurfPromptsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Global Windsurf rules - use bit.rules.md in home directory
+      return path.join(homedir(), '.windsurf', 'bit.rules.md');
+    } else {
+      // Workspace-specific rules - use .windsurf/rules directory with bit.rules.md file
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.windsurf', 'rules', 'bit.rules.md');
+    }
+  }
+
+  /**
+   * Get default Bit MCP rules content from template file
+   */
+  static getDefaultRulesContent(): Promise<string> {
+    const templatePath = path.join(__dirname, 'bit-rules-template.md');
+    return fs.readFile(templatePath, 'utf8');
+  }
+
+  /**
+   * Write Bit MCP rules file for VS Code
+   */
+  static async writeVSCodeRules(options: RulesOptions): Promise<void> {
+    const { isGlobal, workspaceDir } = options;
+
+    // Determine prompts file path
+    const promptsPath = this.getVSCodePromptsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(promptsPath));
+
+    // Write rules content
+    const rulesContent = await this.getDefaultRulesContent();
+    await fs.writeFile(promptsPath, rulesContent);
+  }
+
+  /**
+   * Write Bit MCP rules file for Cursor
+   */
+  static async writeCursorRules(options: RulesOptions): Promise<void> {
+    const { isGlobal, workspaceDir } = options;
+
+    // Determine prompts file path
+    const promptsPath = this.getCursorPromptsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(promptsPath));
+
+    // Write rules content
+    const rulesContent = await this.getDefaultRulesContent();
+    await fs.writeFile(promptsPath, rulesContent);
+  }
+
+  /**
+   * Write Bit MCP rules file for Windsurf
+   */
+  static async writeWindsurfRules(options: RulesOptions): Promise<void> {
+    const { isGlobal, workspaceDir } = options;
+
+    // Determine prompts file path
+    const promptsPath = this.getWindsurfPromptsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(promptsPath));
+
+    // Write rules content
+    const rulesContent = await this.getDefaultRulesContent();
+    await fs.writeFile(promptsPath, rulesContent);
   }
 }

@@ -18,7 +18,8 @@ import { Http } from '@teambit/scope.network';
 import { CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 import fetch from 'node-fetch';
 import { McpSetupCmd } from './setup-cmd';
-import { McpSetupUtils, SetupOptions } from './setup-utils';
+import { McpRulesCmd } from './rules-cmd';
+import { McpSetupUtils, SetupOptions, RulesOptions } from './setup-utils';
 
 interface CommandFilterOptions {
   additionalCommandsSet?: Set<string>;
@@ -1192,6 +1193,29 @@ export class CliMcpServerMain {
     }
   }
 
+  async writeRulesFile(editor: string, options: RulesOptions, workspaceDir?: string): Promise<void> {
+    const supportedEditors = ['vscode', 'cursor', 'windsurf'];
+    const editorLower = editor.toLowerCase();
+
+    if (!supportedEditors.includes(editorLower)) {
+      throw new Error(`Editor "${editor}" is not supported yet. Currently supported: ${supportedEditors.join(', ')}`);
+    }
+
+    // Add workspaceDir to options if provided
+    const rulesOptions: RulesOptions = { ...options };
+    if (workspaceDir) {
+      rulesOptions.workspaceDir = workspaceDir;
+    }
+
+    if (editorLower === 'vscode') {
+      await McpSetupUtils.writeVSCodeRules(rulesOptions);
+    } else if (editorLower === 'cursor') {
+      await McpSetupUtils.writeCursorRules(rulesOptions);
+    } else if (editorLower === 'windsurf') {
+      await McpSetupUtils.writeWindsurfRules(rulesOptions);
+    }
+  }
+
   static slots = [];
   static dependencies = [CLIAspect, LoggerAspect];
   static runtime = MainRuntime;
@@ -1199,7 +1223,7 @@ export class CliMcpServerMain {
     const logger = loggerMain.createLogger(CliMcpServerAspect.id);
     const mcpServer = new CliMcpServerMain(cli, logger);
     const mcpServerCmd = new McpServerCmd(mcpServer);
-    mcpServerCmd.commands = [new McpStartCmd(mcpServer), new McpSetupCmd(mcpServer)];
+    mcpServerCmd.commands = [new McpStartCmd(mcpServer), new McpSetupCmd(mcpServer), new McpRulesCmd(mcpServer)];
     cli.register(mcpServerCmd);
     return mcpServer;
   }
