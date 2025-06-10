@@ -6,11 +6,8 @@ import { homedir } from 'os';
  * Options for setting up MCP server configuration
  */
 export interface SetupOptions {
-  extended?: boolean;
   consumerProject?: boolean;
-  includeOnly?: string;
   includeAdditional?: string;
-  exclude?: string;
   isGlobal: boolean;
   workspaceDir?: string;
 }
@@ -23,27 +20,15 @@ export class McpSetupUtils {
    * Build MCP server arguments based on provided options
    */
   static buildMcpServerArgs(options: SetupOptions): string[] {
-    const { extended, consumerProject, includeOnly, includeAdditional, exclude } = options;
+    const { consumerProject, includeAdditional } = options;
     const args = ['mcp-server'];
-
-    if (extended) {
-      args.push('--extended');
-    }
 
     if (consumerProject) {
       args.push('--consumer-project');
     }
 
-    if (includeOnly) {
-      args.push('--include-only', includeOnly);
-    }
-
     if (includeAdditional) {
       args.push('--include-additional', includeAdditional);
-    }
-
-    if (exclude) {
-      args.push('--exclude', exclude);
     }
 
     return args;
