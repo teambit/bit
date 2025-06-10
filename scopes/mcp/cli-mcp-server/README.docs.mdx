@@ -76,8 +76,8 @@ bit mcp-server setup
 # Global setup for Cursor
 bit mcp-server setup cursor --global
 
-# Setup for Windsurf with consumer project mode
-bit mcp-server setup windsurf --consumer-project
+# Setup with consumer project mode
+bit mcp-server setup --consumer-project
 ```
 
 #### Manual Configuration
@@ -180,4 +180,45 @@ bit mcp-server start --consumer-project
 
 # Add specific tools to the consumer project set
 bit mcp-server start --consumer-project --include-additional "deps,get,preview"
+```
+
+### Writing AI Assistant Rules
+
+The MCP server provides a `rules` command to create instruction files for AI assistants:
+
+```bash
+bit mcp-server rules [vscode|cursor|windsurf] [options]
+```
+
+This command creates rules/instructions markdown files that provide guidance to AI assistants on how to effectively use the Bit MCP server and follow best practices when working with Bit components.
+
+#### Supported Editors
+
+- **VS Code**: `bit mcp-server rules vscode` (or just `bit mcp-server rules`)
+- **Cursor**: `bit mcp-server rules cursor`
+- **Windsurf**: `bit mcp-server rules windsurf`
+
+#### Configuration Options
+
+- `--global`: Write rules to global configuration (default: workspace-specific)
+- `--print`: Print rules content to screen instead of writing to file
+- `--consumer-project`: Generate rules for consumer projects that only use Bit components as packages
+
+#### Examples
+
+```bash
+# Basic VS Code rules (workspace level)
+bit mcp-server rules
+
+# Global rules for Cursor
+bit mcp-server rules cursor --global
+
+# Consumer project rules for VS Code
+bit mcp-server rules --consumer-project
+
+# Print rules content to screen for manual setup
+bit mcp-server rules --print
+
+# Print consumer project content for Windsurf (requires manual addition to .windsurfrules)
+bit mcp-server rules windsurf --print --consumer-project
 ```
