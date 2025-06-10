@@ -31,7 +31,7 @@ bit mcp-server start [options]
 
 Options:
 
-- `--consumer-project`: For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools and automatically adds the "--remote" flag to relevant commands.
+- `--consumer-project`: For non-Bit workspaces that only consume Bit component packages. Enables only "bit_remote_search" and "bit_remote_component_details" tools and automatically adds the "--remote" flag to relevant commands.
 - `--include-additional <commands>`: Add specific commands to the available tools (comma-separated list)
 
 ### Integrating with IDEs
@@ -142,14 +142,13 @@ In default mode, the server exposes a minimal set of essential tools focused on 
 This mode is designed for applications or projects that are not Bit workspaces but need to consume or work with Bit components as packages. It provides a minimal set of tools focused on component discovery and information:
 
 - `bit_remote_search`: Search for components in remote scopes
-- `bit_schema`: Retrieves component API schema from remote scopes (automatically adds `--remote` flag)
-- `bit_show`: Displays component information from remote scopes (automatically adds `--remote` flag)
+- `bit_remote_component_details`: Get detailed information about a remote component including basic info and its public API schema (combines the functionality of show and schema commands)
 
 In this mode:
 
 1. You don't need a Bit workspace initialization
-2. Only these 3 tools are available (no workspace-specific tools)
-3. The `--remote` flag is automatically added to `show` and `schema` commands
+2. Only these 2 tools are available (no workspace-specific tools)
+3. The `--remote` flag is automatically added to component detail queries
 4. The `cwd` parameter is still required but can be any directory (not necessarily a Bit workspace)
 5. You can still add additional tools with the `--include-additional` flag
 

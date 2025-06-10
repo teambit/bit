@@ -351,7 +351,7 @@ export class CliMcpServerMain {
     });
 
     // Set of tools for consumer projects (non-Bit workspaces)
-    const consumerProjectTools = new Set(['schema', 'show']);
+    const consumerProjectTools = new Set<string>();
 
     const consumerProject = Boolean(options.consumerProject);
 
@@ -361,7 +361,7 @@ export class CliMcpServerMain {
     // Validate flags combination
     if (consumerProject) {
       this.logger.debug(
-        `[MCP-DEBUG] Running MCP server in consumer project mode (for non-Bit workspaces) with tools: ${Array.from(consumerProjectTools).join(', ')} + remote-search (always available)`
+        `[MCP-DEBUG] Running MCP server in consumer project mode (for non-Bit workspaces) with tools: bit_remote_search, bit_remote_component_details`
       );
       if (options.includeAdditional) {
         this.logger.debug(
@@ -393,9 +393,12 @@ export class CliMcpServerMain {
     // Always register remote-search tool
     this.registerRemoteSearchTool(server);
 
-    // In consumer project mode, only register bit_remote_search, bit_show, and bit_schema
+    // In consumer project mode, only register bit_remote_search and bit_remote_component_details
     // All other tools should not be available in consumer project mode
-    if (!consumerProject) {
+    if (consumerProject) {
+      // Register the new combined remote component details tool
+      this.registerRemoteComponentDetailsTool(server);
+    } else {
       // Register the bit_workspace_info tool
       this.registerWorkspaceInfoTool(server);
 
@@ -650,6 +653,50 @@ export class CliMcpServerMain {
         text: results.components.join('\n'),
       };
       return { content: [formattedResults] } as CallToolResult;
+    });
+  }
+
+  private registerRemoteComponentDetailsTool(server: McpServer) {
+    const toolName = 'bit_remote_component_details';
+    const description =
+      'Get detailed information about a remote component including basic info and its public API schema. Combines the functionality of show and schema commands for remote components.';
+    const schema: Record<string, any> = {
+      cwd: z.string().describe('Path to workspace directory'),
+      componentName: z.string().describe('Component name or component ID to get details for'),
+      includeSchema: z.boolean().optional().describe('Include component public API schema (default: true)'),
+    };
+
+    server.tool(toolName, description, schema, async (params: any) => {
+      try {
+        const { componentName, includeSchema = true, cwd } = params;
+
+        // Get basic component information using show command via direct execution
+        const showArgs = ['show', componentName, '--remote', '--legacy'];
+        const showResult = await this.runBit(showArgs, cwd);
+
+        const result: any = {
+          componentInfo: showResult.content[0].text,
+        };
+
+        // Get schema information if requested
+        if (includeSchema) {
+          try {
+            const schemaArgs = ['schema', componentName, '--remote'];
+            const schemaResult = await this.runBit(schemaArgs, cwd);
+            result.schema = schemaResult.content[0].text;
+          } catch (schemaError) {
+            this.logger.warn(
+              `[MCP-DEBUG] Failed to get schema for ${componentName}: ${(schemaError as Error).message}`
+            );
+            result.schemaError = `Failed to retrieve schema: ${(schemaError as Error).message}`;
+          }
+        }
+
+        return this.formatAsCallToolResult(result);
+      } catch (error) {
+        this.logger.error(`[MCP-DEBUG] Error in bit_remote_component_details tool: ${(error as Error).message}`);
+        return this.formatErrorAsCallToolResult(error as Error, 'getting remote component details');
+      }
     });
   }
 
@@ -1071,7 +1118,11 @@ export class CliMcpServerMain {
     this.logger.debug(`[MCP-DEBUG] Running: ${this.bitBin} ${args.join(' ')} in ${cwd}`);
     const cmd = `${this.bitBin} ${args.join(' ')}`;
     try {
-      const cmdOutput = childProcess.execSync(cmd, { cwd });
+      const cmdOutput = childProcess.execSync(cmd, {
+        cwd,
+        env: { ...process.env, BIT_DISABLE_SPINNER: '1' },
+        stdio: 'pipe',
+      });
       this.logger.debug(`[MCP-DEBUG] result. stdout: ${cmdOutput}`);
 
       return { content: [{ type: 'text', text: cmdOutput.toString() }] };
