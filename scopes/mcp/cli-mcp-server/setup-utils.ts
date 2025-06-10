@@ -21,7 +21,7 @@ export class McpSetupUtils {
    */
   static buildMcpServerArgs(options: SetupOptions): string[] {
     const { consumerProject, includeAdditional } = options;
-    const args = ['mcp-server'];
+    const args = ['mcp-server', 'start'];
 
     if (consumerProject) {
       args.push('--consumer-project');
