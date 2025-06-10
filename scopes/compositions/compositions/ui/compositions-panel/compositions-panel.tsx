@@ -55,6 +55,8 @@ export function CompositionsPanel({
   ...rest
 }: CompositionsPanelProps) {
   // setup drawer state
+  // TODO: only for alpha versions of live controls. remove when stable.
+  const [hasLiveControls, setHasLiveControls] = useState(false);
   const [openDrawerList, onToggleDrawer] = useState(['COMPOSITIONS', 'LIVE_CONTROLS']);
   const handleDrawerToggle = (id: string) => {
     const isDrawerOpen = openDrawerList.includes(id);
@@ -105,6 +107,13 @@ export function CompositionsPanel({
 
   // listen to the mounter for live control updates
   useEffect(() => {
+    // TODO: remove when stable.
+    window.addEventListener('message', (e: MessageEvent) => {
+      if (e.data.type === 'composition-live-controls:activate') {
+        setHasLiveControls(true);
+      }
+    });
+
     function onLiveControlsSetup(e: MessageEvent<LiveControlReadyEventData>) {
       getReadyListener(e, ({ controls, values, timestamp }) => {
         const iframeWindow = e.source;
@@ -185,18 +194,22 @@ export function CompositionsPanel({
           })}
         </ul>
       </DrawerUI>
-      <DrawerUI
-        isOpen={openDrawerList.includes('LIVE_CONTROLS')}
-        onToggle={() => handleDrawerToggle('LIVE_CONTROLS')}
-        className={classNames(styles.tab)}
-        name="LIVE CONTROLS"
-      >
-        {controlsTimestamp ? (
-          <LiveControls defs={controlsDefs} values={controlsValues} onChange={onLiveControlsUpdate} />
-        ) : (
-          <div className={styles.noLiveControls}>No live controls available for this composition</div>
-        )}
-      </DrawerUI>
+      {
+        /* TODO: remove when stable */ hasLiveControls ? (
+          <DrawerUI
+            isOpen={openDrawerList.includes('LIVE_CONTROLS')}
+            onToggle={() => handleDrawerToggle('LIVE_CONTROLS')}
+            className={classNames(styles.tab)}
+            name="LIVE CONTROLS"
+          >
+            {controlsTimestamp ? (
+              <LiveControls defs={controlsDefs} values={controlsValues} onChange={onLiveControlsUpdate} />
+            ) : (
+              <div className={styles.noLiveControls}>No live controls available for this composition</div>
+            )}
+          </DrawerUI>
+        ) : null
+      }
     </div>
   );
 }
