@@ -22,10 +22,7 @@ import { McpSetupUtils, SetupOptions } from './setup-utils';
 
 interface CommandFilterOptions {
   additionalCommandsSet?: Set<string>;
-  userExcludeSet?: Set<string>;
   alwaysExcludeTools: Set<string>;
-  extended: boolean;
-  includeOnlySet?: Set<string>;
   consumerProject: boolean;
   consumerProjectTools: Set<string>;
 }
@@ -319,19 +316,11 @@ export class CliMcpServerMain {
     }
   }
 
-  async runMcpServer(options: {
-    extended?: boolean;
-    includeOnly?: string;
-    includeAdditional?: string;
-    exclude?: string;
-    bitBin?: string;
-    consumerProject?: boolean;
-  }) {
+  async runMcpServer(options: { includeAdditional?: string; bitBin?: string; consumerProject?: boolean }) {
     this.logger.debug(
       `[MCP-DEBUG] Starting MCP server with options: ${JSON.stringify(options)}. CWD: ${process.cwd()}`
     );
     const commands = this.cli.commands;
-    const extended = Boolean(options.extended);
     this.bitBin = options.bitBin || this.bitBin;
 
     // Tools to always exclude
@@ -350,22 +339,10 @@ export class CliMcpServerMain {
     ]);
 
     // Parse command strings from flag options
-    let includeOnlySet: Set<string> | undefined;
-    if (options.includeOnly) {
-      includeOnlySet = new Set(options.includeOnly.split(',').map((cmd) => cmd.trim()));
-      this.logger.debug(`[MCP-DEBUG] Including only commands: ${Array.from(includeOnlySet).join(', ')}`);
-    }
-
     let additionalCommandsSet: Set<string> | undefined;
     if (options.includeAdditional) {
       additionalCommandsSet = new Set(options.includeAdditional.split(',').map((cmd) => cmd.trim()));
       this.logger.debug(`[MCP-DEBUG] Including additional commands: ${Array.from(additionalCommandsSet).join(', ')}`);
-    }
-
-    let userExcludeSet: Set<string> | undefined;
-    if (options.exclude) {
-      userExcludeSet = new Set(options.exclude.split(',').map((cmd) => cmd.trim()));
-      this.logger.debug(`[MCP-DEBUG] Excluding commands: ${Array.from(userExcludeSet).join(', ')}`);
     }
 
     const server = new McpServer({
@@ -391,19 +368,11 @@ export class CliMcpServerMain {
           `[MCP-DEBUG] Additional tools enabled in consumer project mode: ${options.includeAdditional}`
         );
       }
-      if (extended) {
-        this.logger.warn(
-          '[MCP-DEBUG] Warning: --consumer-project and --extended flags were both provided. The --extended flag will be ignored.'
-        );
-      }
     }
 
     const filterOptions: CommandFilterOptions = {
       additionalCommandsSet,
-      userExcludeSet,
       alwaysExcludeTools,
-      extended: consumerProject ? false : extended, // Ignore extended when consumerProject is true
-      includeOnlySet,
       consumerProject,
       consumerProjectTools,
     };
@@ -443,24 +412,6 @@ export class CliMcpServerMain {
   private shouldIncludeCommand(cmdName: string, options: CommandFilterOptions): boolean {
     // Always exclude certain commands
     if (options.alwaysExcludeTools.has(cmdName)) return false;
-
-    // User-specified exclude takes precedence
-    if (options.userExcludeSet?.has(cmdName)) {
-      this.logger.debug(`[MCP-DEBUG] Excluding command due to --exclude flag: ${cmdName}`);
-      return false;
-    }
-
-    // If includeOnly is specified, only include those specific commands
-    if (options.includeOnlySet) {
-      const shouldInclude = options.includeOnlySet.has(cmdName);
-      if (shouldInclude) {
-        this.logger.debug(`[MCP-DEBUG] Including command due to --include-only flag: ${cmdName}`);
-      }
-      return shouldInclude;
-    }
-
-    // Extended mode includes all commands except excluded ones
-    if (options.extended) return true;
 
     // Consumer project mode: only include consumer project tools + any additional specified
     if (options.consumerProject) {
