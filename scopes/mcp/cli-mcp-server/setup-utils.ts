@@ -18,6 +18,7 @@ export interface SetupOptions {
 export interface RulesOptions {
   isGlobal: boolean;
   workspaceDir?: string;
+  consumerProject?: boolean;
 }
 
 /**
@@ -275,8 +276,9 @@ export class McpSetupUtils {
   /**
    * Get default Bit MCP rules content from template file
    */
-  static getDefaultRulesContent(): Promise<string> {
-    const templatePath = path.join(__dirname, 'bit-rules-template.md');
+  static getDefaultRulesContent(consumerProject: boolean = false): Promise<string> {
+    const templateName = consumerProject ? 'bit-rules-consumer-template.md' : 'bit-rules-template.md';
+    const templatePath = path.join(__dirname, templateName);
     return fs.readFile(templatePath, 'utf8');
   }
 
@@ -284,7 +286,7 @@ export class McpSetupUtils {
    * Write Bit MCP rules file for VS Code
    */
   static async writeVSCodeRules(options: RulesOptions): Promise<void> {
-    const { isGlobal, workspaceDir } = options;
+    const { isGlobal, workspaceDir, consumerProject = false } = options;
 
     // Determine prompts file path
     const promptsPath = this.getVSCodePromptsPath(isGlobal, workspaceDir);
@@ -293,7 +295,7 @@ export class McpSetupUtils {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Write rules content
-    const rulesContent = await this.getDefaultRulesContent();
+    const rulesContent = await this.getDefaultRulesContent(consumerProject);
     await fs.writeFile(promptsPath, rulesContent);
   }
 
@@ -301,7 +303,7 @@ export class McpSetupUtils {
    * Write Bit MCP rules file for Cursor
    */
   static async writeCursorRules(options: RulesOptions): Promise<void> {
-    const { isGlobal, workspaceDir } = options;
+    const { isGlobal, workspaceDir, consumerProject = false } = options;
 
     // Determine prompts file path
     const promptsPath = this.getCursorPromptsPath(isGlobal, workspaceDir);
@@ -310,7 +312,7 @@ export class McpSetupUtils {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Write rules content
-    const rulesContent = await this.getDefaultRulesContent();
+    const rulesContent = await this.getDefaultRulesContent(consumerProject);
     await fs.writeFile(promptsPath, rulesContent);
   }
 }

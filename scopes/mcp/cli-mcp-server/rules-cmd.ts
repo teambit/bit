@@ -5,13 +5,14 @@ import { CliMcpServerMain } from './cli-mcp-server.main.runtime';
 export type McpRulesCmdOptions = {
   global?: boolean;
   print?: boolean;
+  consumerProject?: boolean;
 };
 
 export class McpRulesCmd implements Command {
   name = 'rules [editor]';
   description = 'Write Bit MCP rules/instructions file for VS Code, Cursor, or print to screen';
   extendedDescription =
-    'Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code and Cursor. Use --print to display content on screen.';
+    'Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code and Cursor. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.';
   arguments = [
     {
       name: 'editor',
@@ -21,13 +22,14 @@ export class McpRulesCmd implements Command {
   options = [
     ['g', 'global', 'Write rules to global configuration (default: workspace-specific)'],
     ['p', 'print', 'Print rules content to screen instead of writing to file'],
+    ['', 'consumer-project', 'Generate rules for consumer projects that only use Bit components as packages'],
   ] as CommandOptions;
 
   constructor(private mcpServerMain: CliMcpServerMain) {}
 
   async report(
     [editor = 'vscode']: [string],
-    { global: isGlobal = false, print: shouldPrint = false }: McpRulesCmdOptions
+    { global: isGlobal = false, print: shouldPrint = false, consumerProject = false }: McpRulesCmdOptions
   ): Promise<string> {
     try {
       // Handle Windsurf requests by directing to print option
@@ -42,12 +44,13 @@ export class McpRulesCmd implements Command {
       }
 
       if (shouldPrint) {
-        const rulesContent = await this.mcpServerMain.getRulesContent();
+        const rulesContent = await this.mcpServerMain.getRulesContent(consumerProject);
         return rulesContent;
       }
 
       await this.mcpServerMain.writeRulesFile(editor, {
         isGlobal,
+        consumerProject,
       });
 
       const scope = isGlobal ? 'global' : 'workspace';

@@ -202,6 +202,7 @@ This command creates rules/instructions markdown files that provide guidance to 
 
 - `--global`: Write rules to global configuration (default: workspace-specific)
 - `--print`: Print rules content to screen instead of writing to file
+- `--consumer-project`: Generate rules for consumer projects that only use Bit components as packages
 
 #### Examples
 
@@ -212,9 +213,12 @@ bit mcp-server rules
 # Global rules for Cursor
 bit mcp-server rules cursor --global
 
+# Consumer project rules for VS Code
+bit mcp-server rules --consumer-project
+
 # Print rules content to screen for manual setup
 bit mcp-server rules --print
 
-# Print content for Windsurf (requires manual addition to .windsurfrules)
-bit mcp-server rules windsurf --print
+# Print consumer project content for Windsurf (requires manual addition to .windsurfrules)
+bit mcp-server rules windsurf --print --consumer-project
 ```

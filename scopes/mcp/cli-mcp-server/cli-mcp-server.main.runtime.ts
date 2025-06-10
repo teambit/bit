@@ -1218,8 +1218,8 @@ export class CliMcpServerMain {
     }
   }
 
-  async getRulesContent(): Promise<string> {
-    return McpSetupUtils.getDefaultRulesContent();
+  async getRulesContent(consumerProject: boolean = false): Promise<string> {
+    return McpSetupUtils.getDefaultRulesContent(consumerProject);
   }
 
   static slots = [];
