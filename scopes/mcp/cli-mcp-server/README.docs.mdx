@@ -31,11 +31,8 @@ bit mcp-server [options]
 
 Options:
 
-- `-e, --extended`: Enable the full set of Bit CLI commands as MCP tools
 - `--consumer-project`: For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote-search" tools and automatically adds the "--remote" flag to relevant commands.
-- `--include-only <commands>`: Specify a subset of commands to expose as MCP tools (comma-separated list)
 - `--include-additional <commands>`: Add specific commands to the available tools (comma-separated list)
-- `--exclude <commands>`: Prevent specific commands from being exposed (comma-separated list)
 
 ### Integrating with IDEs
 
@@ -67,11 +64,8 @@ This command automatically configures the MCP server settings in your chosen edi
 #### Configuration Options
 
 - `--global`: Apply configuration globally (user settings) instead of workspace settings
-- `--extended`: Configure with extended mode enabled
 - `--consumer-project`: Configure for consumer projects
-- `--include-only <commands>`: Specify subset of commands to expose
 - `--include-additional <commands>`: Add specific commands to the available tools
-- `--exclude <commands>`: Prevent specific commands from being exposed
 
 #### Examples
 
@@ -79,8 +73,8 @@ This command automatically configures the MCP server settings in your chosen edi
 # Basic VS Code setup (workspace level)
 bit mcp-server setup
 
-# Global setup for Cursor with extended mode
-bit mcp-server setup cursor --global --extended
+# Global setup for Cursor
+bit mcp-server setup cursor --global
 
 # Setup for Windsurf with consumer project mode
 bit mcp-server setup windsurf --consumer-project
@@ -125,7 +119,7 @@ async function example() {
 
 ## Available Tools
 
-The Bit CLI MCP Server operates in three modes and provides several specialized tools:
+The Bit CLI MCP Server operates in two modes and provides several specialized tools:
 
 ### Default Mode
 
@@ -157,20 +151,6 @@ In this mode:
 3. The `cwd` parameter is still required but can be any directory (not necessarily a Bit workspace)
 4. You can still add additional tools with the `--include-additional` flag
 
-### Extended Mode (--extended)
-
-When started with the `--extended` flag, the server exposes nearly all Bit CLI commands as MCP tools, including:
-
-- All lane sub-commands (remove, alias, rename, diff, change-scope, import, fetch, eject, history, etc.)
-- Development tools (build, lint, format)
-- Package management (uninstall, update)
-- Component operations (recover, fork, rename)
-- Workspace management (ws-config, stash, aspect)
-- Analysis tools (insight, deps, why)
-- And many more
-
-> **Note:** When using extended mode, some AI models (particularly Gemini and ChatGPT) may struggle with the high number of available tools and respond with "400 Bad Request" or "500 Server Error" errors. This is not due to any issue with specific tools, but rather with how these models handle large tool sets. Claude Sonnet tends to handle extended mode better. If you encounter these errors, try using default mode or selectively adding only the tools you need via the `--include-additional` flag.
-
 ## Tool Parameters
 
 All tools accept a `cwd` parameter specifying the workspace path. Additional parameters vary by command.
@@ -187,12 +167,9 @@ Example tool call for `bit_status`:
 
 ## Custom Tool Selection
 
-To customize the available tools beyond the default set or extended mode:
+To customize the available tools:
 
 ```
-# Include only specific tools
-bit mcp-server --include-only "status,show,tag,snap,import,export"
-
 # Add specific tools to the available tools
 bit mcp-server --include-additional "build,lint,format,create,schema"
 
@@ -201,7 +178,4 @@ bit mcp-server --consumer-project
 
 # Add specific tools to the consumer project set
 bit mcp-server --consumer-project --include-additional "deps,get,preview"
-
-# Exclude specific tools from being available
-bit mcp-server --extended --exclude "checkout,remove"
 ```
