@@ -233,23 +233,30 @@ export class McpSetupUtils {
    */
   static getVSCodePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
     if (isGlobal) {
-      // Global VS Code prompts - there isn't a standard global prompts directory
-      // So we'll use the User directory with a .vscode/prompts subdirectory
+      // Global VS Code prompts - use the official User Data prompts directory
       const platform = process.platform;
       switch (platform) {
         case 'win32':
-          return path.join(homedir(), '.vscode', 'prompts', 'bit.instructions.md');
+          return path.join(homedir(), 'AppData', 'Roaming', 'Code', 'User', 'prompts', 'bit.instructions.md');
         case 'darwin':
-          return path.join(homedir(), '.vscode', 'prompts', 'bit.instructions.md');
+          return path.join(
+            homedir(),
+            'Library',
+            'Application Support',
+            'Code',
+            'User',
+            'prompts',
+            'bit.instructions.md'
+          );
         case 'linux':
-          return path.join(homedir(), '.vscode', 'prompts', 'bit.instructions.md');
+          return path.join(homedir(), '.config', 'Code', 'User', 'prompts', 'bit.instructions.md');
         default:
           throw new Error(`Unsupported platform: ${platform}`);
       }
     } else {
       // Workspace-specific prompts
       const targetDir = workspaceDir || process.cwd();
-      return path.join(targetDir, '.vscode', 'prompts', 'bit.instructions.md');
+      return path.join(targetDir, '.github', 'instructions', 'bit.instructions.md');
     }
   }
 
