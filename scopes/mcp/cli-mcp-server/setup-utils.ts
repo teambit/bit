@@ -265,13 +265,10 @@ export class McpSetupUtils {
    */
   static getCursorPromptsPath(isGlobal: boolean, workspaceDir?: string): string {
     if (isGlobal) {
-      // Global Cursor rules - use bit.rules.md in home directory
-      return path.join(homedir(), '.cursor', 'bit.rules.md');
+      throw new Error('Cursor does not support global prompts configuration in a file');
     } else {
-      // Workspace-specific rules - use .cursorrules file for legacy compatibility
-      // This is the most widely supported format for Cursor rules
       const targetDir = workspaceDir || process.cwd();
-      return path.join(targetDir, '.cursorrules');
+      return path.join(targetDir, '.cursor', 'rules', 'bit.rules.mdc');
     }
   }
 
