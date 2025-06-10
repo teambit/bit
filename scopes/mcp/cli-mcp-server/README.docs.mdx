@@ -76,8 +76,8 @@ bit mcp-server setup
 # Global setup for Cursor
 bit mcp-server setup cursor --global
 
-# Setup for Windsurf with consumer project mode
-bit mcp-server setup windsurf --consumer-project
+# Setup with consumer project mode
+bit mcp-server setup --consumer-project
 ```
 
 #### Manual Configuration
@@ -201,6 +201,7 @@ This command creates rules/instructions markdown files that provide guidance to 
 #### Configuration Options
 
 - `--global`: Write rules to global configuration (default: workspace-specific)
+- `--print`: Print rules content to screen instead of writing to file
 
 #### Examples
 
@@ -211,6 +212,9 @@ bit mcp-server rules
 # Global rules for Cursor
 bit mcp-server rules cursor --global
 
-# Rules for Windsurf (workspace level)
-bit mcp-server rules windsurf
+# Print rules content to screen for manual setup
+bit mcp-server rules --print
+
+# Print content for Windsurf (requires manual addition to .windsurfrules)
+bit mcp-server rules windsurf --print
 ```

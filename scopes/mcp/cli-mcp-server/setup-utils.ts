@@ -273,20 +273,6 @@ export class McpSetupUtils {
   }
 
   /**
-   * Get Windsurf prompts path based on global/workspace scope
-   */
-  static getWindsurfPromptsPath(isGlobal: boolean, workspaceDir?: string): string {
-    if (isGlobal) {
-      // Global Windsurf rules - use bit.rules.md in home directory
-      return path.join(homedir(), '.windsurf', 'bit.rules.md');
-    } else {
-      // Workspace-specific rules - use .windsurf/rules directory with bit.rules.md file
-      const targetDir = workspaceDir || process.cwd();
-      return path.join(targetDir, '.windsurf', 'rules', 'bit.rules.md');
-    }
-  }
-
-  /**
    * Get default Bit MCP rules content from template file
    */
   static getDefaultRulesContent(): Promise<string> {
@@ -319,23 +305,6 @@ export class McpSetupUtils {
 
     // Determine prompts file path
     const promptsPath = this.getCursorPromptsPath(isGlobal, workspaceDir);
-
-    // Ensure directory exists
-    await fs.ensureDir(path.dirname(promptsPath));
-
-    // Write rules content
-    const rulesContent = await this.getDefaultRulesContent();
-    await fs.writeFile(promptsPath, rulesContent);
-  }
-
-  /**
-   * Write Bit MCP rules file for Windsurf
-   */
-  static async writeWindsurfRules(options: RulesOptions): Promise<void> {
-    const { isGlobal, workspaceDir } = options;
-
-    // Determine prompts file path
-    const promptsPath = this.getWindsurfPromptsPath(isGlobal, workspaceDir);
 
     // Ensure directory exists
     await fs.ensureDir(path.dirname(promptsPath));
