@@ -107,17 +107,16 @@ describe('CliMcpServer Integration Tests', function () {
       }
     });
 
-    it('should only enable bit_remote_search, bit_show, and bit_schema tools', async () => {
+    it('should only enable bit_remote_search and bit_remote_component_details tools', async () => {
       const response = await consumerProjectClient.listTools();
 
       expect(response.tools).to.be.an('array');
 
       const toolNames = response.tools.map((tool) => tool.name);
 
-      // Should include only these three tools
+      // Should include only these two tools
       expect(toolNames).to.include('bit_remote_search');
-      expect(toolNames).to.include('bit_show');
-      expect(toolNames).to.include('bit_schema');
+      expect(toolNames).to.include('bit_remote_component_details');
 
       // Should NOT include these tools that are available in regular mode
       expect(toolNames).to.not.include('bit_workspace_info');
@@ -127,8 +126,12 @@ describe('CliMcpServer Integration Tests', function () {
       expect(toolNames).to.not.include('bit_query');
       expect(toolNames).to.not.include('bit_execute');
 
-      // Should have exactly 3 tools
-      expect(toolNames).to.have.lengthOf(3);
+      // Should NOT include the old separate tools
+      expect(toolNames).to.not.include('bit_show');
+      expect(toolNames).to.not.include('bit_schema');
+
+      // Should have exactly 2 tools
+      expect(toolNames).to.have.lengthOf(2);
     });
 
     it('should work with bit_remote_search tool', async () => {
