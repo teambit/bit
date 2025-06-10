@@ -267,7 +267,7 @@ describe('CliMcpServer Integration Tests', function () {
       expect(firstCommand).to.have.property('description');
     });
 
-    it('should get extended commands info', async () => {
+    it('should get commands info with extended description', async () => {
       const result = (await mcpClient.callTool({
         name: 'bit_commands_list',
         arguments: {
@@ -535,13 +535,12 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       });
     });
 
-    it('should setup VS Code integration with extended options', async () => {
+    it('should setup VS Code integration with consumer project options', async () => {
       await setupMcpServer.setupEditor(
         'vscode',
         {
-          extended: true,
           consumerProject: true,
-          includeOnly: 'status,list',
+          includeAdditional: 'status,list',
           isGlobal: false,
         },
         setupWorkspacePath
@@ -550,9 +549,8 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       const vscodeSettingsPath = path.join(setupWorkspacePath, '.vscode', 'settings.json');
       const settings = await fs.readJson(vscodeSettingsPath);
 
-      expect(settings.mcp.servers['bit-cli'].args).to.include('--extended');
       expect(settings.mcp.servers['bit-cli'].args).to.include('--consumer-project');
-      expect(settings.mcp.servers['bit-cli'].args).to.include('--include-only');
+      expect(settings.mcp.servers['bit-cli'].args).to.include('--include-additional');
       expect(settings.mcp.servers['bit-cli'].args).to.include('status,list');
     });
 
