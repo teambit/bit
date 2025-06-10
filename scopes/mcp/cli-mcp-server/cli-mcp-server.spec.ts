@@ -36,7 +36,7 @@ describe('CliMcpServer Integration Tests', function () {
     // Create MCP client and connect directly to the MCP server command
     const transport = new StdioClientTransport({
       command: 'bit',
-      args: ['mcp-server'],
+      args: ['mcp-server', 'start'],
       cwd: workspacePath,
     });
 
@@ -74,6 +74,75 @@ describe('CliMcpServer Integration Tests', function () {
       expect(toolNames).to.include('bit_commands_list');
       expect(toolNames).to.include('bit_query');
       expect(toolNames).to.include('bit_execute');
+    });
+  });
+
+  describe('Consumer Project Mode', () => {
+    let consumerProjectClient: Client;
+
+    beforeEach(async () => {
+      // Create MCP client for consumer project mode
+      const transport = new StdioClientTransport({
+        command: 'bit',
+        args: ['mcp-server', 'start', '--consumer-project'],
+        cwd: workspacePath,
+      });
+
+      consumerProjectClient = new Client(
+        {
+          name: 'test-consumer-client',
+          version: '1.0.0',
+        },
+        {
+          capabilities: {},
+        }
+      );
+
+      await consumerProjectClient.connect(transport);
+    });
+
+    afterEach(async () => {
+      if (consumerProjectClient) {
+        await consumerProjectClient.close();
+      }
+    });
+
+    it('should only enable bit_remote_search, bit_show, and bit_schema tools', async () => {
+      const response = await consumerProjectClient.listTools();
+
+      expect(response.tools).to.be.an('array');
+
+      const toolNames = response.tools.map((tool) => tool.name);
+
+      // Should include only these three tools
+      expect(toolNames).to.include('bit_remote_search');
+      expect(toolNames).to.include('bit_show');
+      expect(toolNames).to.include('bit_schema');
+
+      // Should NOT include these tools that are available in regular mode
+      expect(toolNames).to.not.include('bit_workspace_info');
+      expect(toolNames).to.not.include('bit_component_details');
+      expect(toolNames).to.not.include('bit_commands_list');
+      expect(toolNames).to.not.include('bit_command_help');
+      expect(toolNames).to.not.include('bit_query');
+      expect(toolNames).to.not.include('bit_execute');
+
+      // Should have exactly 3 tools
+      expect(toolNames).to.have.lengthOf(3);
+    });
+
+    it('should work with bit_remote_search tool', async () => {
+      const result = (await consumerProjectClient.callTool({
+        name: 'bit_remote_search',
+        arguments: {
+          queryStr: 'button',
+          cwd: workspacePath,
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
     });
   });
 
@@ -462,7 +531,7 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       expect(settings.mcp.servers).to.have.property('bit-cli');
       expect(settings.mcp.servers['bit-cli']).to.deep.equal({
         command: 'bit',
-        args: ['mcp-server'],
+        args: ['mcp-server', 'start'],
       });
     });
 
@@ -506,7 +575,7 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       expect(config.mcpServers.bit).to.deep.equal({
         type: 'stdio',
         command: 'bit',
-        args: ['mcp-server'],
+        args: ['mcp-server', 'start'],
       });
     });
 
@@ -531,7 +600,7 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       expect(config.mcpServers.bit).to.deep.equal({
         type: 'stdio',
         command: 'bit',
-        args: ['mcp-server'],
+        args: ['mcp-server', 'start'],
       });
     });
 
@@ -560,7 +629,7 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       expect(settings).to.have.property('mcp');
       expect(settings.mcp.servers['bit-cli']).to.deep.equal({
         command: 'bit',
-        args: ['mcp-server'],
+        args: ['mcp-server', 'start'],
       });
     });
   });

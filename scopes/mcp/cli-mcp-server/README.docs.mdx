@@ -18,7 +18,7 @@ This server acts as a bridge between MCP clients (such as VS Code, AI tools, or 
 The Bit CLI MCP Server is included with Bit. If you have Bit installed, you can run the server using:
 
 ```
-bit mcp-server
+bit mcp-server start
 ```
 
 ## Usage
@@ -26,12 +26,12 @@ bit mcp-server
 ### Command-Line Options
 
 ```
-bit mcp-server [options]
+bit mcp-server start [options]
 ```
 
 Options:
 
-- `--consumer-project`: For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote-search" tools and automatically adds the "--remote" flag to relevant commands.
+- `--consumer-project`: For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools and automatically adds the "--remote" flag to relevant commands.
 - `--include-additional <commands>`: Add specific commands to the available tools (comma-separated list)
 
 ### Integrating with IDEs
@@ -93,7 +93,7 @@ If you need to manually configure the settings, here's a basic example for VS Co
     "servers": {
       "bit-cli": {
         "command": "bit",
-        "args": ["mcp-server"]
+        "args": ["mcp-server", "start"]
       }
     }
   }
@@ -106,7 +106,7 @@ If you need to manually configure the settings, here's a basic example for VS Co
 import { McpClient } from '@modelcontextprotocol/sdk/client';
 
 async function example() {
-  const client = await McpClient.spawn('bit', ['mcp-server']);
+  const client = await McpClient.spawn('bit', ['mcp-server', 'start']);
 
   // Call a Bit CLI tool via MCP
   const result = await client.callTool('bit_status', { cwd: '/path/to/workspace' });
@@ -141,15 +141,17 @@ In default mode, the server exposes a minimal set of essential tools focused on 
 
 This mode is designed for applications or projects that are not Bit workspaces but need to consume or work with Bit components as packages. It provides a minimal set of tools focused on component discovery and information:
 
+- `bit_remote_search`: Search for components in remote scopes
 - `bit_schema`: Retrieves component API schema from remote scopes (automatically adds `--remote` flag)
 - `bit_show`: Displays component information from remote scopes (automatically adds `--remote` flag)
 
 In this mode:
 
 1. You don't need a Bit workspace initialization
-2. The `--remote` flag is automatically added to `show` and `schema` commands
-3. The `cwd` parameter is still required but can be any directory (not necessarily a Bit workspace)
-4. You can still add additional tools with the `--include-additional` flag
+2. Only these 3 tools are available (no workspace-specific tools)
+3. The `--remote` flag is automatically added to `show` and `schema` commands
+4. The `cwd` parameter is still required but can be any directory (not necessarily a Bit workspace)
+5. You can still add additional tools with the `--include-additional` flag
 
 ## Tool Parameters
 
@@ -171,13 +173,13 @@ To customize the available tools:
 
 ```
 # Add specific tools to the available tools
-bit mcp-server --include-additional "build,lint,format,create,schema"
+bit mcp-server start --include-additional "build,lint,format,create,schema"
 
 # For consumer projects (non-Bit workspaces)
-bit mcp-server --consumer-project
+bit mcp-server start --consumer-project
 
 # Add specific tools to the consumer project set
-bit mcp-server --consumer-project --include-additional "deps,get,preview"
+bit mcp-server start --consumer-project --include-additional "deps,get,preview"
 ```
 
 ### Writing AI Assistant Rules

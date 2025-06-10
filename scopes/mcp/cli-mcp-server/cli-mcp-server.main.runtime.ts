@@ -394,18 +394,22 @@ export class CliMcpServerMain {
     // Always register remote-search tool
     this.registerRemoteSearchTool(server);
 
-    // Register the bit_workspace_info tool
-    this.registerWorkspaceInfoTool(server);
+    // In consumer project mode, only register bit_remote_search, bit_show, and bit_schema
+    // All other tools should not be available in consumer project mode
+    if (!consumerProject) {
+      // Register the bit_workspace_info tool
+      this.registerWorkspaceInfoTool(server);
 
-    // Register the bit_component_details tool
-    this.registerComponentDetailsTool(server);
+      // Register the bit_component_details tool
+      this.registerComponentDetailsTool(server);
 
-    // Register command discovery and help tools
-    this.registerCommandsListTool(server);
-    this.registerCommandHelpTool(server);
+      // Register command discovery and help tools
+      this.registerCommandsListTool(server);
+      this.registerCommandHelpTool(server);
 
-    this.registerQueryTool(server);
-    this.registerExecuteTool(server);
+      this.registerQueryTool(server);
+      this.registerExecuteTool(server);
+    }
 
     await server.connect(new StdioServerTransport());
   }
