@@ -36,7 +36,7 @@ describe('CliMcpServer Integration Tests', function () {
     // Create MCP client and connect directly to the MCP server command
     const transport = new StdioClientTransport({
       command: 'bit',
-      args: ['mcp-server'],
+      args: ['mcp-server', 'start'],
       cwd: workspacePath,
     });
 
@@ -531,7 +531,7 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       expect(settings.mcp.servers).to.have.property('bit-cli');
       expect(settings.mcp.servers['bit-cli']).to.deep.equal({
         command: 'bit',
-        args: ['mcp-server'],
+        args: ['mcp-server', 'start'],
       });
     });
 
@@ -575,7 +575,7 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       expect(config.mcpServers.bit).to.deep.equal({
         type: 'stdio',
         command: 'bit',
-        args: ['mcp-server'],
+        args: ['mcp-server', 'start'],
       });
     });
 
@@ -600,7 +600,7 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       expect(config.mcpServers.bit).to.deep.equal({
         type: 'stdio',
         command: 'bit',
-        args: ['mcp-server'],
+        args: ['mcp-server', 'start'],
       });
     });
 
@@ -629,7 +629,7 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       expect(settings).to.have.property('mcp');
       expect(settings.mcp.servers['bit-cli']).to.deep.equal({
         command: 'bit',
-        args: ['mcp-server'],
+        args: ['mcp-server', 'start'],
       });
     });
   });
