@@ -13,6 +13,15 @@ export interface SetupOptions {
 }
 
 /**
+ * Options for writing rules/instructions files
+ */
+export interface RulesOptions {
+  isGlobal: boolean;
+  workspaceDir?: string;
+  consumerProject?: boolean;
+}
+
+/**
  * Utility class for setting up MCP server configurations across different editors
  */
 export class McpSetupUtils {
@@ -218,5 +227,92 @@ export class McpSetupUtils {
 
     // Write updated MCP configuration
     await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
+  }
+
+  /**
+   * Get VS Code prompts path based on global/workspace scope
+   */
+  static getVSCodePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Global VS Code prompts - use the official User Data prompts directory
+      const platform = process.platform;
+      switch (platform) {
+        case 'win32':
+          return path.join(homedir(), 'AppData', 'Roaming', 'Code', 'User', 'prompts', 'bit.instructions.md');
+        case 'darwin':
+          return path.join(
+            homedir(),
+            'Library',
+            'Application Support',
+            'Code',
+            'User',
+            'prompts',
+            'bit.instructions.md'
+          );
+        case 'linux':
+          return path.join(homedir(), '.config', 'Code', 'User', 'prompts', 'bit.instructions.md');
+        default:
+          throw new Error(`Unsupported platform: ${platform}`);
+      }
+    } else {
+      // Workspace-specific prompts
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.github', 'instructions', 'bit.instructions.md');
+    }
+  }
+
+  /**
+   * Get Cursor prompts path based on global/workspace scope
+   */
+  static getCursorPromptsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      throw new Error('Cursor does not support global prompts configuration in a file');
+    } else {
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.cursor', 'rules', 'bit.rules.mdc');
+    }
+  }
+
+  /**
+   * Get default Bit MCP rules content from template file
+   */
+  static getDefaultRulesContent(consumerProject: boolean = false): Promise<string> {
+    const templateName = consumerProject ? 'bit-rules-consumer-template.md' : 'bit-rules-template.md';
+    const templatePath = path.join(__dirname, templateName);
+    return fs.readFile(templatePath, 'utf8');
+  }
+
+  /**
+   * Write Bit MCP rules file for VS Code
+   */
+  static async writeVSCodeRules(options: RulesOptions): Promise<void> {
+    const { isGlobal, workspaceDir, consumerProject = false } = options;
+
+    // Determine prompts file path
+    const promptsPath = this.getVSCodePromptsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(promptsPath));
+
+    // Write rules content
+    const rulesContent = await this.getDefaultRulesContent(consumerProject);
+    await fs.writeFile(promptsPath, rulesContent);
+  }
+
+  /**
+   * Write Bit MCP rules file for Cursor
+   */
+  static async writeCursorRules(options: RulesOptions): Promise<void> {
+    const { isGlobal, workspaceDir, consumerProject = false } = options;
+
+    // Determine prompts file path
+    const promptsPath = this.getCursorPromptsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(promptsPath));
+
+    // Write rules content
+    const rulesContent = await this.getDefaultRulesContent(consumerProject);
+    await fs.writeFile(promptsPath, rulesContent);
   }
 }
