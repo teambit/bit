@@ -117,8 +117,8 @@ export class PeopleBrowser {
   static dependencies = [SymphonyPlatformAspect];
 
   static async provider([symphonyPlatform]: [SymphonyPlatformBrowser]) {
-    const support = new SupportBrowser();
-    // integrate the login as a route to the platform.
+    const people = new PeopleBrowser();
+    // Integrate the login as a route to the platform.
     symphonyPlatform.registerRoute([
       {
         path: '/login',
@@ -126,7 +126,7 @@ export class PeopleBrowser {
       }
     ]);
 
-    return support;
+    return people;
   }
 }
 ```
