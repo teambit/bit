@@ -215,7 +215,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "1.11.13",
+        "version": "1.11.14",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -285,7 +285,7 @@
     "cli-mcp-server": {
         "name": "cli-mcp-server",
         "scope": "teambit.mcp",
-        "version": "0.0.17",
+        "version": "0.0.18",
         "mainFile": "index.ts",
         "rootDir": "scopes/mcp/cli-mcp-server"
     },
@@ -495,7 +495,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.650",
+        "version": "2.0.651",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
