@@ -9,6 +9,7 @@ import { ComponentID } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
 import { reportLegacy, actionLegacy } from './legacy-show/show-legacy-cmd';
 import { ComponentMain } from '../component.main.runtime';
+import { isLikelyPackageName, resolveComponentIdFromPackageNameStandalone } from '../standalone-package-name-resolver';
 
 export class ShowCmd implements Command {
   name = 'show <component-name>';
@@ -35,14 +36,15 @@ export class ShowCmd implements Command {
 
   private async getComponent(idStr: string, remote: boolean) {
     if (remote) {
-      const id = ComponentID.fromString(idStr); // user used --remote so we know it has a scope
       const host = this.component.getHostIfExist('teambit.scope/scope');
-      if (!host)
+      if (!host) {
         throw new Error(`error: the current directory is not a workspace nor a scope. the full "bit show" is not supported.
 to see the legacy bit show, please use "--legacy" flag`);
+      }
       if (!host.getRemoteComponent) {
         throw new Error('Component Host does not implement getRemoteComponent()');
       }
+      const id = ComponentID.fromString(idStr); // user used --remote so we know it has a scope
       const component = await host.getRemoteComponent(id);
       return component;
     }
@@ -58,8 +60,23 @@ to see the legacy bit show, please use "--legacy" flag`);
     return component;
   }
 
+  private async resolveIdWithoutWorkspace(id: string): Promise<string> {
+    if (isLikelyPackageName(id)) {
+      try {
+        const compId = await resolveComponentIdFromPackageNameStandalone(id, this.component.dependencyResolver);
+        return compId.toString();
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw new Error(`${errorMessage}.
+If this is a component, Please use a valid component ID instead.`);
+      }
+    }
+    return id;
+  }
+
   async useLegacy(id: string, json = false, remote = false, compare = false) {
-    const showData = await actionLegacy([id], {
+    const resolvedId = await this.resolveIdWithoutWorkspace(id);
+    const showData = await actionLegacy([resolvedId], {
       json,
       remote,
       compare,
