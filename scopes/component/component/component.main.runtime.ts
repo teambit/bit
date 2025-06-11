@@ -5,6 +5,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';
 import { flatten, orderBy } from 'lodash';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
@@ -29,6 +30,7 @@ export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 export type ShowFragmentSlot = SlotRegistry<ShowFragment[]>;
 
 export class ComponentMain {
+  dependencyResolver: DependencyResolverMain;
   constructor(
     /**
      * slot for component hosts to register.

@@ -53,8 +53,18 @@ import {
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DepLinkerContext, DependencyLinker, LinkingOptions } from './dependency-linker';
-import { ComponentRangePrefix, DependencyResolverWorkspaceConfig, NodeLinker } from './dependency-resolver-workspace-config';
-import { ComponentModelVersion, getAllPolicyPkgs, CurrentPkg, OutdatedPkg, CurrentPkgSource } from './get-all-policy-pkgs';
+import {
+  ComponentRangePrefix,
+  DependencyResolverWorkspaceConfig,
+  NodeLinker,
+} from './dependency-resolver-workspace-config';
+import {
+  ComponentModelVersion,
+  getAllPolicyPkgs,
+  CurrentPkg,
+  OutdatedPkg,
+  CurrentPkgSource,
+} from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
@@ -208,7 +218,7 @@ export class DependencyResolverMain {
 
     private postInstallSlot: PostInstallSlot,
 
-    private addPackagesToLinkSlot: AddPackagesToLinkSlot,
+    private addPackagesToLinkSlot: AddPackagesToLinkSlot
   ) {}
 
   /**
@@ -680,8 +690,11 @@ export class DependencyResolverMain {
    */
   getLinker(options: GetLinkerOptions = {}) {
     const additionalPackagesToLink = this.getAdditionalPackagesToLink();
-    const linkingOptions = Object.assign({ additionalPackagesToLink },
-      defaultLinkingOptions, options?.linkingOptions || {});
+    const linkingOptions = Object.assign(
+      { additionalPackagesToLink },
+      defaultLinkingOptions,
+      options?.linkingOptions || {}
+    );
     // TODO: we should somehow pass the cache root dir to the package manager constructor
     return new DependencyLinker(
       this,
@@ -1380,16 +1393,15 @@ export class DependencyResolverMain {
       const allowedSpecialChars = ['+', '-'];
       if (policyVersion === '*') {
         // this is only valid for packages, not for components.
-        const isComp = data.dependencies.find(d => d.__type === COMPONENT_DEP_TYPE
-          && d.packageName === policy.dependencyId);
+        const isComp = data.dependencies.find(
+          (d) => d.__type === COMPONENT_DEP_TYPE && d.packageName === policy.dependencyId
+        );
         if (!isComp) return;
         errorMsg = `${errorPrefix} the policy version "${policyVersion}" of ${policy.dependencyId} is not valid for components, only for packages.
 as an alternative, you can use "+" to keep the same version installed in the workspace`;
       }
       const isVersionValid = Boolean(
-        semver.valid(policyVersion) ||
-          semver.validRange(policyVersion) ||
-          allowedSpecialChars.includes(policyVersion)
+        semver.valid(policyVersion) || semver.validRange(policyVersion) || allowedSpecialChars.includes(policyVersion)
       );
       if (isVersionValid) return;
       errorMsg = `${errorPrefix} the policy version "${policyVersion}" of ${policy.dependencyId} is not a valid semver version or range`;
@@ -1449,26 +1461,28 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     components: Component[];
   }): CurrentPkg[] {
     const localComponentPkgNames = new Set(components.map((component) => this.getPackageName(component)));
-    const componentModelVersions: ComponentModelVersion[] = components.map((component) => {
-      const depList = this.getDependencies(component);
-      return depList
-        .filter(
-          (dep) =>
-            typeof dep.getPackageName === 'function' &&
-            // If the dependency is referenced not via a valid range it means that it wasn't yet published to the registry
-            semver.validRange(dep.version) != null &&
-            !dep['isExtension'] && // eslint-disable-line
-            dep.lifecycle !== 'peer' &&
-            !localComponentPkgNames.has(dep.getPackageName())
-        )
-        .map((dep) => ({
-          name: dep.getPackageName!(), // eslint-disable-line
-          version: dep.version,
-          isAuto: dep.source === 'auto',
-          componentId: component.id,
-          lifecycleType: dep.lifecycle,
-        }));
-    }).flat();
+    const componentModelVersions: ComponentModelVersion[] = components
+      .map((component) => {
+        const depList = this.getDependencies(component);
+        return depList
+          .filter(
+            (dep) =>
+              typeof dep.getPackageName === 'function' &&
+              // If the dependency is referenced not via a valid range it means that it wasn't yet published to the registry
+              semver.validRange(dep.version) != null &&
+              !dep['isExtension'] && // eslint-disable-line
+              dep.lifecycle !== 'peer' &&
+              !localComponentPkgNames.has(dep.getPackageName())
+          )
+          .map((dep) => ({
+            name: dep.getPackageName!(), // eslint-disable-line
+            version: dep.version,
+            isAuto: dep.source === 'auto',
+            componentId: component.id,
+            lifecycleType: dep.lifecycle,
+          }));
+      })
+      .flat();
     return getAllPolicyPkgs({
       rootPolicy: this.getWorkspacePolicyFromConfig(),
       variantPoliciesByPatterns,
@@ -1632,7 +1646,6 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     return undefined;
   }
 
-
   static runtime = MainRuntime;
   static dependencies = [
     EnvsAspect,
@@ -1707,7 +1720,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       dependencyFactorySlot,
       preInstallSlot,
       postInstallSlot,
-      addPackagesToLinkSlot,
+      addPackagesToLinkSlot
     );
 
     const envJsoncDetector = envs.getEnvJsoncDetector();
@@ -1718,6 +1731,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       new DevDependenciesFragment(dependencyResolver),
       new PeerDependenciesFragment(dependencyResolver),
     ]);
+    componentAspect.dependencyResolver = dependencyResolver;
     // TODO: solve this generics issue and remove the ts-ignore
     // @ts-ignore
     dependencyResolver.registerDependencyFactories([new ComponentDependencyFactory(componentAspect)]);
