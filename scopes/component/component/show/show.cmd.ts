@@ -9,7 +9,7 @@ import { ComponentID } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
 import { reportLegacy, actionLegacy } from './legacy-show/show-legacy-cmd';
 import { ComponentMain } from '../component.main.runtime';
-import { isLikelyPackageName, resolveComponentIdFromPackageNameStandalone } from '../standalone-package-name-resolver';
+import { isLikelyPackageName, resolveComponentIdFromPackageName } from '@teambit/pkg.modules.component-package-name';
 
 export class ShowCmd implements Command {
   name = 'show <component-name>';
@@ -44,7 +44,7 @@ to see the legacy bit show, please use "--legacy" flag`);
       if (!host.getRemoteComponent) {
         throw new Error('Component Host does not implement getRemoteComponent()');
       }
-      const id = ComponentID.fromString(idStr); // user used --remote so we know it has a scope
+      const id = await host.resolveComponentId(idStr);
       const component = await host.getRemoteComponent(id);
       return component;
     }
@@ -63,7 +63,7 @@ to see the legacy bit show, please use "--legacy" flag`);
   private async resolveIdWithoutWorkspace(id: string): Promise<string> {
     if (isLikelyPackageName(id)) {
       try {
-        const compId = await resolveComponentIdFromPackageNameStandalone(id, this.component.dependencyResolver);
+        const compId = await resolveComponentIdFromPackageName(id, this.component.dependencyResolver);
         return compId.toString();
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
