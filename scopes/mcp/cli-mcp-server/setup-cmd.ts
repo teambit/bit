@@ -44,7 +44,14 @@ export class McpSetupCmd implements Command {
 
       const scope = isGlobal ? 'global' : 'workspace';
       const editorName = this.mcpServerMain.getEditorDisplayName(editor);
-      return chalk.green(`✓ Successfully configured ${editorName} MCP integration (${scope})`);
+
+      // Get the config file path based on the editor type
+      const configPath = this.mcpServerMain.getEditorConfigPath(editor, isGlobal);
+
+      return chalk.green(
+        `✓ Successfully configured ${editorName} MCP integration (${scope})\n` +
+          `  Configuration written to: ${chalk.cyan(configPath)}`
+      );
     } catch (error) {
       const editorName = this.mcpServerMain.getEditorDisplayName(editor);
       return chalk.red(`Error setting up ${editorName} integration: ${(error as Error).message}`);
