@@ -33,7 +33,6 @@ import { MissingCompsToMerge } from './exceptions/missing-comps-to-merge';
 import { MergeAbortLaneCmd, MergeAbortOpts } from './merge-abort.cmd';
 import { LastMerged } from './last-merged';
 import { MergeMoveLaneCmd } from './merge-move.cmd';
-import { DETACH_HEAD, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import { LanesCheckConflictsRoute } from './lanes-check-conflicts.route';
 
@@ -62,7 +61,7 @@ export type MergeLaneOptions = {
   fetchCurrent?: boolean; // needed when merging from a bare-scope (because it's empty)
   detachHead?: boolean;
 };
-export type ConflictPerId = { id: ComponentID; files: string[]; config?: boolean, configConflict?: string };
+export type ConflictPerId = { id: ComponentID; files: string[]; config?: boolean; configConflict?: string };
 
 export class MergeLanesMain {
   constructor(
@@ -268,15 +267,8 @@ export class MergeLanesMain {
     return { mergeResults, deleteResults, configMergeResults, mergedSuccessfullyIds, conflicts };
   }
 
-  private validateMergeFlags(otherLaneId: LaneId,
-    currentLaneId: LaneId,
-    options: MergeLaneOptions
-  ) {
-    const {
-      tag,
-      resolveUnrelated,
-      detachHead,
-    } = options;
+  private validateMergeFlags(otherLaneId: LaneId, currentLaneId: LaneId, options: MergeLaneOptions) {
+    const { tag, resolveUnrelated, detachHead } = options;
 
     if (tag && !currentLaneId.isDefault()) {
       throw new BitError(`--tag only possible when on main. currently checked out to ${currentLaneId.toString()}`);
@@ -291,25 +283,13 @@ export class MergeLanesMain {
         `unable to resolve unrelated when on main. switch to ${otherLaneId.toString()} and run "bit lane merge main --resolve-unrelated"`
       );
     }
-    if (detachHead && !isFeatureEnabled(DETACH_HEAD)) {
-      throw new BitError(`unable to detach head. the feature is not enabled`);
-    }
     if (detachHead && !currentLaneId.isDefault()) {
       throw new BitError(`unable to detach head. the current lane is not main`);
     }
   }
 
-  private async resolveMergeContext(
-    otherLaneId: LaneId,
-    currentLaneId: LaneId,
-    options: Partial<MergeLaneOptions>
-  ) {
-    const {
-      skipFetch,
-      excludeNonLaneComps,
-      shouldIncludeUpdateDependents,
-      fetchCurrent,
-    } = options;
+  private async resolveMergeContext(otherLaneId: LaneId, currentLaneId: LaneId, options: Partial<MergeLaneOptions>) {
+    const { skipFetch, excludeNonLaneComps, shouldIncludeUpdateDependents, fetchCurrent } = options;
     const legacyScope = this.scope.legacyScope;
     if (fetchCurrent && !currentLaneId.isDefault()) {
       // if current is default, it'll be fetch later on
@@ -365,7 +345,7 @@ export class MergeLanesMain {
       otherLane,
       laneToFetchArtifactsFrom,
       idsToMerge,
-    }
+    };
   }
 
   /**
@@ -382,11 +362,7 @@ export class MergeLanesMain {
     const otherLaneId: LaneId = await legacyScope.lanes.parseLaneIdFromString(sourceLaneIdStr);
     const currentLaneId: LaneId = await legacyScope.lanes.parseLaneIdFromString(targetLaneIdStr);
     options.excludeNonLaneComps = true;
-    const { currentLane, otherLane, idsToMerge } = await this.resolveMergeContext(
-      otherLaneId,
-      currentLaneId,
-      options
-    );
+    const { currentLane, otherLane, idsToMerge } = await this.resolveMergeContext(otherLaneId, currentLaneId, options);
 
     const allComponentsStatus = await this.merging.getMergeStatus(
       idsToMerge,
@@ -408,7 +384,7 @@ export class MergeLanesMain {
       if (files.length || config) {
         const configData = configMergeResults.find((co) => co.compIdStr === c.id.toStringWithoutVersion());
         const configConflict = configData?.generateMergeConflictFile() || undefined;
-        conflicts.push({ id: c.id, files: files.map(f => f.filePath), config, configConflict });
+        conflicts.push({ id: c.id, files: files.map((f) => f.filePath), config, configConflict });
       }
     });
 
