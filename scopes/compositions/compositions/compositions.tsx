@@ -88,7 +88,7 @@ export function Compositions({ menuBarWidgets, emptyState, usePreviewSandboxSlot
   useEffect(() => setSidebarOpenness(showSidebar), [showSidebar]);
   return (
     <CompositionContextProvider queryParams={compositionParams} setQueryParams={setCompositionParams}>
-      <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
+      <SplitPane layout={sidebarOpenness} size="80%" className={styles.compositionsPage}>
         <Pane className={styles.left}>
           <CompositionsMenuBar menuBarWidgets={menuBarWidgets} className={styles.menuBar}>
             <Tooltip content={'Open in new tab'} placement="right">
