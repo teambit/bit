@@ -639,6 +639,7 @@
     },
     "nodeVersion": "22.14.0",
     "engineStrict": true,
+    // This is a temporary workaround to fix "bit compile" on macOS and Windows.
     "packageImportMethod": "copy",
     "packageManagerArgs": [],
     "devFilePatterns": [
