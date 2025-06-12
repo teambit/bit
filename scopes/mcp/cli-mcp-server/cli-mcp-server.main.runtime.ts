@@ -1225,6 +1225,23 @@ export class CliMcpServerMain {
     return McpSetupUtils.getEditorDisplayName(editor);
   }
 
+  /**
+   * Get the path to the editor config file based on editor type and scope
+   */
+  getEditorConfigPath(editor: string, isGlobal: boolean, workspaceDir?: string): string {
+    const editorLower = editor.toLowerCase();
+
+    if (editorLower === 'vscode') {
+      return McpSetupUtils.getVSCodeSettingsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'cursor') {
+      return McpSetupUtils.getCursorSettingsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'windsurf') {
+      return McpSetupUtils.getWindsurfSettingsPath(isGlobal, workspaceDir);
+    }
+
+    throw new Error(`Editor "${editor}" is not supported yet.`);
+  }
+
   async setupEditor(editor: string, options: SetupOptions, workspaceDir?: string): Promise<void> {
     const supportedEditors = ['vscode', 'cursor', 'windsurf'];
     const editorLower = editor.toLowerCase();
