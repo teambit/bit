@@ -9,20 +9,27 @@ applyTo: '**'
 - Your goal is to efficiently automate Bit workflows and help users manage and reuse components.
 - You will achieve this by using the provided MCP tools and adhering strictly to the following rules and workflows.
 
+## Core Philosophy for Building with Bit
+
+- **Deconstruct to Compose:** Build applications by composing independent and reusable components, with each component being developed, tested, and versioned in isolation.
+- **Autonomous Components:** Use the Bit MCP to make these components truly autonomous, allowing them to be managed and shared from any codebase without being coupled to a specific project's architecture.
+- **Scalable Collaboration:** The ultimate goal is to create a shared "component economy" where teams can collaborate, accelerate development, and ensure consistency by assembling applications from this distributed system of components.
+
 ## Critical Rules of Engagement - do these steps before any tool or command execution!!!
 
-1.  **Use Up-to-Date Information(MANDATORY):** ALWAYS start any task by using `bit_workspace_info` to understand the current state of the workspace (list components, templates, dependencies, etc).
-2.  **MCP Tools First:** You MUST use the provided MCP tools to interact with Bit. Do NOT run commands directly in a terminal shell, with a few specific exceptions.
-3.  **Reuse Before Creating or Modifying(MANDATORY):** Before creating _any_ new component or modify _any_ file, you MUST first search for existing components.
-    - Use `bit_workspace_info` to check for local and existing components.
-    - Use `bit_remote_search` to find components on the remote scope.
-    - Present findings to the user, even if you think creating a new component is simpler.
-4.  **Do not rely on cached knowledge:** Always run `bit_command_help` for command details.
-5.  **No Relative Imports To Components:** Always import a component using the package name, so it is used through `node_modules`.
-6.  **Prefer using Bit:** Every time you want to operate in this project (editing code, creating new code, etc), consider using any of the Bit MCP tools or Bit CLI commands to do so.
-7.  **Prioritize creating Bit components and composing over adding functionality to existing components:** New functionality should be a dependency, unless the user specifically asks for a new functionality added to an existing component.
-8.  **Use the `bit_commands_list` to understand available commands:** This will help you decide which command to use for a specific operation.
-9.  **User may use different terms to describe components:** Be flexible and understand that users may refer to components as "features", "apps", "modules", "pages" or "services". Always clarify with the user what they mean.
+1. **Use Up-to-Date Information(MANDATORY):** ALWAYS start any task by using `bit_workspace_info` to understand the current state of the workspace (list components, templates, dependencies, etc).
+2. **MCP Tools First:** You MUST use the provided MCP tools to interact with Bit. Do NOT run commands directly in a terminal shell, with a few specific exceptions.
+3. **Do not rely on cached knowledge:** Always run `bit_commands_list` and `bit_command_help` for command details.
+4. **Prefer using Bit:** Every time you want to operate in this project (editing code, creating new code, etc), consider using any of the Bit MCP tools or Bit CLI commands to do so.
+
+## Core Principles of Building with Bit
+
+- **Reuse Before Creating or Modifying(MANDATORY):** Before creating _any_ new component or modify _any_ file, you MUST first search for existing components.
+  - Use `bit_workspace_info` to check for local and existing components.
+  - Use `bit_remote_search` to find components on the remote scope.
+  - Present findings to the user, even if you think creating a new component is simpler.
+- **No Relative Imports To Components:** Always import a component using the package name, so it is used through `node_modules`.
+- You should always aim to code APIs in the dependent component and use them in the dependency (e.g. in React, aim to have prop-types instead of always passing children to be rendered in a dependency).
 
 ## Tooling & Command Execution Hierarchy
 
@@ -60,20 +67,18 @@ This is the decision-making process for executing any Bit operation.
 
 ### Workflow: Generating New Components, Feature or Apps
 
-- **Follow Critical Rule #3 Reuse Before Creating or Modifying.**
+- **Follow Core Principle #1 Reuse Before Creating or Modifying.**
 - `bit_workspace_info` lists templates for new components.
 - If a new component is necessary, clarify the TEMPLATE and combination of NAMESPACE(s) (optional) and NAME with the user.
 - Run `bit_component_details` on new components gives information on them, this is useful for making code changes or composing the component into another (as a dependency).
-- After generating a new component, ask if to add implementation to the new component and remember to update all relevant files (e.g. `*.composition.*`, `*.docs.mdx`, `*.spec.*`).
+- After generating a new component or app, ask the user what they want to be implemented in the new component or app.
 
 ### Workflow: Adding Functionality (feature, page, module, function, etc) to Bit Components and Apps
 
-- **Follow Critical Rule #3 Reuse Before Creating.**
+- **Follow Critical Principle #1 Reuse Before Creating or Modifying.**
 - If a potentially reusable component is found, use it as a dependency in the component you want to modify.
   **Hint:** use `bit_component_details` to get API references and documentation.
-  **Follow Critical Rule #5 No Relative Imports Between Components**.
-- Validate with user if they want the new functionality to be in a new component before generating any code in any component.
-  - If need to create a new component, clarify the TEMPLATE and combination of NAMESPACE(s) (optional) and NAME with the user.
+  **Follow Critical Principle #2 No Relative Imports Between Components**.
 - After modifying component implementation, always consider updating the following component files `*.composition.*`, `*.docs.mdx`, `*.spec.*`.
 
 ### Workflow: USE or DEVELOP a Component
@@ -105,4 +110,5 @@ This is the decision-making process for executing any Bit operation.
 
 ## Pointers to remember:
 
-- For generating ESlint or TypeScript configuration files execute the command `bit workspace-config write --clean`
+- For generating ESlint or TypeScript configuration files execute the command `bit ws-config write --clean`
+- User may use different terms to describe components. Be flexible and understand that users may refer to components as "features", "apps", "modules", "pages" or "services".
