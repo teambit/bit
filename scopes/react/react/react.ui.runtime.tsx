@@ -10,6 +10,7 @@ import { reactRenderer } from '@teambit/api-reference.renderers.react';
 import { ReactAspect } from './react.aspect';
 import { HighlighterWidget } from './highlighter-widget';
 import { ReactSchema } from './react.schema';
+import { tempRenderer } from './temp.renderer';
 
 export class ReactUI {
   static runtime = UIRuntime;
@@ -27,6 +28,8 @@ export class ReactUI {
 
     apiUI.registerSchemaClasses(() => [ReactSchema]);
     apiUI.registerAPINodeRenderer([reactRenderer]);
+    apiUI.registerAPINodeRenderer([tempRenderer]);
+    console.log('Temp renderer registered:', tempRenderer, 4);
 
     compositionsUI.registerMenuWidget({
       location: 'start',
