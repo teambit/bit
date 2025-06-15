@@ -1,3 +1,21 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+.tab {
+  > div:first-child {
+    border: none;
+    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  }
+  > div:last-child {
+    border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
+  }
+}
+
 .linkWrapper {
   padding: 0 12px;
   display: flex;
@@ -120,6 +138,10 @@
   &:active {
     color: inherit;
   }
+}
+
+.noLiveControls {
+  padding: 12px;
 }
 
 .tabs {

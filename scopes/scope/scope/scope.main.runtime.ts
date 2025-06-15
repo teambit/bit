@@ -1201,7 +1201,7 @@ export class ScopeMain implements ComponentFactory {
         await this.legacyScope.reloadScopeJson();
       },
       getPath: () => this.legacyScope.scopeJson.scopeJsonPath,
-    }
+    };
   }
 
   async isModified(): Promise<boolean> {
@@ -1250,8 +1250,7 @@ export class ScopeMain implements ComponentFactory {
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver,
-      configStore]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver, configStore]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -1262,7 +1261,7 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain,
       EnvsMain,
       DependencyResolverMain,
-      ConfigStoreMain
+      ConfigStoreMain,
     ],
     config: ScopeConfig,
     [

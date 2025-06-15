@@ -27,7 +27,7 @@
 
 Bit supports all tooling in the JS ecosystem and comes out of the box with official dev environments for [NodeJS](https://bit.dev/docs/backend-intro), [React](https://bit.dev/docs/react-intro), [Angular](https://bit.dev/docs/angular-introduction), [Vue](https://bit.dev/docs/vue-intro), [React Native](https://bit.dev/docs/react-native-intro), [NextJS](https://bit.dev/docs/quick-start/hello-world-nextjs) and [far more](https://bit.dev/docs). All are native to TypeScript and ESM and equipped with the best dev tooling.
 
-Bit is a fit to every codebase structure. You can use Bit components in a monorepo, polyrepo, or even without repositories at all. 
+Bit is a fit to every codebase structure. You can use Bit components in a monorepo, polyrepo, or even without repositories at all.
 
 ## Getting started
 
@@ -71,7 +71,7 @@ Create a feature composing [React](https://bit.dev/docs/react/react-intro), [Ang
 bit create aspect people
 ```
 
-You can find simple guides for creating NodeJS modules, UI components and apps, backend services and more on the [Create Component docs](https://bit.dev/docs/getting-started/composing/creating-components/). 
+You can find simple guides for creating NodeJS modules, UI components and apps, backend services and more on the [Create Component docs](https://bit.dev/docs/getting-started/composing/creating-components/).
 
 You can add API to the people aspect to leverage as introducing new features into the platform. Dive deeper into [creating features](docs/getting-started/composing/create-feature) or optionally learn to create and maintain [independent feature workspaces](docs/workspaces/feature-workspace).
 
@@ -88,10 +88,10 @@ export const AcmePlatform = HarmonyPlatform.from({
   name: 'acme-platform',
   // use the Bit default platform engineering aspect
   platform: [SymphonyPlatformAspect],
-  
+
   aspects: [
     // compose the people feature into the platform
-    PeopleAspect
+    PeopleAspect,
   ],
 });
 ```
@@ -122,8 +122,8 @@ export class PeopleBrowser {
     symphonyPlatform.registerRoute([
       {
         path: '/login',
-        component: () => <Login />
-      }
+        component: () => <Login />,
+      },
     ]);
 
     return people;
@@ -131,9 +131,9 @@ export class PeopleBrowser {
 }
 ```
 
-Head to `http://localhost:3000/login` to view your new login page. 
+Head to `http://localhost:3000/login` to view your new login page.
 
-You can use `bit templates` to list official templates or find guides for creating React hooks, backend services, NodeJS modules, UI components and more on our [create components page](/getting-started/composing/creating-components). 
+You can use `bit templates` to list official templates or find guides for creating React hooks, backend services, NodeJS modules, UI components and more on our [create components page](/getting-started/composing/creating-components).
 Optionally, use `bit start` to run the Bit UI to preview components in isolation.
 
 ### Release and deploy
