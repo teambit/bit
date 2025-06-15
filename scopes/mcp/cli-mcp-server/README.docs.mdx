@@ -18,7 +18,7 @@ This server acts as a bridge between MCP clients (such as VS Code, AI tools, or 
 The Bit CLI MCP Server is included with Bit. If you have Bit installed, you can run the server using:
 
 ```
-bit mcp-server
+bit mcp-server start
 ```
 
 ## Usage
@@ -26,16 +26,13 @@ bit mcp-server
 ### Command-Line Options
 
 ```
-bit mcp-server [options]
+bit mcp-server start [options]
 ```
 
 Options:
 
-- `-e, --extended`: Enable the full set of Bit CLI commands as MCP tools
-- `--consumer-project`: For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote-search" tools and automatically adds the "--remote" flag to relevant commands.
-- `--include-only <commands>`: Specify a subset of commands to expose as MCP tools (comma-separated list)
+- `--consumer-project`: For non-Bit workspaces that only consume Bit component packages. Enables only "bit_remote_search" and "bit_remote_component_details" tools and automatically adds the "--remote" flag to relevant commands.
 - `--include-additional <commands>`: Add specific commands to the available tools (comma-separated list)
-- `--exclude <commands>`: Prevent specific commands from being exposed (comma-separated list)
 
 ### Integrating with IDEs
 
@@ -67,11 +64,8 @@ This command automatically configures the MCP server settings in your chosen edi
 #### Configuration Options
 
 - `--global`: Apply configuration globally (user settings) instead of workspace settings
-- `--extended`: Configure with extended mode enabled
 - `--consumer-project`: Configure for consumer projects
-- `--include-only <commands>`: Specify subset of commands to expose
 - `--include-additional <commands>`: Add specific commands to the available tools
-- `--exclude <commands>`: Prevent specific commands from being exposed
 
 #### Examples
 
@@ -79,11 +73,11 @@ This command automatically configures the MCP server settings in your chosen edi
 # Basic VS Code setup (workspace level)
 bit mcp-server setup
 
-# Global setup for Cursor with extended mode
-bit mcp-server setup cursor --global --extended
+# Global setup for Cursor
+bit mcp-server setup cursor --global
 
-# Setup for Windsurf with consumer project mode
-bit mcp-server setup windsurf --consumer-project
+# Setup with consumer project mode
+bit mcp-server setup --consumer-project
 ```
 
 #### Manual Configuration
@@ -99,7 +93,7 @@ If you need to manually configure the settings, here's a basic example for VS Co
     "servers": {
       "bit-cli": {
         "command": "bit",
-        "args": ["mcp-server"]
+        "args": ["mcp-server", "start"]
       }
     }
   }
@@ -112,7 +106,7 @@ If you need to manually configure the settings, here's a basic example for VS Co
 import { McpClient } from '@modelcontextprotocol/sdk/client';
 
 async function example() {
-  const client = await McpClient.spawn('bit', ['mcp-server']);
+  const client = await McpClient.spawn('bit', ['mcp-server', 'start']);
 
   // Call a Bit CLI tool via MCP
   const result = await client.callTool('bit_status', { cwd: '/path/to/workspace' });
@@ -125,7 +119,7 @@ async function example() {
 
 ## Available Tools
 
-The Bit CLI MCP Server operates in three modes and provides several specialized tools:
+The Bit CLI MCP Server operates in two modes and provides several specialized tools:
 
 ### Default Mode
 
@@ -147,29 +141,16 @@ In default mode, the server exposes a minimal set of essential tools focused on 
 
 This mode is designed for applications or projects that are not Bit workspaces but need to consume or work with Bit components as packages. It provides a minimal set of tools focused on component discovery and information:
 
-- `bit_schema`: Retrieves component API schema from remote scopes (automatically adds `--remote` flag)
-- `bit_show`: Displays component information from remote scopes (automatically adds `--remote` flag)
+- `bit_remote_search`: Search for components in remote scopes
+- `bit_remote_component_details`: Get detailed information about a remote component including basic info and its public API schema (combines the functionality of show and schema commands)
 
 In this mode:
 
 1. You don't need a Bit workspace initialization
-2. The `--remote` flag is automatically added to `show` and `schema` commands
-3. The `cwd` parameter is still required but can be any directory (not necessarily a Bit workspace)
-4. You can still add additional tools with the `--include-additional` flag
-
-### Extended Mode (--extended)
-
-When started with the `--extended` flag, the server exposes nearly all Bit CLI commands as MCP tools, including:
-
-- All lane sub-commands (remove, alias, rename, diff, change-scope, import, fetch, eject, history, etc.)
-- Development tools (build, lint, format)
-- Package management (uninstall, update)
-- Component operations (recover, fork, rename)
-- Workspace management (ws-config, stash, aspect)
-- Analysis tools (insight, deps, why)
-- And many more
-
-> **Note:** When using extended mode, some AI models (particularly Gemini and ChatGPT) may struggle with the high number of available tools and respond with "400 Bad Request" or "500 Server Error" errors. This is not due to any issue with specific tools, but rather with how these models handle large tool sets. Claude Sonnet tends to handle extended mode better. If you encounter these errors, try using default mode or selectively adding only the tools you need via the `--include-additional` flag.
+2. Only these 2 tools are available (no workspace-specific tools)
+3. The `--remote` flag is automatically added to component detail queries
+4. The `cwd` parameter is still required but can be any directory (not necessarily a Bit workspace)
+5. You can still add additional tools with the `--include-additional` flag
 
 ## Tool Parameters
 
@@ -187,21 +168,56 @@ Example tool call for `bit_status`:
 
 ## Custom Tool Selection
 
-To customize the available tools beyond the default set or extended mode:
+To customize the available tools:
 
 ```
-# Include only specific tools
-bit mcp-server --include-only "status,show,tag,snap,import,export"
-
 # Add specific tools to the available tools
-bit mcp-server --include-additional "build,lint,format,create,schema"
+bit mcp-server start --include-additional "build,lint,format,create,schema"
 
 # For consumer projects (non-Bit workspaces)
-bit mcp-server --consumer-project
+bit mcp-server start --consumer-project
 
 # Add specific tools to the consumer project set
-bit mcp-server --consumer-project --include-additional "deps,get,preview"
+bit mcp-server start --consumer-project --include-additional "deps,get,preview"
+```
 
-# Exclude specific tools from being available
-bit mcp-server --extended --exclude "checkout,remove"
+### Writing AI Assistant Rules
+
+The MCP server provides a `rules` command to create instruction files for AI assistants:
+
+```bash
+bit mcp-server rules [vscode|cursor|windsurf] [options]
+```
+
+This command creates rules/instructions markdown files that provide guidance to AI assistants on how to effectively use the Bit MCP server and follow best practices when working with Bit components.
+
+#### Supported Editors
+
+- **VS Code**: `bit mcp-server rules vscode` (or just `bit mcp-server rules`)
+- **Cursor**: `bit mcp-server rules cursor`
+- **Windsurf**: `bit mcp-server rules windsurf`
+
+#### Configuration Options
+
+- `--global`: Write rules to global configuration (default: workspace-specific)
+- `--print`: Print rules content to screen instead of writing to file
+- `--consumer-project`: Generate rules for consumer projects that only use Bit components as packages
+
+#### Examples
+
+```bash
+# Basic VS Code rules (workspace level)
+bit mcp-server rules
+
+# Global rules for Cursor
+bit mcp-server rules cursor --global
+
+# Consumer project rules for VS Code
+bit mcp-server rules --consumer-project
+
+# Print rules content to screen for manual setup
+bit mcp-server rules --print
+
+# Print consumer project content for Windsurf (requires manual addition to .windsurfrules)
+bit mcp-server rules windsurf --print --consumer-project
 ```

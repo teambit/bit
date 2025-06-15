@@ -34,6 +34,7 @@ import { ExportPersist, PostSign } from '@teambit/scope.remote-actions';
 import { DependencyResolverAspect, DependencyResolverMain, NodeLinker } from '@teambit/dependency-resolver';
 import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
+import { isLikelyPackageName, resolveComponentIdFromPackageName } from '@teambit/pkg.modules.component-package-name';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import chokidar, { WatchOptions } from 'chokidar';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
@@ -912,6 +913,11 @@ export class ScopeMain implements ComponentFactory {
     if (id instanceof ComponentID) return id;
     if (id instanceof BitId) return this.resolveComponentIdFromBitId(id);
     const idStr = id.toString();
+
+    if (isLikelyPackageName(idStr)) {
+      return resolveComponentIdFromPackageName(idStr, this.dependencyResolver);
+    }
+
     const component = await this.legacyScope.loadModelComponentByIdStr(idStr);
     const getIdToCheck = () => {
       if (component) return idStr; // component exists in the scope with the scope-name.
@@ -1195,7 +1201,7 @@ export class ScopeMain implements ComponentFactory {
         await this.legacyScope.reloadScopeJson();
       },
       getPath: () => this.legacyScope.scopeJson.scopeJsonPath,
-    }
+    };
   }
 
   async isModified(): Promise<boolean> {
@@ -1244,8 +1250,7 @@ export class ScopeMain implements ComponentFactory {
   };
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver,
-      configStore]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain, envs, depsResolver, configStore]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
@@ -1256,7 +1261,7 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain,
       EnvsMain,
       DependencyResolverMain,
-      ConfigStoreMain
+      ConfigStoreMain,
     ],
     config: ScopeConfig,
     [

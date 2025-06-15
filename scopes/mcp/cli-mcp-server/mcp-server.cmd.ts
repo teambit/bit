@@ -3,10 +3,7 @@ import { CLIArgs, Command, CommandOptions } from '@teambit/cli';
 import { CliMcpServerMain } from './cli-mcp-server.main.runtime';
 
 export type McpStartCmdOptions = {
-  extended?: boolean;
-  includeOnly?: string;
   includeAdditional?: string;
-  exclude?: string;
   bitBin?: string;
   consumerProject?: boolean;
 };
@@ -19,21 +16,10 @@ export class McpServerCmd implements Command {
   group = 'advanced';
   loader = false;
   options = [
-    ['e', 'extended', 'Enable the full set of Bit CLI commands as MCP tools'],
-    [
-      '',
-      'include-only <commands>',
-      'Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. "status,install,compile"',
-    ],
     [
       '',
       'include-additional <commands>',
-      'Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used',
-    ],
-    [
-      '',
-      'exclude <commands>',
-      'Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes',
+      'Add specific commands to the default MCP tools set. Use comma-separated list in quotes',
     ],
     ['', 'bit-bin <binary>', 'Specify the binary to use for running Bit commands (default: "bit")'],
     [
@@ -65,21 +51,10 @@ export class McpStartCmd implements Command {
   group = 'advanced';
   loader = false;
   options = [
-    ['e', 'extended', 'Enable the full set of Bit CLI commands as MCP tools'],
-    [
-      '',
-      'include-only <commands>',
-      'Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. "status,install,compile"',
-    ],
     [
       '',
       'include-additional <commands>',
-      'Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used',
-    ],
-    [
-      '',
-      'exclude <commands>',
-      'Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes',
+      'Add specific commands to the default MCP tools set. Use comma-separated list in quotes',
     ],
     ['', 'bit-bin <binary>', 'Specify the binary to use for running Bit commands (default: "bit")'],
     [

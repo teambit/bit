@@ -79,24 +79,9 @@
     "alias": "",
     "options": [
       [
-        "e",
-        "extended",
-        "Enable the full set of Bit CLI commands as MCP tools"
-      ],
-      [
-        "",
-        "include-only <commands>",
-        "Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. \"status,install,compile\""
-      ],
-      [
         "",
         "include-additional <commands>",
-        "Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used"
-      ],
-      [
-        "",
-        "exclude <commands>",
-        "Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes"
+        "Add specific commands to the default MCP tools set. Use comma-separated list in quotes"
       ],
       [
         "",
@@ -119,24 +104,9 @@
         "alias": "",
         "options": [
           [
-            "e",
-            "extended",
-            "Enable the full set of Bit CLI commands as MCP tools"
-          ],
-          [
-            "",
-            "include-only <commands>",
-            "Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. \"status,install,compile\""
-          ],
-          [
             "",
             "include-additional <commands>",
-            "Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used"
-          ],
-          [
-            "",
-            "exclude <commands>",
-            "Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes"
+            "Add specific commands to the default MCP tools set. Use comma-separated list in quotes"
           ],
           [
             "",
@@ -159,29 +129,14 @@
         "alias": "",
         "options": [
           [
-            "e",
-            "extended",
-            "Enable the full set of Bit CLI commands as MCP tools"
-          ],
-          [
             "",
             "consumer-project",
             "Configure for non-Bit workspaces that only consume Bit component packages"
           ],
           [
             "",
-            "include-only <commands>",
-            "Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes"
-          ],
-          [
-            "",
             "include-additional <commands>",
             "Add specific commands to the default MCP tools set. Use comma-separated list in quotes"
-          ],
-          [
-            "",
-            "exclude <commands>",
-            "Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes"
           ],
           [
             "g",
@@ -197,6 +152,37 @@
           {
             "name": "editor",
             "description": "Editor to setup (default: vscode). Available: vscode, cursor, windsurf"
+          }
+        ]
+      },
+      {
+        "name": "rules [editor]",
+        "alias": "",
+        "options": [
+          [
+            "g",
+            "global",
+            "Write rules to global configuration (default: workspace-specific)"
+          ],
+          [
+            "p",
+            "print",
+            "Print rules content to screen instead of writing to file"
+          ],
+          [
+            "",
+            "consumer-project",
+            "Generate rules for consumer projects that only use Bit components as packages"
+          ]
+        ],
+        "description": "Write Bit MCP rules/instructions file for VS Code, Cursor, or print to screen",
+        "extendedDescription": "Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code and Cursor. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.",
+        "group": "ungrouped",
+        "private": false,
+        "arguments": [
+          {
+            "name": "editor",
+            "description": "Editor to write rules for (default: vscode). Available: vscode, cursor"
           }
         ]
       }

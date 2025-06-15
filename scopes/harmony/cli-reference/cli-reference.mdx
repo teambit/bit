@@ -1589,14 +1589,11 @@ this command does the following:
 **Description**: Start the MCP server  
 Start the Model Context Protocol (MCP) server with the specified configuration
 
-| **Option**                        | **Option alias** | **Description**                                                                                                                  |
-| --------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------- |
-| `--extended`                      |       `-e`       | Enable the full set of Bit CLI commands as MCP tools                                                                             |
-| `--include-only <commands>`       |                  | Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. "status,install,compile"           |
-| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used |
-| `--exclude <commands>`            |                  | Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes                                    |
-| `--bit-bin <binary>`              |                  | Specify the binary to use for running Bit commands (default: "bit")                                                              |
-| `--consumer-project`              |                  | For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools        |
+| **Option**                        | **Option alias** | **Description**                                                                                                           |
+| --------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------------- |
+| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes                                    |
+| `--bit-bin <binary>`              |                  | Specify the binary to use for running Bit commands (default: "bit")                                                       |
+| `--consumer-project`              |                  | For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools |
 
 ### mcp-server setup
 
@@ -1609,23 +1606,34 @@ Creates or updates configuration files to integrate Bit MCP server with supporte
 | -------- | :--------------------------------------------------------------------: |
 | `editor` | Editor to setup (default: vscode). Available: vscode, cursor, windsurf |
 
-| **Option**                        | **Option alias** | **Description**                                                                               |
-| --------------------------------- | :--------------: | --------------------------------------------------------------------------------------------- |
-| `--extended`                      |       `-e`       | Enable the full set of Bit CLI commands as MCP tools                                          |
-| `--consumer-project`              |                  | Configure for non-Bit workspaces that only consume Bit component packages                     |
-| `--include-only <commands>`       |                  | Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes       |
-| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes        |
-| `--exclude <commands>`            |                  | Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes |
-| `--global`                        |       `-g`       | Setup global configuration (default: workspace-specific)                                      |
+| **Option**                        | **Option alias** | **Description**                                                                        |
+| --------------------------------- | :--------------: | -------------------------------------------------------------------------------------- |
+| `--consumer-project`              |                  | Configure for non-Bit workspaces that only consume Bit component packages              |
+| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes |
+| `--global`                        |       `-g`       | Setup global configuration (default: workspace-specific)                               |
 
-| **Option**                        | **Option alias** | **Description**                                                                                                                  |
-| --------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------- |
-| `--extended`                      |       `-e`       | Enable the full set of Bit CLI commands as MCP tools                                                                             |
-| `--include-only <commands>`       |                  | Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. "status,install,compile"           |
-| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used |
-| `--exclude <commands>`            |                  | Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes                                    |
-| `--bit-bin <binary>`              |                  | Specify the binary to use for running Bit commands (default: "bit")                                                              |
-| `--consumer-project`              |                  | For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools        |
+### mcp-server rules
+
+**Usage**: `mcp-server rules [editor]`
+
+**Description**: Write Bit MCP rules/instructions file for VS Code, Cursor, or print to screen  
+Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code and Cursor. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.
+
+| **Arg**  |                            **Description**                             |
+| -------- | :--------------------------------------------------------------------: |
+| `editor` | Editor to write rules for (default: vscode). Available: vscode, cursor |
+
+| **Option**           | **Option alias** | **Description**                                                               |
+| -------------------- | :--------------: | ----------------------------------------------------------------------------- |
+| `--global`           |       `-g`       | Write rules to global configuration (default: workspace-specific)             |
+| `--print`            |       `-p`       | Print rules content to screen instead of writing to file                      |
+| `--consumer-project` |                  | Generate rules for consumer projects that only use Bit components as packages |
+
+| **Option**                        | **Option alias** | **Description**                                                                                                           |
+| --------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------------- |
+| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes                                    |
+| `--bit-bin <binary>`              |                  | Specify the binary to use for running Bit commands (default: "bit")                                                       |
+| `--consumer-project`              |                  | For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools |
 
 ---
 

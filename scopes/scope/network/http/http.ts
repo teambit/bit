@@ -122,6 +122,7 @@ export class Http implements Network {
     const processToken = globalFlags.token;
     const token = processToken || getConfig(CFG_USER_TOKEN_KEY);
     if (!token) return null;
+    logger.debug(`Http, found a token`);
 
     return token;
   }
