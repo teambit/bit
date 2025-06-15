@@ -18,14 +18,12 @@ import { Http } from '@teambit/scope.network';
 import { CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 import fetch from 'node-fetch';
 import { McpSetupCmd } from './setup-cmd';
-import { McpSetupUtils, SetupOptions } from './setup-utils';
+import { McpRulesCmd } from './rules-cmd';
+import { McpSetupUtils, SetupOptions, RulesOptions } from './setup-utils';
 
 interface CommandFilterOptions {
   additionalCommandsSet?: Set<string>;
-  userExcludeSet?: Set<string>;
   alwaysExcludeTools: Set<string>;
-  extended: boolean;
-  includeOnlySet?: Set<string>;
   consumerProject: boolean;
   consumerProjectTools: Set<string>;
 }
@@ -319,19 +317,11 @@ export class CliMcpServerMain {
     }
   }
 
-  async runMcpServer(options: {
-    extended?: boolean;
-    includeOnly?: string;
-    includeAdditional?: string;
-    exclude?: string;
-    bitBin?: string;
-    consumerProject?: boolean;
-  }) {
+  async runMcpServer(options: { includeAdditional?: string; bitBin?: string; consumerProject?: boolean }) {
     this.logger.debug(
       `[MCP-DEBUG] Starting MCP server with options: ${JSON.stringify(options)}. CWD: ${process.cwd()}`
     );
     const commands = this.cli.commands;
-    const extended = Boolean(options.extended);
     this.bitBin = options.bitBin || this.bitBin;
 
     // Tools to always exclude
@@ -350,22 +340,10 @@ export class CliMcpServerMain {
     ]);
 
     // Parse command strings from flag options
-    let includeOnlySet: Set<string> | undefined;
-    if (options.includeOnly) {
-      includeOnlySet = new Set(options.includeOnly.split(',').map((cmd) => cmd.trim()));
-      this.logger.debug(`[MCP-DEBUG] Including only commands: ${Array.from(includeOnlySet).join(', ')}`);
-    }
-
     let additionalCommandsSet: Set<string> | undefined;
     if (options.includeAdditional) {
       additionalCommandsSet = new Set(options.includeAdditional.split(',').map((cmd) => cmd.trim()));
       this.logger.debug(`[MCP-DEBUG] Including additional commands: ${Array.from(additionalCommandsSet).join(', ')}`);
-    }
-
-    let userExcludeSet: Set<string> | undefined;
-    if (options.exclude) {
-      userExcludeSet = new Set(options.exclude.split(',').map((cmd) => cmd.trim()));
-      this.logger.debug(`[MCP-DEBUG] Excluding commands: ${Array.from(userExcludeSet).join(', ')}`);
     }
 
     const server = new McpServer({
@@ -374,7 +352,7 @@ export class CliMcpServerMain {
     });
 
     // Set of tools for consumer projects (non-Bit workspaces)
-    const consumerProjectTools = new Set(['schema', 'show']);
+    const consumerProjectTools = new Set<string>();
 
     const consumerProject = Boolean(options.consumerProject);
 
@@ -384,26 +362,18 @@ export class CliMcpServerMain {
     // Validate flags combination
     if (consumerProject) {
       this.logger.debug(
-        `[MCP-DEBUG] Running MCP server in consumer project mode (for non-Bit workspaces) with tools: ${Array.from(consumerProjectTools).join(', ')} + remote-search (always available)`
+        `[MCP-DEBUG] Running MCP server in consumer project mode (for non-Bit workspaces) with tools: bit_remote_search, bit_remote_component_details`
       );
       if (options.includeAdditional) {
         this.logger.debug(
           `[MCP-DEBUG] Additional tools enabled in consumer project mode: ${options.includeAdditional}`
         );
       }
-      if (extended) {
-        this.logger.warn(
-          '[MCP-DEBUG] Warning: --consumer-project and --extended flags were both provided. The --extended flag will be ignored.'
-        );
-      }
     }
 
     const filterOptions: CommandFilterOptions = {
       additionalCommandsSet,
-      userExcludeSet,
       alwaysExcludeTools,
-      extended: consumerProject ? false : extended, // Ignore extended when consumerProject is true
-      includeOnlySet,
       consumerProject,
       consumerProjectTools,
     };
@@ -424,18 +394,25 @@ export class CliMcpServerMain {
     // Always register remote-search tool
     this.registerRemoteSearchTool(server);
 
-    // Register the bit_workspace_info tool
-    this.registerWorkspaceInfoTool(server);
+    // In consumer project mode, only register bit_remote_search and bit_remote_component_details
+    // All other tools should not be available in consumer project mode
+    if (consumerProject) {
+      // Register the new combined remote component details tool
+      this.registerRemoteComponentDetailsTool(server);
+    } else {
+      // Register the bit_workspace_info tool
+      this.registerWorkspaceInfoTool(server);
 
-    // Register the bit_component_details tool
-    this.registerComponentDetailsTool(server);
+      // Register the bit_component_details tool
+      this.registerComponentDetailsTool(server);
 
-    // Register command discovery and help tools
-    this.registerCommandsListTool(server);
-    this.registerCommandHelpTool(server);
+      // Register command discovery and help tools
+      this.registerCommandsListTool(server);
+      this.registerCommandHelpTool(server);
 
-    this.registerQueryTool(server);
-    this.registerExecuteTool(server);
+      this.registerQueryTool(server);
+      this.registerExecuteTool(server);
+    }
 
     await server.connect(new StdioServerTransport());
   }
@@ -443,24 +420,6 @@ export class CliMcpServerMain {
   private shouldIncludeCommand(cmdName: string, options: CommandFilterOptions): boolean {
     // Always exclude certain commands
     if (options.alwaysExcludeTools.has(cmdName)) return false;
-
-    // User-specified exclude takes precedence
-    if (options.userExcludeSet?.has(cmdName)) {
-      this.logger.debug(`[MCP-DEBUG] Excluding command due to --exclude flag: ${cmdName}`);
-      return false;
-    }
-
-    // If includeOnly is specified, only include those specific commands
-    if (options.includeOnlySet) {
-      const shouldInclude = options.includeOnlySet.has(cmdName);
-      if (shouldInclude) {
-        this.logger.debug(`[MCP-DEBUG] Including command due to --include-only flag: ${cmdName}`);
-      }
-      return shouldInclude;
-    }
-
-    // Extended mode includes all commands except excluded ones
-    if (options.extended) return true;
 
     // Consumer project mode: only include consumer project tools + any additional specified
     if (options.consumerProject) {
@@ -695,6 +654,50 @@ export class CliMcpServerMain {
         text: results.components.join('\n'),
       };
       return { content: [formattedResults] } as CallToolResult;
+    });
+  }
+
+  private registerRemoteComponentDetailsTool(server: McpServer) {
+    const toolName = 'bit_remote_component_details';
+    const description =
+      'Get detailed information about a remote component including basic info and its public API schema. Combines the functionality of show and schema commands for remote components.';
+    const schema: Record<string, any> = {
+      cwd: z.string().describe('Path to workspace directory'),
+      componentName: z.string().describe('Component name or component ID to get details for'),
+      includeSchema: z.boolean().optional().describe('Include component public API schema (default: true)'),
+    };
+
+    server.tool(toolName, description, schema, async (params: any) => {
+      try {
+        const { componentName, includeSchema = true, cwd } = params;
+
+        // Get basic component information using show command via direct execution
+        const showArgs = ['show', componentName, '--remote', '--legacy'];
+        const showResult = await this.runBit(showArgs, cwd);
+
+        const result: any = {
+          componentInfo: showResult.content[0].text,
+        };
+
+        // Get schema information if requested
+        if (includeSchema) {
+          try {
+            const schemaArgs = ['schema', componentName, '--remote'];
+            const schemaResult = await this.runBit(schemaArgs, cwd);
+            result.schema = schemaResult.content[0].text;
+          } catch (schemaError) {
+            this.logger.warn(
+              `[MCP-DEBUG] Failed to get schema for ${componentName}: ${(schemaError as Error).message}`
+            );
+            result.schemaError = `Failed to retrieve schema: ${(schemaError as Error).message}`;
+          }
+        }
+
+        return this.formatAsCallToolResult(result);
+      } catch (error) {
+        this.logger.error(`[MCP-DEBUG] Error in bit_remote_component_details tool: ${(error as Error).message}`);
+        return this.formatErrorAsCallToolResult(error as Error, 'getting remote component details');
+      }
     });
   }
 
@@ -1116,7 +1119,11 @@ export class CliMcpServerMain {
     this.logger.debug(`[MCP-DEBUG] Running: ${this.bitBin} ${args.join(' ')} in ${cwd}`);
     const cmd = `${this.bitBin} ${args.join(' ')}`;
     try {
-      const cmdOutput = childProcess.execSync(cmd, { cwd });
+      const cmdOutput = childProcess.execSync(cmd, {
+        cwd,
+        env: { ...process.env, BIT_DISABLE_SPINNER: '1' },
+        stdio: 'pipe',
+      });
       this.logger.debug(`[MCP-DEBUG] result. stdout: ${cmdOutput}`);
 
       return { content: [{ type: 'text', text: cmdOutput.toString() }] };
@@ -1241,6 +1248,31 @@ export class CliMcpServerMain {
     }
   }
 
+  async writeRulesFile(editor: string, options: RulesOptions, workspaceDir?: string): Promise<void> {
+    const supportedEditors = ['vscode', 'cursor'];
+    const editorLower = editor.toLowerCase();
+
+    if (!supportedEditors.includes(editorLower)) {
+      throw new Error(`Editor "${editor}" is not supported yet. Currently supported: ${supportedEditors.join(', ')}`);
+    }
+
+    // Add workspaceDir to options if provided
+    const rulesOptions: RulesOptions = { ...options };
+    if (workspaceDir) {
+      rulesOptions.workspaceDir = workspaceDir;
+    }
+
+    if (editorLower === 'vscode') {
+      await McpSetupUtils.writeVSCodeRules(rulesOptions);
+    } else if (editorLower === 'cursor') {
+      await McpSetupUtils.writeCursorRules(rulesOptions);
+    }
+  }
+
+  async getRulesContent(consumerProject: boolean = false): Promise<string> {
+    return McpSetupUtils.getDefaultRulesContent(consumerProject);
+  }
+
   static slots = [];
   static dependencies = [CLIAspect, LoggerAspect];
   static runtime = MainRuntime;
@@ -1248,7 +1280,7 @@ export class CliMcpServerMain {
     const logger = loggerMain.createLogger(CliMcpServerAspect.id);
     const mcpServer = new CliMcpServerMain(cli, logger);
     const mcpServerCmd = new McpServerCmd(mcpServer);
-    mcpServerCmd.commands = [new McpStartCmd(mcpServer), new McpSetupCmd(mcpServer)];
+    mcpServerCmd.commands = [new McpStartCmd(mcpServer), new McpSetupCmd(mcpServer), new McpRulesCmd(mcpServer)];
     cli.register(mcpServerCmd);
     return mcpServer;
   }

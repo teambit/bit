@@ -197,7 +197,7 @@ export class VersionMaker {
   }
 
   private async _addDependenciesGraphToComponents(): Promise<void> {
-    if (!this.workspace) {
+    if (!this.workspace || !this.allWorkspaceComps) {
       return;
     }
     this.snapping.logger.setStatusLine('adding dependencies graph...');
@@ -209,12 +209,13 @@ export class VersionMaker {
       componentIdByPkgName,
     };
     await pMapPool(
-      this.components,
-      async (component) => {
-        if (component.state._consumer.componentMap?.rootDir) {
+      this.allComponentsToTag,
+      async (consumerComponent) => {
+        const component = this._findWorkspaceCompByConsumerComp(consumerComponent);
+        if (consumerComponent.componentMap?.rootDir && component) {
           await this.dependencyResolver.addDependenciesGraph(
             component,
-            component.state._consumer.componentMap.rootDir,
+            consumerComponent.componentMap.rootDir,
             options
           );
         }
@@ -223,6 +224,10 @@ export class VersionMaker {
     );
     this.snapping.logger.clearStatusLine();
     this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
+  }
+
+  private _findWorkspaceCompByConsumerComp(consumerComponent: ConsumerComponent): Component | undefined {
+    return this.allWorkspaceComps?.find((component) => component.id.isEqualWithoutVersion(consumerComponent.id));
   }
 
   private _getComponentIdByPkgNameMap(): Map<string, ComponentID> {

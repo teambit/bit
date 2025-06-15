@@ -173,7 +173,6 @@ export function CompositionsPanel({
                 className={classNames(styles.linkWrapper, composition === active && styles.active)}
               >
                 <a className={styles.panelLink} onClick={() => handleSelect(composition)}>
-                  <span className={styles.box}></span>
                   <span className={styles.name}>{composition.displayName}</span>
                 </a>
                 <div className={styles.right}>
@@ -184,7 +183,7 @@ export function CompositionsPanel({
                     onClick={onCompositionCodeClicked(composition)}
                   />
                   <Tooltip content="Open in new tab" placement="bottom">
-                    <a className={styles.panelLink} target="_blank" rel="noopener noreferrer" href={href}>
+                    <a className={styles.iconLink} target="_blank" rel="noopener noreferrer" href={href}>
                       <Icon className={styles.icon} of="open-tab" />
                     </a>
                   </Tooltip>
