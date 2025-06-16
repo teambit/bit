@@ -236,6 +236,12 @@ export async function convertGraphToLockfile(
       Object.assign(packages[pkgId], convertGraphPackageToLockfilePackage(graphPkg));
     }
   }
+  for (const [pkgId, graphPkg] of graph.packages.entries()) {
+    if (packages[pkgId] == null) {
+      packages[pkgId] = convertGraphPackageToLockfilePackage(graphPkg);
+      snapshots[pkgId] = {};
+    }
+  }
   const depsRequiringBuild: string[] = [];
   for (const [pkgId, { requiresBuild }] of graph.packages.entries()) {
     if (requiresBuild) {
