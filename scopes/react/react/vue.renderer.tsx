@@ -1,22 +1,19 @@
-/* eslint-disable no-console */
+// TODO: this file can be a dedicated component
 
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINode } from '@teambit/api-reference.models.api-reference-model';
 import { PropTable } from '@teambit/documenter.ui.property-table';
 import type { RowType } from '@teambit/documenter.ui.table-row';
 import type { ComponentMeta } from 'vue-component-meta';
 
-import styles from './temp.renderer.module.scss';
+import styles from './vue.renderer.module.scss';
 
-export function useMeta(apiNode: any) {
-  return (apiNode.api as any).schemaObj.meta;
+function useMeta(apiNode: APINode): ComponentMeta {
+  return (apiNode.api as any).meta as ComponentMeta;
 }
 
-export function TestMeta(meta: any) {
-  return <pre>{JSON.stringify(meta, null, 2)}</pre>;
-}
-
-export function VueSFCProps({ props, expanded = false }: { props: ComponentMeta['props']; expanded?: boolean }) {
+function VueSFCProps({ props, expanded = false }: { props: ComponentMeta['props']; expanded?: boolean }) {
   const rows: RowType[] = props
     .filter(({ global }) => !global)
     .map(({ name, default: defaultValue, required, type, description }) => {
@@ -47,7 +44,7 @@ export function VueSFCProps({ props, expanded = false }: { props: ComponentMeta[
   );
 }
 
-export function VueSFCEmits({ events, expanded = false }: { events: ComponentMeta['events']; expanded?: boolean }) {
+function VueSFCEmits({ events, expanded = false }: { events: ComponentMeta['events']; expanded?: boolean }) {
   const rows: RowType[] = events.map(({ name, type, description }) => ({
     name,
     required: false,
@@ -65,7 +62,7 @@ export function VueSFCEmits({ events, expanded = false }: { events: ComponentMet
   );
 }
 
-export function VueSFCSlots({ slots, expanded }: { slots: ComponentMeta['slots']; expanded?: boolean }) {
+function VueSFCSlots({ slots, expanded }: { slots: ComponentMeta['slots']; expanded?: boolean }) {
   const rows: RowType[] = slots.map(({ name, type, description }) => ({
     name,
     required: false,
@@ -83,7 +80,7 @@ export function VueSFCSlots({ slots, expanded }: { slots: ComponentMeta['slots']
   );
 }
 
-export function TempComponent({ apiNode }: APINodeRenderProps) {
+function VueComponent({ apiNode }: APINodeRenderProps) {
   const meta = useMeta(apiNode);
   return (
     <div className={styles.container}>
@@ -96,7 +93,7 @@ export function TempComponent({ apiNode }: APINodeRenderProps) {
   );
 }
 
-export function TempOverviewComponent({ apiNode }: APINodeRenderProps) {
+function VueOverviewComponent({ apiNode }: APINodeRenderProps) {
   const meta = useMeta(apiNode);
   return (
     <div className={styles.container}>
@@ -109,17 +106,15 @@ export function TempOverviewComponent({ apiNode }: APINodeRenderProps) {
   );
 }
 
-export function predicate(node: any): boolean {
-  return (
-    node.__schema === 'VueSchema' || (node.__schema === 'UnknownSchema' && node.schemaObj.__schema === 'VueSchema')
-  );
+function predicate(node: any): boolean {
+  return node.__schema === 'VueSchema';
 }
 
-export const tempRenderer: APINodeRenderer = {
+export const vueRenderer: APINodeRenderer = {
   predicate,
-  Component: TempComponent,
-  OverviewComponent: TempOverviewComponent,
-  nodeType: 'Vue',
+  Component: VueComponent,
+  OverviewComponent: VueOverviewComponent,
+  nodeType: 'Vue SFCs',
   icon: { name: 'Vue', url: 'https://static.bit.dev/extensions-icons/vue.svg' },
   default: true,
 };
