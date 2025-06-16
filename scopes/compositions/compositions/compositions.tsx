@@ -80,6 +80,7 @@ export function Compositions({ menuBarWidgets, emptyState, usePreviewSandboxSlot
 
   const [compositionParams, setCompositionParams] = useState<Record<string, any>>({
     fullscreen: true,
+    livecontrols: true,
   });
 
   const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);

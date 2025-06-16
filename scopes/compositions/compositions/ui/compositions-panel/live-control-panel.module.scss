@@ -1,0 +1,14 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  padding: 8px 0;
+}
+
+.item {
+  padding: 4px 8px;
+}
+
+.label {
+  font-weight: bold;
+}
