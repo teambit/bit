@@ -29,7 +29,6 @@ export class ReactUI {
     apiUI.registerSchemaClasses(() => [ReactSchema]);
     apiUI.registerAPINodeRenderer([reactRenderer]);
     apiUI.registerAPINodeRenderer([tempRenderer]);
-    console.log('Temp renderer registered:', tempRenderer, 4);
 
     compositionsUI.registerMenuWidget({
       location: 'start',
