@@ -25,7 +25,7 @@
 
 [Bit](https://bit.dev) is the AI-powered development workspace with reusable components and zero overhead for the era of AI. Bit organizes source code into composable components, empowering to build reliable, scalable and consistent applications. It supports local AI agents via MCP for creating and composing reusable components at ease.
 
-With Bit you can build:
+Features:
 
 - **Shell applications.** Compose reusable components and features into application shells.
 - **Reusable components.** Create reusable UI components and modules to reuse across your software.
