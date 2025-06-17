@@ -1,4 +1,4 @@
-import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { ExportSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { Node, SyntaxKind, ExportAssignment as ExportAssignmentNode } from 'typescript';
 import { ExportIdentifier } from '../export-identifier';
 import { SchemaExtractorContext } from '../schema-extractor-context';
@@ -14,12 +14,20 @@ export class ExportAssignmentTransformer implements SchemaTransformer {
   }
 
   async getIdentifiers(exportDec: ExportAssignmentNode) {
-    const specifier = exportDec.expression;
-    return [new ExportIdentifier(specifier.getText(), exportDec.getSourceFile().fileName)];
+    return [new ExportIdentifier('default', exportDec.getSourceFile().fileName)];
   }
 
   async transform(exportDec: ExportAssignmentNode, context: SchemaExtractorContext): Promise<SchemaNode> {
     const specifier = exportDec.expression;
-    return context.computeSchema(specifier);
+    const location = context.getLocation(exportDec);
+    const absoluteFilePath = exportDec.getSourceFile().fileName;
+
+    const exportNode = await context.getTypeRef(specifier.getText(), absoluteFilePath, location);
+
+    if (exportNode) {
+      return new ExportSchema(location, 'default', exportNode);
+    }
+
+    return new ExportSchema(location, 'default', await context.computeSchema(specifier));
   }
 }
