@@ -206,6 +206,7 @@
         "@teambit/documenter.ui.property-table": "4.1.11",
         "@teambit/documenter.ui.section": "4.1.1",
         "@teambit/documenter.ui.separator": "4.1.1",
+        "@teambit/documenter.ui.table": "4.1.10",
         "@teambit/documenter.ui.table-heading-row": "4.0.11",
         "@teambit/documenter.ui.table-row": "4.1.14",
         "@teambit/evangelist.elements.button": "1.0.6",
