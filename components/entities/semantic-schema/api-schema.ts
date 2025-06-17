@@ -54,36 +54,32 @@ export class APISchema extends SchemaNode {
     );
   }
 
-  private createSectionNameFromSchemaType(schemaType: string): string {
-    const baseName = schemaType.replace(/Schema$/, '');
-    const spacedName = baseName.replace(/([A-Z])/g, ' $1').trim();
-    return spacedName;
-  }
-
   toStringPerType() {
     const title = chalk.inverse(`API Schema of ${this.componentId.toString()}\n`);
 
     const exportGroups = this.module.exports.reduce(
       (acc, exp) => {
         const node = ExportSchema.isExportSchema(exp) ? exp.exportNode : exp;
-        const schemaType = node.__schema;
-        (acc[schemaType] = acc[schemaType] || []).push(exp);
+
+        const displayName = node.displaySchemaName;
+
+        (acc[displayName] = acc[displayName] || []).push(exp);
         return acc;
       },
       {} as { [key: string]: SchemaNode[] }
     );
 
-    const sortedSchemaTypes = Object.keys(exportGroups).sort();
+    const sortedDisplayNames = Object.keys(exportGroups).sort();
 
-    if (sortedSchemaTypes.length === 0) {
+    if (sortedDisplayNames.length === 0) {
       return title;
     }
 
-    const sections = sortedSchemaTypes.map((schemaType) => {
-      const exports = exportGroups[schemaType];
-      const sectionName = this.createSectionNameFromSchemaType(schemaType);
+    const sections = sortedDisplayNames.map((displayName) => {
+      const exports = exportGroups[displayName];
       const sectionBody = exports.map((c) => c.toString({ color: true })).join('\n');
-      return `${chalk.green.bold(sectionName)}\n${sectionBody}`;
+
+      return `${chalk.green.bold(displayName)}\n${sectionBody}`;
     });
 
     return title + sections.join('\n\n') + '\n\n';
