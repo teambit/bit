@@ -13,6 +13,7 @@ export interface ISchemaNode {
   getNodes(): SchemaNode[];
   findNode(predicate: (node: SchemaNode) => boolean, visitedNodes?: Set<SchemaNode>): SchemaNode | undefined;
   getAllNodesRecursively(visitedNodes?: Set<SchemaNode>): SchemaNode[];
+  displaySchemaName: string;
 }
 
 /**
