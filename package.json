@@ -44,6 +44,7 @@
     "ts-coverage": "type-coverage",
     "check-types": "tsc --noEmit",
     "oxlint": "oxlint --deny-warnings",
+    "oxlint:with-react": "oxlint --deny-warnings --react-plugin",
     "lint:only": "eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\"",
     "lint": "tsc --noEmit && eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\"",
     "lint:table": "eslint \"{e2e,scopes,components}/**/*.{ts,tsx}\" --format table",
