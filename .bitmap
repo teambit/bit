@@ -2313,9 +2313,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/vue/vue",
         "config": {
-            "teambit.harmony/aspect": {},
+            "teambit.harmony/envs/core-aspect-env@0.0.69": {},
             "teambit.envs/envs": {
-                "env": "teambit.harmony/aspect"
+                "env": "teambit.harmony/envs/core-aspect-env"
             }
         }
     },
