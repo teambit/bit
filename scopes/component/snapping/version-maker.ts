@@ -233,12 +233,17 @@ export class VersionMaker {
   private _getComponentIdByPkgNameMap(): Map<string, ComponentID> {
     if (!this.allWorkspaceComps) throw new Error('please make sure to populate this.allWorkspaceComps before');
     const componentIdByPkgName = new Map<string, ComponentID>();
-    this.components.forEach((component, index) => {
-      const pkgName = this.dependencyResolver.getPackageName(component);
-      componentIdByPkgName.set(pkgName, this.allComponentsToTag[index].id);
+    this.allComponentsToTag.forEach((consumerComponent) => {
+      const component = this._findWorkspaceCompByConsumerComp(consumerComponent);
+      if (component) {
+        const pkgName = this.dependencyResolver.getPackageName(component);
+        componentIdByPkgName.set(pkgName, consumerComponent.id);
+      }
     });
     for (const workspaceComp of this.allWorkspaceComps) {
-      if (this.components.every((snappedComponent) => !snappedComponent.id.isEqualWithoutVersion(workspaceComp.id))) {
+      if (
+        this.allComponentsToTag.every((snappedComponent) => !snappedComponent.id.isEqualWithoutVersion(workspaceComp.id)
+      )) {
         componentIdByPkgName.set(this.dependencyResolver.getPackageName(workspaceComp), workspaceComp.id);
       }
     }
