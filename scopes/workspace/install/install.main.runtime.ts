@@ -325,6 +325,7 @@ export class InstallMain {
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     };
     const { linkedRootDeps } = await this.calculateLinks(linkOpts);
+    await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
     // eslint-disable-next-line prefer-const
     let { mergedRootPolicy, componentsAndManifests: current } = await this._getComponentsManifestsAndRootPolicy(
       installer,
