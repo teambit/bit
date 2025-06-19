@@ -31,7 +31,7 @@ import { PnpmAspect } from '@teambit/pnpm';
 import { PreviewAspect } from '@teambit/preview';
 import { ComponentSizerAspect } from '@teambit/component-sizer';
 import { ReactAspect } from '@teambit/react';
-import { VueAspect } from '@teambit/vue';
+import { VueAspect } from '@teambit/vue-aspect';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { SchemaAspect } from '@teambit/schema';
 import { PubsubAspect } from '@teambit/pubsub';

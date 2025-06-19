@@ -2305,8 +2305,8 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/version-history"
     },
-    "vue": {
-        "name": "vue",
+    "vue-aspect": {
+        "name": "vue-aspect",
         "scope": "",
         "version": "",
         "defaultScope": "teambit.vue",
