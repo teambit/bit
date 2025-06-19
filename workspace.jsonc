@@ -585,6 +585,7 @@
         "vinyl-file": "3.0.0",
         "vscode-jsonrpc": "6.0.0",
         "vscode-languageserver-types": "3.16.0",
+        "vue-component-meta": "^2.2.10",
         "webpack": "5.97.1",
         "webpack-assets-manifest": "5.1.0",
         "webpack-dev-server": "4.15.2",

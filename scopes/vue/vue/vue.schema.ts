@@ -1,7 +1,4 @@
-// TODO: this file can be a dedicated component
-
-import type { Location } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { type Location, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 
 /**
  * Vue SFC schema node.

@@ -2305,6 +2305,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/version-history"
     },
+    "vue": {
+        "name": "vue",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.vue",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/vue/vue",
+        "config": {
+            "teambit.harmony/aspect": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/aspect"
+            }
+        }
+    },
     "watcher": {
         "name": "watcher",
         "scope": "teambit.workspace",

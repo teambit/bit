@@ -1,5 +1,3 @@
-// TODO: this file can be a dedicated component
-
 import React from 'react';
 import type { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import type { APINode } from '@teambit/api-reference.models.api-reference-model';
