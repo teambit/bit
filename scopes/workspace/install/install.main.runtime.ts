@@ -325,7 +325,6 @@ export class InstallMain {
       linkNestedDepsInNM: !this.workspace.isLegacy && !hasRootComponents,
     };
     const { linkedRootDeps } = await this.calculateLinks(linkOpts);
-    await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
     // eslint-disable-next-line prefer-const
     let { mergedRootPolicy, componentsAndManifests: current } = await this._getComponentsManifestsAndRootPolicy(
       installer,
@@ -647,6 +646,7 @@ export class InstallMain {
       linkedRootDeps: Record<string, string>;
     }
   ): Promise<{ componentsAndManifests: ComponentsAndManifests; mergedRootPolicy: WorkspacePolicy }> {
+    await this.workspace.loadExternalEnvs(await this.workspace.getMany(this.workspace.listIds()));
     const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy();
     await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
     const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, options);

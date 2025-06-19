@@ -2412,6 +2412,47 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     });
     return componentPolicies;
   }
+
+  /**
+   * This will ensue that the envs of the components are loaded before the compilation starts.
+   * @param components
+   */
+  public async loadExternalEnvs(components: Component[]) {
+    const componentsIdsStr = components.map((c) => c.id.toString());
+    const envIdsCompIdsMap = {};
+    const compsWithWrongEnvId: string[] = [];
+    await Promise.all(
+      components.map(async (component) => {
+        // It's important to use calculate here to get the real id even if it's not loaded
+        const envId = (await this.envs.calculateEnvId(component)).toString();
+        // This might be different from the env id above, because the component might be loaded before the env
+        // in that case we will need to clear the cache of that component
+        const envIdByGet = this.envs.getEnvId(component);
+        if (envId !== envIdByGet) {
+          compsWithWrongEnvId.push(component.id.toString());
+        }
+        // If it's part of the components it will be handled later as it's not external
+        // and might need to be compiled as well
+        if (componentsIdsStr.includes(envId)) return undefined;
+        if (!envIdsCompIdsMap[envId]) envIdsCompIdsMap[envId] = [component.id.toString()];
+        envIdsCompIdsMap[envId].push(component.id.toString());
+      })
+    );
+    const externalEnvsIds = Object.keys(envIdsCompIdsMap);
+
+    if (!externalEnvsIds.length) return;
+    const nonLoadedEnvs = externalEnvsIds.filter((envId) => !this.envs.isEnvRegistered(envId));
+    await this.loadAspects(nonLoadedEnvs);
+    const idsToClearCache: string[] = uniq(
+      nonLoadedEnvs
+        .reduce((acc, envId) => {
+          const compIds = envIdsCompIdsMap[envId];
+          return [...acc, ...compIds];
+        }, [] as string[])
+        .concat(compsWithWrongEnvId)
+    );
+    this.clearComponentsCache(idsToClearCache.map((id) => ComponentID.fromString(id)));
+  }
 }
 
 /**
