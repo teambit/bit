@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { UIRuntime } from '@teambit/ui';
 import { APIReferenceAspect } from '@teambit/api-reference';
 import { VueAspect } from './vue.aspect';
 import { VueSchema } from './vue.schema';
@@ -13,7 +13,7 @@ export class VueMain {
   // in case you need to use another aspect API.
   static dependencies = [APIReferenceAspect];
 
-  static runtime = MainRuntime;
+  static runtime = UIRuntime;
 
   static async provider([apiUI]) {
     apiUI.registerSchemaClasses(() => [VueSchema]);
