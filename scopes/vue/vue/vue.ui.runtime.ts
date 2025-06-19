@@ -5,9 +5,6 @@ import { VueSchema } from './vue.schema';
 import { vueRenderer } from './vue.renderer';
 
 export class VueMain {
-  // your aspect API goes here.
-  getSomething() {}
-
   static slots = [];
   // define your aspect dependencies here.
   // in case you need to use another aspect API.

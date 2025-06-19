@@ -10,8 +10,6 @@ import { reactRenderer } from '@teambit/api-reference.renderers.react';
 import { ReactAspect } from './react.aspect';
 import { HighlighterWidget } from './highlighter-widget';
 import { ReactSchema } from './react.schema';
-// import { VueSchema } from './vue.schema';
-// import { vueRenderer } from './vue.renderer';
 
 export class ReactUI {
   static runtime = UIRuntime;
@@ -28,9 +26,7 @@ export class ReactUI {
     });
 
     apiUI.registerSchemaClasses(() => [ReactSchema]);
-    // apiUI.registerSchemaClasses(() => [VueSchema]);
     apiUI.registerAPINodeRenderer([reactRenderer]);
-    // apiUI.registerAPINodeRenderer([vueRenderer]);
 
     compositionsUI.registerMenuWidget({
       location: 'start',

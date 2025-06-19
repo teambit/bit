@@ -38,7 +38,6 @@ import { reactSchema } from './react.graphql';
 import { getTemplates } from './react.templates';
 import { ReactAppOptions } from './apps/web/react-app-options';
 import { ReactSchema } from './react.schema';
-// import { VueSchema } from './vue.schema';
 import { ReactAPITransformer } from './react.api.transformer';
 import { PrettierConfigTransformer } from '@teambit/defender.prettier.config-mutator';
 
@@ -469,7 +468,6 @@ export class ReactMain {
 
     if (application) application.registerAppType(appType);
     if (schemaMain) schemaMain.registerSchemaClasses(() => [ReactSchema]);
-    // if (schemaMain) schemaMain.registerSchemaClasses(() => [VueSchema]);
     if (tsAspect) tsAspect.registerApiTransformer([new ReactAPITransformer()]);
 
     return react;

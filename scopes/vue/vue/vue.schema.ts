@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import { type Location, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 
 /**
@@ -16,11 +17,9 @@ export class VueSchema extends SchemaNode {
     return [];
   }
 
-  toString() // options?: { color?: boolean }
-  : string {
-    // const bold = options?.color ? chalk.bold : (x: string) => x;
-    // return `${bold(this.name)}: import('vue').Component`
-    return `${this.name}: import('vue').Component`;
+  toString(options?: { color?: boolean }): string {
+    const bold = options?.color ? chalk.bold : (x: string) => x;
+    return `${bold(this.name)}: import('vue').Component`;
   }
 
   toFullSignature(): string {
