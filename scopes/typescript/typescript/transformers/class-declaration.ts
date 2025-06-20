@@ -12,7 +12,14 @@ import { Identifier } from '../identifier';
 
 export class ClassDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {
-    return node.kind === ts.SyntaxKind.ClassDeclaration;
+    if (node.kind !== ts.SyntaxKind.ClassDeclaration) {
+      return false;
+    }
+    const classNode = node as ClassDeclaration;
+    if (!classNode.members || (classNode.members as any).isMissingList) {
+      return false;
+    }
+    return true;
   }
 
   // @todo: in case of `export default class` the class has no name.

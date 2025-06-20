@@ -1,4 +1,5 @@
 import { pickBy } from 'lodash';
+import pluralize from 'pluralize';
 import { DocSchema } from './schemas';
 
 export interface ISchemaNode {
@@ -23,13 +24,12 @@ export interface ISchemaNode {
  */
 export abstract class SchemaNode implements ISchemaNode {
   readonly __schema = this.constructor.name;
-  readonly displaySchemaName = this.constructor.name
-    .replace(/Schema$/, '')
-    .replace(/([A-Z])/g, ' $1')
-    .trim()
-    .replace(/s$/, 'ses')
-    .replace(/([^s]s)$/, '$1es')
-    .replace(/([^s])$/, '$1s');
+  readonly displaySchemaName = pluralize(
+    this.constructor.name
+      .replace(/Schema$/, '')
+      .replace(/([A-Z])/g, ' $1')
+      .trim()
+  );
 
   abstract readonly location: SchemaLocation;
   readonly doc?: DocSchema;
