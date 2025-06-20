@@ -88,7 +88,7 @@ function ColorInput({ id, value, onChange }: InputComponentProps) {
   };
   return (
     <p className={classNames(styles.wrapper)}>
-      <ColorPicker id={id} value={inputValue} onColorSelect={handleChange} />
+      <ColorPicker id={id} value={inputValue} onColorSelect={handleChange} allowCustomColor />
     </p>
   );
 }

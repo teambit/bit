@@ -179,7 +179,7 @@
         "@teambit/design.ui.contributors": "0.0.514",
         "@teambit/design.ui.empty-box": "0.0.363",
         "@teambit/design.ui.icon-button": "1.0.16",
-        "@teambit/design.ui.input.color-picker": "^0.0.53",
+        "@teambit/design.ui.input.color-picker": "^0.0.55",
         "@teambit/design.ui.input.option-button": "1.0.0",
         "@teambit/design.ui.input.radio": "1.1.13",
         "@teambit/design.ui.input.toggle": "1.0.12",
