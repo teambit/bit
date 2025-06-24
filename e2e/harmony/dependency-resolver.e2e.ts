@@ -646,6 +646,9 @@ describe('dependency-resolver extension', function () {
     });
   });
   describe('component range support with snaps', () => {
+    before(() => {
+      helper = new Helper();
+    });
     describe('when snapping with ^ prefix', () => {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
