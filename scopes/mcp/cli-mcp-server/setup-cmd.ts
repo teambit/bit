@@ -10,13 +10,13 @@ export type McpSetupCmdOptions = {
 
 export class McpSetupCmd implements Command {
   name = 'setup [editor]';
-  description = 'Setup MCP integration with VS Code, Cursor, Windsurf, or other editors';
+  description = 'Setup MCP integration with VS Code, Cursor, Windsurf, Roo Code, or other editors';
   extendedDescription =
-    'Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, and Windsurf.';
+    'Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, Windsurf, and Roo Code.';
   arguments = [
     {
       name: 'editor',
-      description: 'Editor to setup (default: vscode). Available: vscode, cursor, windsurf',
+      description: 'Editor to setup (default: vscode). Available: vscode, cursor, windsurf, roo',
     },
   ];
   options = [
