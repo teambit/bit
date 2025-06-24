@@ -509,7 +509,7 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       } catch (error) {
         expect(error).to.exist;
         expect((error as Error).message).to.include('Editor "unsupported-editor" is not supported yet');
-        expect((error as Error).message).to.include('Currently supported: vscode, cursor, windsurf');
+        expect((error as Error).message).to.include('Currently supported: vscode, cursor, windsurf, roo');
       }
     });
 
@@ -605,6 +605,48 @@ describe('CliMcpServer Direct Aspect Tests', function () {
         command: 'bit',
         args: ['mcp-server', 'start'],
       });
+    });
+
+    it('should setup Roo Code integration directly', async () => {
+      await setupMcpServer.setupEditor(
+        'roo',
+        {
+          isGlobal: false,
+        },
+        setupWorkspacePath
+      );
+
+      // Verify that the mcp.json file was created in the workspace directory
+      const rooConfigPath = path.join(setupWorkspacePath, '.roo', 'mcp.json');
+      const configExists = await fs.pathExists(rooConfigPath);
+      expect(configExists).to.be.true;
+
+      // Verify the content of the config file
+      const config = await fs.readJson(rooConfigPath);
+      expect(config).to.have.property('mcpServers');
+      expect(config.mcpServers).to.have.property('bit');
+      expect(config.mcpServers.bit).to.deep.equal({
+        type: 'stdio',
+        command: 'bit',
+        args: ['mcp-server', 'start'],
+      });
+    });
+
+    it('should throw error when trying to setup Roo Code globally', async () => {
+      try {
+        await setupMcpServer.setupEditor(
+          'roo',
+          {
+            isGlobal: true,
+          },
+          setupWorkspacePath
+        );
+        expect.fail('Should have thrown an error for global Roo Code setup');
+      } catch (error) {
+        expect(error).to.exist;
+        expect((error as Error).message).to.include('Roo Code global configuration is not supported');
+        expect((error as Error).message).to.include('VS Code internal storage that cannot be accessed');
+      }
     });
 
     it('should merge with existing VS Code settings', async () => {

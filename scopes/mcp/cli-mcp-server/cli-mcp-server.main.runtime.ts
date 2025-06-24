@@ -1237,13 +1237,15 @@ export class CliMcpServerMain {
       return McpSetupUtils.getCursorSettingsPath(isGlobal, workspaceDir);
     } else if (editorLower === 'windsurf') {
       return McpSetupUtils.getWindsurfSettingsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'roo') {
+      return McpSetupUtils.getRooCodeSettingsPath(isGlobal, workspaceDir);
     }
 
     throw new Error(`Editor "${editor}" is not supported yet.`);
   }
 
   async setupEditor(editor: string, options: SetupOptions, workspaceDir?: string): Promise<void> {
-    const supportedEditors = ['vscode', 'cursor', 'windsurf'];
+    const supportedEditors = ['vscode', 'cursor', 'windsurf', 'roo'];
     const editorLower = editor.toLowerCase();
 
     if (!supportedEditors.includes(editorLower)) {
@@ -1262,6 +1264,8 @@ export class CliMcpServerMain {
       await McpSetupUtils.setupCursor(setupOptions);
     } else if (editorLower === 'windsurf') {
       await McpSetupUtils.setupWindsurf(setupOptions);
+    } else if (editorLower === 'roo') {
+      await McpSetupUtils.setupRooCode(setupOptions);
     }
   }
 
