@@ -720,7 +720,12 @@
       [
         "",
         "include-local-only",
-        "include only the components in the workspace (or local scope)"
+        "DEPRECATED: include only the components in the workspace (or local scope). This is now the default behavior."
+      ],
+      [
+        "",
+        "include-dependencies",
+        "include all dependencies recursively, not just workspace (or local scope) components"
       ],
       [
         "j",

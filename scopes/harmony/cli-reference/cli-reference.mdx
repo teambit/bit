@@ -950,14 +950,15 @@ bit export => export all staged snaps/tags of components to their remote scope. 
 
 `bit graph [id]`
 
-| **Option**              | **Option alias** | **Description**                                                                                        |
-| ----------------------- | :--------------: | ------------------------------------------------------------------------------------------------------ |
-| `--remote [remoteName]` |       `-r`       | remote name (name is optional, leave empty when id is specified)                                       |
-| `--layout <name>`       |                  | GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi] |
-| `--png`                 |                  | save the graph as a png file instead of svg. requires "graphviz" to be installed                       |
-| `--cycles`              |                  | generate a graph of cycles only                                                                        |
-| `--include-local-only`  |                  | include only the components in the workspace (or local scope)                                          |
-| `--json`                |       `-j`       | json format                                                                                            |
+| **Option**               | **Option alias** | **Description**                                                                                              |
+| ------------------------ | :--------------: | ------------------------------------------------------------------------------------------------------------ |
+| `--remote [remoteName]`  |       `-r`       | remote name (name is optional, leave empty when id is specified)                                             |
+| `--layout <name>`        |                  | GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]       |
+| `--png`                  |                  | save the graph as a png file instead of svg. requires "graphviz" to be installed                             |
+| `--cycles`               |                  | generate a graph of cycles only                                                                              |
+| `--include-local-only`   |                  | DEPRECATED: include only the components in the workspace (or local scope). This is now the default behavior. |
+| `--include-dependencies` |                  | include all dependencies recursively, not just workspace (or local scope) components                         |
+| `--json`                 |       `-j`       | json format                                                                                                  |
 
 ---
 
