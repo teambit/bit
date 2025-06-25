@@ -1731,6 +1731,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       new DevDependenciesFragment(dependencyResolver),
       new PeerDependenciesFragment(dependencyResolver),
     ]);
+    componentAspect.dependencyResolver = dependencyResolver;
     // TODO: solve this generics issue and remove the ts-ignore
     // @ts-ignore
     dependencyResolver.registerDependencyFactories([new ComponentDependencyFactory(componentAspect)]);

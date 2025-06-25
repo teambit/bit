@@ -199,7 +199,7 @@ export class SchemaMain {
     const getId = async () => {
       if (!id.startsWith('@')) return id;
       if (!this.workspace) throw new Error(`Please provide a component ID. The ${id} recognized as a package name.`);
-      const compId = await this.workspace.resolveComponentIdFromPackageName(id);
+      const compId = await this.workspace.resolveComponentIdFromPackageName(id, true);
       return compId.toString();
     };
     const compIdStr = await getId();

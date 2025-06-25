@@ -216,16 +216,14 @@ export async function install(
   logger?: Logger
 ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string; depsRequiringBuild?: DepPath[] }> {
   const externalDependencies = new Set<string>();
-  const readPackage: ReadPackageHook[] = [];
+  const readPackage = createReadPackageHooks(options);
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
     for (const [dir, { name }] of Object.entries(manifestsByPaths)) {
       if (dir !== rootDir && name) {
         externalDependencies.add(name);
       }
     }
-    readPackage.push(readPackageHook as ReadPackageHook);
   }
-  readPackage.push(removeLegacyFromDeps as ReadPackageHook);
   const overrides = {
     ...options.overrides,
   };
@@ -233,10 +231,6 @@ export async function install(
     // Harmony needs to be a singleton, so if a specific version was requested for the workspace,
     // we force that version accross the whole dependency graph.
     overrides['@teambit/harmony'] = options.forcedHarmonyVersion;
-  } else {
-    // If the workspace did not specify a harmony version in a root policy,
-    // then we remove harmony from any dependencies, so that the one linked from bvm is used.
-    readPackage.push(removeHarmonyFromDeps as ReadPackageHook);
   }
   if (!manifestsByPaths[rootDir].dependenciesMeta) {
     manifestsByPaths = {
@@ -246,9 +240,6 @@ export async function install(
         dependenciesMeta: {},
       },
     };
-  }
-  if (options?.rootComponentsForCapsules) {
-    readPackage.push(readPackageHookForCapsules as ReadPackageHook);
   }
   const { allProjects, packagesToBuild } = groupPkgs(manifestsByPaths, {
     update: options?.updateAll,
@@ -393,6 +384,31 @@ function initReporter(opts?: ReportOptions) {
     // Only those that are symlinked from outside the workspace will be hidden.
     filterPkgsDiff: (diff) => !diff.name.startsWith('@teambit/') || !diff.from,
   });
+}
+
+/**
+ * This function returns the list of hooks that are passed to pnpm
+ * for transforming the manifests of dependencies during installation.
+ */
+export function createReadPackageHooks(options: {
+  rootComponents?: boolean;
+  rootComponentsForCapsules?: boolean;
+  forcedHarmonyVersion?: string;
+}): ReadPackageHook[] {
+  const readPackage: ReadPackageHook[] = [];
+  if (options?.rootComponents && !options?.rootComponentsForCapsules) {
+    readPackage.push(readPackageHook as ReadPackageHook);
+  }
+  readPackage.push(removeLegacyFromDeps as ReadPackageHook);
+  if (!options.forcedHarmonyVersion) {
+    // If the workspace did not specify a harmony version in a root policy,
+    // then we remove harmony from any dependencies, so that the one linked from bvm is used.
+    readPackage.push(removeHarmonyFromDeps as ReadPackageHook);
+  }
+  if (options?.rootComponentsForCapsules) {
+    readPackage.push(readPackageHookForCapsules as ReadPackageHook);
+  }
+  return readPackage;
 }
 
 /**

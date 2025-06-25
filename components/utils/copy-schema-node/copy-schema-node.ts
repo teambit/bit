@@ -10,5 +10,6 @@ export function copySchemaNode(source: ISchemaNode, update: Partial<ISchemaNode>
     getNodes: update.getNodes || source.getNodes,
     findNode: update.findNode || source.findNode,
     getAllNodesRecursively: update.getAllNodesRecursively || source.getAllNodesRecursively,
+    displaySchemaName: update.displaySchemaName || source.displaySchemaName,
   };
 }

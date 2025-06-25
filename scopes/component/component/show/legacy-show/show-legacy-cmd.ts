@@ -170,6 +170,7 @@ function paintComponent(component: ConsumerComponent, componentModel: ConsumerCo
   function getFields() {
     const fields = [
       'id',
+      'packageName',
       'compiler',
       'tester',
       'language',

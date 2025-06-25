@@ -1783,7 +1783,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return this.defaultDirectory;
   }
 
-  async resolveComponentIdFromPackageName(packageName: string): Promise<ComponentID> {
+  async resolveComponentIdFromPackageName(packageName: string, keepOriginalVersion = false): Promise<ComponentID> {
     if (!packageName.startsWith('@')) {
       throw new Error(`findComponentIdFromPackageName supports only packages that start with @, got ${packageName}`);
     }
@@ -1791,7 +1791,11 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
     const fromPackageJson = await this.resolveComponentIdFromPackageJsonInNM(packageName, errMsgPrefix);
     if (fromPackageJson) return fromPackageJson;
-    const fromRegistryManifest = await this.resolveComponentIdFromRegistryManifest(packageName, errMsgPrefix);
+    const fromRegistryManifest = await this.resolveComponentIdFromRegistryManifest(
+      packageName,
+      errMsgPrefix,
+      keepOriginalVersion
+    );
     if (fromRegistryManifest) return fromRegistryManifest;
     const fromWsComponents = await this.resolveComponentIdFromWsComponents(packageName);
     if (fromWsComponents) return fromWsComponents;
@@ -1826,7 +1830,8 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
   private async resolveComponentIdFromRegistryManifest(
     packageName: string,
-    errMsgPrefix: string
+    errMsgPrefix: string,
+    keepOriginalVersion = false
   ): Promise<ComponentID | undefined> {
     const manifest = await this.dependencyResolver.fetchFullPackageManifest(packageName);
     if (!manifest) {
@@ -1837,6 +1842,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
         `${errMsgPrefix}the package.json of version "${manifest.version}" has no componentId field, it's probably not a component`
       );
     }
+    if (keepOriginalVersion) return ComponentID.fromObject(manifest.componentId as ComponentIdObj);
     return ComponentID.fromObject(manifest.componentId as ComponentIdObj).changeVersion(undefined);
   }
 

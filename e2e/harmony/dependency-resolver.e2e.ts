@@ -645,4 +645,68 @@ describe('dependency-resolver extension', function () {
       });
     });
   });
+  describe('component range support with snaps', () => {
+    before(() => {
+      helper = new Helper();
+    });
+    describe('when snapping with ^ prefix', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.fixtures.populateComponents(2);
+        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '^');
+        helper.command.snapAllComponents();
+      });
+
+      it('should not apply ^ prefix to snap versions in dependency data', () => {
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2', false);
+        const depsData = helper.command.showDependenciesData('comp1');
+        const comp2Dep = depsData.find((d) => d.packageName === comp2Pkg);
+        expect(comp2Dep).to.have.property('version');
+
+        const snapVersion = comp2Dep!.version;
+        expect(snapVersion).to.not.include('^');
+      });
+
+      it('generated package.json should not have invalid semver with ^ prefix', () => {
+        const comp1 = helper.command.catComponent('comp1@latest');
+        const pkgExtensionData = helper.command.getAspectsData(comp1, Extensions.pkg).data;
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2', false);
+
+        expect(pkgExtensionData.pkgJson.dependencies).to.have.property(comp2Pkg);
+        const dependencyVersion = pkgExtensionData.pkgJson.dependencies[comp2Pkg];
+
+        expect(dependencyVersion).to.not.include('^');
+      });
+    });
+
+    describe('when snapping with ~ prefix', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.fixtures.populateComponents(2);
+        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '~');
+        helper.command.snapAllComponents();
+      });
+
+      it('should not apply ~ prefix to snap versions in dependency data', () => {
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2', false);
+        const depsData = helper.command.showDependenciesData('comp1');
+        const comp2Dep = depsData.find((d) => d.packageName === comp2Pkg);
+        expect(comp2Dep).to.have.property('version');
+
+        const snapVersion = comp2Dep!.version;
+        expect(snapVersion).to.not.include('~');
+      });
+
+      it('generated package.json should not have invalid semver with ~ prefix', () => {
+        const comp1 = helper.command.catComponent('comp1@latest');
+        const pkgExtensionData = helper.command.getAspectsData(comp1, Extensions.pkg).data;
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2', false);
+
+        expect(pkgExtensionData.pkgJson.dependencies).to.have.property(comp2Pkg);
+        const dependencyVersion = pkgExtensionData.pkgJson.dependencies[comp2Pkg];
+
+        expect(dependencyVersion).to.not.include('~');
+      });
+    });
+  });
 });

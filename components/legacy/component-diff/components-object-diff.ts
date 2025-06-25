@@ -9,6 +9,7 @@ import { compact, find, get, isEmpty, isNil, union } from 'lodash';
 import { lt, gt } from 'semver';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { DiffOptions, FieldsDiff, getOneFileDiff } from './components-diff';
 
 type ConfigDiff = {
@@ -62,6 +63,12 @@ export function componentToPrintableForDiff(component: Component): Record<string
   const overrides = component.overrides.componentOverridesData;
 
   obj.id = component.id._legacy.toStringWithoutScope();
+  obj.packageName = componentIdToPackageName({
+    id: component.id,
+    bindingPrefix,
+    defaultScope: component.id.scope,
+    extensions: extensions || new ExtensionDataList()
+  });
   obj.language = lang;
   obj.bindingPrefix = bindingPrefix;
   obj.mainFile = mainFile ? normalize(mainFile) : null;

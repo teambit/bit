@@ -1,5 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import semver from 'semver';
+import { isSnap } from '@teambit/component-version';
 import { Consumer } from '@teambit/legacy.consumer';
 import { Workspace } from '@teambit/workspace';
 import { logger } from '@teambit/legacy.logger';
@@ -103,16 +104,21 @@ export async function updateDependenciesVersions(
   function updateDependency(dependency: Dependency, depType: DepType) {
     const { id, packageName } = dependency;
     const { version: resolvedVersion, range } = resolveVersion(id, depType, packageName);
-    if (resolvedVersion) {
-      dependency.id = dependency.id.changeVersion(resolvedVersion);
-      if (supportComponentRange) {
-        if (range) dependency.versionRange = range;
-        else if (resolvedVersion !== 'latest' && (componentRangePrefix === '^' || componentRangePrefix === '~')) {
-          dependency.versionRange = `${componentRangePrefix}${resolvedVersion}`;
-        }
-      } else if (dependency.versionRange && depType !== 'peerDependencies' && dependency.versionRange !== '+') {
-        dependency.versionRange = undefined;
+    if (!resolvedVersion) {
+      return;
+    }
+    dependency.id = dependency.id.changeVersion(resolvedVersion);
+    if (supportComponentRange) {
+      if (range) dependency.versionRange = range;
+      else if (
+        resolvedVersion !== 'latest' &&
+        (componentRangePrefix === '^' || componentRangePrefix === '~') &&
+        !isSnap(resolvedVersion)
+      ) {
+        dependency.versionRange = `${componentRangePrefix}${resolvedVersion}`;
       }
+    } else if (dependency.versionRange && depType !== 'peerDependencies' && dependency.versionRange !== '+') {
+      dependency.versionRange = undefined;
     }
   }
   function updateDependencies(dependencies: Dependencies, depType: DepType) {
