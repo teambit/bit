@@ -29,7 +29,6 @@ import { Workspace, AutoTagResult } from '@teambit/workspace';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 import { LaneId } from '@teambit/lane-id';
-import { DETACH_HEAD, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 
 export type BasicTagSnapParams = {
   message: string;
@@ -329,9 +328,6 @@ export class VersionMaker {
     // to tags and can be thrown for snaps as well.
     // once --ignore-newest-version is removed, no need for this condition. it's ok to not provide the override-head option.
     const { detachHead, ignoreNewestVersion, isSnap } = this.params;
-    if (detachHead && !isFeatureEnabled(DETACH_HEAD)) {
-      throw new Error('unable to detach head, the feature is not enabled');
-    }
     if (ignoreNewestVersion && !detachHead) this.params.overrideHead = true;
     if (!ignoreNewestVersion && !isSnap) {
       await throwForNewestVersion(this.allComponentsToTag, this.legacyScope);

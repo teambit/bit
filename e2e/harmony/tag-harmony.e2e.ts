@@ -5,7 +5,6 @@ import { uniq } from 'lodash';
 import { Extensions } from '@teambit/legacy.constants';
 import { SchemaName } from '@teambit/legacy.consumer-component';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import { DETACH_HEAD } from '@teambit/harmony.modules.feature-toggle';
 
 chai.use(require('chai-fs'));
 
@@ -477,7 +476,6 @@ describe('tag components on Harmony', function () {
     let ver2Head: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.setFeatures(DETACH_HEAD);
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild('--ver 1.0.0');
       helper.fixtures.populateComponents(1, undefined, 'version2');
