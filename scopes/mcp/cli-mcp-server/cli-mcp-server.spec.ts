@@ -509,7 +509,7 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       } catch (error) {
         expect(error).to.exist;
         expect((error as Error).message).to.include('Editor "unsupported-editor" is not supported yet');
-        expect((error as Error).message).to.include('Currently supported: vscode, cursor, windsurf, roo');
+        expect((error as Error).message).to.include('Currently supported: vscode, cursor, windsurf, roo, cline');
       }
     });
 
