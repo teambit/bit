@@ -276,6 +276,20 @@ export class McpSetupUtils {
   }
 
   /**
+   * Get Roo Code prompts path based on global/workspace scope
+   */
+  static getRooCodePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Global Roo Code rules
+      return path.join(homedir(), '.roo', 'rules', 'bit.instructions.md');
+    } else {
+      // Workspace-specific rules
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.roo', 'rules', 'bit.instructions.md');
+    }
+  }
+
+  /**
    * Get default Bit MCP rules content from template file
    */
   static getDefaultRulesContent(consumerProject: boolean = false): Promise<string> {
@@ -309,6 +323,23 @@ export class McpSetupUtils {
 
     // Determine prompts file path
     const promptsPath = this.getCursorPromptsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(promptsPath));
+
+    // Write rules content
+    const rulesContent = await this.getDefaultRulesContent(consumerProject);
+    await fs.writeFile(promptsPath, rulesContent);
+  }
+
+  /**
+   * Write Bit MCP rules file for Roo Code
+   */
+  static async writeRooCodeRules(options: RulesOptions): Promise<void> {
+    const { isGlobal, workspaceDir, consumerProject = false } = options;
+
+    // Determine prompts file path
+    const promptsPath = this.getRooCodePromptsPath(isGlobal, workspaceDir);
 
     // Ensure directory exists
     await fs.ensureDir(path.dirname(promptsPath));

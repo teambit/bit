@@ -1270,7 +1270,7 @@ export class CliMcpServerMain {
   }
 
   async writeRulesFile(editor: string, options: RulesOptions, workspaceDir?: string): Promise<void> {
-    const supportedEditors = ['vscode', 'cursor'];
+    const supportedEditors = ['vscode', 'cursor', 'roo'];
     const editorLower = editor.toLowerCase();
 
     if (!supportedEditors.includes(editorLower)) {
@@ -1287,6 +1287,8 @@ export class CliMcpServerMain {
       await McpSetupUtils.writeVSCodeRules(rulesOptions);
     } else if (editorLower === 'cursor') {
       await McpSetupUtils.writeCursorRules(rulesOptions);
+    } else if (editorLower === 'roo') {
+      await McpSetupUtils.writeRooCodeRules(rulesOptions);
     }
   }
 
