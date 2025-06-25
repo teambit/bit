@@ -353,19 +353,37 @@ ${mainComps.map((c) => c.id.toString()).join('\n')}`);
   }
 
   async addRemovedDependenciesIssues(components: Component[]) {
+    const workspacePolicyManifest = this.depResolver.getWorkspacePolicyManifest();
+    const workspaceDependencies = {
+      ...workspacePolicyManifest.dependencies,
+      ...workspacePolicyManifest.peerDependencies,
+    };
+    const installedDeps = Object.keys(workspaceDependencies);
     await pMapSeries(components, async (component) => {
-      await this.addRemovedDepIssue(component);
+      await this.addRemovedDepIssue(component, installedDeps);
     });
   }
 
-  private async addRemovedDepIssue(component: Component) {
+  private async addRemovedDepIssue(component: Component, installedDeps: string[]) {
     const dependencies = this.depResolver.getComponentDependencies(component);
     const removedDependencies: ComponentID[] = [];
     let removedEnv: ComponentID | undefined;
+
     await Promise.all(
       dependencies.map(async (dep) => {
         const isRemoved = await this.isRemovedByIdWithoutLoadingComponent(dep.componentId);
         if (!isRemoved) return;
+
+        // a component can be deleted from the workspace and installed as a package in different version.
+        // normally, this is happening when checked out to a lane and a component is deleted from the lane.
+        // the user still wants to use it but not as part of the lane.
+        const packageName = dep.getPackageName();
+        const isAvailableAsInstalledPackage = installedDeps.includes(packageName);
+        const bitmapEntry = this.workspace.bitMap.getBitmapEntryIfExist(dep.componentId);
+        if (bitmapEntry && isAvailableAsInstalledPackage && bitmapEntry.version !== dep.version) {
+          return;
+        }
+
         const isEnv = await this.isEnvByIdWithoutLoadingComponent(dep.componentId);
         if (isEnv) {
           removedEnv = dep.componentId;

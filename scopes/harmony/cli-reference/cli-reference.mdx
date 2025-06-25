@@ -400,14 +400,6 @@ The following gets removed by this command:
 
 ---
 
-## completion
-
-**Description**: enable bash/zsh-completion shortcuts for commands and options
-
-`bit completion`
-
----
-
 ## config
 
 **Description**: config management  
@@ -958,14 +950,15 @@ bit export => export all staged snaps/tags of components to their remote scope. 
 
 `bit graph [id]`
 
-| **Option**              | **Option alias** | **Description**                                                                                        |
-| ----------------------- | :--------------: | ------------------------------------------------------------------------------------------------------ |
-| `--remote [remoteName]` |       `-r`       | remote name (name is optional, leave empty when id is specified)                                       |
-| `--layout <name>`       |                  | GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi] |
-| `--png`                 |                  | save the graph as a png file instead of svg. requires "graphviz" to be installed                       |
-| `--cycles`              |                  | generate a graph of cycles only                                                                        |
-| `--include-local-only`  |                  | include only the components in the workspace (or local scope)                                          |
-| `--json`                |       `-j`       | json format                                                                                            |
+| **Option**               | **Option alias** | **Description**                                                                                              |
+| ------------------------ | :--------------: | ------------------------------------------------------------------------------------------------------------ |
+| `--remote [remoteName]`  |       `-r`       | remote name (name is optional, leave empty when id is specified)                                             |
+| `--layout <name>`        |                  | GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]       |
+| `--png`                  |                  | save the graph as a png file instead of svg. requires "graphviz" to be installed                             |
+| `--cycles`               |                  | generate a graph of cycles only                                                                              |
+| `--include-local-only`   |                  | DEPRECATED: include only the components in the workspace (or local scope). This is now the default behavior. |
+| `--include-dependencies` |                  | include all dependencies recursively, not just workspace (or local scope) components                         |
+| `--json`                 |       `-j`       | json format                                                                                                  |
 
 ---
 
@@ -1597,43 +1590,51 @@ this command does the following:
 **Description**: Start the MCP server  
 Start the Model Context Protocol (MCP) server with the specified configuration
 
-| **Option**                        | **Option alias** | **Description**                                                                                                                  |
-| --------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------- |
-| `--extended`                      |       `-e`       | Enable the full set of Bit CLI commands as MCP tools                                                                             |
-| `--include-only <commands>`       |                  | Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. "status,install,compile"           |
-| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used |
-| `--exclude <commands>`            |                  | Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes                                    |
-| `--bit-bin <binary>`              |                  | Specify the binary to use for running Bit commands (default: "bit")                                                              |
-| `--consumer-project`              |                  | For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools        |
+| **Option**                        | **Option alias** | **Description**                                                                                                           |
+| --------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------------- |
+| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes                                    |
+| `--bit-bin <binary>`              |                  | Specify the binary to use for running Bit commands (default: "bit")                                                       |
+| `--consumer-project`              |                  | For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools |
 
 ### mcp-server setup
 
 **Usage**: `mcp-server setup [editor]`
 
-**Description**: Setup MCP integration with VS Code, Cursor, Windsurf, or other editors  
-Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, and Windsurf.
+**Description**: Setup MCP integration with VS Code, Cursor, Windsurf, Roo Code, or other editors  
+Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, Windsurf, and Roo Code.
+
+| **Arg**  |                               **Description**                               |
+| -------- | :-------------------------------------------------------------------------: |
+| `editor` | Editor to setup (default: vscode). Available: vscode, cursor, windsurf, roo |
+
+| **Option**                        | **Option alias** | **Description**                                                                        |
+| --------------------------------- | :--------------: | -------------------------------------------------------------------------------------- |
+| `--consumer-project`              |                  | Configure for non-Bit workspaces that only consume Bit component packages              |
+| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes |
+| `--global`                        |       `-g`       | Setup global configuration (default: workspace-specific)                               |
+
+### mcp-server rules
+
+**Usage**: `mcp-server rules [editor]`
+
+**Description**: Write Bit MCP rules/instructions file for VS Code, Cursor, or print to screen  
+Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code and Cursor. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.
 
 | **Arg**  |                            **Description**                             |
 | -------- | :--------------------------------------------------------------------: |
-| `editor` | Editor to setup (default: vscode). Available: vscode, cursor, windsurf |
+| `editor` | Editor to write rules for (default: vscode). Available: vscode, cursor |
 
-| **Option**                        | **Option alias** | **Description**                                                                               |
-| --------------------------------- | :--------------: | --------------------------------------------------------------------------------------------- |
-| `--extended`                      |       `-e`       | Enable the full set of Bit CLI commands as MCP tools                                          |
-| `--consumer-project`              |                  | Configure for non-Bit workspaces that only consume Bit component packages                     |
-| `--include-only <commands>`       |                  | Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes       |
-| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes        |
-| `--exclude <commands>`            |                  | Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes |
-| `--global`                        |       `-g`       | Setup global configuration (default: workspace-specific)                                      |
+| **Option**           | **Option alias** | **Description**                                                               |
+| -------------------- | :--------------: | ----------------------------------------------------------------------------- |
+| `--global`           |       `-g`       | Write rules to global configuration (default: workspace-specific)             |
+| `--print`            |       `-p`       | Print rules content to screen instead of writing to file                      |
+| `--consumer-project` |                  | Generate rules for consumer projects that only use Bit components as packages |
 
-| **Option**                        | **Option alias** | **Description**                                                                                                                  |
-| --------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------- |
-| `--extended`                      |       `-e`       | Enable the full set of Bit CLI commands as MCP tools                                                                             |
-| `--include-only <commands>`       |                  | Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. "status,install,compile"           |
-| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used |
-| `--exclude <commands>`            |                  | Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes                                    |
-| `--bit-bin <binary>`              |                  | Specify the binary to use for running Bit commands (default: "bit")                                                              |
-| `--consumer-project`              |                  | For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools        |
+| **Option**                        | **Option alias** | **Description**                                                                                                           |
+| --------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------------- |
+| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes                                    |
+| `--bit-bin <binary>`              |                  | Specify the binary to use for running Bit commands (default: "bit")                                                       |
+| `--consumer-project`              |                  | For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools |
 
 ---
 
@@ -2029,19 +2030,6 @@ optionally, provide [pattern] to limit the fork to specific components
 
 ---
 
-## server
-
-**Description**: communicate with bit cli program via http requests
-
-`bit server`
-
-| **Option**      | **Option alias** | **Description**                             |
-| --------------- | :--------------: | ------------------------------------------- |
-| `--port [port]` |       `-p`       | port to run the server on                   |
-| `--compile`     |       `-c`       | compile components during the watch process |
-
----
-
 ## set-peer
 
 **Description**: set a component as always peer
@@ -2326,18 +2314,6 @@ list components templates when inside bit-workspace (for bit-create), otherwise,
 
 ---
 
-## unuse
-
-**Description**: unset aspects in the workspace config (opposite of "use" command)
-
-`bit unuse <component-id>`
-
-| **Arg**        |        **Description**         |
-| -------------- | :----------------------------: |
-| `component-id` | the component ID of the aspect |
-
----
-
 ## update
 
 **Alias**: `up`  
@@ -2356,18 +2332,6 @@ list components templates when inside bit-workspace (for bit-create), otherwise,
 | `--minor`  |                  | update to the latest minor version. Semver rules are ignored                                                                                                                   |
 | `--major`  |                  | update to the latest major version. Semver rules are ignored                                                                                                                   |
 | `--semver` |                  | update to the newest version respecting semver                                                                                                                                 |
-
----
-
-## use
-
-**Description**: set aspects in the workspace/scope config to make them loadable by the workspace/scope
-
-`bit use <component-id>`
-
-| **Arg**        |        **Description**         |
-| -------------- | :----------------------------: |
-| `component-id` | the component ID of the aspect |
 
 ---
 

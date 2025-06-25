@@ -36,7 +36,7 @@ describe('CliMcpServer Integration Tests', function () {
     // Create MCP client and connect directly to the MCP server command
     const transport = new StdioClientTransport({
       command: 'bit',
-      args: ['mcp-server'],
+      args: ['mcp-server', 'start'],
       cwd: workspacePath,
     });
 
@@ -74,6 +74,78 @@ describe('CliMcpServer Integration Tests', function () {
       expect(toolNames).to.include('bit_commands_list');
       expect(toolNames).to.include('bit_query');
       expect(toolNames).to.include('bit_execute');
+    });
+  });
+
+  describe('Consumer Project Mode', () => {
+    let consumerProjectClient: Client;
+
+    beforeEach(async () => {
+      // Create MCP client for consumer project mode
+      const transport = new StdioClientTransport({
+        command: 'bit',
+        args: ['mcp-server', 'start', '--consumer-project'],
+        cwd: workspacePath,
+      });
+
+      consumerProjectClient = new Client(
+        {
+          name: 'test-consumer-client',
+          version: '1.0.0',
+        },
+        {
+          capabilities: {},
+        }
+      );
+
+      await consumerProjectClient.connect(transport);
+    });
+
+    afterEach(async () => {
+      if (consumerProjectClient) {
+        await consumerProjectClient.close();
+      }
+    });
+
+    it('should only enable bit_remote_search and bit_remote_component_details tools', async () => {
+      const response = await consumerProjectClient.listTools();
+
+      expect(response.tools).to.be.an('array');
+
+      const toolNames = response.tools.map((tool) => tool.name);
+
+      // Should include only these two tools
+      expect(toolNames).to.include('bit_remote_search');
+      expect(toolNames).to.include('bit_remote_component_details');
+
+      // Should NOT include these tools that are available in regular mode
+      expect(toolNames).to.not.include('bit_workspace_info');
+      expect(toolNames).to.not.include('bit_component_details');
+      expect(toolNames).to.not.include('bit_commands_list');
+      expect(toolNames).to.not.include('bit_command_help');
+      expect(toolNames).to.not.include('bit_query');
+      expect(toolNames).to.not.include('bit_execute');
+
+      // Should NOT include the old separate tools
+      expect(toolNames).to.not.include('bit_show');
+      expect(toolNames).to.not.include('bit_schema');
+
+      // Should have exactly 2 tools
+      expect(toolNames).to.have.lengthOf(2);
+    });
+
+    it('should work with bit_remote_search tool', async () => {
+      const result = (await consumerProjectClient.callTool({
+        name: 'bit_remote_search',
+        arguments: {
+          queryStr: 'button',
+          cwd: workspacePath,
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
     });
   });
 
@@ -198,7 +270,7 @@ describe('CliMcpServer Integration Tests', function () {
       expect(firstCommand).to.have.property('description');
     });
 
-    it('should get extended commands info', async () => {
+    it('should get commands info with extended description', async () => {
       const result = (await mcpClient.callTool({
         name: 'bit_commands_list',
         arguments: {
@@ -437,7 +509,7 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       } catch (error) {
         expect(error).to.exist;
         expect((error as Error).message).to.include('Editor "unsupported-editor" is not supported yet');
-        expect((error as Error).message).to.include('Currently supported: vscode, cursor, windsurf');
+        expect((error as Error).message).to.include('Currently supported: vscode, cursor, windsurf, roo');
       }
     });
 
@@ -462,17 +534,16 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       expect(settings.mcp.servers).to.have.property('bit-cli');
       expect(settings.mcp.servers['bit-cli']).to.deep.equal({
         command: 'bit',
-        args: ['mcp-server'],
+        args: ['mcp-server', 'start'],
       });
     });
 
-    it('should setup VS Code integration with extended options', async () => {
+    it('should setup VS Code integration with consumer project options', async () => {
       await setupMcpServer.setupEditor(
         'vscode',
         {
-          extended: true,
           consumerProject: true,
-          includeOnly: 'status,list',
+          includeAdditional: 'status,list',
           isGlobal: false,
         },
         setupWorkspacePath
@@ -481,9 +552,8 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       const vscodeSettingsPath = path.join(setupWorkspacePath, '.vscode', 'settings.json');
       const settings = await fs.readJson(vscodeSettingsPath);
 
-      expect(settings.mcp.servers['bit-cli'].args).to.include('--extended');
       expect(settings.mcp.servers['bit-cli'].args).to.include('--consumer-project');
-      expect(settings.mcp.servers['bit-cli'].args).to.include('--include-only');
+      expect(settings.mcp.servers['bit-cli'].args).to.include('--include-additional');
       expect(settings.mcp.servers['bit-cli'].args).to.include('status,list');
     });
 
@@ -508,7 +578,7 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       expect(config.mcpServers.bit).to.deep.equal({
         type: 'stdio',
         command: 'bit',
-        args: ['mcp-server'],
+        args: ['mcp-server', 'start'],
       });
     });
 
@@ -533,8 +603,50 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       expect(config.mcpServers.bit).to.deep.equal({
         type: 'stdio',
         command: 'bit',
-        args: ['mcp-server'],
+        args: ['mcp-server', 'start'],
       });
+    });
+
+    it('should setup Roo Code integration directly', async () => {
+      await setupMcpServer.setupEditor(
+        'roo',
+        {
+          isGlobal: false,
+        },
+        setupWorkspacePath
+      );
+
+      // Verify that the mcp.json file was created in the workspace directory
+      const rooConfigPath = path.join(setupWorkspacePath, '.roo', 'mcp.json');
+      const configExists = await fs.pathExists(rooConfigPath);
+      expect(configExists).to.be.true;
+
+      // Verify the content of the config file
+      const config = await fs.readJson(rooConfigPath);
+      expect(config).to.have.property('mcpServers');
+      expect(config.mcpServers).to.have.property('bit');
+      expect(config.mcpServers.bit).to.deep.equal({
+        type: 'stdio',
+        command: 'bit',
+        args: ['mcp-server', 'start'],
+      });
+    });
+
+    it('should throw error when trying to setup Roo Code globally', async () => {
+      try {
+        await setupMcpServer.setupEditor(
+          'roo',
+          {
+            isGlobal: true,
+          },
+          setupWorkspacePath
+        );
+        expect.fail('Should have thrown an error for global Roo Code setup');
+      } catch (error) {
+        expect(error).to.exist;
+        expect((error as Error).message).to.include('Roo Code global configuration is not supported');
+        expect((error as Error).message).to.include('VS Code internal storage that cannot be accessed');
+      }
     });
 
     it('should merge with existing VS Code settings', async () => {
@@ -562,7 +674,7 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       expect(settings).to.have.property('mcp');
       expect(settings.mcp.servers['bit-cli']).to.deep.equal({
         command: 'bit',
-        args: ['mcp-server'],
+        args: ['mcp-server', 'start'],
       });
     });
   });

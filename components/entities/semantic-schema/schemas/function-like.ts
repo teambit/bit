@@ -24,6 +24,7 @@ export class FunctionLikeSchema extends SchemaNode {
   readonly params: ParameterSchema[];
   readonly doc?: DocSchema;
   readonly signature?: string | undefined;
+  readonly displaySchemaName = 'Functions';
 
   constructor(
     readonly location: SchemaLocation,

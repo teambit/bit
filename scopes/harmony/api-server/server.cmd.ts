@@ -12,6 +12,7 @@ export class ServerCmd implements Command {
     ['p', 'port [port]', 'port to run the server on'],
     ['c', 'compile', 'compile components during the watch process'],
   ] as CommandOptions;
+  private = true;
 
   constructor(private apiServer: ApiServerMain) {}
 

@@ -14,6 +14,7 @@ import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
 import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
+import { isSnap as isSnapVersion } from '@teambit/component-version';
 import { BuilderMain, OnTagOpts } from '@teambit/builder';
 import { ModelComponent, Log, DependenciesGraph, Lane } from '@teambit/objects';
 import { MessagePerComponent, MessagePerComponentFetcher } from './message-per-component';
@@ -201,7 +202,7 @@ export class VersionMaker {
   }
 
   private async _addDependenciesGraphToComponents(): Promise<void> {
-    if (!this.workspace) {
+    if (!this.workspace || !this.allWorkspaceComps) {
       return;
     }
     this.snapping.logger.setStatusLine('adding dependencies graph...');
@@ -213,12 +214,13 @@ export class VersionMaker {
       componentIdByPkgName,
     };
     await pMapPool(
-      this.components,
-      async (component) => {
-        if (component.state._consumer.componentMap?.rootDir) {
+      this.allComponentsToTag,
+      async (consumerComponent) => {
+        const component = this._findWorkspaceCompByConsumerComp(consumerComponent);
+        if (consumerComponent.componentMap?.rootDir && component) {
           await this.dependencyResolver.addDependenciesGraph(
             component,
-            component.state._consumer.componentMap.rootDir,
+            consumerComponent.componentMap.rootDir,
             options
           );
         }
@@ -229,15 +231,26 @@ export class VersionMaker {
     this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
   }
 
+  private _findWorkspaceCompByConsumerComp(consumerComponent: ConsumerComponent): Component | undefined {
+    return this.allWorkspaceComps?.find((component) => component.id.isEqualWithoutVersion(consumerComponent.id));
+  }
+
   private _getComponentIdByPkgNameMap(): Map<string, ComponentID> {
     if (!this.allWorkspaceComps) throw new Error('please make sure to populate this.allWorkspaceComps before');
     const componentIdByPkgName = new Map<string, ComponentID>();
-    this.components.forEach((component, index) => {
-      const pkgName = this.dependencyResolver.getPackageName(component);
-      componentIdByPkgName.set(pkgName, this.allComponentsToTag[index].id);
+    this.allComponentsToTag.forEach((consumerComponent) => {
+      const component = this._findWorkspaceCompByConsumerComp(consumerComponent);
+      if (component) {
+        const pkgName = this.dependencyResolver.getPackageName(component);
+        componentIdByPkgName.set(pkgName, consumerComponent.id);
+      }
     });
     for (const workspaceComp of this.allWorkspaceComps) {
-      if (this.components.every((snappedComponent) => !snappedComponent.id.isEqualWithoutVersion(workspaceComp.id))) {
+      if (
+        this.allComponentsToTag.every(
+          (snappedComponent) => !snappedComponent.id.isEqualWithoutVersion(workspaceComp.id)
+        )
+      ) {
         componentIdByPkgName.set(this.dependencyResolver.getPackageName(workspaceComp), workspaceComp.id);
       }
     }
@@ -524,7 +537,8 @@ export class VersionMaker {
         dep.version = (newDepId || depId).version;
         // if newDepId, then it means the dependency is in the current workspace and currently being tagged.
         // the versionRange needs to be updated to the new version.
-        if (newDepId && (componentRangePrefix === '^' || componentRangePrefix === '~')) {
+        // However, for snaps, we should not apply range prefixes as they are not valid semver
+        if (newDepId && (componentRangePrefix === '^' || componentRangePrefix === '~') && !isSnapVersion(dep.version)) {
           dep.versionRange = `${componentRangePrefix}${dep.version}`;
         }
       });
@@ -540,7 +554,8 @@ export class VersionMaker {
         dependency.id = newDepId;
         // if componentRangePrefix === '+', then, only it only saves packages in workspace.jsonc.
         // in this case, these dependencies are in .bitmap. not in workspace.jsonc. so it's not relevant.
-        if (componentRangePrefix === '^' || componentRangePrefix === '~') {
+        // For snaps (hash versions), we should not apply range prefixes as they are not valid semver
+        if ((componentRangePrefix === '^' || componentRangePrefix === '~') && !isSnapVersion(newDepId.version)) {
           dependency.versionRange = `${componentRangePrefix}${newDepId.version}`;
         }
       });

@@ -9,6 +9,7 @@ import { SchemaRegistry } from '../schema-registry';
 export class VariableLikeSchema extends SchemaNode {
   type: SchemaNode;
   readonly doc?: DocSchema;
+  readonly displaySchemaName = 'Variables';
 
   constructor(
     readonly location: SchemaLocation,

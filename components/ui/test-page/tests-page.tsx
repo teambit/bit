@@ -13,7 +13,7 @@ import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/defender.ui.test-table';
 import { Table, type ColumnProps, type CellFunctionProps } from '@teambit/design.content.table';
-import { Link } from '@teambit/base-react.navigation.link';
+import { Link } from '@teambit/design.ui.navigation.link';
 import styles from './tests-page.module.scss';
 
 type CoverageResults = {

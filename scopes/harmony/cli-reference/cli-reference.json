@@ -6,7 +6,7 @@
     "description": "enable bash/zsh-completion shortcuts for commands and options",
     "extendedDescription": "",
     "group": "system",
-    "private": false
+    "private": true
   },
   {
     "name": "cli",
@@ -40,7 +40,7 @@
         "description": "generate an .md file with all commands details",
         "extendedDescription": "",
         "group": "general",
-        "private": false
+        "private": true
       }
     ]
   },
@@ -79,24 +79,9 @@
     "alias": "",
     "options": [
       [
-        "e",
-        "extended",
-        "Enable the full set of Bit CLI commands as MCP tools"
-      ],
-      [
-        "",
-        "include-only <commands>",
-        "Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. \"status,install,compile\""
-      ],
-      [
         "",
         "include-additional <commands>",
-        "Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used"
-      ],
-      [
-        "",
-        "exclude <commands>",
-        "Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes"
+        "Add specific commands to the default MCP tools set. Use comma-separated list in quotes"
       ],
       [
         "",
@@ -119,24 +104,9 @@
         "alias": "",
         "options": [
           [
-            "e",
-            "extended",
-            "Enable the full set of Bit CLI commands as MCP tools"
-          ],
-          [
-            "",
-            "include-only <commands>",
-            "Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes, e.g. \"status,install,compile\""
-          ],
-          [
             "",
             "include-additional <commands>",
-            "Add specific commands to the default MCP tools set. Use comma-separated list in quotes. Only applies when --extended is not used"
-          ],
-          [
-            "",
-            "exclude <commands>",
-            "Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes"
+            "Add specific commands to the default MCP tools set. Use comma-separated list in quotes"
           ],
           [
             "",
@@ -159,19 +129,9 @@
         "alias": "",
         "options": [
           [
-            "e",
-            "extended",
-            "Enable the full set of Bit CLI commands as MCP tools"
-          ],
-          [
             "",
             "consumer-project",
             "Configure for non-Bit workspaces that only consume Bit component packages"
-          ],
-          [
-            "",
-            "include-only <commands>",
-            "Specify a subset of commands to expose as MCP tools. Use comma-separated list in quotes"
           ],
           [
             "",
@@ -179,24 +139,50 @@
             "Add specific commands to the default MCP tools set. Use comma-separated list in quotes"
           ],
           [
-            "",
-            "exclude <commands>",
-            "Prevent specific commands from being exposed as MCP tools. Use comma-separated list in quotes"
-          ],
-          [
             "g",
             "global",
             "Setup global configuration (default: workspace-specific)"
           ]
         ],
-        "description": "Setup MCP integration with VS Code, Cursor, Windsurf, or other editors",
-        "extendedDescription": "Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, and Windsurf.",
+        "description": "Setup MCP integration with VS Code, Cursor, Windsurf, Roo Code, or other editors",
+        "extendedDescription": "Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, Windsurf, and Roo Code.",
         "group": "ungrouped",
         "private": false,
         "arguments": [
           {
             "name": "editor",
-            "description": "Editor to setup (default: vscode). Available: vscode, cursor, windsurf"
+            "description": "Editor to setup (default: vscode). Available: vscode, cursor, windsurf, roo"
+          }
+        ]
+      },
+      {
+        "name": "rules [editor]",
+        "alias": "",
+        "options": [
+          [
+            "g",
+            "global",
+            "Write rules to global configuration (default: workspace-specific)"
+          ],
+          [
+            "p",
+            "print",
+            "Print rules content to screen instead of writing to file"
+          ],
+          [
+            "",
+            "consumer-project",
+            "Generate rules for consumer projects that only use Bit components as packages"
+          ]
+        ],
+        "description": "Write Bit MCP rules/instructions file for VS Code, Cursor, or print to screen",
+        "extendedDescription": "Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code and Cursor. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.",
+        "group": "ungrouped",
+        "private": false,
+        "arguments": [
+          {
+            "name": "editor",
+            "description": "Editor to write rules for (default: vscode). Available: vscode, cursor"
           }
         ]
       }
@@ -734,7 +720,12 @@
       [
         "",
         "include-local-only",
-        "include only the components in the workspace (or local scope)"
+        "DEPRECATED: include only the components in the workspace (or local scope). This is now the default behavior."
+      ],
+      [
+        "",
+        "include-dependencies",
+        "include all dependencies recursively, not just workspace (or local scope) components"
       ],
       [
         "j",
@@ -1272,7 +1263,7 @@
     "description": "set aspects in the workspace/scope config to make them loadable by the workspace/scope",
     "extendedDescription": "",
     "group": "workspace-setup",
-    "private": false,
+    "private": true,
     "remoteOp": true,
     "arguments": [
       {
@@ -1288,7 +1279,7 @@
     "description": "unset aspects in the workspace config (opposite of \"use\" command)",
     "extendedDescription": "",
     "group": "workspace-setup",
-    "private": false,
+    "private": true,
     "remoteOp": true,
     "arguments": [
       {
@@ -4588,7 +4579,7 @@
     "description": "communicate with bit cli program via http requests",
     "extendedDescription": "",
     "group": "workspace-setup",
-    "private": false
+    "private": true
   },
   {
     "name": "pack <componentId> [scopePath]",
