@@ -1,5 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import semver from 'semver';
+import { isSnap } from '@teambit/component-version';
 import { Consumer } from '@teambit/legacy.consumer';
 import { Workspace } from '@teambit/workspace';
 import { logger } from '@teambit/legacy.logger';
@@ -25,7 +26,7 @@ export async function updateDependenciesVersions(
   const consumer: Consumer = workspace.consumer;
   const autoDetectConfigMerge = workspace.getAutoDetectConfigMerge(component.id) || {};
   const currentLane = await workspace.getCurrentLaneObject();
-  const componentRangePrefix  = depsResolver.calcComponentRangePrefixByConsumerComponent(component);
+  const componentRangePrefix = depsResolver.calcComponentRangePrefixByConsumerComponent(component);
   const supportComponentRange = componentRangePrefix && componentRangePrefix !== '-';
   updateDependencies(component.dependencies, 'dependencies');
   updateDependencies(component.devDependencies, 'devDependencies');
@@ -40,7 +41,7 @@ export async function updateDependenciesVersions(
    * running bit link --rewire).
    * 2: this gets called for extension-id.
    */
-  function resolveVersion(id: ComponentID, depType: DepType, pkg?: string): { version?: string, range?: string} {
+  function resolveVersion(id: ComponentID, depType: DepType, pkg?: string): { version?: string; range?: string } {
     const idFromBitMap = getIdFromBitMap(id);
     const idFromComponentConfig = getIdFromComponentConfig(id);
     const getFromComponentConfig = () => idFromComponentConfig;
@@ -60,8 +61,8 @@ export async function updateDependenciesVersions(
       return {
         compId: id,
         range: supportComponentRange && semver.validRange(fromPolicy) ? fromPolicy : undefined,
-      }
-    }
+      };
+    };
     // merge config here is only auto-detected ones. their priority is less then the ws policy
     // otherwise, imagine you merge a lane, you don't like the dependency you got from the other lane, you run
     // bit-install to change it, but it won't do anything.
@@ -89,9 +90,7 @@ export async function updateDependenciesVersions(
       if (!strategyId) continue;
       const version = strategyId instanceof ComponentID ? strategyId.version : strategyId.compId?.version;
       if (!version) continue;
-      logger.trace(
-        `found dependency version ${version} for ${id.toString()} in strategy ${strategy.name}`
-      );
+      logger.trace(`found dependency version ${version} for ${id.toString()} in strategy ${strategy.name}`);
       if (debugDep) {
         debugDep.versionResolvedFrom = strategy.name.replace('getFrom', '');
         debugDep.version = version;
@@ -105,16 +104,21 @@ export async function updateDependenciesVersions(
   function updateDependency(dependency: Dependency, depType: DepType) {
     const { id, packageName } = dependency;
     const { version: resolvedVersion, range } = resolveVersion(id, depType, packageName);
-    if (resolvedVersion) {
-      dependency.id = dependency.id.changeVersion(resolvedVersion);
-      if (supportComponentRange) {
-        if (range) dependency.versionRange = range;
-        else if (resolvedVersion !== 'latest' && (componentRangePrefix === '^' || componentRangePrefix === '~')) {
-          dependency.versionRange = `${componentRangePrefix}${resolvedVersion}`;
-        }
-      } else if (dependency.versionRange && depType !== 'peerDependencies' && dependency.versionRange !== '+') {
-        dependency.versionRange = undefined;
+    if (!resolvedVersion) {
+      return;
+    }
+    dependency.id = dependency.id.changeVersion(resolvedVersion);
+    if (supportComponentRange) {
+      if (range) dependency.versionRange = range;
+      else if (
+        resolvedVersion !== 'latest' &&
+        (componentRangePrefix === '^' || componentRangePrefix === '~') &&
+        !isSnap(resolvedVersion)
+      ) {
+        dependency.versionRange = `${componentRangePrefix}${resolvedVersion}`;
       }
+    } else if (dependency.versionRange && depType !== 'peerDependencies' && dependency.versionRange !== '+') {
+      dependency.versionRange = undefined;
     }
   }
   function updateDependencies(dependencies: Dependencies, depType: DepType) {
@@ -162,8 +166,11 @@ export async function updateDependenciesVersions(
   /**
    * config in .bitmap or component.json are resolved here.
    */
-  function resolveFromOverrides(id: ComponentID, depType: DepType, pkgName?: string):
-  { compId?: ComponentID; range?: string } | undefined {
+  function resolveFromOverrides(
+    id: ComponentID,
+    depType: DepType,
+    pkgName?: string
+  ): { compId?: ComponentID; range?: string } | undefined {
     if (!pkgName) return undefined;
     const dependencies = overridesDependencies.getDependenciesToAddManually();
     const found = dependencies?.[depType]?.[pkgName];

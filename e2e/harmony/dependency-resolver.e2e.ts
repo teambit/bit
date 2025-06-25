@@ -332,7 +332,9 @@ describe('dependency-resolver extension', function () {
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
       helper.env.setEmptyEnv();
-      helper.fs.outputFile('empty-env/env.jsonc', `{
+      helper.fs.outputFile(
+        'empty-env/env.jsonc',
+        `{
   "policy": {
     "peers": [
       {
@@ -343,7 +345,8 @@ describe('dependency-resolver extension', function () {
     ]
   }
 }
-`);
+`
+      );
       helper.command.tagAllComponents(); // it'll tag only empty-env.
       helper.command.export();
     });
@@ -353,9 +356,13 @@ describe('dependency-resolver extension', function () {
     function validateDepData(expectedVersion: string) {
       const comp = helper.command.catComponent(`${helper.scopes.remote}/empty-env@latest`);
       const depResolverExt = comp.extensions.find((e) => e.name === Extensions.dependencyResolver);
-      const policy = depResolverExt.data.policy.find(p => p.dependencyId === helper.general.getPackageNameByCompName('comp1'));
+      const policy = depResolverExt.data.policy.find(
+        (p) => p.dependencyId === helper.general.getPackageNameByCompName('comp1')
+      );
       expect(policy.value.version).to.equal('+');
-      const data =  depResolverExt.data.dependencies.find(p => p.packageName === helper.general.getPackageNameByCompName('comp1'));
+      const data = depResolverExt.data.dependencies.find(
+        (p) => p.packageName === helper.general.getPackageNameByCompName('comp1')
+      );
       expect(data.version).to.equal(expectedVersion);
       expect(data.componentId.version).to.equal(expectedVersion);
     }
@@ -374,7 +381,9 @@ describe('dependency-resolver extension', function () {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.install(helper.general.getPackageNameByCompName('empty-env'));
-        const pkgJson = helper.fs.readJsonFile(`node_modules/${helper.general.getPackageNameByCompName('empty-env')}/package.json`);
+        const pkgJson = helper.fs.readJsonFile(
+          `node_modules/${helper.general.getPackageNameByCompName('empty-env')}/package.json`
+        );
         expect(pkgJson.dependencies[`${helper.general.getPackageNameByCompName('comp1')}`]).to.equal('0.0.2');
       });
       // this is an important test. in case the env is imported without the dep, it is unable to resolve the dep-version
@@ -400,7 +409,9 @@ describe('dependency-resolver extension', function () {
       npmCiRegistry.publishPackage(examplePkg, '0.0.1');
 
       helper.env.setEmptyEnv();
-      helper.fs.outputFile('empty-env/env.jsonc', `{
+      helper.fs.outputFile(
+        'empty-env/env.jsonc',
+        `{
   "policy": {
     "peers": [
       {
@@ -411,7 +422,8 @@ describe('dependency-resolver extension', function () {
     ]
   }
 }
-`);
+`
+      );
       helper.command.tagAllComponents();
       helper.command.export();
     });
@@ -421,9 +433,9 @@ describe('dependency-resolver extension', function () {
     function validatePkgData() {
       const comp = helper.command.catComponent(`${helper.scopes.remote}/empty-env@latest`);
       const depResolverExt = comp.extensions.find((e) => e.name === Extensions.dependencyResolver);
-      const policy = depResolverExt.data.policy.find(p => p.dependencyId === examplePkg);
+      const policy = depResolverExt.data.policy.find((p) => p.dependencyId === examplePkg);
       expect(policy.value.version).to.equal('*');
-      const data =  depResolverExt.data.dependencies.find(p => p.id === examplePkg);
+      const data = depResolverExt.data.dependencies.find((p) => p.id === examplePkg);
       expect(data.version).to.equal('*');
     }
     it('should not break and save the policy correctly with the *', () => {
@@ -443,7 +455,9 @@ describe('dependency-resolver extension', function () {
         helper.scopeHelper.addRemoteScope();
         helper.command.install(helper.general.getPackageNameByCompName('empty-env'));
 
-        const envPkgJson = helper.fs.readJsonFile(`node_modules/${helper.general.getPackageNameByCompName('empty-env')}/package.json`);
+        const envPkgJson = helper.fs.readJsonFile(
+          `node_modules/${helper.general.getPackageNameByCompName('empty-env')}/package.json`
+        );
         expect(envPkgJson.dependencies[examplePkg]).to.equal('*');
 
         const pkgJsonPath = path.join('node_modules', '.pnpm/@ci+lodash@0.0.2/node_modules/@ci/lodash/package.json');
@@ -628,6 +642,70 @@ describe('dependency-resolver extension', function () {
         const depsData = helper.command.showDependenciesData('comp1');
         const comp2Dep = depsData.find((d) => d.packageName === comp2Pkg);
         expect(comp2Dep).to.not.have.property('versionRange');
+      });
+    });
+  });
+  describe('component range support with snaps', () => {
+    before(() => {
+      helper = new Helper();
+    });
+    describe('when snapping with ^ prefix', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.fixtures.populateComponents(2);
+        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '^');
+        helper.command.snapAllComponents();
+      });
+
+      it('should not apply ^ prefix to snap versions in dependency data', () => {
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2', false);
+        const depsData = helper.command.showDependenciesData('comp1');
+        const comp2Dep = depsData.find((d) => d.packageName === comp2Pkg);
+        expect(comp2Dep).to.have.property('version');
+
+        const snapVersion = comp2Dep!.version;
+        expect(snapVersion).to.not.include('^');
+      });
+
+      it('generated package.json should not have invalid semver with ^ prefix', () => {
+        const comp1 = helper.command.catComponent('comp1@latest');
+        const pkgExtensionData = helper.command.getAspectsData(comp1, Extensions.pkg).data;
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2', false);
+
+        expect(pkgExtensionData.pkgJson.dependencies).to.have.property(comp2Pkg);
+        const dependencyVersion = pkgExtensionData.pkgJson.dependencies[comp2Pkg];
+
+        expect(dependencyVersion).to.not.include('^');
+      });
+    });
+
+    describe('when snapping with ~ prefix', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.fixtures.populateComponents(2);
+        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '~');
+        helper.command.snapAllComponents();
+      });
+
+      it('should not apply ~ prefix to snap versions in dependency data', () => {
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2', false);
+        const depsData = helper.command.showDependenciesData('comp1');
+        const comp2Dep = depsData.find((d) => d.packageName === comp2Pkg);
+        expect(comp2Dep).to.have.property('version');
+
+        const snapVersion = comp2Dep!.version;
+        expect(snapVersion).to.not.include('~');
+      });
+
+      it('generated package.json should not have invalid semver with ~ prefix', () => {
+        const comp1 = helper.command.catComponent('comp1@latest');
+        const pkgExtensionData = helper.command.getAspectsData(comp1, Extensions.pkg).data;
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2', false);
+
+        expect(pkgExtensionData.pkgJson.dependencies).to.have.property(comp2Pkg);
+        const dependencyVersion = pkgExtensionData.pkgJson.dependencies[comp2Pkg];
+
+        expect(dependencyVersion).to.not.include('~');
       });
     });
   });

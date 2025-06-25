@@ -70,6 +70,8 @@ export class McpSetupUtils {
         return 'Cursor';
       case 'windsurf':
         return 'Windsurf';
+      case 'roo':
+        return 'Roo Code';
       default:
         return editor;
     }
@@ -314,5 +316,60 @@ export class McpSetupUtils {
     // Write rules content
     const rulesContent = await this.getDefaultRulesContent(consumerProject);
     await fs.writeFile(promptsPath, rulesContent);
+  }
+
+  /**
+   * Get Roo Code mcp.json path based on global/workspace scope
+   */
+  static getRooCodeSettingsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Roo Code doesn't support global configuration, show warning
+      throw new Error(
+        'Roo Code global configuration is not supported as it uses VS Code internal storage that cannot be accessed. Please use workspace-specific configuration instead.'
+      );
+    } else {
+      // Workspace-specific MCP configuration
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.roo', 'mcp.json');
+    }
+  }
+
+  /**
+   * Setup Roo Code MCP integration
+   */
+  static async setupRooCode(options: SetupOptions): Promise<void> {
+    const { isGlobal, workspaceDir } = options;
+
+    if (isGlobal) {
+      throw new Error(
+        'Roo Code global configuration is not supported as it uses VS Code internal storage that cannot be accessed. Please use workspace-specific configuration instead.'
+      );
+    }
+
+    // Determine mcp.json path
+    const mcpConfigPath = this.getRooCodeSettingsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(mcpConfigPath));
+
+    // Read existing MCP configuration or create empty object
+    const mcpConfig = await this.readJsonFile(mcpConfigPath);
+
+    // Build MCP server args
+    const args = this.buildMcpServerArgs(options);
+
+    // Create or update MCP configuration for Roo Code
+    if (!mcpConfig.mcpServers) {
+      mcpConfig.mcpServers = {};
+    }
+
+    mcpConfig.mcpServers.bit = {
+      type: 'stdio',
+      command: 'bit',
+      args: args,
+    };
+
+    // Write updated MCP configuration
+    await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
   }
 }
