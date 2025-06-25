@@ -300,6 +300,11 @@ export async function install(
     hoistPattern,
     virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
     overrides,
+    peerDependencyRules: {
+      allowAny: ['*'],
+      ignoreMissing: ['*'],
+      ...options.reportOptions?.peerDependencyRules,
+    },
   };
 
   let dependenciesChanged = false;
@@ -372,11 +377,6 @@ function initReporter(opts?: ReportOptions) {
       hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
       hideProgressPrefix: opts?.hideProgressPrefix,
       hideLifecycleOutput: opts?.hideLifecycleOutput,
-      peerDependencyRules: {
-        allowAny: ['*'],
-        ignoreMissing: ['*'],
-        ...opts?.peerDependencyRules,
-      },
     },
     streamParser: streamParser as any, // eslint-disable-line
     // Linked in core aspects are excluded from the output to reduce noise.
