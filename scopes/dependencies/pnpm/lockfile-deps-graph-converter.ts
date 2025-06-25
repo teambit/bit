@@ -356,7 +356,7 @@ function getPkgsToResolve(lockfile: BitLockfileFile, manifests: Record<string, P
 }
 
 function depPathToRef(depPath: dp.DependencyPath): string {
-  return `${depPath.version}${depPath.patchHash ?? ''}${depPath.peersSuffix ?? ''}`;
+  return `${depPath.version}${depPath.patchHash ?? ''}${depPath.peerDepGraphHash ?? ''}`;
 }
 
 function convertGraphPackageToLockfilePackage(pkgAttr: PackageAttributes) {
