@@ -186,7 +186,7 @@ bit mcp-server start --consumer-project --include-additional "deps,get,preview"
 The MCP server provides a `rules` command to create instruction files for AI assistants:
 
 ```bash
-bit mcp-server rules [vscode|cursor|windsurf] [options]
+bit mcp-server rules [vscode|cursor|windsurf|cline] [options]
 ```
 
 This command creates rules/instructions markdown files that provide guidance to AI assistants on how to effectively use the Bit MCP server and follow best practices when working with Bit components.
@@ -196,6 +196,7 @@ This command creates rules/instructions markdown files that provide guidance to 
 - **VS Code**: `bit mcp-server rules vscode` (or just `bit mcp-server rules`)
 - **Cursor**: `bit mcp-server rules cursor`
 - **Windsurf**: `bit mcp-server rules windsurf`
+- **Cline**: `bit mcp-server rules cline`
 
 #### Configuration Options
 
@@ -214,6 +215,12 @@ bit mcp-server rules cursor --global
 
 # Consumer project rules for VS Code
 bit mcp-server rules --consumer-project
+
+# Global rules for Cline (macOS only)
+bit mcp-server rules cline --global
+
+# Workspace-specific rules for Cline
+bit mcp-server rules cline
 
 # Print rules content to screen for manual setup
 bit mcp-server rules --print

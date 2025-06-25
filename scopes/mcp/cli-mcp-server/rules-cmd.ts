@@ -10,13 +10,13 @@ export type McpRulesCmdOptions = {
 
 export class McpRulesCmd implements Command {
   name = 'rules [editor]';
-  description = 'Write Bit MCP rules/instructions file for VS Code, Cursor, Roo Code, or print to screen';
+  description = 'Write Bit MCP rules/instructions file for VS Code, Cursor, Roo Code, Cline, or print to screen';
   extendedDescription =
-    'Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, and Roo Code. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.';
+    'Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, Roo Code, and Cline. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.';
   arguments = [
     {
       name: 'editor',
-      description: 'Editor to write rules for (default: vscode). Available: vscode, cursor, roo',
+      description: 'Editor to write rules for (default: vscode). Available: vscode, cursor, roo, cline',
     },
   ];
   options = [
