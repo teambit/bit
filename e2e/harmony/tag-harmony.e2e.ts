@@ -227,7 +227,16 @@ describe('tag components on Harmony', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.outputFile('bar/index.js');
-      helper.fs.outputFile('bar/foo.spec.js'); // it will fail as it doesn't have any test
+      helper.fs.outputFile(
+        'bar/foo.spec.js',
+        `
+        describe('bar component', () => {
+          it('should fail', () => {
+            expect(true).toBe(false);
+          });
+        });
+      `
+      );
       helper.command.addComponent('bar');
       beforeTagScope = helper.scopeHelper.cloneWorkspace();
     });
@@ -245,6 +254,12 @@ describe('tag components on Harmony', function () {
     it('should succeed with --ignore-build-errors', () => {
       helper.scopeHelper.getClonedWorkspace(beforeTagScope);
       expect(() => helper.command.tagAllComponents('--ignore-build-errors')).to.not.throw();
+    });
+    it('should not throw with --build --loose when only test failures occur and set buildStatus to succeed', () => {
+      helper.scopeHelper.getClonedWorkspace(beforeTagScope);
+      helper.command.tagAllComponents('--build --loose');
+      const comp = helper.command.catComponent('bar@latest');
+      expect(comp.buildStatus).to.equal('succeed');
     });
   });
   describe('modified one component, the rest are auto-tag pending', () => {

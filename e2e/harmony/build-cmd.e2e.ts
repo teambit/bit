@@ -5,6 +5,7 @@ import { loadBit } from '@teambit/bit';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import { specFileFailingFixture } from './jest.e2e';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -129,6 +130,34 @@ describe('build command', function () {
     it('should indicate when executing a build task on a dependency', () => {
       const output = helper.command.build();
       expect(output).to.have.string('[dependency] (node)');
+    });
+  });
+
+  describe('bit build with --loose flag', () => {
+    describe('component with a failing test', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.fixtures.populateComponents(1);
+        helper.fs.outputFile('comp1/comp1.spec.ts', specFileFailingFixture());
+      });
+      it('bit build --loose should not throw and show the failing test but indicate build success', () => {
+        const output = helper.command.build(undefined, '--loose', true);
+        expect(output).to.have.string('task "teambit.defender/tester:JestTest" has failed'); // Should still show the failing task
+        expect(output).to.have.string('should fail'); // Should still show the failing test
+        expect(output).to.have.string('build succeeded'); // But build should succeed
+      });
+    });
+    describe('component with a compilation error', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.fixtures.populateComponents(1);
+        // Create a TypeScript file with a compilation error
+        helper.fs.outputFile('comp1/comp1.ts', 'export function invalidFunction(): string { return 123; }');
+        helper.fs.outputFile('comp1/index.ts', 'export { invalidFunction } from "./comp1";');
+      });
+      it('bit build --loose should still throw an error for compilation errors', () => {
+        expect(() => helper.command.build(undefined, '--loose')).to.throw();
+      });
     });
   });
 });

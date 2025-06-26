@@ -194,7 +194,7 @@ function specFilePassingFixture(describeText = 'test', itText = 'should pass') {
 `;
 }
 
-function specFileFailingFixture() {
+export function specFileFailingFixture() {
   return `describe('test', () => {
   it('should fail', () => {
     expect(false).toBeTruthy();

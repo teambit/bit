@@ -52,6 +52,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       'skip the snap pipeline. this will for instance skip packing and publishing component version for install, and app deployment',
     ],
     ['', 'ignore-build-errors', 'proceed to snap pipeline even when build pipeline fails'],
+    ['', 'loose', 'allow snap --build to succeed even if tasks like tests or lint fail'],
     ['', 'rebuild-deps-graph', 'do not reuse the saved dependencies graph, instead build it from scratch'],
     [
       'i',
@@ -96,6 +97,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       unmodified = false,
       failFast = false,
       detachHead,
+      loose = false,
     }: {
       unmerged?: boolean;
       editor?: string;
@@ -130,6 +132,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       unmodified,
       exitOnFirstFailedTask: failFast,
       detachHead,
+      loose,
     });
 
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
