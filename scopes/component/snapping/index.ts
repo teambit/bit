@@ -12,5 +12,11 @@ export type {
 export default SnappingAspect;
 export { SnappingAspect };
 export { VersionMaker, BasicTagParams, VersionMakerParams, BasicTagSnapParams } from './version-maker';
-export { AUTO_TAGGED_MSG, NOTHING_TO_TAG_MSG, tagCmdOptions, TagParams, validateOptions, tagResultOutput } from './tag-cmd';
-
+export {
+  AUTO_TAGGED_MSG,
+  NOTHING_TO_TAG_MSG,
+  tagCmdOptions,
+  TagParams,
+  validateOptions,
+  tagResultOutput,
+} from './tag-cmd';
