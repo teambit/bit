@@ -1600,12 +1600,12 @@ Start the Model Context Protocol (MCP) server with the specified configuration
 
 **Usage**: `mcp-server setup [editor]`
 
-**Description**: Setup MCP integration with VS Code, Cursor, Windsurf, Roo Code, or other editors  
-Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, Windsurf, and Roo Code.
+**Description**: Setup MCP integration with VS Code, Cursor, Windsurf, Roo Code, Cline, or other editors  
+Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, Windsurf, Roo Code, and Cline.
 
-| **Arg**  |                               **Description**                               |
-| -------- | :-------------------------------------------------------------------------: |
-| `editor` | Editor to setup (default: vscode). Available: vscode, cursor, windsurf, roo |
+| **Arg**  |                                  **Description**                                   |
+| -------- | :--------------------------------------------------------------------------------: |
+| `editor` | Editor to setup (default: vscode). Available: vscode, cursor, windsurf, roo, cline |
 
 | **Option**                        | **Option alias** | **Description**                                                                        |
 | --------------------------------- | :--------------: | -------------------------------------------------------------------------------------- |
@@ -1617,12 +1617,12 @@ Creates or updates configuration files to integrate Bit MCP server with supporte
 
 **Usage**: `mcp-server rules [editor]`
 
-**Description**: Write Bit MCP rules/instructions file for VS Code, Cursor, or print to screen  
-Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code and Cursor. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.
+**Description**: Write Bit MCP rules/instructions file for VS Code, Cursor, Roo Code, Cline, or print to screen  
+Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, Roo Code, and Cline. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.
 
-| **Arg**  |                            **Description**                             |
-| -------- | :--------------------------------------------------------------------: |
-| `editor` | Editor to write rules for (default: vscode). Available: vscode, cursor |
+| **Arg**  |                                  **Description**                                   |
+| -------- | :--------------------------------------------------------------------------------: |
+| `editor` | Editor to write rules for (default: vscode). Available: vscode, cursor, roo, cline |
 
 | **Option**           | **Option alias** | **Description**                                                               |
 | -------------------- | :--------------: | ----------------------------------------------------------------------------- |

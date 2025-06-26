@@ -144,14 +144,14 @@
             "Setup global configuration (default: workspace-specific)"
           ]
         ],
-        "description": "Setup MCP integration with VS Code, Cursor, Windsurf, Roo Code, or other editors",
-        "extendedDescription": "Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, Windsurf, and Roo Code.",
+        "description": "Setup MCP integration with VS Code, Cursor, Windsurf, Roo Code, Cline, or other editors",
+        "extendedDescription": "Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, Windsurf, Roo Code, and Cline.",
         "group": "ungrouped",
         "private": false,
         "arguments": [
           {
             "name": "editor",
-            "description": "Editor to setup (default: vscode). Available: vscode, cursor, windsurf, roo"
+            "description": "Editor to setup (default: vscode). Available: vscode, cursor, windsurf, roo, cline"
           }
         ]
       },
@@ -175,14 +175,14 @@
             "Generate rules for consumer projects that only use Bit components as packages"
           ]
         ],
-        "description": "Write Bit MCP rules/instructions file for VS Code, Cursor, or print to screen",
-        "extendedDescription": "Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code and Cursor. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.",
+        "description": "Write Bit MCP rules/instructions file for VS Code, Cursor, Roo Code, Cline, or print to screen",
+        "extendedDescription": "Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, Roo Code, and Cline. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.",
         "group": "ungrouped",
         "private": false,
         "arguments": [
           {
             "name": "editor",
-            "description": "Editor to write rules for (default: vscode). Available: vscode, cursor"
+            "description": "Editor to write rules for (default: vscode). Available: vscode, cursor, roo, cline"
           }
         ]
       }
