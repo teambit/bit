@@ -67,10 +67,13 @@ import { RemoveAspect, RemoveMain } from '@teambit/remove';
 import { VersionMaker, BasicTagParams, BasicTagSnapParams, updateVersions, VersionMakerParams } from './version-maker';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 
-export type PackageIntegritiesByPublishedPackages = Map<string, {
-  integrity: string | undefined;
-  previouslyUsedVersion: string | undefined;
-}>;
+export type PackageIntegritiesByPublishedPackages = Map<
+  string,
+  {
+    integrity: string | undefined;
+    previouslyUsedVersion: string | undefined;
+  }
+>;
 
 export type TagDataPerComp = {
   componentId: ComponentID;
@@ -203,6 +206,7 @@ export class SnappingMain {
     failFast = false,
     detachHead,
     overrideHead,
+    loose = false,
   }: {
     ids?: string[];
     all?: boolean | string;
@@ -268,6 +272,7 @@ export class SnappingMain {
       exitOnFirstFailedTask: failFast,
       detachHead,
       overrideHead,
+      loose,
     };
     const { taggedComponents, autoTaggedResults, publishedPackages, stagedConfig, removedComponents } =
       await this.makeVersion(compIds, components, params);
@@ -403,12 +408,14 @@ export class SnappingMain {
       return snapData;
     };
     const updatedLegacyComponents = params.updatedLegacyComponents || [];
-    const updatedComponents =  await this.scope.getManyByLegacy(updatedLegacyComponents);
+    const updatedComponents = await this.scope.getManyByLegacy(updatedLegacyComponents);
 
-    const existingComponents = compact(await pMapSeries(componentIdsLatest, async (id) => {
-      const foundInUpdated = updatedComponents.find((c) => c.id.isEqualWithoutVersion(id));
-      return foundInUpdated || this.scope.get(id);
-    }));
+    const existingComponents = compact(
+      await pMapSeries(componentIdsLatest, async (id) => {
+        const foundInUpdated = updatedComponents.find((c) => c.id.isEqualWithoutVersion(id));
+        return foundInUpdated || this.scope.get(id);
+      })
+    );
     // in case of update-dependents, align the dependencies of the dependents according to the lane
     if (params.updateDependents && laneCompIds) {
       existingComponents.forEach((comp) => {
@@ -449,7 +456,7 @@ export class SnappingMain {
     // node env.
     const { loadAspectOnlyForIds } = params;
     const compsToLoadAspects = loadAspectOnlyForIds
-      ? components.filter(c => loadAspectOnlyForIds.hasWithoutVersion(c.id))
+      ? components.filter((c) => loadAspectOnlyForIds.hasWithoutVersion(c.id))
       : components;
 
     await this.scope.loadManyCompsAspects(compsToLoadAspects);
@@ -520,6 +527,7 @@ export class SnappingMain {
     unmodified = false,
     exitOnFirstFailedTask = false,
     detachHead,
+    loose = false,
   }: Partial<BasicTagSnapParams> & {
     pattern?: string;
     legacyBitIds?: ComponentIdList;
@@ -560,6 +568,7 @@ export class SnappingMain {
       packageManagerConfigRootDir: this.workspace.path,
       exitOnFirstFailedTask,
       detachHead,
+      loose,
     };
     const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await this.makeVersion(
       ids,

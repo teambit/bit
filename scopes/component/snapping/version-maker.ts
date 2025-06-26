@@ -39,6 +39,7 @@ export type BasicTagSnapParams = {
   rebuildDepsGraph?: boolean;
   detachHead?: boolean;
   overrideHead?: boolean;
+  loose?: boolean;
 };
 
 export type BasicTagParams = BasicTagSnapParams & {
@@ -285,6 +286,7 @@ export class VersionMaker {
       exitOnFirstFailedTask,
       populateArtifactsIgnorePkgJson,
       skipTests,
+      loose,
     } = this.params;
     const onTagOpts: OnTagOpts = {
       disableTagAndSnapPipelines,
@@ -292,11 +294,12 @@ export class VersionMaker {
       forceDeploy: ignoreBuildErrors,
       isSnap,
       populateArtifactsFrom,
+      loose,
     };
     const skipTasksParsed = skipTasks ? skipTasks.split(',').map((t) => t.trim()) : undefined;
     const seedersOnly = !this.workspace; // if tag from scope, build only the given components
     const isolateOptions = { packageManagerConfigRootDir, seedersOnly, populateArtifactsIgnorePkgJson };
-    const builderOptions = { exitOnFirstFailedTask, skipTests, skipTasks: skipTasksParsed };
+    const builderOptions = { exitOnFirstFailedTask, skipTests, skipTasks: skipTasksParsed, loose };
 
     const componentsToBuild = harmonyCompsToTag.filter((c) => !c.isDeleted());
     if (componentsToBuild.length) {
