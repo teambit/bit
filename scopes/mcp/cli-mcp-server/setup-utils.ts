@@ -72,6 +72,8 @@ export class McpSetupUtils {
         return 'Windsurf';
       case 'roo':
         return 'Roo Code';
+      case 'cline':
+        return 'Cline';
       default:
         return editor;
     }
@@ -350,6 +352,23 @@ export class McpSetupUtils {
   }
 
   /**
+   * Write Bit MCP rules file for Cline
+   */
+  static async writeClineRules(options: RulesOptions): Promise<void> {
+    const { isGlobal, workspaceDir, consumerProject = false } = options;
+
+    // Determine prompts file path
+    const promptsPath = this.getClinePromptsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(promptsPath));
+
+    // Write rules content
+    const rulesContent = await this.getDefaultRulesContent(consumerProject);
+    await fs.writeFile(promptsPath, rulesContent);
+  }
+
+  /**
    * Get Roo Code mcp.json path based on global/workspace scope
    */
   static getRooCodeSettingsPath(isGlobal: boolean, workspaceDir?: string): string {
@@ -402,5 +421,29 @@ export class McpSetupUtils {
 
     // Write updated MCP configuration
     await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
+  }
+
+  /**
+   * Get Cline prompts path based on global/workspace scope
+   */
+  static getClinePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Global Cline rules - using Mac path as specified, error for others
+      const platform = process.platform;
+      if (platform === 'darwin') {
+        return path.join(homedir(), 'Documents', 'Cline', 'Rules', 'bit.instructions.md');
+      } else {
+        throw new Error(
+          `Global Cline rules configuration is not supported on ${platform}. ` +
+            'The global path is only known for macOS (~/Documents/Cline/Rules/). ' +
+            'For other operating systems, please use the --print flag to get the rules content ' +
+            'and add it manually to your global Cline configuration.'
+        );
+      }
+    } else {
+      // Workspace-specific rules
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.clinerules', 'bit.instructions.md');
+    }
   }
 }
