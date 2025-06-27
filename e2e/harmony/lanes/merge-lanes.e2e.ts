@@ -4,6 +4,7 @@ import { uniq } from 'lodash';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { Extensions, statusWorkspaceIsCleanMsg } from '@teambit/legacy.constants';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
+import { specFileFailingFixture } from '../jest.e2e';
 
 chai.use(require('chai-fs'));
 
@@ -1743,6 +1744,47 @@ describe('merge lanes', function () {
     it('should squash successfully', () => {
       const laneHeadVer = helper.command.catObject(headOnLane, true);
       expect(laneHeadVer.squashed.previousParents[0]).to.equal(firstSnapOnLane);
+    });
+  });
+  describe('merge with --build --loose', () => {
+    let beforeMerge: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // Create divergent histories to trigger snap-merge
+      helper.command.createLane('dev');
+      // Add failing test to existing component
+      helper.fs.outputFile('comp1/comp1.spec.ts', specFileFailingFixture());
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      // Switch to main and create conflicting change
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.tagAllWithoutBuild('--unmodified'); // This creates divergent history
+
+      beforeMerge = helper.scopeHelper.cloneWorkspace();
+    });
+    describe('without --loose flag', () => {
+      it('should fail when merging with --build due to test failures', () => {
+        const output = helper.command.mergeLane('dev', '--build --no-squash');
+        expect(output).to.have.string('Total Snapped: 0');
+      });
+    });
+    describe('with --loose flag', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(beforeMerge);
+        mergeOutput = helper.command.mergeLane('dev', '--build --loose --no-squash');
+      });
+      it('should succeed despite test failures', () => {
+        expect(mergeOutput).to.have.string('Total Snapped: 1');
+      });
+      it('should indicate that the test failed', () => {
+        expect(mergeOutput).to.include('task "teambit.defender/tester:JestTest" has failed');
+      });
     });
   });
 });

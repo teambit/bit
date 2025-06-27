@@ -221,6 +221,7 @@ export class MergingMain {
     build,
     skipDependencyInstallation,
     detachHead,
+    loose,
   }: {
     mergeStrategy: MergeStrategy;
     allComponentsStatus: ComponentMergeStatus[];
@@ -233,6 +234,7 @@ export class MergingMain {
     build?: boolean;
     skipDependencyInstallation?: boolean;
     detachHead?: boolean;
+    loose?: boolean;
   }): Promise<ApplyVersionResults> {
     const consumer = this.workspace?.consumer;
     const legacyScope = this.scope.legacyScope;
@@ -336,13 +338,12 @@ export class MergingMain {
         const { taggedComponents, autoTaggedResults, removedComponents } = results;
         return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults, removedComponents };
       }
-      return this.snapResolvedComponents(
-        allComponentsStatus,
+      return this.snapResolvedComponents(allComponentsStatus, updatedComponents, {
         snapMessage,
         build,
-        currentLane?.toLaneId(),
-        updatedComponents
-      );
+        laneId: currentLane?.toLaneId(),
+        loose,
+      });
     };
     let mergeSnapResults: MergeSnapResults = null;
     let mergeSnapError: Error | undefined;
@@ -635,10 +636,18 @@ export class MergingMain {
 
   private async snapResolvedComponents(
     allComponentsStatus: ComponentMergeStatus[],
-    snapMessage?: string,
-    build?: boolean,
-    laneId?: LaneId,
-    updatedComponents?: ConsumerComponent[]
+    updatedComponents: ConsumerComponent[],
+    {
+      snapMessage,
+      build,
+      laneId,
+      loose,
+    }: {
+      snapMessage?: string;
+      build?: boolean;
+      laneId?: LaneId;
+      loose?: boolean;
+    }
   ): Promise<MergeSnapResults> {
     const unmergedComponents = this.scope.legacyScope.objects.unmergedComponents.getComponents();
     this.logger.debug(`merge-snaps, snapResolvedComponents, total ${unmergedComponents.length.toString()} components`);
@@ -672,6 +681,7 @@ export class MergingMain {
           lane: laneId?.toString(),
           updatedLegacyComponents: updatedComponents,
           loadAspectOnlyForIds: getLoadAspectOnlyForIds(),
+          loose,
         }
       );
       return results;
@@ -680,6 +690,7 @@ export class MergingMain {
       legacyBitIds: ids,
       build,
       message: snapMessage,
+      loose,
     });
   }
 
