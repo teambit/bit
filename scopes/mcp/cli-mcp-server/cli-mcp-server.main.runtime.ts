@@ -90,13 +90,26 @@ export class CliMcpServerMain {
 
   private async getBitServerPort(cwd: string, skipValidatePortFlag = false): Promise<number | undefined> {
     try {
-      const existingPort = childProcess
-        .execSync(`${this.bitBin} cli-server-port ${skipValidatePortFlag}`, {
-          cwd,
-          env: { ...process.env, BIT_CLI_SERVER: 'true' },
-        })
-        .toString()
-        .trim();
+      const args = ['cli-server-port'];
+      if (skipValidatePortFlag) {
+        args.push(String(skipValidatePortFlag));
+      }
+
+      const result = childProcess.spawnSync(this.bitBin, args, {
+        cwd,
+        env: { ...process.env, BIT_CLI_SERVER: 'true' },
+        encoding: 'utf8',
+      });
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      if (result.status !== 0) {
+        throw new Error(`Command failed with status ${result.status}: ${result.stderr}`);
+      }
+
+      const existingPort = result.stdout.trim();
       if (!existingPort) return undefined;
       return parseInt(existingPort, 10);
     } catch (err: any) {
@@ -1117,19 +1130,26 @@ export class CliMcpServerMain {
 
   private async runBit(args: string[], cwd: string): Promise<CallToolResult> {
     this.logger.debug(`[MCP-DEBUG] Running: ${this.bitBin} ${args.join(' ')} in ${cwd}`);
-    const cmd = `${this.bitBin} ${args.join(' ')}`;
     try {
-      const cmdOutput = childProcess.execSync(cmd, {
+      const result = childProcess.spawnSync(this.bitBin, args, {
         cwd,
         env: { ...process.env, BIT_DISABLE_SPINNER: '1' },
-        stdio: 'pipe',
+        encoding: 'utf8',
       });
-      this.logger.debug(`[MCP-DEBUG] result. stdout: ${cmdOutput}`);
 
-      return { content: [{ type: 'text', text: cmdOutput.toString() }] };
+      if (result.error) {
+        throw result.error;
+      }
+
+      if (result.status !== 0) {
+        const errorMessage = result.stderr || `Command failed with status ${result.status}`;
+        throw new Error(errorMessage);
+      }
+
+      this.logger.debug(`[MCP-DEBUG] result. stdout: ${result.stdout}`);
+      return { content: [{ type: 'text', text: result.stdout }] };
     } catch (error: any) {
-      this.logger.error(`[MCP-DEBUG] Error executing ${cmd}`, error);
-
+      this.logger.error(`[MCP-DEBUG] Error executing ${this.bitBin} ${args.join(' ')}`, error);
       return { content: [{ type: 'text', text: error.message }] };
     }
   }
