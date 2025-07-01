@@ -40,6 +40,7 @@ export type WorkspaceExtensionProps = {
   defaultScope?: string;
   defaultDirectory?: string;
   components?: ComponentScopeDirMap;
+  externalPackageManager?: boolean;
 };
 
 export type PackageManagerClients = 'npm' | 'yarn' | undefined;
@@ -177,16 +178,33 @@ export class WorkspaceConfig implements HostConfig {
     // previously, we just did `assign(template, props)`, but it was replacing the entire workspace config with the "props".
     // so for example, if the props only had defaultScope, it was removing the defaultDirectory.
     const workspaceAspectConf = assign(template[WorkspaceAspect.id], props[WorkspaceAspect.id]);
+
+    // When external package manager mode is enabled, set conflicting properties to false in the template
+    if (workspaceAspectConf.externalPackageManager) {
+      // Override template defaults to be compatible with external package manager mode
+      template[WorkspaceAspect.id].resolveAspectsFromNodeModules = false;
+      template[WorkspaceAspect.id].resolveEnvsFromRoots = false;
+      template['teambit.workspace/workspace-config-files'] = template['teambit.workspace/workspace-config-files'] || {};
+      template['teambit.workspace/workspace-config-files'].enableWorkspaceConfigWrite = false;
+    }
+
     const merged = assign(template, { [WorkspaceAspect.id]: workspaceAspectConf });
+
     if (generator) {
       const generators = generator.split(',').map((g) => g.trim());
       merged['teambit.generator/generator'] = { envs: generators };
     }
-    return new WorkspaceConfig(
+
+    const workspaceConfig = new WorkspaceConfig(
       merged as WorkspaceConfigFileProps,
       WorkspaceConfig.composeWorkspaceJsoncPath(dirPath),
       scopePath
     );
+
+    // Validate external package manager configuration
+    workspaceConfig.validateExternalPackageManagerConfig();
+
+    return workspaceConfig;
   }
 
   /**
@@ -287,7 +305,12 @@ export class WorkspaceConfig implements HostConfig {
     } catch {
       throw new InvalidConfigFile(workspaceJsoncPath);
     }
-    return WorkspaceConfig.fromObject(parsed, workspaceJsoncPath, scopePath);
+    const workspaceConfig = WorkspaceConfig.fromObject(parsed, workspaceJsoncPath, scopePath);
+
+    // Validate external package manager configuration
+    workspaceConfig.validateExternalPackageManagerConfig();
+
+    return workspaceConfig;
   }
 
   async write({ dir, reasonForChange }: { dir?: PathOsBasedAbsolute; reasonForChange?: string } = {}): Promise<void> {
@@ -381,6 +404,39 @@ export class WorkspaceConfig implements HostConfig {
       toVinyl: this.toVinyl.bind(this),
       _legacyPlainObject: () => undefined,
     };
+  }
+
+  /**
+   * Validates that external package manager configuration is compatible with other settings
+   */
+  validateExternalPackageManagerConfig(): void {
+    const workspaceExt = this.extension(WorkspaceAspect.id, true);
+    if (!workspaceExt?.externalPackageManager) {
+      return; // No validation needed if external package manager is not enabled
+    }
+
+    const conflicts: string[] = [];
+
+    // Check workspace aspect conflicts
+    if (workspaceExt.resolveAspectsFromNodeModules === true) {
+      conflicts.push('resolveAspectsFromNodeModules cannot be true when externalPackageManager is enabled');
+    }
+
+    if (workspaceExt.resolveEnvsFromRoots === true) {
+      conflicts.push('resolveEnvsFromRoots cannot be true when externalPackageManager is enabled');
+    }
+
+    // Check workspace-config-files aspect conflicts
+    const workspaceConfigFilesExt = this.extension('teambit.workspace/workspace-config-files', true);
+    if (workspaceConfigFilesExt?.enableWorkspaceConfigWrite === true) {
+      conflicts.push('enableWorkspaceConfigWrite cannot be true when externalPackageManager is enabled');
+    }
+
+    if (conflicts.length > 0) {
+      throw new Error(
+        `External package manager mode is incompatible with the following settings:\n${conflicts.map((c) => `  - ${c}`).join('\n')}\n\nPlease set these properties to false or remove them from your workspace.jsonc`
+      );
+    }
   }
 }
 
