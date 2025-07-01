@@ -60,6 +60,7 @@ export type MergeLaneOptions = {
   throwIfNotUpToDate?: boolean; // relevant when merging from a scope
   fetchCurrent?: boolean; // needed when merging from a bare-scope (because it's empty)
   detachHead?: boolean;
+  loose?: boolean; // relevant for --build, to allow build to succeed even if tasks like tests or lint fail
 };
 export type ConflictPerId = { id: ComponentID; files: string[]; config?: boolean; configConflict?: string };
 
@@ -114,6 +115,7 @@ export class MergeLanesMain {
       snapMessage,
       existingOnWorkspaceOnly,
       build,
+      loose,
       keepReadme,
       squash,
       noSquash,
@@ -224,6 +226,7 @@ export class MergeLanesMain {
       build,
       skipDependencyInstallation,
       detachHead,
+      loose,
     });
 
     if (snapshot) await lastMerged?.persistSnapshot(snapshot);
