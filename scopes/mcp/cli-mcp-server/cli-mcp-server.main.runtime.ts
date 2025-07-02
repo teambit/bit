@@ -1266,7 +1266,10 @@ export class CliMcpServerMain {
     const editorLower = editor.toLowerCase();
 
     if (editorLower === 'vscode') {
-      return McpSetupUtils.getVSCodeSettingsPath(isGlobal, workspaceDir);
+      // For VS Code, return appropriate config path based on global vs workspace scope
+      return isGlobal
+        ? McpSetupUtils.getVSCodeSettingsPath(isGlobal, workspaceDir)
+        : McpSetupUtils.getVSCodeMcpConfigPath(workspaceDir);
     } else if (editorLower === 'cursor') {
       return McpSetupUtils.getCursorSettingsPath(isGlobal, workspaceDir);
     } else if (editorLower === 'windsurf') {
