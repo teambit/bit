@@ -134,6 +134,7 @@ export class ApplicationMain {
    */
   async loadAllAppsAsAspects(poolIds?: ComponentID[]): Promise<ComponentID[]> {
     const apps = await this.listAppsComponents(poolIds);
+    if (!apps.length) return [];
     // do not load apps that their env was not loaded yet. their package-json may not be up to date. e.g. it could be
     // cjs, when the env needs it as esm. once it is loaded, node.js saved the package.json in the cache with no way to
     // refresh it.
@@ -193,6 +194,7 @@ export class ApplicationMain {
    */
   async listAppsComponents(poolIds?: ComponentID[]): Promise<Component[]> {
     const host = this.workspace || this.componentAspect.getHost();
+    if (!host) return [];
     const components = poolIds
       ? this.workspace
         ? await this.workspace.getMany(poolIds, {
