@@ -110,6 +110,11 @@ function printDiffFromLastSnapshot(cmdOutput: string) {
   console.log('********** the following files are new ***************************');
   difference(linesFromBitInstallation, fromLastSnapshotLines).forEach((line) => console.log(line));
   console.log('******************************************************************');
+
+  console.log('********** the following files are old ***************************');
+  difference(fromLastSnapshotLines, linesFromBitInstallation).forEach((line) => console.log(line));
+  console.log('******************************************************************');
+
   console.log('********** the following files are not from bit-installation *****');
   otherLines.forEach((line) => console.log(line));
   console.log('*******************************************************************');
