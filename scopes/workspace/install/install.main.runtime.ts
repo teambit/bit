@@ -143,7 +143,7 @@ export class InstallMain {
     private ipcEvents: IpcEventsMain,
 
     private harmony: Harmony
-  ) { }
+  ) {}
   /**
    * Install dependencies for all components in the workspace
    *
@@ -151,6 +151,15 @@ export class InstallMain {
    * @memberof Workspace
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions): Promise<ComponentMap<string>> {
+    // Check if external package manager mode is enabled
+    const workspaceConfig = this.workspace.getWorkspaceConfig();
+    const workspaceExtConfig = workspaceConfig.extensions.findExtension(WorkspaceAspect.id);
+    if (workspaceExtConfig?.config.externalPackageManager) {
+      throw new Error(
+        'External package manager mode is enabled. Please use your preferred package manager (npm, yarn, pnpm) to install dependencies instead of "bit install".'
+      );
+    }
+
     // set workspace in install context
     this.workspace.inInstallContext = true;
     this.workspace.inInstallAfterPmContext = false;
@@ -1241,7 +1250,7 @@ export class InstallMain {
     WorkspaceConfigFilesAspect,
     AspectLoaderAspect,
     BundlerAspect,
-    UIAspect
+    UIAspect,
   ];
 
   static runtime = MainRuntime;
@@ -1262,24 +1271,24 @@ export class InstallMain {
       wsConfigFiles,
       aspectLoader,
       bundler,
-      ui
+      ui,
     ]: [
-        DependencyResolverMain,
-        Workspace,
-        LoggerMain,
-        VariantsMain,
-        CLIMain,
-        CompilerMain,
-        IssuesMain,
-        EnvsMain,
-        ApplicationMain,
-        IpcEventsMain,
-        GeneratorMain,
-        WorkspaceConfigFilesMain,
-        AspectLoaderMain,
-        BundlerMain,
-        UiMain
-      ],
+      DependencyResolverMain,
+      Workspace,
+      LoggerMain,
+      VariantsMain,
+      CLIMain,
+      CompilerMain,
+      IssuesMain,
+      EnvsMain,
+      ApplicationMain,
+      IpcEventsMain,
+      GeneratorMain,
+      WorkspaceConfigFilesMain,
+      AspectLoaderMain,
+      BundlerMain,
+      UiMain,
+    ],
     _,
     [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot],
     harmony: Harmony

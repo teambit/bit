@@ -74,4 +74,14 @@ export interface WorkspaceExtConfig {
    * when set to true, bit will try to load MyDepAspect automatically.
    */
   autoLoadAspectsDeps?: boolean;
+
+  /**
+   * If set to `true`, enables external package manager mode. When enabled:
+   * - resolveAspectsFromNodeModules will be set to false
+   * - resolveEnvsFromRoots will be set to false
+   * - enableWorkspaceConfigWrite will be set to false
+   * - bit install will throw an error suggesting to use external package manager
+   * - commands with -x flag will skip dependency installation by default
+   */
+  externalPackageManager?: boolean;
 }
