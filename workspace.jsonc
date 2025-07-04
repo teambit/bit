@@ -625,7 +625,8 @@
     "packageManager": "teambit.dependencies/pnpm",
     "rootComponents": true,
     "overrides": {
-      "lodash@4.17.15": "4.17.21",
+      "lodash@4": "4.17.21",
+      "trim@0": "0.0.3",
       "@teambit/harmony": "0.4.7",
       "@types/fs-capacitor": "2.0.0",
       // @types/node is used as a peer dependency, so to reduce duplication,
