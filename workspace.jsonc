@@ -221,7 +221,7 @@
         "@teambit/evangelist.elements.icon": "1.0.2",
         "@teambit/evangelist.input.checkbox.label": "^1.1.0",
         "@teambit/evangelist.surfaces.dropdown": "1.0.2",
-        "@teambit/explorer.ui.command-bar": "2.0.16",
+        "@teambit/explorer.ui.command-bar": "^2.0.17",
         "@teambit/explorer.ui.component-card": "^0.0.50",
         "@teambit/explorer.ui.gallery.component-grid": "0.0.496",
         "@teambit/git.modules.git-ignore": "^1.0.2",
