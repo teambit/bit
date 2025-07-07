@@ -221,7 +221,7 @@
         "@teambit/evangelist.elements.icon": "1.0.2",
         "@teambit/evangelist.input.checkbox.label": "^1.1.0",
         "@teambit/evangelist.surfaces.dropdown": "1.0.2",
-        "@teambit/explorer.ui.command-bar": "2.0.16",
+        "@teambit/explorer.ui.command-bar": "^2.0.17",
         "@teambit/explorer.ui.component-card": "^0.0.50",
         "@teambit/explorer.ui.gallery.component-grid": "0.0.496",
         "@teambit/git.modules.git-ignore": "^1.0.2",
@@ -625,7 +625,8 @@
     "packageManager": "teambit.dependencies/pnpm",
     "rootComponents": true,
     "overrides": {
-      "lodash@4.17.15": "4.17.21",
+      "lodash@4": "4.17.21",
+      "trim@0": "0.0.3",
       "@teambit/harmony": "0.4.7",
       "@types/fs-capacitor": "2.0.0",
       // @types/node is used as a peer dependency, so to reduce duplication,
