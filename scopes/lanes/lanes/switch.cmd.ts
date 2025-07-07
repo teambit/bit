@@ -43,6 +43,7 @@ ${COMPONENT_PATTERN_HELP}`,
     ],
     ['', 'verbose', 'display detailed information about components that legitimately were not switched'],
     ['j', 'json', 'return the output as JSON'],
+    ['', 'branch', 'create and checkout a new git branch named after the lane'],
   ] as CommandOptions;
   loader = true;
 
@@ -62,6 +63,7 @@ ${COMPONENT_PATTERN_HELP}`,
       pattern,
       verbose,
       json = false,
+      branch = false,
     }: {
       head?: boolean;
       alias?: string;
@@ -75,6 +77,7 @@ ${COMPONENT_PATTERN_HELP}`,
       pattern?: string;
       verbose?: boolean;
       json?: boolean;
+      branch?: boolean;
     }
   ) {
     const { components, failedComponents, installationError, compilationError } = await this.lanes.switchLanes(lane, {
@@ -86,6 +89,7 @@ ${COMPONENT_PATTERN_HELP}`,
       workspaceOnly,
       pattern,
       skipDependencyInstallation,
+      branch,
     });
     if (getAll) {
       this.lanes.logger.warn('the --get-all flag is deprecated and currently the default behavior');

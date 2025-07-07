@@ -620,6 +620,7 @@ export class LaneImportCmd implements Command {
       'pattern <component-pattern>',
       'import only components from the lane that fit the specified component-pattern to the workspace. works only when the workspace is empty',
     ],
+    ['', 'branch', 'create and checkout a new git branch named after the lane'],
   ] as CommandOptions;
   loader = true;
 
@@ -627,9 +628,17 @@ export class LaneImportCmd implements Command {
 
   async report(
     [lane]: [string],
-    { skipDependencyInstallation = false, pattern }: { skipDependencyInstallation: boolean; pattern?: string }
+    {
+      skipDependencyInstallation = false,
+      pattern,
+      branch = false,
+    }: {
+      skipDependencyInstallation: boolean;
+      pattern?: string;
+      branch?: boolean;
+    }
   ): Promise<string> {
-    return this.switchCmd.report([lane], { skipDependencyInstallation, pattern });
+    return this.switchCmd.report([lane], { skipDependencyInstallation, pattern, branch });
   }
 }
 
