@@ -134,11 +134,22 @@ export class CiMain {
       ignoreCircularDependencies: false,
     });
 
-    if (status.componentsWithIssues.length > 0) {
+    // Check for blocking issues (errors) vs warnings
+    const componentsWithErrors = status.componentsWithIssues.filter(({ issues }) => issues.hasTagBlockerIssues());
+
+    const componentsWithWarnings = status.componentsWithIssues.filter(({ issues }) => !issues.hasTagBlockerIssues());
+
+    if (componentsWithWarnings.length > 0) {
       this.logger.console(
-        chalk.red(
-          `Found ${status.componentsWithIssues.length} components with issues, run 'bit status' to see the issues.`
+        chalk.yellow(
+          `Found ${componentsWithWarnings.length} components with warnings, run 'bit status' to see the warnings.`
         )
+      );
+    }
+
+    if (componentsWithErrors.length > 0) {
+      this.logger.console(
+        chalk.red(`Found ${componentsWithErrors.length} components with errors, run 'bit status' to see the errors.`)
       );
       return { code: 1, data: '', status };
     }
