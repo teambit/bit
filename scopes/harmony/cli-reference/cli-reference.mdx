@@ -344,6 +344,43 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
 
 ---
 
+## ci
+
+**Description**: CI commands
+
+`bit ci <sub-command>`
+
+### ci verify
+
+**Usage**: `ci verify`
+
+**Description**: CI commands
+
+### ci pr
+
+**Usage**: `ci pr`
+
+**Description**: This command is meant to run when a PR was open/updated and meant to export a lane to bit-cloud.
+
+| **Option**            | **Option alias** | **Description**                                                                  |
+| --------------------- | :--------------: | -------------------------------------------------------------------------------- |
+| `--message <message>` |       `-m`       | If set, set it as the snap message, if not, try and grab from git-commit-message |
+| `--lane <lane>`       |       `-l`       | If set, use as the lane name, if not available, grab from git-branch name        |
+| `--build`             |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI    |
+
+### ci merge
+
+**Usage**: `ci merge`
+
+**Description**: Merges a PR
+
+| **Option**            | **Option alias** | **Description**                                                                  |
+| --------------------- | :--------------: | -------------------------------------------------------------------------------- |
+| `--message <message>` |       `-m`       | If set, use it as the snap message, if not, try and grab from git-commit-message |
+| `--build`             |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI    |
+
+---
+
 ## clear-cache
 
 **Alias**: `cc`  
