@@ -124,7 +124,7 @@ export class ApiServerMain {
       '/api/cloud-graphql',
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       createProxyMiddleware({
-        target: `https://${symphonyUrl}/graphql`,
+        target: `${symphonyUrl}/graphql`,
         changeOrigin: true,
         headers: proxyHeaders,
         on: {
@@ -145,7 +145,7 @@ export class ApiServerMain {
       '/api/cloud-rest',
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       createProxyMiddleware({
-        target: `https://${symphonyUrl}`,
+        target: `${symphonyUrl}`,
         changeOrigin: true,
         headers: proxyHeaders,
         on: {
