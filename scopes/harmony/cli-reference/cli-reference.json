@@ -3978,6 +3978,11 @@
             "j",
             "json",
             "return the output as JSON"
+          ],
+          [
+            "",
+            "branch",
+            "create and checkout a new git branch named after the lane"
           ]
         ],
         "description": "switch to the specified lane",
@@ -4169,6 +4174,11 @@
             "p",
             "pattern <component-pattern>",
             "import only components from the lane that fit the specified component-pattern to the workspace. works only when the workspace is empty"
+          ],
+          [
+            "",
+            "branch",
+            "create and checkout a new git branch named after the lane"
           ]
         ],
         "description": "import a remote lane to your workspace and switch to that lane",
@@ -4559,6 +4569,11 @@
         "j",
         "json",
         "return the output as JSON"
+      ],
+      [
+        "",
+        "branch",
+        "create and checkout a new git branch named after the lane"
       ]
     ],
     "description": "switch to the specified lane",
