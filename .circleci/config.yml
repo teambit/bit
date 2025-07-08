@@ -539,11 +539,11 @@ jobs:
           path: bit/yarn.lock
 
   bit_pr:
-    resource_class: large
+    resource_class: xlarge
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=8000
+      NODE_OPTIONS: --max-old-space-size=15000
     steps:
       - attach_workspace:
           at: ./
@@ -561,8 +561,9 @@ jobs:
       - run:
           name: 'bit ci pr'
           command: 'cd bit && bit ci pr --build'
+          no_output_timeout: '20m'
           environment:
-            NODE_OPTIONS: --max-old-space-size=8000
+            NODE_OPTIONS: --max-old-space-size=15000
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
@@ -633,6 +634,7 @@ jobs:
       - run:
           name: 'bit ci merge'
           command: 'cd bit && bit ci merge --build'
+          no_output_timeout: '25m'
           environment:
             NODE_OPTIONS: --max-old-space-size=15000
       - store_artifacts:
