@@ -105,6 +105,7 @@ import { ObjectsAspect } from '@teambit/objects';
 import { BitAspect } from './bit.aspect';
 import { ConfigStoreAspect } from '@teambit/config-store';
 import { CliMcpServerAspect } from '@teambit/cli-mcp-server';
+import { CiAspect } from '@teambit/ci';
 
 /**
  * this is the place to register core aspects.
@@ -218,6 +219,7 @@ export const manifestsMap = {
   [ObjectsAspect.id]: ObjectsAspect,
   [ConfigStoreAspect.id]: ConfigStoreAspect,
   [CliMcpServerAspect.id]: CliMcpServerAspect,
+  [CiAspect.id]: CiAspect,
 };
 
 export function isCoreAspect(id: string) {

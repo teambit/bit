@@ -560,6 +560,7 @@
         "semver-intersect": "1.4.0",
         "semver-range-intersect": "0.3.1",
         "serialize-error": "5.0.0",
+        "simple-git": "^3.28.0",
         "sinon": "17.0.1",
         "socks-proxy-agent": "5.0.0",
         "ssri": "10.0.1",
