@@ -7,6 +7,7 @@ type Options = {
   message?: string;
   build?: boolean;
   lane?: string;
+  strict?: boolean;
 };
 
 export class CiPrCmd implements Command {
@@ -18,6 +19,7 @@ export class CiPrCmd implements Command {
     ['m', 'message <message>', 'If set, set it as the snap message, if not, try and grab from git-commit-message'],
     ['l', 'lane <lane>', 'If set, use as the lane name, if not available, grab from git-branch name'],
     ['b', 'build', 'Set to true to build the app locally, false (default) will build on Ripple CI'],
+    ['s', 'strict', 'Set to true to fail on warnings as well as errors, false (default) only fails on errors'],
   ];
 
   constructor(
@@ -62,6 +64,7 @@ export class CiPrCmd implements Command {
       branch,
       message,
       build: options.build,
+      strict: options.strict,
     });
   }
 }
