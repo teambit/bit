@@ -1278,13 +1278,15 @@ export class CliMcpServerMain {
       return McpSetupUtils.getRooCodeSettingsPath(isGlobal, workspaceDir);
     } else if (editorLower === 'cline') {
       return McpSetupUtils.getClinePromptsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'claude-code') {
+      return McpSetupUtils.getClaudeCodeSettingsPath(isGlobal, workspaceDir);
     }
 
     throw new Error(`Editor "${editor}" is not supported yet.`);
   }
 
   async setupEditor(editor: string, options: SetupOptions, workspaceDir?: string): Promise<void> {
-    const supportedEditors = ['vscode', 'cursor', 'windsurf', 'roo', 'cline'];
+    const supportedEditors = ['vscode', 'cursor', 'windsurf', 'roo', 'cline', 'claude-code'];
     const editorLower = editor.toLowerCase();
 
     if (!supportedEditors.includes(editorLower)) {
@@ -1309,11 +1311,13 @@ export class CliMcpServerMain {
       // Cline doesn't need MCP server setup, only rules files
       // This is a no-op but we include it for consistency
       // Users should use the 'rules' command to set up Cline instructions
+    } else if (editorLower === 'claude-code') {
+      await McpSetupUtils.setupClaudeCode(setupOptions);
     }
   }
 
   async writeRulesFile(editor: string, options: RulesOptions, workspaceDir?: string): Promise<void> {
-    const supportedEditors = ['vscode', 'cursor', 'roo', 'cline'];
+    const supportedEditors = ['vscode', 'cursor', 'roo', 'cline', 'claude-code'];
     const editorLower = editor.toLowerCase();
 
     if (!supportedEditors.includes(editorLower)) {
@@ -1334,6 +1338,8 @@ export class CliMcpServerMain {
       await McpSetupUtils.writeRooCodeRules(rulesOptions);
     } else if (editorLower === 'cline') {
       await McpSetupUtils.writeClineRules(rulesOptions);
+    } else if (editorLower === 'claude-code') {
+      await McpSetupUtils.writeClaudeCodeRules(rulesOptions);
     }
   }
 
