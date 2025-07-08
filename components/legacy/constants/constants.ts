@@ -188,14 +188,17 @@ export const getSymphonyUrl = (): string => {
   if (resolvedSymphonyUrl) return resolvedSymphonyUrl;
   const fromConfig = getConfig(CFG_SYMPHONY_URL_KEY);
   if (fromConfig) {
-    resolvedSymphonyUrl = fromConfig;
+    resolvedSymphonyUrl = fromConfig.startsWith('http') ? fromConfig : `https://${fromConfig}`;
     return resolvedSymphonyUrl;
   }
   const cloudDomain = getCloudDomain();
-  resolvedSymphonyUrl =
+  const symphonyUrlWithoutProtocol =
     cloudDomain === DEFAULT_CLOUD_DOMAIN
       ? `${SYMPHONY_URL_PREFIX_V2}${cloudDomain}`
       : `${SYMPHONY_URL_PREFIX}${cloudDomain}`;
+  resolvedSymphonyUrl = symphonyUrlWithoutProtocol.startsWith('http')
+    ? symphonyUrlWithoutProtocol
+    : `https://${symphonyUrlWithoutProtocol}`;
   return resolvedSymphonyUrl;
 };
 
@@ -222,7 +225,7 @@ export const getRegistryUrl = (domain?: string): string => {
   return url;
 };
 
-export const SYMPHONY_GRAPHQL = `https://${getSymphonyUrl()}/graphql`;
+export const SYMPHONY_GRAPHQL = `${getSymphonyUrl()}/graphql`;
 
 export const BASE_DOCS_DOMAIN = `${BASE_COMMUNITY_DOMAIN}/`;
 
@@ -238,10 +241,10 @@ export const DEFAULT_REGISTRY_URL = `${DEFAULT_REGISTRY_URL_PREFIX}${DEFAULT_CLO
 
 export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_WEB_DOMAIN}`;
 
-export const CENTRAL_BIT_HUB_URL = `https://${getSymphonyUrl()}/exporter`;
+export const CENTRAL_BIT_HUB_URL = `${getSymphonyUrl()}/exporter`;
 
 // export const CENTRAL_BIT_HUB_URL_IMPORTER = `http://localhost:5001/importer/api/fetch`;
-export const CENTRAL_BIT_HUB_URL_IMPORTER = `https://${getSymphonyUrl()}/importer/api/fetch`;
+export const CENTRAL_BIT_HUB_URL_IMPORTER = `${getSymphonyUrl()}/importer/api/fetch`;
 export const CENTRAL_BIT_HUB_URL_IMPORTER_V2 = `https://api.v2.bit.cloud/importer/api/fetch`;
 
 export const CENTRAL_BIT_HUB_NAME = getCloudDomain();
