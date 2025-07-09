@@ -83,10 +83,10 @@ commands: # reusable commands
       - run: '<<parameters.bin_name>> config set package-manager.cache /home/circleci/package-manager-cache'
   docker_build_and_push:
     parameters:
-      docker_build_arg_name:
+      docker_build_base_image_arg_name:
         default: 'BASE_IMAGE'
         type: string
-      docker_build_arg_value:
+      docker_build_base_image_arg_value:
         default: 'node:22.14.0'
         type: string
       image_name:
@@ -104,18 +104,18 @@ commands: # reusable commands
           image_name: "<<parameters.image_name>>"
           docker_file_name: "<<parameters.docker_file_name>>"
           docker_tag_suffix: "<<parameters.docker_tag_suffix>>"
-          docker_build_arg_name: "<<parameters.docker_build_arg_name>>"
-          docker_build_arg_value: "<<parameters.docker_build_arg_value>>"
+          docker_build_base_image_arg_name: "<<parameters.docker_build_base_image_arg_name>>"
+          docker_build_base_image_arg_value: "<<parameters.docker_build_base_image_arg_value>>"
       - docker_push:
           image_name: "<<parameters.image_name>>"
           docker_tag_suffix: "<<parameters.docker_tag_suffix>>"
 
   docker_build_internal:
     parameters:
-      docker_build_arg_name:
+      docker_build_base_image_arg_name:
         default: 'BASE_IMAGE'
         type: string
-      docker_build_arg_value:
+      docker_build_base_image_arg_value:
         default: 'node:22.14.0'
         type: string
       image_name:
@@ -128,8 +128,8 @@ commands: # reusable commands
         default: ""
         type: string
     steps:
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg <<parameters.docker_build_arg_name>>=<<parameters.docker_build_arg_value>> -t <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>> .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg <<parameters.docker_build_arg_name>>=<<parameters.docker_build_arg_value>> -t <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>> .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg <<parameters.docker_build_base_image_arg_name>>=<<parameters.docker_build_base_image_arg_value>> -t <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>> .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg <<parameters.docker_build_base_image_arg_name>>=<<parameters.docker_build_base_image_arg_value>> -t <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>> .
 
   docker_push:
     parameters:
@@ -334,7 +334,7 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:22.14.0"
+          docker_build_base_image_arg_value: "node:22.14.0"
           docker_tag_suffix: "-node-22.14.0"
 
   # docker_non_root_build:
@@ -354,7 +354,7 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:22.14.0"
+          docker_build_base_image_arg_value: "node:22.14.0"
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
           docker_tag_suffix: "-node-22.14.0"
@@ -367,8 +367,7 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_name: "BIT_IMAGE"
-          docker_build_arg_value: "`npm show @teambit/bit version`-node-22.14.0"
+          docker_build_base_image_arg_value: "`npm show @teambit/bit version`-node-22.14.0"
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
           docker_tag_suffix: "-node-22.14.0"
