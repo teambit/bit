@@ -126,7 +126,7 @@ export class CiMain {
     }
   }
 
-  private async verifyWorkspaceStatusInternal() {
+  private async verifyWorkspaceStatusInternal(strict: boolean = false) {
     this.logger.console('📊 Workspace Status');
     this.logger.console(chalk.blue('Verifying status of workspace'));
     const status = await this.status.status({
@@ -134,11 +134,31 @@ export class CiMain {
       ignoreCircularDependencies: false,
     });
 
-    if (status.componentsWithIssues.length > 0) {
+    // Check for blocking issues (errors) vs warnings
+    const componentsWithErrors = status.componentsWithIssues.filter(({ issues }) => issues.hasTagBlockerIssues());
+
+    const componentsWithWarnings = status.componentsWithIssues.filter(({ issues }) => !issues.hasTagBlockerIssues());
+
+    if (componentsWithWarnings.length > 0) {
+      if (strict) {
+        this.logger.console(
+          chalk.red(
+            `Found ${componentsWithWarnings.length} components with warnings (strict mode), run 'bit status' to see the warnings.`
+          )
+        );
+        return { code: 1, data: '', status };
+      } else {
+        this.logger.console(
+          chalk.yellow(
+            `Found ${componentsWithWarnings.length} components with warnings, run 'bit status' to see the warnings.`
+          )
+        );
+      }
+    }
+
+    if (componentsWithErrors.length > 0) {
       this.logger.console(
-        chalk.red(
-          `Found ${status.componentsWithIssues.length} components with issues, run 'bit status' to see the issues.`
-        )
+        chalk.red(`Found ${componentsWithErrors.length} components with errors, run 'bit status' to see the errors.`)
       );
       return { code: 1, data: '', status };
     }
@@ -184,7 +204,17 @@ export class CiMain {
     return { code: 0, data: '' };
   }
 
-  async snapPrCommit({ branch, message, build }: { branch: string; message: string; build: boolean | undefined }) {
+  async snapPrCommit({
+    branch,
+    message,
+    build,
+    strict,
+  }: {
+    branch: string;
+    message: string;
+    build: boolean | undefined;
+    strict: boolean | undefined;
+  }) {
     this.logger.console(chalk.blue(`Branch name: ${branch}`));
 
     const originalLane = await this.lanes.getCurrentLane();
@@ -196,7 +226,7 @@ export class CiMain {
       return { code: 1, data: '' };
     }
 
-    const { code, data } = await this.verifyWorkspaceStatusInternal();
+    const { code, data } = await this.verifyWorkspaceStatusInternal(strict);
     if (code !== 0) return { code, data };
 
     await this.importer
@@ -271,7 +301,9 @@ export class CiMain {
       });
 
       if (!results) {
-        throw new Error('No snap results found');
+        this.logger.console(chalk.yellow('No changes detected, nothing to snap'));
+        this.logger.console(chalk.green('Lane is up to date'));
+        return { code: 0, data: 'No changes detected, nothing to snap' };
       }
 
       const {
@@ -357,7 +389,7 @@ export class CiMain {
     }
   }
 
-  async mergePr({ message: argMessage, build }: { message?: string; build?: boolean }) {
+  async mergePr({ message: argMessage, build, strict }: { message?: string; build?: boolean; strict?: boolean }) {
     let message: string;
 
     if (argMessage) {
@@ -393,7 +425,7 @@ export class CiMain {
       skipNpmInstall: true,
     });
 
-    const { code, data, status } = await this.verifyWorkspaceStatusInternal();
+    const { code, data, status } = await this.verifyWorkspaceStatusInternal(strict);
     if (code !== 0) return { code, data };
 
     const hasSoftTaggedComponents = status.softTaggedComponents.length > 0;

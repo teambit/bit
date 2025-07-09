@@ -6,6 +6,7 @@ import { CiMain } from '../ci.main.runtime';
 type Options = {
   message?: string;
   build?: boolean;
+  strict?: boolean;
 };
 
 export class CiMergeCmd implements Command {
@@ -16,6 +17,7 @@ export class CiMergeCmd implements Command {
   options: CommandOptions = [
     ['m', 'message <message>', 'If set, use it as the snap message, if not, try and grab from git-commit-message'],
     ['b', 'build', 'Set to true to build the app locally, false (default) will build on Ripple CI'],
+    ['s', 'strict', 'Set to true to fail on warnings as well as errors, false (default) only fails on errors'],
   ];
 
   constructor(
@@ -29,6 +31,6 @@ export class CiMergeCmd implements Command {
     this.logger.console('🚀 Initializing Merge command');
     if (!this.workspace) throw new OutsideWorkspaceError();
 
-    return this.ci.mergePr({ message: options.message, build: options.build });
+    return this.ci.mergePr({ message: options.message, build: options.build, strict: options.strict });
   }
 }
