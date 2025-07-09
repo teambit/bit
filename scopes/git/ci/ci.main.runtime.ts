@@ -472,7 +472,7 @@ export class CiMain {
 
     // Commit the .bitmap and pnpm-lock.yaml files using Git
     await git.add(['.bitmap', 'pnpm-lock.yaml']);
-    await git.commit('chore: update .bitmap and pnpm-lock.yaml');
+    await git.commit('chore: update .bitmap and lockfiles as needed [skip ci]');
 
     // Push the commit to the remote repository
     const defaultBranch = await this.getDefaultBranchName();
