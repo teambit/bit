@@ -111,6 +111,26 @@ export class CiMain {
     }
   }
 
+  async getDefaultBranchName() {
+    try {
+      // Try to get the default branch from git symbolic-ref
+      const result = await git.raw(['symbolic-ref', 'refs/remotes/origin/HEAD']);
+      const defaultBranch = result.trim().split('/').pop();
+      return defaultBranch || 'master';
+    } catch (e: any) {
+      // Fallback to common default branch names
+      try {
+        const branches = await git.branch(['-r']);
+        if (branches.all.includes('origin/main')) return 'main';
+        if (branches.all.includes('origin/master')) return 'master';
+        return 'master'; // Final fallback
+      } catch {
+        this.logger.console(chalk.yellow(`Unable to detect default branch, using 'master': ${e.toString()}`));
+        return 'master';
+      }
+    }
+  }
+
   async getGitCommitMessage() {
     try {
       const commit = await git.log({
@@ -455,7 +475,8 @@ export class CiMain {
     await git.commit('chore: update .bitmap and pnpm-lock.yaml');
 
     // Push the commit to the remote repository
-    await git.push('origin', 'main');
+    const defaultBranch = await this.getDefaultBranchName();
+    await git.push('origin', defaultBranch);
 
     this.logger.console(chalk.green('Merged PR'));
 
