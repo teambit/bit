@@ -452,7 +452,7 @@ export class CiMain {
 
     this.logger.console('📦 Component Operations');
     this.logger.console(chalk.blue('Tagging components'));
-    await this.snapping.tag({
+    const tagResults = await this.snapping.tag({
       all: true,
       message,
       build,
@@ -461,22 +461,29 @@ export class CiMain {
     });
     this.logger.console(chalk.green('Tagged components'));
 
-    this.logger.console(chalk.blue('Exporting components'));
-    await this.exporter.export();
-    this.logger.console(chalk.green('Exported components'));
+    const hasTaggedComponents = tagResults.taggedComponents && tagResults.taggedComponents.length > 0;
 
-    this.logger.console('🔄 Git Operations');
-    // Set user.email and user.name
-    await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
-    await git.addConfig('user.name', 'Bit CI');
+    if (hasTaggedComponents) {
+      this.logger.console(chalk.blue('Exporting components'));
+      await this.exporter.export();
+      this.logger.console(chalk.green('Exported components'));
 
-    // Commit the .bitmap and pnpm-lock.yaml files using Git
-    await git.add(['.bitmap', 'pnpm-lock.yaml']);
-    await git.commit('chore: update .bitmap and lockfiles as needed [skip ci]');
+      this.logger.console('🔄 Git Operations');
+      // Set user.email and user.name
+      await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
+      await git.addConfig('user.name', 'Bit CI');
 
-    // Push the commit to the remote repository
-    const defaultBranch = await this.getDefaultBranchName();
-    await git.push('origin', defaultBranch);
+      // Commit the .bitmap and pnpm-lock.yaml files using Git
+      await git.add(['.bitmap', 'pnpm-lock.yaml']);
+      await git.commit('chore: update .bitmap and lockfiles as needed [skip ci]');
+
+      // Pull latest changes and push the commit to the remote repository
+      const defaultBranch = await this.getDefaultBranchName();
+      await git.pull('origin', defaultBranch);
+      await git.push('origin', defaultBranch);
+    } else {
+      this.logger.console(chalk.yellow('No components were tagged, skipping export and git operations'));
+    }
 
     this.logger.console(chalk.green('Merged PR'));
 
