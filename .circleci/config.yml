@@ -562,6 +562,7 @@ jobs:
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
       - run:
           name: 'bit ci pr'
           command: 'cd bit && bit ci pr --build'
