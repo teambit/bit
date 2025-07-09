@@ -55,7 +55,7 @@ export class UIServer {
     private logger: Logger,
     private publicDir: string,
     private plugins: StartPlugin[]
-  ) { }
+  ) {}
 
   getName() {
     return this.uiRoot.name;
@@ -111,7 +111,7 @@ export class UIServer {
         context: [hmrRoute],
         target: `ws://${this.host}:${server.port}`,
         ws: true,
-      }
+      },
     ];
 
     if (this._proxyRoutes.has(previewRoute) || this._proxyRoutes.has(hmrRoute)) {
@@ -131,11 +131,13 @@ export class UIServer {
           const reqUrl = req.url?.replace(/\?.+$/, '') || '';
           const path = stripTrailingChar(reqUrl, '/');
 
-          const entry = entries.find((proxy) =>
-            proxy.ws && proxy.context.some(item => {
-              const itemPath = stripTrailingChar(item, '/');
-              return path === itemPath || path.startsWith(itemPath);
-            })
+          const entry = entries.find(
+            (proxy) =>
+              proxy.ws &&
+              proxy.context.some((item) => {
+                const itemPath = stripTrailingChar(item, '/');
+                return path === itemPath || path.startsWith(itemPath);
+              })
           );
 
           if (!entry) {
@@ -207,9 +209,7 @@ export class UIServer {
       const reqUrl = req.url?.replace(/\?.+$/, '') || '';
       const path = stripTrailingChar(reqUrl, '/');
       const proxyEntries = this.getProxyFromPlugins();
-      const entry = proxyEntries.find((proxy) =>
-        proxy.context.some((item) => item === stripTrailingChar(path, '/'))
-      );
+      const entry = proxyEntries.find((proxy) => proxy.context.some((item) => item === stripTrailingChar(path, '/')));
       if (!entry) {
         return;
       }
@@ -315,11 +315,6 @@ export class UIServer {
         target: `http://${this.host}:${port}`,
         changeOrigin: true,
       },
-      {
-        context: ['/_hmr'],
-        target: `ws://${this.host}:${port}`,
-        ws: true,
-      }
     ];
 
     const gqlProxies: ProxyEntry[] = [
