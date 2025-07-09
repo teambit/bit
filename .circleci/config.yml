@@ -637,6 +637,10 @@ jobs:
       - update_ssh_agent
       - set_git_credentials
       - run:
+          name: setting npmjs registry with publishing permission
+          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
+      - run:
           name: 'bit ci merge'
           command: 'cd bit && bit ci merge --build'
           no_output_timeout: '25m'
