@@ -182,8 +182,8 @@ export class WorkspaceConfig implements HostConfig {
     // When external package manager mode is enabled, set conflicting properties to false in the template
     if (workspaceAspectConf.externalPackageManager) {
       // Override template defaults to be compatible with external package manager mode
-      template[WorkspaceAspect.id].resolveAspectsFromNodeModules = false;
-      template[WorkspaceAspect.id].resolveEnvsFromRoots = false;
+      template['teambit.dependencies/dependency-resolver'] = template['teambit.dependencies/dependency-resolver'] || {};
+      template['teambit.dependencies/dependency-resolver'].rootComponent = false;
       template['teambit.workspace/workspace-config-files'] = template['teambit.workspace/workspace-config-files'] || {};
       template['teambit.workspace/workspace-config-files'].enableWorkspaceConfigWrite = false;
     }
@@ -417,13 +417,10 @@ export class WorkspaceConfig implements HostConfig {
 
     const conflicts: string[] = [];
 
-    // Check workspace aspect conflicts
-    if (workspaceExt.resolveAspectsFromNodeModules === true) {
-      conflicts.push('resolveAspectsFromNodeModules cannot be true when externalPackageManager is enabled');
-    }
-
-    if (workspaceExt.resolveEnvsFromRoots === true) {
-      conflicts.push('resolveEnvsFromRoots cannot be true when externalPackageManager is enabled');
+    // Check dependency-resolver aspect conflicts
+    const depResolverExt = this.extension('teambit.dependencies/dependency-resolver', true);
+    if (depResolverExt?.rootComponent === true) {
+      conflicts.push('rootComponent cannot be true when externalPackageManager is enabled');
     }
 
     // Check workspace-config-files aspect conflicts

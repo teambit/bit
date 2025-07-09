@@ -36,7 +36,19 @@ export async function createConsumer(
   });
   await consumer.setBitMap();
   if (!noPackageJson) {
-    consumer.setPackageJsonWithTypeModule();
+    if (workspaceExtensionProps?.externalPackageManager) {
+      // Create package.json with postInstall script for external package manager mode
+      const jsonContent = {
+        type: 'module',
+        scripts: {
+          postinstall: 'bit link && bit compile',
+        },
+      };
+      const packageJson = PackageJsonFile.create(consumer.projectPath, undefined, jsonContent);
+      consumer.setPackageJson(packageJson);
+    } else {
+      consumer.setPackageJsonWithTypeModule();
+    }
   }
   return consumer;
 }

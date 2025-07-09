@@ -5,6 +5,7 @@ import { getRootComponentDir, linkPkgsToRootComponents } from '@teambit/workspac
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
+import yesno from 'yesno';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { compact, mapValues, omit, uniq, intersection, groupBy } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
@@ -155,9 +156,7 @@ export class InstallMain {
     const workspaceConfig = this.workspace.getWorkspaceConfig();
     const workspaceExtConfig = workspaceConfig.extensions.findExtension(WorkspaceAspect.id);
     if (workspaceExtConfig?.config.externalPackageManager) {
-      throw new Error(
-        'External package manager mode is enabled. Please use your preferred package manager (npm, yarn, pnpm) to install dependencies instead of "bit install".'
-      );
+      await this.handleExternalPackageManagerPrompt();
     }
 
     // set workspace in install context
@@ -1344,6 +1343,86 @@ export class InstallMain {
     });
     cli.register(...commands);
     return installExt;
+  }
+
+  private async handleExternalPackageManagerPrompt(): Promise<void> {
+    this.logger.clearStatusLine();
+    const question = `Hi, I noticed you use external package manager mode. Do you want to use Bit's package manager instead? [yes(y)/no(n)]`;
+    const shouldSwitchToBitPM = await yesno({ question });
+
+    if (!shouldSwitchToBitPM) {
+      throw new Error(
+        'External package manager mode is enabled. Please use your preferred package manager (npm, yarn, pnpm) to install dependencies instead of "bit install".'
+      );
+    }
+
+    // User chose to switch to Bit's package manager
+    await this.disableExternalPackageManagerMode();
+  }
+
+  private async disableExternalPackageManagerMode(): Promise<void> {
+    try {
+      // Get the workspace config
+      const workspaceConfig = this.workspace.getWorkspaceConfig();
+
+      // Remove externalPackageManager property
+      const workspaceExtConfig = workspaceConfig.extensions.findExtension(WorkspaceAspect.id);
+      if (workspaceExtConfig?.config.externalPackageManager) {
+        delete workspaceExtConfig.config.externalPackageManager;
+      }
+
+      // Restore default settings
+      const depResolverExt = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');
+      if (depResolverExt) {
+        depResolverExt.config.rootComponent = true;
+      }
+
+      // Enable workspace config write
+      const workspaceConfigFilesExt = workspaceConfig.extensions.findExtension(
+        'teambit.workspace/workspace-config-files'
+      );
+      if (workspaceConfigFilesExt) {
+        workspaceConfigFilesExt.config.enableWorkspaceConfigWrite = true;
+      }
+
+      // Remove postInstall script from package.json (preserve user's existing scripts)
+      await this.removePostInstallScript();
+
+      // Write the updated config
+      await workspaceConfig.write();
+
+      this.logger.console(chalk.green('✓ Successfully switched to Bit package manager mode'));
+    } catch (error) {
+      this.logger.console(chalk.red('✗ Failed to switch to Bit package manager mode'));
+      throw error;
+    }
+  }
+
+  private async removePostInstallScript(): Promise<void> {
+    try {
+      const packageJsonPath = path.join(this.workspace.path, 'package.json');
+      const packageJsonExists = await pathExists(packageJsonPath);
+
+      if (!packageJsonExists) {
+        return;
+      }
+
+      const packageJson = await fs.readJson(packageJsonPath);
+
+      // Only remove our specific postInstall script, preserve user's custom scripts
+      if (packageJson.scripts?.postinstall === 'bit link && bit compile') {
+        delete packageJson.scripts.postinstall;
+
+        // Clean up empty scripts object
+        if (Object.keys(packageJson.scripts).length === 0) {
+          delete packageJson.scripts;
+        }
+
+        await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+      }
+    } catch {
+      this.logger.console(chalk.yellow('⚠ Warning: Could not remove postInstall script from package.json'));
+    }
   }
 }
 
