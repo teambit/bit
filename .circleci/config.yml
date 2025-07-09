@@ -1429,33 +1429,18 @@ workflows:
           requires:
             - set_npm_registries
             - checkout_code
-      - bit_tag:
-          <<: *master_only_filter
-          requires:
-            - setup_harmony
-      - sleep_5_minutes:
-          <<: *master_only_filter
-          requires:
-            - bit_tag
-            - bit_export
       - bundle_version_linux:
           <<: *master_only_filter
           requires:
-            - bit_tag
-            - bit_export
-            - sleep_5_minutes
+            - setup_harmony
       - bundle_version_macos:
           <<: *master_only_filter
           requires:
-            - bit_tag
-            - bit_export
-            - sleep_5_minutes
+            - setup_harmony
       - bundle_version_windows:
           <<: *master_only_filter
           requires:
-            - bit_tag
-            - bit_export
-            - sleep_5_minutes
+            - setup_harmony
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
@@ -1463,10 +1448,6 @@ workflows:
             - bundle_version_macos
             - bundle_version_windows
             - checkout_code # This is needed to generate index.json
-      - bit_export:
-          <<: *master_only_filter
-          requires:
-            - bit_tag
       # - docker_build:
       #     requires:
       #       - harmony_publish_to_gcloud
