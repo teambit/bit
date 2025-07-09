@@ -1586,7 +1586,7 @@ workflows:
   #     - harmony_publish_to_gcloud:
   #         filters:
   #           branches:
-  #             only: docker-alpine
+  #             only: manual-release
   #         requires:
   #           - bundle_version_linux
   #           - bundle_version_macos
