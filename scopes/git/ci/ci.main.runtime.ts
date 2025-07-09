@@ -461,7 +461,7 @@ export class CiMain {
     });
     this.logger.console(chalk.green('Tagged components'));
 
-    const hasTaggedComponents = tagResults.taggedComponents && tagResults.taggedComponents.length > 0;
+    const hasTaggedComponents = tagResults?.taggedComponents && tagResults.taggedComponents.length > 0;
 
     if (hasTaggedComponents) {
       this.logger.console(chalk.blue('Exporting components'));
