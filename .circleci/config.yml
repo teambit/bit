@@ -138,12 +138,12 @@ commands: # reusable commands
           cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> \
             --build-arg <<parameters.docker_build_base_image_arg_name>>=<<parameters.docker_build_base_image_arg_value>> \
             --build-arg <<parameters.bit_version_arg_name>>=`npm show @teambit/bit version` \
-            <</parameters.bit_version>>-t <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>> .
+            -t <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>> .
       - run: |
           cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> \
             --build-arg <<parameters.docker_build_base_image_arg_name>>=<<parameters.docker_build_base_image_arg_value>> \
             --build-arg <<parameters.bit_version_arg_name>>=`npm show @teambit/bit version` \
-            <</parameters.bit_version>>-t <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>> .
+            -t <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>> .
 
   docker_push:
     parameters:
