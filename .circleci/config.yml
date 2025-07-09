@@ -538,6 +538,40 @@ jobs:
       - store_artifacts:
           path: bit/yarn.lock
 
+  bit_pr:
+    resource_class: xlarge
+    <<: *defaults
+    environment:
+      BIT_FEATURES: cloud-importer-v2
+      NODE_OPTIONS: --max-old-space-size=15000
+    steps:
+      - attach_workspace:
+          at: ./
+      - bit_global_for_npm
+      - bit_config:
+          env: "hub"
+      - restore_cache:
+          key: bitsrc-ssh-key3
+      - restore_cache:
+          key: bitsrc-registry10
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+      - restore_cache:
+          key: core-aspect-env-v0.0.65-v2
+      - run:
+          name: setting npmjs registry with publishing permission
+          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
+      - run:
+          name: 'bit ci pr'
+          command: 'cd bit && bit ci pr --build'
+          no_output_timeout: '20m'
+          environment:
+            NODE_OPTIONS: --max-old-space-size=15000
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
+
   bit_build:
     resource_class: xlarge
     <<: *defaults
@@ -574,6 +608,42 @@ jobs:
       - run:
           name: 'bit build'
           command: 'cd bit && bit build'
+          environment:
+            NODE_OPTIONS: --max-old-space-size=15000
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
+
+  bit_merge:
+    resource_class: xlarge
+    <<: *defaults
+    environment:
+      BIT_FEATURES: cloud-importer-v2
+      NODE_OPTIONS: --max-old-space-size=15000
+    steps:
+      - attach_workspace:
+          at: ./
+      - bit_global_for_npm
+      - bit_config:
+          env: "hub"
+      - restore_cache:
+          key: bitsrc-ssh-key3
+      - restore_cache:
+          key: bitsrc-registry10
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+      - restore_cache:
+          key: core-aspect-env-v0.0.65-v2
+      - update_ssh_agent
+      - set_git_credentials
+      - run:
+          name: setting npmjs registry with publishing permission
+          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
+      - run:
+          name: 'bit ci merge'
+          command: 'cd bit && bit ci merge --build'
+          no_output_timeout: '25m'
           environment:
             NODE_OPTIONS: --max-old-space-size=15000
       - store_artifacts:
@@ -699,6 +769,8 @@ jobs:
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
             pnpm add @teambit/bit
       - run:
@@ -754,6 +826,8 @@ jobs:
             pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
             pnpm add @teambit/bit
       - compress_bit
@@ -805,6 +879,8 @@ jobs:
             pnpm dlx @ialdama/jsonmod --key pnpm.neverBuiltDependencies --values cpu-features --values ssh2 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
+            pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
             pnpm add @teambit/bit
       - compress_bit
@@ -1276,9 +1352,18 @@ workflows:
       - e2e_test:
           requires:
             - setup_harmony
-      - bit_build:
+      - bit_pr:
+          requires:
+            - setup_harmony
+          filters:
+            branches:
+              ignore: master
+      - bit_merge:
           requires:
             - generate_and_check_types
+          filters:
+            branches:
+              only: master
 
   # windows_e2e:
   #   jobs:

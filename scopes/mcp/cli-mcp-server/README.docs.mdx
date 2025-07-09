@@ -82,7 +82,26 @@ bit mcp-server setup --consumer-project
 
 #### Manual Configuration
 
-If you need to manually configure the settings, here's a basic example for VS Code:
+If you need to manually configure the settings, here's how to set up VS Code MCP integration:
+
+**For workspace-specific configuration:**
+
+1. Create a `.vscode/mcp.json` file in your workspace folder
+2. Add the following configuration:
+
+```json
+{
+  "servers": {
+    "bit-cli": {
+      "type": "stdio",
+      "command": "bit",
+      "args": ["mcp-server", "start"]
+    }
+  }
+}
+```
+
+**For global configuration:**
 
 1. Open VS Code settings (JSON) by pressing `Ctrl + Shift + P` (or `Cmd + Shift + P` on macOS) and typing `Preferences: Open Settings (JSON)`
 2. Add the following configuration:
@@ -92,6 +111,7 @@ If you need to manually configure the settings, here's a basic example for VS Co
   "mcp": {
     "servers": {
       "bit-cli": {
+        "type": "stdio",
         "command": "bit",
         "args": ["mcp-server", "start"]
       }

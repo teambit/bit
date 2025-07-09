@@ -32,7 +32,9 @@ describe('Filesystem read count', function () {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
       });
       it('should not exceed a reasonable file-count number', () => {
-        const output = helper.command.runCmd('bit --help', undefined, undefined, undefined, undefined, { 'BIT_DEBUG_READ_FILE': 'true' });
+        const output = helper.command.runCmd('bit --help', undefined, undefined, undefined, undefined, {
+          BIT_DEBUG_READ_FILE: 'true',
+        });
         const numberOfReads = getNumberOfReads(output);
         if (numberOfReads) {
           console.log(`Total reads found: ${numberOfReads}`);
@@ -64,7 +66,9 @@ describe('Filesystem read count', function () {
         helper.fixtures.populateComponents(1);
       });
       it('should not exceed a reasonable file-count number', () => {
-        const output = helper.command.runCmd('bit status', undefined, undefined, undefined, undefined, { 'BIT_DEBUG_READ_FILE': 'true' });
+        const output = helper.command.runCmd('bit status', undefined, undefined, undefined, undefined, {
+          BIT_DEBUG_READ_FILE: 'true',
+        });
         expect(output).to.not.have.string(`#${MAX_FILES_READ_STATUS}`);
       });
       it('should take less than 2 seconds', () => {
@@ -104,8 +108,13 @@ function printDiffFromLastSnapshot(cmdOutput: string) {
   const fromLastSnapshotLines = fromLastSnapshot.split('\n');
   const { linesFromBitInstallation, otherLines } = getLinesFromBitInstallation(cmdOutput);
   console.log('********** the following files are new ***************************');
+  difference(linesFromBitInstallation, fromLastSnapshotLines).forEach((line) => console.log(line));
+  console.log('******************************************************************');
+
+  console.log('********** the following files are old ***************************');
   difference(fromLastSnapshotLines, linesFromBitInstallation).forEach((line) => console.log(line));
   console.log('******************************************************************');
+
   console.log('********** the following files are not from bit-installation *****');
   otherLines.forEach((line) => console.log(line));
   console.log('*******************************************************************');
@@ -114,16 +123,16 @@ function printDiffFromLastSnapshot(cmdOutput: string) {
 function getLinesFromBitInstallation(cmdOutput: string) {
   const lines = cmdOutput.split('\n');
   const relevantLines = lines.filter((line) => line.startsWith('#'));
-  const linesWithoutHash = relevantLines.map(l => l.replace(/#[0-9]+/, ''));
+  const linesWithoutHash = relevantLines.map((l) => l.replace(/#[0-9]+/, ''));
   const mustPresentFileCandidate = '@teambit/bit/dist/bootstrap.js';
-  const bitBootstrap = linesWithoutHash.find(l => l.endsWith(mustPresentFileCandidate));
+  const bitBootstrap = linesWithoutHash.find((l) => l.endsWith(mustPresentFileCandidate));
   if (!bitBootstrap) {
     throw new Error(`unable to find ${mustPresentFileCandidate} in the output`);
   }
   const commonDir = bitBootstrap.replace(mustPresentFileCandidate, '');
-  const linesWithCommonDir = linesWithoutHash.filter(l => l.startsWith(commonDir));
-  const linesFromBitInstallation = linesWithCommonDir.map(l => l.replace(commonDir, ''));
-  const otherLines = linesWithoutHash.filter(l => !l.startsWith(commonDir));
+  const linesWithCommonDir = linesWithoutHash.filter((l) => l.startsWith(commonDir));
+  const linesFromBitInstallation = linesWithCommonDir.map((l) => l.replace(commonDir, ''));
+  const otherLines = linesWithoutHash.filter((l) => !l.startsWith(commonDir));
   return { linesFromBitInstallation, otherLines };
 }
 

@@ -344,6 +344,43 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
 
 ---
 
+## ci
+
+**Description**: CI commands
+
+`bit ci <sub-command>`
+
+### ci verify
+
+**Usage**: `ci verify`
+
+**Description**: CI commands
+
+### ci pr
+
+**Usage**: `ci pr`
+
+**Description**: This command is meant to run when a PR was open/updated and meant to export a lane to bit-cloud.
+
+| **Option**            | **Option alias** | **Description**                                                                  |
+| --------------------- | :--------------: | -------------------------------------------------------------------------------- |
+| `--message <message>` |       `-m`       | If set, set it as the snap message, if not, try and grab from git-commit-message |
+| `--lane <lane>`       |       `-l`       | If set, use as the lane name, if not available, grab from git-branch name        |
+| `--build`             |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI    |
+
+### ci merge
+
+**Usage**: `ci merge`
+
+**Description**: Merges a PR
+
+| **Option**            | **Option alias** | **Description**                                                                  |
+| --------------------- | :--------------: | -------------------------------------------------------------------------------- |
+| `--message <message>` |       `-m`       | If set, use it as the snap message, if not, try and grab from git-commit-message |
+| `--build`             |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI    |
+
+---
+
 ## clear-cache
 
 **Alias**: `cc`  
@@ -1114,6 +1151,7 @@ when no package is specified, all workspace dependencies are installed and all w
 | `--alias <string>`                      |       `-n`       | relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `--verbose`                             |                  | display detailed information about components that legitimately were not switched                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `--json`                                |       `-j`       | return the output as JSON                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `--branch`                              |                  | create and checkout a new git branch named after the lane                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ### lane show
 
@@ -1229,6 +1267,7 @@ bit lane diff from to => diff between "from" lane and "to" lane.
 | -------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `--skip-dependency-installation` |       `-x`       | do not install dependencies of the imported components                                                                                 |
 | `--pattern <component-pattern>`  |       `-p`       | import only components from the lane that fit the specified component-pattern to the workspace. works only when the workspace is empty |
+| `--branch`                       |                  | create and checkout a new git branch named after the lane                                                                              |
 
 ### lane remove-comp
 
