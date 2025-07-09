@@ -381,7 +381,7 @@ jobs:
           at: ./
       - docker_build_and_push:
           docker_build_base_image_arg_value: "node:22.14.0-alpine"
-          image_name: "bitcli/bit-alpine"
+          # image_name: "bitcli/bit-alpine"
           docker_file_name: "Dockerfile-bit-alpine"
           docker_tag_suffix: "-alpine-node-22.14.0"
 
