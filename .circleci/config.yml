@@ -1564,49 +1564,49 @@ workflows:
   #           branches:
   #             only: circle-esbuild-cache
   # uncomment and change the filter branch name to debug the bvm bundle jobs
-  # bvm_bundle_debug:
-  #   jobs:
-  #     - checkout_code:
-  #         filters:
-  #           branches:
-  #             only: manual-release
-  #     - bundle_version_linux:
-  #         filters:
-  #           branches:
-  #             only: manual-release
-  #     - bundle_version_macos:
-  #         filters:
-  #           branches:
-  #             only: manual-release
-  #     - bundle_version_windows:
-  #         filters:
-  #           branches:
-  #             only: manual-release
-  #     - harmony_publish_to_gcloud:
-  #         filters:
-  #           branches:
-  #             only: manual-release
-  #         requires:
-  #           - bundle_version_linux
-  #           - bundle_version_macos
-  #           - bundle_version_windows
-  #           - checkout_code # This is needed to generate index.json
-  #     - docker_build_node_22:
-  #         requires:
-  #           - checkout_code
-  #           - harmony_publish_to_gcloud
-  #     - docker_build_alpine:
-  #         requires:
-  #           - checkout_code
-  #           - harmony_publish_to_gcloud
+  bvm_bundle_debug:
+    jobs:
+      - checkout_code:
+          filters:
+            branches:
+              only: docker-alpine
+      - bundle_version_linux:
+          filters:
+            branches:
+              only: docker-alpine
+      - bundle_version_macos:
+          filters:
+            branches:
+              only: docker-alpine
+      - bundle_version_windows:
+          filters:
+            branches:
+              only: docker-alpine
+      - harmony_publish_to_gcloud:
+          filters:
+            branches:
+              only: docker-alpine
+          requires:
+            - bundle_version_linux
+            - bundle_version_macos
+            - bundle_version_windows
+            - checkout_code # This is needed to generate index.json
+      - docker_build_node_22:
+          requires:
+            - checkout_code
+            - harmony_publish_to_gcloud
+      - docker_build_alpine:
+          requires:
+            - checkout_code
+            - harmony_publish_to_gcloud
 
-  #     - docker_non_root_build_node_22:
-  #         requires:
-  #           - checkout_code
-  #           - harmony_publish_to_gcloud
-  #     - server_docker_build_node_22:
-  #         requires:
-  #           - docker_build_node_22
+      - docker_non_root_build_node_22:
+          requires:
+            - checkout_code
+            - harmony_publish_to_gcloud
+      - server_docker_build_node_22:
+          requires:
+            - docker_build_node_22
   # uncomment to print node version on windows default orb
   # windows_print_node_version_workflow:
   #   jobs:
