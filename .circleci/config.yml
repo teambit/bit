@@ -96,14 +96,17 @@ commands: # reusable commands
         default: 'Dockerfile-bit'
         type: string
       docker_tag_suffix:
-        # I want this to be something like '-node-<<parameters.node_version>>' but I don't think we can access other params here
         default: ''
+        type: string
+      bit_version_arg_name:
+        default: 'BIT_VERSION'
         type: string
     steps:
       - docker_build_internal:
           image_name: "<<parameters.image_name>>"
           docker_file_name: "<<parameters.docker_file_name>>"
           docker_tag_suffix: "<<parameters.docker_tag_suffix>>"
+          bit_version_arg_name: "<<parameters.bit_version_arg_name>>"
           docker_build_base_image_arg_name: "<<parameters.docker_build_base_image_arg_name>>"
           docker_build_base_image_arg_value: "<<parameters.docker_build_base_image_arg_value>>"
       - docker_push:
@@ -127,9 +130,20 @@ commands: # reusable commands
       docker_tag_suffix:
         default: ""
         type: string
+      bit_version_arg_name:
+        default: 'BIT_VERSION'
+        type: string
     steps:
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg <<parameters.docker_build_base_image_arg_name>>=<<parameters.docker_build_base_image_arg_value>> -t <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>> .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg <<parameters.docker_build_base_image_arg_name>>=<<parameters.docker_build_base_image_arg_value>> -t <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>> .
+      - run: |
+          cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> \
+            --build-arg <<parameters.docker_build_base_image_arg_name>>=<<parameters.docker_build_base_image_arg_value>> \
+            --build-arg <<parameters.bit_version_arg_name>>=`npm show @teambit/bit version` \
+            <</parameters.bit_version>>-t <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>> .
+      - run: |
+          cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> \
+            --build-arg <<parameters.docker_build_base_image_arg_name>>=<<parameters.docker_build_base_image_arg_value>> \
+            --build-arg <<parameters.bit_version_arg_name>>=`npm show @teambit/bit version` \
+            <</parameters.bit_version>>-t <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>> .
 
   docker_push:
     parameters:
@@ -359,6 +373,17 @@ jobs:
           docker_file_name: "Dockerfile-bit-non-root"
           docker_tag_suffix: "-node-22.14.0"
 
+  docker_build_alpine:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build_and_push:
+          docker_build_base_image_arg_value: "node:22.14.0-alpine"
+          image_name: "bitcli/bit-alpine"
+          docker_file_name: "Dockerfile-bit-alpine"
+          docker_tag_suffix: "-alpine-node-22.14.0"
 
   server_docker_build_node_22:
     machine:
@@ -1374,6 +1399,9 @@ workflows:
       - docker_build_node_22:
           requires:
             - harmony_publish_to_gcloud
+      - docker_build_alpine:
+          requires:
+            - harmony_publish_to_gcloud
       - docker_non_root_build_node_22:
           requires:
             - harmony_publish_to_gcloud
@@ -1515,6 +1543,10 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - harmony_publish_to_gcloud
+      - docker_build_alpine:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
       - docker_non_root_build_node_22:
           requires:
             - harmony_deploy_approval_job
@@ -1563,6 +1595,11 @@ workflows:
   #         requires:
   #           - checkout_code
   #           - harmony_publish_to_gcloud
+  #     - docker_build_alpine:
+  #         requires:
+  #           - checkout_code
+  #           - harmony_publish_to_gcloud
+
   #     - docker_non_root_build_node_22:
   #         requires:
   #           - checkout_code
