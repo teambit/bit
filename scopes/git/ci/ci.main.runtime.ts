@@ -301,7 +301,9 @@ export class CiMain {
       });
 
       if (!results) {
-        throw new Error('No snap results found');
+        this.logger.console(chalk.yellow('No changes detected, nothing to snap'));
+        this.logger.console(chalk.green('Lane is up to date'));
+        return { code: 0, data: 'No changes detected, nothing to snap' };
       }
 
       const {
