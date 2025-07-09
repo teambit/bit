@@ -1347,7 +1347,15 @@ export class InstallMain {
 
   private async handleExternalPackageManagerPrompt(): Promise<void> {
     this.logger.clearStatusLine();
-    const question = `Hi, I noticed you use external package manager mode. Do you want to use Bit's package manager instead? [yes(y)/no(n)]`;
+
+    // Display a colorful and informative message
+    this.logger.console(chalk.cyan('\n📦 External Package Manager Mode Detected'));
+    this.logger.console(chalk.gray('Your workspace is configured to use external package managers (npm, yarn, pnpm).'));
+    this.logger.console(chalk.gray('Running "bit install" is not available in this mode.\n'));
+
+    const question = chalk.bold(
+      "Would you like to switch to Bit's package manager for dependency management? [yes(y)/no(n)]"
+    );
     const shouldSwitchToBitPM = await yesno({ question });
 
     if (!shouldSwitchToBitPM) {

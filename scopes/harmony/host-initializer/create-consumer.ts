@@ -37,15 +37,28 @@ export async function createConsumer(
   await consumer.setBitMap();
   if (!noPackageJson) {
     if (workspaceExtensionProps?.externalPackageManager) {
-      // Create package.json with postInstall script for external package manager mode
-      const jsonContent = {
-        type: 'module',
-        scripts: {
-          postinstall: 'bit link && bit compile',
-        },
-      };
-      const packageJson = PackageJsonFile.create(consumer.projectPath, undefined, jsonContent);
-      consumer.setPackageJson(packageJson);
+      // Handle package.json for external package manager mode
+      const existingPackageJson = PackageJsonFile.loadSync(consumer.projectPath);
+      if (existingPackageJson.fileExist) {
+        // Merge with existing package.json
+        const content = { ...existingPackageJson.packageJsonObject };
+        content.type = 'module';
+        content.scripts = content.scripts || {};
+        content.scripts.postinstall = 'bit link && bit compile';
+
+        const packageJson = PackageJsonFile.create(consumer.projectPath, undefined, content);
+        consumer.setPackageJson(packageJson);
+      } else {
+        // Create new package.json with postInstall script
+        const jsonContent = {
+          type: 'module',
+          scripts: {
+            postinstall: 'bit link && bit compile',
+          },
+        };
+        const packageJson = PackageJsonFile.create(consumer.projectPath, undefined, jsonContent);
+        consumer.setPackageJson(packageJson);
+      }
     } else {
       consumer.setPackageJsonWithTypeModule();
     }
