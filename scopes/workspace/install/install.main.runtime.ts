@@ -157,7 +157,16 @@ export class InstallMain {
     const workspaceConfig = this.workspace.getWorkspaceConfig();
     const depResolverExtConfig = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');
     if (depResolverExtConfig?.config.externalPackageManager) {
-      await this.handleExternalPackageManagerPrompt();
+      // Only show prompt for explicit install commands, not programmatic installs from import/etc
+      // When import: false is passed, it's usually a programmatic install from component operations
+      const isProgrammaticInstall = options?.import === false;
+      if (isProgrammaticInstall) {
+        // For programmatic installs (import, checkout, etc.), just return early without doing anything
+        return new ComponentMap(new Map());
+      } else {
+        // For explicit "bit install" commands, show the prompt
+        await this.handleExternalPackageManagerPrompt();
+      }
     }
 
     // set workspace in install context
