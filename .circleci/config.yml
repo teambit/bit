@@ -1389,6 +1389,7 @@ workflows:
           filters:
             branches:
               only: master
+          serial-group: "bit-merge-operations"
 
   # windows_e2e:
   #   jobs:
