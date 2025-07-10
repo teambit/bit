@@ -83,10 +83,10 @@ commands: # reusable commands
       - run: '<<parameters.bin_name>> config set package-manager.cache /home/circleci/package-manager-cache'
   docker_build_and_push:
     parameters:
-      docker_build_arg_name:
+      docker_build_base_image_arg_name:
         default: 'BASE_IMAGE'
         type: string
-      docker_build_arg_value:
+      docker_build_base_image_arg_value:
         default: 'node:22.14.0'
         type: string
       image_name:
@@ -95,27 +95,31 @@ commands: # reusable commands
       docker_file_name:
         default: 'Dockerfile-bit'
         type: string
+      # I want this to be something like '-node-<<parameters.node_version>>' but I don't think we can access other params here
       docker_tag_suffix:
-        # I want this to be something like '-node-<<parameters.node_version>>' but I don't think we can access other params here
         default: ''
+        type: string
+      bit_version_arg_name:
+        default: 'BIT_VERSION'
         type: string
     steps:
       - docker_build_internal:
           image_name: "<<parameters.image_name>>"
           docker_file_name: "<<parameters.docker_file_name>>"
           docker_tag_suffix: "<<parameters.docker_tag_suffix>>"
-          docker_build_arg_name: "<<parameters.docker_build_arg_name>>"
-          docker_build_arg_value: "<<parameters.docker_build_arg_value>>"
+          bit_version_arg_name: "<<parameters.bit_version_arg_name>>"
+          docker_build_base_image_arg_name: "<<parameters.docker_build_base_image_arg_name>>"
+          docker_build_base_image_arg_value: "<<parameters.docker_build_base_image_arg_value>>"
       - docker_push:
           image_name: "<<parameters.image_name>>"
           docker_tag_suffix: "<<parameters.docker_tag_suffix>>"
 
   docker_build_internal:
     parameters:
-      docker_build_arg_name:
+      docker_build_base_image_arg_name:
         default: 'BASE_IMAGE'
         type: string
-      docker_build_arg_value:
+      docker_build_base_image_arg_value:
         default: 'node:22.14.0'
         type: string
       image_name:
@@ -127,9 +131,20 @@ commands: # reusable commands
       docker_tag_suffix:
         default: ""
         type: string
+      bit_version_arg_name:
+        default: 'BIT_VERSION'
+        type: string
     steps:
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg <<parameters.docker_build_arg_name>>=<<parameters.docker_build_arg_value>> -t <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>> .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> --build-arg <<parameters.docker_build_arg_name>>=<<parameters.docker_build_arg_value>> -t <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>> .
+      - run: |
+          cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> \
+            --build-arg <<parameters.docker_build_base_image_arg_name>>=<<parameters.docker_build_base_image_arg_value>> \
+            --build-arg <<parameters.bit_version_arg_name>>=`npm show @teambit/bit version` \
+            -t <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>> .
+      - run: |
+          cd bit/scripts && docker build -f ./docker-teambit-bit/<<parameters.docker_file_name>> \
+            --build-arg <<parameters.docker_build_base_image_arg_name>>=<<parameters.docker_build_base_image_arg_value>> \
+            --build-arg <<parameters.bit_version_arg_name>>=`npm show @teambit/bit version` \
+            -t <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>> .
 
   docker_push:
     parameters:
@@ -334,7 +349,7 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:22.14.0"
+          docker_build_base_image_arg_value: "node:22.14.0"
           docker_tag_suffix: "-node-22.14.0"
 
   # docker_non_root_build:
@@ -354,11 +369,22 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_value: "node:22.14.0"
+          docker_build_base_image_arg_value: "node:22.14.0"
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
           docker_tag_suffix: "-node-22.14.0"
 
+  docker_build_alpine:
+    machine:
+      image: ubuntu-2004:202111-02
+    steps:
+      - attach_workspace:
+          at: ./
+      - docker_build_and_push:
+          docker_build_base_image_arg_value: "node:22.14.0-alpine"
+          # image_name: "bitcli/bit-alpine"
+          docker_file_name: "Dockerfile-bit-alpine"
+          docker_tag_suffix: "-alpine-node-22.14.0"
 
   server_docker_build_node_22:
     machine:
@@ -367,8 +393,7 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_arg_name: "BIT_IMAGE"
-          docker_build_arg_value: "`npm show @teambit/bit version`-node-22.14.0"
+          docker_build_base_image_arg_value: "`npm show @teambit/bit version`-node-22.14.0"
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
           docker_tag_suffix: "-node-22.14.0"
@@ -538,6 +563,40 @@ jobs:
       - store_artifacts:
           path: bit/yarn.lock
 
+  bit_pr:
+    resource_class: xlarge
+    <<: *defaults
+    environment:
+      BIT_FEATURES: cloud-importer-v2
+      NODE_OPTIONS: --max-old-space-size=15000
+    steps:
+      - attach_workspace:
+          at: ./
+      - bit_global_for_npm
+      - bit_config:
+          env: "hub"
+      - restore_cache:
+          key: bitsrc-ssh-key3
+      - restore_cache:
+          key: bitsrc-registry10
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+      - restore_cache:
+          key: core-aspect-env-v0.0.65-v2
+      - run:
+          name: setting npmjs registry with publishing permission
+          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
+      - run:
+          name: 'bit ci pr'
+          command: 'cd bit && bit ci pr --build'
+          no_output_timeout: '20m'
+          environment:
+            NODE_OPTIONS: --max-old-space-size=15000
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
+
   bit_build:
     resource_class: xlarge
     <<: *defaults
@@ -574,6 +633,42 @@ jobs:
       - run:
           name: 'bit build'
           command: 'cd bit && bit build'
+          environment:
+            NODE_OPTIONS: --max-old-space-size=15000
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
+
+  bit_merge:
+    resource_class: xlarge
+    <<: *defaults
+    environment:
+      BIT_FEATURES: cloud-importer-v2
+      NODE_OPTIONS: --max-old-space-size=15000
+    steps:
+      - attach_workspace:
+          at: ./
+      - bit_global_for_npm
+      - bit_config:
+          env: "hub"
+      - restore_cache:
+          key: bitsrc-ssh-key3
+      - restore_cache:
+          key: bitsrc-registry10
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+      - restore_cache:
+          key: core-aspect-env-v0.0.65-v2
+      - update_ssh_agent
+      - set_git_credentials
+      - run:
+          name: setting npmjs registry with publishing permission
+          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
+      - run:
+          name: 'bit ci merge'
+          command: 'cd bit && bit ci merge --build'
+          no_output_timeout: '25m'
           environment:
             NODE_OPTIONS: --max-old-space-size=15000
       - store_artifacts:
@@ -1282,9 +1377,18 @@ workflows:
       - e2e_test:
           requires:
             - setup_harmony
-      - bit_build:
+      - bit_pr:
+          requires:
+            - setup_harmony
+          filters:
+            branches:
+              ignore: master
+      - bit_merge:
           requires:
             - generate_and_check_types
+          filters:
+            branches:
+              only: master
 
   # windows_e2e:
   #   jobs:
@@ -1325,33 +1429,18 @@ workflows:
           requires:
             - set_npm_registries
             - checkout_code
-      - bit_tag:
-          <<: *master_only_filter
-          requires:
-            - setup_harmony
-      - sleep_5_minutes:
-          <<: *master_only_filter
-          requires:
-            - bit_tag
-            - bit_export
       - bundle_version_linux:
           <<: *master_only_filter
           requires:
-            - bit_tag
-            - bit_export
-            - sleep_5_minutes
+            - setup_harmony
       - bundle_version_macos:
           <<: *master_only_filter
           requires:
-            - bit_tag
-            - bit_export
-            - sleep_5_minutes
+            - setup_harmony
       - bundle_version_windows:
           <<: *master_only_filter
           requires:
-            - bit_tag
-            - bit_export
-            - sleep_5_minutes
+            - setup_harmony
       - harmony_publish_to_gcloud:
           <<: *master_only_filter
           requires:
@@ -1359,10 +1448,6 @@ workflows:
             - bundle_version_macos
             - bundle_version_windows
             - checkout_code # This is needed to generate index.json
-      - bit_export:
-          <<: *master_only_filter
-          requires:
-            - bit_tag
       # - docker_build:
       #     requires:
       #       - harmony_publish_to_gcloud
@@ -1373,6 +1458,9 @@ workflows:
       #     requires:
       #       - docker_build
       - docker_build_node_22:
+          requires:
+            - harmony_publish_to_gcloud
+      - docker_build_alpine:
           requires:
             - harmony_publish_to_gcloud
       - docker_non_root_build_node_22:
@@ -1516,6 +1604,10 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - harmony_publish_to_gcloud
+      - docker_build_alpine:
+          requires:
+            - harmony_deploy_approval_job
+            - harmony_publish_to_gcloud
       - docker_non_root_build_node_22:
           requires:
             - harmony_deploy_approval_job
@@ -1564,6 +1656,11 @@ workflows:
   #         requires:
   #           - checkout_code
   #           - harmony_publish_to_gcloud
+  #     - docker_build_alpine:
+  #         requires:
+  #           - checkout_code
+  #           - harmony_publish_to_gcloud
+
   #     - docker_non_root_build_node_22:
   #         requires:
   #           - checkout_code
