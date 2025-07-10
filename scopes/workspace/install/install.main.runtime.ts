@@ -143,7 +143,7 @@ export class InstallMain {
     private ipcEvents: IpcEventsMain,
 
     private harmony: Harmony
-  ) { }
+  ) {}
   /**
    * Install dependencies for all components in the workspace
    *
@@ -1241,7 +1241,7 @@ export class InstallMain {
     WorkspaceConfigFilesAspect,
     AspectLoaderAspect,
     BundlerAspect,
-    UIAspect
+    UIAspect,
   ];
 
   static runtime = MainRuntime;
@@ -1262,24 +1262,24 @@ export class InstallMain {
       wsConfigFiles,
       aspectLoader,
       bundler,
-      ui
+      ui,
     ]: [
-        DependencyResolverMain,
-        Workspace,
-        LoggerMain,
-        VariantsMain,
-        CLIMain,
-        CompilerMain,
-        IssuesMain,
-        EnvsMain,
-        ApplicationMain,
-        IpcEventsMain,
-        GeneratorMain,
-        WorkspaceConfigFilesMain,
-        AspectLoaderMain,
-        BundlerMain,
-        UiMain
-      ],
+      DependencyResolverMain,
+      Workspace,
+      LoggerMain,
+      VariantsMain,
+      CLIMain,
+      CompilerMain,
+      IssuesMain,
+      EnvsMain,
+      ApplicationMain,
+      IpcEventsMain,
+      GeneratorMain,
+      WorkspaceConfigFilesMain,
+      AspectLoaderMain,
+      BundlerMain,
+      UiMain,
+    ],
     _,
     [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot],
     harmony: Harmony

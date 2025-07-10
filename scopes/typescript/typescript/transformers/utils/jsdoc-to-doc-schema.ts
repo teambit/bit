@@ -72,8 +72,8 @@ export async function tagParser(
         if (!formatter) return simpleTag(tag, tagName, context);
         try {
           const extractedSnippetToFormat = comment && extractCodeBlock(comment);
-          const formattedComment = extractedSnippetToFormat 
-          && (await formatter.formatSnippet(extractedSnippetToFormat.code));
+          const formattedComment =
+            extractedSnippetToFormat && (await formatter.formatSnippet(extractedSnippetToFormat.code));
           return new TagSchema(context.getLocation(tag), tagName, formattedComment ?? undefined);
         } catch {
           return simpleTag(tag, tagName, context);

@@ -1,7 +1,10 @@
 import path from 'path';
 import { uniq } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
-import { getLastModifiedComponentTimestampMs, getLastModifiedPathsTimestampMs } from '@teambit/toolbox.fs.last-modified';
+import {
+  getLastModifiedComponentTimestampMs,
+  getLastModifiedPathsTimestampMs,
+} from '@teambit/toolbox.fs.last-modified';
 import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { DependencyLoaderOpts, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
@@ -129,7 +132,9 @@ export class DependenciesLoader {
         const lastModifiedEnvJsonc = await getLastModifiedPathsTimestampMs([envJsonFile.path]);
         const wasEnvJsonModifiedAfterCache = lastModifiedEnvJsonc > cacheData.timestamp;
         if (wasEnvJsonModifiedAfterCache) {
-          this.logger.debug(`dependencies-loader, the env ${this.idStr} was modified after the cache was created, clearing all deps caches`);
+          this.logger.debug(
+            `dependencies-loader, the env ${this.idStr} was modified after the cache was created, clearing all deps caches`
+          );
           await workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
         }
       }

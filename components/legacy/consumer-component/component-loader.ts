@@ -141,7 +141,7 @@ export class ComponentLoader {
       }
     });
     logger.trace(
-      `ComponentLoader, the following ${alreadyLoadedComponents.length} components have been already loaded, get them from the cache. ${alreadyLoadedComponents.map((c) => c.id.toString()).join(', ')}`,
+      `ComponentLoader, the following ${alreadyLoadedComponents.length} components have been already loaded, get them from the cache. ${alreadyLoadedComponents.map((c) => c.id.toString()).join(', ')}`
     );
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents, removedComponents };
     const storeInCache = loadOptsWithDefaults?.storeInCache ?? true;

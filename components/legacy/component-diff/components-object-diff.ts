@@ -67,7 +67,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
     id: component.id,
     bindingPrefix,
     defaultScope: component.id.scope,
-    extensions: extensions || new ExtensionDataList()
+    extensions: extensions || new ExtensionDataList(),
   });
   obj.language = lang;
   obj.bindingPrefix = bindingPrefix;

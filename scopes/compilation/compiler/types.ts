@@ -17,7 +17,7 @@ export enum CompilationInitiator {
   AspectLoadFail,
   ComponentAdded,
   Install,
-  PreDevServer
+  PreDevServer,
 }
 
 export type TranspileComponentParams = {

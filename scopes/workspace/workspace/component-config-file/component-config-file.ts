@@ -46,7 +46,7 @@ export class ComponentConfigFile {
 
   static async load(
     componentDir: PathOsBasedAbsolute,
-    aspectListFactory: (extensionDataList: ExtensionDataList) => Promise<AspectList>,
+    aspectListFactory: (extensionDataList: ExtensionDataList) => Promise<AspectList>
   ): Promise<ComponentConfigFile | undefined> {
     const filePath = ComponentConfigFile.composePath(componentDir);
     const isExist = await fs.pathExists(filePath);
@@ -58,7 +58,9 @@ export class ComponentConfigFile {
     const indent = detectIndent(content).indent;
     const newLine = detectNewline(content);
     if (!parsed.componentId.scope) {
-      throw new Error(`component.json file at ${componentDir} is invalid, it must contain 'scope' property in the componentId`);
+      throw new Error(
+        `component.json file at ${componentDir} is invalid, it must contain 'scope' property in the componentId`
+      );
     }
     const componentId = ComponentID.fromObject(parsed.componentId);
     const aspects = await aspectListFactory(ExtensionDataList.fromConfigObject(parsed.extensions));

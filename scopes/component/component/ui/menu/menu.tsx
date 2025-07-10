@@ -112,11 +112,19 @@ export function ComponentMenu({
   const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
   const rightSideItems = useMemo(() => orderBy(flatten(rightSideMenuSlot.values()), 'order'), [rightSideMenuSlot]);
   const pinnedWidgets = useMemo(
-    () => flatten(pinnedWidgetSlot.toArray().sort(sortFn).map(([, pinnedWidget]) => pinnedWidget)), [pinnedWidgetSlot]);
+    () =>
+      flatten(
+        pinnedWidgetSlot
+          .toArray()
+          .sort(sortFn)
+          .map(([, pinnedWidget]) => pinnedWidget)
+      ),
+    [pinnedWidgetSlot]
+  );
   const componentFilters = useComponentFilters?.() || {};
   const query = useQuery();
   const componentVersion = query.get('version');
-  const host = componentVersion ? 'teambit.scope/scope' : hostFromProps
+  const host = componentVersion ? 'teambit.scope/scope' : hostFromProps;
 
   const useComponentVersions = defaultLoadVersions(
     host,
@@ -136,7 +144,7 @@ export function ComponentMenu({
             useComponent={useComponentVersions}
             componentFilters={componentFilters}
             authToken={authToken}
-          // loading={loading}
+            // loading={loading}
           />
           {rightSideItems.map(({ item }) => item)}
           {!isMinimal && <MainDropdown className={styles.hideOnMobile} menuItems={mainMenuItems} />}
@@ -154,7 +162,10 @@ export function ComponentMenu({
             <div className={styles.leftSide}>
               <CollapsibleMenuNav navigationSlot={navigationSlot} widgetSlot={widgetSlot} />
             </div>
-            {isMinimal && pinnedWidgets.map(pinnedWidget => <PinnedWidgetComponent key={`key-${pinnedWidget.order}`} {...pinnedWidget.props} />)}
+            {isMinimal &&
+              pinnedWidgets.map((pinnedWidget) => (
+                <PinnedWidgetComponent key={`key-${pinnedWidget.order}`} {...pinnedWidget.props} />
+              ))}
             {!skipRightSide && <div className={styles.rightSide}>{RightSide}</div>}
           </div>
         }
@@ -320,12 +331,12 @@ export function VersionRelatedDropdowns(props: VersionRelatedDropdownsProps) {
   const consumeMethodProps: ConsumePluginProps | undefined = React.useMemo(() => {
     return id
       ? {
-        id,
-        packageName: packageName ?? '',
-        latest,
-        options: { viewedLane, disableInstall: !packageName },
-        authToken,
-      }
+          id,
+          packageName: packageName ?? '',
+          latest,
+          options: { viewedLane, disableInstall: !packageName },
+          authToken,
+        }
       : undefined;
   }, [id, packageName, latest, viewedLane, authToken]);
   const methods = useConsumeMethods(consumeMethods, consumeMethodProps);
@@ -375,7 +386,6 @@ function useConsumeMethods(
     [consumeMethods, consumePluginProps]
   );
 }
-
 
 function sortFn([, { order: first }]: [string, NavPlugin], [, { order: second }]: [string, NavPlugin]) {
   return (first ?? 0) - (second ?? 0);

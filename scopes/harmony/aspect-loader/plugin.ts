@@ -32,7 +32,7 @@ export class Plugin {
     // In case the path not exists we don't need to resolve it (it will throw an error)
     const realPath = exists ? realpathSync(this.path) : this.path;
     const resolvedPathFromRealPath = require.resolve(realPath);
-    this._instance.__resolvedPath = resolvedPathFromRealPath
+    this._instance.__resolvedPath = resolvedPathFromRealPath;
     return this._instance;
   }
 }
