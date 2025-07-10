@@ -111,6 +111,26 @@ export class CiMain {
     }
   }
 
+  async getDefaultBranchName() {
+    try {
+      // Try to get the default branch from git symbolic-ref
+      const result = await git.raw(['symbolic-ref', 'refs/remotes/origin/HEAD']);
+      const defaultBranch = result.trim().split('/').pop();
+      return defaultBranch || 'master';
+    } catch (e: any) {
+      // Fallback to common default branch names
+      try {
+        const branches = await git.branch(['-r']);
+        if (branches.all.includes('origin/main')) return 'main';
+        if (branches.all.includes('origin/master')) return 'master';
+        return 'master'; // Final fallback
+      } catch {
+        this.logger.console(chalk.yellow(`Unable to detect default branch, using 'master': ${e.toString()}`));
+        return 'master';
+      }
+    }
+  }
+
   async getGitCommitMessage() {
     try {
       const commit = await git.log({
@@ -126,7 +146,7 @@ export class CiMain {
     }
   }
 
-  private async verifyWorkspaceStatusInternal() {
+  private async verifyWorkspaceStatusInternal(strict: boolean = false) {
     this.logger.console('📊 Workspace Status');
     this.logger.console(chalk.blue('Verifying status of workspace'));
     const status = await this.status.status({
@@ -134,11 +154,31 @@ export class CiMain {
       ignoreCircularDependencies: false,
     });
 
-    if (status.componentsWithIssues.length > 0) {
+    // Check for blocking issues (errors) vs warnings
+    const componentsWithErrors = status.componentsWithIssues.filter(({ issues }) => issues.hasTagBlockerIssues());
+
+    const componentsWithWarnings = status.componentsWithIssues.filter(({ issues }) => !issues.hasTagBlockerIssues());
+
+    if (componentsWithWarnings.length > 0) {
+      if (strict) {
+        this.logger.console(
+          chalk.red(
+            `Found ${componentsWithWarnings.length} components with warnings (strict mode), run 'bit status' to see the warnings.`
+          )
+        );
+        return { code: 1, data: '', status };
+      } else {
+        this.logger.console(
+          chalk.yellow(
+            `Found ${componentsWithWarnings.length} components with warnings, run 'bit status' to see the warnings.`
+          )
+        );
+      }
+    }
+
+    if (componentsWithErrors.length > 0) {
       this.logger.console(
-        chalk.red(
-          `Found ${status.componentsWithIssues.length} components with issues, run 'bit status' to see the issues.`
-        )
+        chalk.red(`Found ${componentsWithErrors.length} components with errors, run 'bit status' to see the errors.`)
       );
       return { code: 1, data: '', status };
     }
@@ -184,7 +224,17 @@ export class CiMain {
     return { code: 0, data: '' };
   }
 
-  async snapPrCommit({ branch, message, build }: { branch: string; message: string; build: boolean | undefined }) {
+  async snapPrCommit({
+    branch,
+    message,
+    build,
+    strict,
+  }: {
+    branch: string;
+    message: string;
+    build: boolean | undefined;
+    strict: boolean | undefined;
+  }) {
     this.logger.console(chalk.blue(`Branch name: ${branch}`));
 
     const originalLane = await this.lanes.getCurrentLane();
@@ -196,7 +246,7 @@ export class CiMain {
       return { code: 1, data: '' };
     }
 
-    const { code, data } = await this.verifyWorkspaceStatusInternal();
+    const { code, data } = await this.verifyWorkspaceStatusInternal(strict);
     if (code !== 0) return { code, data };
 
     await this.importer
@@ -271,7 +321,9 @@ export class CiMain {
       });
 
       if (!results) {
-        throw new Error('No snap results found');
+        this.logger.console(chalk.yellow('No changes detected, nothing to snap'));
+        this.logger.console(chalk.green('Lane is up to date'));
+        return { code: 0, data: 'No changes detected, nothing to snap' };
       }
 
       const {
@@ -357,7 +409,7 @@ export class CiMain {
     }
   }
 
-  async mergePr({ message: argMessage, build }: { message?: string; build?: boolean }) {
+  async mergePr({ message: argMessage, build, strict }: { message?: string; build?: boolean; strict?: boolean }) {
     let message: string;
 
     if (argMessage) {
@@ -393,14 +445,14 @@ export class CiMain {
       skipNpmInstall: true,
     });
 
-    const { code, data, status } = await this.verifyWorkspaceStatusInternal();
+    const { code, data, status } = await this.verifyWorkspaceStatusInternal(strict);
     if (code !== 0) return { code, data };
 
     const hasSoftTaggedComponents = status.softTaggedComponents.length > 0;
 
     this.logger.console('📦 Component Operations');
     this.logger.console(chalk.blue('Tagging components'));
-    await this.snapping.tag({
+    const tagResults = await this.snapping.tag({
       all: true,
       message,
       build,
@@ -409,21 +461,29 @@ export class CiMain {
     });
     this.logger.console(chalk.green('Tagged components'));
 
-    this.logger.console(chalk.blue('Exporting components'));
-    await this.exporter.export();
-    this.logger.console(chalk.green('Exported components'));
+    const hasTaggedComponents = tagResults?.taggedComponents && tagResults.taggedComponents.length > 0;
 
-    this.logger.console('🔄 Git Operations');
-    // Set user.email and user.name
-    await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
-    await git.addConfig('user.name', 'Bit CI');
+    if (hasTaggedComponents) {
+      this.logger.console(chalk.blue('Exporting components'));
+      await this.exporter.export();
+      this.logger.console(chalk.green('Exported components'));
 
-    // Commit the .bitmap and pnpm-lock.yaml files using Git
-    await git.add(['.bitmap', 'pnpm-lock.yaml']);
-    await git.commit('chore: update .bitmap and pnpm-lock.yaml');
+      this.logger.console('🔄 Git Operations');
+      // Set user.email and user.name
+      await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
+      await git.addConfig('user.name', 'Bit CI');
 
-    // Push the commit to the remote repository
-    await git.push('origin', 'main');
+      // Commit the .bitmap and pnpm-lock.yaml files using Git
+      await git.add(['.bitmap', 'pnpm-lock.yaml']);
+      await git.commit('chore: update .bitmap and lockfiles as needed [skip ci]');
+
+      // Pull latest changes and push the commit to the remote repository
+      const defaultBranch = await this.getDefaultBranchName();
+      await git.pull('origin', defaultBranch);
+      await git.push('origin', defaultBranch);
+    } else {
+      this.logger.console(chalk.yellow('No components were tagged, skipping export and git operations'));
+    }
 
     this.logger.console(chalk.green('Merged PR'));
 
