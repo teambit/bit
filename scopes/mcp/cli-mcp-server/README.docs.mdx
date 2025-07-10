@@ -50,7 +50,7 @@ This will automatically configure your VS Code settings to use the Bit MCP serve
 The **recommended way** to integrate the MCP server with your IDE is using the `setup` command:
 
 ```bash
-bit mcp-server setup [vscode|cursor|windsurf] [options]
+bit mcp-server setup [vscode|cursor|windsurf|roo|cline|claude-code] [options]
 ```
 
 This command automatically configures the MCP server settings in your chosen editor. If no editor is specified, it defaults to VS Code.
@@ -60,6 +60,9 @@ This command automatically configures the MCP server settings in your chosen edi
 - **VS Code**: `bit mcp-server setup vscode` (or just `bit mcp-server setup`)
 - **Cursor**: `bit mcp-server setup cursor`
 - **Windsurf**: `bit mcp-server setup windsurf`
+- **Roo Code**: `bit mcp-server setup roo`
+- **Cline**: `bit mcp-server setup cline`
+- **Claude Code**: `bit mcp-server setup claude-code`
 
 #### Configuration Options
 
@@ -78,6 +81,12 @@ bit mcp-server setup cursor --global
 
 # Setup with consumer project mode
 bit mcp-server setup --consumer-project
+
+# Setup for Claude Code (creates .mcp.json file)
+bit mcp-server setup claude-code
+
+# Global setup for Claude Code
+bit mcp-server setup claude-code --global
 ```
 
 #### Manual Configuration
@@ -119,6 +128,59 @@ If you need to manually configure the settings, here's how to set up VS Code MCP
   }
 }
 ```
+
+#### Claude Code Setup
+
+Claude Code uses `.mcp.json` files for MCP server configuration. The setup command creates these files automatically:
+
+**Workspace Configuration:**
+
+```bash
+bit mcp-server setup claude-code
+```
+
+This creates a `.mcp.json` file in your project root:
+
+```json
+{
+  "mcpServers": {
+    "bit": {
+      "command": "bit",
+      "args": ["mcp-server", "start"]
+    }
+  }
+}
+```
+
+**Global Configuration:**
+
+```bash
+bit mcp-server setup claude-code --global
+```
+
+This creates/updates the global configuration file:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/claude/claude_desktop_config.json`
+
+**Important**: After setup, restart Claude Code for the MCP server to be available.
+
+**Claude Code Rules:**
+
+To provide Bit-specific guidance to Claude Code, use the rules command:
+
+```bash
+bit mcp-server rules claude-code
+```
+
+This creates `.claude/bit.md` with Bit instructions. To integrate with your existing `CLAUDE.md`, add:
+
+```markdown
+@.claude/bit.md
+```
+
+This approach ensures your existing `CLAUDE.md` file is never overwritten.
 
 ### Programmatic Usage
 
@@ -206,7 +268,7 @@ bit mcp-server start --consumer-project --include-additional "deps,get,preview"
 The MCP server provides a `rules` command to create instruction files for AI assistants:
 
 ```bash
-bit mcp-server rules [vscode|cursor|windsurf|cline] [options]
+bit mcp-server rules [vscode|cursor|windsurf|roo|cline|claude-code] [options]
 ```
 
 This command creates rules/instructions markdown files that provide guidance to AI assistants on how to effectively use the Bit MCP server and follow best practices when working with Bit components.
@@ -216,7 +278,9 @@ This command creates rules/instructions markdown files that provide guidance to 
 - **VS Code**: `bit mcp-server rules vscode` (or just `bit mcp-server rules`)
 - **Cursor**: `bit mcp-server rules cursor`
 - **Windsurf**: `bit mcp-server rules windsurf`
+- **Roo Code**: `bit mcp-server rules roo`
 - **Cline**: `bit mcp-server rules cline`
+- **Claude Code**: `bit mcp-server rules claude-code`
 
 #### Configuration Options
 
@@ -235,6 +299,12 @@ bit mcp-server rules cursor --global
 
 # Consumer project rules for VS Code
 bit mcp-server rules --consumer-project
+
+# Claude Code rules (creates .claude/bit.md)
+bit mcp-server rules claude-code
+
+# Global Claude Code rules
+bit mcp-server rules claude-code --global
 
 # Global rules for Cline (macOS only)
 bit mcp-server rules cline --global
