@@ -641,7 +641,6 @@ jobs:
   bit_merge:
     resource_class: xlarge
     <<: *defaults
-    serial-group: "bit-merge-operations"
     environment:
       BIT_FEATURES: cloud-importer-v2
       NODE_OPTIONS: --max-old-space-size=15000
@@ -1390,6 +1389,7 @@ workflows:
           filters:
             branches:
               only: master
+          serial-group: "bit-merge-operations"
 
   # windows_e2e:
   #   jobs:
