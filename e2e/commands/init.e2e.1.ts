@@ -339,11 +339,11 @@ describe('run bit init', function () {
         helper.command.init('--external-package-manager');
 
         // Verify initial external PM state
-        let workspaceConfig = helper.workspaceJsonc.read();
+        const workspaceConfig = helper.workspaceJsonc.read();
         expect(workspaceConfig['teambit.workspace/workspace']).to.have.property('externalPackageManager', true);
         expect(workspaceConfig['teambit.dependencies/dependency-resolver']).to.have.property('rootComponent', false);
 
-        let packageJson = helper.packageJson.read();
+        const packageJson = helper.packageJson.read();
         expect(packageJson.scripts).to.have.property('postinstall', 'bit link && bit compile');
 
         // Test answering 'yes' to switch to Bit package manager
