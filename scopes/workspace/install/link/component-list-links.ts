@@ -7,12 +7,23 @@ import { LinkDetail } from '@teambit/dependency-resolver';
 type ComponentListLinksProps = {
   componentListLinks?: NodeModulesLinksResult[];
   verbose: boolean;
+  compSummary?: boolean;
 };
 
-export function ComponentListLinks({ componentListLinks, verbose = false }: ComponentListLinksProps) {
+export function ComponentListLinks({
+  componentListLinks,
+  verbose = false,
+  compSummary = false,
+}: ComponentListLinksProps) {
   if (!componentListLinks || !componentListLinks.length) {
     return chalk.cyan('No components link were generated');
   }
+
+  if (compSummary) {
+    const count = componentListLinks.length;
+    return chalk.cyan(`${count} components were linked`);
+  }
+
   const title = chalk.bold.cyan('Components links');
   const links = componentListLinks.map((componentLinks) => ComponentLinks({ componentLinks, verbose })).join('\n');
 
@@ -25,11 +36,13 @@ export function packageListLinks(packageList?: LinkDetail[]) {
   }
   const title = chalk.bold.cyan('Non-Core Package links');
 
-  const links = packageList.map((link) => {
-    const id = link.packageName;
-    const packagePath = getPackageNameFromTarget(link.to);
-    return LinkRow({ title: id, target: packagePath, padding: 50 });
-  }).join('\n');
+  const links = packageList
+    .map((link) => {
+      const id = link.packageName;
+      const packagePath = getPackageNameFromTarget(link.to);
+      return LinkRow({ title: id, target: packagePath, padding: 50 });
+    })
+    .join('\n');
 
   return `${title}\n${links}`;
 }
