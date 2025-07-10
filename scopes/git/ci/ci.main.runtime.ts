@@ -5,7 +5,7 @@ import { WorkspaceAspect, type Workspace } from '@teambit/workspace';
 import { BuilderAspect, type BuilderMain } from '@teambit/builder';
 import { StatusAspect, type StatusMain } from '@teambit/status';
 import { LanesAspect, type LanesMain } from '@teambit/lanes';
-import { SnappingAspect, SnapResults, type SnappingMain } from '@teambit/snapping';
+import { SnappingAspect, SnapResults, tagResultOutput, type SnappingMain } from '@teambit/snapping';
 import { ExportAspect, type ExportMain } from '@teambit/export';
 import { ImporterAspect, type ImporterMain } from '@teambit/importer';
 import { CheckoutAspect, type CheckoutMain } from '@teambit/checkout';
@@ -410,38 +410,32 @@ export class CiMain {
   }
 
   async mergePr({ message: argMessage, build, strict }: { message?: string; build?: boolean; strict?: boolean }) {
-    let message: string;
-
-    if (argMessage) {
-      message = argMessage;
-    } else {
-      const commitMessage = await this.getGitCommitMessage();
-      if (!commitMessage) {
-        return { code: 1, data: 'Failed to get commit message' };
-      }
-      message = commitMessage;
+    const message = argMessage || (await this.getGitCommitMessage());
+    if (!message) {
+      throw new Error('Failed to get commit message from git. Please provide a message using --message option.');
     }
 
     const currentLane = await this.lanes.getCurrentLane();
 
-    await this.lanes.checkout.checkout({
-      forceOurs: true,
-      head: true,
-      skipNpmInstall: true,
-    });
-
     if (currentLane) {
+      // this doesn't normally happen. we expect this mergePr to be called from the default branch, which normally checks
+      // out to main lane.
       this.logger.console(chalk.blue(`Currently on lane ${currentLane.name}, switching to main`));
       await this.switchToLane('main', { skipDependencyInstallation: true });
-      this.logger.console(chalk.green('Switched to main'));
+      this.logger.console(chalk.green('Switched to main lane'));
     }
 
+    // Pull latest changes from remote to ensure we have the most up-to-date .bitmap
+    // This prevents issues when multiple PRs are merged in sequence
+    const defaultBranch = await this.getDefaultBranchName();
+    this.logger.console(chalk.blue(`Pulling latest git changes from ${defaultBranch} branch`));
+    await git.pull('origin', defaultBranch);
+    this.logger.console(chalk.green('Pulled latest git changes'));
+
+    this.logger.console('🔄 Checking out to main head');
     await this.checkout.checkout({
       forceOurs: true,
       head: true,
-      main: true,
-      mergeStrategy: 'ours',
-      workspaceOnly: true,
       skipNpmInstall: true,
     });
 
@@ -459,14 +453,25 @@ export class CiMain {
       failFast: true,
       persist: hasSoftTaggedComponents,
     });
-    this.logger.console(chalk.green('Tagged components'));
+
+    if (tagResults) {
+      const tagOutput = tagResultOutput(tagResults);
+      this.logger.console(tagOutput);
+    } else {
+      this.logger.console(chalk.yellow('No components to tag'));
+    }
 
     const hasTaggedComponents = tagResults?.taggedComponents && tagResults.taggedComponents.length > 0;
 
     if (hasTaggedComponents) {
       this.logger.console(chalk.blue('Exporting components'));
-      await this.exporter.export();
-      this.logger.console(chalk.green('Exported components'));
+      const exportResult = await this.exporter.export();
+
+      if (exportResult.componentsIds.length > 0) {
+        this.logger.console(chalk.green(`Exported ${exportResult.componentsIds.length} component(s)`));
+      } else {
+        this.logger.console(chalk.yellow('Nothing to export'));
+      }
 
       this.logger.console('🔄 Git Operations');
       // Set user.email and user.name
@@ -478,7 +483,6 @@ export class CiMain {
       await git.commit('chore: update .bitmap and lockfiles as needed [skip ci]');
 
       // Pull latest changes and push the commit to the remote repository
-      const defaultBranch = await this.getDefaultBranchName();
       await git.pull('origin', defaultBranch);
       await git.push('origin', defaultBranch);
     } else {
