@@ -322,10 +322,47 @@ describe('run bit init', function () {
         helper.command.init('--external-package-manager');
       });
       it('should throw error when answering no to prompt', () => {
-        // Since we can't test interactive prompts directly, we test that install command
-        // would fail in external package manager mode (the prompt logic would be tested in unit tests)
         const installCmd = () => helper.command.runCmd('echo "n" | bit install');
         expect(installCmd).to.throw();
+      });
+      it('should switch to Bit package manager when answering yes to prompt', () => {
+        // Reset to external PM mode with existing package.json
+        helper.scopeHelper.cleanWorkspace();
+        const existingPackageJson = {
+          name: 'test-project',
+          version: '1.0.0',
+          scripts: {
+            start: 'node index.js',
+          },
+        };
+        helper.packageJson.write(existingPackageJson);
+        helper.command.init('--external-package-manager');
+
+        // Verify initial external PM state
+        let workspaceConfig = helper.workspaceJsonc.read();
+        expect(workspaceConfig['teambit.workspace/workspace']).to.have.property('externalPackageManager', true);
+        expect(workspaceConfig['teambit.dependencies/dependency-resolver']).to.have.property('rootComponent', false);
+
+        let packageJson = helper.packageJson.read();
+        expect(packageJson.scripts).to.have.property('postinstall', 'bit link && bit compile');
+
+        // Test answering 'yes' to switch to Bit package manager
+        const output = helper.command.runCmd('echo "y" | bit install');
+        expect(output).to.have.string('Successfully switched to Bit package manager mode');
+
+        // Verify the workspace is now in normal Bit PM mode
+        const updatedConfig = helper.workspaceJsonc.read();
+        expect(updatedConfig['teambit.workspace/workspace']).to.not.have.property('externalPackageManager');
+        expect(updatedConfig['teambit.dependencies/dependency-resolver']).to.have.property('rootComponent', true);
+        expect(updatedConfig['teambit.workspace/workspace-config-files']).to.have.property(
+          'enableWorkspaceConfigWrite',
+          true
+        );
+
+        // Verify postinstall script was removed but user scripts preserved
+        const updatedPackageJson = helper.packageJson.read();
+        expect(updatedPackageJson.scripts).to.have.property('start', 'node index.js');
+        expect(updatedPackageJson.scripts).to.not.have.property('postinstall');
       });
     });
     describe('validation of conflicting settings', () => {
