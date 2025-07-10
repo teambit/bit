@@ -92,7 +92,7 @@ export class InitCmd implements Command {
       throw new BitError('cannot use both --reset and --reset-hard, please use only one of them');
     }
 
-    const workspaceExtensionProps: WorkspaceExtensionProps = {
+    const workspaceExtensionProps: WorkspaceExtensionProps & { externalPackageManager?: boolean } = {
       defaultDirectory: defaultDirectory ?? getConfig(CFG_INIT_DEFAULT_DIRECTORY),
       defaultScope: defaultScope ?? getConfig(CFG_INIT_DEFAULT_SCOPE),
       name,

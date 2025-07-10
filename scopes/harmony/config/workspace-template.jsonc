@@ -34,11 +34,6 @@
      **/
     "defaultScope": "my-scope",
 
-    /**
-     * when enabled, disables Bit's internal dependency management and instructs users to use their own package manager (npm/yarn/pnpm).
-     * automatically sets resolveAspectsFromNodeModules, resolveEnvsFromRoots, and enableWorkspaceConfigWrite to false.
-     **/
-    "externalPackageManager": false,
     "resolveAspectsFromNodeModules": true,
     "resolveEnvsFromRoots": true
   },

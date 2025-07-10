@@ -291,9 +291,12 @@ describe('run bit init', function () {
         helper.scopeHelper.cleanWorkspace();
         helper.command.init('--external-package-manager');
       });
-      it('should set externalPackageManager to true in workspace config', () => {
+      it('should set externalPackageManager to true in dependency-resolver config', () => {
         const workspaceConfig = helper.workspaceJsonc.read();
-        expect(workspaceConfig['teambit.workspace/workspace']).to.have.property('externalPackageManager', true);
+        expect(workspaceConfig['teambit.dependencies/dependency-resolver']).to.have.property(
+          'externalPackageManager',
+          true
+        );
       });
       it('should set rootComponent to false in dependency-resolver config', () => {
         const workspaceConfig = helper.workspaceJsonc.read();
@@ -340,7 +343,10 @@ describe('run bit init', function () {
 
         // Verify initial external PM state
         const workspaceConfig = helper.workspaceJsonc.read();
-        expect(workspaceConfig['teambit.workspace/workspace']).to.have.property('externalPackageManager', true);
+        expect(workspaceConfig['teambit.dependencies/dependency-resolver']).to.have.property(
+          'externalPackageManager',
+          true
+        );
         expect(workspaceConfig['teambit.dependencies/dependency-resolver']).to.have.property('rootComponent', false);
 
         const packageJson = helper.packageJson.read();
@@ -352,7 +358,9 @@ describe('run bit init', function () {
 
         // Verify the workspace is now in normal Bit PM mode
         const updatedConfig = helper.workspaceJsonc.read();
-        expect(updatedConfig['teambit.workspace/workspace']).to.not.have.property('externalPackageManager');
+        expect(updatedConfig['teambit.dependencies/dependency-resolver']).to.not.have.property(
+          'externalPackageManager'
+        );
         expect(updatedConfig['teambit.dependencies/dependency-resolver']).to.have.property('rootComponent', true);
         expect(updatedConfig['teambit.workspace/workspace-config-files']).to.have.property(
           'enableWorkspaceConfigWrite',
@@ -432,7 +440,7 @@ describe('run bit init', function () {
         const workspaceConfig = helper.workspaceJsonc.read();
 
         // Remove externalPackageManager flag
-        delete workspaceConfig['teambit.workspace/workspace'].externalPackageManager;
+        delete workspaceConfig['teambit.dependencies/dependency-resolver'].externalPackageManager;
 
         // Restore settings
         workspaceConfig['teambit.dependencies/dependency-resolver'].rootComponent = true;
@@ -450,7 +458,9 @@ describe('run bit init', function () {
 
         // Verify configuration is back to normal
         const updatedConfig = helper.workspaceJsonc.read();
-        expect(updatedConfig['teambit.workspace/workspace']).to.not.have.property('externalPackageManager');
+        expect(updatedConfig['teambit.dependencies/dependency-resolver']).to.not.have.property(
+          'externalPackageManager'
+        );
         expect(updatedConfig['teambit.dependencies/dependency-resolver']).to.have.property('rootComponent', true);
         expect(updatedConfig['teambit.workspace/workspace-config-files']).to.have.property(
           'enableWorkspaceConfigWrite',

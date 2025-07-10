@@ -14,6 +14,7 @@ import { componentIdToPackageName } from '@teambit/pkg.modules.component-package
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
 import { VariantsMain, VariantsAspect } from '@teambit/variants';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
+import { PackageJsonFile } from '@teambit/component.sources';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
@@ -154,8 +155,8 @@ export class InstallMain {
   async install(packages?: string[], options?: WorkspaceInstallOptions): Promise<ComponentMap<string>> {
     // Check if external package manager mode is enabled
     const workspaceConfig = this.workspace.getWorkspaceConfig();
-    const workspaceExtConfig = workspaceConfig.extensions.findExtension(WorkspaceAspect.id);
-    if (workspaceExtConfig?.config.externalPackageManager) {
+    const depResolverExtConfig = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');
+    if (depResolverExtConfig?.config.externalPackageManager) {
       await this.handleExternalPackageManagerPrompt();
     }
 
@@ -1373,14 +1374,11 @@ export class InstallMain {
       // Get the workspace config
       const workspaceConfig = this.workspace.getWorkspaceConfig();
 
-      // Remove externalPackageManager property
-      const workspaceExtConfig = workspaceConfig.extensions.findExtension(WorkspaceAspect.id);
-      if (workspaceExtConfig?.config.externalPackageManager) {
-        delete workspaceExtConfig.config.externalPackageManager;
-      }
-
-      // Restore default settings
+      // Remove externalPackageManager property and restore default settings
       const depResolverExt = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');
+      if (depResolverExt?.config.externalPackageManager) {
+        delete depResolverExt.config.externalPackageManager;
+      }
       if (depResolverExt) {
         depResolverExt.config.rootComponent = true;
       }
@@ -1408,25 +1406,22 @@ export class InstallMain {
 
   private async removePostInstallScript(): Promise<void> {
     try {
-      const packageJsonPath = path.join(this.workspace.path, 'package.json');
-      const packageJsonExists = await pathExists(packageJsonPath);
+      const packageJsonFile = await PackageJsonFile.load(this.workspace.path);
 
-      if (!packageJsonExists) {
+      if (!packageJsonFile.fileExist) {
         return;
       }
 
-      const packageJson = await fs.readJson(packageJsonPath);
-
       // Only remove our specific postInstall script, preserve user's custom scripts
-      if (packageJson.scripts?.postinstall === 'bit link && bit compile') {
-        delete packageJson.scripts.postinstall;
+      if (packageJsonFile.packageJsonObject.scripts?.postinstall === 'bit link && bit compile') {
+        delete packageJsonFile.packageJsonObject.scripts.postinstall;
 
         // Clean up empty scripts object
-        if (Object.keys(packageJson.scripts).length === 0) {
-          delete packageJson.scripts;
+        if (Object.keys(packageJsonFile.packageJsonObject.scripts).length === 0) {
+          delete packageJsonFile.packageJsonObject.scripts;
         }
 
-        await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+        await packageJsonFile.write();
       }
     } catch {
       this.logger.console(chalk.yellow('⚠ Warning: Could not remove postInstall script from package.json'));

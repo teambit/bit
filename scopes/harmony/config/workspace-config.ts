@@ -40,7 +40,6 @@ export type WorkspaceExtensionProps = {
   defaultScope?: string;
   defaultDirectory?: string;
   components?: ComponentScopeDirMap;
-  externalPackageManager?: boolean;
 };
 
 export type PackageManagerClients = 'npm' | 'yarn' | undefined;
@@ -52,6 +51,7 @@ export interface DependencyResolverExtensionProps {
   packageManagerProcessOptions?: any;
   useWorkspaces?: boolean;
   manageWorkspaces?: boolean;
+  externalPackageManager?: boolean;
 }
 
 export type WorkspaceSettingsNewProps = {
@@ -180,7 +180,11 @@ export class WorkspaceConfig implements HostConfig {
     const workspaceAspectConf = assign(template[WorkspaceAspect.id], props[WorkspaceAspect.id]);
 
     // When external package manager mode is enabled, set conflicting properties to false in the template
-    if (workspaceAspectConf.externalPackageManager) {
+    const depResolverConf = assign(
+      template['teambit.dependencies/dependency-resolver'],
+      props['teambit.dependencies/dependency-resolver']
+    );
+    if (depResolverConf.externalPackageManager) {
       // Override template defaults to be compatible with external package manager mode
       template['teambit.dependencies/dependency-resolver'] = template['teambit.dependencies/dependency-resolver'] || {};
       template['teambit.dependencies/dependency-resolver'].rootComponent = false;
@@ -188,7 +192,10 @@ export class WorkspaceConfig implements HostConfig {
       template['teambit.workspace/workspace-config-files'].enableWorkspaceConfigWrite = false;
     }
 
-    const merged = assign(template, { [WorkspaceAspect.id]: workspaceAspectConf });
+    const merged = assign(template, {
+      [WorkspaceAspect.id]: workspaceAspectConf,
+      'teambit.dependencies/dependency-resolver': depResolverConf,
+    });
 
     if (generator) {
       const generators = generator.split(',').map((g) => g.trim());
@@ -410,15 +417,14 @@ export class WorkspaceConfig implements HostConfig {
    * Validates that external package manager configuration is compatible with other settings
    */
   validateExternalPackageManagerConfig(): void {
-    const workspaceExt = this.extension(WorkspaceAspect.id, true);
-    if (!workspaceExt?.externalPackageManager) {
+    const depResolverExt = this.extension('teambit.dependencies/dependency-resolver', true);
+    if (!depResolverExt?.externalPackageManager) {
       return; // No validation needed if external package manager is not enabled
     }
 
     const conflicts: string[] = [];
 
     // Check dependency-resolver aspect conflicts
-    const depResolverExt = this.extension('teambit.dependencies/dependency-resolver', true);
     if (depResolverExt?.rootComponent === true) {
       conflicts.push('rootComponent cannot be true when externalPackageManager is enabled');
     }
