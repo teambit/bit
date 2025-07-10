@@ -77,11 +77,11 @@ export interface WorkspaceExtConfig {
 
   /**
    * If set to `true`, enables external package manager mode. When enabled:
-   * - resolveAspectsFromNodeModules will be set to false
-   * - resolveEnvsFromRoots will be set to false
-   * - enableWorkspaceConfigWrite will be set to false
-   * - bit install will throw an error suggesting to use external package manager
-   * - commands with -x flag will skip dependency installation by default
+   * - `bit install` will not install dependencies and will prompt the user to use their package manager.
+   * - Other commands that trigger installation (e.g., `bit import`, `bit checkout`) will skip the installation and print a warning.
+   * When this prop is set by bit to `true`, the following properties are automatically set to `false`:
+   * - `rootComponent`.
+   * - `enableWorkspaceConfigWrite`.
    */
   externalPackageManager?: boolean;
 }

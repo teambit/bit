@@ -77,6 +77,7 @@ export type WorkspaceInstallOptions = {
   lifecycleType?: WorkspaceDependencyLifecycleType;
   dedupe?: boolean;
   import?: boolean;
+  showExternalPackageManagerPrompt?: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
   updateExisting?: boolean;
@@ -157,15 +158,16 @@ export class InstallMain {
     const workspaceConfig = this.workspace.getWorkspaceConfig();
     const depResolverExtConfig = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');
     if (depResolverExtConfig?.config.externalPackageManager) {
-      // Only show prompt for explicit install commands, not programmatic installs from import/etc
-      // When import: false is passed, it's usually a programmatic install from component operations
-      const isProgrammaticInstall = options?.import === false;
-      if (isProgrammaticInstall) {
-        // For programmatic installs (import, checkout, etc.), just return early without doing anything
-        return new ComponentMap(new Map());
-      } else {
+      if (options?.showExternalPackageManagerPrompt) {
         // For explicit "bit install" commands, show the prompt
         await this.handleExternalPackageManagerPrompt();
+      } else {
+        this.logger.console(
+          chalk.yellow(
+            'Installation was skipped due to external package manager configuration. Please run your package manager to install dependencies.'
+          )
+        );
+        return new ComponentMap(new Map());
       }
     }
 
