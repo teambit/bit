@@ -436,10 +436,17 @@ export class CiMain {
       this.logger.console(chalk.green('Switched to main'));
     }
 
+    // Pull latest changes from remote to ensure we have the most up-to-date .bitmap
+    // This prevents issues when multiple PRs are merged in sequence
+    const defaultBranch = await this.getDefaultBranchName();
+    this.logger.console(chalk.blue(`Pulling latest changes from ${defaultBranch} branch`));
+    await git.pull('origin', defaultBranch);
+    this.logger.console(chalk.green('Pulled latest changes'));
+
+    this.logger.console('🔄 Checking out to main head');
     await this.checkout.checkout({
       forceOurs: true,
       head: true,
-      main: true,
       mergeStrategy: 'ours',
       workspaceOnly: true,
       skipNpmInstall: true,
@@ -478,7 +485,6 @@ export class CiMain {
       await git.commit('chore: update .bitmap and lockfiles as needed [skip ci]');
 
       // Pull latest changes and push the commit to the remote repository
-      const defaultBranch = await this.getDefaultBranchName();
       await git.pull('origin', defaultBranch);
       await git.push('origin', defaultBranch);
     } else {
