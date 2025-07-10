@@ -522,17 +522,17 @@ describe('CliMcpServer Direct Aspect Tests', function () {
         setupWorkspacePath
       );
 
-      // Verify that the settings.json file was created in the workspace directory
-      const vscodeSettingsPath = path.join(setupWorkspacePath, '.vscode', 'settings.json');
-      const settingsExists = await fs.pathExists(vscodeSettingsPath);
-      expect(settingsExists).to.be.true;
+      // Verify that the mcp.json file was created in the workspace directory
+      const vscodeMcpPath = path.join(setupWorkspacePath, '.vscode', 'mcp.json');
+      const mcpExists = await fs.pathExists(vscodeMcpPath);
+      expect(mcpExists).to.be.true;
 
-      // Verify the content of the settings file
-      const settings = await fs.readJson(vscodeSettingsPath);
-      expect(settings).to.have.property('mcp');
-      expect(settings.mcp).to.have.property('servers');
-      expect(settings.mcp.servers).to.have.property('bit-cli');
-      expect(settings.mcp.servers['bit-cli']).to.deep.equal({
+      // Verify the content of the mcp.json file
+      const mcpConfig = await fs.readJson(vscodeMcpPath);
+      expect(mcpConfig).to.have.property('servers');
+      expect(mcpConfig.servers).to.have.property('bit-cli');
+      expect(mcpConfig.servers['bit-cli']).to.deep.equal({
+        type: 'stdio',
         command: 'bit',
         args: ['mcp-server', 'start'],
       });
@@ -549,12 +549,12 @@ describe('CliMcpServer Direct Aspect Tests', function () {
         setupWorkspacePath
       );
 
-      const vscodeSettingsPath = path.join(setupWorkspacePath, '.vscode', 'settings.json');
-      const settings = await fs.readJson(vscodeSettingsPath);
+      const vscodeMcpPath = path.join(setupWorkspacePath, '.vscode', 'mcp.json');
+      const mcpConfig = await fs.readJson(vscodeMcpPath);
 
-      expect(settings.mcp.servers['bit-cli'].args).to.include('--consumer-project');
-      expect(settings.mcp.servers['bit-cli'].args).to.include('--include-additional');
-      expect(settings.mcp.servers['bit-cli'].args).to.include('status,list');
+      expect(mcpConfig.servers['bit-cli'].args).to.include('--consumer-project');
+      expect(mcpConfig.servers['bit-cli'].args).to.include('--include-additional');
+      expect(mcpConfig.servers['bit-cli'].args).to.include('status,list');
     });
 
     it('should setup Cursor integration directly', async () => {
@@ -649,13 +649,18 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       }
     });
 
-    it('should merge with existing VS Code settings', async () => {
-      // First, create existing settings
-      const vscodeSettingsPath = path.join(setupWorkspacePath, '.vscode', 'settings.json');
-      await fs.ensureDir(path.dirname(vscodeSettingsPath));
-      await fs.writeJson(vscodeSettingsPath, {
-        'editor.formatOnSave': true,
-        'typescript.preferences.includePackageJsonAutoImports': 'off',
+    it('should merge with existing VS Code mcp.json config', async () => {
+      // First, create existing MCP config
+      const vscodeMcpPath = path.join(setupWorkspacePath, '.vscode', 'mcp.json');
+      await fs.ensureDir(path.dirname(vscodeMcpPath));
+      await fs.writeJson(vscodeMcpPath, {
+        servers: {
+          'existing-server': {
+            type: 'stdio',
+            command: 'some-other-command',
+            args: ['start'],
+          },
+        },
       });
 
       // Run setup
@@ -667,12 +672,17 @@ describe('CliMcpServer Direct Aspect Tests', function () {
         setupWorkspacePath
       );
 
-      // Verify that existing settings are preserved and MCP config is added
-      const settings = await fs.readJson(vscodeSettingsPath);
-      expect(settings).to.have.property('editor.formatOnSave', true);
-      expect(settings).to.have.property('typescript.preferences.includePackageJsonAutoImports', 'off');
-      expect(settings).to.have.property('mcp');
-      expect(settings.mcp.servers['bit-cli']).to.deep.equal({
+      // Verify that existing MCP config is preserved and Bit config is added
+      const mcpConfig = await fs.readJson(vscodeMcpPath);
+      expect(mcpConfig.servers).to.have.property('existing-server');
+      expect(mcpConfig.servers['existing-server']).to.deep.equal({
+        type: 'stdio',
+        command: 'some-other-command',
+        args: ['start'],
+      });
+      expect(mcpConfig.servers).to.have.property('bit-cli');
+      expect(mcpConfig.servers['bit-cli']).to.deep.equal({
+        type: 'stdio',
         command: 'bit',
         args: ['mcp-server', 'start'],
       });

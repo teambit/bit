@@ -104,39 +104,76 @@ export class McpSetupUtils {
   }
 
   /**
+   * Get VS Code mcp.json path for workspace configuration
+   */
+  static getVSCodeMcpConfigPath(workspaceDir?: string): string {
+    const targetDir = workspaceDir || process.cwd();
+    return path.join(targetDir, '.vscode', 'mcp.json');
+  }
+
+  /**
    * Setup VS Code MCP integration
    */
   static async setupVSCode(options: SetupOptions): Promise<void> {
     const { isGlobal, workspaceDir } = options;
 
-    // Determine settings.json path
-    const settingsPath = this.getVSCodeSettingsPath(isGlobal, workspaceDir);
+    if (isGlobal) {
+      // For global configuration, use settings.json with mcp.servers structure
+      const settingsPath = this.getVSCodeSettingsPath(isGlobal, workspaceDir);
 
-    // Ensure directory exists
-    await fs.ensureDir(path.dirname(settingsPath));
+      // Ensure directory exists
+      await fs.ensureDir(path.dirname(settingsPath));
 
-    // Read existing settings or create empty object
-    const settings = await this.readJsonFile(settingsPath);
+      // Read existing settings or create empty object
+      const settings = await this.readJsonFile(settingsPath);
 
-    // Build MCP server args
-    const args = this.buildMcpServerArgs(options);
+      // Build MCP server args
+      const args = this.buildMcpServerArgs(options);
 
-    // Create or update MCP configuration
-    if (!settings.mcp) {
-      settings.mcp = {};
+      // Create or update MCP configuration
+      if (!settings.mcp) {
+        settings.mcp = {};
+      }
+
+      if (!settings.mcp.servers) {
+        settings.mcp.servers = {};
+      }
+
+      settings.mcp.servers['bit-cli'] = {
+        type: 'stdio',
+        command: 'bit',
+        args: args,
+      };
+
+      // Write updated settings
+      await fs.writeFile(settingsPath, JSON.stringify(settings, null, 2));
+    } else {
+      // For workspace configuration, use .vscode/mcp.json with direct servers structure
+      const mcpConfigPath = this.getVSCodeMcpConfigPath(workspaceDir);
+
+      // Ensure directory exists
+      await fs.ensureDir(path.dirname(mcpConfigPath));
+
+      // Read existing MCP configuration or create empty object
+      const mcpConfig = await this.readJsonFile(mcpConfigPath);
+
+      // Build MCP server args
+      const args = this.buildMcpServerArgs(options);
+
+      // Create or update MCP configuration
+      if (!mcpConfig.servers) {
+        mcpConfig.servers = {};
+      }
+
+      mcpConfig.servers['bit-cli'] = {
+        type: 'stdio',
+        command: 'bit',
+        args: args,
+      };
+
+      // Write updated MCP configuration
+      await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
     }
-
-    if (!settings.mcp.servers) {
-      settings.mcp.servers = {};
-    }
-
-    settings.mcp.servers['bit-cli'] = {
-      command: 'bit',
-      args: args,
-    };
-
-    // Write updated settings
-    await fs.writeFile(settingsPath, JSON.stringify(settings, null, 2));
   }
 
   /**

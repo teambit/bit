@@ -24,6 +24,7 @@ type BuildOpts = {
   includeSnap?: boolean;
   includeTag?: boolean;
   ignoreIssues?: string;
+  loose?: boolean;
 };
 
 export class BuilderCmd implements Command {
@@ -69,6 +70,7 @@ specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. te
       'list tasks of an env or a component-id for each one of the pipelines: build, tag and snap',
     ],
     ['', 'skip-tests', 'skip running component tests during build process'],
+    ['', 'loose', 'allow build to succeed even if tasks like tests or lint fail'],
     [
       '',
       'skip-tasks <string>',
@@ -115,6 +117,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       includeSnap,
       includeTag,
       ignoreIssues,
+      loose = false,
     }: BuildOpts
   ): Promise<string> {
     if (rewrite && !reuseCapsules) throw new Error('cannot use --rewrite without --reuse-capsules');
@@ -163,12 +166,12 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     );
     this.logger.console(`build output can be found in path: ${envsExecutionResults.capsuleRootDir}`);
     const duration = prettyTime(process.hrtime(start));
-    const succeedOrFailed = envsExecutionResults.hasErrors() ? 'failed' : 'succeeded';
+    const succeedOrFailed = envsExecutionResults.hasErrors(loose) ? 'failed' : 'succeeded';
     const msg = `build ${succeedOrFailed}. completed in ${duration}.`;
-    if (envsExecutionResults.hasErrors()) {
+    if (envsExecutionResults.hasErrors(loose)) {
       this.logger.consoleFailure(msg);
     }
-    envsExecutionResults.throwErrorsIfExist();
+    envsExecutionResults.throwErrorsIfExist(loose);
     return chalk.green(msg);
   }
 

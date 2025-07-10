@@ -51,6 +51,7 @@ This is the decision-making process for executing any Bit operation.
   - `bit lint`
   - `bit check-types`
   - `bit run` (long-running processes)
+  - any command when `--build` flag is used. (build can take long)
 
 ## Core Workflows
 

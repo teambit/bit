@@ -228,6 +228,7 @@ because this process can take a while on a large workspace, some flags are avail
 | `--cache-packages-on-capsule-root` |                  | set the package-manager cache on the capsule root                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `--list-tasks <string>`            |                  | list tasks of an env or a component-id for each one of the pipelines: build, tag and snap                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `--skip-tests`                     |                  | skip running component tests during build process                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `--loose`                          |                  | allow build to succeed even if tasks like tests or lint fail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `--skip-tasks <string>`            |                  | skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes. specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `--fail-fast`                      |                  | stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `--include-snap`                   |                  | include snap pipeline tasks. Warning: this may deploy/publish if you have such tasks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -340,6 +341,43 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
 | `--skip-dependency-installation`        |       `-x`       | do not auto-install dependencies of the imported components                                                                              |
 | `--force-ours`                          |                  | do not merge, preserve local files as is                                                                                                 |
 | `--force-theirs`                        |                  | do not merge, just overwrite with incoming files                                                                                         |
+
+---
+
+## ci
+
+**Description**: CI commands
+
+`bit ci <sub-command>`
+
+### ci verify
+
+**Usage**: `ci verify`
+
+**Description**: CI commands
+
+### ci pr
+
+**Usage**: `ci pr`
+
+**Description**: This command is meant to run when a PR was open/updated and meant to export a lane to bit-cloud.
+
+| **Option**            | **Option alias** | **Description**                                                                  |
+| --------------------- | :--------------: | -------------------------------------------------------------------------------- |
+| `--message <message>` |       `-m`       | If set, set it as the snap message, if not, try and grab from git-commit-message |
+| `--lane <lane>`       |       `-l`       | If set, use as the lane name, if not available, grab from git-branch name        |
+| `--build`             |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI    |
+
+### ci merge
+
+**Usage**: `ci merge`
+
+**Description**: Merges a PR
+
+| **Option**            | **Option alias** | **Description**                                                                  |
+| --------------------- | :--------------: | -------------------------------------------------------------------------------- |
+| `--message <message>` |       `-m`       | If set, use it as the snap message, if not, try and grab from git-commit-message |
+| `--build`             |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI    |
 
 ---
 
@@ -1113,6 +1151,7 @@ when no package is specified, all workspace dependencies are installed and all w
 | `--alias <string>`                      |       `-n`       | relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `--verbose`                             |                  | display detailed information about components that legitimately were not switched                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `--json`                                |       `-j`       | return the output as JSON                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `--branch`                              |                  | create and checkout a new git branch named after the lane                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ### lane show
 
@@ -1228,6 +1267,7 @@ bit lane diff from to => diff between "from" lane and "to" lane.
 | -------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `--skip-dependency-installation` |       `-x`       | do not install dependencies of the imported components                                                                                 |
 | `--pattern <component-pattern>`  |       `-p`       | import only components from the lane that fit the specified component-pattern to the workspace. works only when the workspace is empty |
+| `--branch`                       |                  | create and checkout a new git branch named after the lane                                                                              |
 
 ### lane remove-comp
 
@@ -1365,6 +1405,7 @@ this flag keeps the history of one end and saves a reference to the other end. t
 | `--no-snap`                             |                  | do not pass snaps from the other lane even for non-diverged components (see command description)                                                            |
 | `--tag`                                 |                  | auto-tag all lane components after merging into main (or tag-merge in case of snap-merge)                                                                   |
 | `--build`                               |                  | in case of snap during the merge, run the build-pipeline (similar to bit snap --build)                                                                      |
+| `--loose`                               |                  | relevant for --build, to allow build to succeed even if tasks like tests or lint fail                                                                       |
 | `--message <message>`                   |       `-m`       | override the default message for the auto snap                                                                                                              |
 | `--keep-readme`                         |                  | skip deleting the lane readme component after merging                                                                                                       |
 | `--no-squash`                           |                  | relevant for merging lanes into main, which by default squashes all lane snaps                                                                              |
@@ -1600,12 +1641,12 @@ Start the Model Context Protocol (MCP) server with the specified configuration
 
 **Usage**: `mcp-server setup [editor]`
 
-**Description**: Setup MCP integration with VS Code, Cursor, Windsurf, Roo Code, or other editors  
-Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, Windsurf, and Roo Code.
+**Description**: Setup MCP integration with VS Code, Cursor, Windsurf, Roo Code, Cline, or other editors  
+Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, Windsurf, Roo Code, and Cline.
 
-| **Arg**  |                               **Description**                               |
-| -------- | :-------------------------------------------------------------------------: |
-| `editor` | Editor to setup (default: vscode). Available: vscode, cursor, windsurf, roo |
+| **Arg**  |                                  **Description**                                   |
+| -------- | :--------------------------------------------------------------------------------: |
+| `editor` | Editor to setup (default: vscode). Available: vscode, cursor, windsurf, roo, cline |
 
 | **Option**                        | **Option alias** | **Description**                                                                        |
 | --------------------------------- | :--------------: | -------------------------------------------------------------------------------------- |
@@ -1617,12 +1658,12 @@ Creates or updates configuration files to integrate Bit MCP server with supporte
 
 **Usage**: `mcp-server rules [editor]`
 
-**Description**: Write Bit MCP rules/instructions file for VS Code, Cursor, or print to screen  
-Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code and Cursor. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.
+**Description**: Write Bit MCP rules/instructions file for VS Code, Cursor, Roo Code, Cline, or print to screen  
+Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, Roo Code, and Cline. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.
 
-| **Arg**  |                            **Description**                             |
-| -------- | :--------------------------------------------------------------------: |
-| `editor` | Editor to write rules for (default: vscode). Available: vscode, cursor |
+| **Arg**  |                                  **Description**                                   |
+| -------- | :--------------------------------------------------------------------------------: |
+| `editor` | Editor to write rules for (default: vscode). Available: vscode, cursor, roo, cline |
 
 | **Option**           | **Option alias** | **Description**                                                               |
 | -------------------- | :--------------: | ----------------------------------------------------------------------------- |
@@ -2085,6 +2126,7 @@ optionally, provide [pattern] to limit the fork to specific components
 | `--skip-auto-snap`         |                  | skip auto snapping dependents                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `--disable-snap-pipeline`  |                  | skip the snap pipeline. this will for instance skip packing and publishing component version for install, and app deployment                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `--ignore-build-errors`    |                  | proceed to snap pipeline even when build pipeline fails                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `--loose`                  |                  | allow snap --build to succeed even if tasks like tests or lint fail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `--rebuild-deps-graph`     |                  | do not reuse the saved dependencies graph, instead build it from scratch                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `--ignore-issues <issues>` |       `-i`       | ignore component issues (shown in "bit status" as "issues found"), issues to ignore: [MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory] to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "\*". |
 | `--fail-fast`              |                  | stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
@@ -2240,6 +2282,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
 | `--ignore-newest-version`    |       `-I`       | allow tagging even when the component has newer versions e.g. for hotfixes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `--fail-fast`                |                  | stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `--build`                    |       `-b`       | locally run the build pipeline (i.e. not via rippleCI) and complete the tag                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `--loose`                    |                  | allow tag --build to succeed even if tasks like tests or lint fail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `--detach-head`              |                  | UNSUPPORTED YET. in case a component is checked out to an older version, tag it without changing the head                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 ---

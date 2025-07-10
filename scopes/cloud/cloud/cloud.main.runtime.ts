@@ -110,7 +110,7 @@ export class CloudMain {
     public scope: ScopeMain,
     public configStore: ConfigStoreMain,
     public onSuccessLoginSlot: OnSuccessLoginSlot
-  ) { }
+  ) {}
 
   getNpmConfig(): Record<string, string> {
     try {
@@ -385,7 +385,7 @@ export class CloudMain {
 
   async isLoggedIn(): Promise<boolean> {
     const currentUser = await this.getCurrentUser();
-    return Boolean(currentUser)
+    return Boolean(currentUser);
   }
 
   getAuthToken() {
@@ -434,15 +434,17 @@ export class CloudMain {
     }
     const authListenerForPort = this.authListenerByPort.get(port);
     if (authListenerForPort) {
-      return `${loginUrl}?port=${port}&clientId=${authListenerForPort.clientId}&responseType=token&deviceName=${machineName || os.hostname()
-        }&os=${process.platform}`;
+      return `${loginUrl}?port=${port}&clientId=${authListenerForPort.clientId}&responseType=token&deviceName=${
+        machineName || os.hostname()
+      }&os=${process.platform}`;
     }
     const authListener = await this.setupAuthListener({ port });
 
     if (!authListener) return null;
 
     return encodeURI(
-      `${loginUrl}?port=${port}&clientId=${authListener?.clientId}&responseType=token&deviceName=${machineName || os.hostname()
+      `${loginUrl}?port=${port}&clientId=${authListener?.clientId}&responseType=token&deviceName=${
+        machineName || os.hostname()
       }&os=${process.platform}`
     );
   }
@@ -642,7 +644,7 @@ export class CloudMain {
   }
 
   async fetchFromSymphonyViaGQL<T>(query: string, variables?: Record<string, any>): Promise<T | null> {
-    const graphqlUrl = `https://${this.getCloudApi()}${CloudMain.GRAPHQL_ENDPOINT}`;
+    const graphqlUrl = `${this.getCloudApi()}${CloudMain.GRAPHQL_ENDPOINT}`;
     const body = JSON.stringify({
       query,
       variables,

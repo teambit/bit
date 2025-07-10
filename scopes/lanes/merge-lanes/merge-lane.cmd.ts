@@ -63,6 +63,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     ['', 'no-snap', 'do not pass snaps from the other lane even for non-diverged components (see command description)'],
     ['', 'tag', 'auto-tag all lane components after merging into main (or tag-merge in case of snap-merge)'],
     ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
+    ['', 'loose', 'relevant for --build, to allow build to succeed even if tasks like tests or lint fail'],
     ['m', 'message <message>', 'override the default message for the auto snap'],
     ['', 'keep-readme', 'skip deleting the lane readme component after merging'],
     ['', 'no-squash', 'relevant for merging lanes into main, which by default squashes all lane snaps'],
@@ -134,6 +135,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       verbose = false,
       excludeNonLaneComps = false,
       detachHead,
+      loose = false,
     }: {
       ours?: boolean;
       theirs?: boolean;
@@ -156,6 +158,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       verbose?: boolean;
       excludeNonLaneComps?: boolean;
       detachHead?: boolean;
+      loose?: boolean;
     }
   ): Promise<string> {
     build = this.configStore.getConfigBoolean(CFG_FORCE_LOCAL_BUILD) || Boolean(build);
@@ -211,6 +214,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
       includeDeps,
       excludeNonLaneComps,
       detachHead,
+      loose,
     });
 
     const mergeResult = mergeReport({ ...mergeResults, configMergeResults, verbose });

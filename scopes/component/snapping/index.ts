@@ -19,4 +19,5 @@ export {
   TagParams,
   validateOptions,
   tagResultOutput,
+  outputIdsIfExists,
 } from './tag-cmd';

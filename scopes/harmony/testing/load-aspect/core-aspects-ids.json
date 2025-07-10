@@ -103,6 +103,7 @@
   "teambit.scope/objects",
   "teambit.harmony/config-store",
   "teambit.mcp/cli-mcp-server",
+  "teambit.git/ci",
   "teambit.harmony/bit",
   "teambit.harmony/config"
 ]

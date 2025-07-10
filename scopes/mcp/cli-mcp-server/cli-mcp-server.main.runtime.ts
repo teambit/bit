@@ -79,7 +79,10 @@ export class CliMcpServerMain {
   constructor(
     private cli: CLIMain,
     private logger: Logger
-  ) {}
+  ) {
+    // Validate the default bitBin on construction
+    this.bitBin = this.validateBitBin(this.bitBin);
+  }
 
   async getHttp(): Promise<Http> {
     if (!this._http) {
@@ -90,13 +93,26 @@ export class CliMcpServerMain {
 
   private async getBitServerPort(cwd: string, skipValidatePortFlag = false): Promise<number | undefined> {
     try {
-      const existingPort = childProcess
-        .execSync(`${this.bitBin} cli-server-port ${skipValidatePortFlag}`, {
-          cwd,
-          env: { ...process.env, BIT_CLI_SERVER: 'true' },
-        })
-        .toString()
-        .trim();
+      const args = ['cli-server-port'];
+      if (skipValidatePortFlag) {
+        args.push(String(skipValidatePortFlag));
+      }
+
+      const result = childProcess.spawnSync(this.bitBin, args, {
+        cwd,
+        env: { ...process.env, BIT_CLI_SERVER: 'true' },
+        encoding: 'utf8',
+      });
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      if (result.status !== 0) {
+        throw new Error(`Command failed with status ${result.status}: ${result.stderr}`);
+      }
+
+      const existingPort = result.stdout.trim();
       if (!existingPort) return undefined;
       return parseInt(existingPort, 10);
     } catch (err: any) {
@@ -322,7 +338,12 @@ export class CliMcpServerMain {
       `[MCP-DEBUG] Starting MCP server with options: ${JSON.stringify(options)}. CWD: ${process.cwd()}`
     );
     const commands = this.cli.commands;
-    this.bitBin = options.bitBin || this.bitBin;
+
+    // Validate and set bitBin with security checks
+    if (options.bitBin) {
+      this.bitBin = this.validateBitBin(options.bitBin);
+    }
+    // If no bitBin provided, keep the default 'bit'
 
     // Tools to always exclude
     const alwaysExcludeTools = new Set([
@@ -1117,19 +1138,26 @@ export class CliMcpServerMain {
 
   private async runBit(args: string[], cwd: string): Promise<CallToolResult> {
     this.logger.debug(`[MCP-DEBUG] Running: ${this.bitBin} ${args.join(' ')} in ${cwd}`);
-    const cmd = `${this.bitBin} ${args.join(' ')}`;
     try {
-      const cmdOutput = childProcess.execSync(cmd, {
+      const result = childProcess.spawnSync(this.bitBin, args, {
         cwd,
         env: { ...process.env, BIT_DISABLE_SPINNER: '1' },
-        stdio: 'pipe',
+        encoding: 'utf8',
       });
-      this.logger.debug(`[MCP-DEBUG] result. stdout: ${cmdOutput}`);
 
-      return { content: [{ type: 'text', text: cmdOutput.toString() }] };
+      if (result.error) {
+        throw result.error;
+      }
+
+      if (result.status !== 0) {
+        const errorMessage = result.stderr || `Command failed with status ${result.status}`;
+        throw new Error(errorMessage);
+      }
+
+      this.logger.debug(`[MCP-DEBUG] result. stdout: ${result.stdout}`);
+      return { content: [{ type: 'text', text: result.stdout }] };
     } catch (error: any) {
-      this.logger.error(`[MCP-DEBUG] Error executing ${cmd}`, error);
-
+      this.logger.error(`[MCP-DEBUG] Error executing ${this.bitBin} ${args.join(' ')}`, error);
       return { content: [{ type: 'text', text: error.message }] };
     }
   }
@@ -1219,6 +1247,12 @@ export class CliMcpServerMain {
       }
     }
   }
+  private validateBitBin(bitBin: string): string {
+    const trimmed = bitBin?.trim();
+    // Check for shell metacharacters and spaces. Protect against command injection.
+    if (!trimmed || /[;&|`$(){}[\]<>'"\\]/.test(trimmed) || /\s/.test(trimmed)) throw new Error('Invalid bitBin');
+    return trimmed;
+  }
 
   // Setup command business logic methods
   getEditorDisplayName(editor: string): string {
@@ -1232,7 +1266,10 @@ export class CliMcpServerMain {
     const editorLower = editor.toLowerCase();
 
     if (editorLower === 'vscode') {
-      return McpSetupUtils.getVSCodeSettingsPath(isGlobal, workspaceDir);
+      // For VS Code, return appropriate config path based on global vs workspace scope
+      return isGlobal
+        ? McpSetupUtils.getVSCodeSettingsPath(isGlobal, workspaceDir)
+        : McpSetupUtils.getVSCodeMcpConfigPath(workspaceDir);
     } else if (editorLower === 'cursor') {
       return McpSetupUtils.getCursorSettingsPath(isGlobal, workspaceDir);
     } else if (editorLower === 'windsurf') {
