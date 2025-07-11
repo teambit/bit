@@ -515,7 +515,7 @@ jobs:
 
 
   setup_harmony:
-    resource_class: large
+    resource_class: xlarge
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
