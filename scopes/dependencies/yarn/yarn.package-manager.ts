@@ -514,7 +514,7 @@ function convertOverridesToResolutions(
       from: override.parentPkg ? toYarnResolutionSelector(override.parentPkg) : undefined,
       descriptor: toYarnResolutionSelector(override.targetPkg),
     },
-    reference: override.newPref,
+    reference: override.newBareSpecifier,
   }));
 }
 
