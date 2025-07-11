@@ -2364,6 +2364,10 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     await this.dependencyResolver.persistConfig('Write dependencies');
   }
 
+  externalPackageManagerIsUsed(): boolean {
+    return this.dependencyResolver.config.externalPackageManager === true;
+  }
+
   async writeDependenciesToPackageJson(): Promise<void> {
     const pkgJson = await PackageJsonFile.load(this.path);
     const allDeps = await this.getAllDedupedDirectDependencies();
