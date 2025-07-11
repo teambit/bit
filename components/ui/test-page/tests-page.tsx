@@ -17,28 +17,28 @@ import { Link } from '@teambit/design.ui.navigation.link';
 import styles from './tests-page.module.scss';
 
 type CoverageResults = {
-  files: CoverageFile[]
-  total: CoverageData
-}
+  files: CoverageFile[];
+  total: CoverageData;
+};
 
 type CoverageStats = {
-  pct: number
-  total: number
-  covered: number
-  skipped: number
-}
+  pct: number;
+  total: number;
+  covered: number;
+  skipped: number;
+};
 
 type CoverageFile = {
-  path: string
-  data: CoverageData
-}
+  path: string;
+  data: CoverageData;
+};
 
 type CoverageData = {
-  lines: CoverageStats
-  statements: CoverageStats
-  functions: CoverageStats
-  branches: CoverageStats
-}
+  lines: CoverageStats;
+  statements: CoverageStats;
+  functions: CoverageStats;
+  branches: CoverageStats;
+};
 
 /**
  * Displays the total row with color-coded values
@@ -52,12 +52,12 @@ const getColor = (pct: number) => {
   if (pct < 50) return 'var(--warning-color)';
   if (pct < 75) return '#EEB90F';
   return 'var(--positive-color)';
-}
+};
 
 const StyledRow: React.FC<{
-  row: CoverageFile | undefined | null,
-  type: keyof CoverageFile['data'],
-  displayValue: (data: CoverageFile['data'][keyof CoverageFile['data']]) => string
+  row: CoverageFile | undefined | null;
+  type: keyof CoverageFile['data'];
+  displayValue: (data: CoverageFile['data'][keyof CoverageFile['data']]) => string;
 }> = ({ row, type, displayValue }) => {
   if (!row) return null;
 
@@ -67,60 +67,46 @@ const StyledRow: React.FC<{
     return null;
   }
 
-  return (
-    <span style={{ color: getColor(data.pct) }}>
-      {displayValue(data)}
-    </span>
-  )
-}
+  return <span style={{ color: getColor(data.pct) }}>{displayValue(data)}</span>;
+};
 
-const StyledTotalRow = (props: { row: CoverageFile | undefined | null, type: keyof CoverageFile['data'] }) => (
-  <StyledRow {...props} displayValue={data => `${data.covered}/${data.total}`} />
+const StyledTotalRow = (props: { row: CoverageFile | undefined | null; type: keyof CoverageFile['data'] }) => (
+  <StyledRow {...props} displayValue={(data) => `${data.covered}/${data.total}`} />
 );
 
-const StyledPctRow = (props: { row: CoverageFile | undefined | null, type: keyof CoverageFile['data'] }) => (
-  <StyledRow {...props} displayValue={data => `${data.pct}%`} />
+const StyledPctRow = (props: { row: CoverageFile | undefined | null; type: keyof CoverageFile['data'] }) => (
+  <StyledRow {...props} displayValue={(data) => `${data.pct}%`} />
 );
 
 const createColumn = (id: string, header: string, type: keyof CoverageFile['data']) => [
   {
     id: `${id}_pct`,
     header: '%',
-    cell: ({ row }: CellFunctionProps<CoverageFile>) => (
-      row ? <StyledPctRow row={row} type={type} /> : null
-    ),
+    cell: ({ row }: CellFunctionProps<CoverageFile>) => (row ? <StyledPctRow row={row} type={type} /> : null),
     value: (row?: CoverageFile) => row?.data[type].pct ?? 0,
     className: {
       td: styles.coverage_column,
       th: styles.coverage_column,
-    }
+    },
   },
   {
     id: `${id}_total`,
     header: 'Total',
-    cell: ({ row }: CellFunctionProps<CoverageFile>) => (
-      row ? <StyledTotalRow row={row} type={type} /> : null
-    ),
+    cell: ({ row }: CellFunctionProps<CoverageFile>) => (row ? <StyledTotalRow row={row} type={type} /> : null),
     value: (row?: CoverageFile) => row?.data[type].covered ?? 0,
     className: {
       td: styles.coverage_column,
       th: styles.coverage_column,
-    }
+    },
   },
 ];
 
 const calculatePercentage = (data: CoverageData) => {
-  const covered = data.lines.covered 
-    + data.branches.covered
-    + data.functions.covered
-    + data.statements.covered;
+  const covered = data.lines.covered + data.branches.covered + data.functions.covered + data.statements.covered;
 
-  const total = data.lines.total 
-    + data.branches.total
-    + data.functions.total
-    + data.statements.total;
+  const total = data.lines.total + data.branches.total + data.functions.total + data.statements.total;
   return (covered / total) * 100;
-}
+};
 
 const columns: ColumnProps<CoverageFile>[] = [
   {
@@ -128,11 +114,9 @@ const columns: ColumnProps<CoverageFile>[] = [
     header: 'File',
     cell: ({ row }) => (
       <div className={styles.filePath}>
-        <Link href={`../~code/${row?.path}${document.location.search}`}>
-          {row?.path}
-        </Link>
+        <Link href={`../~code/${row?.path}${document.location.search}`}>{row?.path}</Link>
       </div>
-    )
+    ),
   },
   {
     id: 'progress',
@@ -143,42 +127,44 @@ const columns: ColumnProps<CoverageFile>[] = [
       }
 
       const coveredPercentage = calculatePercentage(row?.data);
-      
+
       return (
         <div className={styles.summaryProgressBar}>
-          <div className={styles.progressBarFill} style={{
+          <div
+            className={styles.progressBarFill}
+            style={{
               width: `${coveredPercentage}%`,
-              backgroundColor: getColor(coveredPercentage)
+              backgroundColor: getColor(coveredPercentage),
             }}
           />
         </div>
-      )
+      );
     },
     value: (file) => file?.data.lines.pct ?? 0,
     className: {
       td: styles.coverage_column,
       th: styles.coverage_column,
-    }
+    },
   },
   {
     id: 'lines',
     header: 'Lines',
-    columns: createColumn('lines', 'Lines', 'lines')
+    columns: createColumn('lines', 'Lines', 'lines'),
   },
   {
     id: 'functions',
     header: 'Functions',
-    columns: createColumn('functions', 'Functions', 'functions')
+    columns: createColumn('functions', 'Functions', 'functions'),
   },
   {
     id: 'statements',
     header: 'Statements',
-    columns: createColumn('statements', 'Statements', 'statements')
+    columns: createColumn('statements', 'Statements', 'statements'),
   },
   {
     id: 'branches',
     header: 'Branches',
-    columns: createColumn('branches', 'Branches', 'branches')
+    columns: createColumn('branches', 'Branches', 'branches'),
   },
 ];
 
@@ -288,50 +274,49 @@ type TotalCoverageSummaryProps = {
 };
 
 const TotalCoverageSummary: React.FC<TotalCoverageSummaryProps> = ({ coverageResult }) => {
-  const { lines, statements, functions, branches } = coverageResult.total
+  const { lines, statements, functions, branches } = coverageResult.total;
 
   const data = [
-    { label: "Statements", value: `${statements.covered}/${statements.total}`, pct: statements.pct },
-    { label: "Branches", value: `${branches.covered}/${branches.total}`, pct: branches.pct },
-    { label: "Functions", value: `${functions.covered}/${functions.total}`, pct: functions.pct },
-    { label: "Lines", value: `${lines.covered}/${lines.total}`, pct: lines.pct },
-  ]
+    { label: 'Statements', value: `${statements.covered}/${statements.total}`, pct: statements.pct },
+    { label: 'Branches', value: `${branches.covered}/${branches.total}`, pct: branches.pct },
+    { label: 'Functions', value: `${functions.covered}/${functions.total}`, pct: functions.pct },
+    { label: 'Lines', value: `${lines.covered}/${lines.total}`, pct: lines.pct },
+  ];
 
   const totalCovered = lines.covered + branches.covered + functions.covered + statements.covered;
   const totalLines = lines.total + branches.total + functions.total + statements.total;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", marginBottom: "20px" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '20px' }}>
       <div className={styles.container}>
         {data.map((item) => (
           <div key={item.label} className={styles.item}>
-            <span className={styles.percentage}
+            <span
+              className={styles.percentage}
               style={{
-                color: getColor(item.pct)
+                color: getColor(item.pct),
               }}
             >
               {item.pct}%
             </span>
-            <span className={styles.label}>
-              {item.label}
-            </span>
-            <span className={styles.badge}>
-              {item.value}
-            </span>
+            <span className={styles.label}>{item.label}</span>
+            <span className={styles.badge}>{item.value}</span>
           </div>
         ))}
       </div>
       {/** Display a progress bar for the total */}
       <div className={styles.summaryProgressBar}>
-        <div className={styles.progressBarFill} style={{
-            width: `${totalCovered / totalLines * 100}%`,
-            backgroundColor: getColor(totalCovered / totalLines * 100)
+        <div
+          className={styles.progressBarFill}
+          style={{
+            width: `${(totalCovered / totalLines) * 100}%`,
+            backgroundColor: getColor((totalCovered / totalLines) * 100),
           }}
         />
       </div>
     </div>
-  )
-}
+  );
+};
 
 type TestsPageProps = {
   emptyState: EmptyStateSlot;

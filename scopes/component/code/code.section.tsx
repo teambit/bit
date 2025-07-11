@@ -4,7 +4,10 @@ import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import type { CodeUI } from './code.ui.runtime';
 
 export class CodeSection implements Section {
-  constructor(private codeUI: CodeUI, private pinned: boolean) { }
+  constructor(
+    private codeUI: CodeUI,
+    private pinned: boolean
+  ) {}
   route = {
     path: '~code/*',
     element: this.codeUI.getCodePage(),
@@ -13,7 +16,7 @@ export class CodeSection implements Section {
     href: '~code',
     children: <MenuWidgetIcon icon="Code" tooltipContent="Code" />,
     displayName: 'Code',
-    hideInMinimalMode: !this.pinned
+    hideInMinimalMode: !this.pinned,
   };
   order = this.pinned ? 0 : 30;
 }

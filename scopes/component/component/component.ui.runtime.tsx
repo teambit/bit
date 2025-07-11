@@ -311,7 +311,7 @@ export class ComponentUI {
     Slot.withType<ComponentPageSlot>(),
     Slot.withType<ComponentSearchResultSlot>(),
     Slot.withType<RightSideMenuSlot>(),
-    Slot.withType<NavPlugin>()
+    Slot.withType<NavPlugin>(),
   ];
   static defaultConfig: ComponentUIConfig = {
     commandBar: true,
@@ -339,7 +339,7 @@ export class ComponentUI {
       ComponentPageSlot,
       ComponentSearchResultSlot,
       RightSideMenuSlot,
-      OrderedNavigationSlot
+      OrderedNavigationSlot,
     ]
   ) {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)

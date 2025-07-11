@@ -31,7 +31,7 @@ export function WorkspaceComponentCard({
 }: WorkspaceComponentCardProps) {
   const [shouldShowPreviewState, togglePreview] = React.useState<boolean>(Boolean(shouldShowPreviewStateFromProps));
   const prevServerUrlRef = useRef(component.server?.url);
-  
+
   useEffect(() => {
     const currentServerUrl = component.server?.url;
     if (prevServerUrlRef.current !== currentServerUrl && shouldShowPreviewState) {
@@ -44,17 +44,17 @@ export function WorkspaceComponentCard({
   useEffect(() => {
     togglePreview(Boolean(shouldShowPreviewStateFromProps));
   }, [shouldShowPreviewStateFromProps]);
-  
+
   const showPreview = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
     if (!shouldShowPreviewState) {
       togglePreview(true);
     }
   };
-  
+
   const loadPreviewBtnVisible =
     component.compositions.length > 0 && component?.buildStatus !== 'pending' && !shouldShowPreviewState;
-  
+
   const updatedPlugins = React.useMemo(() => {
     return plugins?.map((plugin) => {
       if (plugin.preview) {
@@ -74,9 +74,9 @@ export function WorkspaceComponentCard({
       return plugin;
     });
   }, [shouldShowPreviewState, component.compositions.length, component.server?.url]);
-  
+
   if (component.deprecation?.isDeprecate) return null;
-  
+
   return (
     <div key={component.id.toString()} className={classNames(styles.cardWrapper, className)} {...rest}>
       {loadPreviewBtnVisible && <LoadPreview className={styles.loadPreview} onClick={showPreview} />}

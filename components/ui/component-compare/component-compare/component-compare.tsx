@@ -284,7 +284,10 @@ export function ComponentCompare(props: ComponentCompareProps) {
   const componentDescriptor = useContext(ComponentDescriptorContext);
   const location = useLocation();
   const isWorkspace = hostFromProps === 'teambit.workspace/workspace';
-  const compareHost = isWorkspace && !location?.search.includes('version') && !compareIdFromProps && component.logs?.length === 0 ? hostFromProps : 'teambit.scope/scope';
+  const compareHost =
+    isWorkspace && !location?.search.includes('version') && !compareIdFromProps && component.logs?.length === 0
+      ? hostFromProps
+      : 'teambit.scope/scope';
   const host = 'teambit.scope/scope';
   const {
     component: compareComponent,

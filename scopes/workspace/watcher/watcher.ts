@@ -486,24 +486,33 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
   private shouldIgnoreFromLocalScopeChokidar(pathToCheck: string) {
     if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
     return (
-      pathToCheck.startsWith(`${this.workspacePathLinux}/.git/`) || pathToCheck.startsWith(`${this.workspacePathLinux}/.bit/`)
+      pathToCheck.startsWith(`${this.workspacePathLinux}/.git/`) ||
+      pathToCheck.startsWith(`${this.workspacePathLinux}/.bit/`)
     );
   }
 
   private shouldIgnoreFromLocalScopeParcel(pathToCheck: string) {
     if (pathToCheck.startsWith(this.ipcEventsDir) || pathToCheck.endsWith(UNMERGED_FILENAME)) return false;
-    return pathToCheck.startsWith(join(this.workspace.path, '.git') + sep)
-     || pathToCheck.startsWith(join(this.workspace.path, '.bit') + sep);
+    return (
+      pathToCheck.startsWith(join(this.workspace.path, '.git') + sep) ||
+      pathToCheck.startsWith(join(this.workspace.path, '.bit') + sep)
+    );
   }
 
   private async createChokidarWatcher() {
     const chokidarOpts = await this.watcherMain.getChokidarWatchOptions();
     // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
     // (windows-style backslashes are converted to forward slashes)
-    chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', this.shouldIgnoreFromLocalScopeChokidar.bind(this)];
+    chokidarOpts.ignored = [
+      '**/node_modules/**',
+      '**/package.json',
+      this.shouldIgnoreFromLocalScopeChokidar.bind(this),
+    ];
     this.chokidarWatcher = chokidar.watch(this.workspace.path, chokidarOpts);
     if (this.verbose) {
-      logger.console(`${chalk.bold('chokidar.options:\n')} ${JSON.stringify(this.chokidarWatcher.options, undefined, 2)}`);
+      logger.console(
+        `${chalk.bold('chokidar.options:\n')} ${JSON.stringify(this.chokidarWatcher.options, undefined, 2)}`
+      );
     }
   }
 

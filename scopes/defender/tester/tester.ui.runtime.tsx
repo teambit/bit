@@ -13,7 +13,7 @@ import { Icon } from '@teambit/evangelist.elements.icon';
 import { Link } from '@teambit/base-react.navigation.link';
 import { TestsSection } from './tests.section';
 import { TesterAspect } from './tester.aspect';
-import styles from './coverage-label.module.scss'
+import styles from './coverage-label.module.scss';
 
 const GET_COMPONENT = gql`
   query ($id: String!) {
@@ -81,7 +81,7 @@ export class TesterUI {
         const { data } = useQuery(GET_COMPONENT, {
           variables: { id: legacyComponentModel.id.toString() },
         });
-        
+
         if (!data || !data.getHost || !data.getHost.getTests) return null;
 
         const total = data.getHost.getTests.testsResults?.coverage?.total as {
@@ -107,11 +107,11 @@ export class TesterUI {
             <Link href={`~tests${document.location.search}`} className={styles.link}>
               <PillLabel className={styles.label}>
                 <span>{total.lines.pct}%</span>
-                <Icon of='scan-component'  />
+                <Icon of="scan-component" />
               </PillLabel>
             </Link>
           </Tooltip>
-        )
+        );
       },
       weight: 30,
     });

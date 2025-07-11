@@ -89,7 +89,7 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
       Subscription: {
         componentAdded: {
           subscribe: () => graphql.pubsub.asyncIterator(ComponentAdded),
-          resolve: (payload) => payload.componentAdded
+          resolve: (payload) => payload.componentAdded,
         },
         componentChanged: {
           subscribe: () => graphql.pubsub.asyncIterator(ComponentChanged),
