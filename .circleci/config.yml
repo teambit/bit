@@ -567,7 +567,7 @@ jobs:
     resource_class: xlarge
     <<: *defaults
     environment:
-      BIT_FEATURES: cloud-importer-v2
+      # BIT_FEATURES: cloud-importer-v2
       NODE_OPTIONS: --max-old-space-size=15000
     steps:
       - attach_workspace:
