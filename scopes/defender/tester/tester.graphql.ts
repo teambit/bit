@@ -109,12 +109,12 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
                     return {
                       ...test,
                       duration: test.duration?.toFixed(0),
-                    }
+                    };
                   }),
-                }
+                };
               }),
-            }
-          }
+            },
+          };
         },
       },
     },

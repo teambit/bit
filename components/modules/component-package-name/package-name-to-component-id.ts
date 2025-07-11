@@ -25,7 +25,9 @@ export async function resolveComponentIdFromPackageName(
   dependencyResolver: { fetchFullPackageManifest: (name: string) => Promise<any> }
 ): Promise<ComponentID> {
   if (!packageName.startsWith('@')) {
-    throw new BitError(`resolveComponentIdFromPackageName supports only packages that start with @, got ${packageName}`);
+    throw new BitError(
+      `resolveComponentIdFromPackageName supports only packages that start with @, got ${packageName}`
+    );
   }
 
   const errMsgPrefix = `unable to resolve a component-id from the package-name ${packageName}, `;

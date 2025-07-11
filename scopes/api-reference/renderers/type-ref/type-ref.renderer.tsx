@@ -60,9 +60,9 @@ function TypeRefComponent(props: APINodeRenderProps) {
 
   const exportedTypeUrlFromAnotherComp = typeRefNode.componentId
     ? getExportedTypeUrlFromAnotherComp({
-      componentId: typeRefNode.componentId,
-      selectedAPI: typeRefNode.name,
-    })
+        componentId: typeRefNode.componentId,
+        selectedAPI: typeRefNode.name,
+      })
     : undefined;
 
   const packageUrl = typeRefNode.packageName ? `https://www.npmjs.com/package/${typeRefNode.packageName}` : undefined;
@@ -165,15 +165,13 @@ export function TypeRefName({
   if (url && !withinLink) {
     return (
       <LinkContext.Provider value={true}>
-        <Link
-          href={url}
-          external={external}
-          className={classnames(className, styles.nodeLink)}
-        >
+        <Link href={url} external={external} className={classnames(className, styles.nodeLink)}>
           {name}
-          {external && <div className={styles.locationIcon}>
-            <img src="https://static.bit.dev/design-system-assets/Icons/external-link.svg"></img>
-          </div>}
+          {external && (
+            <div className={styles.locationIcon}>
+              <img src="https://static.bit.dev/design-system-assets/Icons/external-link.svg"></img>
+            </div>
+          )}
           {children}
         </Link>
       </LinkContext.Provider>
@@ -198,8 +196,9 @@ function getExportedTypeUrlFromAnotherComp({
   const componentUrl = ComponentUrl.toUrl(componentId, { useLocationOrigin: false, includeVersion: true });
   const [componentIdUrl, versionQuery] = componentUrl.split('?');
 
-  const exportedTypeUrl = `${componentIdUrl}/~api-reference?selectedAPI=${encodeURIComponent(selectedAPI)}${versionQuery ? `&${versionQuery}` : ''
-    }`;
+  const exportedTypeUrl = `${componentIdUrl}/~api-reference?selectedAPI=${encodeURIComponent(selectedAPI)}${
+    versionQuery ? `&${versionQuery}` : ''
+  }`;
 
   return exportedTypeUrl;
 }

@@ -441,7 +441,13 @@ export class PnpmPackageManager implements PackageManager {
       filterByImporterIds.push(opts.componentRootDir as ProjectId);
     }
     for (const importerId of filterByImporterIds) {
-      for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies', 'specifiers', 'dependenciesMeta']) {
+      for (const depType of [
+        'dependencies',
+        'devDependencies',
+        'optionalDependencies',
+        'specifiers',
+        'dependenciesMeta',
+      ]) {
         for (const workspacePkgName of opts.componentIdByPkgName.keys()) {
           if (workspacePkgName !== opts.pkgName) {
             delete lockfile.importers[importerId]?.[depType]?.[workspacePkgName];

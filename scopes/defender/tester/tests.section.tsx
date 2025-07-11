@@ -13,7 +13,7 @@ export class TestsSection implements Section {
   navigationLink = {
     href: '~tests',
     children: 'Tests',
-    hideInMinimalMode: true
+    hideInMinimalMode: true,
   };
   order = 40;
 }

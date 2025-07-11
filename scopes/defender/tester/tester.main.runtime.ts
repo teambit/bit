@@ -75,28 +75,28 @@ export type TesterOptions = {
 };
 
 type CoverageResults = {
-  files: CoverageFile[]
-  total: CoverageData
-}
+  files: CoverageFile[];
+  total: CoverageData;
+};
 
 type CoverageStats = {
-  pct: number
-  total: number
-  covered: number
-  skipped: number
-}
+  pct: number;
+  total: number;
+  covered: number;
+  skipped: number;
+};
 
 type CoverageFile = {
-  path: string
-  data: CoverageData
-}
+  path: string;
+  data: CoverageData;
+};
 
 type CoverageData = {
-  lines: CoverageStats
-  statements: CoverageStats
-  functions: CoverageStats
-  branches: CoverageStats
-}
+  lines: CoverageStats;
+  statements: CoverageStats;
+  functions: CoverageStats;
+  branches: CoverageStats;
+};
 
 export class TesterMain {
   static runtime = MainRuntime;
@@ -190,12 +190,14 @@ export class TesterMain {
   async getTestsResults(
     component: IComponent,
     idHasVersion = true
-  ): Promise<{ testsResults?: TestsResult; loading: boolean, coverage?: CoverageResults } | undefined> {
+  ): Promise<{ testsResults?: TestsResult; loading: boolean; coverage?: CoverageResults } | undefined> {
     const entry = component.get(TesterAspect.id);
     const isModified = !idHasVersion && (await component.isModified());
-    const data = this.builder.getDataByAspect(component, TesterAspect.id) as { tests: TestsResult & {
-      coverage: CoverageResults
-    } };
+    const data = this.builder.getDataByAspect(component, TesterAspect.id) as {
+      tests: TestsResult & {
+        coverage: CoverageResults;
+      };
+    };
     if ((entry || data) && !isModified) {
       return { testsResults: data?.tests || entry?.data.tests, loading: false, coverage: data?.tests.coverage };
     }

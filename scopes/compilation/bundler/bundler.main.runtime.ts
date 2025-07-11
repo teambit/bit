@@ -66,9 +66,8 @@ export class BundlerMain {
      */
     private onPreDevServerCreatedSlot: OnPreDevServerCreatedSlot,
 
-    private graphql: GraphqlMain,
-  ) {
-  }
+    private graphql: GraphqlMain
+  ) {}
 
   async addNewDevServers(newCompsWithoutDevServers: Component[]): Promise<ComponentServer[]> {
     const newComponents = newCompsWithoutDevServers.filter((component) => {
@@ -79,9 +78,7 @@ export class BundlerMain {
       return [];
     }
 
-    await Promise.all(
-      this.onPreDevServerCreatedSlot.values().map(subscriberFn => subscriberFn(newComponents))
-    );
+    await Promise.all(this.onPreDevServerCreatedSlot.values().map((subscriberFn) => subscriberFn(newComponents)));
 
     return this.devServer(newComponents, { configureProxy: true });
   }
@@ -92,12 +89,7 @@ export class BundlerMain {
       dedicatedEnvDevServers: this.config.dedicatedEnvDevServers,
     });
     if (opts.configureProxy) {
-      this.pubsub.pub(BundlerAspect.id, new NewDevServersCreatedEvent(
-        servers,
-        Date.now(),
-        this.graphql,
-        true
-      ));
+      this.pubsub.pub(BundlerAspect.id, new NewDevServersCreatedEvent(servers, Date.now(), this.graphql, true));
     }
     this._componentServers = servers;
     this.indexByComponent();
@@ -120,7 +112,7 @@ export class BundlerMain {
 
   /**
    * compute entry files for bundling components in a given execution context.
-  */
+   */
   async computeEntries(context: BundlerContext) {
     const slotEntries = await Promise.all(
       this.runtimeSlot.values().map(async (browserRuntime) => browserRuntime.entry(context))
@@ -164,45 +156,30 @@ export class BundlerMain {
     return this;
   }
 
-  private indexByComponent() { }
+  private indexByComponent() {}
 
   static slots = [
     Slot.withType<BrowserRuntime>(),
     Slot.withType<DevServerTransformerSlot>(),
-    Slot.withType<OnPreDevServerCreatedSlot>()
+    Slot.withType<OnPreDevServerCreatedSlot>(),
   ];
 
   static runtime = MainRuntime;
-  static dependencies = [
-    PubsubAspect,
-    EnvsAspect,
-    GraphqlAspect,
-    DependencyResolverAspect,
-  ];
+  static dependencies = [PubsubAspect, EnvsAspect, GraphqlAspect, DependencyResolverAspect];
 
   static defaultConfig = {
     dedicatedEnvDevServers: [],
   };
 
   static async provider(
-    [pubsub, envs, graphql, dependencyResolver]:
-      [
-        PubsubMain,
-        EnvsMain,
-        GraphqlMain,
-        DependencyResolverMain,
-      ],
+    [pubsub, envs, graphql, dependencyResolver]: [PubsubMain, EnvsMain, GraphqlMain, DependencyResolverMain],
     config,
-    [runtimeSlot,
-      devServerTransformerSlot,
-      onPreDevServerCreatedSlot
-    ]: [
-        BrowserRuntimeSlot,
-        DevServerTransformerSlot,
-        OnPreDevServerCreatedSlot
-      ]
+    [runtimeSlot, devServerTransformerSlot, onPreDevServerCreatedSlot]: [
+      BrowserRuntimeSlot,
+      DevServerTransformerSlot,
+      OnPreDevServerCreatedSlot,
+    ]
   ) {
-
     const devServerService = new DevServerService(pubsub, dependencyResolver, runtimeSlot, devServerTransformerSlot);
     const bundler = new BundlerMain(
       config,
@@ -212,7 +189,7 @@ export class BundlerMain {
       runtimeSlot,
       devServerTransformerSlot,
       onPreDevServerCreatedSlot,
-      graphql,
+      graphql
     );
     envs.registerService(devServerService, new BundlerService());
     graphql.register(() => devServerSchema(bundler, graphql));

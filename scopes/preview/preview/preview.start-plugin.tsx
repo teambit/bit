@@ -1,5 +1,12 @@
 import { flatten } from 'lodash';
-import { BundlerAspect, BundlerMain, ComponentServer, ComponentServerStartedEvent, ComponentsServerStartedEvent, NewDevServersCreatedEvent } from '@teambit/bundler';
+import {
+  BundlerAspect,
+  BundlerMain,
+  ComponentServer,
+  ComponentServerStartedEvent,
+  ComponentsServerStartedEvent,
+  NewDevServersCreatedEvent,
+} from '@teambit/bundler';
 import { PubsubMain } from '@teambit/pubsub';
 import { ProxyEntry, StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
 import { Workspace } from '@teambit/workspace';
@@ -57,10 +64,10 @@ export class PreviewStartPlugin implements StartPlugin {
 
     this.serversState[startedEnvId] = {
       ...this.serversState[startedEnvId],
-      isStarted: true
+      isStarted: true,
     };
 
-    const index = this.previewServers.findIndex(s => s.context.envRuntime.id === startedEnvId);
+    const index = this.previewServers.findIndex((s) => s.context.envRuntime.id === startedEnvId);
     if (index >= 0) {
       this.previewServers[index] = componentServer;
     } else {
@@ -70,16 +77,18 @@ export class PreviewStartPlugin implements StartPlugin {
     const uiServer = this.ui.getUIServer();
     if (uiServer) {
       uiServer.addComponentServerProxy(componentServer);
-      
+
       if (wasPending) {
         if (this.serversState[startedEnvId]?.isCompilationDone) {
           await this.publishServerStarted(componentServer);
         } else {
           this.serversState[startedEnvId] = {
             ...this.serversState[startedEnvId],
-            isPendingPublish: true
+            isPendingPublish: true,
           };
-          this.logger.console(`Server ${startedEnvId} started but waiting for compilation to complete before publishing event.`);
+          this.logger.console(
+            `Server ${startedEnvId} started but waiting for compilation to complete before publishing event.`
+          );
         }
       }
     }
@@ -95,15 +104,15 @@ export class PreviewStartPlugin implements StartPlugin {
     for (const server of servers) {
       const envId = server.context.envRuntime.id;
       this.pendingServers.set(envId, server);
-      
+
       this.serversState[envId] = {
         isCompiling: false,
         isReady: false,
         isStarted: false,
         isCompilationDone: false,
-        isPendingPublish: false
+        isPendingPublish: false,
       };
-      
+
       try {
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         server.listen();
@@ -121,15 +130,15 @@ export class PreviewStartPlugin implements StartPlugin {
     previewServers.forEach((server) => {
       const envId = server.context.envRuntime.id;
       this.serversMap[envId] = server;
-      
+
       this.serversState[envId] = {
         isCompiling: false,
         isReady: false,
         isStarted: false,
         isCompilationDone: false,
-        isPendingPublish: false
+        isPendingPublish: false,
       };
-      
+
       // DON'T add wait! this promise never resolves, so it would stop the start process!
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       server.listen();
@@ -192,9 +201,9 @@ export class PreviewStartPlugin implements StartPlugin {
   }
 
   private handleOnStartCompiling(id: string) {
-    this.serversState[id] = { 
+    this.serversState[id] = {
       ...this.serversState[id],
-      isCompiling: true 
+      isCompiling: true,
     };
     const spinnerId = getSpinnerId(id);
     const text = getSpinnerCompilingMessage(this.serversMap[id] || this.pendingServers.get(id));
@@ -238,9 +247,9 @@ export class PreviewStartPlugin implements StartPlugin {
       const server = this.serversMap[id];
       if (server) {
         this.serversState[id].isPendingPublish = false;
-         this.publishServerStarted(server).catch((err) => {
+        this.publishServerStarted(server).catch((err) => {
           this.logger.error(`failed to publish server started event for ${server.context.envRuntime.id}`, err);
-         });
+        });
       }
     }
   }

@@ -226,8 +226,11 @@ export async function mergeObjects(
   ] as ComponentNeedsUpdate[];
   const componentsWithConflicts = errors.filter((result) => result instanceof MergeConflict) as MergeConflict[];
   if (componentsWithConflicts.length || componentsNeedUpdate.length) {
-    const idsAndVersions = componentsWithConflicts.map((c) => ({ id: c.id, versions: c.versions,
-      isDeleted: c.isDeleted }));
+    const idsAndVersions = componentsWithConflicts.map((c) => ({
+      id: c.id,
+      versions: c.versions,
+      isDeleted: c.isDeleted,
+    }));
     const idsAndVersionsWithConflicts = sortBy(idsAndVersions, property('id'));
     const idsOfNeedUpdateComps = sortBy(
       componentsNeedUpdate.map((c) => ({ id: c.id, lane: c.lane, isDeleted: c.isDeleted })),

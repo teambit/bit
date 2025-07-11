@@ -1,16 +1,19 @@
 import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
 
-type IdAndVersions = { id: string; versions: string[], isDeleted?: boolean };
-type IdAndLane = { id: string; lane?: string, isDeleted?: boolean };
+type IdAndVersions = { id: string; versions: string[]; isDeleted?: boolean };
+type IdAndLane = { id: string; lane?: string; isDeleted?: boolean };
 
 export default class MergeConflictOnRemote extends BitError {
   code: number;
 
-  constructor(readonly idsAndVersionsWithConflicts: IdAndVersions[], readonly idsNeedUpdate: IdAndLane[]) {
+  constructor(
+    readonly idsAndVersionsWithConflicts: IdAndVersions[],
+    readonly idsNeedUpdate: IdAndLane[]
+  ) {
     const deletedIds = [...idsAndVersionsWithConflicts, ...idsNeedUpdate].filter((i) => i.isDeleted).map((i) => i.id);
     let output = '';
-    if (deletedIds.length){
+    if (deletedIds.length) {
       output += `error: the following component(s) were marked as deleted on the remote scope: ${deletedIds
         .map((i) => chalk.bold(i))
         .join(', ')}.

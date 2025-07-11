@@ -57,7 +57,6 @@ type ConsumerProps = {
 const BITMAP_HISTORY_DIR_NAME = 'bitmap-history';
 const BITMAP_HISTORY_METADATA_FILE_NAME = 'bitmap-history-metadata.txt';
 
-
 export default class Consumer {
   projectPath: PathOsBasedAbsolute;
   created: boolean;
@@ -311,7 +310,6 @@ export default class Consumer {
       copyDependenciesVersionsFromModelToFS(version.devDependencies, componentFromModel.devDependencies);
 
       sortProperties(version);
-
 
       // align files properties between model and filesystem.
       // the reason is that "name" and "test" props became deprecated. we don't want discrepancies between the

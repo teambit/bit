@@ -81,8 +81,10 @@ export class MDXMain {
     const mdx = new MDXMain();
     const logger = loggerAspect.createLogger(MDXAspect.id);
 
-    const mdxEnv = envs.merge<MdxEnv, ReactEnv>(new MdxEnv(react,
-      logger, multiCompiler, compiler, docs), react.reactEnv);
+    const mdxEnv = envs.merge<MdxEnv, ReactEnv>(
+      new MdxEnv(react, logger, multiCompiler, compiler, docs),
+      react.reactEnv
+    );
 
     envs.registerEnv(mdxEnv);
     depResolver.registerDetector(new MDXDependencyDetector(config.extensions));

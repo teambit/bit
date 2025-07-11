@@ -591,9 +591,9 @@ jobs:
       - run:
           name: 'bit ci pr'
           command: 'cd bit && bit ci pr --build'
-          no_output_timeout: '20m'
+          no_output_timeout: '50m'
           environment:
-            NODE_OPTIONS: --max-old-space-size=15000
+            NODE_OPTIONS: --max-old-space-size=30000
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
@@ -643,7 +643,7 @@ jobs:
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=15000
+      NODE_OPTIONS: --max-old-space-size=30000
     steps:
       - attach_workspace:
           at: ./
@@ -668,7 +668,7 @@ jobs:
       - run:
           name: 'bit ci merge'
           command: 'cd bit && bit ci merge --build'
-          no_output_timeout: '25m'
+          no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=15000
       - store_artifacts:
@@ -1424,6 +1424,9 @@ workflows:
                 - master
     jobs:
       - checkout_code
+      - setup_harmony:
+          requires:
+            - checkout_code
       - bundle_version_linux:
           <<: *master_only_filter
           requires:
@@ -1466,6 +1469,7 @@ workflows:
             - docker_build_node_22
       - e2e_test_bbit:
           requires:
+            - setup_harmony
             - harmony_publish_to_gcloud
 
   windows-nightly:
