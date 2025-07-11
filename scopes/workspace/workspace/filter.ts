@@ -14,7 +14,7 @@ export const statesFilter = [
   'codeModified',
   'localOnly',
 ] as const;
-export type StatesFilter = typeof statesFilter[number];
+export type StatesFilter = (typeof statesFilter)[number];
 
 export class Filter {
   constructor(private workspace: Workspace) {}

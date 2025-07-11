@@ -32,8 +32,7 @@ import createSsrWebpackConfig from './webpack/webpack.ssr.config';
 import { StartPlugin, StartPluginOptions } from './start-plugin';
 import { BundleUiTask, BUNDLE_UI_HASH_FILENAME } from './bundle-ui.task';
 
-export type UIDeps = [
-  PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
+export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
@@ -191,7 +190,7 @@ export class UiMain {
     private harmony: Harmony,
 
     private startPluginSlot: StartPluginSlot
-  ) { }
+  ) {}
 
   async publicDir(uiRoot: UIRoot) {
     const overwriteFn = this.getOverwritePublic();

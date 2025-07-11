@@ -50,7 +50,7 @@ export class ComponentGenerator {
     private aspectId: string,
     private envId?: ComponentID,
     private installOptions: InstallOptions = {},
-    private promptResults?: PromptResults,
+    private promptResults?: PromptResults
   ) {}
 
   async generate(force = false): Promise<GenerateResult[]> {
@@ -160,7 +160,9 @@ export class ComponentGenerator {
       throw new Error(`Missing value for ${option.name}`);
     }
     if (option.type === 'select' && !option.choices?.includes(argValue)) {
-      throw new Error(`Invalid value for ${option.name}. Please use one of the following values: ${option.choices?.join(', ')}`);
+      throw new Error(
+        `Invalid value for ${option.name}. Please use one of the following values: ${option.choices?.join(', ')}`
+      );
     }
     return argValue;
   }
@@ -171,7 +173,7 @@ export class ComponentGenerator {
         return prompt({
           type: 'input',
           name: option.name,
-          message: option.message
+          message: option.message,
         });
       case 'confirm':
         return prompt({
@@ -197,7 +199,7 @@ export class ComponentGenerator {
     }
     const promptOptions = this.template.promptOptions?.();
     if (!promptOptions) {
-      return undefined
+      return undefined;
     }
     const promptResults: PromptResults = {};
     for await (const option of promptOptions) {
@@ -213,7 +215,8 @@ export class ComponentGenerator {
         const optionResult = await this.getPromptOptionResult(option);
         promptResults[option.name] = optionResult[option.name];
       } catch (err: any) {
-        if (!err) { // for some reason, when the user clicks Ctrl+C, the error is an empty string
+        if (!err) {
+          // for some reason, when the user clicks Ctrl+C, the error is an empty string
           throw new Error(`The prompt has been canceled`);
         }
         throw err;

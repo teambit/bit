@@ -31,7 +31,7 @@ type ConflictedDataAspects = { [extId: string]: string }; // extId => reason
 
 export type DataMergeResult = {
   conflictedAspects?: ConflictedDataAspects;
-}
+};
 
 export const compIsAlreadyMergedMsg = 'component is already merged';
 export class MergeStatusProvider {
@@ -145,7 +145,10 @@ other:   ${otherLaneHead.toString()}`);
     const configMergeResult = configMerger.merge();
 
     const dataMergeResult = this.mergeExtensionsData(
-      currentComponent.extensions, baseComponent.extensions, otherComponent.extensions);
+      currentComponent.extensions,
+      baseComponent.extensions,
+      otherComponent.extensions
+    );
 
     const mergeResults = await threeWayMerge({
       scope: this.scope.legacyScope,
@@ -161,29 +164,26 @@ other:   ${otherLaneHead.toString()}`);
       mergeResults,
       divergeData,
       configMergeResult,
-      dataMergeResult
+      dataMergeResult,
     };
   }
 
   private mergeExtensionsData(
     currentExtensions: ExtensionDataList,
     baseExtensions: ExtensionDataList,
-    otherExtensions: ExtensionDataList,
+    otherExtensions: ExtensionDataList
   ): DataMergeResult {
     if (!this.options.shouldMergeAspectsData) {
       return {};
     }
     const conflictedAspects: { [extId: string]: string } = {}; // extId => reason
     // these aspects handled separately
-    const aspectsToSkip = [
-      DependencyResolverAspect.id,
-      BuilderAspect.id,
-    ];
+    const aspectsToSkip = [DependencyResolverAspect.id, BuilderAspect.id];
     currentExtensions.forEach((currentExtension) => {
       if (aspectsToSkip.includes(currentExtension.stringId)) {
         return;
       }
-      const baseExtension = baseExtensions.findExtension(currentExtension.idWithoutVersion , true);
+      const baseExtension = baseExtensions.findExtension(currentExtension.idWithoutVersion, true);
       const otherExtension = otherExtensions.findExtension(currentExtension.idWithoutVersion, true);
       if (!otherExtension) {
         conflictedAspects[currentExtension.stringId] = 'missing in other';
@@ -195,7 +195,8 @@ other:   ${otherLaneHead.toString()}`);
           // ext version has changed in current. we're good.
           return;
         }
-        conflictedAspects[currentExtension.stringId] = `version changed. base: ${baseExtension?.extensionId?.version}, other: ${otherExtension.extensionId?.version}`;
+        conflictedAspects[currentExtension.stringId] =
+          `version changed. base: ${baseExtension?.extensionId?.version}, other: ${otherExtension.extensionId?.version}`;
         return;
       }
       if (isEqual(currentExtension.data, otherExtension.data)) return;

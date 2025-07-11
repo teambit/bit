@@ -1,18 +1,17 @@
 .coverageTooltip {
-    padding: 0;
-    // need to add !important to override the inline style added by Tippy.js
-    max-width: fit-content !important;
-  }
-  .coverageTooltipContent {
-    font-size: var(--bit-p-xs, '14px');
-  }
-  .label {
-    padding: 4px 8px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .link {
-    text-decoration: none;
-  }
-  
+  padding: 0;
+  // need to add !important to override the inline style added by Tippy.js
+  max-width: fit-content !important;
+}
+.coverageTooltipContent {
+  font-size: var(--bit-p-xs, '14px');
+}
+.label {
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.link {
+  text-decoration: none;
+}

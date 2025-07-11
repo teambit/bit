@@ -206,7 +206,7 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
 
         const serverInfo = update.componentServerStarted;
         if (!serverInfo || serverInfo.length === 0) return prev;
-        
+
         const updatedComponents = prev.workspace.components.map((component) => {
           if (component.env?.id === serverInfo[0].env) {
             return {
@@ -230,8 +230,6 @@ export function useWorkspace(options: UseWorkspaceOptions = {}) {
           },
         };
       },
-
-
     });
 
     return () => {
