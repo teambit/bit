@@ -294,7 +294,7 @@ commands: # reusable commands
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.65-v2
+          key: core-aspect-env-v0.0.65-v3
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -525,7 +525,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.65-v2
+          key: core-aspect-env-v0.0.65-v3
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
@@ -543,7 +543,7 @@ jobs:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.0.65-v2
+          key: core-aspect-env-v0.0.65-v3
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a107
       # - run: cd bit && bbit compile
@@ -583,7 +583,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.65-v2
+          key: core-aspect-env-v0.0.65-v3
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
@@ -616,7 +616,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.65-v2
+          key: core-aspect-env-v0.0.65-v3
       # - update_ssh_agent
       # temporary, check if we can remove it
       - run: cd bit && bit cc
@@ -658,7 +658,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.65-v2
+          key: core-aspect-env-v0.0.65-v3
       - update_ssh_agent
       - set_git_credentials
       - run:
@@ -689,7 +689,7 @@ jobs:
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - restore_cache:
-          key: core-aspect-env-v0.0.65-v2
+          key: core-aspect-env-v0.0.65-v3
       - bit_config:
           env: "hub"
       - restore_cache:
