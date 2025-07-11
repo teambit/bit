@@ -51,6 +51,7 @@ export interface DependencyResolverExtensionProps {
   packageManagerProcessOptions?: any;
   useWorkspaces?: boolean;
   manageWorkspaces?: boolean;
+  externalPackageManager?: boolean;
 }
 
 export type WorkspaceSettingsNewProps = {
@@ -177,16 +178,40 @@ export class WorkspaceConfig implements HostConfig {
     // previously, we just did `assign(template, props)`, but it was replacing the entire workspace config with the "props".
     // so for example, if the props only had defaultScope, it was removing the defaultDirectory.
     const workspaceAspectConf = assign(template[WorkspaceAspect.id], props[WorkspaceAspect.id]);
-    const merged = assign(template, { [WorkspaceAspect.id]: workspaceAspectConf });
+
+    // When external package manager mode is enabled, set conflicting properties to false in the template
+    const depResolverConf = assign(
+      template['teambit.dependencies/dependency-resolver'],
+      props['teambit.dependencies/dependency-resolver']
+    );
+    if (depResolverConf.externalPackageManager) {
+      // Override template defaults to be compatible with external package manager mode
+      template['teambit.dependencies/dependency-resolver'] = template['teambit.dependencies/dependency-resolver'] || {};
+      template['teambit.dependencies/dependency-resolver'].rootComponent = false;
+      template['teambit.workspace/workspace-config-files'] = template['teambit.workspace/workspace-config-files'] || {};
+      template['teambit.workspace/workspace-config-files'].enableWorkspaceConfigWrite = false;
+    }
+
+    const merged = assign(template, {
+      [WorkspaceAspect.id]: workspaceAspectConf,
+      'teambit.dependencies/dependency-resolver': depResolverConf,
+    });
+
     if (generator) {
       const generators = generator.split(',').map((g) => g.trim());
       merged['teambit.generator/generator'] = { envs: generators };
     }
-    return new WorkspaceConfig(
+
+    const workspaceConfig = new WorkspaceConfig(
       merged as WorkspaceConfigFileProps,
       WorkspaceConfig.composeWorkspaceJsoncPath(dirPath),
       scopePath
     );
+
+    // Validate external package manager configuration
+    workspaceConfig.validateExternalPackageManagerConfig();
+
+    return workspaceConfig;
   }
 
   /**
@@ -287,7 +312,12 @@ export class WorkspaceConfig implements HostConfig {
     } catch {
       throw new InvalidConfigFile(workspaceJsoncPath);
     }
-    return WorkspaceConfig.fromObject(parsed, workspaceJsoncPath, scopePath);
+    const workspaceConfig = WorkspaceConfig.fromObject(parsed, workspaceJsoncPath, scopePath);
+
+    // Validate external package manager configuration
+    workspaceConfig.validateExternalPackageManagerConfig();
+
+    return workspaceConfig;
   }
 
   async write({ dir, reasonForChange }: { dir?: PathOsBasedAbsolute; reasonForChange?: string } = {}): Promise<void> {
@@ -381,6 +411,35 @@ export class WorkspaceConfig implements HostConfig {
       toVinyl: this.toVinyl.bind(this),
       _legacyPlainObject: () => undefined,
     };
+  }
+
+  /**
+   * Validates that external package manager configuration is compatible with other settings
+   */
+  validateExternalPackageManagerConfig(): void {
+    const depResolverExt = this.extension('teambit.dependencies/dependency-resolver', true);
+    if (!depResolverExt?.externalPackageManager) {
+      return; // No validation needed if external package manager is not enabled
+    }
+
+    const conflicts: string[] = [];
+
+    // Check dependency-resolver aspect conflicts
+    if (depResolverExt?.rootComponent === true) {
+      conflicts.push('rootComponent cannot be true when externalPackageManager is enabled');
+    }
+
+    // Check workspace-config-files aspect conflicts
+    const workspaceConfigFilesExt = this.extension('teambit.workspace/workspace-config-files', true);
+    if (workspaceConfigFilesExt?.enableWorkspaceConfigWrite === true) {
+      conflicts.push('enableWorkspaceConfigWrite cannot be true when externalPackageManager is enabled');
+    }
+
+    if (conflicts.length > 0) {
+      throw new Error(
+        `External package manager mode is incompatible with the following settings:\n${conflicts.map((c) => `  - ${c}`).join('\n')}\n\nPlease set these properties to false or remove them from your workspace.jsonc`
+      );
+    }
   }
 }
 
