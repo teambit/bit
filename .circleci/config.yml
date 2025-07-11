@@ -1425,6 +1425,9 @@ workflows:
                 - master
     jobs:
       - checkout_code
+      - setup_harmony:
+          requires:
+            - checkout_code
       - bundle_version_linux:
           <<: *master_only_filter
           requires:
@@ -1467,6 +1470,7 @@ workflows:
             - docker_build_node_22
       - e2e_test_bbit:
           requires:
+            - setup_harmony
             - harmony_publish_to_gcloud
 
   windows-nightly:
