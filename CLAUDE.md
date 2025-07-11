@@ -17,7 +17,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `bit compile` - Compile all components
 - `bit watch` - Watch for changes and compile automatically
-- `npm run check-types` - Run TypeScript type checking without emitting files
 
 ### Testing
 
@@ -26,6 +25,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run e2e-test` - Run end-to-end tests (can take hours, usually run on CI)
 - `npm run e2e-test:debug` - Run e2e tests in debug mode (keeps workspaces, prints output)
 - `npm run mocha-circleci` - Run mocha tests with CircleCI configuration
+
+**Running specific e2e tests:** To run a specific test during development, add `.only` to the describe or it block (e.g., `describe.only(...)` or `it.only(...)`), then run `npm run e2e-test`.
 
 ### Linting and Formatting
 

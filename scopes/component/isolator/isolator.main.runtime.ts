@@ -142,6 +142,12 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
   alwaysNew?: boolean;
 
   /**
+   * optimize capsule creation by using package manager for unmodified exported dependencies
+   * instead of creating capsules for them. This is useful for build/tag/snap operations.
+   */
+  usePackagesForUnmodifiedDeps?: boolean;
+
+  /**
    * If this is true -
    * the isolator will check if there are missing capsules in the base dir
    * if yes, it will create the capsule in a special dir inside a dir with the current date (without time)
@@ -286,7 +292,7 @@ export class IsolatorMain {
     GlobalConfigAspect,
     AspectLoaderAspect,
     CLIAspect,
-    ConfigStoreAspect
+    ConfigStoreAspect,
   ];
   static slots = [Slot.withType<CapsuleTransferFn>()];
   static defaultConfig = {};
@@ -303,7 +309,7 @@ export class IsolatorMain {
       GlobalConfigMain,
       AspectLoaderMain,
       CLIMain,
-      ConfigStoreMain
+      ConfigStoreMain,
     ],
     _config,
     [capsuleTransferSlot]: [CapsuleTransferSlot]
@@ -347,10 +353,13 @@ export class IsolatorMain {
         Object.assign({}, opts, { host: opts.host?.name })
       )}`
     );
+    this.logger.console(
+      `[OPTIMIZATION] isolateComponents called with seeders: ${seeders.join(', ')}, usePackagesForUnmodifiedDeps: ${opts.usePackagesForUnmodifiedDeps}`
+    );
     const createGraphOpts = pick(opts, ['includeFromNestedHosts', 'host']);
     const componentsToIsolate = opts.seedersOnly
       ? await host.getMany(seeders)
-      : await this.createGraph(seeders, createGraphOpts);
+      : await this.createGraph(seeders, createGraphOpts, opts);
     this.logger.debug(`isolateComponents, total componentsToIsolate: ${componentsToIsolate.length}`);
     const seedersWithVersions = seeders.map((seeder) => {
       if (seeder._legacy.hasVersion()) return seeder;
@@ -382,7 +391,11 @@ export class IsolatorMain {
     return new Network(capsuleList, seedersWithVersions, capsuleDir);
   }
 
-  private async createGraph(seeders: ComponentID[], opts: CreateGraphOptions = {}): Promise<Component[]> {
+  private async createGraph(
+    seeders: ComponentID[],
+    opts: CreateGraphOptions = {},
+    isolateOpts?: IsolateComponentsOptions
+  ): Promise<Component[]> {
     const host = opts.host || this.componentAspect.getHost();
     const getGraphOpts = pick(opts, ['host']);
     const graph = await this.graph.getGraphIds(seeders, getGraphOpts);
@@ -402,7 +415,19 @@ export class IsolatorMain {
         return undefined;
       })
     );
-    const existingComps = await host.getMany(compact(existingCompsIds));
+    let componentsToInclude = compact(existingCompsIds);
+
+    // Optimization: exclude unmodified exported dependencies from capsule creation
+    if (isolateOpts?.usePackagesForUnmodifiedDeps) {
+      const seederIds = seeders.map((id) => id.toString());
+      this.logger.console(
+        `[OPTIMIZATION] Starting with ${componentsToInclude.length} components, seeders: ${seederIds.join(', ')}`
+      );
+      componentsToInclude = await this.filterUnmodifiedExportedDependencies(componentsToInclude, seederIds, host);
+      this.logger.console(`[OPTIMIZATION] After filtering: ${componentsToInclude.length} components remaining`);
+    }
+
+    const existingComps = await host.getMany(componentsToInclude);
     return existingComps;
   }
 
@@ -708,9 +733,9 @@ export class IsolatorMain {
           })
         );
       } else {
-        const dependenciesGraph = opts.useDependenciesGraph ? await legacyScope?.getDependenciesGraphByComponentIds(
-          capsuleList.getAllComponentIDs()
-        ) : undefined;
+        const dependenciesGraph = opts.useDependenciesGraph
+          ? await legacyScope?.getDependenciesGraphByComponentIds(capsuleList.getAllComponentIDs())
+          : undefined;
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
@@ -1177,7 +1202,8 @@ export class IsolatorMain {
         const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
         const entry = dep.toManifest();
         if (entry) {
-          manifest[keyName][entry.packageName] = dep.versionRange && dep.versionRange !== '+' ? dep.versionRange : version;
+          manifest[keyName][entry.packageName] =
+            dep.versionRange && dep.versionRange !== '+' ? dep.versionRange : version;
         }
       });
       await Promise.all(promises);
@@ -1215,11 +1241,7 @@ export class IsolatorMain {
     clonedFiles.forEach((file) => file.updatePaths({ newBase: writeToPath }));
     dataToPersist.removePath(new RemovePath(writeToPath));
     clonedFiles.map((file) => dataToPersist.addFile(file));
-    const packageJson = this.preparePackageJsonToWrite(
-      component,
-      writeToPath,
-      ids
-    );
+    const packageJson = this.preparePackageJsonToWrite(component, writeToPath, ids);
     if (!legacyComp.id.hasVersion()) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       packageJson.addOrUpdateProperty('version', semver.inc(legacyComp.version!, 'prerelease') || '0.0.1-0');
@@ -1372,6 +1394,88 @@ export class IsolatorMain {
       artifactsVinylFlattened.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
     }
     return artifactsVinylFlattened;
+  }
+
+  /**
+   * Filter out unmodified exported dependencies to optimize capsule creation.
+   * These dependencies can be installed as packages instead of creating capsules.
+   */
+  private async filterUnmodifiedExportedDependencies(
+    allComponentIds: ComponentID[],
+    seederIds: string[],
+    host: ComponentFactory
+  ): Promise<ComponentID[]> {
+    this.logger.debug(`filterUnmodifiedExportedDependencies: filtering ${allComponentIds.length} components`);
+
+    const components = await host.getMany(allComponentIds);
+    const filtered: ComponentID[] = [];
+
+    for (const component of components) {
+      const componentIdStr = component.id.toString();
+      const isSeeder = seederIds.some((seederId) =>
+        component.id.isEqual(ComponentID.fromString(seederId), { ignoreVersion: true })
+      );
+
+      if (isSeeder) {
+        // Always include seeders (modified components and their dependents)
+        filtered.push(component.id);
+        this.logger.console(`[OPTIMIZATION] Including seeder: ${componentIdStr}`);
+      } else {
+        // For dependencies, check if they are exported and unmodified
+        const isExported = await this.isComponentExported(component, host);
+
+        if (isExported) {
+          // This is an unmodified exported dependency - exclude from capsules
+          this.logger.console(`[OPTIMIZATION] Excluding unmodified exported dependency: ${componentIdStr}`);
+        } else {
+          // Not exported yet, include in capsules
+          filtered.push(component.id);
+          this.logger.console(`[OPTIMIZATION] Including non-exported dependency: ${componentIdStr}`);
+        }
+      }
+    }
+
+    this.logger.debug(
+      `filterUnmodifiedExportedDependencies: kept ${filtered.length} out of ${allComponentIds.length} components`
+    );
+    return filtered;
+  }
+
+  /**
+   * Check if a component is exported (has been published to a remote scope)
+   */
+  private async isComponentExported(component: Component, host: ComponentFactory): Promise<boolean> {
+    try {
+      // Use the workspace's isExported method if available
+      if ('isExported' in host && typeof host.isExported === 'function') {
+        const isExported = host.isExported(component.id);
+        this.logger.console(
+          `[OPTIMIZATION] Component ${component.id.toString()} isExported (via workspace): ${isExported}`
+        );
+        return isExported;
+      }
+
+      // Fallback: A component is considered exported if it has a valid version and exists in a remote scope
+      const hasVersion = component.id.hasVersion();
+      if (!hasVersion) {
+        this.logger.debug(`Component ${component.id.toString()} has no version, not exported`);
+        return false;
+      }
+
+      // Check if the component exists in the legacy scope (which tracks exported components)
+      const legacyComp = component.state._consumer;
+      const scope = legacyComp.scope;
+
+      this.logger.debug(`Component ${component.id.toString()}: scope=${scope}, hasVersion=${hasVersion}`);
+
+      // If component has a scope name and version, it's likely exported
+      const isExported = !!(scope && hasVersion && scope !== 'workspace');
+      this.logger.debug(`Component ${component.id.toString()} isExported (fallback): ${isExported}`);
+      return isExported;
+    } catch (error) {
+      this.logger.debug(`Error checking if component ${component.id.toString()} is exported: ${error}`);
+      return false;
+    }
   }
 }
 

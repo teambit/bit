@@ -115,6 +115,7 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
       useHash,
       getExistingAsIs: true,
       seedersOnly: options.seedersOnly,
+      usePackagesForUnmodifiedDeps: true, // Enable optimization for build pipeline
     };
 
     await pMapSeries(envsExecutionContext, async (executionContext) => {
