@@ -515,7 +515,8 @@ jobs:
 
 
   setup_harmony:
-    resource_class: xlarge
+    # changing to xlarge doesn't make any change
+    resource_class: large
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
@@ -1017,11 +1018,12 @@ jobs:
 
   e2e_test:
     <<: *defaults
-    resource_class: large
+    # changing from medium to large, doesn't affect the performance
+    # resource_class: large
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
-    parallelism: 35
+    parallelism: 30
     steps:
       - e2e_test_cmd
 
