@@ -40,6 +40,15 @@ export type WorkspaceConfigFilesAspectConfig = {
    * We will hoist config files only up to this directory
    */
   componentsRootDir?: string;
+  /**
+   * Whether to use the default directory as components root dir for configuration files
+   * This will take the config from:
+   *   "teambit.workspace/workspace": {
+   *     "componentsRootDir": "bit-components/{scope}/{name}"
+   *   }
+   * it will take the constant part from it, up until the first {
+   */
+  useDefaultDirectory?: boolean;
   enableWorkspaceConfigWrite?: boolean;
 };
 
@@ -313,7 +322,7 @@ export class WorkspaceConfigFilesMain {
     return userConfiguredDir ? join(this.workspace.path, userConfiguredDir) : this.getCacheDir(this.workspace.path);
   }
 
-  private getComponentsRootDir(): string | undefined {
+  private getComponentsRootDirFromComponentsRootDir(): string | undefined {
     const componentsRootDir = this.config.componentsRootDir;
     if (!componentsRootDir) return undefined;
     // Remove leading './' or '/' and trailing slash
@@ -321,6 +330,24 @@ export class WorkspaceConfigFilesMain {
       .replace(/^\.?\//, '')
       .replace(/\/$/, '');
     return normalized;
+  }
+
+  private getComponentsRootDirFromDefaultDir(): string | undefined {
+    if (!this.config.useDefaultDirectory) return undefined;
+    const defaultDir = this.workspace.defaultDirectory;
+    if (!defaultDir) return undefined;
+    // get path until first dynamic segment (segment with {})
+    const segments = defaultDir.split('/');
+    const dynamicSegmentIndex = segments.findIndex((segment) => segment.startsWith('{'));
+    if (dynamicSegmentIndex === -1) return defaultDir;
+    return segments.slice(0, dynamicSegmentIndex).join('/');
+  }
+
+  private getComponentsRootDir(): string | undefined {
+    const fromComponentsRootDir = this.getComponentsRootDirFromComponentsRootDir();
+    if (fromComponentsRootDir) return fromComponentsRootDir;
+    const fromDefaultDir = this.getComponentsRootDirFromDefaultDir();
+    if (fromDefaultDir) return fromDefaultDir;
   }
 
   private getCacheDir(rootDir): string {
