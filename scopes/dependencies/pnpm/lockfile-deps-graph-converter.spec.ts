@@ -225,8 +225,8 @@ describe('convertLockfileToGraph simple case', () => {
           },
           rootDir: process.cwd(),
           resolve: () => ({ resolution: { integrity: '0000' } }) as any,
-        }
-      )
+        },
+      })
     ).to.eql({
       bit: {
         depsRequiringBuild: ['bar@1.0.0'],
