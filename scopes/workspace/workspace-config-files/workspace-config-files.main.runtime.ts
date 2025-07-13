@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import { join } from 'path';
+import { join, normalize } from 'path';
 import globby from 'globby';
 import chalk from 'chalk';
 import { PromptCanceled } from '@teambit/legacy.cli.prompts';
@@ -30,7 +30,16 @@ import {
  * Configs that can be configured in the workspace.jsonc file
  */
 export type WorkspaceConfigFilesAspectConfig = {
+  /**
+   * The root directory for real configuration files
+   * This is usually under node_modules
+   */
   configsRootDir?: string;
+  /**
+   * The root directory for component files
+   * We will hoist config files only up to this directory
+   */
+  componentsRootDir?: string;
   enableWorkspaceConfigWrite?: boolean;
 };
 
@@ -228,6 +237,7 @@ export class WorkspaceConfigFilesMain {
   private async write(envsExecutionContext: ExecutionContext[], opts: WriteConfigFilesOptions): Promise<WriteResults> {
     const envCompDirsMap = this.getEnvComponentsDirsMap(envsExecutionContext);
     const configsRootDir = this.getConfigsRootDir();
+    const componentsRootDir = this.getComponentsRootDir();
     const configWriters = await this.listConfigWriters();
     const writerIdsToEnvEntriesMap = this.groupByWriterId(configWriters);
     const filteredWriterIdsToEnvEntriesMap = opts.writers
@@ -238,7 +248,14 @@ export class WorkspaceConfigFilesMain {
     const results = await pMapSeries(
       Object.entries(filteredWriterIdsToEnvEntriesMap),
       async ([writerId, envEntries]) => {
-        const oneResult = await this.handleOneIdWriter(writerId, envEntries, envCompDirsMap, configsRootDir, opts);
+        const oneResult = await this.handleOneIdWriter(
+          writerId,
+          envEntries,
+          envCompDirsMap,
+          configsRootDir,
+          componentsRootDir,
+          opts
+        );
         totalRealConfigFiles += oneResult.totalRealConfigFiles;
         totalExtendingConfigFiles += oneResult.totalExtendingConfigFiles;
         return oneResult;
@@ -254,6 +271,7 @@ export class WorkspaceConfigFilesMain {
     envEntries: EnvConfigWriterEntry[],
     envCompsDirsMap: EnvCompsDirsMap,
     configsRootDir: string,
+    componentsRootDir: string | undefined,
     opts: WriteConfigFilesOptions
   ): Promise<OneConfigWriterIdResult> {
     const writtenRealConfigFilesMap = await handleRealConfigFiles(
@@ -268,6 +286,7 @@ export class WorkspaceConfigFilesMain {
       envCompsDirsMap,
       writtenRealConfigFilesMap,
       configsRootDir,
+      componentsRootDir,
       this.workspace.path,
       opts
     );
@@ -292,6 +311,16 @@ export class WorkspaceConfigFilesMain {
   private getConfigsRootDir(): string {
     const userConfiguredDir = this.config.configsRootDir;
     return userConfiguredDir ? join(this.workspace.path, userConfiguredDir) : this.getCacheDir(this.workspace.path);
+  }
+
+  private getComponentsRootDir(): string | undefined {
+    const componentsRootDir = this.config.componentsRootDir;
+    if (!componentsRootDir) return undefined;
+    // Remove leading './' or '/' and trailing slash
+    const normalized = normalize(componentsRootDir)
+      .replace(/^\.?\//, '')
+      .replace(/\/$/, '');
+    return normalized;
   }
 
   private getCacheDir(rootDir): string {
