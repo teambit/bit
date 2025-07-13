@@ -223,9 +223,9 @@ describe('convertLockfileToGraph simple case', () => {
               zoo: '1.1.0',
             },
           },
-          rootDir: process.cwd(),
-          resolve: () => ({ resolution: { integrity: '0000' } }) as any,
         },
+        rootDir: process.cwd(),
+        resolve: () => ({ resolution: { integrity: '0000' } }) as any,
       })
     ).to.eql({
       bit: {
