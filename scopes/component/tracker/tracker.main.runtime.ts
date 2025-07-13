@@ -6,7 +6,13 @@ import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/work
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { PathOsBasedRelative, PathOsBasedAbsolute, PathLinuxRelative } from '@teambit/legacy.utils';
 import { AddCmd } from './add-cmd';
-import AddComponents, { AddActionResults, AddContext, addMultipleFromResolvedTrackData, AddProps, Warnings } from './add-components';
+import AddComponents, {
+  AddActionResults,
+  AddContext,
+  addMultipleFromResolvedTrackData,
+  AddProps,
+  Warnings,
+} from './add-components';
 import { TrackerAspect } from './tracker.aspect';
 
 export type TrackResult = { files: string[]; warnings: Warnings; componentId: ComponentID };

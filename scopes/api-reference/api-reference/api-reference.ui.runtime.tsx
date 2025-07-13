@@ -38,7 +38,7 @@ export class APIReferenceUI {
     private apiNodeRendererSlot: APINodeRendererSlot,
     private code: CodeUI,
     private workspace: WorkspaceUI
-  ) { }
+  ) {}
 
   static dependencies = [ComponentAspect, CodeAspect, WorkspaceAspect];
   static runtime = UIRuntime;
@@ -61,7 +61,7 @@ export class APIReferenceUI {
     );
   };
 
-   /**
+  /**
    * @deprecated use registerSchemaClasses instead
    * registerSchemaClasses is better for performance as it lazy-loads the schemas.
    */
@@ -94,7 +94,7 @@ export class APIReferenceUI {
     typeArrayRenderer,
     thisRenderer,
     decoratorRenderer,
-    tupleTypeRenderer
+    tupleTypeRenderer,
   ];
 
   static async provider(

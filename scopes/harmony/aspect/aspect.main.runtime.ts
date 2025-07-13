@@ -248,8 +248,20 @@ export class AspectMain {
   ];
 
   static async provider(
-    [react, envs, builder, aspectLoader, compiler, generator, workspace, cli, loggerMain, workerMain, devFilesMain,
-      depResolver]: [
+    [
+      react,
+      envs,
+      builder,
+      aspectLoader,
+      compiler,
+      generator,
+      workspace,
+      cli,
+      loggerMain,
+      workerMain,
+      devFilesMain,
+      depResolver,
+    ]: [
       ReactMain,
       EnvsMain,
       BuilderMain,
@@ -261,7 +273,7 @@ export class AspectMain {
       LoggerMain,
       WorkerMain,
       DevFilesMain,
-      DependencyResolverMain
+      DependencyResolverMain,
     ],
     config,
     slots,

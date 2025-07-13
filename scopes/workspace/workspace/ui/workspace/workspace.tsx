@@ -42,7 +42,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
   const currentTheme = theme?.current;
   const [isSidebarOpen, setSidebarOpen] = useState<boolean | null>(null);
   const handleSidebarToggle = useCallback(() => {
-    setSidebarOpen(prev => !prev);
+    setSidebarOpen((prev) => !prev);
   }, []);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
   const themeName = currentTheme?.themeName || 'light';

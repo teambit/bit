@@ -102,9 +102,7 @@ describe('convertLockfileToGraph simple case', () => {
     pkgName: 'comp1',
     componentRelativeDir: 'comps/comp1',
     componentRootDir: 'node_modules/.bit_roots/env',
-    componentIdByPkgName: new Map([
-      ['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')]
-    ]),
+    componentIdByPkgName: new Map([['comp1', ComponentID.fromString('my-scope/comp1@1.0.0')]]),
   });
   const expected = {
     schemaVersion: '2.0',
@@ -215,17 +213,14 @@ describe('convertLockfileToGraph simple case', () => {
   });
   it('should convert the graph object to the lockfile object', async () => {
     expect(
-      await convertGraphToLockfile(
-        new DependenciesGraph(graph),
-        {
-          manifests: {
-            [path.resolve('comps/comp1')]: {
-              dependencies: {
-                foo: '^1.0.0',
-                bar: `link:${path.resolve('comps/bar')}`, // Links from the manifests are added to the lockfile
-                qar: '1.1.0',
-                zoo: '1.1.0',
-              },
+      await convertGraphToLockfile(new DependenciesGraph(graph), {
+        manifests: {
+          [path.resolve('comps/comp1')]: {
+            dependencies: {
+              foo: '^1.0.0',
+              bar: `link:${path.resolve('comps/bar')}`, // Links from the manifests are added to the lockfile
+              qar: '1.1.0',
+              zoo: '1.1.0',
             },
           },
           rootDir: process.cwd(),

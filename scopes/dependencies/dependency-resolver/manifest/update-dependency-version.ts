@@ -33,9 +33,8 @@ export function updateDependencyVersion(
     const packageName = dependency.getPackageName();
     const variantVersion = variantPolicy?.getDepVersion(packageName, dependency.lifecycle);
     const specialChars = ['-', '+', '*'];
-    const variantVersionWithoutSpecialChar = variantVersion && !specialChars.includes(variantVersion)
-      ? variantVersion
-      : undefined;
+    const variantVersionWithoutSpecialChar =
+      variantVersion && !specialChars.includes(variantVersion) ? variantVersion : undefined;
     const version =
       variantVersionWithoutSpecialChar ||
       rootPolicy?.getValidSemverDepVersion(packageName, dependency.lifecycle === 'peer' ? 'peer' : 'runtime') ||

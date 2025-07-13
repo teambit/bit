@@ -4,9 +4,7 @@ import { ComponentID } from '@teambit/component-id';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { ComponentModel } from './component-model';
 import { ComponentQueryResult, Filters } from './use-component.model';
-import {
-  GET_COMPONENT,
-} from './use-component.fragments';
+import { GET_COMPONENT } from './use-component.fragments';
 import { useComponentLogs } from './use-component-logs';
 import { ComponentError } from './component-error';
 
@@ -15,7 +13,7 @@ export function useComponentQuery(
   componentId: string,
   host: string,
   filters?: Filters,
-  skip?: boolean,
+  skip?: boolean
 ): ComponentQueryResult {
   const idRef = useRef(componentId);
   idRef.current = componentId;

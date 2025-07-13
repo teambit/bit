@@ -32,7 +32,7 @@ import { readWantedLockfile, writeWantedLockfile } from '@pnpm/lockfile.fs';
 import { type LockfileFile, type LockfileObject } from '@pnpm/lockfile.types'
 import { Logger } from '@teambit/logger';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
-import { isEqual } from 'lodash'
+import { isEqual } from 'lodash';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
@@ -324,7 +324,7 @@ export async function install(
       const installResult = await installsRunning[rootDir];
       depsRequiringBuild = installResult.depsRequiringBuild?.sort();
       if (depsRequiringBuild != null) {
-        await addDepsRequiringBuildToLockfile(rootDir, depsRequiringBuild)
+        await addDepsRequiringBuildToLockfile(rootDir, depsRequiringBuild);
       }
       dependenciesChanged =
         installResult.stats.added + installResult.stats.removed + installResult.stats.linkedToRoot > 0;
@@ -641,13 +641,13 @@ export async function resolveRemoteVersion(
 }
 
 async function addDepsRequiringBuildToLockfile(rootDir: string, depsRequiringBuild: string[]) {
-  const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: true }) as BitLockfile;
-  if (lockfile == null) return
+  const lockfile = (await readWantedLockfile(rootDir, { ignoreIncompatible: true })) as BitLockfile;
+  if (lockfile == null) return;
   if (isEqual(lockfile.bit?.depsRequiringBuild, depsRequiringBuild)) return;
   lockfile.bit = {
     ...lockfile.bit,
     depsRequiringBuild,
-  }
+  };
   await writeWantedLockfile(rootDir, lockfile);
 }
 
