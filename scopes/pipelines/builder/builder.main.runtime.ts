@@ -44,6 +44,7 @@ export type OnTagOpts = {
   forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
   populateArtifactsFrom?: ComponentID[]; // helpful for tagging from scope where we want to use the build-artifacts of previous snap.
   isSnap?: boolean;
+  loose?: boolean; // whether to ignore test/lint errors and allow tagging to succeed
 };
 export const FILE_PATH_PARAM_DELIM = '~';
 
@@ -119,7 +120,7 @@ export class BuilderMain {
   ): Promise<OnTagResults> {
     const pipeResults: TaskResultsList[] = [];
     const allTasksResults: TaskResults[] = [];
-    const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap, populateArtifactsFrom } = options;
+    const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap, populateArtifactsFrom, loose } = options;
     if (populateArtifactsFrom) isolateOptions.populateArtifactsFrom = populateArtifactsFrom;
     const buildEnvsExecutionResults = await this.build(
       components,
@@ -131,11 +132,11 @@ export class BuilderMain {
       },
       { ignoreIssues: '*' }
     );
-    if (throwOnError && !forceDeploy) buildEnvsExecutionResults.throwErrorsIfExist();
+    if (throwOnError && !forceDeploy) buildEnvsExecutionResults.throwErrorsIfExist(loose);
     allTasksResults.push(...buildEnvsExecutionResults.tasksResults);
     pipeResults.push(buildEnvsExecutionResults);
 
-    if (forceDeploy || (!disableTagAndSnapPipelines && !buildEnvsExecutionResults?.hasErrors())) {
+    if (forceDeploy || (!disableTagAndSnapPipelines && !buildEnvsExecutionResults?.hasErrors(loose))) {
       const builderOptionsForTagSnap: BuilderServiceOptions = {
         ...builderOptions,
         seedersOnly: isolateOptions.seedersOnly,
@@ -144,7 +145,7 @@ export class BuilderMain {
       const deployEnvsExecutionResults = isSnap
         ? await this.runSnapTasks(components, builderOptionsForTagSnap)
         : await this.runTagTasks(components, builderOptionsForTagSnap);
-      if (throwOnError && !forceDeploy) deployEnvsExecutionResults.throwErrorsIfExist();
+      if (throwOnError && !forceDeploy) deployEnvsExecutionResults.throwErrorsIfExist(loose);
       allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
       pipeResults.push(deployEnvsExecutionResults);
     }

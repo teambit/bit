@@ -33,6 +33,7 @@
      * default scope for all components in workspace.
      **/
     "defaultScope": "my-scope",
+
     "resolveAspectsFromNodeModules": true,
     "resolveEnvsFromRoots": true
   },

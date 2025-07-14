@@ -74,12 +74,12 @@ export function useCardPlugins({
 }): ComponentCardPluginType<PluginProps>[] {
   const serverUrlsSignature = React.useMemo(() => {
     const serversCount = Array.from(compModelsById.values())
-      .filter(comp => comp.server?.url)
-      .map(comp => comp.server?.url)
+      .filter((comp) => comp.server?.url)
+      .map((comp) => comp.server?.url)
       .join(',');
     return serversCount;
   }, [compModelsById]);
-  
+
   const plugins = React.useMemo(
     () => [
       {

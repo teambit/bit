@@ -231,7 +231,7 @@ export class TypescriptMain {
   getAllTransformers(): SchemaTransformer[] {
     const transformersFunc = Array.from(this.schemaTransformerSlot.values());
     // backward compatibility for transformers that are not wrapped with a function (bit < 1.9.80)
-    return transformersFunc.map((transformer) => Array.isArray(transformer) ? transformer : transformer()).flat();
+    return transformersFunc.map((transformer) => (Array.isArray(transformer) ? transformer : transformer())).flat();
   }
 
   /**

@@ -58,7 +58,7 @@ export type WorkspaceDeps = [
   AspectLoaderMain,
   EnvsMain,
   GlobalConfigMain,
-  ConfigStoreMain
+  ConfigStoreMain,
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;
@@ -137,15 +137,15 @@ export class WorkspaceMain {
       onBitmapChangeSlot,
       onWorkspaceConfigChangeSlot,
     ]: [
-        OnComponentLoadSlot,
-        OnComponentChangeSlot,
-        OnComponentAddSlot,
-        OnComponentRemoveSlot,
-        OnAspectsResolveSlot,
-        OnRootAspectAddedSlot,
-        OnBitmapChangeSlot,
-        OnWorkspaceConfigChangeSlot,
-      ],
+      OnComponentLoadSlot,
+      OnComponentChangeSlot,
+      OnComponentAddSlot,
+      OnComponentRemoveSlot,
+      OnAspectsResolveSlot,
+      OnRootAspectAddedSlot,
+      OnBitmapChangeSlot,
+      OnWorkspaceConfigChangeSlot,
+    ],
     harmony: Harmony
   ) {
     const currentCmd = process.argv[2];

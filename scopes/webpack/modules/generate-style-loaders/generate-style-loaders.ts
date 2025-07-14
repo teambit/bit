@@ -43,14 +43,14 @@ export function generateStyleLoaders(options: GenerateStyleLoadersOptions) {
         loader: options.preProcessOptions.resolveUrlLoaderPath,
         options: {
           sourceMap: options.shouldUseSourceMap,
-          ...additionalOptions
+          ...additionalOptions,
         },
       },
       {
         loader: options.preProcessOptions.preProcessorPath,
         options: {
           sourceMap: true,
-          ...additionalOptions
+          ...additionalOptions,
         },
       }
     );

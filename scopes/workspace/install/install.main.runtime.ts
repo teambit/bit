@@ -5,6 +5,7 @@ import { getRootComponentDir, linkPkgsToRootComponents } from '@teambit/workspac
 import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
+import yesno from 'yesno';
 import { WorkspaceAspect, Workspace } from '@teambit/workspace';
 import { compact, mapValues, omit, uniq, intersection, groupBy } from 'lodash';
 import { ProjectManifest } from '@pnpm/types';
@@ -13,6 +14,7 @@ import { componentIdToPackageName } from '@teambit/pkg.modules.component-package
 import { ApplicationMain, ApplicationAspect } from '@teambit/application';
 import { VariantsMain, VariantsAspect } from '@teambit/variants';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
+import { PackageJsonFile } from '@teambit/component.sources';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
@@ -75,6 +77,7 @@ export type WorkspaceInstallOptions = {
   lifecycleType?: WorkspaceDependencyLifecycleType;
   dedupe?: boolean;
   import?: boolean;
+  showExternalPackageManagerPrompt?: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
   updateExisting?: boolean;
@@ -143,7 +146,7 @@ export class InstallMain {
     private ipcEvents: IpcEventsMain,
 
     private harmony: Harmony
-  ) { }
+  ) {}
   /**
    * Install dependencies for all components in the workspace
    *
@@ -151,6 +154,23 @@ export class InstallMain {
    * @memberof Workspace
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions): Promise<ComponentMap<string>> {
+    // Check if external package manager mode is enabled
+    const workspaceConfig = this.workspace.getWorkspaceConfig();
+    const depResolverExtConfig = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');
+    if (depResolverExtConfig?.config.externalPackageManager) {
+      if (options?.showExternalPackageManagerPrompt) {
+        // For explicit "bit install" commands, show the prompt
+        await this.handleExternalPackageManagerPrompt();
+      } else {
+        this.logger.console(
+          chalk.yellow(
+            'Installation was skipped due to external package manager configuration. Please run your package manager to install dependencies.'
+          )
+        );
+        return new ComponentMap(new Map());
+      }
+    }
+
     // set workspace in install context
     this.workspace.inInstallContext = true;
     this.workspace.inInstallAfterPmContext = false;
@@ -1242,7 +1262,7 @@ export class InstallMain {
     WorkspaceConfigFilesAspect,
     AspectLoaderAspect,
     BundlerAspect,
-    UIAspect
+    UIAspect,
   ];
 
   static runtime = MainRuntime;
@@ -1263,24 +1283,24 @@ export class InstallMain {
       wsConfigFiles,
       aspectLoader,
       bundler,
-      ui
+      ui,
     ]: [
-        DependencyResolverMain,
-        Workspace,
-        LoggerMain,
-        VariantsMain,
-        CLIMain,
-        CompilerMain,
-        IssuesMain,
-        EnvsMain,
-        ApplicationMain,
-        IpcEventsMain,
-        GeneratorMain,
-        WorkspaceConfigFilesMain,
-        AspectLoaderMain,
-        BundlerMain,
-        UiMain
-      ],
+      DependencyResolverMain,
+      Workspace,
+      LoggerMain,
+      VariantsMain,
+      CLIMain,
+      CompilerMain,
+      IssuesMain,
+      EnvsMain,
+      ApplicationMain,
+      IpcEventsMain,
+      GeneratorMain,
+      WorkspaceConfigFilesMain,
+      AspectLoaderMain,
+      BundlerMain,
+      UiMain,
+    ],
     _,
     [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot],
     harmony: Harmony
@@ -1336,6 +1356,88 @@ export class InstallMain {
     });
     cli.register(...commands);
     return installExt;
+  }
+
+  private async handleExternalPackageManagerPrompt(): Promise<void> {
+    this.logger.clearStatusLine();
+
+    // Display a colorful and informative message
+    this.logger.console(chalk.cyan('\n📦 External Package Manager Mode Detected'));
+    this.logger.console(chalk.gray('Your workspace is configured to use external package managers (npm, yarn, pnpm).'));
+    this.logger.console(chalk.gray('Running "bit install" is not available in this mode.\n'));
+
+    const question = chalk.bold(
+      "Would you like to switch to Bit's package manager for dependency management? [yes(y)/no(n)]"
+    );
+    const shouldSwitchToBitPM = await yesno({ question });
+
+    if (!shouldSwitchToBitPM) {
+      throw new Error(
+        'External package manager mode is enabled. Please use your preferred package manager (npm, yarn, pnpm) to install dependencies instead of "bit install".'
+      );
+    }
+
+    // User chose to switch to Bit's package manager
+    await this.disableExternalPackageManagerMode();
+  }
+
+  private async disableExternalPackageManagerMode(): Promise<void> {
+    try {
+      // Get the workspace config
+      const workspaceConfig = this.workspace.getWorkspaceConfig();
+
+      // Remove externalPackageManager property and restore default settings
+      const depResolverExt = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');
+      if (depResolverExt?.config.externalPackageManager) {
+        delete depResolverExt.config.externalPackageManager;
+      }
+      if (depResolverExt) {
+        depResolverExt.config.rootComponent = true;
+      }
+
+      // Enable workspace config write
+      const workspaceConfigFilesExt = workspaceConfig.extensions.findExtension(
+        'teambit.workspace/workspace-config-files'
+      );
+      if (workspaceConfigFilesExt) {
+        workspaceConfigFilesExt.config.enableWorkspaceConfigWrite = true;
+      }
+
+      // Remove postInstall script from package.json (preserve user's existing scripts)
+      await this.removePostInstallScript();
+
+      // Write the updated config
+      await workspaceConfig.write();
+
+      this.logger.console(chalk.green('✓ Successfully switched to Bit package manager mode'));
+    } catch (error) {
+      this.logger.console(chalk.red('✗ Failed to switch to Bit package manager mode'));
+      throw error;
+    }
+  }
+
+  private async removePostInstallScript(): Promise<void> {
+    try {
+      const packageJsonFile = await PackageJsonFile.load(this.workspace.path);
+
+      if (!packageJsonFile.fileExist) {
+        return;
+      }
+
+      // Only remove our specific postInstall script, preserve user's custom scripts
+      if (packageJsonFile.packageJsonObject.scripts?.postinstall === 'bit link && bit compile') {
+        delete packageJsonFile.packageJsonObject.scripts.postinstall;
+
+        // Clean up empty scripts object
+        if (Object.keys(packageJsonFile.packageJsonObject.scripts).length === 0) {
+          delete packageJsonFile.packageJsonObject.scripts;
+        }
+
+        await packageJsonFile.write();
+      }
+    } catch {
+      this.logger.console(chalk.yellow('⚠ Warning: Could not remove postInstall script from package.json'));
+    }
   }
 }
 

@@ -28,6 +28,9 @@ import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
+import fs from 'fs-extra';
+import execa from 'execa';
+import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
 import { removeLanes } from './remove-lanes';
 import { LanesAspect } from './lanes.aspect';
 import {
@@ -89,6 +92,7 @@ export type SwitchLaneOptions = {
   skipDependencyInstallation?: boolean;
   verbose?: boolean;
   override?: boolean;
+  branch?: boolean;
 };
 
 export type LaneComponentDiffStatus = {
@@ -588,6 +592,7 @@ please create a new lane instead, which will include all components of this lane
       workspaceOnly,
       skipDependencyInstallation = false,
       head,
+      branch = false,
     }: SwitchLaneOptions
   ) {
     if (!this.workspace) {
@@ -623,7 +628,39 @@ please create a new lane instead, which will include all components of this lane
       reset: false,
       all: false,
     };
+
+    // Create git branch if requested and git is available
+    if (branch) {
+      await this.createGitBranchForLane(laneName);
+    }
+
     return new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps, this).switch();
+  }
+
+  private async createGitBranchForLane(laneName: string): Promise<void> {
+    if (!this.workspace) return;
+
+    try {
+      // Check if git exists in the project
+      const isGit = await fs.pathExists('.git');
+      if (!isGit) {
+        this.logger.warn('Git repository not found. Skipping git branch creation.');
+        return;
+      }
+
+      const gitExecutablePath = getGitExecutablePath();
+      const branchName = laneName.replace(/[^a-zA-Z0-9-_]/g, '-'); // Sanitize branch name
+
+      // Create and checkout to the new git branch
+      await execa(gitExecutablePath, ['checkout', '-b', branchName], {
+        cwd: this.workspace.path,
+      });
+
+      this.logger.info(`Created and checked out git branch: ${branchName}`);
+    } catch (err: any) {
+      // Don't fail the lane import if git branch creation fails
+      this.logger.warn(`Failed to create git branch: ${err.message}`);
+    }
   }
 
   /**

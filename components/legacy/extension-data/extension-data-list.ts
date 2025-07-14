@@ -29,7 +29,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
    * the only aspect registered to this hook is the teambit.harmony/aspect. All other aspects that want to validate,
    * need to register to teambit.harmony/aspect. (currently it doesn't have slots to register, but needs to be added).
    */
-  static validateBeforePersistHook?: ((extDataList: ExtensionDataList) => ValidateBeforePersistResult);
+  static validateBeforePersistHook?: (extDataList: ExtensionDataList) => ValidateBeforePersistResult;
   static registerCoreExtensionName(name: string) {
     ExtensionDataList.coreExtensionsNames.set(name, '');
   }

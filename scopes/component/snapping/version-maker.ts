@@ -14,16 +14,21 @@ import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
 import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
+import { isSnap as isSnapVersion } from '@teambit/component-version';
 import { BuilderMain, OnTagOpts } from '@teambit/builder';
 import { ModelComponent, Log, DependenciesGraph, Lane } from '@teambit/objects';
 import { MessagePerComponent, MessagePerComponentFetcher } from './message-per-component';
-import { DependencyResolverAspect, DependencyResolverMain, COMPONENT_DEP_TYPE, ComponentRangePrefix } from '@teambit/dependency-resolver';
+import {
+  DependencyResolverAspect,
+  DependencyResolverMain,
+  COMPONENT_DEP_TYPE,
+  ComponentRangePrefix,
+} from '@teambit/dependency-resolver';
 import { ScopeMain, StagedConfig } from '@teambit/scope';
 import { Workspace, AutoTagResult } from '@teambit/workspace';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 import { LaneId } from '@teambit/lane-id';
-import { DETACH_HEAD, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 
 export type BasicTagSnapParams = {
   message: string;
@@ -34,6 +39,7 @@ export type BasicTagSnapParams = {
   rebuildDepsGraph?: boolean;
   detachHead?: boolean;
   overrideHead?: boolean;
+  loose?: boolean;
 };
 
 export type BasicTagParams = BasicTagSnapParams & {
@@ -242,8 +248,10 @@ export class VersionMaker {
     });
     for (const workspaceComp of this.allWorkspaceComps) {
       if (
-        this.allComponentsToTag.every((snappedComponent) => !snappedComponent.id.isEqualWithoutVersion(workspaceComp.id)
-      )) {
+        this.allComponentsToTag.every(
+          (snappedComponent) => !snappedComponent.id.isEqualWithoutVersion(workspaceComp.id)
+        )
+      ) {
         componentIdByPkgName.set(this.dependencyResolver.getPackageName(workspaceComp), workspaceComp.id);
       }
     }
@@ -278,6 +286,7 @@ export class VersionMaker {
       exitOnFirstFailedTask,
       populateArtifactsIgnorePkgJson,
       skipTests,
+      loose,
     } = this.params;
     const onTagOpts: OnTagOpts = {
       disableTagAndSnapPipelines,
@@ -285,11 +294,12 @@ export class VersionMaker {
       forceDeploy: ignoreBuildErrors,
       isSnap,
       populateArtifactsFrom,
+      loose,
     };
     const skipTasksParsed = skipTasks ? skipTasks.split(',').map((t) => t.trim()) : undefined;
     const seedersOnly = !this.workspace; // if tag from scope, build only the given components
     const isolateOptions = { packageManagerConfigRootDir, seedersOnly, populateArtifactsIgnorePkgJson };
-    const builderOptions = { exitOnFirstFailedTask, skipTests, skipTasks: skipTasksParsed };
+    const builderOptions = { exitOnFirstFailedTask, skipTests, skipTasks: skipTasksParsed, loose };
 
     const componentsToBuild = harmonyCompsToTag.filter((c) => !c.isDeleted());
     if (componentsToBuild.length) {
@@ -321,9 +331,6 @@ export class VersionMaker {
     // to tags and can be thrown for snaps as well.
     // once --ignore-newest-version is removed, no need for this condition. it's ok to not provide the override-head option.
     const { detachHead, ignoreNewestVersion, isSnap } = this.params;
-    if (detachHead && !isFeatureEnabled(DETACH_HEAD)) {
-      throw new Error('unable to detach head, the feature is not enabled');
-    }
     if (ignoreNewestVersion && !detachHead) this.params.overrideHead = true;
     if (!ignoreNewestVersion && !isSnap) {
       await throwForNewestVersion(this.allComponentsToTag, this.legacyScope);
@@ -357,7 +364,8 @@ export class VersionMaker {
     // them as dependencies.
     const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
     const autoTagDataWithLocalOnly = await this.workspace.getAutoTagInfo(
-      ComponentIdList.fromArray(idsToTriggerAutoTag));
+      ComponentIdList.fromArray(idsToTriggerAutoTag)
+    );
     const localOnly = this.workspace?.listLocalOnly();
     return localOnly
       ? autoTagDataWithLocalOnly.filter((autoTagItem) => !localOnly.hasWithoutVersion(autoTagItem.component.id))
@@ -369,14 +377,17 @@ export class VersionMaker {
     if (!lane) return [];
     const laneCompIds = lane.toComponentIds();
     const graphIds = await this.scope.getGraphIds(laneCompIds);
-    const dependentsMap = idsToTag.reduce((acc, id) => {
-      const dependents = graphIds.predecessors(id.toString());
-      const dependentsCompIds = dependents.map(d => d.attr);
-      const dependentsCompIdsFromTheLane = dependentsCompIds.filter(s => laneCompIds.has(s));
-      if (!dependentsCompIdsFromTheLane.length) return acc;
-      acc[id.toString()] = ComponentIdList.fromArray(dependentsCompIdsFromTheLane);
-      return acc;
-    }, {} as Record<string, ComponentIdList>);
+    const dependentsMap = idsToTag.reduce(
+      (acc, id) => {
+        const dependents = graphIds.predecessors(id.toString());
+        const dependentsCompIds = dependents.map((d) => d.attr);
+        const dependentsCompIdsFromTheLane = dependentsCompIds.filter((s) => laneCompIds.has(s));
+        if (!dependentsCompIdsFromTheLane.length) return acc;
+        acc[id.toString()] = ComponentIdList.fromArray(dependentsCompIdsFromTheLane);
+        return acc;
+      },
+      {} as Record<string, ComponentIdList>
+    );
     if (Object.keys(dependentsMap).length === 0) return [];
     const allDependentsIds = ComponentIdList.uniqFromArray(Object.values(dependentsMap).flat());
     const allDependents = await this.legacyScope.getManyConsumerComponents(allDependentsIds);
@@ -529,23 +540,25 @@ export class VersionMaker {
         dep.version = (newDepId || depId).version;
         // if newDepId, then it means the dependency is in the current workspace and currently being tagged.
         // the versionRange needs to be updated to the new version.
-        if (newDepId && (componentRangePrefix === '^' || componentRangePrefix === '~')) {
+        // However, for snaps, we should not apply range prefixes as they are not valid semver
+        if (newDepId && (componentRangePrefix === '^' || componentRangePrefix === '~') && !isSnapVersion(dep.version)) {
           dep.versionRange = `${componentRangePrefix}${dep.version}`;
         }
       });
       return component;
-    }
+    };
 
     componentsToTag.forEach((oneComponentToTag) => {
-      const componentRangePrefix = this.dependencyResolver
-        .calcComponentRangePrefixByConsumerComponent(oneComponentToTag);
+      const componentRangePrefix =
+        this.dependencyResolver.calcComponentRangePrefixByConsumerComponent(oneComponentToTag);
       oneComponentToTag.getAllDependencies().forEach((dependency) => {
         const newDepId = getNewDependencyVersion(dependency.id);
         if (!newDepId) return;
         dependency.id = newDepId;
         // if componentRangePrefix === '+', then, only it only saves packages in workspace.jsonc.
         // in this case, these dependencies are in .bitmap. not in workspace.jsonc. so it's not relevant.
-        if (componentRangePrefix === '^' || componentRangePrefix === '~') {
+        // For snaps (hash versions), we should not apply range prefixes as they are not valid semver
+        if ((componentRangePrefix === '^' || componentRangePrefix === '~') && !isSnapVersion(newDepId.version)) {
           dependency.versionRange = `${componentRangePrefix}${newDepId.version}`;
         }
       });
@@ -657,13 +670,15 @@ function addIntegritiesToDependenciesGraph(
   packageIntegritiesByPublishedPackages: PackageIntegritiesByPublishedPackages,
   dependenciesGraph: DependenciesGraph
 ): DependenciesGraph {
-  const resolvedVersions: Array<{ name: string; version: string; previouslyUsedVersion?: string; }> = [];
+  const resolvedVersions: Array<{ name: string; version: string; previouslyUsedVersion?: string }> = [];
   for (const [selector, { integrity, previouslyUsedVersion }] of packageIntegritiesByPublishedPackages.entries()) {
     if (integrity == null) continue;
     const index = selector.indexOf('@', 1);
     const name = selector.substring(0, index);
     const version = selector.substring(index + 1);
-    const pendingPkg = dependenciesGraph.packages.get(`${name}@${previouslyUsedVersion}`) ?? dependenciesGraph.packages.get(`${name}@${version}`);;
+    const pendingPkg =
+      dependenciesGraph.packages.get(`${name}@${previouslyUsedVersion}`) ??
+      dependenciesGraph.packages.get(`${name}@${version}`);
     if (pendingPkg) {
       pendingPkg.resolution = { integrity };
       resolvedVersions.push({ name, version, previouslyUsedVersion });
@@ -775,7 +790,7 @@ export async function updateVersions(
 
 function replacePendingVersions(
   graph: DependenciesGraph,
-  resolvedVersions: Array<{ name: string; version: string; previouslyUsedVersion?: string; }>
+  resolvedVersions: Array<{ name: string; version: string; previouslyUsedVersion?: string }>
 ): DependenciesGraph {
   let s = graph.serialize();
   for (const { name, version, previouslyUsedVersion } of resolvedVersions) {

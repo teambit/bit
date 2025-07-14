@@ -10,13 +10,13 @@ export type McpSetupCmdOptions = {
 
 export class McpSetupCmd implements Command {
   name = 'setup [editor]';
-  description = 'Setup MCP integration with VS Code, Cursor, Windsurf, or other editors';
+  description = 'Setup MCP integration with VS Code, Cursor, Windsurf, Roo Code, Cline, Claude Code, or other editors';
   extendedDescription =
-    'Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, and Windsurf.';
+    'Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, Windsurf, Roo Code, Cline, and Claude Code.';
   arguments = [
     {
       name: 'editor',
-      description: 'Editor to setup (default: vscode). Available: vscode, cursor, windsurf',
+      description: 'Editor to setup (default: vscode). Available: vscode, cursor, windsurf, roo, cline, claude-code',
     },
   ];
   options = [
@@ -47,6 +47,15 @@ export class McpSetupCmd implements Command {
 
       // Get the config file path based on the editor type
       const configPath = this.mcpServerMain.getEditorConfigPath(editor, isGlobal);
+
+      // Special message for Claude Code to mention restart requirement
+      if (editor.toLowerCase() === 'claude-code') {
+        return chalk.green(
+          `✓ Successfully configured ${editorName} MCP integration (${scope})\n` +
+            `  Configuration written to: ${chalk.cyan(configPath)}\n` +
+            `  ${chalk.yellow('Note:')} Restart Claude Code to use the Bit MCP tools.`
+        );
+      }
 
       return chalk.green(
         `✓ Successfully configured ${editorName} MCP integration (${scope})\n` +

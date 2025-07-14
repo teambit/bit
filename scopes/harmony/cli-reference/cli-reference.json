@@ -75,120 +75,6 @@
     "private": false
   },
   {
-    "name": "mcp-server [sub-command]",
-    "alias": "",
-    "options": [
-      [
-        "",
-        "include-additional <commands>",
-        "Add specific commands to the default MCP tools set. Use comma-separated list in quotes"
-      ],
-      [
-        "",
-        "bit-bin <binary>",
-        "Specify the binary to use for running Bit commands (default: \"bit\")"
-      ],
-      [
-        "",
-        "consumer-project",
-        "For non-Bit workspaces that only consume Bit component packages. Enables only \"schema\", \"show\", and \"remote_search\" tools"
-      ]
-    ],
-    "description": "Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.",
-    "extendedDescription": "",
-    "group": "advanced",
-    "private": false,
-    "commands": [
-      {
-        "name": "start",
-        "alias": "",
-        "options": [
-          [
-            "",
-            "include-additional <commands>",
-            "Add specific commands to the default MCP tools set. Use comma-separated list in quotes"
-          ],
-          [
-            "",
-            "bit-bin <binary>",
-            "Specify the binary to use for running Bit commands (default: \"bit\")"
-          ],
-          [
-            "",
-            "consumer-project",
-            "For non-Bit workspaces that only consume Bit component packages. Enables only \"schema\", \"show\", and \"remote_search\" tools"
-          ]
-        ],
-        "description": "Start the MCP server",
-        "extendedDescription": "Start the Model Context Protocol (MCP) server with the specified configuration",
-        "group": "advanced",
-        "private": false
-      },
-      {
-        "name": "setup [editor]",
-        "alias": "",
-        "options": [
-          [
-            "",
-            "consumer-project",
-            "Configure for non-Bit workspaces that only consume Bit component packages"
-          ],
-          [
-            "",
-            "include-additional <commands>",
-            "Add specific commands to the default MCP tools set. Use comma-separated list in quotes"
-          ],
-          [
-            "g",
-            "global",
-            "Setup global configuration (default: workspace-specific)"
-          ]
-        ],
-        "description": "Setup MCP integration with VS Code, Cursor, Windsurf, or other editors",
-        "extendedDescription": "Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, and Windsurf.",
-        "group": "ungrouped",
-        "private": false,
-        "arguments": [
-          {
-            "name": "editor",
-            "description": "Editor to setup (default: vscode). Available: vscode, cursor, windsurf"
-          }
-        ]
-      },
-      {
-        "name": "rules [editor]",
-        "alias": "",
-        "options": [
-          [
-            "g",
-            "global",
-            "Write rules to global configuration (default: workspace-specific)"
-          ],
-          [
-            "p",
-            "print",
-            "Print rules content to screen instead of writing to file"
-          ],
-          [
-            "",
-            "consumer-project",
-            "Generate rules for consumer projects that only use Bit components as packages"
-          ]
-        ],
-        "description": "Write Bit MCP rules/instructions file for VS Code, Cursor, or print to screen",
-        "extendedDescription": "Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code and Cursor. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.",
-        "group": "ungrouped",
-        "private": false,
-        "arguments": [
-          {
-            "name": "editor",
-            "description": "Editor to write rules for (default: vscode). Available: vscode, cursor"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "name": "config",
     "alias": "",
     "options": [],
@@ -270,130 +156,125 @@
     ]
   },
   {
-    "name": "doctor [diagnosis-name]",
+    "name": "globals",
     "alias": "",
     "options": [
       [
         "j",
         "json",
-        "return diagnoses in json format"
-      ],
-      [
-        "",
-        "list",
-        "list all available diagnoses"
-      ],
-      [
-        "s",
-        "save [filePath]",
-        "save diagnoses to a file"
-      ],
-      [
-        "a",
-        "archive [filePath]",
-        "archive the workspace including diagnosis info (by default exclude node-modules and include .bit)"
-      ],
-      [
-        "n",
-        "include-node-modules",
-        "relevant for --archive. include node_modules in the archive file"
-      ],
-      [
-        "p",
-        "include-public",
-        "relevant for --archive. include public folder in the archive file"
-      ],
-      [
-        "e",
-        "exclude-local-scope",
-        "relevant for --archive. exclude .bit or .git/bit from the archive file"
+        "json format"
       ]
     ],
-    "description": "diagnose a bit workspace",
+    "description": "list all globals",
     "extendedDescription": "",
     "group": "system",
     "private": false
   },
   {
-    "name": "init [path]",
+    "name": "system <sub-command>",
+    "alias": "",
+    "options": [],
+    "description": "system operations",
+    "extendedDescription": "",
+    "group": "system",
+    "private": false,
+    "commands": [
+      {
+        "name": "log",
+        "alias": "",
+        "options": [],
+        "description": "print debug.log to the screen",
+        "extendedDescription": "",
+        "group": "system",
+        "private": false
+      },
+      {
+        "name": "tail-log",
+        "alias": "",
+        "options": [],
+        "description": "print the log file to the screen as it is being written",
+        "extendedDescription": "similar to linux \"tail -f\" command",
+        "group": "system",
+        "private": false
+      }
+    ]
+  },
+  {
+    "name": "remote",
     "alias": "",
     "options": [
       [
-        "n",
-        "name <workspace-name>",
-        "name of the workspace"
-      ],
-      [
-        "",
-        "generator <env-id>",
-        "for multiple, separate by a comma. add env-ids into the generators field in the workspace config for future \"bit create\" templates"
-      ],
-      [
-        "T",
-        "standalone",
-        "do not nest component store within .git directory and do not write config data inside package.json"
-      ],
-      [
-        "",
-        "no-package-json",
-        "do not generate package.json"
-      ],
-      [
-        "r",
-        "reset",
-        "write missing or damaged Bit files"
-      ],
-      [
-        "",
-        "reset-new",
-        "reset .bitmap file as if the components were newly added and remove all model data (objects)"
-      ],
-      [
-        "",
-        "reset-lane-new",
-        "same as reset-new, but it only resets components belong to lanes. main components are left intact"
-      ],
-      [
-        "",
-        "reset-hard",
-        "delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-starting workspace from scratch"
-      ],
-      [
-        "",
-        "reset-scope",
-        "removes local scope (.bit or .git/bit). tags/snaps that have not been exported will be lost. workspace is left intact"
-      ],
-      [
-        "d",
-        "default-directory <default-directory>",
-        "set the default directory pattern to import/create components into"
-      ],
-      [
-        "",
-        "default-scope <default-scope>",
-        "set the default scope for components in the workspace"
-      ],
-      [
-        "f",
-        "force",
-        "force workspace initialization without clearing local objects"
-      ],
-      [
-        "b",
-        "bare [name]",
-        "initialize an empty bit bare scope"
-      ],
-      [
-        "s",
-        "shared <groupname>",
-        "add group write permissions to a scope properly"
+        "g",
+        "global",
+        "see globally configured remotes"
       ]
     ],
-    "description": "create or reinitialize an empty workspace",
-    "extendedDescription": "if the current directory is already a workspace, it validates that bit files are correct and rewrite them if needed.",
-    "group": "workspace-setup",
+    "description": "manage set of tracked bit scope(s)",
+    "extendedDescription": "",
+    "group": "collaborate",
     "private": false,
-    "skipWorkspace": true
+    "commands": [
+      {
+        "name": "add <url>",
+        "alias": "",
+        "options": [
+          [
+            "g",
+            "global",
+            "configure a remote bit scope"
+          ]
+        ],
+        "description": "add a bare-scope as a remote",
+        "extendedDescription": "supported protocols are [file, http].\nfor example: \"http://localhost:3000\", \"file:///tmp/local-scope\"",
+        "group": "ungrouped",
+        "private": false
+      },
+      {
+        "name": "del <name>",
+        "alias": "",
+        "options": [
+          [
+            "g",
+            "global",
+            "remove a globally configured remote scope"
+          ]
+        ],
+        "description": "remove a tracked bit remote",
+        "extendedDescription": "",
+        "group": "ungrouped",
+        "private": false
+      },
+      {
+        "name": "list",
+        "alias": "",
+        "options": [
+          [
+            "g",
+            "global",
+            "see globally configured remotes"
+          ]
+        ],
+        "description": "list all configured remotes",
+        "extendedDescription": "",
+        "group": "collaborate",
+        "private": false
+      }
+    ]
+  },
+  {
+    "name": "component-issues",
+    "alias": "",
+    "options": [
+      [
+        "j",
+        "json",
+        "output issues in json format"
+      ]
+    ],
+    "description": "list available component-issues",
+    "extendedDescription": "",
+    "group": "info-analysis",
+    "private": true
   },
   {
     "name": "show <component-name>",
@@ -435,21 +316,6 @@
         "description": "component name or component id"
       }
     ]
-  },
-  {
-    "name": "component-issues",
-    "alias": "",
-    "options": [
-      [
-        "j",
-        "json",
-        "output issues in json format"
-      ]
-    ],
-    "description": "list available component-issues",
-    "extendedDescription": "",
-    "group": "info-analysis",
-    "private": true
   },
   {
     "name": "envs",
@@ -588,153 +454,6 @@
     ]
   },
   {
-    "name": "globals",
-    "alias": "",
-    "options": [
-      [
-        "j",
-        "json",
-        "json format"
-      ]
-    ],
-    "description": "list all globals",
-    "extendedDescription": "",
-    "group": "system",
-    "private": false
-  },
-  {
-    "name": "system <sub-command>",
-    "alias": "",
-    "options": [],
-    "description": "system operations",
-    "extendedDescription": "",
-    "group": "system",
-    "private": false,
-    "commands": [
-      {
-        "name": "log",
-        "alias": "",
-        "options": [],
-        "description": "print debug.log to the screen",
-        "extendedDescription": "",
-        "group": "system",
-        "private": false
-      },
-      {
-        "name": "tail-log",
-        "alias": "",
-        "options": [],
-        "description": "print the log file to the screen as it is being written",
-        "extendedDescription": "similar to linux \"tail -f\" command",
-        "group": "system",
-        "private": false
-      }
-    ]
-  },
-  {
-    "name": "remote",
-    "alias": "",
-    "options": [
-      [
-        "g",
-        "global",
-        "see globally configured remotes"
-      ]
-    ],
-    "description": "manage set of tracked bit scope(s)",
-    "extendedDescription": "",
-    "group": "collaborate",
-    "private": false,
-    "commands": [
-      {
-        "name": "add <url>",
-        "alias": "",
-        "options": [
-          [
-            "g",
-            "global",
-            "configure a remote bit scope"
-          ]
-        ],
-        "description": "add a bare-scope as a remote",
-        "extendedDescription": "supported protocols are [file, http].\nfor example: \"http://localhost:3000\", \"file:///tmp/local-scope\"",
-        "group": "ungrouped",
-        "private": false
-      },
-      {
-        "name": "del <name>",
-        "alias": "",
-        "options": [
-          [
-            "g",
-            "global",
-            "remove a globally configured remote scope"
-          ]
-        ],
-        "description": "remove a tracked bit remote",
-        "extendedDescription": "",
-        "group": "ungrouped",
-        "private": false
-      },
-      {
-        "name": "list",
-        "alias": "",
-        "options": [
-          [
-            "g",
-            "global",
-            "see globally configured remotes"
-          ]
-        ],
-        "description": "list all configured remotes",
-        "extendedDescription": "",
-        "group": "collaborate",
-        "private": false
-      }
-    ]
-  },
-  {
-    "name": "graph [id]",
-    "alias": "",
-    "options": [
-      [
-        "r",
-        "remote [remoteName]",
-        "remote name (name is optional, leave empty when id is specified)"
-      ],
-      [
-        "",
-        "layout <name>",
-        "GraphVis layout. default to \"dot\". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]"
-      ],
-      [
-        "",
-        "png",
-        "save the graph as a png file instead of svg. requires \"graphviz\" to be installed"
-      ],
-      [
-        "",
-        "cycles",
-        "generate a graph of cycles only"
-      ],
-      [
-        "",
-        "include-local-only",
-        "include only the components in the workspace (or local scope)"
-      ],
-      [
-        "j",
-        "json",
-        "json format"
-      ]
-    ],
-    "description": "generate an SVG image file with the components' dependencies graph",
-    "extendedDescription": "",
-    "group": "info-analysis",
-    "private": false,
-    "remoteOp": true
-  },
-  {
     "name": "start [component-pattern]",
     "alias": "c",
     "options": [
@@ -803,6 +522,52 @@
     "extendedDescription": "",
     "group": "run-serve",
     "private": true
+  },
+  {
+    "name": "graph [id]",
+    "alias": "",
+    "options": [
+      [
+        "r",
+        "remote [remoteName]",
+        "remote name (name is optional, leave empty when id is specified)"
+      ],
+      [
+        "",
+        "layout <name>",
+        "GraphVis layout. default to \"dot\". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]"
+      ],
+      [
+        "",
+        "png",
+        "save the graph as a png file instead of svg. requires \"graphviz\" to be installed"
+      ],
+      [
+        "",
+        "cycles",
+        "generate a graph of cycles only"
+      ],
+      [
+        "",
+        "include-local-only",
+        "DEPRECATED: include only the components in the workspace (or local scope). This is now the default behavior."
+      ],
+      [
+        "",
+        "include-dependencies",
+        "include all dependencies recursively, not just workspace (or local scope) components"
+      ],
+      [
+        "j",
+        "json",
+        "json format"
+      ]
+    ],
+    "description": "generate an SVG image file with the components' dependencies graph",
+    "extendedDescription": "",
+    "group": "info-analysis",
+    "private": false,
+    "remoteOp": true
   },
   {
     "name": "scope <sub-command>",
@@ -1003,123 +768,6 @@
     "alias": "",
     "options": [],
     "description": "run an action on a remote",
-    "extendedDescription": "",
-    "group": "advanced",
-    "private": true
-  },
-  {
-    "name": "version-history <sub-command>",
-    "alias": "vh",
-    "options": [],
-    "description": "manage the version-history of components",
-    "extendedDescription": "",
-    "group": "version-control",
-    "private": false,
-    "commands": [
-      {
-        "name": "graph <component-id>",
-        "alias": "",
-        "options": [
-          [
-            "s",
-            "short-hash",
-            "show only 9 chars of the hash"
-          ],
-          [
-            "m",
-            "mark <string>",
-            "paint the given node-ids in the graph in red color, for multiple, separate by commas"
-          ],
-          [
-            "",
-            "png",
-            "save the graph as a png file instead of svg. requires \"graphviz\" to be installed"
-          ],
-          [
-            "l",
-            "layout <name>",
-            "GraphVis layout. default to \"dot\". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]"
-          ],
-          [
-            "",
-            "limit <number>",
-            "limit the number of nodes in the graph (starting from the heads)"
-          ]
-        ],
-        "description": "generate a graph of the version history of a component and save as an SVG file",
-        "extendedDescription": "",
-        "group": "info-analysis",
-        "private": false
-      },
-      {
-        "name": "show <component-id>",
-        "alias": "vh",
-        "options": [
-          [
-            "s",
-            "short-hash",
-            "show only 9 chars of the hash"
-          ],
-          [
-            "j",
-            "json",
-            "json format"
-          ]
-        ],
-        "description": "show the version-history of a component",
-        "extendedDescription": "",
-        "group": "info-analysis",
-        "private": false
-      },
-      {
-        "name": "build <component-pattern>",
-        "alias": "",
-        "options": [
-          [
-            "",
-            "from-snap <snap>",
-            "build the version history from a specific snap. the pattern must be a single component-id"
-          ],
-          [
-            "",
-            "from-all-lanes",
-            "build the version history from the heads of all lanes that include this component"
-          ],
-          [
-            "",
-            "delete-existing",
-            "delete the existing version history before building it"
-          ],
-          [
-            "",
-            "remote <scope>",
-            "make the change on the remote scope"
-          ]
-        ],
-        "description": "rebuild the version history of a component. helpful when it got corrupted for some reason",
-        "extendedDescription": "",
-        "group": "info-analysis",
-        "private": false,
-        "arguments": [
-          {
-            "name": "component-pattern",
-            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "name": "cat-version-history <id>",
-    "alias": "cvh",
-    "options": [
-      [
-        "j",
-        "json",
-        "json format"
-      ]
-    ],
-    "description": "cat version-history object by component-id",
     "extendedDescription": "",
     "group": "advanced",
     "private": true
@@ -1371,41 +1019,6 @@
     ]
   },
   {
-    "name": "git <sub-command>",
-    "alias": "",
-    "options": [],
-    "description": "perform git operations",
-    "extendedDescription": "",
-    "group": "workspace-tools",
-    "private": false,
-    "commands": [
-      {
-        "name": "set-merge-driver",
-        "alias": "smd",
-        "options": [
-          [
-            "g",
-            "global",
-            "set the git merge driver globally"
-          ]
-        ],
-        "description": "setup bit's git merge driver for bitmap files",
-        "extendedDescription": "",
-        "group": "workspace-tools",
-        "private": false
-      },
-      {
-        "name": "merge-bitmaps <ancestor> <current> <other>",
-        "alias": "",
-        "options": [],
-        "description": "a special command to merge conflicting bitmap files during git merge",
-        "extendedDescription": "",
-        "group": "workspace-tools",
-        "private": true
-      }
-    ]
-  },
-  {
     "name": "list [remote-scope]",
     "alias": "ls",
     "options": [
@@ -1596,6 +1209,41 @@
     "private": false,
     "remoteOp": true,
     "skipWorkspace": true
+  },
+  {
+    "name": "git <sub-command>",
+    "alias": "",
+    "options": [],
+    "description": "perform git operations",
+    "extendedDescription": "",
+    "group": "workspace-tools",
+    "private": false,
+    "commands": [
+      {
+        "name": "set-merge-driver",
+        "alias": "smd",
+        "options": [
+          [
+            "g",
+            "global",
+            "set the git merge driver globally"
+          ]
+        ],
+        "description": "setup bit's git merge driver for bitmap files",
+        "extendedDescription": "",
+        "group": "workspace-tools",
+        "private": false
+      },
+      {
+        "name": "merge-bitmaps <ancestor> <current> <other>",
+        "alias": "",
+        "options": [],
+        "description": "a special command to merge conflicting bitmap files during git merge",
+        "extendedDescription": "",
+        "group": "workspace-tools",
+        "private": true
+      }
+    ]
   },
   {
     "name": "add [path...]",
@@ -1903,6 +1551,11 @@
         "",
         "skip-tests",
         "skip running component tests during build process"
+      ],
+      [
+        "",
+        "loose",
+        "allow build to succeed even if tasks like tests or lint fail"
       ],
       [
         "",
@@ -2617,6 +2270,219 @@
     "private": false
   },
   {
+    "name": "checkout <to> [component-pattern]",
+    "alias": "U",
+    "options": [
+      [
+        "i",
+        "interactive-merge",
+        "when a component is modified and the merge process found conflicts, display options to resolve them"
+      ],
+      [
+        "r",
+        "auto-merge-resolve <merge-strategy>",
+        "in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]"
+      ],
+      [
+        "",
+        "manual",
+        "same as \"--auto-merge-resolve manual\". in case of merge conflict, write the files with the conflict markers"
+      ],
+      [
+        "a",
+        "all",
+        "all components"
+      ],
+      [
+        "e",
+        "workspace-only",
+        "only relevant for 'bit checkout head' when on a lane. don't import components from the remote lane that are not already in the workspace"
+      ],
+      [
+        "v",
+        "verbose",
+        "showing verbose output for inspection"
+      ],
+      [
+        "x",
+        "skip-dependency-installation",
+        "do not auto-install dependencies of the imported components"
+      ],
+      [
+        "",
+        "force-ours",
+        "do not merge, preserve local files as is"
+      ],
+      [
+        "",
+        "force-theirs",
+        "do not merge, just overwrite with incoming files"
+      ]
+    ],
+    "description": "switch between component versions or remove local changes",
+    "extendedDescription": "\n`bit checkout <version> [component-pattern]` => checkout the specified ids (or all components when --all is used) to the specified version\n`bit checkout head [component-pattern]` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all\n`bit checkout head~x [component-pattern]` => go backward x generations from the head and checkout to that version\n`bit checkout latest [component-pattern]` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all\n`bit checkout reset [component-pattern]` => remove local modifications from the specified ids (or all components when --all is used). also, if a component dir is deleted from the filesystem, it'll be restored\nwhen on a lane, \"checkout head\" only checks out components on this lane. to update main components, run \"bit lane merge main\"",
+    "group": "version-control",
+    "private": false,
+    "arguments": [
+      {
+        "name": "to",
+        "description": "permitted values: [head, latest, reset, {specific-version}, {head~x}]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes"
+      },
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
+  },
+  {
+    "name": "revert <component-pattern> <to>",
+    "alias": "",
+    "options": [
+      [
+        "v",
+        "verbose",
+        "showing verbose output for inspection"
+      ],
+      [
+        "x",
+        "skip-dependency-installation",
+        "do not install packages of the imported components"
+      ]
+    ],
+    "description": "replace the current component files by the specified version, leave the version intact",
+    "extendedDescription": "",
+    "group": "version-control",
+    "private": false,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      },
+      {
+        "name": "to",
+        "description": "permitted values: [main, specific-version]. 'main' - head version on main."
+      }
+    ]
+  },
+  {
+    "name": "eject <component-pattern>",
+    "alias": "E",
+    "options": [
+      [
+        "f",
+        "force",
+        "ignore local changes/versions. eject component/s even when they are staged or modified. Note: unexported tags/snaps will be lost"
+      ],
+      [
+        "x",
+        "skip-dependency-installation",
+        "do not auto-install dependencies"
+      ],
+      [
+        "j",
+        "json",
+        "print the results in JSON format"
+      ],
+      [
+        "",
+        "keep-files",
+        "keep the component files in the workspace intact"
+      ]
+    ],
+    "description": "remove component from the workspace and install it instead as a regular npm package.",
+    "extendedDescription": "By default the component files will be removed from the workspace",
+    "group": "dependencies",
+    "private": false,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
+  },
+  {
+    "name": "resume-export <export-id> <remotes...>",
+    "alias": "",
+    "options": [],
+    "description": "EXPERIMENTAL. resume failed export",
+    "extendedDescription": "resume failed export to persist the pending objects on the given remotes.\nthe export-id is the id the client received in the error message during the failure.\nalternatively, exporting to any one of the failed scopes, throws server-is-busy error with the export-id",
+    "group": "advanced",
+    "private": true,
+    "remoteOp": true
+  },
+  {
+    "name": "export [component-patterns...]",
+    "alias": "e",
+    "options": [
+      [
+        "e",
+        "eject",
+        "after export, remove the components from the workspace and install them as packages"
+      ],
+      [
+        "a",
+        "all",
+        "export all components, including non-staged (useful when components in the remote scope are corrupted or missing)"
+      ],
+      [
+        "",
+        "all-versions",
+        "export not only staged versions but all of them (useful when versions in the remote scope are corrupted or missing)"
+      ],
+      [
+        "",
+        "origin-directly",
+        "avoid export to the central hub, instead, export directly to the original scopes. not recommended!"
+      ],
+      [
+        "",
+        "resume <string>",
+        "in case the previous export failed and suggested to resume with an export-id, enter the id"
+      ],
+      [
+        "",
+        "head-only",
+        "in case previous export failed and locally it shows exported and only one snap/tag was created, try using this flag"
+      ],
+      [
+        "",
+        "ignore-missing-artifacts",
+        "don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote"
+      ],
+      [
+        "",
+        "fork-lane-new-scope",
+        "allow exporting a forked lane into a different scope than the original scope"
+      ],
+      [
+        "",
+        "open-browser",
+        "open a browser once the export is completed in the cloud job url"
+      ],
+      [
+        "",
+        "verbose",
+        "per exported component, show the versions being exported"
+      ],
+      [
+        "j",
+        "json",
+        "show output in json format"
+      ]
+    ],
+    "description": "export components from the workspace to remote scopes",
+    "extendedDescription": "bit export => export all staged snaps/tags of components to their remote scope. if checked out to a lane, export the lane as well\n  `bit export [pattern...]` => export components included by the pattern to their remote scope (we recommend not using a pattern in\n    most scenarios so that all changes are exported simultaneously)\n  you can use a pattern for multiple ids, such as bit export \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
+    "group": "collaborate",
+    "private": false,
+    "remoteOp": true,
+    "arguments": [
+      {
+        "name": "component-patterns...",
+        "description": "(not recommended) component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
+  },
+  {
     "name": "deps <sub-command>",
     "alias": "dependencies",
     "options": [],
@@ -2922,124 +2788,6 @@
     ]
   },
   {
-    "name": "eject <component-pattern>",
-    "alias": "E",
-    "options": [
-      [
-        "f",
-        "force",
-        "ignore local changes/versions. eject component/s even when they are staged or modified. Note: unexported tags/snaps will be lost"
-      ],
-      [
-        "x",
-        "skip-dependency-installation",
-        "do not auto-install dependencies"
-      ],
-      [
-        "j",
-        "json",
-        "print the results in JSON format"
-      ],
-      [
-        "",
-        "keep-files",
-        "keep the component files in the workspace intact"
-      ]
-    ],
-    "description": "remove component from the workspace and install it instead as a regular npm package.",
-    "extendedDescription": "By default the component files will be removed from the workspace",
-    "group": "dependencies",
-    "private": false,
-    "arguments": [
-      {
-        "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      }
-    ]
-  },
-  {
-    "name": "resume-export <export-id> <remotes...>",
-    "alias": "",
-    "options": [],
-    "description": "EXPERIMENTAL. resume failed export",
-    "extendedDescription": "resume failed export to persist the pending objects on the given remotes.\nthe export-id is the id the client received in the error message during the failure.\nalternatively, exporting to any one of the failed scopes, throws server-is-busy error with the export-id",
-    "group": "advanced",
-    "private": true,
-    "remoteOp": true
-  },
-  {
-    "name": "export [component-patterns...]",
-    "alias": "e",
-    "options": [
-      [
-        "e",
-        "eject",
-        "after export, remove the components from the workspace and install them as packages"
-      ],
-      [
-        "a",
-        "all",
-        "export all components, including non-staged (useful when components in the remote scope are corrupted or missing)"
-      ],
-      [
-        "",
-        "all-versions",
-        "export not only staged versions but all of them (useful when versions in the remote scope are corrupted or missing)"
-      ],
-      [
-        "",
-        "origin-directly",
-        "avoid export to the central hub, instead, export directly to the original scopes. not recommended!"
-      ],
-      [
-        "",
-        "resume <string>",
-        "in case the previous export failed and suggested to resume with an export-id, enter the id"
-      ],
-      [
-        "",
-        "head-only",
-        "in case previous export failed and locally it shows exported and only one snap/tag was created, try using this flag"
-      ],
-      [
-        "",
-        "ignore-missing-artifacts",
-        "don't throw an error when artifact files are missing. not recommended, unless you're sure the artifacts are in the remote"
-      ],
-      [
-        "",
-        "fork-lane-new-scope",
-        "allow exporting a forked lane into a different scope than the original scope"
-      ],
-      [
-        "",
-        "open-browser",
-        "open a browser once the export is completed in the cloud job url"
-      ],
-      [
-        "",
-        "verbose",
-        "per exported component, show the versions being exported"
-      ],
-      [
-        "j",
-        "json",
-        "show output in json format"
-      ]
-    ],
-    "description": "export components from the workspace to remote scopes",
-    "extendedDescription": "bit export => export all staged snaps/tags of components to their remote scope. if checked out to a lane, export the lane as well\n  `bit export [pattern...]` => export components included by the pattern to their remote scope (we recommend not using a pattern in\n    most scenarios so that all changes are exported simultaneously)\n  you can use a pattern for multiple ids, such as bit export \"utils/*\". (wrap the pattern with quotes to avoid collision with shell commands)",
-    "group": "collaborate",
-    "private": false,
-    "remoteOp": true,
-    "arguments": [
-      {
-        "name": "component-patterns...",
-        "description": "(not recommended) component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      }
-    ]
-  },
-  {
     "name": "tag [component-patterns...]",
     "alias": "t",
     "options": [
@@ -3170,6 +2918,11 @@
       ],
       [
         "",
+        "loose",
+        "allow tag --build to succeed even if tasks like tests or lint fail"
+      ],
+      [
+        "",
         "detach-head",
         "UNSUPPORTED YET. in case a component is checked out to an older version, tag it without changing the head"
       ]
@@ -3245,6 +2998,11 @@
         "",
         "ignore-build-errors",
         "proceed to snap pipeline even when build pipeline fails"
+      ],
+      [
+        "",
+        "loose",
+        "allow snap --build to succeed even if tasks like tests or lint fail"
       ],
       [
         "",
@@ -3327,207 +3085,6 @@
     "extendedDescription": "in case source and target snaps are not provided, the command will use the local and remote heads.\nby \"head\" we mean component-head if on main, or lane-head if on lane.\nif source and target snaps are provided, the command will use them to calculate the distance.",
     "group": "advanced",
     "private": true
-  },
-  {
-    "name": "checkout <to> [component-pattern]",
-    "alias": "U",
-    "options": [
-      [
-        "i",
-        "interactive-merge",
-        "when a component is modified and the merge process found conflicts, display options to resolve them"
-      ],
-      [
-        "r",
-        "auto-merge-resolve <merge-strategy>",
-        "in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]"
-      ],
-      [
-        "",
-        "manual",
-        "same as \"--auto-merge-resolve manual\". in case of merge conflict, write the files with the conflict markers"
-      ],
-      [
-        "a",
-        "all",
-        "all components"
-      ],
-      [
-        "e",
-        "workspace-only",
-        "only relevant for 'bit checkout head' when on a lane. don't import components from the remote lane that are not already in the workspace"
-      ],
-      [
-        "v",
-        "verbose",
-        "showing verbose output for inspection"
-      ],
-      [
-        "x",
-        "skip-dependency-installation",
-        "do not auto-install dependencies of the imported components"
-      ],
-      [
-        "",
-        "force-ours",
-        "do not merge, preserve local files as is"
-      ],
-      [
-        "",
-        "force-theirs",
-        "do not merge, just overwrite with incoming files"
-      ]
-    ],
-    "description": "switch between component versions or remove local changes",
-    "extendedDescription": "\n`bit checkout <version> [component-pattern]` => checkout the specified ids (or all components when --all is used) to the specified version\n`bit checkout head [component-pattern]` => checkout to the last snap/tag (use --latest if you only want semver tags), omit [component-pattern] to checkout head for all\n`bit checkout head~x [component-pattern]` => go backward x generations from the head and checkout to that version\n`bit checkout latest [component-pattern]` => checkout to the latest satisfying semver tag, omit [component-pattern] to checkout latest for all\n`bit checkout reset [component-pattern]` => remove local modifications from the specified ids (or all components when --all is used). also, if a component dir is deleted from the filesystem, it'll be restored\nwhen on a lane, \"checkout head\" only checks out components on this lane. to update main components, run \"bit lane merge main\"",
-    "group": "version-control",
-    "private": false,
-    "arguments": [
-      {
-        "name": "to",
-        "description": "permitted values: [head, latest, reset, {specific-version}, {head~x}]. 'head' - last snap/tag. 'latest' - semver latest tag. 'reset' - removes local changes"
-      },
-      {
-        "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      }
-    ]
-  },
-  {
-    "name": "revert <component-pattern> <to>",
-    "alias": "",
-    "options": [
-      [
-        "v",
-        "verbose",
-        "showing verbose output for inspection"
-      ],
-      [
-        "x",
-        "skip-dependency-installation",
-        "do not install packages of the imported components"
-      ]
-    ],
-    "description": "replace the current component files by the specified version, leave the version intact",
-    "extendedDescription": "",
-    "group": "version-control",
-    "private": false,
-    "arguments": [
-      {
-        "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      },
-      {
-        "name": "to",
-        "description": "permitted values: [main, specific-version]. 'main' - head version on main."
-      }
-    ]
-  },
-  {
-    "name": "stash <sub-command>",
-    "alias": "",
-    "options": [
-      [
-        "p",
-        "pattern",
-        "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      ],
-      [
-        "m",
-        "message <string>",
-        "message to be attached to the stashed components"
-      ]
-    ],
-    "description": "stash modified components",
-    "extendedDescription": "",
-    "group": "version-control",
-    "private": false,
-    "commands": [
-      {
-        "name": "save",
-        "alias": "s",
-        "options": [
-          [
-            "p",
-            "pattern",
-            "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-          ],
-          [
-            "",
-            "include-new",
-            "EXPERIMENTAL. by default, only modified components are stashed. use this flag to include new components"
-          ],
-          [
-            "m",
-            "message <string>",
-            "message to be attached to the stashed components"
-          ]
-        ],
-        "description": "stash modified components",
-        "extendedDescription": "",
-        "group": "version-control",
-        "private": false
-      },
-      {
-        "name": "load [stash-id]",
-        "alias": "pop",
-        "options": [
-          [
-            "r",
-            "auto-merge-resolve <merge-strategy>",
-            "in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]"
-          ],
-          [
-            "",
-            "manual",
-            "same as \"--auto-merge-resolve manual\". in case of merge conflict, write the files with the conflict markers"
-          ],
-          [
-            "",
-            "force-ours",
-            "do not merge, preserve local files as is"
-          ],
-          [
-            "",
-            "force-theirs",
-            "do not merge, just overwrite with incoming files"
-          ]
-        ],
-        "description": "apply the changes according to the stash. if no stash-id provided, it loads the latest stash",
-        "extendedDescription": "",
-        "group": "version-control",
-        "private": false
-      },
-      {
-        "name": "list",
-        "alias": "",
-        "options": [],
-        "description": "list stash",
-        "extendedDescription": "",
-        "group": "version-control",
-        "private": false
-      }
-    ]
-  },
-  {
-    "name": "schema <pattern>",
-    "alias": "",
-    "options": [
-      [
-        "r",
-        "remote",
-        "fetch schema from remote scope (works for components not in workspace)"
-      ],
-      [
-        "j",
-        "json",
-        "return the component schema in json format"
-      ]
-    ],
-    "description": "extracts and displays the API schema (types, functions, classes, interfaces) of the specified component/s.",
-    "extendedDescription": "Extracts TypeScript definitions to provide a comprehensive view of a component's public API.\nShows detailed information about exported elements including classes, interfaces, functions, types, and enums with their respective signatures and documentation.\n\nyou can use a `<pattern>` for multiple component ids, such as `bit schema \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
-    "group": "info-analysis",
-    "private": false
   },
   {
     "name": "test [component-pattern]",
@@ -3657,101 +3214,6 @@
       {
         "cmd": "diff foo 0.0.2 --parent",
         "description": "compare \"foo@0.0.2\" to its parent version. showing what changed in 0.0.2"
-      }
-    ]
-  },
-  {
-    "name": "log <id>",
-    "alias": "",
-    "options": [
-      [
-        "r",
-        "remote",
-        "show log of a remote component"
-      ],
-      [
-        "",
-        "parents",
-        "show parents and lanes data"
-      ],
-      [
-        "o",
-        "one-line",
-        "show each log entry in one line"
-      ],
-      [
-        "f",
-        "full-hash",
-        "show full hash of the snap (default to the first 9 characters for --one-line/--parents flags)"
-      ],
-      [
-        "m",
-        "full-message",
-        "show full message of the snap (default to the first line for --one-line/--parents flags)"
-      ],
-      [
-        "",
-        "show-hidden",
-        "show hidden snaps (snaps are marked as hidden typically when the following tag has the same files/config)"
-      ],
-      [
-        "j",
-        "json",
-        "json format"
-      ]
-    ],
-    "description": "show components(s) version history",
-    "extendedDescription": "",
-    "group": "version-control",
-    "private": false,
-    "remoteOp": true,
-    "skipWorkspace": true,
-    "arguments": [
-      {
-        "name": "id",
-        "description": "component-id or component-name"
-      }
-    ]
-  },
-  {
-    "name": "log-file <filepath>",
-    "alias": "",
-    "options": [
-      [
-        "o",
-        "one-line",
-        "show each log entry in one line"
-      ]
-    ],
-    "description": "EXPERIMENTAL. show file history",
-    "extendedDescription": "",
-    "group": "version-control",
-    "private": false,
-    "arguments": [
-      {
-        "name": "filepath",
-        "description": "file path relative to the workspace"
-      }
-    ]
-  },
-  {
-    "name": "blame <filepath>",
-    "alias": "",
-    "options": [
-      [
-        "m",
-        "include-message",
-        "show the commit message"
-      ]
-    ],
-    "description": "EXPERIMENTAL. per line, show who and when was the last to modify it",
-    "extendedDescription": "",
-    "group": "version-control",
-    "private": false,
-    "arguments": [
-      {
-        "name": "filepath",
-        "description": "file path relative to the workspace"
       }
     ]
   },
@@ -3958,6 +3420,11 @@
             "j",
             "json",
             "return the output as JSON"
+          ],
+          [
+            "",
+            "branch",
+            "create and checkout a new git branch named after the lane"
           ]
         ],
         "description": "switch to the specified lane",
@@ -4149,6 +3616,11 @@
             "p",
             "pattern <component-pattern>",
             "import only components from the lane that fit the specified component-pattern to the workspace. works only when the workspace is empty"
+          ],
+          [
+            "",
+            "branch",
+            "create and checkout a new git branch named after the lane"
           ]
         ],
         "description": "import a remote lane to your workspace and switch to that lane",
@@ -4355,6 +3827,11 @@
             "in case of snap during the merge, run the build-pipeline (similar to bit snap --build)"
           ],
           [
+            "",
+            "loose",
+            "relevant for --build, to allow build to succeed even if tasks like tests or lint fail"
+          ],
+          [
             "m",
             "message <message>",
             "override the default message for the auto snap"
@@ -4534,6 +4011,11 @@
         "j",
         "json",
         "return the output as JSON"
+      ],
+      [
+        "",
+        "branch",
+        "create and checkout a new git branch named after the lane"
       ]
     ],
     "description": "switch to the specified lane",
@@ -4555,6 +4037,725 @@
     "extendedDescription": "",
     "group": "advanced",
     "private": true
+  },
+  {
+    "name": "insights [names...]",
+    "alias": "",
+    "options": [
+      [
+        "l",
+        "list",
+        "list all insights"
+      ],
+      [
+        "j",
+        "json",
+        "return the insights in json format"
+      ],
+      [
+        "",
+        "include-deps",
+        "include component dependencies that are not in this workspace"
+      ]
+    ],
+    "description": "Insights on component graph",
+    "extendedDescription": "",
+    "group": "workspace-tools",
+    "private": true
+  },
+  {
+    "name": "status",
+    "alias": "s",
+    "options": [
+      [
+        "j",
+        "json",
+        "return a json version of the component"
+      ],
+      [
+        "w",
+        "warnings",
+        "show warnings. by default, only issues that block tag/snap are shown"
+      ],
+      [
+        "",
+        "verbose",
+        "show extra data: full snap hashes for staged components, and divergence point for lanes"
+      ],
+      [
+        "l",
+        "lanes",
+        "when on a lane, show updates from main and updates from forked lanes"
+      ],
+      [
+        "",
+        "strict",
+        "in case issues found, exit with code 1"
+      ],
+      [
+        "c",
+        "ignore-circular-dependencies",
+        "do not check for circular dependencies to get the results quicker"
+      ]
+    ],
+    "description": "present the current status of components in the workspace, including indication of detected issues",
+    "extendedDescription": "",
+    "group": "info-analysis",
+    "private": false
+  },
+  {
+    "name": "mini-status [component-pattern]",
+    "alias": "ms",
+    "options": [
+      [
+        "",
+        "show-issues",
+        "show component issues (slows down the command)"
+      ],
+      [
+        "c",
+        "ignore-circular-dependencies",
+        "do not check for circular dependencies to get the results quicker (relevant when --show-issues flag is used)"
+      ],
+      [
+        "j",
+        "json",
+        "json format"
+      ]
+    ],
+    "description": "basic status for fast execution",
+    "extendedDescription": "shows only modified/new components with code changes. for the full status, use \"bit status\".\nthis command only checks source code changes, it doesn't check for config/aspect/dependency changes",
+    "group": "info-analysis",
+    "private": true,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
+  },
+  {
+    "name": "ci <sub-command>",
+    "alias": "",
+    "options": [],
+    "description": "CI commands",
+    "extendedDescription": "",
+    "group": "collaborate",
+    "private": false,
+    "commands": [
+      {
+        "name": "verify",
+        "alias": "",
+        "options": [],
+        "description": "CI commands",
+        "extendedDescription": "",
+        "group": "development",
+        "private": false
+      },
+      {
+        "name": "pr",
+        "alias": "",
+        "options": [
+          [
+            "m",
+            "message <message>",
+            "If set, set it as the snap message, if not, try and grab from git-commit-message"
+          ],
+          [
+            "l",
+            "lane <lane>",
+            "If set, use as the lane name, if not available, grab from git-branch name"
+          ],
+          [
+            "b",
+            "build",
+            "Set to true to build the app locally, false (default) will build on Ripple CI"
+          ]
+        ],
+        "description": "This command is meant to run when a PR was open/updated and meant to export a lane to bit-cloud.",
+        "extendedDescription": "",
+        "group": "collaborate",
+        "private": false
+      },
+      {
+        "name": "merge",
+        "alias": "",
+        "options": [
+          [
+            "m",
+            "message <message>",
+            "If set, use it as the snap message, if not, try and grab from git-commit-message"
+          ],
+          [
+            "b",
+            "build",
+            "Set to true to build the app locally, false (default) will build on Ripple CI"
+          ]
+        ],
+        "description": "Merges a PR",
+        "extendedDescription": "",
+        "group": "collaborate",
+        "private": false
+      }
+    ]
+  },
+  {
+    "name": "mcp-server [sub-command]",
+    "alias": "",
+    "options": [
+      [
+        "",
+        "include-additional <commands>",
+        "Add specific commands to the default MCP tools set. Use comma-separated list in quotes"
+      ],
+      [
+        "",
+        "bit-bin <binary>",
+        "Specify the binary to use for running Bit commands (default: \"bit\")"
+      ],
+      [
+        "",
+        "consumer-project",
+        "For non-Bit workspaces that only consume Bit component packages. Enables only \"schema\", \"show\", and \"remote_search\" tools"
+      ]
+    ],
+    "description": "Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.",
+    "extendedDescription": "",
+    "group": "advanced",
+    "private": false,
+    "commands": [
+      {
+        "name": "start",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "include-additional <commands>",
+            "Add specific commands to the default MCP tools set. Use comma-separated list in quotes"
+          ],
+          [
+            "",
+            "bit-bin <binary>",
+            "Specify the binary to use for running Bit commands (default: \"bit\")"
+          ],
+          [
+            "",
+            "consumer-project",
+            "For non-Bit workspaces that only consume Bit component packages. Enables only \"schema\", \"show\", and \"remote_search\" tools"
+          ]
+        ],
+        "description": "Start the MCP server",
+        "extendedDescription": "Start the Model Context Protocol (MCP) server with the specified configuration",
+        "group": "advanced",
+        "private": false
+      },
+      {
+        "name": "setup [editor]",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "consumer-project",
+            "Configure for non-Bit workspaces that only consume Bit component packages"
+          ],
+          [
+            "",
+            "include-additional <commands>",
+            "Add specific commands to the default MCP tools set. Use comma-separated list in quotes"
+          ],
+          [
+            "g",
+            "global",
+            "Setup global configuration (default: workspace-specific)"
+          ]
+        ],
+        "description": "Setup MCP integration with VS Code, Cursor, Windsurf, Roo Code, Cline, or other editors",
+        "extendedDescription": "Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, Windsurf, Roo Code, and Cline.",
+        "group": "ungrouped",
+        "private": false,
+        "arguments": [
+          {
+            "name": "editor",
+            "description": "Editor to setup (default: vscode). Available: vscode, cursor, windsurf, roo, cline"
+          }
+        ]
+      },
+      {
+        "name": "rules [editor]",
+        "alias": "",
+        "options": [
+          [
+            "g",
+            "global",
+            "Write rules to global configuration (default: workspace-specific)"
+          ],
+          [
+            "p",
+            "print",
+            "Print rules content to screen instead of writing to file"
+          ],
+          [
+            "",
+            "consumer-project",
+            "Generate rules for consumer projects that only use Bit components as packages"
+          ]
+        ],
+        "description": "Write Bit MCP rules/instructions file for VS Code, Cursor, Roo Code, Cline, or print to screen",
+        "extendedDescription": "Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, Roo Code, and Cline. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.",
+        "group": "ungrouped",
+        "private": false,
+        "arguments": [
+          {
+            "name": "editor",
+            "description": "Editor to write rules for (default: vscode). Available: vscode, cursor, roo, cline"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "doctor [diagnosis-name]",
+    "alias": "",
+    "options": [
+      [
+        "j",
+        "json",
+        "return diagnoses in json format"
+      ],
+      [
+        "",
+        "list",
+        "list all available diagnoses"
+      ],
+      [
+        "s",
+        "save [filePath]",
+        "save diagnoses to a file"
+      ],
+      [
+        "a",
+        "archive [filePath]",
+        "archive the workspace including diagnosis info (by default exclude node-modules and include .bit)"
+      ],
+      [
+        "n",
+        "include-node-modules",
+        "relevant for --archive. include node_modules in the archive file"
+      ],
+      [
+        "p",
+        "include-public",
+        "relevant for --archive. include public folder in the archive file"
+      ],
+      [
+        "e",
+        "exclude-local-scope",
+        "relevant for --archive. exclude .bit or .git/bit from the archive file"
+      ]
+    ],
+    "description": "diagnose a bit workspace",
+    "extendedDescription": "",
+    "group": "system",
+    "private": false
+  },
+  {
+    "name": "init [path]",
+    "alias": "",
+    "options": [
+      [
+        "n",
+        "name <workspace-name>",
+        "name of the workspace"
+      ],
+      [
+        "",
+        "generator <env-id>",
+        "for multiple, separate by a comma. add env-ids into the generators field in the workspace config for future \"bit create\" templates"
+      ],
+      [
+        "T",
+        "standalone",
+        "do not nest component store within .git directory and do not write config data inside package.json"
+      ],
+      [
+        "",
+        "no-package-json",
+        "do not generate package.json"
+      ],
+      [
+        "r",
+        "reset",
+        "write missing or damaged Bit files"
+      ],
+      [
+        "",
+        "reset-new",
+        "reset .bitmap file as if the components were newly added and remove all model data (objects)"
+      ],
+      [
+        "",
+        "reset-lane-new",
+        "same as reset-new, but it only resets components belong to lanes. main components are left intact"
+      ],
+      [
+        "",
+        "reset-hard",
+        "delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-starting workspace from scratch"
+      ],
+      [
+        "",
+        "reset-scope",
+        "removes local scope (.bit or .git/bit). tags/snaps that have not been exported will be lost. workspace is left intact"
+      ],
+      [
+        "d",
+        "default-directory <default-directory>",
+        "set the default directory pattern to import/create components into"
+      ],
+      [
+        "",
+        "default-scope <default-scope>",
+        "set the default scope for components in the workspace"
+      ],
+      [
+        "f",
+        "force",
+        "force workspace initialization without clearing local objects"
+      ],
+      [
+        "b",
+        "bare [name]",
+        "initialize an empty bit bare scope"
+      ],
+      [
+        "s",
+        "shared <groupname>",
+        "add group write permissions to a scope properly"
+      ]
+    ],
+    "description": "create or reinitialize an empty workspace",
+    "extendedDescription": "if the current directory is already a workspace, it validates that bit files are correct and rewrite them if needed.",
+    "group": "workspace-setup",
+    "private": false,
+    "skipWorkspace": true
+  },
+  {
+    "name": "version-history <sub-command>",
+    "alias": "vh",
+    "options": [],
+    "description": "manage the version-history of components",
+    "extendedDescription": "",
+    "group": "version-control",
+    "private": false,
+    "commands": [
+      {
+        "name": "graph <component-id>",
+        "alias": "",
+        "options": [
+          [
+            "s",
+            "short-hash",
+            "show only 9 chars of the hash"
+          ],
+          [
+            "m",
+            "mark <string>",
+            "paint the given node-ids in the graph in red color, for multiple, separate by commas"
+          ],
+          [
+            "",
+            "png",
+            "save the graph as a png file instead of svg. requires \"graphviz\" to be installed"
+          ],
+          [
+            "l",
+            "layout <name>",
+            "GraphVis layout. default to \"dot\". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]"
+          ],
+          [
+            "",
+            "limit <number>",
+            "limit the number of nodes in the graph (starting from the heads)"
+          ]
+        ],
+        "description": "generate a graph of the version history of a component and save as an SVG file",
+        "extendedDescription": "",
+        "group": "info-analysis",
+        "private": false
+      },
+      {
+        "name": "show <component-id>",
+        "alias": "vh",
+        "options": [
+          [
+            "s",
+            "short-hash",
+            "show only 9 chars of the hash"
+          ],
+          [
+            "j",
+            "json",
+            "json format"
+          ]
+        ],
+        "description": "show the version-history of a component",
+        "extendedDescription": "",
+        "group": "info-analysis",
+        "private": false
+      },
+      {
+        "name": "build <component-pattern>",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "from-snap <snap>",
+            "build the version history from a specific snap. the pattern must be a single component-id"
+          ],
+          [
+            "",
+            "from-all-lanes",
+            "build the version history from the heads of all lanes that include this component"
+          ],
+          [
+            "",
+            "delete-existing",
+            "delete the existing version history before building it"
+          ],
+          [
+            "",
+            "remote <scope>",
+            "make the change on the remote scope"
+          ]
+        ],
+        "description": "rebuild the version history of a component. helpful when it got corrupted for some reason",
+        "extendedDescription": "",
+        "group": "info-analysis",
+        "private": false,
+        "arguments": [
+          {
+            "name": "component-pattern",
+            "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "cat-version-history <id>",
+    "alias": "cvh",
+    "options": [
+      [
+        "j",
+        "json",
+        "json format"
+      ]
+    ],
+    "description": "cat version-history object by component-id",
+    "extendedDescription": "",
+    "group": "advanced",
+    "private": true
+  },
+  {
+    "name": "stash <sub-command>",
+    "alias": "",
+    "options": [
+      [
+        "p",
+        "pattern",
+        "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      ],
+      [
+        "m",
+        "message <string>",
+        "message to be attached to the stashed components"
+      ]
+    ],
+    "description": "stash modified components",
+    "extendedDescription": "",
+    "group": "version-control",
+    "private": false,
+    "commands": [
+      {
+        "name": "save",
+        "alias": "s",
+        "options": [
+          [
+            "p",
+            "pattern",
+            "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+          ],
+          [
+            "",
+            "include-new",
+            "EXPERIMENTAL. by default, only modified components are stashed. use this flag to include new components"
+          ],
+          [
+            "m",
+            "message <string>",
+            "message to be attached to the stashed components"
+          ]
+        ],
+        "description": "stash modified components",
+        "extendedDescription": "",
+        "group": "version-control",
+        "private": false
+      },
+      {
+        "name": "load [stash-id]",
+        "alias": "pop",
+        "options": [
+          [
+            "r",
+            "auto-merge-resolve <merge-strategy>",
+            "in case of merge conflict, resolve according to the provided strategy: [ours, theirs, manual]"
+          ],
+          [
+            "",
+            "manual",
+            "same as \"--auto-merge-resolve manual\". in case of merge conflict, write the files with the conflict markers"
+          ],
+          [
+            "",
+            "force-ours",
+            "do not merge, preserve local files as is"
+          ],
+          [
+            "",
+            "force-theirs",
+            "do not merge, just overwrite with incoming files"
+          ]
+        ],
+        "description": "apply the changes according to the stash. if no stash-id provided, it loads the latest stash",
+        "extendedDescription": "",
+        "group": "version-control",
+        "private": false
+      },
+      {
+        "name": "list",
+        "alias": "",
+        "options": [],
+        "description": "list stash",
+        "extendedDescription": "",
+        "group": "version-control",
+        "private": false
+      }
+    ]
+  },
+  {
+    "name": "schema <pattern>",
+    "alias": "",
+    "options": [
+      [
+        "r",
+        "remote",
+        "fetch schema from remote scope (works for components not in workspace)"
+      ],
+      [
+        "j",
+        "json",
+        "return the component schema in json format"
+      ]
+    ],
+    "description": "extracts and displays the API schema (types, functions, classes, interfaces) of the specified component/s.",
+    "extendedDescription": "Extracts TypeScript definitions to provide a comprehensive view of a component's public API.\nShows detailed information about exported elements including classes, interfaces, functions, types, and enums with their respective signatures and documentation.\n\nyou can use a `<pattern>` for multiple component ids, such as `bit schema \"org.scope/utils/**\"`.\nuse comma to separate patterns and '!' to exclude. e.g. 'ui/**, !ui/button'\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nalways wrap the pattern with single quotes to avoid collision with shell commands.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n",
+    "group": "info-analysis",
+    "private": false
+  },
+  {
+    "name": "log <id>",
+    "alias": "",
+    "options": [
+      [
+        "r",
+        "remote",
+        "show log of a remote component"
+      ],
+      [
+        "",
+        "parents",
+        "show parents and lanes data"
+      ],
+      [
+        "o",
+        "one-line",
+        "show each log entry in one line"
+      ],
+      [
+        "f",
+        "full-hash",
+        "show full hash of the snap (default to the first 9 characters for --one-line/--parents flags)"
+      ],
+      [
+        "m",
+        "full-message",
+        "show full message of the snap (default to the first line for --one-line/--parents flags)"
+      ],
+      [
+        "",
+        "show-hidden",
+        "show hidden snaps (snaps are marked as hidden typically when the following tag has the same files/config)"
+      ],
+      [
+        "j",
+        "json",
+        "json format"
+      ]
+    ],
+    "description": "show components(s) version history",
+    "extendedDescription": "",
+    "group": "version-control",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true,
+    "arguments": [
+      {
+        "name": "id",
+        "description": "component-id or component-name"
+      }
+    ]
+  },
+  {
+    "name": "log-file <filepath>",
+    "alias": "",
+    "options": [
+      [
+        "o",
+        "one-line",
+        "show each log entry in one line"
+      ]
+    ],
+    "description": "EXPERIMENTAL. show file history",
+    "extendedDescription": "",
+    "group": "version-control",
+    "private": false,
+    "arguments": [
+      {
+        "name": "filepath",
+        "description": "file path relative to the workspace"
+      }
+    ]
+  },
+  {
+    "name": "blame <filepath>",
+    "alias": "",
+    "options": [
+      [
+        "m",
+        "include-message",
+        "show the commit message"
+      ]
+    ],
+    "description": "EXPERIMENTAL. per line, show who and when was the last to modify it",
+    "extendedDescription": "",
+    "group": "version-control",
+    "private": false,
+    "arguments": [
+      {
+        "name": "filepath",
+        "description": "file path relative to the workspace"
+      }
+    ]
   },
   {
     "name": "server",
@@ -4764,102 +4965,6 @@
         "group": "auth",
         "private": false,
         "skipWorkspace": false
-      }
-    ]
-  },
-  {
-    "name": "insights [names...]",
-    "alias": "",
-    "options": [
-      [
-        "l",
-        "list",
-        "list all insights"
-      ],
-      [
-        "j",
-        "json",
-        "return the insights in json format"
-      ],
-      [
-        "",
-        "include-deps",
-        "include component dependencies that are not in this workspace"
-      ]
-    ],
-    "description": "Insights on component graph",
-    "extendedDescription": "",
-    "group": "workspace-tools",
-    "private": true
-  },
-  {
-    "name": "status",
-    "alias": "s",
-    "options": [
-      [
-        "j",
-        "json",
-        "return a json version of the component"
-      ],
-      [
-        "w",
-        "warnings",
-        "show warnings. by default, only issues that block tag/snap are shown"
-      ],
-      [
-        "",
-        "verbose",
-        "show extra data: full snap hashes for staged components, and divergence point for lanes"
-      ],
-      [
-        "l",
-        "lanes",
-        "when on a lane, show updates from main and updates from forked lanes"
-      ],
-      [
-        "",
-        "strict",
-        "in case issues found, exit with code 1"
-      ],
-      [
-        "c",
-        "ignore-circular-dependencies",
-        "do not check for circular dependencies to get the results quicker"
-      ]
-    ],
-    "description": "present the current status of components in the workspace, including indication of detected issues",
-    "extendedDescription": "",
-    "group": "info-analysis",
-    "private": false
-  },
-  {
-    "name": "mini-status [component-pattern]",
-    "alias": "ms",
-    "options": [
-      [
-        "",
-        "show-issues",
-        "show component issues (slows down the command)"
-      ],
-      [
-        "c",
-        "ignore-circular-dependencies",
-        "do not check for circular dependencies to get the results quicker (relevant when --show-issues flag is used)"
-      ],
-      [
-        "j",
-        "json",
-        "json format"
-      ]
-    ],
-    "description": "basic status for fast execution",
-    "extendedDescription": "shows only modified/new components with code changes. for the full status, use \"bit status\".\nthis command only checks source code changes, it doesn't check for config/aspect/dependency changes",
-    "group": "info-analysis",
-    "private": true,
-    "arguments": [
-      {
-        "name": "component-pattern",
-        "description": "component name, component id, or component pattern. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
       }
     ]
   },

@@ -285,4 +285,219 @@ describe('run bit init', function () {
       });
     });
   });
+  describe('external package manager mode', () => {
+    describe('bit init --external-package-manager', () => {
+      before(() => {
+        helper.scopeHelper.cleanWorkspace();
+        helper.command.init('--external-package-manager');
+      });
+      it('should set externalPackageManager to true in dependency-resolver config', () => {
+        const workspaceConfig = helper.workspaceJsonc.read();
+        expect(workspaceConfig['teambit.dependencies/dependency-resolver']).to.have.property(
+          'externalPackageManager',
+          true
+        );
+      });
+      it('should set rootComponent to false in dependency-resolver config', () => {
+        const workspaceConfig = helper.workspaceJsonc.read();
+        expect(workspaceConfig['teambit.dependencies/dependency-resolver']).to.have.property('rootComponent', false);
+      });
+      it('should set enableWorkspaceConfigWrite to false', () => {
+        const workspaceConfig = helper.workspaceJsonc.read();
+        expect(workspaceConfig['teambit.workspace/workspace-config-files']).to.have.property(
+          'enableWorkspaceConfigWrite',
+          false
+        );
+      });
+      it('should create package.json with type module', () => {
+        const packageJson = helper.packageJson.read();
+        expect(packageJson).to.have.property('type', 'module');
+      });
+      it('should create package.json with postinstall script', () => {
+        const packageJson = helper.packageJson.read();
+        expect(packageJson).to.have.property('scripts');
+        expect(packageJson.scripts).to.have.property('postinstall', 'bit link && bit compile');
+      });
+    });
+    describe('bit install in external package manager mode', () => {
+      before(() => {
+        helper.scopeHelper.cleanWorkspace();
+        helper.command.init('--external-package-manager');
+      });
+      it('should throw error when answering no to prompt', () => {
+        const installCmd = () => helper.command.runCmd('echo "n" | bit install');
+        expect(installCmd).to.throw();
+      });
+      it('should switch to Bit package manager when answering yes to prompt', () => {
+        // Reset to external PM mode with existing package.json
+        helper.scopeHelper.cleanWorkspace();
+        const existingPackageJson = {
+          name: 'test-project',
+          version: '1.0.0',
+          scripts: {
+            start: 'node index.js',
+          },
+        };
+        helper.packageJson.write(existingPackageJson);
+        helper.command.init('--external-package-manager');
+
+        // Verify initial external PM state
+        const workspaceConfig = helper.workspaceJsonc.read();
+        expect(workspaceConfig['teambit.dependencies/dependency-resolver']).to.have.property(
+          'externalPackageManager',
+          true
+        );
+        expect(workspaceConfig['teambit.dependencies/dependency-resolver']).to.have.property('rootComponent', false);
+
+        const packageJson = helper.packageJson.read();
+        expect(packageJson.scripts).to.have.property('postinstall', 'bit link && bit compile');
+
+        // Test answering 'yes' to switch to Bit package manager
+        const output = helper.command.runCmd('echo "y" | bit install');
+        expect(output).to.have.string('Successfully switched to Bit package manager mode');
+
+        // Verify the workspace is now in normal Bit PM mode
+        const updatedConfig = helper.workspaceJsonc.read();
+        expect(updatedConfig['teambit.dependencies/dependency-resolver']).to.not.have.property(
+          'externalPackageManager'
+        );
+        expect(updatedConfig['teambit.dependencies/dependency-resolver']).to.have.property('rootComponent', true);
+        expect(updatedConfig['teambit.workspace/workspace-config-files']).to.have.property(
+          'enableWorkspaceConfigWrite',
+          true
+        );
+
+        // Verify postinstall script was removed but user scripts preserved
+        const updatedPackageJson = helper.packageJson.read();
+        expect(updatedPackageJson.scripts).to.have.property('start', 'node index.js');
+        expect(updatedPackageJson.scripts).to.not.have.property('postinstall');
+      });
+    });
+    describe('validation of conflicting settings', () => {
+      before(() => {
+        helper.scopeHelper.cleanWorkspace();
+        helper.command.init('--external-package-manager');
+      });
+      it('should throw error when manually setting rootComponent to true', () => {
+        const workspaceConfig = helper.workspaceJsonc.read();
+        workspaceConfig['teambit.dependencies/dependency-resolver'].rootComponent = true;
+        helper.workspaceJsonc.write(workspaceConfig);
+
+        const statusCmd = () => helper.command.runCmd('bit status');
+        expect(statusCmd).to.throw('rootComponent cannot be true when externalPackageManager is enabled');
+      });
+      it('should throw error when manually setting enableWorkspaceConfigWrite to true', () => {
+        // Reset to clean state
+        helper.scopeHelper.cleanWorkspace();
+        helper.command.init('--external-package-manager');
+
+        const workspaceConfig = helper.workspaceJsonc.read();
+        workspaceConfig['teambit.workspace/workspace-config-files'].enableWorkspaceConfigWrite = true;
+        helper.workspaceJsonc.write(workspaceConfig);
+
+        const statusCmd = () => helper.command.runCmd('bit status');
+        expect(statusCmd).to.throw('enableWorkspaceConfigWrite cannot be true when externalPackageManager is enabled');
+      });
+    });
+    describe('preserving existing package.json', () => {
+      before(() => {
+        helper.scopeHelper.cleanWorkspace();
+        // Create package.json with existing scripts
+        const existingPackageJson = {
+          name: 'my-project',
+          version: '1.0.0',
+          scripts: {
+            start: 'node index.js',
+            build: 'webpack',
+          },
+        };
+        helper.packageJson.write(existingPackageJson);
+        helper.command.init('--external-package-manager');
+      });
+      it('should preserve existing package.json properties', () => {
+        const packageJson = helper.packageJson.read();
+        expect(packageJson).to.have.property('name', 'my-project');
+        expect(packageJson).to.have.property('version', '1.0.0');
+      });
+      it('should preserve existing scripts and add postinstall', () => {
+        const packageJson = helper.packageJson.read();
+        expect(packageJson.scripts).to.have.property('start', 'node index.js');
+        expect(packageJson.scripts).to.have.property('build', 'webpack');
+        expect(packageJson.scripts).to.have.property('postinstall', 'bit link && bit compile');
+      });
+      it('should add type module to existing package.json', () => {
+        const packageJson = helper.packageJson.read();
+        expect(packageJson).to.have.property('type', 'module');
+      });
+    });
+    describe('disabling external package manager mode', () => {
+      before(() => {
+        helper.scopeHelper.cleanWorkspace();
+        helper.command.init('--external-package-manager');
+      });
+      it('should revert to normal mode when externalPackageManager is removed', () => {
+        // Simulate what happens when user chooses 'yes' to switch back to Bit PM
+        const workspaceConfig = helper.workspaceJsonc.read();
+
+        // Remove externalPackageManager flag
+        delete workspaceConfig['teambit.dependencies/dependency-resolver'].externalPackageManager;
+
+        // Restore settings
+        workspaceConfig['teambit.dependencies/dependency-resolver'].rootComponent = true;
+        workspaceConfig['teambit.workspace/workspace-config-files'].enableWorkspaceConfigWrite = true;
+
+        helper.workspaceJsonc.write(workspaceConfig);
+
+        // Remove postinstall script from package.json
+        const packageJson = helper.packageJson.read();
+        delete packageJson.scripts.postinstall;
+        if (Object.keys(packageJson.scripts).length === 0) {
+          delete packageJson.scripts;
+        }
+        helper.packageJson.write(packageJson);
+
+        // Verify configuration is back to normal
+        const updatedConfig = helper.workspaceJsonc.read();
+        expect(updatedConfig['teambit.dependencies/dependency-resolver']).to.not.have.property(
+          'externalPackageManager'
+        );
+        expect(updatedConfig['teambit.dependencies/dependency-resolver']).to.have.property('rootComponent', true);
+        expect(updatedConfig['teambit.workspace/workspace-config-files']).to.have.property(
+          'enableWorkspaceConfigWrite',
+          true
+        );
+
+        // Verify postinstall script is removed
+        const updatedPackageJson = helper.packageJson.read();
+        expect(updatedPackageJson).to.not.have.property('scripts');
+      });
+      it('should preserve user scripts when removing postinstall', () => {
+        // Reset and create scenario with user scripts
+        helper.scopeHelper.cleanWorkspace();
+        const existingPackageJson = {
+          name: 'my-project',
+          scripts: {
+            start: 'node index.js',
+            test: 'jest',
+          },
+        };
+        helper.packageJson.write(existingPackageJson);
+        helper.command.init('--external-package-manager');
+
+        // Verify postinstall was added
+        const packageJson = helper.packageJson.read();
+        expect(packageJson.scripts).to.have.property('postinstall', 'bit link && bit compile');
+
+        // Simulate removing only our postinstall script
+        delete packageJson.scripts.postinstall;
+        helper.packageJson.write(packageJson);
+
+        // Verify user scripts are preserved
+        const finalPackageJson = helper.packageJson.read();
+        expect(finalPackageJson.scripts).to.have.property('start', 'node index.js');
+        expect(finalPackageJson.scripts).to.have.property('test', 'jest');
+        expect(finalPackageJson.scripts).to.not.have.property('postinstall');
+      });
+    });
+  });
 });

@@ -31,21 +31,24 @@ type ClientOptions = {
 
 export class GraphqlUI {
   createClient(uri: string, { state, subscriptionUri, host }: ClientOptions = {}) {
-    const defaultOptions: DefaultOptions | undefined = host === 'teambit.workspace/workspace' ? {
-      query: {
-        fetchPolicy: 'network-only',
-      },
-      watchQuery: {
-        fetchPolicy: 'network-only',
-      },
-      mutate: {
-        fetchPolicy: 'network-only'
-      }
-    } : undefined;
+    const defaultOptions: DefaultOptions | undefined =
+      host === 'teambit.workspace/workspace'
+        ? {
+            query: {
+              fetchPolicy: 'network-only',
+            },
+            watchQuery: {
+              fetchPolicy: 'network-only',
+            },
+            mutate: {
+              fetchPolicy: 'network-only',
+            },
+          }
+        : undefined;
     const client = new ApolloClient({
       link: this.createLink(uri, { subscriptionUri }),
       cache: this.createCache({ state }),
-      defaultOptions
+      defaultOptions,
     });
 
     return client;

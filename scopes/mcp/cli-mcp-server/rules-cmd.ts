@@ -10,13 +10,14 @@ export type McpRulesCmdOptions = {
 
 export class McpRulesCmd implements Command {
   name = 'rules [editor]';
-  description = 'Write Bit MCP rules/instructions file for VS Code, Cursor, or print to screen';
+  description =
+    'Write Bit MCP rules/instructions file for VS Code, Cursor, Roo Code, Cline, Claude Code, or print to screen';
   extendedDescription =
-    'Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code and Cursor. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.';
+    'Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, Roo Code, Cline, and Claude Code. For Claude Code, creates .claude/bit.md to avoid overwriting existing CLAUDE.md files. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.';
   arguments = [
     {
       name: 'editor',
-      description: 'Editor to write rules for (default: vscode). Available: vscode, cursor',
+      description: 'Editor to write rules for (default: vscode). Available: vscode, cursor, roo, cline, claude-code',
     },
   ];
   options = [
@@ -55,6 +56,21 @@ export class McpRulesCmd implements Command {
 
       const scope = isGlobal ? 'global' : 'workspace';
       const editorName = this.mcpServerMain.getEditorDisplayName(editor);
+
+      // Special message for Claude Code to explain the file location
+      if (editor.toLowerCase() === 'claude-code') {
+        const filePath = isGlobal ? '~/.claude/bit.md' : '.claude/bit.md';
+        const atSyntax = isGlobal ? '@~/.claude/bit.md' : '@.claude/bit.md';
+
+        return chalk.green(
+          `✓ Successfully wrote ${editorName} Bit rules file (${scope})\n` +
+            `  File created: ${chalk.cyan(filePath)}\n\n` +
+            `  ${chalk.yellow('Integration:')} Add this line to your main CLAUDE.md file:\n` +
+            `  ${chalk.cyan(atSyntax)}\n\n` +
+            `  ${chalk.gray('This will automatically include all Bit-specific instructions.')}`
+        );
+      }
+
       return chalk.green(`✓ Successfully wrote ${editorName} Bit MCP rules file (${scope})`);
     } catch (error) {
       const editorName = this.mcpServerMain.getEditorDisplayName(editor);

@@ -49,6 +49,7 @@ import {
   MergeOptions,
 } from './merge-version';
 import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
+import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 
 type ResolveUnrelatedData = {
   strategy: MergeStrategy;
@@ -124,7 +125,8 @@ export class MergingMain {
     private config: ConfigMain,
     private remove: RemoveMain,
     private configMerger: ConfigMergerMain,
-    private depResolver: DependencyResolverMain
+    private depResolver: DependencyResolverMain,
+    private application: ApplicationMain
   ) {}
 
   async merge(
@@ -219,6 +221,7 @@ export class MergingMain {
     build,
     skipDependencyInstallation,
     detachHead,
+    loose,
   }: {
     mergeStrategy: MergeStrategy;
     allComponentsStatus: ComponentMergeStatus[];
@@ -231,6 +234,7 @@ export class MergingMain {
     build?: boolean;
     skipDependencyInstallation?: boolean;
     detachHead?: boolean;
+    loose?: boolean;
   }): Promise<ApplyVersionResults> {
     const consumer = this.workspace?.consumer;
     const legacyScope = this.scope.legacyScope;
@@ -297,7 +301,14 @@ export class MergingMain {
 
     const componentsHasConfigMergeConflicts = allComponentsStatus.some((c) => c.configMergeResult?.hasConflicts());
     const leftUnresolvedConflicts = componentWithConflict && mergeStrategy === 'manual';
+
     if (!skipDependencyInstallation && !leftUnresolvedConflicts && !componentsHasConfigMergeConflicts) {
+      // this is a workaround.
+      // keep this here. although it gets called before snapping.
+      // the reason is that when the installation is running, for some reason, some apps are unable to load in the same process.
+      // they throw an error "Cannot find module" during the aspect loading.
+      await this.application.loadAllAppsAsAspects();
+
       try {
         await this.install.install(undefined, {
           dedupe: true,
@@ -327,8 +338,12 @@ export class MergingMain {
         const { taggedComponents, autoTaggedResults, removedComponents } = results;
         return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults, removedComponents };
       }
-      return this.snapResolvedComponents(allComponentsStatus, snapMessage, build, currentLane?.toLaneId(),
-      updatedComponents);
+      return this.snapResolvedComponents(allComponentsStatus, updatedComponents, {
+        snapMessage,
+        build,
+        laneId: currentLane?.toLaneId(),
+        loose,
+      });
     };
     let mergeSnapResults: MergeSnapResults = null;
     let mergeSnapError: Error | undefined;
@@ -621,10 +636,18 @@ export class MergingMain {
 
   private async snapResolvedComponents(
     allComponentsStatus: ComponentMergeStatus[],
-    snapMessage?: string,
-    build?: boolean,
-    laneId?: LaneId,
-    updatedComponents?: ConsumerComponent[]
+    updatedComponents: ConsumerComponent[],
+    {
+      snapMessage,
+      build,
+      laneId,
+      loose,
+    }: {
+      snapMessage?: string;
+      build?: boolean;
+      laneId?: LaneId;
+      loose?: boolean;
+    }
   ): Promise<MergeSnapResults> {
     const unmergedComponents = this.scope.legacyScope.objects.unmergedComponents.getComponents();
     this.logger.debug(`merge-snaps, snapResolvedComponents, total ${unmergedComponents.length.toString()} components`);
@@ -637,7 +660,11 @@ export class MergingMain {
           .filter((c) => {
             const conflictedAspects = c.dataMergeResult?.conflictedAspects || {};
             const aspectIds = Object.keys(conflictedAspects);
-            aspectIds.forEach(aspectId => this.logger.debug(`conflicted-data for "${c.id.toString()}". aspectId: ${aspectId}. reason: ${conflictedAspects[aspectId]}`));
+            aspectIds.forEach((aspectId) =>
+              this.logger.debug(
+                `conflicted-data for "${c.id.toString()}". aspectId: ${aspectId}. reason: ${conflictedAspects[aspectId]}`
+              )
+            );
             return aspectIds.length;
           })
           .map((c) => c.id);
@@ -654,6 +681,7 @@ export class MergingMain {
           lane: laneId?.toString(),
           updatedLegacyComponents: updatedComponents,
           loadAspectOnlyForIds: getLoadAspectOnlyForIds(),
+          loose,
         }
       );
       return results;
@@ -662,6 +690,7 @@ export class MergingMain {
       legacyBitIds: ids,
       build,
       message: snapMessage,
+      loose,
     });
   }
 
@@ -740,6 +769,7 @@ export class MergingMain {
     ConfigStoreAspect,
     ConfigMergerAspect,
     DependencyResolverAspect,
+    ApplicationAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -757,6 +787,7 @@ export class MergingMain {
     configStore,
     configMerger,
     depResolver,
+    application,
   ]: [
     CLIMain,
     Workspace,
@@ -772,6 +803,7 @@ export class MergingMain {
     ConfigStoreMain,
     ConfigMergerMain,
     DependencyResolverMain,
+    ApplicationMain,
   ]) {
     const logger = loggerMain.createLogger(MergingAspect.id);
     const merging = new MergingMain(
@@ -786,7 +818,8 @@ export class MergingMain {
       config,
       remove,
       configMerger,
-      depResolver
+      depResolver,
+      application
     );
     cli.register(new MergeCmd(merging, configStore));
     return merging;

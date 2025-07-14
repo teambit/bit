@@ -70,6 +70,12 @@ export class McpSetupUtils {
         return 'Cursor';
       case 'windsurf':
         return 'Windsurf';
+      case 'roo':
+        return 'Roo Code';
+      case 'cline':
+        return 'Cline';
+      case 'claude-code':
+        return 'Claude Code';
       default:
         return editor;
     }
@@ -100,39 +106,76 @@ export class McpSetupUtils {
   }
 
   /**
+   * Get VS Code mcp.json path for workspace configuration
+   */
+  static getVSCodeMcpConfigPath(workspaceDir?: string): string {
+    const targetDir = workspaceDir || process.cwd();
+    return path.join(targetDir, '.vscode', 'mcp.json');
+  }
+
+  /**
    * Setup VS Code MCP integration
    */
   static async setupVSCode(options: SetupOptions): Promise<void> {
     const { isGlobal, workspaceDir } = options;
 
-    // Determine settings.json path
-    const settingsPath = this.getVSCodeSettingsPath(isGlobal, workspaceDir);
+    if (isGlobal) {
+      // For global configuration, use settings.json with mcp.servers structure
+      const settingsPath = this.getVSCodeSettingsPath(isGlobal, workspaceDir);
 
-    // Ensure directory exists
-    await fs.ensureDir(path.dirname(settingsPath));
+      // Ensure directory exists
+      await fs.ensureDir(path.dirname(settingsPath));
 
-    // Read existing settings or create empty object
-    const settings = await this.readJsonFile(settingsPath);
+      // Read existing settings or create empty object
+      const settings = await this.readJsonFile(settingsPath);
 
-    // Build MCP server args
-    const args = this.buildMcpServerArgs(options);
+      // Build MCP server args
+      const args = this.buildMcpServerArgs(options);
 
-    // Create or update MCP configuration
-    if (!settings.mcp) {
-      settings.mcp = {};
+      // Create or update MCP configuration
+      if (!settings.mcp) {
+        settings.mcp = {};
+      }
+
+      if (!settings.mcp.servers) {
+        settings.mcp.servers = {};
+      }
+
+      settings.mcp.servers['bit-cli'] = {
+        type: 'stdio',
+        command: 'bit',
+        args: args,
+      };
+
+      // Write updated settings
+      await fs.writeFile(settingsPath, JSON.stringify(settings, null, 2));
+    } else {
+      // For workspace configuration, use .vscode/mcp.json with direct servers structure
+      const mcpConfigPath = this.getVSCodeMcpConfigPath(workspaceDir);
+
+      // Ensure directory exists
+      await fs.ensureDir(path.dirname(mcpConfigPath));
+
+      // Read existing MCP configuration or create empty object
+      const mcpConfig = await this.readJsonFile(mcpConfigPath);
+
+      // Build MCP server args
+      const args = this.buildMcpServerArgs(options);
+
+      // Create or update MCP configuration
+      if (!mcpConfig.servers) {
+        mcpConfig.servers = {};
+      }
+
+      mcpConfig.servers['bit-cli'] = {
+        type: 'stdio',
+        command: 'bit',
+        args: args,
+      };
+
+      // Write updated MCP configuration
+      await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
     }
-
-    if (!settings.mcp.servers) {
-      settings.mcp.servers = {};
-    }
-
-    settings.mcp.servers['bit-cli'] = {
-      command: 'bit',
-      args: args,
-    };
-
-    // Write updated settings
-    await fs.writeFile(settingsPath, JSON.stringify(settings, null, 2));
   }
 
   /**
@@ -274,6 +317,20 @@ export class McpSetupUtils {
   }
 
   /**
+   * Get Roo Code prompts path based on global/workspace scope
+   */
+  static getRooCodePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Global Roo Code rules
+      return path.join(homedir(), '.roo', 'rules', 'bit.instructions.md');
+    } else {
+      // Workspace-specific rules
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.roo', 'rules', 'bit.instructions.md');
+    }
+  }
+
+  /**
    * Get default Bit MCP rules content from template file
    */
   static getDefaultRulesContent(consumerProject: boolean = false): Promise<string> {
@@ -314,5 +371,220 @@ export class McpSetupUtils {
     // Write rules content
     const rulesContent = await this.getDefaultRulesContent(consumerProject);
     await fs.writeFile(promptsPath, rulesContent);
+  }
+
+  /**
+   * Write Bit MCP rules file for Roo Code
+   */
+  static async writeRooCodeRules(options: RulesOptions): Promise<void> {
+    const { isGlobal, workspaceDir, consumerProject = false } = options;
+
+    // Determine prompts file path
+    const promptsPath = this.getRooCodePromptsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(promptsPath));
+
+    // Write rules content
+    const rulesContent = await this.getDefaultRulesContent(consumerProject);
+    await fs.writeFile(promptsPath, rulesContent);
+  }
+
+  /**
+   * Write Bit MCP rules file for Cline
+   */
+  static async writeClineRules(options: RulesOptions): Promise<void> {
+    const { isGlobal, workspaceDir, consumerProject = false } = options;
+
+    // Determine prompts file path
+    const promptsPath = this.getClinePromptsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(promptsPath));
+
+    // Write rules content
+    const rulesContent = await this.getDefaultRulesContent(consumerProject);
+    await fs.writeFile(promptsPath, rulesContent);
+  }
+
+  /**
+   * Get Roo Code mcp.json path based on global/workspace scope
+   */
+  static getRooCodeSettingsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Roo Code doesn't support global configuration, show warning
+      throw new Error(
+        'Roo Code global configuration is not supported as it uses VS Code internal storage that cannot be accessed. Please use workspace-specific configuration instead.'
+      );
+    } else {
+      // Workspace-specific MCP configuration
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.roo', 'mcp.json');
+    }
+  }
+
+  /**
+   * Setup Roo Code MCP integration
+   */
+  static async setupRooCode(options: SetupOptions): Promise<void> {
+    const { isGlobal, workspaceDir } = options;
+
+    if (isGlobal) {
+      throw new Error(
+        'Roo Code global configuration is not supported as it uses VS Code internal storage that cannot be accessed. Please use workspace-specific configuration instead.'
+      );
+    }
+
+    // Determine mcp.json path
+    const mcpConfigPath = this.getRooCodeSettingsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(mcpConfigPath));
+
+    // Read existing MCP configuration or create empty object
+    const mcpConfig = await this.readJsonFile(mcpConfigPath);
+
+    // Build MCP server args
+    const args = this.buildMcpServerArgs(options);
+
+    // Create or update MCP configuration for Roo Code
+    if (!mcpConfig.mcpServers) {
+      mcpConfig.mcpServers = {};
+    }
+
+    mcpConfig.mcpServers.bit = {
+      type: 'stdio',
+      command: 'bit',
+      args: args,
+    };
+
+    // Write updated MCP configuration
+    await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
+  }
+
+  /**
+   * Get Cline prompts path based on global/workspace scope
+   */
+  static getClinePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Global Cline rules - using Mac path as specified, error for others
+      const platform = process.platform;
+      if (platform === 'darwin') {
+        return path.join(homedir(), 'Documents', 'Cline', 'Rules', 'bit.instructions.md');
+      } else {
+        throw new Error(
+          `Global Cline rules configuration is not supported on ${platform}. ` +
+            'The global path is only known for macOS (~/Documents/Cline/Rules/). ' +
+            'For other operating systems, please use the --print flag to get the rules content ' +
+            'and add it manually to your global Cline configuration.'
+        );
+      }
+    } else {
+      // Workspace-specific rules
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.clinerules', 'bit.instructions.md');
+    }
+  }
+
+  /**
+   * Get Claude Code mcp.json path based on global/workspace scope
+   */
+  static getClaudeCodeSettingsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Global Claude Code MCP configuration
+      const platform = process.platform;
+      switch (platform) {
+        case 'win32':
+          return path.join(homedir(), 'AppData', 'Roaming', 'Claude', 'claude_desktop_config.json');
+        case 'darwin':
+          return path.join(homedir(), 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json');
+        case 'linux':
+          return path.join(homedir(), '.config', 'claude', 'claude_desktop_config.json');
+        default:
+          throw new Error(`Unsupported platform: ${platform}`);
+      }
+    } else {
+      // Workspace-specific MCP configuration
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.mcp.json');
+    }
+  }
+
+  /**
+   * Setup Claude Code MCP integration
+   */
+  static async setupClaudeCode(options: SetupOptions): Promise<void> {
+    const { isGlobal, workspaceDir } = options;
+
+    // Determine mcp.json path
+    const mcpConfigPath = this.getClaudeCodeSettingsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(mcpConfigPath));
+
+    // Read existing MCP configuration or create empty object
+    const mcpConfig = await this.readJsonFile(mcpConfigPath);
+
+    // Build MCP server args
+    const args = this.buildMcpServerArgs(options);
+
+    // Create or update MCP configuration for Claude Code
+    if (!mcpConfig.mcpServers) {
+      mcpConfig.mcpServers = {};
+    }
+
+    mcpConfig.mcpServers.bit = {
+      command: 'bit',
+      args: args,
+    };
+
+    // Write updated MCP configuration
+    await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
+  }
+
+  /**
+   * Get Claude Code prompts path based on global/workspace scope
+   */
+  static getClaudeCodePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Global Claude Code rules - using .claude directory
+      return path.join(homedir(), '.claude', 'bit.md');
+    } else {
+      // Workspace-specific rules in .claude directory
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.claude', 'bit.md');
+    }
+  }
+
+  /**
+   * Write Bit MCP rules file for Claude Code
+   */
+  static async writeClaudeCodeRules(options: RulesOptions): Promise<void> {
+    const { isGlobal, workspaceDir, consumerProject = false } = options;
+
+    // Determine prompts file path
+    const promptsPath = this.getClaudeCodePromptsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(promptsPath));
+
+    // Get base rules content
+    const rulesContent = await this.getDefaultRulesContent(consumerProject);
+
+    // Add integration instructions at the top
+    const integrationInstructions = `<!--
+To use these Bit instructions, add the following to your main CLAUDE.md file:
+
+@.claude/bit.md
+
+This will automatically include all Bit-specific instructions in your Claude Code context.
+-->
+
+`;
+
+    const finalContent = integrationInstructions + rulesContent;
+
+    // Write rules content with integration instructions
+    await fs.writeFile(promptsPath, finalContent);
   }
 }
