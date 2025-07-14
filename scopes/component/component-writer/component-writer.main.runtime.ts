@@ -84,7 +84,7 @@ export class ComponentWriterMain {
       );
     }
     if (this.workspace.externalPackageManagerIsUsed()) {
-      await this.workspace.writeDependenciesToPackageJson();
+      await this.installer.writeDependenciesToPackageJson();
     } else if (!opts.skipDependencyInstallation) {
       installationError = await this.installPackagesGracefully(
         opts.components.map(({ id }) => id),
