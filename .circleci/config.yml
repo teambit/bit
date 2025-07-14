@@ -670,7 +670,7 @@ jobs:
           command: 'cd bit && bit ci merge --build'
           no_output_timeout: '50m'
           environment:
-            NODE_OPTIONS: --max-old-space-size=15000
+            NODE_OPTIONS: --max-old-space-size=32000
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
