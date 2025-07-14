@@ -6,7 +6,7 @@ import { BitError } from '@teambit/bit-error';
 import { getConfig } from '@teambit/config-store';
 import { initScope } from '@teambit/legacy.scope-api';
 import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy.constants';
-import { WorkspaceExtensionProps } from '@teambit/config';
+import { WorkspaceExtensionProps, WorkspaceConfig } from '@teambit/config';
 import { Command, CommandOptions } from '@teambit/cli';
 import { HostInitializerMain } from './host-initializer.main.runtime';
 import { Logger } from '@teambit/logger';
@@ -61,6 +61,7 @@ export class InitCmd implements Command {
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
     ['', 'external-package-manager', 'enable external package manager mode (npm/yarn/pnpm)'],
+    ['', 'skip-interactive', 'skip interactive mode for Git repositories'],
   ] as CommandOptions;
 
   constructor(
@@ -82,6 +83,18 @@ export class InitCmd implements Command {
   }
 
   /**
+   * Check if the directory already has a bit workspace initialized
+   */
+  private async hasWorkspaceInitialized(path: string): Promise<boolean> {
+    try {
+      const isExist = await WorkspaceConfig.isExist(path);
+      return Boolean(isExist);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Prompt user for environment selection
    */
   private async promptForEnvironment(): Promise<string | null> {
@@ -94,29 +107,57 @@ export class InitCmd implements Command {
       { name: 'bitdev.symphony/envs/symphony-env', message: 'Symphony environment' },
     ];
 
-    const response = (await prompt({
-      type: 'select',
-      name: 'environment',
-      message: 'Which environment would you like to use?',
-      choices: envChoices,
-      initial: 0, // Default to 'none'
-    })) as { environment: string };
+    try {
+      const response = (await prompt({
+        type: 'select',
+        name: 'environment',
+        message: 'Which environment would you like to use?',
+        choices: envChoices,
+        initial: 0, // Default to 'none'
+        cancel() {
+          // By default, canceling the prompt via Ctrl+c throws an empty string.
+          // The custom cancel function prevents that behavior.
+          // Otherwise, Bit CLI would print an error and confuse users.
+          // See related issue: https://github.com/enquirer/enquirer/issues/225
+        },
+      } as any)) as { environment: string };
 
-    return response.environment === 'none' ? null : response.environment;
+      return response.environment === 'none' ? null : response.environment;
+    } catch (err: any) {
+      if (!err || err === '') {
+        // for some reason, when the user clicks Ctrl+C, the error is an empty string
+        throw new Error('The prompt has been canceled');
+      }
+      throw err;
+    }
   }
 
   /**
    * Prompt user for package manager preference
    */
   private async promptForPackageManager(): Promise<boolean> {
-    const response = (await prompt({
-      type: 'confirm',
-      name: 'useExternalPackageManager',
-      message: 'Would you like to use your own package manager (npm/yarn/pnpm) instead of Bit?',
-      initial: false,
-    })) as { useExternalPackageManager: boolean };
+    try {
+      const response = (await prompt({
+        type: 'confirm',
+        name: 'useExternalPackageManager',
+        message: 'Would you like to use your own package manager (npm/yarn/pnpm) instead of Bit?',
+        initial: false,
+        cancel() {
+          // By default, canceling the prompt via Ctrl+c throws an empty string.
+          // The custom cancel function prevents that behavior.
+          // Otherwise, Bit CLI would print an error and confuse users.
+          // See related issue: https://github.com/enquirer/enquirer/issues/225
+        },
+      } as any)) as { useExternalPackageManager: boolean };
 
-    return response.useExternalPackageManager;
+      return response.useExternalPackageManager;
+    } catch (err: any) {
+      if (!err || err === '') {
+        // for some reason, when the user clicks Ctrl+C, the error is an empty string
+        throw new Error('The prompt has been canceled');
+      }
+      throw err;
+    }
   }
 
   /**
@@ -236,6 +277,7 @@ node_modules
       defaultDirectory,
       defaultScope,
       externalPackageManager,
+      skipInteractive,
     } = flags;
     if (path) path = pathlib.resolve(path);
     if (bare) {
@@ -264,7 +306,9 @@ node_modules
       !resetHard &&
       !resetScope &&
       !standalone &&
-      (await this.hasGitDirectory(projectPath))
+      !skipInteractive &&
+      (await this.hasGitDirectory(projectPath)) &&
+      !(await this.hasWorkspaceInitialized(projectPath))
     ) {
       interactiveConfig = await this.runInteractiveMode(projectPath);
     }
