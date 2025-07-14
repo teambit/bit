@@ -364,8 +364,6 @@ export class InstallMain {
         linkedRootDeps,
       }
     );
-    const workspaceConfig = this.workspace.getWorkspaceConfig();
-    const depResolverExtConfig = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');
 
     const pmInstallOptions: PackageManagerInstallOptions = {
       ...calcManifestsOpts,
@@ -669,7 +667,7 @@ export class InstallMain {
     return groups;
   }
 
-  public async _getComponentsManifestsAndRootPolicy(
+  private async _getComponentsManifestsAndRootPolicy(
     installer: DependencyInstaller,
     options: GetComponentsAndManifestsOptions & {
       addMissingDeps?: boolean;
