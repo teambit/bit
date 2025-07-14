@@ -1017,10 +1017,12 @@ jobs:
 
   e2e_test:
     <<: *defaults
+    # changing from medium to large, doesn't affect the performance
+    # resource_class: large
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
-    parallelism: 25
+    parallelism: 30
     steps:
       - e2e_test_cmd
 
@@ -1361,6 +1363,7 @@ workflows:
       - set_ssh_key
       - set_npm_registries
       - setup_harmony:
+      # changing to xlarge doesn't make any change
           requires:
             - set_npm_registries
             - checkout_code
