@@ -44,6 +44,7 @@ export type GraphQLServerOptions = {
   remoteSchemas?: GraphQLServer[];
   subscriptionsPortRange?: number[];
   onWsConnect?: Function;
+  customExecuteFn: (args: any) => Promise<any>;
 };
 
 export class GraphqlMain {
@@ -94,6 +95,10 @@ export class GraphqlMain {
     return schema;
   }
 
+  get execute() {
+    return execute;
+  }
+
   /**
    * get multiple schema by aspect ids.
    * used by the cloud.
@@ -136,6 +141,7 @@ export class GraphqlMain {
       '/graphql',
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       graphqlHTTP((request, res, params) => ({
+        customExecuteFn: options.customExecuteFn,
         customFormatErrorFn: (err) => {
           this.logger.error('graphql got an error during running the following query:', params);
           this.logger.error('graphql error ', err);
