@@ -450,7 +450,6 @@ describe('bit import', function () {
       });
     });
   });
-
   describe('external package manager mode', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
