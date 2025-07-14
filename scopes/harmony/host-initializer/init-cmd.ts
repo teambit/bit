@@ -1,5 +1,7 @@
 import chalk from 'chalk';
 import * as pathlib from 'path';
+import * as fs from 'fs-extra';
+import { prompt } from 'enquirer';
 import { BitError } from '@teambit/bit-error';
 import { getConfig } from '@teambit/config-store';
 import { initScope } from '@teambit/legacy.scope-api';
@@ -7,6 +9,7 @@ import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/leg
 import { WorkspaceExtensionProps } from '@teambit/config';
 import { Command, CommandOptions } from '@teambit/cli';
 import { HostInitializerMain } from './host-initializer.main.runtime';
+import { Logger } from '@teambit/logger';
 
 export class InitCmd implements Command {
   name = 'init [path]';
@@ -60,7 +63,161 @@ export class InitCmd implements Command {
     ['', 'external-package-manager', 'enable external package manager mode (npm/yarn/pnpm)'],
   ] as CommandOptions;
 
-  constructor(private hostInitializer: HostInitializerMain) {}
+  constructor(
+    private hostInitializer: HostInitializerMain,
+    private logger: Logger
+  ) {}
+
+  /**
+   * Check if the directory contains a .git folder
+   */
+  private async hasGitDirectory(path: string): Promise<boolean> {
+    try {
+      const gitPath = pathlib.join(path, '.git');
+      const stat = await fs.stat(gitPath);
+      return stat.isDirectory();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Prompt user for environment selection
+   */
+  private async promptForEnvironment(): Promise<string | null> {
+    const envChoices = [
+      { name: 'none', message: 'None (default)' },
+      { name: 'bitdev.node/node-env', message: 'Node.js environment' },
+      { name: 'bitdev.react/react-env', message: 'React environment' },
+      { name: 'bitdev.vue/vue-env', message: 'Vue environment' },
+      { name: 'bitdev.angular/angular-env', message: 'Angular environment' },
+      { name: 'bitdev.symphony/envs/symphony-env', message: 'Symphony environment' },
+    ];
+
+    const response = (await prompt({
+      type: 'select',
+      name: 'environment',
+      message: 'Which environment would you like to use?',
+      choices: envChoices,
+      initial: 0, // Default to 'none'
+    })) as { environment: string };
+
+    return response.environment === 'none' ? null : response.environment;
+  }
+
+  /**
+   * Prompt user for package manager preference
+   */
+  private async promptForPackageManager(): Promise<boolean> {
+    const response = (await prompt({
+      type: 'confirm',
+      name: 'useExternalPackageManager',
+      message: 'Would you like to use your own package manager (npm/yarn/pnpm) instead of Bit?',
+      initial: false,
+    })) as { useExternalPackageManager: boolean };
+
+    return response.useExternalPackageManager;
+  }
+
+  /**
+   * Create or update .gitignore file with Bit-specific entries
+   */
+  private async updateGitignore(projectPath: string): Promise<void> {
+    const gitignorePath = pathlib.join(projectPath, '.gitignore');
+    const bitGitignoreSection = `
+# Bit
+.bit
+public
+
+# Bit files - generated during bit ws-config write command
+tsconfig.json
+.eslintrc.json
+.prettierrc.cjs
+# allow tsconfig from the env's config dir to be tracked
+!**/config/tsconfig.json
+node_modules
+`;
+
+    try {
+      const exists = await fs.pathExists(gitignorePath);
+      if (exists) {
+        const content = await fs.readFile(gitignorePath, 'utf8');
+        if (!content.includes('# Bit')) {
+          await fs.appendFile(gitignorePath, bitGitignoreSection);
+        }
+      } else {
+        await fs.writeFile(gitignorePath, bitGitignoreSection.trim());
+      }
+    } catch (error: any) {
+      // Don't fail the initialization if gitignore update fails
+      this.logger.consoleWarning(`Warning: Could not update .gitignore file:, ${error.message}`);
+    }
+  }
+
+  /**
+   * Run interactive mode for Git repositories
+   */
+  private async runInteractiveMode(projectPath: string): Promise<{
+    generator?: string;
+    externalPackageManager: boolean;
+    defaultDirectory: string;
+  }> {
+    this.logger.off();
+    this.logger.console(chalk.cyan('🔧 Interactive setup for existing Git repository\n'));
+
+    const selectedEnv = await this.promptForEnvironment();
+    const useExternalPackageManager = await this.promptForPackageManager();
+
+    await this.updateGitignore(projectPath);
+
+    return {
+      generator: selectedEnv || undefined,
+      externalPackageManager: useExternalPackageManager,
+      defaultDirectory: 'bit-components/{scope}/{name}',
+    };
+  }
+
+  /**
+   * Generate the final initialization message
+   */
+  private generateInitMessage(
+    created: boolean,
+    reset: boolean,
+    resetHard: boolean,
+    resetScope: boolean,
+    interactiveConfig: {
+      generator?: string;
+      externalPackageManager: boolean;
+      defaultDirectory: string;
+    } | null
+  ): string {
+    let initMessage = `${chalk.green('successfully initialized a bit workspace.')}`;
+
+    if (!created) initMessage = `${chalk.grey('successfully re-initialized a bit workspace.')}`;
+    if (reset) initMessage = `${chalk.grey('your bit workspace has been reset successfully.')}`;
+    if (resetHard) initMessage = `${chalk.grey('your bit workspace has been hard-reset successfully.')}`;
+    if (resetScope) initMessage = `${chalk.grey('your local scope has been reset successfully.')}`;
+
+    // Add additional information for interactive mode
+    if (interactiveConfig) {
+      initMessage += `\n\n${chalk.cyan('ℹ️  Additional Information:')}`;
+      initMessage += `\n📁 Components will be created in: ${chalk.cyan('bit-components/{scope}/{name}')}`;
+      initMessage += `\n📖 For CI/CD setup, visit: ${chalk.underline('https://bit.dev/docs/getting-started/collaborate/exporting-components#custom-ci/cd-setup')}`;
+
+      if (interactiveConfig.generator) {
+        initMessage += `\n🎯 Environment: ${chalk.cyan(interactiveConfig.generator)}`;
+      }
+
+      if (interactiveConfig.externalPackageManager) {
+        initMessage += `\n📦 External package manager mode enabled`;
+        initMessage += `\n💡 Run ${chalk.cyan('pnpm install')} (or ${chalk.cyan('yarn install')}/${chalk.cyan('npm install')}) to install dependencies`;
+      } else if (interactiveConfig.generator) {
+        initMessage += `\n💡 Run ${chalk.cyan('bit install')} to install dependencies`;
+      }
+    }
+
+    return initMessage;
+  }
 
   async report([path]: [string], flags: Record<string, any>) {
     const {
@@ -92,11 +249,32 @@ export class InitCmd implements Command {
       throw new BitError('cannot use both --reset and --reset-hard, please use only one of them');
     }
 
+    const projectPath = path || process.cwd();
+    let interactiveConfig: {
+      generator?: string;
+      externalPackageManager: boolean;
+      defaultDirectory: string;
+    } | null = null;
+
+    // Check if this is a Git repository and run interactive mode
+    if (
+      !reset &&
+      !resetNew &&
+      !resetLaneNew &&
+      !resetHard &&
+      !resetScope &&
+      !standalone &&
+      (await this.hasGitDirectory(projectPath))
+    ) {
+      interactiveConfig = await this.runInteractiveMode(projectPath);
+    }
+
     const workspaceExtensionProps: WorkspaceExtensionProps & { externalPackageManager?: boolean } = {
-      defaultDirectory: defaultDirectory ?? getConfig(CFG_INIT_DEFAULT_DIRECTORY),
-      defaultScope: defaultScope ?? getConfig(CFG_INIT_DEFAULT_SCOPE),
+      defaultDirectory:
+        interactiveConfig?.defaultDirectory || defaultDirectory || getConfig(CFG_INIT_DEFAULT_DIRECTORY),
+      defaultScope: defaultScope || getConfig(CFG_INIT_DEFAULT_SCOPE),
       name,
-      externalPackageManager,
+      externalPackageManager: interactiveConfig?.externalPackageManager || externalPackageManager,
     };
 
     const { created } = await HostInitializerMain.init(
@@ -110,16 +288,9 @@ export class InitCmd implements Command {
       resetScope,
       force,
       workspaceExtensionProps,
-      generator
+      interactiveConfig?.generator || generator
     );
 
-    let initMessage = `${chalk.green('successfully initialized a bit workspace.')}`;
-
-    if (!created) initMessage = `${chalk.grey('successfully re-initialized a bit workspace.')}`;
-    if (reset) initMessage = `${chalk.grey('your bit workspace has been reset successfully.')}`;
-    if (resetHard) initMessage = `${chalk.grey('your bit workspace has been hard-reset successfully.')}`;
-    if (resetScope) initMessage = `${chalk.grey('your local scope has been reset successfully.')}`;
-
-    return initMessage;
+    return this.generateInitMessage(created, reset, resetHard, resetScope, interactiveConfig);
   }
 }

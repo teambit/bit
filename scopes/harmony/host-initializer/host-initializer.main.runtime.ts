@@ -12,6 +12,7 @@ import { ObjectsWithoutConsumer } from './objects-without-consumer';
 import { HostInitializerAspect } from './host-initializer.aspect';
 import { InitCmd } from './init-cmd';
 import { createConsumer, resetConsumer } from './create-consumer';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
 
 export class HostInitializerMain {
   static async init(
@@ -81,11 +82,12 @@ export class HostInitializerMain {
   }
 
   static slots = [];
-  static dependencies = [CLIAspect];
+  static dependencies = [CLIAspect, LoggerAspect];
   static runtime = MainRuntime;
-  static async provider([cli]: [CLIMain]) {
+  static async provider([cli, loggerMain]: [CLIMain, LoggerMain]) {
+    const logger = loggerMain.createLogger(HostInitializerAspect.id);
     const hostInitializerMain = new HostInitializerMain();
-    const initCmd = new InitCmd(hostInitializerMain);
+    const initCmd = new InitCmd(hostInitializerMain, logger);
     cli.register(initCmd);
     return hostInitializerMain;
   }
