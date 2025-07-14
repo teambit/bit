@@ -16,7 +16,7 @@ import { Registries, Registry } from '@teambit/pkg.entities.registry';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { Logger } from '@teambit/logger';
-import { type LockfileFileV9 } from '@pnpm/lockfile.types';
+import { type LockfileFile } from '@pnpm/lockfile.types';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
@@ -95,10 +95,9 @@ export class PnpmPackageManager implements PackageManager {
       ...opts,
       registries,
     });
-    const lockfile: LockfileFileV9 = await convertGraphToLockfile(dependenciesGraph, {
+    const lockfile: LockfileFile = await convertGraphToLockfile(dependenciesGraph, {
       ...opts,
       resolve,
-      registries: registries.toMap(),
     });
     Object.assign(lockfile, {
       bit: {
@@ -465,8 +464,7 @@ export class PnpmPackageManager implements PackageManager {
         },
         failOnMissingDependencies: false,
         skipped: new Set(),
-      }),
-      { forceSharedFormat: true }
+      })
     );
     const graph = convertLockfileToGraph(partialLockfile, opts);
     return graph;
