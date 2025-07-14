@@ -415,20 +415,19 @@ export class IsolatorMain {
         return undefined;
       })
     );
-    let componentsToInclude = compact(existingCompsIds);
+    const componentsToInclude = compact(existingCompsIds);
+    let filteredComps = await host.getMany(componentsToInclude);
 
     // Optimization: exclude unmodified exported dependencies from capsule creation
     if (isolateOpts?.usePackagesForUnmodifiedDeps) {
-      const seederIds = seeders.map((id) => id.toString());
       this.logger.console(
-        `[OPTIMIZATION] Starting with ${componentsToInclude.length} components, seeders: ${seederIds.join(', ')}`
+        `[OPTIMIZATION] Starting with ${componentsToInclude.length} components, seeders: ${seeders.join(', ')}`
       );
-      componentsToInclude = await this.filterUnmodifiedExportedDependencies(componentsToInclude, seederIds, host);
-      this.logger.console(`[OPTIMIZATION] After filtering: ${componentsToInclude.length} components remaining`);
+      filteredComps = await this.filterUnmodifiedExportedDependencies(filteredComps, seeders, host);
+      this.logger.console(`[OPTIMIZATION] After filtering: ${filteredComps.length} components remaining`);
     }
 
-    const existingComps = await host.getMany(componentsToInclude);
-    return existingComps;
+    return filteredComps;
   }
 
   private registerMoveCapsuleOnProcessExit(
@@ -1401,81 +1400,44 @@ export class IsolatorMain {
    * These dependencies can be installed as packages instead of creating capsules.
    */
   private async filterUnmodifiedExportedDependencies(
-    allComponentIds: ComponentID[],
-    seederIds: string[],
+    components: Component[],
+    seederIds: ComponentID[],
     host: ComponentFactory
-  ): Promise<ComponentID[]> {
-    this.logger.debug(`filterUnmodifiedExportedDependencies: filtering ${allComponentIds.length} components`);
+  ): Promise<Component[]> {
+    this.logger.debug(`filterUnmodifiedExportedDependencies: filtering ${components.length} components`);
 
-    const components = await host.getMany(allComponentIds);
-    const filtered: ComponentID[] = [];
+    const filtered: Component[] = [];
+    const scope = this.componentAspect.getHost('teambit.scope/scope');
+    // @ts-ignore it's there, but we can't have the type of ScopeMain here to not create a circular dependency
+    const remotes = await scope.getRemoteScopes();
 
     for (const component of components) {
       const componentIdStr = component.id.toString();
-      const isSeeder = seederIds.some((seederId) =>
-        component.id.isEqual(ComponentID.fromString(seederId), { ignoreVersion: true })
-      );
+      const isSeeder = seederIds.some((seederId) => component.id.isEqual(seederId, { ignoreVersion: true }));
 
       if (isSeeder) {
         // Always include seeders (modified components and their dependents)
-        filtered.push(component.id);
+        filtered.push(component);
         this.logger.console(`[OPTIMIZATION] Including seeder: ${componentIdStr}`);
       } else {
         // For dependencies, check if they are exported and unmodified
-        const isExported = await this.isComponentExported(component, host);
+        const isExported = host.isExported(component.id) && remotes.isHub(component.id.scope);
 
         if (isExported) {
           // This is an unmodified exported dependency - exclude from capsules
           this.logger.console(`[OPTIMIZATION] Excluding unmodified exported dependency: ${componentIdStr}`);
         } else {
           // Not exported yet, include in capsules
-          filtered.push(component.id);
+          filtered.push(component);
           this.logger.console(`[OPTIMIZATION] Including non-exported dependency: ${componentIdStr}`);
         }
       }
     }
 
     this.logger.debug(
-      `filterUnmodifiedExportedDependencies: kept ${filtered.length} out of ${allComponentIds.length} components`
+      `filterUnmodifiedExportedDependencies: kept ${filtered.length} out of ${components.length} components`
     );
     return filtered;
-  }
-
-  /**
-   * Check if a component is exported (has been published to a remote scope)
-   */
-  private async isComponentExported(component: Component, host: ComponentFactory): Promise<boolean> {
-    try {
-      // Use the workspace's isExported method if available
-      if ('isExported' in host && typeof host.isExported === 'function') {
-        const isExported = host.isExported(component.id);
-        this.logger.console(
-          `[OPTIMIZATION] Component ${component.id.toString()} isExported (via workspace): ${isExported}`
-        );
-        return isExported;
-      }
-
-      // Fallback: A component is considered exported if it has a valid version and exists in a remote scope
-      const hasVersion = component.id.hasVersion();
-      if (!hasVersion) {
-        this.logger.debug(`Component ${component.id.toString()} has no version, not exported`);
-        return false;
-      }
-
-      // Check if the component exists in the legacy scope (which tracks exported components)
-      const legacyComp = component.state._consumer;
-      const scope = legacyComp.scope;
-
-      this.logger.debug(`Component ${component.id.toString()}: scope=${scope}, hasVersion=${hasVersion}`);
-
-      // If component has a scope name and version, it's likely exported
-      const isExported = !!(scope && hasVersion && scope !== 'workspace');
-      this.logger.debug(`Component ${component.id.toString()} isExported (fallback): ${isExported}`);
-      return isExported;
-    } catch (error) {
-      this.logger.debug(`Error checking if component ${component.id.toString()} is exported: ${error}`);
-      return false;
-    }
   }
 }
 

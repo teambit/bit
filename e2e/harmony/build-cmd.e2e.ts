@@ -209,6 +209,29 @@ describe('build command', function () {
       });
     }
   );
+  describe('optimized capsule creation for exported dependencies for self hosting', () => {
+    before(async () => {
+      helper = new Helper();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      // Only modify comp2 to trigger rebuild
+      helper.fs.appendFile('comp2/index.js', '\n// modification to comp2');
+    });
+    it('should create capsules not only for modified components and their dependents, but also for unmodified exported dependencies', () => {
+      helper.command.build();
+
+      // comp1 and comp2 should have capsules since comp1 depends on modified comp2
+      const comp1Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp1@0.0.1`);
+      const comp2Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp2@0.0.1`);
+      const comp3Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp3@0.0.1`);
+      expect(comp1Capsule).to.be.a.directory();
+      expect(comp2Capsule).to.be.a.directory();
+      expect(comp3Capsule).to.be.a.directory();
+    });
+  });
 });
 
 function getNodeEnvExtension() {
