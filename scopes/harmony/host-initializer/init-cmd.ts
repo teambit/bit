@@ -242,7 +242,8 @@ node_modules
     // Add additional information for interactive mode
     if (interactiveConfig) {
       initMessage += `\n\n${chalk.cyan('ℹ️  Additional Information:')}`;
-      initMessage += `\n📁 Components will be created in: ${chalk.cyan('bit-components/{scope}/{name}')}`;
+      const defaultDirectory = interactiveConfig?.defaultDirectory || 'bit-components/{scope}/{name}';
+      initMessage += `\n📁 Components will be created in: ${chalk.cyan(defaultDirectory)}`;
       initMessage += `\n📖 For CI/CD setup, visit: ${chalk.underline('https://bit.dev/docs/getting-started/collaborate/exporting-components#custom-ci/cd-setup')}`;
 
       if (interactiveConfig.generator) {
