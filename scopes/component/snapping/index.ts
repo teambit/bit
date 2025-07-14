@@ -21,3 +21,5 @@ export {
   tagResultOutput,
   outputIdsIfExists,
 } from './tag-cmd';
+
+export { snapResultOutput } from './snap-cmd';
