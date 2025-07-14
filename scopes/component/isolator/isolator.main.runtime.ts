@@ -1406,33 +1406,31 @@ export class IsolatorMain {
   ): Promise<Component[]> {
     this.logger.debug(`filterUnmodifiedExportedDependencies: filtering ${components.length} components`);
 
-    const filtered: Component[] = [];
     const scope = this.componentAspect.getHost('teambit.scope/scope');
     // @ts-ignore it's there, but we can't have the type of ScopeMain here to not create a circular dependency
     const remotes = await scope.getRemoteScopes();
 
-    for (const component of components) {
+    const filtered: Component[] = components.filter((component) => {
       const componentIdStr = component.id.toString();
       const isSeeder = seederIds.some((seederId) => component.id.isEqual(seederId, { ignoreVersion: true }));
 
       if (isSeeder) {
         // Always include seeders (modified components and their dependents)
-        filtered.push(component);
         this.logger.console(`[OPTIMIZATION] Including seeder: ${componentIdStr}`);
-      } else {
-        // For dependencies, check if they are exported and unmodified
-        const isExported = host.isExported(component.id) && remotes.isHub(component.id.scope);
-
-        if (isExported) {
-          // This is an unmodified exported dependency - exclude from capsules
-          this.logger.console(`[OPTIMIZATION] Excluding unmodified exported dependency: ${componentIdStr}`);
-        } else {
-          // Not exported yet, include in capsules
-          filtered.push(component);
-          this.logger.console(`[OPTIMIZATION] Including non-exported dependency: ${componentIdStr}`);
-        }
+        return true;
       }
-    }
+      // For dependencies, check if they are exported and unmodified
+      const isPublished = component.get('teambit.pkg/pkg')?.config?.packageJson?.publishConfig;
+      const canBeInstalled = host.isExported(component.id) && (remotes.isHub(component.id.scope) || isPublished);
+
+      if (canBeInstalled) {
+        // This is an unmodified exported dependency - exclude from capsules
+        this.logger.console(`[OPTIMIZATION] Excluding unmodified exported dependency: ${componentIdStr}`);
+        return false;
+      }
+      this.logger.console(`[OPTIMIZATION] Including non-exported dependency: ${componentIdStr}`);
+      return true;
+    });
 
     this.logger.debug(
       `filterUnmodifiedExportedDependencies: kept ${filtered.length} out of ${components.length} components`
