@@ -162,6 +162,12 @@ export class InstallMain {
         // For explicit "bit install" commands, show the prompt
         await this.handleExternalPackageManagerPrompt();
       } else {
+        const installer = this.dependencyResolver.getInstaller({});
+        const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy();
+        await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
+        const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, {});
+        this.workspace.writeDependenciesToPackageJson(componentsAndManifests.manifests[this.workspace.path].dependencies);
+
         this.logger.console(
           chalk.yellow(
             'Installation was skipped due to external package manager configuration. Please run your package manager to install dependencies.'
@@ -355,6 +361,12 @@ export class InstallMain {
         linkedRootDeps,
       }
     );
+    const workspaceConfig = this.workspace.getWorkspaceConfig();
+    const depResolverExtConfig = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');
+    if (depResolverExtConfig?.config.externalPackageManager) {
+      await this.workspace.writeDependenciesToPackageJson(current.manifests[this.workspace.path].dependencies);
+      return current.componentDirectoryMap;
+    }
 
     const pmInstallOptions: PackageManagerInstallOptions = {
       ...calcManifestsOpts,
@@ -658,7 +670,7 @@ export class InstallMain {
     return groups;
   }
 
-  private async _getComponentsManifestsAndRootPolicy(
+  public async _getComponentsManifestsAndRootPolicy(
     installer: DependencyInstaller,
     options: GetComponentsAndManifestsOptions & {
       addMissingDeps?: boolean;

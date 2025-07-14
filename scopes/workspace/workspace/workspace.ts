@@ -2368,9 +2368,11 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return this.dependencyResolver.config.externalPackageManager === true;
   }
 
-  async writeDependenciesToPackageJson(): Promise<void> {
+  async writeDependenciesToPackageJson(dependencies?: Record<string, string>): Promise<void> {
     const pkgJson = await PackageJsonFile.load(this.path);
-    const allDeps = await this.getAllDedupedDirectDependencies();
+    const allDeps = dependencies
+      ? Object.entries(dependencies).map(([name, currentRange]) => ({ name, currentRange }))
+      : await this.getAllDedupedDirectDependencies();
     pkgJson.packageJsonObject.dependencies ??= {};
     for (const dep of allDeps) {
       pkgJson.packageJsonObject.dependencies[dep.name] = dep.currentRange;
