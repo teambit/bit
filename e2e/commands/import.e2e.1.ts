@@ -450,4 +450,29 @@ describe('bit import', function () {
       });
     });
   });
+
+  describe('external package manager mode', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      // export a new simple component
+      helper.fs.createFile('global', 'simple.js', 'const isOdd = require("is-odd")');
+      helper.command.addComponent('global', { i: 'global/simple' });
+      helper.command.install('is-odd@1.0.0');
+      helper.command.tagWithoutBuild('global/simple');
+      helper.command.exportIds('global/simple');
+
+      // create a new workspace that uses an external package manager
+      helper.scopeHelper.cleanWorkspace();
+      helper.command.init('--external-package-manager');
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('global/simple');
+    });
+    it('should write dependencies to package.json', () => {
+      const pkgJson = helper.fs.readJsonFile('package.json');
+      expect(pkgJson.dependencies['is-odd']).to.eq('1.0.0');
+    })
+    it('should not run installation', () => {
+      expect(helper.fs.exists('node_modules/is-odd')).to.eq(false);
+    })
+  });
 });
