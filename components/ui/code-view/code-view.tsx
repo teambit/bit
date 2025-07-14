@@ -22,7 +22,7 @@ export type CodeViewProps = {
   loading?: boolean;
   codeSnippetClassName?: string;
   dependencies?: DependencyType[];
-  host?: string
+  host?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
 SyntaxHighlighter.registerLanguage('md', markDownSyntax);
@@ -123,7 +123,7 @@ export function CodeView({
     componentId,
     currentFile,
     !!currentFileContent,
-    host,
+    host
   );
   const loading = loadingFromProps || loadingFileContent;
   const location = useLocation();

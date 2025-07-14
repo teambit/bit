@@ -198,7 +198,8 @@ export class SchemaExtractorContext {
     } catch (err: any) {
       if (err.message === 'No content available.') {
         throw new Error(
-          `unable to get quickinfo data from tsserver at ${this.getPath(node)}, Ln ${location.line}, Col ${location.character
+          `unable to get quickinfo data from tsserver at ${this.getPath(node)}, Ln ${location.line}, Col ${
+            location.character
           }`
         );
       }
@@ -218,7 +219,7 @@ export class SchemaExtractorContext {
     return this.tsserver.getTypeDefinition(this.getPath(node), this.getLocation(node));
   }
 
-  visitTypeDefinition() { }
+  visitTypeDefinition() {}
 
   private getPathWithoutExtension(filePath: string) {
     const knownExtensions = ['ts', 'js', 'jsx', 'tsx'];
@@ -362,11 +363,11 @@ export class SchemaExtractorContext {
     return this.extractor.computeSchema(node, this);
   }
 
-  references() { }
+  references() {}
 
-  isExported() { }
+  isExported() {}
 
-  isFromComponent() { }
+  isFromComponent() {}
 
   async getFileIdentifiers(exportDec: ExportDeclaration | ExportAssignment) {
     const file = exportDec.getSourceFile().fileName;
@@ -430,10 +431,7 @@ export class SchemaExtractorContext {
           return new TypeArraySchema(location, baseTypeRef);
         }
 
-        return new TypeArraySchema(
-          location,
-          new InferenceTypeSchema(location, baseType)
-        );
+        return new TypeArraySchema(location, new InferenceTypeSchema(location, baseType));
       }
 
       const currentFilePath = node.getSourceFile().fileName;
@@ -535,61 +533,44 @@ export class SchemaExtractorContext {
   private async createFunctionSchema(node: Node, location: Location, signature: string): Promise<FunctionLikeSchema> {
     const match = signature.match(/\((.*)\)\s*(?:=>|:)\s*(.+)/);
     if (!match) {
-      return new FunctionLikeSchema(
-        location,
-        'anonymous',
-        [],
-        new InferenceTypeSchema(location, 'any'),
-        signature
-      );
+      return new FunctionLikeSchema(location, 'anonymous', [], new InferenceTypeSchema(location, 'any'), signature);
     }
 
     const [, paramsStr, returnTypeStr] = match;
     const params = await this.createFunctionParameters(node, location, paramsStr);
     const returnType = await this.createMethodReturnSchema(node, location, returnTypeStr.trim());
 
-    return new FunctionLikeSchema(
-      location,
-      'anonymous',
-      params,
-      returnType,
-      signature
-    );
+    return new FunctionLikeSchema(location, 'anonymous', params, returnType, signature);
   }
 
   /**
    * Create parameters for function schema, attempting to get type references for param types
    */
   private async createFunctionParameters(
-    node: Node, location: Location, paramsStr: string): Promise<ParameterSchema[]> {
+    node: Node,
+    location: Location,
+    paramsStr: string
+  ): Promise<ParameterSchema[]> {
     if (!paramsStr.trim()) return [];
 
     const params = paramsStr.split(',');
     const paramSchemas: ParameterSchema[] = [];
 
     for (const param of params) {
-      const [nameWithOptional, type] = param.split(':').map(s => s.trim());
+      const [nameWithOptional, type] = param.split(':').map((s) => s.trim());
       const isOptional = nameWithOptional.includes('?');
       const name = nameWithOptional.replace('?', '');
 
       if (!type) {
-        paramSchemas.push(new ParameterSchema(
-          location,
-          name,
-          new InferenceTypeSchema(location, 'any'),
-          isOptional
-        ));
+        paramSchemas.push(new ParameterSchema(location, name, new InferenceTypeSchema(location, 'any'), isOptional));
         continue;
       }
 
       const currentFilePath = node.getSourceFile().fileName;
       const typeRef = await this.getTypeRef(type, this.getIdentifierKey(currentFilePath), location);
-      paramSchemas.push(new ParameterSchema(
-        location,
-        name,
-        typeRef || new InferenceTypeSchema(location, type),
-        isOptional
-      ));
+      paramSchemas.push(
+        new ParameterSchema(location, name, typeRef || new InferenceTypeSchema(location, type), isOptional)
+      );
     }
 
     return paramSchemas;
@@ -605,10 +586,11 @@ export class SchemaExtractorContext {
     }
 
     const objContent = objMatch[1];
-    const properties = objContent.split(';')
-      .map(prop => prop.trim())
+    const properties = objContent
+      .split(';')
+      .map((prop) => prop.trim())
       .filter(Boolean)
-      .map(prop => new InferenceTypeSchema(location, prop));
+      .map((prop) => new InferenceTypeSchema(location, prop));
 
     return new ArrayLiteralExpressionSchema(properties, location);
   }
@@ -634,10 +616,7 @@ export class SchemaExtractorContext {
   /**
    * resolve a type by a node and its identifier.
    */
-  async resolveType(
-    node: Node & { type?: TypeNode },
-    typeStr: string,
-  ): Promise<SchemaNode> {
+  async resolveType(node: Node & { type?: TypeNode }, typeStr: string): Promise<SchemaNode> {
     const location = this.getLocation(node);
 
     // check if internal ref with typeInfo

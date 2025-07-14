@@ -10,7 +10,7 @@ export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Sch
       extend type Component {
         server: ComponentServer
       }
-      
+
       type ComponentServer {
         id: ID!
         env: String
@@ -18,7 +18,7 @@ export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Sch
         host: String
         basePath: String
       }
-      
+
       type Subscription {
         componentServerStarted(id: String): [ComponentServer!]!
       }
@@ -35,14 +35,15 @@ export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Sch
           // see https://github.com/teambit/bit/issues/5328
           if (requestedId && requestedId.includes('@')) {
             return {
-              id: 'no-server'
+              id: 'no-server',
             };
           }
 
           const componentServer = bundler.getComponentServer(component);
-          if (!componentServer) return {
-            id: 'no-server'
-          };
+          if (!componentServer)
+            return {
+              id: 'no-server',
+            };
 
           return {
             id: `server-${componentServer.context.envRuntime.id}`,
@@ -61,12 +62,14 @@ export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Sch
               return [];
             }
 
-            return [{
-              id: `server-${server.context.envRuntime.id}`,
-              env: server.context.envRuntime.id,
-              url: server.url,
-            }];
-          }
+            return [
+              {
+                id: `server-${server.context.envRuntime.id}`,
+                env: server.context.envRuntime.id,
+                url: server.url,
+              },
+            ];
+          },
         },
       },
     },

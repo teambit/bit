@@ -164,7 +164,7 @@ export class DependencyLinker {
       localLinks.push(this.linkDetailToLocalDepEntry(linkResults.teambitLegacyLink));
     }
     if (linkResults.slotOriginatedLinks) {
-      localLinks.push(...linkResults.slotOriginatedLinks.map(l => this.linkDetailToLocalDepEntry(l)));
+      localLinks.push(...linkResults.slotOriginatedLinks.map((l) => this.linkDetailToLocalDepEntry(l)));
     }
     if (linkResults.resolvedFromEnvLinks) {
       linkResults.resolvedFromEnvLinks.forEach((link) => {
@@ -242,7 +242,7 @@ export class DependencyLinker {
       ...(await this.linkCoreAspectsAndLegacy(finalRootDir, componentIds, linkingOpts)),
     };
     const registeredPackages = this.linkingOptions?.additionalPackagesToLink || [];
-    result.slotOriginatedLinks = registeredPackages.map(pkgName => this.linkNonCorePackages(finalRootDir, pkgName));
+    result.slotOriginatedLinks = registeredPackages.map((pkgName) => this.linkNonCorePackages(finalRootDir, pkgName));
 
     if (!this.linkingContext?.inCapsule) {
       this.logger.consoleSuccess(outputMessage, startTime);

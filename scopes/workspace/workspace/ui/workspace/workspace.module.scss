@@ -21,12 +21,12 @@
     --bit-text-color-heavy: white;
   }
 
-  >a {
-    &[aria-current="page"]>img {
+  > a {
+    &[aria-current='page'] > img {
       filter: invert(31%) sepia(75%) saturate(3183%) hue-rotate(235deg) brightness(99%) contrast(108%);
     }
 
-    >img {
+    > img {
       width: 22px;
       height: 22px;
 
@@ -73,7 +73,7 @@
     }
 
     div[class*='iconAnchor'] {
-      >span {
+      > span {
         color: white;
       }
     }
@@ -112,7 +112,7 @@
     background-color: #333333;
 
     a[class*='laneGalleryIcon'] {
-      >img {
+      > img {
         filter: invert(1);
       }
     }
