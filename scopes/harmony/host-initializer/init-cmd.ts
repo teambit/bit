@@ -165,20 +165,7 @@ export class InitCmd implements Command {
    */
   private async updateGitignore(projectPath: string): Promise<void> {
     const gitignorePath = pathlib.join(projectPath, '.gitignore');
-    const bitGitignoreSection = `
-# Bit
-.bit
-public
-
-# Bit files - generated during bit ws-config write command
-tsconfig.json
-.eslintrc.json
-.prettierrc.cjs
-# allow tsconfig from the env's config dir to be tracked
-!**/config/tsconfig.json
-node_modules
-`;
-
+    const bitGitignoreSection = BIT_GITIGNORE_SECTION;
     try {
       const exists = await fs.pathExists(gitignorePath);
       if (exists) {
