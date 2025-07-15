@@ -12,6 +12,7 @@ import { CheckoutAspect, checkoutOutput, type CheckoutMain } from '@teambit/chec
 import { SwitchLaneOptions } from '@teambit/lanes';
 import execa from 'execa';
 import chalk from 'chalk';
+import { ReleaseType } from 'semver';
 import { CiAspect } from './ci.aspect';
 import { CiCmd } from './ci.cmd';
 import { CiVerifyCmd } from './commands/verify.cmd';
@@ -351,7 +352,21 @@ export class CiMain {
     }
   }
 
-  async mergePr({ message: argMessage, build, strict }: { message?: string; build?: boolean; strict?: boolean }) {
+  async mergePr({
+    message: argMessage,
+    build,
+    strict,
+    releaseType,
+    preReleaseId,
+    incrementBy,
+  }: {
+    message?: string;
+    build?: boolean;
+    strict?: boolean;
+    releaseType?: ReleaseType;
+    preReleaseId?: string;
+    incrementBy?: number;
+  }) {
     const message = argMessage || (await this.getGitCommitMessage());
     if (!message) {
       throw new Error('Failed to get commit message from git. Please provide a message using --message option.');
@@ -416,6 +431,9 @@ export class CiMain {
       build,
       failFast: true,
       persist: hasSoftTaggedComponents,
+      releaseType,
+      preReleaseId,
+      incrementBy,
     });
 
     if (tagResults) {

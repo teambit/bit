@@ -80,13 +80,21 @@ Run on the _pull-request_ event after tests but before any deploy step.
 Publishes new semantic versions after a PR merges to `main`.
 
 ```bash
-bit ci merge [--message <string>] [--build]
+bit ci merge [--message <string>] [--build] [--increment <level>] [--patch|--minor|--major] [--increment-by <number>]
 ```
 
-| Flag        | Shorthand | Description                                                                                           |
-| ----------- | --------- | ----------------------------------------------------------------------------------------------------- |
-| `--message` | `-m`      | Changelog entry (defaults to last Git commit message).                                                |
-| `--build`   | `-b`      | Build locally (otherwise Ripple-CI does it). Required if workspace contains _soft-tagged_ components. |
+| Flag              | Shorthand | Description                                                                                                         |
+| ----------------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `--message`       | `-m`      | Changelog entry (defaults to last Git commit message).                                                              |
+| `--build`         | `-b`      | Build locally (otherwise Ripple-CI does it). Required if workspace contains _soft-tagged_ components.               |
+| `--strict`        | `-s`      | Fail on warnings as well as errors (default: only fails on errors).                                                 |
+| `--increment`     | `-l`      | Version bump level: `major`, `premajor`, `minor`, `preminor`, `patch`, `prepatch`, `prerelease` (default: `patch`). |
+| `--patch`         | `-p`      | Shortcut for `--increment patch`.                                                                                   |
+| `--minor`         |           | Shortcut for `--increment minor`.                                                                                   |
+| `--major`         |           | Shortcut for `--increment major`.                                                                                   |
+| `--pre-release`   |           | Shortcut for `--increment prerelease` with optional identifier.                                                     |
+| `--prerelease-id` |           | Prerelease identifier (e.g. "dev" to get "1.0.0-dev.1").                                                            |
+| `--increment-by`  |           | Increment by more than 1 (e.g. `--increment-by 2` with patch: 0.0.1 → 0.0.3).                                       |
 
 ### Internal flow
 
@@ -111,6 +119,25 @@ bit ci merge [--message <string>] [--build]
    git add .bitmap pnpm-lock.yaml
    git commit -m "chore(release): sync bitmap + lockfile"
    ```
+
+### Version bump examples
+
+```bash
+# Default patch increment (1.0.0 → 1.0.1)
+bit ci merge --message "fix: resolve memory leak"
+
+# Minor version bump (1.0.0 → 1.1.0)
+bit ci merge --minor --message "feat: add new API endpoint"
+
+# Major version bump (1.0.0 → 2.0.0)
+bit ci merge --major --message "feat!: breaking API changes"
+
+# Prerelease increment (1.0.0 → 1.0.1-dev.1)
+bit ci merge --pre-release dev --message "feat: experimental feature"
+
+# Custom increment amount (1.0.0 → 1.0.3)
+bit ci merge --patch --increment-by 3 --message "fix: critical patches"
+```
 
 ### CI hint
 
