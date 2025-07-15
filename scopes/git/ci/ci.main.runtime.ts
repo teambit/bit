@@ -391,7 +391,23 @@ export class CiMain {
     // This prevents issues when multiple PRs are merged in sequence
     const defaultBranch = await this.getDefaultBranchName();
     this.logger.console(chalk.blue(`Pulling latest git changes from ${defaultBranch} branch`));
+
+    // Check if there are any changes to stash before rebasing
+    const gitStatus = await git.status();
+    const hasChanges = gitStatus.files.length > 0;
+
+    if (hasChanges) {
+      this.logger.console(chalk.yellow('Stashing uncommitted changes before rebase'));
+      await git.stash(['push', '-u', '-m', 'CI merge temporary stash']);
+    }
+
     await git.pull('origin', defaultBranch, { '--rebase': 'true' });
+
+    if (hasChanges) {
+      this.logger.console(chalk.yellow('Restoring stashed changes after rebase'));
+      await git.stash(['pop']);
+    }
+
     this.logger.console(chalk.green('Pulled latest git changes'));
 
     this.logger.console('🔄 Checking out to main head');
@@ -447,6 +463,7 @@ export class CiMain {
       await git.commit(commitMessage);
 
       // Pull latest changes and push the commit to the remote repository
+      // At this point we have just committed changes, so no need to stash
       await git.pull('origin', defaultBranch, { '--rebase': 'true' });
       await git.push('origin', defaultBranch);
     } else {
