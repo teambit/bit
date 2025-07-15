@@ -138,7 +138,7 @@ export class CiMain {
     }
   }
 
-  async getCustomCommitMessage() {
+  private async getCustomCommitMessage() {
     try {
       const commitMessageScript = this.config.commitMessageScript;
 
