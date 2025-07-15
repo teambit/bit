@@ -34,16 +34,14 @@ class RemoteRm implements Command {
   }
 }
 
-export class RemoteCmd implements Command {
-  name = 'remote';
-  description = 'manage set of tracked bit scope(s)';
+export class RemoteList implements Command {
+  name = 'list';
+  description = 'list all configured remotes';
   group = 'collaborate';
   helpUrl = 'reference/scope/remote-scopes';
   alias = '';
   loadAspects = false;
   options = [['g', 'global', 'see globally configured remotes']] as CommandOptions;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  commands = [new RemoteAdd(), new RemoteRm()];
 
   async report(args: string[], { global }: { global: boolean }) {
     const remotes: { [key: string]: string } = await list(global);
@@ -55,5 +53,21 @@ export class RemoteCmd implements Command {
     });
 
     return table.toString();
+  }
+}
+
+export class RemoteCmd implements Command {
+  name = 'remote';
+  description = 'manage set of tracked bit scope(s)';
+  group = 'collaborate';
+  helpUrl = 'reference/scope/remote-scopes';
+  alias = '';
+  loadAspects = false;
+  options = [['g', 'global', 'see globally configured remotes']] as CommandOptions;
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  commands = [new RemoteAdd(), new RemoteRm(), new RemoteList()];
+
+  async report(args: string[], { global }: { global: boolean }) {
+    return new RemoteList().report(args, { global });
   }
 }

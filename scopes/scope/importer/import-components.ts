@@ -65,6 +65,7 @@ export type ImportOptions = {
   trackOnly?: boolean;
   includeDeprecated?: boolean;
   isLaneFromRemote?: boolean; // whether the `lanes.lane` object is coming directly from the remote.
+  writeDeps?: 'package.json' | 'workspace.jsonc';
 };
 type ComponentMergeStatus = {
   component: Component;
@@ -807,6 +808,7 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
       skipWritingToFs: this.options.trackOnly,
       shouldUpdateWorkspaceConfig: true,
       reasonForBitmapChange: 'import',
+      writeDeps: this.options.writeDeps,
     };
     return this.componentWriter.writeMany(manyComponentsWriterOpts);
   }

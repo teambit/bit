@@ -4,6 +4,8 @@ import { PackageImportMethod } from './package-manager';
 
 export type NodeLinker = 'hoisted' | 'isolated';
 
+export type ComponentRangePrefix = '~' | '^' | '+' | '-';
+
 export interface DependencyResolverWorkspaceConfig {
   policy: WorkspacePolicyConfigObject;
   /**
@@ -208,4 +210,14 @@ export interface DependencyResolverWorkspaceConfig {
    * Tells pnpm to automatically install peer dependencies. It is true by default.
    */
   autoInstallPeers?: boolean;
+
+  /**
+   * By default, Bit saves component dependencies with exact versions (pinned) in the package.json,
+   * even if the dependency-resolver policy specifies a version range.
+   *
+   * To preserve the range defined in the policy, set this value to "+".
+   * To apply a predefined range ("~" or "^") to other component dependencies not covered by the policy,
+   * set this to the desired range symbol.
+   */
+  componentRangePrefix?: ComponentRangePrefix;
 }

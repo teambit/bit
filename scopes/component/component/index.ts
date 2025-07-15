@@ -1,7 +1,9 @@
 import { ComponentAspect } from './component.aspect';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 
 export type { GetComponentsOptions } from './get-component-opts';
 export type { UseComponentType } from './ui/use-component';
+export type { ConsumerComponent };
 export { useComponentHost } from './host';
 export { Component, InvalidComponent } from './component';
 export { ComponentID } from '@teambit/component-id';

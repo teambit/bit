@@ -6,6 +6,7 @@ import { GeneratorMain, TemplateDescriptor } from './generator.main.runtime';
 export type TemplatesOptions = {
   showAll?: boolean;
   aspect?: string;
+  json?: boolean;
 };
 
 export class TemplatesCmd implements Command {
@@ -15,10 +16,11 @@ export class TemplatesCmd implements Command {
     'list components templates when inside bit-workspace (for bit-create), otherwise, list workspace templates (for bit-new)';
   alias = '';
   loader = true;
-  group = 'development';
+  group = 'component-development';
   options = [
     ['s', 'show-all', 'show hidden templates'],
     ['a', 'aspect <aspect-id>', 'show templates provided by the aspect-id'],
+    ['j', 'json', 'return templates in json format'],
   ] as CommandOptions;
 
   constructor(private generator: GeneratorMain) {}
@@ -53,5 +55,17 @@ export class TemplatesCmd implements Command {
 
     const learnMore = `\nfind and add templates in https://bit.dev/reference/generator/use-component-generator`;
     return title + output + learnMore;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async json(args: [], templatesOptions: TemplatesOptions) {
+    let results = await this.generator.listTemplates(templatesOptions);
+
+    // Make sure that we don't list hidden templates
+    if (!templatesOptions.showAll) {
+      results = results.filter((template) => !template.hidden);
+    }
+
+    return results;
   }
 }

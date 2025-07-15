@@ -5,7 +5,7 @@ import { CloudMain } from './cloud.main.runtime';
 export class WhoamiCmd implements Command {
   name = 'whoami';
   description = 'display the currently logged in user';
-  group = 'general';
+  group = 'auth';
   alias = '';
   options = [];
   loader = true;

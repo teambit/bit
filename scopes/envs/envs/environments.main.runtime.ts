@@ -835,10 +835,10 @@ export class EnvsMain {
 this may indicate that the env was not loaded properly. try running "bit install" to ensure the env is correctly loaded.
 to explicitly set the default env, use "bit env set" command.`;
     } else {
-      errorMsg =`env id "${ext.data.id}" is different from the id in the envs aspect config "${ext.config.env}".
+      errorMsg = `env id "${ext.data.id}" is different from the id in the envs aspect config "${ext.config.env}".
 if needed, use "bit env set" command to align the env id`;
     }
-    return { errorMsg, minBitVersion: '1.9.82'}
+    return { errorMsg, minBitVersion: '1.9.82' };
   }
 
   /**

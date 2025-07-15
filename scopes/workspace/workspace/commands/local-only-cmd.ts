@@ -72,7 +72,7 @@ export class LocalOnlyListCmd implements Command {
 export class LocalOnlyCmd implements Command {
   name = 'local-only <sub-command>';
   description = 'manage local-only components, which reside only in the workspace and are not snapped/tagged';
-  group = 'development';
+  group = 'component-config';
   alias = '';
   commands: Command[] = [];
   options = [] as CommandOptions;

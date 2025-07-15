@@ -15,7 +15,7 @@ type Flags = {
 export class DoctorCmd implements Command {
   name = 'doctor [diagnosis-name]';
   description = 'diagnose a bit workspace';
-  group = 'general';
+  group = 'system';
   alias = '';
   loadAspects = false;
   options = [

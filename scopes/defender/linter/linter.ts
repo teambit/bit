@@ -162,5 +162,23 @@ export type LintResults = {
 
 export interface Linter {
   id: string;
+  /**
+   * serialized config of the linter.
+   */
+  displayConfig?(): string;
+
+  /**
+   * returns the version of the current linter instance (e.g. '4.0.1').
+   */
+  version?(): string;
+
+  /**
+   * returns the display name of the current linter instance (e.g. 'ESlint')
+   */
+  displayName?: string;
+
+  /**
+   * lint the given component.
+   */
   lint(context: LinterContext, buildContext?: BuildContext): Promise<LintResults>;
 }

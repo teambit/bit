@@ -14,7 +14,7 @@ export class EnvsUnsetCmd implements Command {
     },
   ];
   options = [];
-  group = 'development';
+  group = 'component-config';
   extendedDescription = `keep in mind that this doesn't remove envs that are set via variants.
 in only removes envs that appear in the .bitmap file, which were previously configured via "bit env set".
 the purpose of this command is to reset previously assigned envs to either allow variants configure the env or use the base node env.

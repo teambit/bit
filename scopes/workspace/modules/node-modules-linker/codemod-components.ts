@@ -116,7 +116,7 @@ function getNameWithoutInternalPath(workspace: Workspace, relativeEntry: Relativ
   if (!componentMap) return importSource;
   const rootDir = componentMap.rootDir;
   if (!rootDir) return importSource;
-  const mainFile = componentMap.trackDir ? componentMap.mainFile : pathJoinLinux(rootDir, componentMap.mainFile);
+  const mainFile = pathJoinLinux(rootDir, componentMap.mainFile);
   const filePathRelativeToWorkspace = relativeEntry.relativePath.sourceRelativePath;
   if (filePathRelativeToWorkspace === mainFile) {
     return importSource;

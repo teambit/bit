@@ -9,6 +9,7 @@ export default class CatLaneCmd implements Command {
   alias = 'cl';
   options = [] as CommandOptions;
   loadAspects = false;
+  group = 'advanced';
 
   async report([id]: [string]) {
     const result = await catLane(id);

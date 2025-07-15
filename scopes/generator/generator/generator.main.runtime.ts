@@ -611,6 +611,24 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     this.aspectLoaded = true;
   }
 
+  /**
+   * Reload the generator config when workspace config changes.
+   * This ensures that changes to envs configuration in workspace.jsonc are reflected
+   * in long-running processes like "bit server".
+   */
+  async onWorkspaceConfigChange(): Promise<void> {
+    this.logger.debug('reloading generator config due to workspace config change');
+    try {
+      const workspaceConfig = this.workspace.getWorkspaceConfig();
+      const generatorConfigEntry = workspaceConfig.extensions.findExtension(GeneratorAspect.id);
+      if (generatorConfigEntry) {
+        this.config = generatorConfigEntry.config as GeneratorConfig;
+      }
+    } catch (error) {
+      this.logger.error('failed to reload generator config', error);
+    }
+  }
+
   static slots = [
     Slot.withType<ComponentTemplate[]>(),
     Slot.withType<WorkspaceTemplate[]>(),
@@ -686,6 +704,12 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       wsConfigFiles,
       deprecation
     );
+
+    // Register for workspace config changes to reload generator config
+    if (workspace) {
+      workspace.registerOnWorkspaceConfigChange(generator.onWorkspaceConfigChange.bind(generator));
+    }
+
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);
     graphql.register(() => generatorSchema(generator));

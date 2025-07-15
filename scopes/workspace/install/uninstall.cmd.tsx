@@ -6,7 +6,7 @@ export default class UninstallCmd implements Command {
   name = 'uninstall [packages...]';
   description = 'uninstall dependencies';
   alias = 'un';
-  group = 'development';
+  group = 'dependencies';
   options = [] as CommandOptions;
 
   constructor(private install: InstallMain) {}

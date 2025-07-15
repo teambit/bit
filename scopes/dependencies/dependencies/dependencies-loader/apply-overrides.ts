@@ -50,7 +50,11 @@ export class ApplyOverrides {
   processedFiles: string[];
   overridesDependencies: OverridesDependencies;
   debugDependenciesData: DebugDependencies;
-  autoDetectOverrides: Record<string, any> | undefined;
+  /**
+   * see workspace.getAutoDetectOverrides docs.
+   * these overrides are from env/variants/merge-config. not ones with "force: true".
+   */
+  public autoDetectOverrides: Record<string, any> | undefined;
   constructor(
     private component: Component,
     private depsResolver: DependencyResolverMain,
@@ -513,31 +517,27 @@ export class ApplyOverrides {
     }
     ['dependencies', 'devDependencies', 'peerDependencies'].forEach((field) => {
       forEach(autoDetectOverrides[field], (pkgVal, pkgName) => {
-        if (this.overridesDependencies.shouldIgnorePeerPackage(pkgName)) return;
+        if (this.overridesDependencies.shouldIgnorePeerPackage(pkgName)) {
+          return;
+        }
+
+        const existsInCompsDeps = this.allDependencies.dependencies.find((dep) => dep.packageName === pkgName);
+        const existsInCompsDevDeps = this.allDependencies.devDependencies.find((dep) => dep.packageName === pkgName);
+        const existsInCompsPeerDeps = this.allDependencies.peerDependencies.find((dep) => dep.packageName === pkgName);
+
         // Validate it was auto detected, we only affect stuff that were detected
-        const existsInCompsDeps = this.allDependencies.dependencies.find((dep) => {
-          return dep.packageName === pkgName;
-        });
-
-        const existsInCompsDevDeps = this.allDependencies.devDependencies.find((dep) => {
-          return dep.packageName === pkgName;
-        });
-
-        const existsInCompsPeerDeps = this.allDependencies.peerDependencies.find((dep) => {
-          return dep.packageName === pkgName;
-        });
-        if (
+        const isAutoDetected =
+          existsInCompsDeps ||
+          existsInCompsDevDeps ||
+          existsInCompsPeerDeps ||
           // We are checking originAllPackagesDependencies instead of allPackagesDependencies
           // as it might be already removed from allPackagesDependencies at this point if it was set with
           // "-" in runtime/dev
           // in such case we still want to apply it here
-          !this.originAllPackagesDependencies.packageDependencies[pkgName] &&
-          !this.originAllPackagesDependencies.devPackageDependencies[pkgName] &&
-          !this.originAllPackagesDependencies.peerPackageDependencies[pkgName] &&
-          !existsInCompsDeps &&
-          !existsInCompsDevDeps &&
-          !existsInCompsPeerDeps &&
-          // Check if it was orignally exists in the component
+          this.originAllPackagesDependencies.packageDependencies[pkgName] ||
+          this.originAllPackagesDependencies.devPackageDependencies[pkgName] ||
+          this.originAllPackagesDependencies.peerPackageDependencies[pkgName] ||
+          // Check if it was originally exists in the component
           // as we might have a policy which looks like this:
           // "components": {
           //   "dependencies": {
@@ -549,9 +549,10 @@ export class ApplyOverrides {
           // }
           // in that case we might remove it before getting to the devDeps then we will think that it wasn't required in the component
           // which is incorrect
-          !originallyExists.includes(pkgName) &&
-          !missingPackages.includes(pkgName)
-        ) {
+          originallyExists.includes(pkgName) ||
+          missingPackages.includes(pkgName);
+
+        if (!isAutoDetected) {
           return;
         }
         originallyExists.push(pkgName);
@@ -572,9 +573,17 @@ export class ApplyOverrides {
             );
           }
         }
-        // delete this.allPackagesDependencies.packageDependencies[pkgName];
-        // delete this.allPackagesDependencies.devPackageDependencies[pkgName];
-        // delete this.allPackagesDependencies.peerPackageDependencies[pkgName];
+
+        // This was restored to fix an issue with a case where
+        // You have a package dep in env.jsonc under peers (like @testing-library/react)
+        // Then you change the env.jsonc and move it from peer to devDependencies
+        // the deps resolver data will be correct, but in the legacy data
+        // it will still be in the peerPackageDependencies, so we need to remove it from there
+        // to avoid having it in package.json as a peer dependency
+        // which then will affect the installation of the component
+        delete this.allPackagesDependencies.packageDependencies[pkgName];
+        delete this.allPackagesDependencies.devPackageDependencies[pkgName];
+        delete this.allPackagesDependencies.peerPackageDependencies[pkgName];
 
         // If it exists in comps deps / comp dev deps, we don't want to add it to the allPackagesDependencies
         // as it will make the same dep both a dev and runtime dep
@@ -624,9 +633,51 @@ export class ApplyOverrides {
         }
       });
     });
-    Object.assign(deps, envPolicyManifest);
+    const resolvedEnvPolicyManifest = Object.keys(envPolicyManifest).reduce((acc, pkgName) => {
+      const version = envPolicyManifest[pkgName];
+      if (version !== '+') {
+        acc[pkgName] = version;
+        return acc;
+      }
+      acc[pkgName] = this.resolveEnvPeerDepVersion(pkgName);
+      return acc;
+    }, {});
     // TODO: handle component deps once we support peers between components
-    this.allPackagesDependencies.packageDependencies = deps;
+    this.allPackagesDependencies.packageDependencies = {
+      ...deps,
+      ...resolvedEnvPolicyManifest,
+    };
+  }
+
+  /**
+   * in the env.jsonc file, a policy-peer package can have `+` sign in the version. it means that it should be resolved
+   * from the workspace. whatever version is installed/imported in the workspace, it should be used here.
+   * in some cases, the package is not installed in the workspace, for example, the env is now imported without the
+   * dep. so the dep is not in the node_modules.
+   * strategy should be: .bitmap, workspace.jsonc, then model.
+   * it's not in .bitmap, otherwise, it was linked and `_resolvePackageData` would have found it.
+   * so either, it's in the workspace.jsonc or in the model.
+   */
+  private resolveEnvPeerDepVersion(pkgName: string): string {
+    const resolved = this._resolvePackageData(pkgName);
+    if (resolved && resolved.concreteVersion) {
+      return resolved.concreteVersion;
+    }
+    const wsPolicy = this.depsResolver.getWorkspacePolicyManifest();
+    const wsVersion = wsPolicy?.dependencies?.[pkgName] || wsPolicy?.peerDependencies?.[pkgName];
+    if (wsVersion) {
+      return wsVersion;
+    }
+    const fromModelDep = this.componentFromModel?.dependencies.get().find((dep) => dep.packageName === pkgName);
+    if (fromModelDep) {
+      return fromModelDep.id.version;
+    }
+    const fromModelPkg = this.componentFromModel?.packageDependencies[pkgName];
+    if (fromModelPkg) {
+      return fromModelPkg;
+    }
+    // no where to be found. instead of throwing an error, return the "latest" version
+    return '*';
   }
 
   /**

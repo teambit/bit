@@ -168,36 +168,32 @@ export class PreviewPreview {
 
   reportSize() {
     if (!window?.parent || !window?.document) return;
-    // TODO: discuss with gilad for a better way to resolve page loaded here.
-
-    const sendPubsubEvent = () => {
-      this.pubsub.pub(
-        PreviewAspect.id,
-        new SizeEvent({
-          width: window.document.body.offsetWidth,
-          height: window.document.body.offsetHeight,
-        })
-      );
+    // In Preview, the <body> is always exactly as tall as the iframe viewport, not as tall as the content.
+    // by measuring the scrollHeight of the root element, we can get the height of the content.
+    const measure = () => {
+      const root = window.document.getElementById('root') ?? window.document.documentElement;
+      const prevHeight = root.style.height;
+      // set height auto to make the browser calculate the natural block formatting height
+      // scrollHeight of an element that has height: 100% reports the viewport height, not the content height
+      root.style.height = 'auto';
+      const height = root.scrollHeight;
+      const width = root.scrollWidth;
+      // restore the previous height so nothing visually changes within the same tick
+      root.style.height = prevHeight;
+      return { width, height };
     };
-
-    window.document.body.addEventListener('resize', debounce(sendPubsubEvent, 300));
-
-    let counter = 0;
-    const interval = setInterval(() => {
-      // TODO: think
-      counter += 1;
-      if (counter > 10) {
-        clearInterval(interval);
-        return;
-      }
-      this.pubsub.pub(
-        PreviewAspect.id,
-        new SizeEvent({
-          width: window.document.body.offsetWidth,
-          height: window.document.body.offsetHeight,
-        })
-      );
-    }, 200);
+    const publish = () => {
+      const { width, height } = measure();
+      this.pubsub.pub(PreviewAspect.id, new SizeEvent({ width, height }));
+    };
+    // publish right away so the parent gets the first real size as soon as possible
+    publish();
+    // publish dimension changes when the content size actually changes
+    const debounced = debounce(publish, 100);
+    const resizedObserver = new ResizeObserver(debounced);
+    resizedObserver.observe(window.document.documentElement);
+    const root = window.document.getElementById('root');
+    if (root) resizedObserver.observe(root);
   }
 
   async getPreviewModule(previewName: string, id: ComponentID): Promise<PreviewModule> {

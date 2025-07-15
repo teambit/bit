@@ -13,6 +13,7 @@ export default class CatObjectCmd implements Command {
     ['', 'headers', 'shows the headers only'],
   ] as CommandOptions;
   loadAspects = false;
+  group = 'advanced';
 
   async report(
     [hash]: [string],

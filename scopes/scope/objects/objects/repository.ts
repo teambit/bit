@@ -44,7 +44,7 @@ export default class Repository {
   protected cache: InMemoryCache<BitObject>;
   remoteLanes!: RemoteLanes;
   unmergedComponents!: UnmergedComponents;
-  _persistMutex?:  Mutex;
+  _persistMutex?: Mutex;
   constructor(scopePath: string, scopeJson: ScopeJson) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;

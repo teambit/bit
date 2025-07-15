@@ -17,6 +17,7 @@ type LinkCommandOpts = {
   target: string;
   skipFetchingObjects?: boolean;
   peers?: boolean;
+  compSummary?: boolean;
 };
 export class LinkCommand implements Command {
   name = 'link [component-names...]';
@@ -24,7 +25,7 @@ export class LinkCommand implements Command {
   description = 'create links in the node_modules directory, to core aspects and to components in the workspace';
   helpUrl = 'reference/workspace/component-links';
   extendedDescription: string;
-  group = 'development';
+  group = 'dependencies';
   private = false;
   arguments = [{ name: 'component-names...', description: 'names or IDs of the components to link' }];
   options = [
@@ -38,6 +39,7 @@ export class LinkCommand implements Command {
     ],
     ['', 'skip-fetching-objects', 'skip fetch missing objects from remotes before linking'],
     ['', 'peers', 'link peer dependencies of the components too'],
+    ['', 'comp-summary', 'show only a summary of component links instead of listing all components'],
   ] as CommandOptions;
 
   constructor(
@@ -71,7 +73,11 @@ export class LinkCommand implements Command {
       verbose: opts.verbose,
     });
     const nonCorePackagesLinks = packageListLinks(linkResults.slotOriginatedLinks);
-    const compsLinks = ComponentListLinks({ componentListLinks: linkResults.legacyLinkResults, verbose: opts.verbose });
+    const compsLinks = ComponentListLinks({
+      componentListLinks: linkResults.legacyLinkResults,
+      verbose: opts.verbose,
+      compSummary: opts.compSummary,
+    });
     const rewireRow = RewireRow({ legacyCodemodResults: linkResults.legacyLinkCodemodResults });
     const nestedLinks = NestedComponentLinksLinks({
       nestedDepsInNmLinks: linkResults.nestedDepsInNmLinks,
@@ -79,7 +85,16 @@ export class LinkCommand implements Command {
     });
     const targetLinks = linkToDir(linkResults.linkToDirResults);
     const footer = `Finished. ${timeDiff}`;
-    return compact([title, coreLinks, nonCorePackagesLinks, compsLinks, rewireRow, nestedLinks, targetLinks, footer]).join('\n');
+    return compact([
+      title,
+      coreLinks,
+      nonCorePackagesLinks,
+      compsLinks,
+      rewireRow,
+      nestedLinks,
+      targetLinks,
+      footer,
+    ]).join('\n');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

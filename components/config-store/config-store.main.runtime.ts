@@ -8,10 +8,10 @@ export type StoreOrigin = 'scope' | 'workspace' | 'global';
 
 export class ConfigStoreMain {
   private _stores: { [origin: string]: Store } | undefined;
-  get stores (): { [origin: string]: Store } {
+  get stores(): { [origin: string]: Store } {
     if (!this._stores) {
       this._stores = {
-        global: configGetter.getGlobalStore()
+        global: configGetter.getGlobalStore(),
       };
     }
     return this._stores;
@@ -39,7 +39,7 @@ export class ConfigStoreMain {
     for await (const store of stores) {
       await store.invalidateCache();
       configGetter.addStore(store);
-    };
+    }
   }
   async setConfig(key: string, value: string, origin: StoreOrigin = 'global') {
     const store = this.stores[origin];
@@ -60,8 +60,8 @@ export class ConfigStoreMain {
   async delConfig(key: string, origin?: StoreOrigin) {
     const getOrigin = () => {
       if (origin) return origin;
-      return Object.keys(this.stores).find(originName => key in this.stores[originName].list());
-    }
+      return Object.keys(this.stores).find((originName) => key in this.stores[originName].list());
+    };
     const foundOrigin = getOrigin();
     if (!foundOrigin) return; // if the key is not found in any store (or given store), nothing to do.
     const store = this.stores[foundOrigin];
@@ -80,7 +80,6 @@ export class ConfigStoreMain {
     const configStore = new ConfigStoreMain();
     cli.register(new ConfigCmd(configStore));
     return configStore;
-
   }
 }
 

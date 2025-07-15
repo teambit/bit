@@ -18,7 +18,7 @@ export class RemoveCmd implements Command {
       description: COMPONENT_PATTERN_HELP,
     },
   ];
-  group = 'collaborate';
+  group = 'component-development';
   helpUrl = 'reference/components/removing-components';
   skipWorkspace = true;
   alias = 'rm';

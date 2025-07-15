@@ -31,6 +31,7 @@ import { PnpmAspect } from '@teambit/pnpm';
 import { PreviewAspect } from '@teambit/preview';
 import { ComponentSizerAspect } from '@teambit/component-sizer';
 import { ReactAspect } from '@teambit/react';
+import { VueAspect } from '@teambit/vue-aspect';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { SchemaAspect } from '@teambit/schema';
 import { PubsubAspect } from '@teambit/pubsub';
@@ -56,14 +57,12 @@ import { ComponentTreeAspect } from '@teambit/component-tree';
 import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
 import { PrettierAspect } from '@teambit/prettier';
-import { SignAspect } from '@teambit/sign';
 import { WorkerAspect } from '@teambit/worker';
 import { GlobalConfigAspect } from '@teambit/global-config';
 import { MultiCompilerAspect } from '@teambit/multi-compiler';
 import { MDXAspect } from '@teambit/mdx';
 import { ReadmeAspect } from '@teambit/readme';
 import { ApplicationAspect } from '@teambit/application';
-import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
 import { ExportAspect } from '@teambit/export';
 import { ImporterAspect } from '@teambit/importer';
 import { EjectAspect } from '@teambit/eject';
@@ -105,6 +104,8 @@ import { DoctorAspect } from '@teambit/doctor';
 import { ObjectsAspect } from '@teambit/objects';
 import { BitAspect } from './bit.aspect';
 import { ConfigStoreAspect } from '@teambit/config-store';
+import { CliMcpServerAspect } from '@teambit/cli-mcp-server';
+import { CiAspect } from '@teambit/ci';
 
 /**
  * this is the place to register core aspects.
@@ -148,6 +149,7 @@ export const manifestsMap = {
   [LoggerAspect.id]: LoggerAspect,
   [PkgAspect.id]: PkgAspect,
   [ReactAspect.id]: ReactAspect,
+  [VueAspect.id]: VueAspect,
   [WorkerAspect.id]: WorkerAspect,
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,
@@ -174,8 +176,6 @@ export const manifestsMap = {
   [CommandBarAspect.id]: CommandBarAspect,
   [SidebarAspect.id]: SidebarAspect,
   [ComponentTreeAspect.id]: ComponentTreeAspect,
-  [SignAspect.id]: SignAspect,
-  [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
   [ExportAspect.id]: ExportAspect,
   [ImporterAspect.id]: ImporterAspect,
   [HarmonyUiAppAspect.id]: HarmonyUiAppAspect,
@@ -218,6 +218,8 @@ export const manifestsMap = {
   [DoctorAspect.id]: DoctorAspect,
   [ObjectsAspect.id]: ObjectsAspect,
   [ConfigStoreAspect.id]: ConfigStoreAspect,
+  [CliMcpServerAspect.id]: CliMcpServerAspect,
+  [CiAspect.id]: CiAspect,
 };
 
 export function isCoreAspect(id: string) {

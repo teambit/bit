@@ -44,8 +44,10 @@ export class ScopeJson {
   hasChanged = false;
   config?: Record<string, string>;
 
-  constructor({ name, remotes, resolverPath, hooksPath, license, groupName, version, lanes, config }: ScopeJsonProps,
-    readonly scopeJsonPath: PathOsBasedAbsolute) {
+  constructor(
+    { name, remotes, resolverPath, hooksPath, license, groupName, version, lanes, config }: ScopeJsonProps,
+    readonly scopeJsonPath: PathOsBasedAbsolute
+  ) {
     this.name = name;
     this.version = version;
     this.resolverPath = resolverPath;

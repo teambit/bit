@@ -26,7 +26,7 @@ export class RenameCmd implements Command {
       description: "the new component name (without its scope name. use --scope to define the new component's scope)",
     },
   ];
-  group = 'collaborate';
+  group = 'component-development';
   skipWorkspace = true;
   alias = '';
   options = [

@@ -23,7 +23,7 @@ export type DiagnosticData = {
   file: string;
   diagnostic: Diagnostic;
   formatted: string;
-}
+};
 
 export class TsserverClient {
   private tsServer: ProcessBasedTsServer | null;

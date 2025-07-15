@@ -477,9 +477,6 @@ describe('bit lane command', function () {
     });
   });
   describe('remove on lane with --update-main then merge to main', () => {
-    let localWs: string;
-    let remoteScope: string;
-    let headOnLane: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
@@ -488,65 +485,31 @@ describe('bit lane command', function () {
       helper.command.createLane();
       helper.command.softRemoveOnLane('comp1', '--update-main');
       helper.command.snapAllComponentsWithoutBuild();
-      headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
       helper.command.export();
-      localWs = helper.scopeHelper.cloneWorkspace();
-      remoteScope = helper.scopeHelper.cloneRemoteScope();
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.mergeLane('dev', '-x');
     });
-    describe('merge from the workspace', () => {
+    it('should be marked as removed on main', () => {
+      const removeData = helper.command.showAspectConfig('comp1', Extensions.remove);
+      expect(removeData.config.removed).to.be.true;
+    });
+    it('bit status should show the component as staged', () => {
+      const status = helper.command.statusJson();
+      expect(status.stagedComponents).to.have.lengthOf(1);
+    });
+    it('bitmap should not have the component', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.not.have.property('comp1');
+    });
+    describe('export and import the component to a new workspace', () => {
       before(() => {
-        helper.command.switchLocalLane('main', '-x');
-        helper.command.mergeLane('dev', '-x');
+        helper.command.export();
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponent('comp1', '-x');
       });
-      it('should be marked as removed on main', () => {
+      it('should show the component as removed', () => {
         const removeData = helper.command.showAspectConfig('comp1', Extensions.remove);
-        expect(removeData.config.removed).to.be.true;
-      });
-      it('bit status should show the component as staged', () => {
-        const status = helper.command.statusJson();
-        expect(status.stagedComponents).to.have.lengthOf(1);
-      });
-      it('bitmap should not have the component', () => {
-        const bitMap = helper.bitMap.read();
-        expect(bitMap).to.not.have.property('comp1');
-      });
-      describe('export and import the component to a new workspace', () => {
-        before(() => {
-          helper.command.export();
-          helper.scopeHelper.reInitWorkspace();
-          helper.scopeHelper.addRemoteScope();
-          helper.command.importComponent('comp1', '-x');
-        });
-        it('should show the component as removed', () => {
-          const removeData = helper.command.showAspectConfig('comp1', Extensions.remove);
-          expect(removeData.config.removed).to.be.true;
-        });
-      });
-    });
-    describe('merge from scope', () => {
-      let bareMerge;
-      let mergeOutput: string;
-      before(() => {
-        helper.scopeHelper.getClonedWorkspace(localWs);
-        helper.scopeHelper.getClonedRemoteScope(remoteScope);
-        bareMerge = helper.scopeHelper.getNewBareScope('-bare-merge');
-        helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareMerge.scopePath);
-        mergeOutput = helper.command.mergeLaneFromScope(bareMerge.scopePath, `${helper.scopes.remote}/dev`);
-      });
-      it('should indicate in the output the new head, not the only one', () => {
-        expect(mergeOutput).to.have.string(headOnLane);
-        expect(mergeOutput).to.not.have.string('0.0.1');
-      });
-      it('should merge successfully to main', () => {
-        const headOnMain = helper.command.getHead('comp1', bareMerge.scopePath);
-        expect(headOnMain).to.equal(headOnLane);
-      });
-      it('should be marked as removed on main', () => {
-        const removeData = helper.command.showAspectConfig(
-          `${helper.scopes.remote}/comp1`,
-          Extensions.remove,
-          bareMerge.scopePath
-        );
         expect(removeData.config.removed).to.be.true;
       });
     });

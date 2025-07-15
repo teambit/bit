@@ -14,7 +14,7 @@ export type CurrentPkgSource =
   // these are dependencies stored in the component object (snapped/tagged version)
   | 'component-model';
 
-type CurrentPkg = {
+export type CurrentPkg = {
   name: string;
   currentRange: string;
   source: CurrentPkgSource;

@@ -12,6 +12,7 @@ export type CompositionCardProps = {
   composition: Composition;
   openCompositionLink?: string;
   previewClass?: string;
+  queryParams?: string | string[];
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export const CompositionCard = React.memo(_CompositionCard);
@@ -22,6 +23,7 @@ function _CompositionCard({
   className,
   openCompositionLink,
   previewClass,
+  queryParams,
   ...rest
 }: CompositionCardProps) {
   const Composition = React.useMemo(() => {
@@ -29,11 +31,12 @@ function _CompositionCard({
       <ComponentComposition
         disableScroll
         className={previewClass}
-        includeEnv={false}
+        includeEnv={true}
         loading={'lazy'}
         composition={composition}
         component={component}
         viewport={1280}
+        queryParams={queryParams}
         previewName="compositions"
       />
     );

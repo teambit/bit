@@ -288,6 +288,10 @@ describe('bit rename command', function () {
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
       helper.command.rename('comp1', 'comp11');
+
+      // intermediate steps - make sure diff is working. we got errors here before
+      expect(() => helper.command.diff()).to.not.throw();
+
       helper.command.snapAllComponentsWithoutBuild();
       headOnLane = helper.command.getHeadOfLane('my-lane', 'comp1');
       helper.command.export();

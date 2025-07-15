@@ -17,59 +17,59 @@ export class GlobalConfigMain {
   constructor(private configStore: ConfigStoreMain) {}
 
   /**
-  * @deprecated use ConfigStore.getConfig instead.
-  */
+   * @deprecated use ConfigStore.getConfig instead.
+   */
   async get(key: string): Promise<string | undefined> {
     return this.configStore.getConfig(key);
   }
 
   /**
-  * @deprecated use ConfigStore.getConfigBoolean instead.
-  */
+   * @deprecated use ConfigStore.getConfigBoolean instead.
+   */
   async getBool(key: string): Promise<boolean | undefined> {
     return this.configStore.getConfigBoolean(key);
   }
 
   /**
-  * @deprecated use ConfigStore.getConfig instead.
-  */
+   * @deprecated use ConfigStore.getConfig instead.
+   */
   getSync(key: string): string | undefined {
     return this.configStore.getConfig(key);
   }
 
   /**
-  * @deprecated use ConfigStore.listConfig instead.
-  */
+   * @deprecated use ConfigStore.listConfig instead.
+   */
   async list(): Promise<Record<string, string>> {
     return this.configStore.listConfig();
   }
   /**
-  * @deprecated use ConfigStore.listConfig instead.
-  */
+   * @deprecated use ConfigStore.listConfig instead.
+   */
   listSync(): Record<string, string> {
     return this.configStore.listConfig();
   }
   /**
-  * @deprecated use ConfigStore.setConfig instead.
-  */
+   * @deprecated use ConfigStore.setConfig instead.
+   */
   async set(key: string, val: string): Promise<void> {
     await this.configStore.setConfig(key, val);
   }
   /**
-  * @deprecated use ConfigStore.setConfig instead.
-  */
+   * @deprecated use ConfigStore.setConfig instead.
+   */
   setSync(key: string, val: string) {
     return setGlobalConfig(key, val);
   }
-/**
-  * @deprecated use ConfigStore.delConfig instead.
-  */
+  /**
+   * @deprecated use ConfigStore.delConfig instead.
+   */
   async del(key: string): Promise<void> {
     await this.configStore.delConfig(key);
   }
-/**
-  * @deprecated use ConfigStore.delConfig instead.
-  */
+  /**
+   * @deprecated use ConfigStore.delConfig instead.
+   */
   delSync(key: string) {
     return delGlobalConfig(key);
   }

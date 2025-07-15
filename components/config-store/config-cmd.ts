@@ -20,12 +20,12 @@ for example, "user.token" becomes "BIT_CONFIG_USER_TOKEN"`;
 
   constructor(private configStore: ConfigStoreMain) {}
 
-  async report([key, value]: [string, string], { local, localTrack }: { local?: boolean, localTrack?: boolean }) {
+  async report([key, value]: [string, string], { local, localTrack }: { local?: boolean; localTrack?: boolean }) {
     const getOrigin = () => {
       if (local) return 'scope';
       if (localTrack) return 'workspace';
       return 'global';
-    }
+    };
     await this.configStore.setConfig(key, value, getOrigin());
     return chalk.green('added configuration successfully');
   }
@@ -57,16 +57,15 @@ class ConfigList implements Command {
 
   constructor(private configStore: ConfigStoreMain) {}
 
-  async report(_, { origin, detailed }: { origin?: StoreOrigin, detailed?: boolean }) {
-
+  async report(_, { origin, detailed }: { origin?: StoreOrigin; detailed?: boolean }) {
     const objToFormattedString = (conf: Record<string, string>) => {
       return Object.entries(conf)
-      .map((tuple) => {
-        tuple[0] = rightpad(tuple[0], 45, ' ');
-        return tuple.join('');
-      })
-      .join('\n');
-    }
+        .map((tuple) => {
+          tuple[0] = rightpad(tuple[0], 45, ' ');
+          return tuple.join('');
+        })
+        .join('\n');
+    };
 
     if (origin) {
       const conf = this.configStore.stores[origin].list();
@@ -75,10 +74,12 @@ class ConfigList implements Command {
 
     if (detailed) {
       const formatTitle = (str: string) => chalk.bold(str.toUpperCase());
-      const origins = Object.keys(this.configStore.stores).map((originName) => {
-        const conf = this.configStore.stores[originName].list();
-        return formatTitle(originName) + '\n' + objToFormattedString(conf);
-      }).join('\n\n');
+      const origins = Object.keys(this.configStore.stores)
+        .map((originName) => {
+          const conf = this.configStore.stores[originName].list();
+          return formatTitle(originName) + '\n' + objToFormattedString(conf);
+        })
+        .join('\n\n');
       const combined = this.configStore.listConfig();
 
       const combinedFormatted = objToFormattedString(combined);
@@ -89,15 +90,18 @@ class ConfigList implements Command {
     return objToFormattedString(conf);
   }
 
-  async json(_, { origin, detailed }: { origin?: StoreOrigin, detailed?: boolean }) {
+  async json(_, { origin, detailed }: { origin?: StoreOrigin; detailed?: boolean }) {
     if (origin) {
       return this.configStore.stores[origin].list();
     }
     if (detailed) {
-      const allStores = Object.keys(this.configStore.stores).reduce((acc, current) => {
-        acc[current] = this.configStore.stores[current].list();
-        return acc;
-      }, {} as Record<string, Record<string, string>>);
+      const allStores = Object.keys(this.configStore.stores).reduce(
+        (acc, current) => {
+          acc[current] = this.configStore.stores[current].list();
+          return acc;
+        },
+        {} as Record<string, Record<string, string>>
+      );
       allStores.combined = this.configStore.listConfig();
       return allStores;
     }
@@ -110,7 +114,11 @@ class ConfigDel implements Command {
   description = 'delete given key from global configuration';
   alias = '';
   options = [
-    ['o', 'origin <origin>', 'default to delete whenever it found first. specify to delete specifically from the following: [scope, workspace, global]'],
+    [
+      'o',
+      'origin <origin>',
+      'default to delete whenever it found first. specify to delete specifically from the following: [scope, workspace, global]',
+    ],
   ] as CommandOptions;
 
   constructor(private configStore: ConfigStoreMain) {}
@@ -125,7 +133,7 @@ export class ConfigCmd implements Command {
   name = 'config';
   description = 'config management';
   extendedDescription = `${BASE_DOCS_DOMAIN}reference/config/bit-config`;
-  group = 'general';
+  group = 'system';
   alias = '';
   loadAspects = false;
   commands: Command[] = [];
@@ -133,11 +141,14 @@ export class ConfigCmd implements Command {
 
   constructor(private configStore: ConfigStoreMain) {
     this.commands = [
-      new ConfigSet(configStore), new ConfigDel(configStore), new ConfigGet(configStore), new ConfigList(configStore)
+      new ConfigSet(configStore),
+      new ConfigDel(configStore),
+      new ConfigGet(configStore),
+      new ConfigList(configStore),
     ];
   }
 
   async report() {
-    return new ConfigList(this.configStore).report(undefined, { });
+    return new ConfigList(this.configStore).report(undefined, {});
   }
 }

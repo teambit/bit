@@ -220,7 +220,7 @@ describe('bit remove command', function () {
       helper.command.tagWithoutBuild();
       helper.command.export();
 
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
       afterRemove = helper.scopeHelper.cloneWorkspace();
     });
     it('bit status should show a section of removed components', () => {
@@ -380,7 +380,7 @@ describe('bit remove command', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
       helper.command.snapAllComponentsWithoutBuild();
-      helper.command.softRemoveComponent('comp1');
+      helper.command.deleteComponent('comp1');
       helper.command.snapAllComponentsWithoutBuild('--ignore-issues="*"');
     });
     it('should show it as removed', () => {
@@ -428,7 +428,7 @@ describe('bit remove command', function () {
       helper.command.tagAllComponents();
       helper.command.export();
 
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
     });
     it('bit status should show RemovedDependency issue', () => {
       helper.command.expectStatusToHaveIssue(IssuesClasses.RemovedDependencies.name);
@@ -445,7 +445,7 @@ describe('bit remove command', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp2', '-x');
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
       helper.command.tagWithoutBuild();
       helper.command.export();
 
@@ -466,7 +466,7 @@ describe('bit remove command', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
-      helper.command.softRemoveComponent('comp1');
+      helper.command.deleteComponent('comp1');
       snapOutput = helper.command.snapAllComponents('--build');
     });
     it('should not build the removed component', () => {

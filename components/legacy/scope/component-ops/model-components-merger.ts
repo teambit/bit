@@ -16,7 +16,7 @@ export class ModelComponentMerger {
     private isImport: boolean,
     private isIncomingFromOrigin: boolean, // import: incoming from original scope. export: component belong to current scope
     private existingHeadIsMissingInIncomingComponent?: boolean, // needed for export only
-    private repo?: Repository,
+    private repo?: Repository
   ) {
     this.isExport = !this.isImport;
   }
@@ -74,7 +74,7 @@ export class ModelComponentMerger {
       return;
     }
     if (!this.incomingComponent.compatibleWith(this.existingComponent, this.isImport)) {
-      const isDeleted = this.existingHeadIsMissingInIncomingComponent && await this.isDeletedInOrigin();
+      const isDeleted = this.existingHeadIsMissingInIncomingComponent && (await this.isDeletedInOrigin());
       const conflictVersions = this.incomingComponent.diffWith(this.existingComponent, this.isImport);
       throw new MergeConflict(this.incomingComponent.id(), conflictVersions, isDeleted);
     }
@@ -88,8 +88,12 @@ export class ModelComponentMerger {
     ) {
       const isDeleted = await this.isDeletedInOrigin();
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      throw new ComponentNeedsUpdate(this.incomingComponent.id(), this.existingComponent.head!.toString(), undefined,
-      isDeleted);
+      throw new ComponentNeedsUpdate(
+        this.incomingComponent.id(),
+        this.existingComponent.head!.toString(),
+        undefined,
+        isDeleted
+      );
     }
   }
 

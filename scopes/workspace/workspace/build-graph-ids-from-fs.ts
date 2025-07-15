@@ -207,7 +207,9 @@ export class GraphIdsFromFsBuilder {
         }
         if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
           if (dependenciesOf && !this.shouldThrowOnInvalidDeps) {
-            this.logger.warn(`component ${idStrPotentiallyWithoutVersion}, dependency of ${dependenciesOf} is invalid. continuing without it`);
+            this.logger.warn(
+              `component ${idStrPotentiallyWithoutVersion}, dependency of ${dependenciesOf} is invalid. continuing without it`
+            );
             return null;
           }
           throw new BitError(

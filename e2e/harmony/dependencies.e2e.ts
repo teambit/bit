@@ -153,14 +153,17 @@ const isPositive = require('is-positive');
       helper.fixtures.populateComponents(1, false);
       helper.fs.outputFile('comp1/some.content.tsx', `import lodash from 'lodash';`);
       helper.command.setEnv('comp1', 'empty-env');
-      helper.command.install(undefined, { a: ''});
+      helper.command.install(undefined, { a: '' });
       helper.command.status(); // makes sure the comp is loaded and its deps are in the filesystem cache.
-      helper.fs.outputFile('empty-env/env.jsonc', JSON.stringify({ patterns: { contents: ['**/*.content.tsx'] } }, null, 2));
+      helper.fs.outputFile(
+        'empty-env/env.jsonc',
+        JSON.stringify({ patterns: { contents: ['**/*.content.tsx'] } }, null, 2)
+      );
     });
     // previously, it was needed to run `bit cc` to see lodash as dev. it was showing as a realtime dep.
     it('should clear all components caches and show the dep as a dev-dep', () => {
-      const depsData = helper.command.getCompDepsDataFromData('comp1')
-      const lodash = depsData.find(d => d.id === 'lodash');
+      const depsData = helper.command.getCompDepsDataFromData('comp1');
+      const lodash = depsData.find((d) => d.id === 'lodash');
       expect(lodash).to.exist;
       expect(lodash?.lifecycle).to.equal('dev');
     });

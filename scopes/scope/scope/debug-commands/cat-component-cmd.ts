@@ -11,6 +11,7 @@ export class CatComponentCmd implements Command {
     ['j', 'json', 'json format'],
   ] as CommandOptions;
   loadAspects = false;
+  group = 'advanced';
 
   async report([id]: [string]) {
     const result = await catComponent(id);

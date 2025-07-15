@@ -41,6 +41,7 @@ export interface ManyComponentsWriterParams {
   reasonForBitmapChange?: string; // optional. will be written in the bitmap-history-metadata
   shouldUpdateWorkspaceConfig?: boolean; // whether it should update dependencies policy (or leave conflicts) in workspace.jsonc
   mergeStrategy?: MergeStrategy; // needed for workspace.jsonc conflicts
+  writeDeps?: 'package.json' | 'workspace.jsonc';
 }
 
 export type ComponentWriterResults = {
@@ -73,6 +74,9 @@ export class ComponentWriterMain {
     let installationError: Error | undefined;
     let compilationError: Error | undefined;
     let workspaceConfigUpdateResult: WorkspaceConfigUpdateResult | undefined;
+    if (opts.writeDeps) {
+      await this.workspace.writeDependencies(opts.writeDeps);
+    }
     if (opts.shouldUpdateWorkspaceConfig) {
       workspaceConfigUpdateResult = await this.configMerge.updateDepsInWorkspaceConfig(
         opts.components,

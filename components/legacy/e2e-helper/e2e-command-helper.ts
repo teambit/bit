@@ -182,10 +182,10 @@ export default class CommandHelper {
     return JSON.parse(output);
   }
   listLocalScope(options = '') {
-    return this.runCmd(`bit list --scope ${options}`);
+    return this.runCmd(`bit list --local-scope ${options}`);
   }
   listLocalScopeParsed(options = ''): Record<string, any>[] {
-    const output = this.runCmd(`bit list --scope --json ${options}`);
+    const output = this.runCmd(`bit list --local-scope --json ${options}`);
     return JSON.parse(output);
   }
   listRemoteScopeParsed(options = '') {
@@ -236,14 +236,8 @@ export default class CommandHelper {
   removeLaneReadme(laneName = '') {
     return this.runCmd(`bit lane remove-readme ${laneName}`);
   }
-  sign(ids: string[], flags = '', cwd = this.scopes.localPath) {
-    return this.runCmd(`bit sign ${ids.join(' ')} ${flags}`, cwd);
-  }
   artifacts(id = '', flags = '') {
     return this.runCmd(`bit artifacts ${id} ${flags}`);
-  }
-  updateDependencies(data: Record<string, any>, flags = '', cwd = this.scopes.localPath) {
-    return this.runCmd(`bit update-dependencies '${JSON.stringify(data)}' ${flags}`, cwd);
   }
   getConfig(configName: string, flags = '') {
     return this.runCmd(`bit config get ${configName} ${flags}`);
@@ -308,7 +302,13 @@ export default class CommandHelper {
   removeComponent(id: string, flags = '') {
     return this.runCmd(`bit remove ${id} --silent ${flags}`);
   }
+  /**
+   * @deprecated use deleteComponent instead
+   */
   softRemoveComponent(id: string, flags = '') {
+    return this.deleteComponent(id, flags);
+  }
+  deleteComponent(id: string, flags = '') {
     return this.runCmd(`bit delete ${id} --silent ${flags}`);
   }
   removeComponentFromRemote(id: string, flags = '') {
@@ -355,6 +355,9 @@ export default class CommandHelper {
   }
   dependenciesUsage(depName: string) {
     return this.runCmd(`bit dependencies usage ${depName}`);
+  }
+  dependenciesWrite(flags = '') {
+    return this.runCmd(`bit dependencies write ${flags}`);
   }
   setPeer(componentId: string, range = '') {
     return this.runCmd(`bit set-peer ${componentId} ${range}`);
@@ -754,7 +757,9 @@ export default class CommandHelper {
     return show.find((_) => _.title === 'configuration').json.find((_) => _.id === aspectId);
   }
 
-  showDependenciesData(compId: string): Array<{ id: string; version: string; packageName: string }> {
+  showDependenciesData(
+    compId: string
+  ): Array<{ id: string; version: string; packageName: string; versionRange?: string }> {
     const showConfig = this.showAspectConfig(compId, Extensions.dependencyResolver);
     return showConfig.data.dependencies;
   }
@@ -770,7 +775,7 @@ export default class CommandHelper {
     return aspectConf.data.dependencies.map((dep) => dep.id);
   }
 
-  getCompDepsDataFromData(compId: string): {id: string, version: string, lifecycle: string, source: string}[] {
+  getCompDepsDataFromData(compId: string): { id: string; version: string; lifecycle: string; source: string }[] {
     const aspectConf = this.showAspectConfig(compId, Extensions.dependencyResolver);
     return aspectConf.data.dependencies;
   }
@@ -836,43 +841,6 @@ export default class CommandHelper {
   }
   mergeMoveLane(laneName: string, options = '') {
     return this.runCmd(`bit lane merge-move ${laneName} ${options}`);
-  }
-  mergeLaneFromScope(cwd: string, fromLane: string, options = '') {
-    return this.runCmd(`bit _merge-lane ${fromLane} ${options}`, cwd);
-  }
-  mergeLaneFromScopeParsed(cwd: string, fromLane: string, options = ''): Record<string, any> {
-    const output = this.mergeLaneFromScope(cwd, fromLane, `${options} --json`);
-    return JSON.parse(output);
-  }
-  tagFromScope(cwd: string, data: Record<string, any>, options = '') {
-    return this.runCmd(`bit _tag '${JSON.stringify(data)}' ${options}`, cwd);
-  }
-  snapFromScope(cwd: string, data: Record<string, any>, options = '') {
-    data.forEach((dataItem) => {
-      if (!dataItem.files) return;
-      dataItem.files.forEach((file) => {
-        if (file.content) {
-          file.content = Buffer.from(file.content).toString('base64');
-        }
-      });
-    });
-    return this.runCmd(`bit _snap '${JSON.stringify(data)}' ${options}`, cwd);
-  }
-  snapFromScopeParsed(cwd: string, data: Record<string, any>, options = '') {
-    const output = this.snapFromScope(cwd, data, `${options} --json`);
-    return JSON.parse(output);
-  }
-  apply(data: Record<string, any>, options = '') {
-    data.forEach((dataItem) => {
-      if (!dataItem.files) return;
-      dataItem.files.forEach((file) => {
-        if (file.content) {
-          file.content = Buffer.from(file.content).toString('base64');
-        }
-      });
-    });
-    // console.log('apply command', `bit apply '${JSON.stringify(data)}' ${options}`);
-    return this.runCmd(`bit apply '${JSON.stringify(data)}' ${options}`);
   }
   diff(id = '') {
     const output = this.runCmd(`bit diff ${id}`);

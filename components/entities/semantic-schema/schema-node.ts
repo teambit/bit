@@ -1,4 +1,5 @@
 import { pickBy } from 'lodash';
+import pluralize from 'pluralize';
 import { DocSchema } from './schemas';
 
 export interface ISchemaNode {
@@ -13,6 +14,7 @@ export interface ISchemaNode {
   getNodes(): SchemaNode[];
   findNode(predicate: (node: SchemaNode) => boolean, visitedNodes?: Set<SchemaNode>): SchemaNode | undefined;
   getAllNodesRecursively(visitedNodes?: Set<SchemaNode>): SchemaNode[];
+  displaySchemaName: string;
 }
 
 /**
@@ -22,11 +24,17 @@ export interface ISchemaNode {
  */
 export abstract class SchemaNode implements ISchemaNode {
   readonly __schema = this.constructor.name;
+  readonly displaySchemaName = pluralize(
+    this.constructor.name
+      .replace(/Schema$/, '')
+      .replace(/([A-Z])/g, ' $1')
+      .trim()
+  );
+
   abstract readonly location: SchemaLocation;
   readonly doc?: DocSchema;
   readonly signature?: string;
   readonly name?: string;
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static fromObject(obj: Record<string, any>): SchemaNode {
     throw new Error(`Method 'fromObject' not implemented in subclass.`);

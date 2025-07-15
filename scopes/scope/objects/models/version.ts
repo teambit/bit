@@ -467,6 +467,8 @@ export default class Version extends BitObject {
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),
         flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toObject()),
+        // @todo: uncomment this in the future, once all remotes are updated to support the backward compatibility.
+        // flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toString()),
         flattenedEdges: this.flattenedEdgesRef ? undefined : this.flattenedEdges.map((f) => Version.depEdgeToObject(f)),
         flattenedEdgesRef: this.flattenedEdgesRef?.toString(),
         dependenciesGraphRef: this.dependenciesGraphRef?.toString(),
@@ -524,10 +526,10 @@ export default class Version extends BitObject {
       dependencies,
       devDependencies,
       flattenedDependencies,
+      flattenedDevDependencies,
       flattenedEdges,
       flattenedEdgesRef,
       dependenciesGraphRef,
-      flattenedDevDependencies,
       devPackageDependencies,
       peerPackageDependencies,
       packageDependencies,
@@ -572,15 +574,18 @@ export default class Version extends BitObject {
       });
     };
 
-    const _getFlattenedDependencies = (deps = []): ComponentID[] => {
+    // Accept both string[] and object[] for backward compatibility
+    const parseFlattenedDeps = (deps = []): ComponentID[] => {
+      if (!deps.length) return [];
+      if (typeof deps[0] === 'string') return deps.map((dep) => ComponentID.fromString(dep));
       return deps.map((dep) => ComponentID.fromObject(dep));
     };
 
     const _groupFlattenedDependencies = () => {
       // support backward compatibility. until v15, there was both flattenedDependencies and
       // flattenedDevDependencies. since then, these both were grouped to one flattenedDependencies
-      const flattenedDeps = _getFlattenedDependencies(flattenedDependencies);
-      const flattenedDevDeps = _getFlattenedDependencies(flattenedDevDependencies);
+      const flattenedDeps = parseFlattenedDeps(flattenedDependencies);
+      const flattenedDevDeps = parseFlattenedDeps(flattenedDevDependencies);
       return ComponentIdList.fromArray([...flattenedDeps, ...flattenedDevDeps]);
     };
 

@@ -18,7 +18,7 @@ export class MoveCmd implements Command {
       description: "the new directory (relative to the workspace root) to create and move the component's files to",
     },
   ];
-  group = 'development';
+  group = 'component-development';
   alias = 'mv';
   loader = true;
   options = [];

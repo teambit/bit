@@ -25,7 +25,6 @@ import {
 } from '@pnpm/core';
 import * as pnpm from '@pnpm/core';
 import { createClient, ClientOptions } from '@pnpm/client';
-import { pickRegistryForPackage } from '@pnpm/pick-registry-for-package';
 import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
 import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
 import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
@@ -33,7 +32,7 @@ import { readWantedLockfile, writeWantedLockfile } from '@pnpm/lockfile.fs';
 import { type LockfileFile, type LockfileObject } from '@pnpm/lockfile.types'
 import { Logger } from '@teambit/logger';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
-import { isEqual } from 'lodash'
+import { isEqual } from 'lodash';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
 
@@ -79,6 +78,7 @@ async function createStoreController(
     fetchRetryMintimeout: options.networkConfig.fetchRetryMintimeout,
     fetchTimeout: options.networkConfig.fetchTimeout,
     virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
+    registries: options.registries.toMap(),
   };
   return createOrConnectStoreController(opts);
 }
@@ -88,11 +88,13 @@ export async function generateResolverAndFetcher({
   registries,
   proxyConfig,
   networkConfig,
+  fullMetadata,
 }: {
   cacheDir: string;
   registries: Registries;
   proxyConfig?: PackageManagerProxyConfig;
   networkConfig?: PackageManagerNetworkConfig;
+  fullMetadata?: boolean;
 }) {
   const pnpmConfig = await readConfig();
   const authConfig = getAuthConfig(registries);
@@ -118,6 +120,8 @@ export async function generateResolverAndFetcher({
       minTimeout: networkConfig.fetchRetryMintimeout,
       retries: networkConfig.fetchRetries,
     },
+    registries: registries.toMap(),
+    fullMetadata,
   };
   const result = createClient(opts);
   return result;
@@ -191,6 +195,7 @@ export async function install(
     hoistInjectedDependencies?: boolean;
     dryRun?: boolean;
     dedupeInjectedDeps?: boolean;
+    forcedHarmonyVersion?: string;
   } & Pick<
     InstallOptions,
     | 'autoInstallPeers'
@@ -211,16 +216,22 @@ export async function install(
   logger?: Logger
 ): Promise<{ dependenciesChanged: boolean; rebuild: RebuildFn; storeDir: string; depsRequiringBuild?: DepPath[] }> {
   const externalDependencies = new Set<string>();
-  const readPackage: ReadPackageHook[] = [];
+  const readPackage = createReadPackageHooks(options);
   if (options?.rootComponents && !options?.rootComponentsForCapsules) {
     for (const [dir, { name }] of Object.entries(manifestsByPaths)) {
       if (dir !== rootDir && name) {
         externalDependencies.add(name);
       }
     }
-    readPackage.push(readPackageHook as ReadPackageHook);
   }
-  readPackage.push(removeLegacyFromDeps as ReadPackageHook);
+  const overrides = {
+    ...options.overrides,
+  };
+  if (options.forcedHarmonyVersion) {
+    // Harmony needs to be a singleton, so if a specific version was requested for the workspace,
+    // we force that version accross the whole dependency graph.
+    overrides['@teambit/harmony'] = options.forcedHarmonyVersion;
+  }
   if (!manifestsByPaths[rootDir].dependenciesMeta) {
     manifestsByPaths = {
       ...manifestsByPaths,
@@ -229,9 +240,6 @@ export async function install(
         dependenciesMeta: {},
       },
     };
-  }
-  if (options?.rootComponentsForCapsules) {
-    readPackage.push(readPackageHookForCapsules as ReadPackageHook);
   }
   const { allProjects, packagesToBuild } = groupPkgs(manifestsByPaths, {
     update: options?.updateAll,
@@ -292,6 +300,12 @@ export async function install(
     disableRelinkLocalDirDeps: true,
     hoistPattern,
     virtualStoreDirMaxLength: VIRTUAL_STORE_DIR_MAX_LENGTH,
+    overrides,
+    peerDependencyRules: {
+      allowAny: ['*'],
+      ignoreMissing: ['*'],
+      ...options.reportOptions?.peerDependencyRules,
+    },
   };
 
   let dependenciesChanged = false;
@@ -311,7 +325,7 @@ export async function install(
       const installResult = await installsRunning[rootDir];
       depsRequiringBuild = installResult.depsRequiringBuild?.sort();
       if (depsRequiringBuild != null) {
-        await addDepsRequiringBuildToLockfile(rootDir, depsRequiringBuild)
+        await addDepsRequiringBuildToLockfile(rootDir, depsRequiringBuild);
       }
       dependenciesChanged =
         installResult.stats.added + installResult.stats.removed + installResult.stats.linkedToRoot > 0;
@@ -364,11 +378,6 @@ function initReporter(opts?: ReportOptions) {
       hideAddedPkgsProgress: opts?.hideAddedPkgsProgress,
       hideProgressPrefix: opts?.hideProgressPrefix,
       hideLifecycleOutput: opts?.hideLifecycleOutput,
-      peerDependencyRules: {
-        allowAny: ['*'],
-        ignoreMissing: ['*'],
-        ...opts?.peerDependencyRules,
-      },
     },
     streamParser: streamParser as any, // eslint-disable-line
     // Linked in core aspects are excluded from the output to reduce noise.
@@ -376,6 +385,31 @@ function initReporter(opts?: ReportOptions) {
     // Only those that are symlinked from outside the workspace will be hidden.
     filterPkgsDiff: (diff) => !diff.name.startsWith('@teambit/') || !diff.from,
   });
+}
+
+/**
+ * This function returns the list of hooks that are passed to pnpm
+ * for transforming the manifests of dependencies during installation.
+ */
+export function createReadPackageHooks(options: {
+  rootComponents?: boolean;
+  rootComponentsForCapsules?: boolean;
+  forcedHarmonyVersion?: string;
+}): ReadPackageHook[] {
+  const readPackage: ReadPackageHook[] = [];
+  if (options?.rootComponents && !options?.rootComponentsForCapsules) {
+    readPackage.push(readPackageHook as ReadPackageHook);
+  }
+  readPackage.push(removeLegacyFromDeps as ReadPackageHook);
+  if (!options.forcedHarmonyVersion) {
+    // If the workspace did not specify a harmony version in a root policy,
+    // then we remove harmony from any dependencies, so that the one linked from bvm is used.
+    readPackage.push(removeHarmonyFromDeps as ReadPackageHook);
+  }
+  if (options?.rootComponentsForCapsules) {
+    readPackage.push(readPackageHookForCapsules as ReadPackageHook);
+  }
+  return readPackage;
 }
 
 /**
@@ -404,11 +438,29 @@ function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string)
  * It is linked from bvm.
  */
 function removeLegacyFromDeps(pkg: PackageManifest): PackageManifest {
-  if (pkg.dependencies?.['@teambit/legacy'] && !pkg.dependencies['@teambit/legacy'].startsWith('link:')) {
-    delete pkg.dependencies['@teambit/legacy'];
+  if (pkg.dependencies != null) {
+    if (pkg.dependencies['@teambit/legacy'] && !pkg.dependencies['@teambit/legacy'].startsWith('link:')) {
+      delete pkg.dependencies['@teambit/legacy'];
+    }
   }
-  if (pkg.peerDependencies?.['@teambit/legacy']) {
-    delete pkg.peerDependencies['@teambit/legacy'];
+  if (pkg.peerDependencies != null) {
+    if (pkg.peerDependencies['@teambit/legacy']) {
+      delete pkg.peerDependencies['@teambit/legacy'];
+    }
+  }
+  return pkg;
+}
+
+function removeHarmonyFromDeps(pkg: PackageManifest): PackageManifest {
+  if (pkg.dependencies != null) {
+    if (pkg.dependencies['@teambit/harmony'] && !pkg.dependencies['@teambit/harmony'].startsWith('link:')) {
+      delete pkg.dependencies['@teambit/harmony'];
+    }
+  }
+  if (pkg.peerDependencies != null) {
+    if (pkg.peerDependencies['@teambit/harmony']) {
+      delete pkg.peerDependencies['@teambit/harmony'];
+    }
   }
   return pkg;
 }
@@ -495,13 +547,29 @@ function groupPkgs(manifestsByPaths: Record<string, ProjectManifest>, opts: { up
 
 export async function resolveRemoteVersion(
   packageName: string,
-  rootDir: string,
-  cacheDir: string,
-  registries: Registries,
-  proxyConfig: PackageManagerProxyConfig = {},
-  networkConfig: PackageManagerNetworkConfig = {}
+  {
+    rootDir,
+    cacheDir,
+    fullMetadata,
+    registries,
+    proxyConfig,
+    networkConfig,
+  }: {
+    rootDir: string;
+    cacheDir: string;
+    fullMetadata?: boolean;
+    registries: Registries;
+    proxyConfig?: PackageManagerProxyConfig;
+    networkConfig?: PackageManagerNetworkConfig;
+  }
 ): Promise<ResolvedPackageVersion> {
-  const { resolve } = await generateResolverAndFetcher({ cacheDir, registries, proxyConfig, networkConfig });
+  const { resolve } = await generateResolverAndFetcher({
+    cacheDir,
+    fullMetadata,
+    networkConfig,
+    proxyConfig,
+    registries,
+  });
   const resolveOpts = {
     lockfileDir: rootDir,
     preferredVersions: {},
@@ -510,12 +578,10 @@ export async function resolveRemoteVersion(
   };
   try {
     const parsedPackage = parsePackageName(packageName);
-    const registry = pickRegistryForPackage(registries.toMap(), parsedPackage.name);
     const wantedDep: WantedDependency = {
       alias: parsedPackage.name,
-      pref: parsedPackage.version,
+      bareSpecifier: parsedPackage.version,
     };
-    resolveOpts.registry = registry;
     const val = await resolve(wantedDep, resolveOpts);
     if (!val.manifest) {
       throw new BitError('The resolved package has no manifest');
@@ -529,6 +595,7 @@ export async function resolveRemoteVersion(
       wantedRange,
       isSemver: true,
       resolvedVia: val.resolvedVia,
+      manifest: val.manifest,
     };
   } catch (e: any) {
     if (!e.message?.includes('is not a valid string')) {
@@ -537,32 +604,33 @@ export async function resolveRemoteVersion(
     // The provided package is probably a git url or path to a folder
     const wantedDep: WantedDependency = {
       alias: undefined,
-      pref: packageName,
+      bareSpecifier: packageName,
     };
     const val = await resolve(wantedDep, resolveOpts);
     if (!val.manifest) {
       throw new BitError('The resolved package has no manifest');
     }
-    if (!val.normalizedPref) {
+    if (!val.normalizedBareSpecifier) {
       throw new BitError('The resolved package has no version');
     }
     return {
       packageName: val.manifest.name,
-      version: val.normalizedPref,
+      version: val.normalizedBareSpecifier,
       isSemver: false,
       resolvedVia: val.resolvedVia,
+      manifest: val.manifest,
     };
   }
 }
 
 async function addDepsRequiringBuildToLockfile(rootDir: string, depsRequiringBuild: string[]) {
-  const lockfile = await readWantedLockfile(rootDir, { ignoreIncompatible: true }) as BitLockfile;
-  if (lockfile == null) return
+  const lockfile = (await readWantedLockfile(rootDir, { ignoreIncompatible: true })) as BitLockfile;
+  if (lockfile == null) return;
   if (isEqual(lockfile.bit?.depsRequiringBuild, depsRequiringBuild)) return;
   lockfile.bit = {
     ...lockfile.bit,
     depsRequiringBuild,
-  }
+  };
   await writeWantedLockfile(rootDir, lockfile);
 }
 

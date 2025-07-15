@@ -18,8 +18,9 @@ export type ComponentCompareContextType = ComponentCompareModel &
     compareContext?: StateAndHooks;
   } & ViewState;
 
-export const ComponentCompareContext: React.Context<
-  ComponentCompareContextType | undefined> = createContext<ComponentCompareContextType | undefined>(undefined);
+export const ComponentCompareContext: React.Context<ComponentCompareContextType | undefined> = createContext<
+  ComponentCompareContextType | undefined
+>(undefined);
 
 export const useComponentCompare: () => ComponentCompareContextType | undefined = () => {
   const componentCompareContext = useContext(ComponentCompareContext);

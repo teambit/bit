@@ -32,6 +32,7 @@ export function CompositionGallery({ component }: CompositionGalleryProps) {
               previewClass={styles.preview}
               composition={composition}
               component={component}
+              queryParams={'disableCta=true'}
             />
           );
         })}

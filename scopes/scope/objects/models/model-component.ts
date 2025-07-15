@@ -46,7 +46,6 @@ import { ObjectItem } from '../objects/object-list';
 import type { Scope } from '@teambit/legacy.scope';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { DetachedHeads } from './detach-heads';
-import { DETACH_HEAD, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 
 type State = {
   versions?: {
@@ -569,6 +568,7 @@ export default class Component extends BitObject {
     const headVersion = head ? ((await repo.load(head)) as unknown as Version) : undefined;
     const removeAspect = headVersion?.extensions.findCoreExtension(Extensions.remove);
     const removeRange = removeAspect?.config.range;
+    const removeSnaps = removeAspect?.config.snaps || [];
     const deprecationAspect = headVersion?.extensions.findCoreExtension(Extensions.deprecation);
     const deprecationRange = deprecationAspect?.config.range;
 
@@ -584,7 +584,9 @@ export default class Component extends BitObject {
         hash: getRef(versionInfo.ref),
         parents: versionInfo.parents.map((parent) => getRef(parent)),
         onLane: versionInfo.onLane,
-        deleted: versionInfo.tag && removeRange && semver.satisfies(versionInfo.tag, removeRange),
+        deleted:
+          (versionInfo.tag && removeRange && semver.satisfies(versionInfo.tag, removeRange)) ||
+          (!versionInfo.tag && removeSnaps.includes(versionInfo.ref.toString())),
         deprecated: versionInfo.tag && deprecationRange && semver.satisfies(versionInfo.tag, deprecationRange),
         hidden: versionInfo.version?.hidden,
       };
@@ -731,7 +733,7 @@ export default class Component extends BitObject {
       const parentToSet = setHeadAsParent ? head : parent;
       version.addAsOnlyParent(parentToSet || head);
     }
-    if (parent && head && !parent.isEqual(head) && !overrideHead && isFeatureEnabled(DETACH_HEAD)) {
+    if (parent && head && !parent.isEqual(head) && !overrideHead) {
       if (detachHead) this.detachedHeads.setHead(version.hash());
       else
         throw new Error(`unable to add a new version for "${this.id()}" on main.
@@ -753,7 +755,7 @@ otherwise, please run "bit checkout head" to be up to date, then snap/tag your c
     const increment = (ver: string) => {
       try {
         // don't use "semver.inc" function, it'll swallow the error and return null.
-        const incResult = new semver.SemVer(ver).inc(releaseType, preReleaseId)
+        const incResult = new semver.SemVer(ver).inc(releaseType, preReleaseId);
         return incResult.version;
       } catch (err: any) {
         throw new Error(`unable to increment version "${ver}" with releaseType "${releaseType}" and preReleaseId "${preReleaseId}".
@@ -1027,10 +1029,14 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     if (removeAspect.config.removed) {
       return true;
     }
-    if (specificVersion && removeAspect.config.range) {
-      const tag = this.getTag(specificVersion);
-      if (!tag) return false; // it's a snap. "range" doesn't support snaps. only semver.
-      return semver.satisfies(tag, removeAspect.config.range);
+    if (specificVersion) {
+      if (removeAspect.config.range) {
+        const tag = this.getTag(specificVersion);
+        if (tag) return semver.satisfies(tag, removeAspect.config.range);
+      }
+      if (removeAspect.config.snaps && Array.isArray(removeAspect.config.snaps)) {
+        return removeAspect.config.snaps.includes(specificVersion);
+      }
     }
     return false;
   }

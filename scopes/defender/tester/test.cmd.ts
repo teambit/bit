@@ -29,7 +29,7 @@ export class TestCmd implements Command {
     },
   ];
   alias = 'at';
-  group = 'development';
+  group = 'testing';
   options = [
     ['w', 'watch', 'start the tester in watch mode.'],
     ['d', 'debug', 'start the tester in debug mode.'],
@@ -141,7 +141,8 @@ otherwise, only new and modified components will be tested`);
     };
   }
 
-  async json( [userPattern]: [string],
+  async json(
+    [userPattern]: [string],
     {
       watch = false,
       debug = false,
@@ -150,69 +151,69 @@ otherwise, only new and modified components will be tested`);
       coverage = false,
       unmodified = false,
       updateSnapshot = false,
-    }: TestFlags): Promise<GenericObject> {
-      const timer = Timer.create();
-      timer.start();
-      if (!this.workspace) throw new OutsideWorkspaceError();
+    }: TestFlags
+  ): Promise<GenericObject> {
+    const timer = Timer.create();
+    timer.start();
+    if (!this.workspace) throw new OutsideWorkspaceError();
 
-      const getPatternWithScope = () => {
-        if (!userPattern) return undefined;
-        const pattern = userPattern || '**';
-        return pattern;
-      };
-      const patternWithScope = getPatternWithScope();
-      const components = await this.workspace.getComponentsByUserInput(unmodified, patternWithScope, true);
-      if (!components.length) {
-        this.logger.info(`no components found to test.
+    const getPatternWithScope = () => {
+      if (!userPattern) return undefined;
+      const pattern = userPattern || '**';
+      return pattern;
+    };
+    const patternWithScope = getPatternWithScope();
+    const components = await this.workspace.getComponentsByUserInput(unmodified, patternWithScope, true);
+    if (!components.length) {
+      this.logger.info(`no components found to test.
   use "--unmodified" flag to test all components or specify the ids to test.
   otherwise, only new and modified components will be tested`);
-        return {
-          code: 0,
-          data: [],
-        };
-      }
-
-      let code = 0;
-      const restore = silenceConsoleAndStdout();
-      let tests: TestResults;
-      try {
-        tests = await this.tester.test(components, {
-          watch,
-          debug,
-          env,
-          junit,
-          coverage,
-          updateSnapshot,
-        });
-      } catch (err) {
-        restore();
-        throw err;
-      }
-      restore();
-      if (tests.hasErrors()) code = 1;
-      if (process.exitCode && process.exitCode !== 0 && typeof process.exitCode === 'number') {
-        // this is needed for testers such as "vitest", where it sets the exitCode to non zero when the coverage is not met.
-        code = process.exitCode;
-      }
-
-      const data = tests.results.map(r => ({
-        data: {
-          components: r.data?.components.map(c => ({
-            ...c,
-            componentId: c.componentId.toString(),
-          })),
-          errors: r.data?.errors,
-        },
-        error: r.error,
-      }));
-
       return {
-        code,
-        data
+        code: 0,
+        data: [],
       };
+    }
+
+    let code = 0;
+    const restore = silenceConsoleAndStdout();
+    let tests: TestResults;
+    try {
+      tests = await this.tester.test(components, {
+        watch,
+        debug,
+        env,
+        junit,
+        coverage,
+        updateSnapshot,
+      });
+    } catch (err) {
+      restore();
+      throw err;
+    }
+    restore();
+    if (tests.hasErrors()) code = 1;
+    if (process.exitCode && process.exitCode !== 0 && typeof process.exitCode === 'number') {
+      // this is needed for testers such as "vitest", where it sets the exitCode to non zero when the coverage is not met.
+      code = process.exitCode;
+    }
+
+    const data = tests.results.map((r) => ({
+      data: {
+        components: r.data?.components.map((c) => ({
+          ...c,
+          componentId: c.componentId.toString(),
+        })),
+        errors: r.data?.errors,
+      },
+      error: r.error,
+    }));
+
+    return {
+      code,
+      data,
+    };
   }
 }
-
 
 /**
  * Disables all console logging (via console.*) and direct writes to
@@ -226,7 +227,7 @@ function silenceConsoleAndStdout(): () => void {
   const originalStderrWrite = process.stderr.write;
 
   // No-op implementations for console.* methods
-  for (const method of ["log", "warn", "error", "info", "debug"] as const) {
+  for (const method of ['log', 'warn', 'error', 'info', 'debug'] as const) {
     // eslint-disable-next-line no-console
     console[method] = () => {};
   }

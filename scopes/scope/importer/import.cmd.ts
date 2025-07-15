@@ -39,6 +39,7 @@ type ImportFlags = {
   fetchDeps?: boolean;
   trackOnly?: boolean;
   includeDeprecated?: boolean;
+  writeDeps?: 'package.json' | 'workspace.jsonc';
 };
 
 export class ImportCmd implements Command {
@@ -119,6 +120,11 @@ export class ImportCmd implements Command {
       '',
       'fetch-deps',
       'fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data',
+    ],
+    [
+      '',
+      'write-deps <workspace.jsonc|package.json>',
+      'write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions',
     ],
     [
       '',
@@ -225,6 +231,7 @@ export class ImportCmd implements Command {
       fetchDeps = false,
       trackOnly = false,
       includeDeprecated = false,
+      writeDeps,
     }: ImportFlags
   ): Promise<ImportResult> {
     if (dependentsDryRun) {
@@ -285,6 +292,7 @@ export class ImportCmd implements Command {
       fetchDeps,
       trackOnly,
       includeDeprecated,
+      writeDeps,
     };
     return this.importer.import(importOptions, this._packageManagerArgs);
   }

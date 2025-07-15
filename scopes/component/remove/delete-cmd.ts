@@ -44,6 +44,7 @@ unless the '--hard' flag is used (not recommended!), in which case, the componen
       'force',
       'relevant for --hard. allow the deletion even if used as a dependency. WARNING: components that depend on this component will corrupt',
     ],
+    ['', 'snaps <string>', 'comma-separated list of snap hashes to mark as deleted (e.g. --snaps "hash1,hash2,hash3")'],
   ] as CommandOptions;
   loader = true;
   remoteOp = true;
@@ -62,6 +63,7 @@ unless the '--hard' flag is used (not recommended!), in which case, the componen
       hard = false,
       silent = false,
       range,
+      snaps,
     }: {
       force?: boolean;
       lane?: boolean;
@@ -69,6 +71,7 @@ unless the '--hard' flag is used (not recommended!), in which case, the componen
       hard?: boolean;
       silent?: boolean;
       range?: string;
+      snaps?: string;
     }
   ) {
     if (this.workspace?.isOnLane() && !hard && !lane && !updateMain) {
@@ -91,7 +94,14 @@ unless the '--hard' flag is used (not recommended!), in which case, the componen
       return `${localMessage}${this.paintArray(remoteResult)}`;
     }
 
-    const removedComps = await this.remove.deleteComps(componentsPattern, { updateMain, range });
+    const deleteOpts: any = { updateMain, range };
+    if (snaps) {
+      deleteOpts.snaps = snaps
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+    const removedComps = await this.remove.deleteComps(componentsPattern, deleteOpts);
     const removedCompIds = removedComps.map((comp) => comp.id.toString());
     return `${chalk.green('successfully deleted the following components:')}
 ${removedCompIds.join('\n')}

@@ -98,9 +98,7 @@ export class APIReferenceModel {
 
     const collectedInternals: SchemaNode[] = [];
     exportedSchemaNodes.forEach((exportedNode) => {
-      const targetNode = ExportSchema.isExportSchema(exportedNode)
-        ? exportedNode.exportNode
-        : exportedNode;
+      const targetNode = ExportSchema.isExportSchema(exportedNode) ? exportedNode.exportNode : exportedNode;
       const allDescendants = targetNode.getAllNodesRecursively();
       allDescendants.forEach((descendant) => {
         if (descendant !== targetNode && this.isInternalTypeReference(descendant)) {
@@ -122,9 +120,7 @@ export class APIReferenceModel {
     const nonDefaultRenderers = renderers.filter((renderer) => !renderer.default);
 
     const exportedAPINodes: APINode[] = exportedSchemaNodes.map((schemaNode) => {
-      const targetNode = ExportSchema.isExportSchema(schemaNode)
-        ? schemaNode.exportNode
-        : schemaNode;
+      const targetNode = ExportSchema.isExportSchema(schemaNode) ? schemaNode.exportNode : schemaNode;
       return {
         componentId,
         api: targetNode,
@@ -137,13 +133,14 @@ export class APIReferenceModel {
     });
 
     const internalAPINodes: APINode[] = internalSchemaNodes.map((schemaNode) => {
-      const internalSchemaNode = head(
-        compact(
-          api.internals
-            .flatMap(i => i.exports)
-            .map((e) => e.findNode((s) => s.name === schemaNode.name && s.__schema !== 'TypeRefSchema'))
-        )
-      ) || schemaNode;
+      const internalSchemaNode =
+        head(
+          compact(
+            api.internals
+              .flatMap((i) => i.exports)
+              .map((e) => e.findNode((s) => s.name === schemaNode.name && s.__schema !== 'TypeRefSchema'))
+          )
+        ) || schemaNode;
 
       return {
         componentId,
@@ -152,7 +149,7 @@ export class APIReferenceModel {
         renderer:
           nonDefaultRenderers.find((renderer) => renderer.predicate(internalSchemaNode)) ||
           defaultRenderers.find((renderer) => renderer.predicate(internalSchemaNode)),
-      } as APINode
+      } as APINode;
     });
 
     return exportedAPINodes.concat(internalAPINodes).filter((node) => node.renderer);

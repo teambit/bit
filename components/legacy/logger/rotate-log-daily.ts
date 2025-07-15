@@ -61,12 +61,7 @@ export function rotateLogDaily(
  * @param ext       Log file extension (e.g. ".log")
  * @param maxFiles  Maximum number of daily logs to keep
  */
-function cleanupOldDailyLogs(
-  dir: string,
-  base: string,
-  ext: string,
-  maxFiles: number
-): void {
+function cleanupOldDailyLogs(dir: string, base: string, ext: string, maxFiles: number): void {
   const allFiles = fs.readdirSync(dir);
 
   // e.g. prefix = "debug-", suffix = ".log"
@@ -74,9 +69,7 @@ function cleanupOldDailyLogs(
   const suffix = ext;
 
   // 1. Collect files like "debug-2025-02-27.log"
-  const dailyLogs = allFiles.filter((filename) =>
-    filename.startsWith(prefix) && filename.endsWith(suffix)
-  );
+  const dailyLogs = allFiles.filter((filename) => filename.startsWith(prefix) && filename.endsWith(suffix));
 
   // 2. Sort ascending by filename, which also sorts by date
   //    because "YYYY-MM-DD" sorts chronologically.
@@ -95,11 +88,7 @@ function cleanupOldDailyLogs(
  * Returns true if two dates differ in year, month, or day.
  */
 function isDifferentDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() !== b.getFullYear() ||
-    a.getMonth() !== b.getMonth() ||
-    a.getDate() !== b.getDate()
-  );
+  return a.getFullYear() !== b.getFullYear() || a.getMonth() !== b.getMonth() || a.getDate() !== b.getDate();
 }
 
 /**

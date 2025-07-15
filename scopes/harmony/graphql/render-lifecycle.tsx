@@ -21,7 +21,7 @@ type RenderContext = {
 const ALLOWED_HEADERS = ['cookie'];
 
 export class GraphqlRenderPlugins implements SSR.RenderPlugin<RenderContext, { state?: NormalizedCacheObject }> {
-  constructor(private graphqlUI: GraphqlUI) { }
+  constructor(private graphqlUI: GraphqlUI) {}
 
   key = GraphqlAspect.id;
 

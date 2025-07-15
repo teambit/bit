@@ -98,7 +98,6 @@ export class PnpmPackageManager implements PackageManager {
     const lockfile: LockfileFile = await convertGraphToLockfile(dependenciesGraph, {
       ...opts,
       resolve,
-      registries: registries.toMap(),
     });
     Object.assign(lockfile, {
       bit: {
@@ -131,14 +130,19 @@ export class PnpmPackageManager implements PackageManager {
       isFeatureEnabled(DEPS_GRAPH) &&
       (installOptions.rootComponents || installOptions.rootComponentsForCapsules)
     ) {
-      await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
-        manifests,
-        rootDir,
-        registries,
-        proxyConfig,
-        networkConfig,
-        cacheDir: config.cacheDir,
-      });
+      try {
+        await this.dependenciesGraphToLockfile(installOptions.dependenciesGraph, {
+          manifests,
+          rootDir,
+          registries,
+          proxyConfig,
+          networkConfig,
+          cacheDir: config.cacheDir,
+        });
+      } catch (error) {
+        // If the lockfile could not be created for some reason, it will be created later during installation.
+        this.logger.error((error as Error).message);
+      }
     }
 
     this.logger.debug(`running installation in root dir ${rootDir}`);
@@ -209,6 +213,7 @@ export class PnpmPackageManager implements PackageManager {
           peerDependencyRules: installOptions.peerDependencyRules,
         },
         returnListOfDepsRequiringBuild: installOptions.returnListOfDepsRequiringBuild,
+        forcedHarmonyVersion: installOptions.forcedHarmonyVersion,
       },
       this.logger
     );
@@ -256,7 +261,14 @@ export class PnpmPackageManager implements PackageManager {
     const proxyConfig = await this.depResolver.getProxyConfig();
     const networkConfig = await this.depResolver.getNetworkConfig();
     const { config } = await this.readConfig(options.packageManagerConfigRootDir);
-    return resolveRemoteVersion(packageName, options.rootDir, config.cacheDir, registries, proxyConfig, networkConfig);
+    return resolveRemoteVersion(packageName, {
+      rootDir: options.rootDir,
+      cacheDir: config.cacheDir,
+      registries,
+      proxyConfig,
+      networkConfig,
+      fullMetadata: options.fullMetadata,
+    });
   }
 
   async getProxyConfig?(): Promise<PackageManagerProxyConfig> {
@@ -428,7 +440,13 @@ export class PnpmPackageManager implements PackageManager {
       filterByImporterIds.push(opts.componentRootDir as ProjectId);
     }
     for (const importerId of filterByImporterIds) {
-      for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies', 'specifiers', 'dependenciesMeta']) {
+      for (const depType of [
+        'dependencies',
+        'devDependencies',
+        'optionalDependencies',
+        'specifiers',
+        'dependenciesMeta',
+      ]) {
         for (const workspacePkgName of opts.componentIdByPkgName.keys()) {
           if (workspacePkgName !== opts.pkgName) {
             delete lockfile.importers[importerId]?.[depType]?.[workspacePkgName];

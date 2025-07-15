@@ -72,10 +72,8 @@ export function APINodeDetails({
   const indexHidden = (containerSize.width ?? 0) < INDEX_THRESHOLD_WIDTH;
 
   const example = (doc?.tags || []).find((tag) => tag.tagName === 'example');
-  const comment = doc?.comment
-    ?? doc?.tags
-      ?.filter((tag) => tag.comment)
-      .reduce((acc, tag) => acc.concat(`${tag.comment}\n`), '');
+  const comment =
+    doc?.comment ?? doc?.tags?.filter((tag) => tag.comment).reduce((acc, tag) => acc.concat(`${tag.comment}\n`), '');
 
   const linkComment = doc?.tags?.find((tag) => tag.tagName === 'link')?.comment;
 
@@ -105,12 +103,15 @@ export function APINodeDetails({
     const word = model.getWordAtPosition(position);
     const wordApiNode: APINode | undefined = word
       ? apiRefModel?.apiByName?.get(word.word) ||
-      apiRefModel?.apiByName?.get(apiRefModel.generateInternalAPIKey(filePath, word.word))
+        apiRefModel?.apiByName?.get(apiRefModel.generateInternalAPIKey(filePath, word.word))
       : undefined;
-    const wordApiUrl = wordApiNode ? getAPINodeUrl({
-      selectedAPI: wordApiNode.exported
-        ? wordApiNode.api.name : apiRefModel.generateInternalAPIKey(filePath, word.word)
-    }) : null;
+    const wordApiUrl = wordApiNode
+      ? getAPINodeUrl({
+          selectedAPI: wordApiNode.exported
+            ? wordApiNode.api.name
+            : apiRefModel.generateInternalAPIKey(filePath, word.word),
+        })
+      : null;
     apiUrlToRoute.current = wordApiUrl;
     if (!wordApiUrl || wordApiNode?.api.name === name) return undefined;
     const contents = [

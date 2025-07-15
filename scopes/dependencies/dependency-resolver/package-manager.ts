@@ -1,5 +1,5 @@
 import { PeerDependencyIssuesByProjects } from '@pnpm/core';
-import { PeerDependencyRules, ProjectManifest } from '@pnpm/types';
+import { PeerDependencyRules, ProjectManifest, DependencyManifest } from '@pnpm/types';
 import { ComponentID, ComponentMap } from '@teambit/component';
 import { type DependenciesGraph } from '@teambit/objects';
 import { Registries } from '@teambit/pkg.entities.registry';
@@ -134,6 +134,8 @@ export type PackageManagerInstallOptions = {
   returnListOfDepsRequiringBuild?: boolean;
 
   dependenciesGraph?: DependenciesGraph;
+
+  forcedHarmonyVersion?: string;
 };
 
 export type PackageManagerGetPeerDependencyIssuesOptions = PackageManagerInstallOptions;
@@ -144,12 +146,14 @@ export type ResolvedPackageVersion = {
   wantedRange?: string;
   isSemver: boolean;
   resolvedVia?: string;
+  manifest?: DependencyManifest;
 };
 
 export type PackageManagerResolveRemoteVersionOptions = {
   rootDir: string;
   cacheRootDir?: string;
   packageManagerConfigRootDir?: string;
+  fullMetadata?: boolean;
   // fetchToCache?: boolean;
   // update?: boolean;
 };

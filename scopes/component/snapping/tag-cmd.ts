@@ -69,6 +69,7 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     'stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)',
   ],
   ['b', 'build', 'locally run the build pipeline (i.e. not via rippleCI) and complete the tag'],
+  ['', 'loose', 'allow tag --build to succeed even if tasks like tests or lint fail'],
   [
     '',
     'detach-head',
@@ -91,11 +92,12 @@ export type TagParams = {
   incrementBy?: number;
   failFast?: boolean;
   disableTagPipeline?: boolean;
+  loose?: boolean;
 } & Partial<BasicTagParams>;
 
 export class TagCmd implements Command {
   name = 'tag [component-patterns...]';
-  group = 'development';
+  group = 'version-control';
   description = 'create an immutable and exportable component snapshot, tagged with a release version.';
   extendedDescription = `if no patterns are provided, it will tag all new and modified components.
 if patterns are entered, you can specify a version per pattern using "@" sign, e.g. bit tag foo@1.0.0 bar@minor baz@major`;
@@ -140,6 +142,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
       failFast = false,
       incrementBy = 1,
       detachHead,
+      loose = false,
     } = options;
 
     if (!message && !persist && !editor) {
@@ -192,6 +195,7 @@ To undo local tag use the "bit reset" command.`
       version: ver,
       failFast,
       detachHead,
+      loose,
     };
 
     const results = await this.snapping.tag(params);

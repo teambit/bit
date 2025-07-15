@@ -85,7 +85,6 @@ export class ScopeComponentsImporter {
     return this._importManyObjectsMutex;
   }
 
-
   static getInstance(scope: Scope): ScopeComponentsImporter {
     if (!this.instancePerScope[scope.name]) {
       this.instancePerScope[scope.name] = new ScopeComponentsImporter(scope);

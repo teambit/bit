@@ -13,7 +13,7 @@ export class InitCmd implements Command {
   skipWorkspace = true;
   description = 'create or reinitialize an empty workspace';
   helpUrl = 'reference/workspace/creating-workspaces/?new_existing_project=1';
-  group = 'start';
+  group = 'workspace-setup';
   extendedDescription =
     'if the current directory is already a workspace, it validates that bit files are correct and rewrite them if needed.';
   alias = '';
@@ -57,6 +57,7 @@ export class InitCmd implements Command {
     ['f', 'force', 'force workspace initialization without clearing local objects'],
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
+    ['', 'external-package-manager', 'enable external package manager mode (npm/yarn/pnpm)'],
   ] as CommandOptions;
 
   constructor(private hostInitializer: HostInitializerMain) {}
@@ -77,6 +78,7 @@ export class InitCmd implements Command {
       force,
       defaultDirectory,
       defaultScope,
+      externalPackageManager,
     } = flags;
     if (path) path = pathlib.resolve(path);
     if (bare) {
@@ -90,10 +92,11 @@ export class InitCmd implements Command {
       throw new BitError('cannot use both --reset and --reset-hard, please use only one of them');
     }
 
-    const workspaceExtensionProps: WorkspaceExtensionProps = {
+    const workspaceExtensionProps: WorkspaceExtensionProps & { externalPackageManager?: boolean } = {
       defaultDirectory: defaultDirectory ?? getConfig(CFG_INIT_DEFAULT_DIRECTORY),
       defaultScope: defaultScope ?? getConfig(CFG_INIT_DEFAULT_SCOPE),
       name,
+      externalPackageManager,
     };
 
     const { created } = await HostInitializerMain.init(

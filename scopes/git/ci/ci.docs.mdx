@@ -1,0 +1,117 @@
+---
+description: 'Aspect that eases the Bit workflow in CI'
+labels: ['aspect', 'ci']
+---
+
+# Bit CI
+
+Bit's **`bit ci`** commands (plus one BVM enhancement) wrap several routine Bit tasks into single-purpose scripts so your CI pipelines stay short, readable and consistent.
+
+| Command                           | Purpose                                               | Typical CI Stage       |
+| --------------------------------- | ----------------------------------------------------- | ---------------------- |
+| [`bit ci verify`](#bit-ci-verify) | Lint + build gate on every commit                     | pre-push / commit hook |
+| [`bit ci pr`](#bit-ci-pr)         | Snap + export a feature lane when a PR opens/updates  | pull-request pipeline  |
+| [`bit ci merge`](#bit-ci-merge)   | Tag + export new semantic versions on merge to `main` | merge-to-main pipeline |
+
+---
+
+## `bit ci verify`
+
+|                  |                                                   |
+| ---------------- | ------------------------------------------------- |
+| **Syntax**       | `bit ci verify`                                   |
+| **What it does** | Ensures the component passes CI on every commit   |
+| **Runs**         | `bit install && bit status --strict && bit build` |
+
+### When to run
+
+- Every commit that **is not** part of an open Pull Request (e.g. a pre-push hook).
+- As an early CI job to fail fast on dependency drift or broken builds.
+
+### Exit behaviour
+
+The command stops at the first failing step (`status`, then `build`) and returns a non-zero exit code.
+
+---
+
+## `bit ci pr`
+
+Export a lane to Bit Cloud whenever a Pull Request is opened or updated.
+
+```bash
+bit ci pr [--message <string>] [--build] [--lane <string>]
+```
+
+| Flag        | Shorthand | Description                                                                               |
+| ----------- | --------- | ----------------------------------------------------------------------------------------- |
+| `--message` | `-m`      | Changelog entry. If omitted, tries the latest Git commit message (fails if unavailable).  |
+| `--build`   | `-b`      | Build locally before export. If absent, Ripple-CI builds the components.                  |
+| `--lane`    | `-l`      | Explicit lane name. Falls back to the current Git branch name. Performs input validation. |
+
+### Internal flow (fail-fast on any step)
+
+1. **Resolve lane name**
+   - From `--lane` or current Git branch.
+   - If the lane doesn’t exist remotely, create it; otherwise, `bit lane checkout <lane>`.
+2. **Run wrapped Bit commands**
+
+   ```bash
+   bit install
+   bit status --strict
+   bit lane create <lane>      # no-op if already exists
+   bit snap --message "<msg>" --build
+   bit export
+   ```
+
+3. **Clean-up**
+
+   ```bash
+   bit lane switch main   # leaves .bitmap unchanged in the working tree
+   ```
+
+### Typical CI placement
+
+Run on the _pull-request_ event after tests but before any deploy step.
+
+---
+
+## `bit ci merge`
+
+Publishes new semantic versions after a PR merges to `main`.
+
+```bash
+bit ci merge [--message <string>] [--build]
+```
+
+| Flag        | Shorthand | Description                                                                                           |
+| ----------- | --------- | ----------------------------------------------------------------------------------------------------- |
+| `--message` | `-m`      | Changelog entry (defaults to last Git commit message).                                                |
+| `--build`   | `-b`      | Build locally (otherwise Ripple-CI does it). Required if workspace contains _soft-tagged_ components. |
+
+### Internal flow
+
+1. **Ensure main lane**
+
+   ```bash
+   bit lane switch main   # preserves working tree files
+   ```
+
+2. **Tag, build, export**
+
+   ```bash
+   bit install
+   bit tag --message "<msg>" --build --persist   # --persist only if soft tags exist
+   bit export
+   ```
+
+3. **Archive remote lane** (house-keeping).
+4. **Commit lock-file updates**
+
+   ```bash
+   git add .bitmap pnpm-lock.yaml
+   git commit -m "chore(release): sync bitmap + lockfile"
+   ```
+
+### CI hint
+
+Gate this step behind a branch-protection rule so only fast-forward merges trigger a release.

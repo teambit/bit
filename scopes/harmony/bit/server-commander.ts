@@ -58,6 +58,7 @@ import { getPidByPort, getSocketPort } from './server-forever';
 const CMD_SERVER_PORT = 'cli-server-port';
 const CMD_SERVER_PORT_DELETE = 'cli-server-port-delete';
 const CMD_SERVER_SOCKET_PORT = 'cli-server-socket-port';
+const SKIP_PORT_VALIDATION_ARG = '--skip-port-validation';
 
 class ServerPortFileNotFound extends Error {
   constructor(filePath: string) {
@@ -291,7 +292,8 @@ Please run the command "bit server-forever" first to start the server.`)
 
   private async getExistingUsedPort(): Promise<number> {
     const port = await this.getExistingPort();
-    const isPortInUse = await this.isPortInUseForCurrentDir(port);
+    const shouldSkipPortValidation = process.argv.includes(SKIP_PORT_VALIDATION_ARG);
+    const isPortInUse = shouldSkipPortValidation ? true : await this.isPortInUseForCurrentDir(port);
     if (!isPortInUse) {
       await this.deleteServerPortFile();
       throw new ServerIsNotRunning(port);

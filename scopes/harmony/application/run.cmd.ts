@@ -24,7 +24,7 @@ export class RunCmd implements Command {
     },
   ];
   alias = 'c';
-  group = 'apps';
+  group = 'run-serve';
   options = [
     ['d', 'dev', 'start the application in dev mode.'],
     ['p', 'port [port-number]', 'port to run the app on'],

@@ -28,6 +28,7 @@ import {
   DependenciesSetCmd,
   DependenciesUnsetCmd,
   DependenciesUsageCmd,
+  DependenciesWriteCmd,
   RemoveDependenciesFlags,
   SetDependenciesFlags,
   SetPeerCmd,
@@ -428,6 +429,7 @@ export class DependenciesMain {
       new DependenciesEjectCmd(depsMain),
       new DependenciesBlameCmd(depsMain),
       new DependenciesUsageCmd(depsMain),
+      new DependenciesWriteCmd(workspace),
     ];
     cli.register(
       depsCmd,

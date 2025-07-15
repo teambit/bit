@@ -161,7 +161,7 @@ export type PromptOption = {
   type: 'input' | 'confirm' | 'select';
   choices?: string[]; // for select type
   skip?: (previousResults: PromptResults) => boolean; // skip this prompt if this function returns true
-}
+};
 
 /**
  * PromptResults is the result of the user input received from the promptOptions.

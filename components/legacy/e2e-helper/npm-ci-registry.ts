@@ -2,6 +2,7 @@
 import { addUser, REGISTRY_MOCK_PORT, start as startRegistryMock, prepare } from '@pnpm/registry-mock';
 import { ChildProcess } from 'child_process';
 import { fetch } from '@pnpm/fetch';
+import fs from 'fs-extra';
 import execa from 'execa';
 import * as path from 'path';
 
@@ -146,6 +147,22 @@ export class NpmCiRegistry {
     const extractedDir = path.join(packDir, 'package');
     this._validateRegistryScope(extractedDir);
     this.helper.command.runCmd('npm publish', extractedDir);
+  }
+
+  /**
+   * publish an empty package to the registry.
+   * it's helpful in case a package is needed. not a component.
+   * instead of going to the NPM, this method is faster.
+   */
+  publishPackage(packageName: string, version = '0.0.1') {
+    const dir = this.helper.fs.createNewDirectory();
+    this.helper.command.runCmd(`npm init -y`, dir);
+    // change package.json according to the packageName and version
+    const packageJson = fs.readJsonSync(path.join(dir, 'package.json'));
+    packageJson.name = packageName;
+    packageJson.version = version;
+    fs.writeJsonSync(path.join(dir, 'package.json'), packageJson);
+    this.helper.command.runCmd('npm publish', dir);
   }
 
   configureCiInPackageJsonHarmony() {

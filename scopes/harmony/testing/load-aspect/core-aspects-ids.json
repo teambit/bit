@@ -34,6 +34,7 @@
   "teambit.harmony/logger",
   "teambit.pkg/pkg",
   "teambit.react/react",
+  "teambit.vue/vue-aspect",
   "teambit.harmony/worker",
   "teambit.scope/scope",
   "teambit.defender/tester",
@@ -59,8 +60,6 @@
   "teambit.explorer/command-bar",
   "teambit.ui-foundation/sidebar",
   "teambit.component/component-tree",
-  "teambit.scope/sign",
-  "teambit.scope/update-dependencies",
   "teambit.scope/export",
   "teambit.scope/importer",
   "teambit.ui-foundation/harmony-ui-app",
@@ -103,6 +102,8 @@
   "teambit.harmony/doctor",
   "teambit.scope/objects",
   "teambit.harmony/config-store",
+  "teambit.mcp/cli-mcp-server",
+  "teambit.git/ci",
   "teambit.harmony/bit",
   "teambit.harmony/config"
 ]

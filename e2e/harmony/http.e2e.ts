@@ -70,7 +70,7 @@ import { HttpHelper } from '../http-helper';
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
-      helper.command.softRemoveComponent('comp2');
+      helper.command.deleteComponent('comp2');
       helper.fs.outputFile('comp1/index.js', '');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();

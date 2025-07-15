@@ -19,7 +19,7 @@ export default class EjectConfCmd implements Command {
     'eject-conf'
   )}`;
   alias = '';
-  group = 'development';
+  group = 'component-config';
   options = [
     [
       'p',

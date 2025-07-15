@@ -43,7 +43,7 @@ export class ConfigGetter {
     this._store = { ...currentStore, ...store.list() };
   }
 
-  getConfig(key: string): string | undefined  {
+  getConfig(key: string): string | undefined {
     if (!key) {
       return undefined;
     }
@@ -106,7 +106,7 @@ export class ConfigGetter {
       set: (key: string, value: string) => this.globalConfig.set(key, value),
       del: (key: string) => this.globalConfig.delete(key),
       write: async () => this.globalConfig.write(),
-      invalidateCache: async () => this._globalConfig = undefined,
+      invalidateCache: async () => (this._globalConfig = undefined),
       getPath: () => getGlobalConfigPath(),
     };
   }

@@ -9,6 +9,7 @@ export class FetchCmd implements Command {
   name = 'fetch [ids...]';
   description = `fetch remote objects and store locally`;
   extendedDescription = `for lanes, use "/" as a separator between the remote and the lane name, e.g. teambit.ui/fix-button`;
+  group = 'collaborate';
   alias = '';
   private = true;
   options = [

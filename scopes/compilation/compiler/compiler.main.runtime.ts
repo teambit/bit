@@ -16,6 +16,7 @@ import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { Workspace, WorkspaceAspect, WorkspaceComponentLoadOptions } from '@teambit/workspace';
+import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { CompilerAspect } from './compiler.aspect';
 import { CompileCmd } from './compiler.cmd';
 import { CompilerService } from './compiler.service';
@@ -126,6 +127,7 @@ export class CompilerMain {
     DependencyResolverAspect,
     WatcherAspect,
     IssuesAspect,
+    BundlerAspect,
   ];
 
   static async provider([
@@ -141,6 +143,7 @@ export class CompilerMain {
     dependencyResolver,
     watcher,
     issues,
+    bundler,
   ]: [
     CLIMain,
     Workspace,
@@ -154,6 +157,7 @@ export class CompilerMain {
     DependencyResolverMain,
     WatcherMain,
     IssuesMain,
+    BundlerMain,
   ]) {
     const logger = loggerMain.createLogger(CompilerAspect.id);
     const compilerService = new CompilerService();
@@ -183,6 +187,16 @@ export class CompilerMain {
       issues.registerAddComponentsIssues(compilerMain.addMissingDistsIssue.bind(compilerMain));
     }
     if (generator) generator.registerComponentTemplate([compilerTemplate]);
+
+    bundler.registerOnPreDevServerCreated(async (newCompsWithoutDevServer) => {
+      logger.debug(
+        `Compiling ${newCompsWithoutDevServer.length} components: ${newCompsWithoutDevServer.map((c) => c.id.toString()).join(', ')} before dev server creation`
+      );
+      await compilerMain.compileOnWorkspace(
+        newCompsWithoutDevServer.map((c) => c.id),
+        { initiator: CompilationInitiator.PreDevServer }
+      );
+    });
 
     return compilerMain;
   }

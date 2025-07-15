@@ -14,9 +14,7 @@ export class Identifier {
   private static computeNormalizedPath(filePath: string, sourceFilePath?: string): string {
     let effectivePath = filePath;
     if (sourceFilePath) {
-      effectivePath = isAbsolute(sourceFilePath)
-        ? sourceFilePath
-        : resolve(dirname(filePath), sourceFilePath);
+      effectivePath = isAbsolute(sourceFilePath) ? sourceFilePath : resolve(dirname(filePath), sourceFilePath);
     }
     return normalize(effectivePath).replace(/\\/g, '/');
   }

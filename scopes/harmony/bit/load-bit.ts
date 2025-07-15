@@ -3,7 +3,6 @@
 process.on('uncaughtException', (err) => {
   // eslint-disable-next-line no-console
   console.error('uncaughtException', err);
-
   process.exit(1);
 });
 
@@ -190,7 +189,7 @@ function getVersionFromBitMapIds(allBitmapIds: ComponentIdList, aspectId: string
 export async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
   const id = aspect.name;
   if (!id) throw new Error('could not retrieve aspect id');
-  const isCore = isCoreAspect(id)
+  const isCore = isCoreAspect(id);
   const dirPath = getAspectDistDir(id, isCore);
   const files = await readdir(dirPath);
   const runtimeFile = files.find((file) => file.includes(`.${runtime.name}.runtime.js`));

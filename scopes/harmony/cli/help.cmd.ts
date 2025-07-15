@@ -7,7 +7,7 @@ export class HelpCmd implements Command {
   description = 'shows help';
   alias = '$0'; // default command (meaning, if no args are provided, this will be used), see https://github.com/yargs/yargs/blob/master/docs/advanced.md#default-commands
   loader = false;
-  group = 'general';
+  group = 'system';
   options = [['', 'internal', 'show internal commands']] as CommandOptions;
 
   constructor(private cliMain: CLIMain) {}

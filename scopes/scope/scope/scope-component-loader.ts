@@ -25,7 +25,7 @@ export class ScopeComponentLoader {
       return fromCache;
     }
     const idStr = id.toString();
-    this.logger.debug(`ScopeComponentLoader.get, loading ${idStr}`);
+    this.logger.trace(`ScopeComponentLoader.get, loading ${idStr}`);
     const legacyId = id;
     let modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id);
     // import if missing

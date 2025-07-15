@@ -15,8 +15,13 @@ import { MDXCompiler, MDXCompilerOpts } from './mdx.compiler';
 export const MdxEnvType = 'mdx';
 
 export class MdxEnv implements Environment {
-  constructor(private react: ReactMain, private logger: Logger,
-    private multiCompiler: MultiCompilerMain, private compiler: CompilerMain, private docs: DocsMain){}
+  constructor(
+    private react: ReactMain,
+    private logger: Logger,
+    private multiCompiler: MultiCompilerMain,
+    private compiler: CompilerMain,
+    private docs: DocsMain
+  ) {}
   getCompiler() {
     const tsTransformer: TsConfigTransformer = (tsconfig: TypescriptConfigMutator) => {
       // set the shouldCopyNonSupportedFiles to false since we don't want ts to copy the .mdx file to the dist folder (it will conflict with the .mdx.js file created by the mdx compiler)
@@ -35,7 +40,6 @@ export class MdxEnv implements Environment {
       { logger: this.logger }
     );
 
-
     return this.multiCompiler.createCompiler(
       [
         babelCompiler,
@@ -48,7 +52,10 @@ export class MdxEnv implements Environment {
 
   getBuildPipe() {
     const mdxCompiler = this.getCompiler();
-    return [this.compiler.createTask('MDXCompiler', mdxCompiler), ...this.react.reactEnv.createBuildPipeWithoutCompiler()];
+    return [
+      this.compiler.createTask('MDXCompiler', mdxCompiler),
+      ...this.react.reactEnv.createBuildPipeWithoutCompiler(),
+    ];
   }
 
   async getDependencies() {

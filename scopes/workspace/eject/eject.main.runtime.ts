@@ -16,7 +16,9 @@ export class EjectMain {
   async eject(componentIds: ComponentID[], ejectOptions: EjectOptions = {}): Promise<EjectResults> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     if (this.workspace.isOnLane()) {
-      throw new Error('unable to eject when the workspace is on a lane, please use "bit lane eject" to delete the component from the lane and install the main version');
+      throw new Error(
+        'unable to eject when the workspace is on a lane, please use "bit lane eject" to delete the component from the lane and install the main version'
+      );
     }
     const componentEjector = new ComponentsEjector(
       this.workspace,

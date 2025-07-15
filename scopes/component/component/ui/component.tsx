@@ -67,12 +67,12 @@ export function Component({
       ...(componentFiltersFromProps.loading
         ? {}
         : {
-          log: {
-            // @todo - enable this when we have lazy loading of logs
-            // limit: 3,
-            ...componentFiltersFromProps.log,
-          },
-        }),
+            log: {
+              // @todo - enable this when we have lazy loading of logs
+              // limit: 3,
+              ...componentFiltersFromProps.log,
+            },
+          }),
     },
     customUseComponent: useComponent,
   };

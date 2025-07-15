@@ -24,6 +24,8 @@ export class ReactSchema extends SchemaNode {
 
   readonly signature?: string | undefined;
 
+  readonly displaySchemaName = 'React';
+
   constructor(
     readonly location: Location,
     readonly name: string,

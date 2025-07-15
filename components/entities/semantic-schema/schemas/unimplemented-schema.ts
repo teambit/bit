@@ -1,6 +1,8 @@
 import { SchemaLocation, SchemaNode } from '../schema-node';
 
 export class UnImplementedSchema extends SchemaNode {
+  readonly displaySchemaName = 'Unimplemented Schemas';
+
   constructor(
     readonly location: SchemaLocation,
     readonly name: string,

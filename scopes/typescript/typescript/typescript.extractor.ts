@@ -42,7 +42,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     private scope: ScopeMain,
     private aspectLoader: AspectLoaderMain,
     private logger: Logger
-  ) { }
+  ) {}
 
   parseSourceFile(file: AbstractVinyl): SourceFile {
     const sourceFile = ts.createSourceFile(
@@ -74,8 +74,8 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const internalFiles = options.skipInternals
       ? []
       : component.filesystem.files.filter(
-        (file) => compatibleExts.includes(file.extname) && file.path !== mainFile.path
-      );
+          (file) => compatibleExts.includes(file.extname) && file.path !== mainFile.path
+        );
     const allFiles = [mainFile, ...internalFiles];
 
     const context = await this.createContext(tsserver, component, options.formatter);

@@ -64,14 +64,18 @@ export class ListerMain {
   async localList(
     showAll = false,
     showRemoteVersion = false,
-    namespacesUsingWildcards?: string
+    namespacesUsingWildcards?: string,
+    scopeName?: string
   ): Promise<ListScopeResult[]> {
     if (!this.workspace) {
       throw new ConsumerNotFound();
     }
     this.logger.setStatusLine(BEFORE_LOCAL_LIST);
     const componentsList = new ComponentsList(this.workspace);
-    const results = await componentsList.listAll(showRemoteVersion, showAll, namespacesUsingWildcards);
+    let results = await componentsList.listAll(showRemoteVersion, showAll, namespacesUsingWildcards);
+    if (scopeName) {
+      results = results.filter((result) => result.id.scope === scopeName);
+    }
     return this.sortListScopeResults(results);
   }
 

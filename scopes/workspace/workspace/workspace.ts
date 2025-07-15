@@ -17,11 +17,14 @@ import {
 import { BitError } from '@teambit/bit-error';
 import { ComponentScopeDirMap, ConfigMain, WorkspaceConfig } from '@teambit/config';
 import {
+  CurrentPkg,
   DependencyResolverMain,
   DependencyResolverAspect,
   VariantPolicy,
   DependencyList,
+  VariantPolicyConfigObject,
   VariantPolicyConfigArr,
+  WorkspacePolicyEntry,
 } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect, EnvJsonc } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
@@ -30,7 +33,7 @@ import { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import type { VariantsMain } from '@teambit/variants';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { ComponentID, ComponentIdList, ComponentIdObj } from '@teambit/component-id';
 import { InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName, BitId } from '@teambit/legacy-bit-id';
 import { LaneId } from '@teambit/lane-id';
 import { Consumer, loadConsumer } from '@teambit/legacy.consumer';
@@ -48,24 +51,18 @@ import { isPathInside } from '@teambit/toolbox.path.is-path-inside';
 import fs from 'fs-extra';
 import { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact, uniqBy, uniq } from 'lodash';
-import {
-  MergeConfigFilename,
-  BIT_ROOTS_DIR,
-  CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS,
-  CFG_USER_TOKEN_KEY,
-} from '@teambit/legacy.constants';
+import { MergeConfigFilename, BIT_ROOTS_DIR, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy.constants';
 import path from 'path';
 import { ConsumerComponent, Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog } from '@teambit/objects';
-import { SourceFile, DataToPersist, JsonVinyl } from '@teambit/component.sources';
+import { SourceFile, DataToPersist, JsonVinyl, PackageJsonFile } from '@teambit/component.sources';
 import { ScopeComponentsImporter } from '@teambit/legacy.scope';
 import { Lane } from '@teambit/objects';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { isHash } from '@teambit/component-version';
 import { GlobalConfigMain } from '@teambit/global-config';
-import { getAuthHeader, fetchWithAgent as fetch } from '@teambit/scope.network';
 import { ComponentConfigFile } from './component-config-file';
 import {
   OnComponentAdd,
@@ -115,6 +112,7 @@ import {
 } from './workspace-component/component-status-loader';
 import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
 import { ConfigStoreAspect, ConfigStoreMain, Store } from '@teambit/config-store';
+import type { DependenciesOverridesData } from '@teambit/legacy.consumer-config';
 
 export type EjectConfResult = {
   configPath: string;
@@ -357,12 +355,12 @@ export class Workspace implements ComponentFactory {
     return this.config.icon;
   }
 
-
   getConfigStore(): Store {
     return {
       list: () => this.getWorkspaceConfig().extension(ConfigStoreAspect.id, true) || {},
       set: (key: string, value: string) => {
-        this.getWorkspaceConfig().setExtension(ConfigStoreAspect.id,
+        this.getWorkspaceConfig().setExtension(
+          ConfigStoreAspect.id,
           { [key]: value },
           { ignoreVersion: true, mergeIntoExisting: true }
         );
@@ -370,11 +368,13 @@ export class Workspace implements ComponentFactory {
       del: (key: string) => {
         const current = this.getWorkspaceConfig().extension(ConfigStoreAspect.id, true) || {};
         delete current[key];
-        this.getWorkspaceConfig().setExtension(ConfigStoreAspect.id, current,
-          { ignoreVersion: true, overrideExisting: true });
+        this.getWorkspaceConfig().setExtension(ConfigStoreAspect.id, current, {
+          ignoreVersion: true,
+          overrideExisting: true,
+        });
       },
       write: async () => {
-        await this.getWorkspaceConfig().write({ reasonForChange: 'store-config changes' })
+        await this.getWorkspaceConfig().write({ reasonForChange: 'store-config changes' });
       },
       invalidateCache: async () => {
         // no need to invalidate anything.
@@ -382,7 +382,7 @@ export class Workspace implements ComponentFactory {
         // if this is another process, it'll react to "this.triggerOnWorkspaceConfigChange()" anyway.
       },
       getPath: () => this.getWorkspaceConfig().path,
-    }
+    };
   }
 
   async getAutoTagInfo(changedComponents: ComponentIdList) {
@@ -464,7 +464,7 @@ export class Workspace implements ComponentFactory {
   /**
    * whether the given component-id is part of the workspace. default to check for the exact version
    */
-  hasId(componentId: ComponentID, opts?: { includeDeleted?: boolean, ignoreVersion?: boolean }): boolean {
+  hasId(componentId: ComponentID, opts?: { includeDeleted?: boolean; ignoreVersion?: boolean }): boolean {
     const ids = opts?.includeDeleted ? this.listIdsIncludeRemoved() : this.listIds();
     return opts?.ignoreVersion ? ids.hasWithoutVersion(componentId) : ids.has(componentId);
   }
@@ -738,7 +738,7 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     storeInCache = true,
     loadOpts?: ComponentLoadOptions
   ): Promise<Component> {
-    this.logger.debug(`get ${componentId.toString()}`);
+    this.logger.trace(`get ${componentId.toString()}`);
     const component = await this.componentLoader.get(componentId, legacyComponent, useCache, storeInCache, loadOpts);
     // When loading a component if it's an env make sure to load it as aspect as well
     // We only want to try load it as aspect if it's the first time we load the component
@@ -836,6 +836,19 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     const hasChanged = wereIdsRemoved.some((isRemoved) => isRemoved);
     if (hasChanged) await workspaceConfig.write({ reasonForChange: 'remove components' });
     return hasChanged;
+  }
+
+  /**
+   * when tagging/snapping a component, its config data is written to the staged config. it helps for "bit reset" to
+   * revert it back.
+   * this method removes entries from that files. used by "bit export" and "bit remove".
+   * in case the component is not found in the staged config, it doesn't throw an error. it simply ignores it.
+   */
+  async removeFromStagedConfig(ids: ComponentID[]) {
+    this.logger.debug(`removeFromStagedConfig, ${ids.length} ids`);
+    const stagedConfig = await this.scope.getStagedConfig();
+    ids.map((compId) => stagedConfig.removeComponentConfig(compId));
+    await stagedConfig.write();
   }
 
   async triggerOnComponentChange(
@@ -1139,7 +1152,9 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   async getMany(ids: Array<ComponentID>, loadOpts?: ComponentLoadOptions, throwOnFailure = true): Promise<Component[]> {
+    this.logger.debug(`getMany, started. ${ids.length} components`);
     const { components } = await this.componentLoader.getMany(ids, loadOpts, throwOnFailure);
+    this.logger.debug(`getMany, completed. ${components.length} components`);
     return components;
   }
 
@@ -1612,15 +1627,12 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   private async componentConfigFileFromComponentDirAndName(
-    relativeComponentDir: PathOsBasedRelative,
+    relativeComponentDir: PathOsBasedRelative
   ): Promise<ComponentConfigFile | undefined> {
     let componentConfigFile;
     if (relativeComponentDir) {
       const absComponentDir = this.componentDirToAbsolute(relativeComponentDir);
-      componentConfigFile = await ComponentConfigFile.load(
-        absComponentDir,
-        this.createAspectList.bind(this),
-      );
+      componentConfigFile = await ComponentConfigFile.load(absComponentDir, this.createAspectList.bind(this));
     }
 
     return componentConfigFile;
@@ -1771,7 +1783,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return this.defaultDirectory;
   }
 
-  async resolveComponentIdFromPackageName(packageName: string): Promise<ComponentID> {
+  async resolveComponentIdFromPackageName(packageName: string, keepOriginalVersion = false): Promise<ComponentID> {
     if (!packageName.startsWith('@')) {
       throw new Error(`findComponentIdFromPackageName supports only packages that start with @, got ${packageName}`);
     }
@@ -1779,7 +1791,11 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
     const fromPackageJson = await this.resolveComponentIdFromPackageJsonInNM(packageName, errMsgPrefix);
     if (fromPackageJson) return fromPackageJson;
-    const fromRegistryManifest = await this.resolveComponentIdFromRegistryManifest(packageName, errMsgPrefix);
+    const fromRegistryManifest = await this.resolveComponentIdFromRegistryManifest(
+      packageName,
+      errMsgPrefix,
+      keepOriginalVersion
+    );
     if (fromRegistryManifest) return fromRegistryManifest;
     const fromWsComponents = await this.resolveComponentIdFromWsComponents(packageName);
     if (fromWsComponents) return fromWsComponents;
@@ -1814,26 +1830,20 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
   private async resolveComponentIdFromRegistryManifest(
     packageName: string,
-    errMsgPrefix: string
+    errMsgPrefix: string,
+    keepOriginalVersion = false
   ): Promise<ComponentID | undefined> {
-    const url = `https://node-registry.bit.cloud/${packageName}`;
-    const token = this.configStore.getConfig(CFG_USER_TOKEN_KEY);
-    const headers = token ? getAuthHeader(token) : {};
-    const res = await fetch(url, { headers });
-    if (!res.ok) {
+    const manifest = await this.dependencyResolver.fetchFullPackageManifest(packageName);
+    if (!manifest) {
       return undefined;
     }
-    const data = await res.json();
-    const latest = data['dist-tags'].latest;
-    if (!latest) throw new BitError(`${errMsgPrefix}the "dist-tags" has no latest field`);
-    const version = data.versions[latest];
-    if (!version) throw new BitError(`${errMsgPrefix}the "versions" is missing the latest "${latest}" field`);
-    const compId = version.componentId;
-    if (!compId)
+    if (!('componentId' in manifest)) {
       throw new BitError(
-        `${errMsgPrefix}the package.json of version "${latest}" has no componentId field, it's probably not a component`
+        `${errMsgPrefix}the package.json of version "${manifest.version}" has no componentId field, it's probably not a component`
       );
-    return ComponentID.fromObject(compId).changeVersion(undefined);
+    }
+    if (keepOriginalVersion) return ComponentID.fromObject(manifest.componentId as ComponentIdObj);
+    return ComponentID.fromObject(manifest.componentId as ComponentIdObj).changeVersion(undefined);
   }
 
   private async resolveComponentIdFromPackageJsonInNM(
@@ -2230,6 +2240,11 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
   async setComponentPathsRegExps() {
     const workspaceComponents = await this.list();
+    if (!workspaceComponents.length) {
+      this.componentPathsRegExps = [];
+      return;
+    }
+
     const workspacePackageNames = workspaceComponents.map((c) => this.componentPackageName(c));
     const packageManager = this.dependencyResolver.packageManagerName;
     const isPnpmEnabled = typeof packageManager === 'undefined' || packageManager.includes('pnpm');
@@ -2254,12 +2269,17 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     );
   }
 
+  /**
+   * the dependencies returned from this method will override the auto-detected dependencies. (done by "applyAutoDetectOverridesOnComponent")
+   * to calculate this, we merge several sources: env, env-for-itself, config from variant, and the merge-config.
+   * keep in mind that component-config (coming from .bitmap or component.json) is not included in this merge.
+   */
   async getAutoDetectOverrides(
     configuredExtensions: ExtensionDataList,
     id: ComponentID,
     legacyFiles: SourceFile[],
     envExtendedDeps?: LegacyDependency[]
-  ) {
+  ): Promise<DependenciesOverridesData> {
     let policy = await this.dependencyResolver.mergeVariantPolicies(
       configuredExtensions,
       id,
@@ -2316,6 +2336,81 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
   listLocalOnly(): ComponentIdList {
     return ComponentIdList.fromArray(this.bitMap.listLocalOnly());
+  }
+
+  async writeDependencies(target?: 'workspace.jsonc' | 'package.json') {
+    if (target === 'package.json') {
+      await this.writeDependenciesToPackageJson();
+    } else {
+      await this.writeDependenciesToWorkspaceJsonc();
+    }
+  }
+
+  async writeDependenciesToWorkspaceJsonc(): Promise<void> {
+    const allDeps = await this.getAllDedupedDirectDependencies();
+    const updatedWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
+    for (const dep of allDeps) {
+      updatedWorkspacePolicyEntries.push({
+        dependencyId: dep.name,
+        value: {
+          version: dep.currentRange,
+        },
+        lifecycleType: 'runtime',
+      });
+    }
+    this.dependencyResolver.addToRootPolicy(updatedWorkspacePolicyEntries, {
+      updateExisting: true,
+    });
+    await this.dependencyResolver.persistConfig('Write dependencies');
+  }
+
+  async writeDependenciesToPackageJson(): Promise<void> {
+    const pkgJson = await PackageJsonFile.load(this.path);
+    const allDeps = await this.getAllDedupedDirectDependencies();
+    pkgJson.packageJsonObject.dependencies ??= {};
+    for (const dep of allDeps) {
+      pkgJson.packageJsonObject.dependencies[dep.name] = dep.currentRange;
+    }
+    await pkgJson.write();
+  }
+
+  async getAllDedupedDirectDependencies(): Promise<CurrentPkg[]> {
+    const componentPolicies = await this.getComponentsWithDependencyPolicies();
+    const variantPoliciesByPatterns = this.variantPatternsToDepPolicesDict();
+    const components = await this.list();
+    return this.dependencyResolver.getAllDedupedDirectDependencies({
+      variantPoliciesByPatterns,
+      componentPolicies,
+      components,
+    });
+  }
+
+  variantPatternsToDepPolicesDict(): Record<string, VariantPolicyConfigObject> {
+    const variantPatterns = this.variants.raw();
+    const variantPoliciesByPatterns: Record<string, VariantPolicyConfigObject> = {};
+    for (const [variantPattern, extensions] of Object.entries(variantPatterns)) {
+      if (extensions[DependencyResolverAspect.id]?.policy) {
+        variantPoliciesByPatterns[variantPattern] = extensions[DependencyResolverAspect.id]?.policy;
+      }
+    }
+    return variantPoliciesByPatterns;
+  }
+
+  async getComponentsWithDependencyPolicies(): Promise<Array<{ componentId: ComponentID; policy: any }>> {
+    const allComponentIds = this.listIds();
+    const componentPolicies = [] as Array<{ componentId: ComponentID; policy: any }>;
+    (
+      await Promise.all<ComponentConfigFile | undefined>(
+        allComponentIds.map((componentId) => this.componentConfigFile(componentId))
+      )
+    ).forEach((componentConfigFile, index) => {
+      if (!componentConfigFile) return;
+      const depResolverConfig = componentConfigFile.aspects.get(DependencyResolverAspect.id);
+      if (!depResolverConfig) return;
+      const componentId = allComponentIds[index];
+      componentPolicies.push({ componentId, policy: depResolverConfig.config.policy });
+    });
+    return componentPolicies;
   }
 }
 

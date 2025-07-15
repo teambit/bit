@@ -58,7 +58,7 @@ export type WorkspaceDeps = [
   AspectLoaderMain,
   EnvsMain,
   GlobalConfigMain,
-  ConfigStoreMain
+  ConfigStoreMain,
 ];
 
 export type OnComponentLoadSlot = SlotRegistry<OnComponentLoad>;

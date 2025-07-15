@@ -45,7 +45,7 @@ describe('import functionality on Harmony', function () {
           );
           helper.command.addComponent('bar');
           // as an intermediate step, make sure the scope is empty.
-          const localScope = helper.command.listLocalScopeParsed('--scope');
+          const localScope = helper.command.listLocalScopeParsed();
           expect(localScope).to.have.lengthOf(0);
 
           helper.command.runCmd('bit insights'); // this command happened to run the build-one-graph.
@@ -55,7 +55,7 @@ describe('import functionality on Harmony', function () {
         //   expect(importOutput).to.have.string('successfully imported one component');
         // });
         it('the scope should have the dependencies and the flattened dependencies', () => {
-          const localScope = helper.command.listLocalScopeParsed('--scope');
+          const localScope = helper.command.listLocalScopeParsed();
           expect(localScope).to.have.lengthOf(3);
         });
       });

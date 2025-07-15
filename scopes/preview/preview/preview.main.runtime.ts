@@ -1126,7 +1126,7 @@ export class PreviewMain {
     cli.register(new GeneratePreviewCmd(preview), new ServePreviewCmd(preview));
 
     if (workspace)
-      uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger, watcher));
+      uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub, logger, watcher, graphql));
 
     componentExtension.registerRoute([
       new PreviewRoute(preview, logger),

@@ -32,6 +32,7 @@ export type BuilderServiceOptions = {
   dev?: boolean;
   exitOnFirstFailedTask?: boolean;
   capsulesBaseDir?: string;
+  loose?: boolean; // avoid throwing errors if tasks like tests or lint fail
 };
 
 type BuilderTransformationMap = ServiceTransformationMap & {

@@ -263,7 +263,8 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
     result: BundlerResult,
     component: Component
   ): ComponentPreviewMetaData {
-    const componentEntryId = component.id.toStringWithoutVersion();
+    const componentEntryId = this.getComponentChunkId(component.id, 'component');
+
     if (!result?.entriesAssetsMap || !result?.entriesAssetsMap[componentEntryId]) {
       return {};
     }

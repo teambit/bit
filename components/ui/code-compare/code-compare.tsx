@@ -35,7 +35,7 @@ export function CodeCompare({ fileIconSlot, className, CodeView = CodeCompareVie
 
   // todo - look into this loading flag where it needs to be used
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { base, compare, state: compareState, hooks: compareHooks, hidden, loading,  } = componentCompareContext || {};
+  const { base, compare, state: compareState, hooks: compareHooks, hidden, loading } = componentCompareContext || {};
 
   const state = compareState?.code;
   const hook = compareHooks?.code;

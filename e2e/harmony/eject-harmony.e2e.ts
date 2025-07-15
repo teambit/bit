@@ -65,7 +65,7 @@ describe('eject command on Harmony', function () {
         helper.command.expectStatusToBeClean();
       });
       it('should not delete the objects from the scope', () => {
-        const listScope = helper.command.listLocalScopeParsed('--scope');
+        const listScope = helper.command.listLocalScopeParsed();
         const ids = listScope.map((l) => l.id);
         expect(ids).to.include(`${helper.scopes.remote}/comp1`);
       });
@@ -100,7 +100,7 @@ describe('eject command on Harmony', function () {
         helper.command.expectStatusToBeClean();
       });
       it('should not delete the objects from the scope', () => {
-        const listScope = helper.command.listLocalScopeParsed('--scope');
+        const listScope = helper.command.listLocalScopeParsed();
         const ids = listScope.map((l) => l.id);
         expect(ids).to.include(`${helper.scopes.remote}/comp1`);
       });

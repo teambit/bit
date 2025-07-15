@@ -7,7 +7,7 @@ export class EnvsReplaceCmd implements Command {
   name = 'replace <current-env> <new-env>';
   description = 'replace an existing env with another env for all components using the old env';
   options = [];
-  group = 'development';
+  group = 'component-config';
   arguments = [
     { name: 'current-env', description: 'the component id of the env to be replaced' },
     { name: 'new-env', description: 'the component id of the new env' },

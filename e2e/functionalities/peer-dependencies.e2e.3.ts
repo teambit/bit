@@ -263,7 +263,7 @@ describe('peer-dependencies functionality', function () {
       helper = new Helper();
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
-      helper.command.dependenciesSet('comp1', `@${helper.scopes.remote}/comp2@*`, '--peer');
+      helper.command.dependenciesSet('comp1', `@${helper.scopes.remote}/comp2@+`, '--peer');
       helper.command.snapAllComponents();
       helper.command.build();
       workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
@@ -273,12 +273,12 @@ describe('peer-dependencies functionality', function () {
       const peerDepData = output.peerDependencies[0];
       expect(peerDepData.id).to.startWith(`${helper.scopes.remote}/comp2`);
       expect(peerDepData.packageName).to.startWith(`@${helper.scopes.remote}/comp2`);
-      expect(peerDepData.versionRange).to.startWith('*');
+      expect(peerDepData.versionRange).to.startWith('+');
       const depResolver = output.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
       const peerDep = depResolver.data.dependencies[0];
       expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/comp2`);
       expect(peerDep.lifecycle).to.eq('peer');
-      expect(peerDep.versionRange).to.eq('*');
+      expect(peerDep.versionRange).to.eq('+');
     });
     it('should save the peer dependency in the scope data', () => {
       const comp = helper.command.catComponent(`comp1@latest`);
@@ -286,15 +286,16 @@ describe('peer-dependencies functionality', function () {
       const peerDep = depResolver.data.dependencies[0];
       expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/comp2`);
       expect(peerDep.lifecycle).to.eq('peer');
-      expect(peerDep.versionRange).to.eq('*');
+      expect(peerDep.versionRange).to.eq('+');
     });
     it('adds peer dependency to the generated package.json', () => {
       const { head } = helper.command.catComponent('comp1');
       const pkgJson = fs.readJsonSync(
         path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1@${head}/package.json`)
       );
+      const comp2Head = helper.command.getHead('comp2');
       expect(pkgJson.peerDependencies).to.deep.equal({
-        [`@${helper.scopes.remote}/comp2`]: '*',
+        [`@${helper.scopes.remote}/comp2`]: `0.0.0-${comp2Head}`, // it can't be `+` as it's invalid in package.json.
       });
     });
   });

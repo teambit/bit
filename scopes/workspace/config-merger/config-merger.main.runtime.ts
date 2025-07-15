@@ -18,6 +18,7 @@ import { DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import { ConfigAspect, ConfigMain } from '@teambit/config';
 import { MergeStrategy, mergeFiles, MergeFileParams } from '@teambit/merging';
+import { isRange1GreaterThanRange2Naively } from '@teambit/pkg.modules.semver-helper';
 import { ConfigMergeResult, parseVersionLineWithConflict } from './config-merge-result';
 import { ConfigMergerAspect } from './config-merger.aspect';
 import { AggregatedDeps } from './aggregated-deps';
@@ -386,7 +387,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
 
       // both are ranges
       if (isDepInCompRange && isDepInWsRange) {
-        if (this.isRange1GreaterThanRange2Naively(depInCompVer, depInWsVer)) {
+        if (isRange1GreaterThanRange2Naively(depInCompVer, depInWsVer)) {
           addToUpdate();
           return;
         }
@@ -476,19 +477,6 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
       updateExisting: true,
     });
     await this.depsResolver.persistConfig('config-merger (update root policy)');
-  }
-
-  /**
-   * if both versions are ranges, it's hard to check which one is bigger. sometimes it's even impossible.
-   * remember that a range can be something like `1.2 <1.2.9 || >2.0.0`.
-   * this check is naive in a way that it assumes the range is simple, such as "^1.2.3" or "~1.2.3.
-   * in this case, it's possible to check for the minimum version and compare it.
-   */
-  private isRange1GreaterThanRange2Naively(range1: string, range2: string) {
-    const minVersion1 = semver.minVersion(range1);
-    const minVersion2 = semver.minVersion(range2);
-    if (!minVersion1 || !minVersion2) return false;
-    return semver.gt(minVersion1, minVersion2);
   }
 
   static slots = [];

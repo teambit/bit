@@ -11,7 +11,7 @@ export class ListEnvsCmd implements Command {
   name = 'list';
   description = 'list all envs currently used in the workspace';
   options = [];
-  group = 'development';
+  group = 'component-config';
 
   constructor(
     private envs: EnvsMain,
@@ -46,7 +46,7 @@ export class GetEnvCmd implements Command {
       'show information about the specific services only. for multiple services, separate by a comma and wrap with quotes',
     ],
   ] as CommandOptions;
-  group = 'development';
+  group = 'component-config';
 
   constructor(
     private envs: EnvsMain,
@@ -88,7 +88,7 @@ export class EnvsCmd implements Command {
   alias = 'env';
   description = 'list all components maintained by the workspace and their corresponding envs';
   options = [];
-  group = 'development';
+  group = 'component-config';
   commands: Command[] = [];
 
   // private showNonLoadedEnvsWarning = false;

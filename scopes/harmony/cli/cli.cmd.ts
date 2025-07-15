@@ -24,6 +24,7 @@ export class CliGenerateCmd implements Command {
     ['', 'docs', 'generate the cli-reference.docs.mdx file'],
     ['j', 'json', 'output the commands info as JSON'],
   ] as CommandOptions;
+  private = true;
 
   constructor(private cliMain: CLIMain) {}
 
@@ -48,7 +49,7 @@ export class CliCmd implements Command {
   alias = '';
   commands: Command[] = [];
   loader = false;
-  group = 'general';
+  group = 'system';
   options = [] as CommandOptions;
 
   constructor(private cliMain: CLIMain) {}

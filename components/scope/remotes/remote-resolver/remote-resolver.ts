@@ -31,7 +31,7 @@ async function getScope(name: string) {
   if (scopeCache[name]) return scopeCache[name];
   const token = getConfig(CFG_USER_TOKEN_KEY);
   const headers = token ? getAuthHeader(token) : {};
-  const graphQlUrl = `https://${symphonyUrl}/graphql`;
+  const graphQlUrl = `${symphonyUrl}/graphql`;
   const graphQlFetcher = await getFetcherWithAgent(graphQlUrl);
   const client = new GraphQLClient(graphQlUrl, { headers, fetch: graphQlFetcher });
 

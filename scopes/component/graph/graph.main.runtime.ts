@@ -2,7 +2,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ComponentMain, ComponentAspect, ComponentID } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { compact, intersection } from "lodash";
+import { compact, intersection } from 'lodash';
 import { GetGraphOpts, GraphBuilder } from './graph-builder';
 import { graphSchema } from './graph.graphql';
 import { GraphAspect } from './graph.aspect';
@@ -36,7 +36,7 @@ export class GraphMain {
   async getVisualGraphIds(ids?: ComponentID[], opts: GraphOpt = {}): Promise<VisualDependencyGraph> {
     this.logger.setStatusLine('loading graph');
     const { layout, includeLocalOnly, cycles } = opts;
-    const graphVizOpts: GraphConfig = {}
+    const graphVizOpts: GraphConfig = {};
     if (layout) graphVizOpts.layout = layout;
     const graphIdsAll = await this.getGraphIds(ids);
 
@@ -44,10 +44,12 @@ export class GraphMain {
     const list = await host.listIds();
     const idsWithVersion = await this.getIdsWithVersions(ids);
     const listStr = list.map((id) => id.toString());
-    const graphIds = includeLocalOnly ? graphIdsAll.successorsSubgraph(idsWithVersion || listStr, {
-      nodeFilter: (node) => listStr.includes(node.id),
-      edgeFilter: (edge) => listStr.includes(edge.targetId) && listStr.includes(edge.sourceId)
-    }) : graphIdsAll;
+    const graphIds = includeLocalOnly
+      ? graphIdsAll.successorsSubgraph(idsWithVersion || listStr, {
+          nodeFilter: (node) => listStr.includes(node.id),
+          edgeFilter: (edge) => listStr.includes(edge.targetId) && listStr.includes(edge.sourceId),
+        })
+      : graphIdsAll;
     this.logger.setStatusLine('rendering graph');
     if (cycles) {
       return this.getVisualCyclesFromGraph(graphIds, idsWithVersion, graphVizOpts);
@@ -55,19 +57,18 @@ export class GraphMain {
     return VisualDependencyGraph.loadFromClearGraph(graphIds, graphVizOpts, idsWithVersion);
   }
 
-  private async getVisualCyclesFromGraph(graphIds: ComponentIdGraph, idsWithVersion?: string[],
+  private async getVisualCyclesFromGraph(
+    graphIds: ComponentIdGraph,
+    idsWithVersion?: string[],
     graphVizOpts: GraphConfig = {}
   ): Promise<VisualDependencyGraph> {
     const cyclesGraph = graphIds.findCycles();
     const multipleCycles = cyclesGraph.map((cycle) => {
-
       if (idsWithVersion && intersection(idsWithVersion, cycle).length < 1) return undefined;
-      return graphIds.subgraph(cycle,
-        {
-          nodeFilter: (node) => cycle.includes(node.id),
-          edgeFilter: (edge) => cycle.includes(edge.targetId)
-        },
-      );
+      return graphIds.subgraph(cycle, {
+        nodeFilter: (node) => cycle.includes(node.id),
+        edgeFilter: (edge) => cycle.includes(edge.targetId),
+      });
     });
     return VisualDependencyGraph.loadFromMultipleClearGraphs(compact(multipleCycles), graphVizOpts, idsWithVersion);
   }
@@ -76,7 +77,7 @@ export class GraphMain {
     const host = this.componentAspect.getHost();
     if (!ids) return undefined;
     const comps = await host.getMany(ids);
-    if (comps.length) return comps.map(comp => comp.id.toString());
+    if (comps.length) return comps.map((comp) => comp.id.toString());
     return undefined;
   }
 

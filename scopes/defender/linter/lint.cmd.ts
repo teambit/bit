@@ -44,7 +44,7 @@ export class LintCmd implements Command {
   description = 'lint components in the development workspace';
   arguments = [{ name: 'component-pattern', description: COMPONENT_PATTERN_HELP }];
   helpUrl = 'reference/linting/linter-overview';
-  group = 'development';
+  group = 'testing';
   options = [
     ['c', 'changed', 'lint only new and modified components'],
     ['f', 'fix', 'automatically fix problems'],

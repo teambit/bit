@@ -24,8 +24,10 @@ const defaultConfig: GraphConfig = {
 };
 
 export class VisualDependencyGraph {
-
-  constructor(public graph: Digraph, public config: GraphConfig) {}
+  constructor(
+    public graph: Digraph,
+    public config: GraphConfig
+  ) {}
 
   static async loadFromGraphlib(graphlib: Graph, config: GraphConfig = {}): Promise<VisualDependencyGraph> {
     const mergedConfig = Object.assign({}, defaultConfig, config);
@@ -153,7 +155,6 @@ export class VisualDependencyGraph {
 
     return graph;
   }
-
 
   private getTmpFilename() {
     return path.join(os.tmpdir(), `${generateRandomStr()}.png`);

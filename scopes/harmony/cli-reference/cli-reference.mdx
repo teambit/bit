@@ -21,7 +21,7 @@ bit COMMAND SUB_COMMAND --help
 ## add
 
 **Alias**: `a`  
-**Description**: Add any subset of files to be tracked as a component(s).  
+**Description**: track one or more directories as new components  
 Learn the recommended workflow for tracking directories as components, in the link below.
 
 `bit add [path...]`
@@ -228,6 +228,7 @@ because this process can take a while on a large workspace, some flags are avail
 | `--cache-packages-on-capsule-root` |                  | set the package-manager cache on the capsule root                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `--list-tasks <string>`            |                  | list tasks of an env or a component-id for each one of the pipelines: build, tag and snap                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `--skip-tests`                     |                  | skip running component tests during build process                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `--loose`                          |                  | allow build to succeed even if tasks like tests or lint fail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `--skip-tasks <string>`            |                  | skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes. specify the task-name (e.g. "TypescriptCompiler") or the task-aspect-id (e.g. teambit.compilation/compiler)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `--fail-fast`                      |                  | stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `--include-snap`                   |                  | include snap pipeline tasks. Warning: this may deploy/publish if you have such tasks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -343,6 +344,43 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
 
 ---
 
+## ci
+
+**Description**: CI commands
+
+`bit ci <sub-command>`
+
+### ci verify
+
+**Usage**: `ci verify`
+
+**Description**: CI commands
+
+### ci pr
+
+**Usage**: `ci pr`
+
+**Description**: This command is meant to run when a PR was open/updated and meant to export a lane to bit-cloud.
+
+| **Option**            | **Option alias** | **Description**                                                                  |
+| --------------------- | :--------------: | -------------------------------------------------------------------------------- |
+| `--message <message>` |       `-m`       | If set, set it as the snap message, if not, try and grab from git-commit-message |
+| `--lane <lane>`       |       `-l`       | If set, use as the lane name, if not available, grab from git-branch name        |
+| `--build`             |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI    |
+
+### ci merge
+
+**Usage**: `ci merge`
+
+**Description**: Merges a PR
+
+| **Option**            | **Option alias** | **Description**                                                                  |
+| --------------------- | :--------------: | -------------------------------------------------------------------------------- |
+| `--message <message>` |       `-m`       | If set, use it as the snap message, if not, try and grab from git-commit-message |
+| `--build`             |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI    |
+
+---
+
 ## clear-cache
 
 **Alias**: `cc`  
@@ -397,14 +435,6 @@ The following gets removed by this command:
 | `--json`            |       `-j`       | return the compile results in json format                                       |
 | `--delete-dist-dir` |       `-d`       | delete existing dist folder before writing new compiled files                   |
 | `--generate-types`  |                  | EXPERIMENTAL. generate d.ts files for typescript components (hurts performance) |
-
----
-
-## completion
-
-**Description**: enable bash/zsh-completion shortcuts for commands and options
-
-`bit completion`
 
 ---
 
@@ -502,6 +532,7 @@ unless the '--hard' flag is used (not recommended!), in which case, the componen
 | `--silent`         |       `-s`       | skip confirmation                                                                                                                                           |
 | `--hard`           |                  | NOT-RECOMMENDED. delete a component completely from a remote scope. careful! this is a permanent change that could corrupt dependents.                      |
 | `--force`          |       `-f`       | relevant for --hard. allow the deletion even if used as a dependency. WARNING: components that depend on this component will corrupt                        |
+| `--snaps <string>` |                  | comma-separated list of snap hashes to mark as deleted (e.g. --snaps "hash1,hash2,hash3")                                                                   |
 
 ---
 
@@ -670,6 +701,16 @@ see also "bit deps remove"
 | **Option**         | **Option alias** | **Description**                           |
 | ------------------ | :--------------: | ----------------------------------------- |
 | `--depth <number>` |                  | max display depth of the dependency graph |
+
+### deps write
+
+**Usage**: `deps write`
+
+**Description**: write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions
+
+| **Option**                 | **Option alias** | **Description** |
+| -------------------------- | :--------------: | --------------- | ---------------------------------------------------------------------------------------------- |
+| `--target <workspace.jsonc |  package.json>`  |                 | specify where the dependencies should be written. By default they are saved to workspace.jsonc |
 
 ---
 
@@ -947,14 +988,15 @@ bit export => export all staged snaps/tags of components to their remote scope. 
 
 `bit graph [id]`
 
-| **Option**              | **Option alias** | **Description**                                                                                        |
-| ----------------------- | :--------------: | ------------------------------------------------------------------------------------------------------ |
-| `--remote [remoteName]` |       `-r`       | remote name (name is optional, leave empty when id is specified)                                       |
-| `--layout <name>`       |                  | GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi] |
-| `--png`                 |                  | save the graph as a png file instead of svg. requires "graphviz" to be installed                       |
-| `--cycles`              |                  | generate a graph of cycles only                                                                        |
-| `--include-local-only`  |                  | include only the components in the workspace (or local scope)                                          |
-| `--json`                |       `-j`       | json format                                                                                            |
+| **Option**               | **Option alias** | **Description**                                                                                              |
+| ------------------------ | :--------------: | ------------------------------------------------------------------------------------------------------------ |
+| `--remote [remoteName]`  |       `-r`       | remote name (name is optional, leave empty when id is specified)                                             |
+| `--layout <name>`        |                  | GraphVis layout. default to "dot". options are [circo, dot, fdp, neato, osage, patchwork, sfdp, twopi]       |
+| `--png`                  |                  | save the graph as a png file instead of svg. requires "graphviz" to be installed                             |
+| `--cycles`               |                  | generate a graph of cycles only                                                                              |
+| `--include-local-only`   |                  | DEPRECATED: include only the components in the workspace (or local scope). This is now the default behavior. |
+| `--include-dependencies` |                  | include all dependencies recursively, not just workspace (or local scope) components                         |
+| `--json`                 |       `-j`       | json format                                                                                                  |
 
 ---
 
@@ -982,7 +1024,7 @@ bit export => export all staged snaps/tags of components to their remote scope. 
 | `component-patterns...` | component IDs or component patterns (separated by space). Use patterns to import groups of components using a common scope or namespace. E.g., "utils/\*" (wrap with double quotes) |
 
 | **Option**                       | **Option alias** | **Description**                                                                                                                                                                   |
-| -------------------------------- | :--------------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -------------------------------- | :--------------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--path <path>`                  |       `-p`       | import components into a specific directory (a relative path in the workspace)                                                                                                    |
 | `--objects`                      |       `-o`       | import components objects to the local scope without checkout (without writing them to the file system). This is the default behavior for import with no id argument              |
 | `--override`                     |       `-O`       | override local changes                                                                                                                                                            |
@@ -1002,6 +1044,7 @@ bit export => export all staged snaps/tags of components to their remote scope. 
 | `--save-in-lane`                 |                  | when checked out to a lane and the component is not on the remote-lane, save it in the lane (defaults to save on main)                                                            |
 | `--all-history`                  |                  | relevant for fetching all components objects. avoid optimizations, fetch all history versions, always                                                                             |
 | `--fetch-deps`                   |                  | fetch dependencies (bit components) objects to the local scope, but dont add to the workspace. Useful to resolve errors about missing dependency data                             |
+| `--write-deps <workspace.jsonc   |  package.json>`  |                                                                                                                                                                                   | write all workspace component dependencies to package.json or workspace.jsonc, resolving conflicts by picking the ranges that match the highest versions |
 | `--track-only`                   |                  | do not write any component files, just create .bitmap entries of the imported components. Useful when the files already exist and just want to re-add the component to the bitmap |
 | `--include-deprecated`           |                  | when importing with patterns, include deprecated components (default to exclude them)                                                                                             |
 
@@ -1056,6 +1099,7 @@ when no package is specified, all workspace dependencies are installed and all w
 | `--skip-compile`             |                  | do not compile components                                                                              |
 | `--skip-write-config-files`  |                  | do not write config files (such as eslint, tsconfig, prettier, etc...)                                 |
 | `--add-missing-deps`         |       `-a`       | install all missing dependencies                                                                       |
+| `--skip-unavailable`         |                  | when adding missing dependencies, skip those that are not found in the regisry                         |
 | `--add-missing-peers`        |                  | install all missing peer dependencies                                                                  |
 | `--recurring-install`        |                  | automatically run install again if there are non loaded old envs in your workspace                     |
 | `--no-optional [noOptional]` |                  | do not install optional dependencies (works with pnpm only)                                            |
@@ -1107,6 +1151,7 @@ when no package is specified, all workspace dependencies are installed and all w
 | `--alias <string>`                      |       `-n`       | relevant when the specified lane is a remote lane. create a local alias for the lane (doesnt affect the lane's name on the remote                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `--verbose`                             |                  | display detailed information about components that legitimately were not switched                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `--json`                                |       `-j`       | return the output as JSON                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `--branch`                              |                  | create and checkout a new git branch named after the lane                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ### lane show
 
@@ -1222,6 +1267,7 @@ bit lane diff from to => diff between "from" lane and "to" lane.
 | -------------------------------- | :--------------: | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `--skip-dependency-installation` |       `-x`       | do not install dependencies of the imported components                                                                                 |
 | `--pattern <component-pattern>`  |       `-p`       | import only components from the lane that fit the specified component-pattern to the workspace. works only when the workspace is empty |
+| `--branch`                       |                  | create and checkout a new git branch named after the lane                                                                              |
 
 ### lane remove-comp
 
@@ -1265,11 +1311,13 @@ workspace, but also mark it as deleted from the lane, so it won't be merged late
 
 **Usage**: `lane history [lane-name]`
 
-**Description**: EXPERIMENTAL. show lane history, default to the current lane
+**Description**: EXPERIMENTAL. show lane history, default to the current lane  
+list from the oldest to the newest history items
 
-| **Option**      | **Option alias** | **Description**              |
-| --------------- | :--------------: | ---------------------------- |
-| `--id <string>` |                  | show a specific history item |
+| **Option**      | **Option alias** | **Description**                        |
+| --------------- | :--------------: | -------------------------------------- |
+| `--id <string>` |                  | show a specific history item           |
+| `--json`        |       `-j`       | return the lane history in json format |
 
 ### lane history-diff
 
@@ -1314,6 +1362,7 @@ if you want to fork the lane from a certain point in history, use "lane checkout
 | **Option**                       | **Option alias** | **Description**                                           |
 | -------------------------------- | :--------------: | --------------------------------------------------------- |
 | `--skip-dependency-installation` |       `-x`       | do not install dependencies of the checked out components |
+| `--json`                         |       `-j`       | return the revert result in json format                   |
 
 ### lane merge
 
@@ -1356,6 +1405,7 @@ this flag keeps the history of one end and saves a reference to the other end. t
 | `--no-snap`                             |                  | do not pass snaps from the other lane even for non-diverged components (see command description)                                                            |
 | `--tag`                                 |                  | auto-tag all lane components after merging into main (or tag-merge in case of snap-merge)                                                                   |
 | `--build`                               |                  | in case of snap during the merge, run the build-pipeline (similar to bit snap --build)                                                                      |
+| `--loose`                               |                  | relevant for --build, to allow build to succeed even if tasks like tests or lint fail                                                                       |
 | `--message <message>`                   |       `-m`       | override the default message for the auto snap                                                                                                              |
 | `--keep-readme`                         |                  | skip deleting the lane readme component after merging                                                                                                       |
 | `--no-squash`                           |                  | relevant for merging lanes into main, which by default squashes all lane snaps                                                                              |
@@ -1460,11 +1510,12 @@ this command does the following:
 | **Option**             | **Option alias** | **Description**                                                                               |
 | ---------------------- | :--------------: | --------------------------------------------------------------------------------------------- |
 | `--ids`                |       `-i`       | show only component ids, unformatted                                                          |
-| `--scope`              |       `-s`       | show only components stored in the local scope, including indirect dependencies               |
+| `--local-scope`        |       `-l`       | show only components stored in the local scope, including indirect dependencies               |
+| `--scope <string>`     |       `-s`       | filter components by their scope name (e.g., teambit.workspace)                               |
 | `--outdated`           |       `-o`       | highlight outdated components, in comparison with their latest remote version (if one exists) |
 | `--include-deleted`    |       `-d`       | EXPERIMENTAL. show also deleted components                                                    |
 | `--json`               |       `-j`       | show the output in JSON format                                                                |
-| `--namespace <string>` |       `-n`       | show only components in the specified namespace/s e.g. '-n ui' or '\*/ui'                     |
+| `--namespace <string>` |       `-n`       | filter components by their namespace (a logical grouping within a scope, e.g., 'ui', '\*/ui') |
 
 ---
 
@@ -1567,6 +1618,67 @@ this command does the following:
 
 ---
 
+## mcp-server
+
+**Description**: Start the Bit CLI Model Context Protocol (MCP) server for programmatic and remote access to Bit commands.
+
+`bit mcp-server [sub-command]`
+
+### mcp-server start
+
+**Usage**: `mcp-server start`
+
+**Description**: Start the MCP server  
+Start the Model Context Protocol (MCP) server with the specified configuration
+
+| **Option**                        | **Option alias** | **Description**                                                                                                           |
+| --------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------------- |
+| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes                                    |
+| `--bit-bin <binary>`              |                  | Specify the binary to use for running Bit commands (default: "bit")                                                       |
+| `--consumer-project`              |                  | For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools |
+
+### mcp-server setup
+
+**Usage**: `mcp-server setup [editor]`
+
+**Description**: Setup MCP integration with VS Code, Cursor, Windsurf, Roo Code, Cline, or other editors  
+Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, Windsurf, Roo Code, and Cline.
+
+| **Arg**  |                                  **Description**                                   |
+| -------- | :--------------------------------------------------------------------------------: |
+| `editor` | Editor to setup (default: vscode). Available: vscode, cursor, windsurf, roo, cline |
+
+| **Option**                        | **Option alias** | **Description**                                                                        |
+| --------------------------------- | :--------------: | -------------------------------------------------------------------------------------- |
+| `--consumer-project`              |                  | Configure for non-Bit workspaces that only consume Bit component packages              |
+| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes |
+| `--global`                        |       `-g`       | Setup global configuration (default: workspace-specific)                               |
+
+### mcp-server rules
+
+**Usage**: `mcp-server rules [editor]`
+
+**Description**: Write Bit MCP rules/instructions file for VS Code, Cursor, Roo Code, Cline, or print to screen  
+Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, Roo Code, and Cline. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.
+
+| **Arg**  |                                  **Description**                                   |
+| -------- | :--------------------------------------------------------------------------------: |
+| `editor` | Editor to write rules for (default: vscode). Available: vscode, cursor, roo, cline |
+
+| **Option**           | **Option alias** | **Description**                                                               |
+| -------------------- | :--------------: | ----------------------------------------------------------------------------- |
+| `--global`           |       `-g`       | Write rules to global configuration (default: workspace-specific)             |
+| `--print`            |       `-p`       | Print rules content to screen instead of writing to file                      |
+| `--consumer-project` |                  | Generate rules for consumer projects that only use Bit components as packages |
+
+| **Option**                        | **Option alias** | **Description**                                                                                                           |
+| --------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------------- |
+| `--include-additional <commands>` |                  | Add specific commands to the default MCP tools set. Use comma-separated list in quotes                                    |
+| `--bit-bin <binary>`              |                  | Specify the binary to use for running Bit commands (default: "bit")                                                       |
+| `--consumer-project`              |                  | For non-Bit workspaces that only consume Bit component packages. Enables only "schema", "show", and "remote_search" tools |
+
+---
+
 ## merge
 
 **Description**: merge changes of the remote head into local - auto-snaps all merged components  
@@ -1594,27 +1706,6 @@ optionally use '--abort' to revert the last merge. to revert a lane merge, use "
 | `--verbose`                             |                  | show details of components that were not merged successfully                                                            |
 | `--skip-dependency-installation`        |       `-x`       | do not install new dependencies resulting from the merge                                                                |
 | `--message <message>`                   |       `-m`       | override the default message for the auto snap                                                                          |
-
----
-
-## mini-status
-
-**Alias**: `ms`  
-**Description**: basic status for fast execution  
-shows only modified/new components with code changes. for the full status, use "bit status".  
-this command only checks source code changes, it doesn't check for config/aspect/dependency changes
-
-`bit mini-status [component-pattern]`
-
-| **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
-| ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
-
-| **Option**                       | **Option alias** | **Description**                                                                                              |
-| -------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------ |
-| `--show-issues`                  |                  | show component issues (slows down the command)                                                               |
-| `--ignore-circular-dependencies` |       `-c`       | do not check for circular dependencies to get the results quicker (relevant when --show-issues flag is used) |
-| `--json`                         |       `-j`       | json format                                                                                                  |
 
 ---
 
@@ -1758,6 +1849,16 @@ for example: "http://localhost:3000", "file:///tmp/local-scope"
 | ---------- | :--------------: | ----------------------------------------- |
 | `--global` |       `-g`       | remove a globally configured remote scope |
 
+### remote list
+
+**Usage**: `remote list`
+
+**Description**: list all configured remotes
+
+| **Option** | **Option alias** | **Description**                 |
+| ---------- | :--------------: | ------------------------------- |
+| `--global` |       `-g`       | see globally configured remotes |
+
 | **Option** | **Option alias** | **Description**                 |
 | ---------- | :--------------: | ------------------------------- |
 | `--global` |       `-g`       | see globally configured remotes |
@@ -1818,7 +1919,6 @@ https://bit.dev/components/tags#undoing-a-tag
 | **Arg**             |                                                                                                                                                                                                                 **Description**                                                                                                                                                                                                                 |
 | ------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | `component-pattern` | component name, component id, or component pattern. use component pattern to select multiple components. wrap the pattern with quotes. use comma to separate patterns and "!" to exclude. e.g. "ui/\*\*, !ui/button". use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'. use `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern. |
-| `component-version` |                                                                                                                                                                                             the version to untag (semver for tags. hash for snaps)                                                                                                                                                                                              |
 
 | **Option**         | **Option alias** | **Description**                                                                                                 |
 | ------------------ | :--------------: | --------------------------------------------------------------------------------------------------------------- |
@@ -1871,7 +1971,10 @@ https://bit.dev/components/tags#undoing-a-tag
 
 ## schema
 
-**Description**: shows the API schema of the specified component/s.  
+**Description**: extracts and displays the API schema (types, functions, classes, interfaces) of the specified component/s.  
+Extracts TypeScript definitions to provide a comprehensive view of a component's public API.  
+Shows detailed information about exported elements including classes, interfaces, functions, types, and enums with their respective signatures and documentation.
+
 you can use a `<pattern>` for multiple component ids, such as `bit schema "org.scope/utils/**"`.  
 use comma to separate patterns and '!' to exclude. e.g. 'ui/\*\*, !ui/button'  
 use '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.  
@@ -1880,9 +1983,10 @@ use `bit pattern --help` to understand patterns better and `bit pattern <pattern
 
 `bit schema <pattern>`
 
-| **Option** | **Option alias** | **Description**                            |
-| ---------- | :--------------: | ------------------------------------------ |
-| `--json`   |       `-j`       | return the component schema in json format |
+| **Option** | **Option alias** | **Description**                                                        |
+| ---------- | :--------------: | ---------------------------------------------------------------------- |
+| `--remote` |       `-r`       | fetch schema from remote scope (works for components not in workspace) |
+| `--json`   |       `-j`       | return the component schema in json format                             |
 
 ---
 
@@ -1967,19 +2071,6 @@ optionally, provide [pattern] to limit the fork to specific components
 
 ---
 
-## server
-
-**Description**: communicate with bit cli program via http requests
-
-`bit server`
-
-| **Option**      | **Option alias** | **Description**                             |
-| --------------- | :--------------: | ------------------------------------------- |
-| `--port [port]` |       `-p`       | port to run the server on                   |
-| `--compile`     |       `-c`       | compile components during the watch process |
-
----
-
 ## set-peer
 
 **Description**: set a component as always peer
@@ -2035,6 +2126,7 @@ optionally, provide [pattern] to limit the fork to specific components
 | `--skip-auto-snap`         |                  | skip auto snapping dependents                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `--disable-snap-pipeline`  |                  | skip the snap pipeline. this will for instance skip packing and publishing component version for install, and app deployment                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `--ignore-build-errors`    |                  | proceed to snap pipeline even when build pipeline fails                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `--loose`                  |                  | allow snap --build to succeed even if tasks like tests or lint fail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `--rebuild-deps-graph`     |                  | do not reuse the saved dependencies graph, instead build it from scratch                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `--ignore-issues <issues>` |       `-i`       | ignore component issues (shown in "bit status" as "issues found"), issues to ignore: [MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory] to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "\*". |
 | `--fail-fast`              |                  | stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
@@ -2190,6 +2282,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
 | `--ignore-newest-version`    |       `-I`       | allow tagging even when the component has newer versions e.g. for hotfixes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `--fail-fast`                |                  | stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `--build`                    |       `-b`       | locally run the build pipeline (i.e. not via rippleCI) and complete the tag                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `--loose`                    |                  | allow tag --build to succeed even if tasks like tests or lint fail                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `--detach-head`              |                  | UNSUPPORTED YET. in case a component is checked out to an older version, tag it without changing the head                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 ---
@@ -2205,6 +2298,7 @@ list components templates when inside bit-workspace (for bit-create), otherwise,
 | ---------------------- | :--------------: | ---------------------------------------- |
 | `--show-all`           |       `-s`       | show hidden templates                    |
 | `--aspect <aspect-id>` |       `-a`       | show templates provided by the aspect-id |
+| `--json`               |       `-j`       | return templates in json format          |
 
 ---
 
@@ -2263,18 +2357,6 @@ list components templates when inside bit-workspace (for bit-create), otherwise,
 
 ---
 
-## unuse
-
-**Description**: unset aspects in the workspace config (opposite of "use" command)
-
-`bit unuse <component-id>`
-
-| **Arg**        |        **Description**         |
-| -------------- | :----------------------------: |
-| `component-id` | the component ID of the aspect |
-
----
-
 ## update
 
 **Alias**: `up`  
@@ -2293,18 +2375,6 @@ list components templates when inside bit-workspace (for bit-create), otherwise,
 | `--minor`  |                  | update to the latest minor version. Semver rules are ignored                                                                                                                   |
 | `--major`  |                  | update to the latest major version. Semver rules are ignored                                                                                                                   |
 | `--semver` |                  | update to the newest version respecting semver                                                                                                                                 |
-
----
-
-## use
-
-**Description**: set aspects in the workspace/scope config to make them loadable by the workspace/scope
-
-`bit use <component-id>`
-
-| **Arg**        |        **Description**         |
-| -------------- | :----------------------------: |
-| `component-id` | the component ID of the aspect |
 
 ---
 

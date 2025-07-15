@@ -30,7 +30,6 @@ export async function runBit(additionalAspects?: Aspect[]) {
     autocomplete();
     process.exit(0);
   }
-
   if (process.argv.includes('server-forever')) {
     spawnPTY();
   } else if (shouldUseBitServer()) {
@@ -60,7 +59,7 @@ function consoleFileReadUsages() {
   const print = (filename: string) => {
     // eslint-disable-next-line no-console
     console.log(`#${numR}`, filename);
-  }
+  };
   const originalReadFile = fs.readFile;
   const originalReadFileSync = fs.readFileSync;
   // @ts-ignore
@@ -69,12 +68,12 @@ function consoleFileReadUsages() {
     print(args[0]);
     // @ts-ignore
     return originalReadFile(...args);
-  }
+  };
 
   fs.readFileSync = (...args) => {
     numR++;
     print(args[0]);
     // @ts-ignore
     return originalReadFileSync(...args);
-  }
+  };
 }

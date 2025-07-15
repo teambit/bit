@@ -9,7 +9,7 @@ export class AppListCmd implements Command {
   name = 'list';
   description = 'list all registered apps';
   alias = '';
-  group = 'apps';
+  group = 'run-serve';
   helpUrl = 'reference/reference/cli-reference';
   options = [['j', 'json', 'return the component data in json format']] as CommandOptions;
 
@@ -34,7 +34,7 @@ export class AppCmd implements Command {
   description = 'Manages apps';
   helpUrl = 'docs/getting-started/composing/create-apps';
   alias = 'apps';
-  group = 'apps';
+  group = 'run-serve';
   commands: Command[] = [];
   options = [] as CommandOptions;
 

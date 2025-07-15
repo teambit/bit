@@ -54,6 +54,11 @@ function getEnvId(context: ExecutionContext, dedicatedServers?: string[]): strin
     return context.id;
   }
 
+  // Happen for envs that are not implementing preview
+  if (!context.env?.getDevEnvId) {
+    return undefined;
+  }
+
   return context.env?.getDevEnvId(context);
 }
 

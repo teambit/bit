@@ -13,9 +13,16 @@ export function CoreAspectsLinks({ coreAspectsLinks, verbose = false }: CoreAspe
   if (!coreAspectsLinks || !coreAspectsLinks.length) {
     return chalk.cyan('No core aspects were linked');
   }
-  const title = chalk.cyan('Core aspects links');
-  const links = coreAspectsLinks.map((link) => CoreAspectLinkRow({ coreAspectLink: link, verbose })).join('\n');
-  return `${title}\n${links}`;
+
+  if (verbose) {
+    const title = chalk.cyan('Core aspects links');
+    const links = coreAspectsLinks.map((link) => CoreAspectLinkRow({ coreAspectLink: link, verbose })).join('\n');
+    return `${title}\n${links}`;
+  }
+
+  // Show summary by default
+  const count = coreAspectsLinks.length;
+  return chalk.cyan(`${count} core-aspects were linked`);
 }
 
 type CoreAspectLinkProps = {

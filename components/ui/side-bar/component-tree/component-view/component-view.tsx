@@ -62,13 +62,13 @@ export function ComponentView(props: ComponentViewProps) {
   const envUrl = !envId
     ? undefined
     : (isEnvOnCurrentLane &&
-      lanesModel?.viewedLane?.id &&
-      mounted &&
-      `${window.location.origin}${LanesModel.getLaneComponentUrl(envId, lanesModel.viewedLane?.id, undefined, lanesModel.viewedLane)}`) ||
-    ComponentUrl.toUrl(envId, {
-      includeVersion: true,
-      useLocationOrigin: mounted ? window.location.host.startsWith('localhost') : false,
-    });
+        lanesModel?.viewedLane?.id &&
+        mounted &&
+        `${window.location.origin}${LanesModel.getLaneComponentUrl(envId, lanesModel.viewedLane?.id, undefined, lanesModel.viewedLane)}`) ||
+      ComponentUrl.toUrl(envId, {
+        includeVersion: true,
+        useLocationOrigin: mounted ? window.location.host.startsWith('localhost') : false,
+      });
 
   const envTooltip = envId ? (
     <Link
@@ -87,11 +87,11 @@ export function ComponentView(props: ComponentViewProps) {
 
   const href = !isMissingCompOrEnvId
     ? lanesModel?.getLaneComponentUrlByVersion(
-      component.id as any,
-      lanesModel.viewedLane?.id,
-      !scope.name,
-      lanesModel.viewedLane
-    )
+        component.id as any,
+        lanesModel.viewedLane?.id,
+        !scope.name,
+        lanesModel.viewedLane
+      )
     : undefined;
 
   const viewingMainCompOnLane = React.useMemo(() => {
@@ -204,7 +204,7 @@ export function ComponentView(props: ComponentViewProps) {
     return !scopeFromQueryParams
       ? laneCompIdFromUrl?.toString() === compIdStr || laneCompIdFromUrl.fullName === compIdName
       : laneCompIdFromUrl?.toString() === compIdStr ||
-      (laneCompIdFromUrl.fullName === compIdName && componentScope === scopeFromQueryParams);
+          (laneCompIdFromUrl.fullName === compIdName && componentScope === scopeFromQueryParams);
   }, [href, viewingMainCompOnLane, location?.pathname, component?.id.toString(), scope.name]);
 
   if (isMissingCompOrEnvId) return null;

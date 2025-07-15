@@ -697,7 +697,10 @@ once done, to continue working, please run "bit cc"`
     if (name === CURRENT_UPSTREAM) {
       throw new BitError(`the name "${CURRENT_UPSTREAM}" is a reserved word, please use another name`);
     }
-    const scopeJson = new ScopeJson({ name, groupName, version: getBitVersionGracefully() || 'unknown' }, getScopeJsonPath(scopePath));
+    const scopeJson = new ScopeJson(
+      { name, groupName, version: getBitVersionGracefully() || 'unknown' },
+      getScopeJsonPath(scopePath)
+    );
     return scopeJson;
   }
 

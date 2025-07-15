@@ -5,7 +5,7 @@ import { ClearCacheMain } from './clear-cache.main.runtime';
 export default class ClearCacheCmd implements Command {
   name = 'clear-cache';
   description = "clears Bit's cache from current working machine";
-  group = 'general';
+  group = 'system';
   extendedDescription: string;
   alias = 'cc';
   options = [['r', 'remote <remote-name>', 'clear memory cache from a remote scope']] as CommandOptions;

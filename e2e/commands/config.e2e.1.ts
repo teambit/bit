@@ -65,7 +65,7 @@ describe('bit config', function () {
   describe('saving config in the local workspace', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
-      helper.command.setConfig('local.ws', 'hello-ws',  '--local-track');
+      helper.command.setConfig('local.ws', 'hello-ws', '--local-track');
     });
     after(() => {
       helper.command.delConfig('shared-conf');
@@ -106,7 +106,7 @@ describe('bit config', function () {
   describe('saving config in the local scope', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();
-      helper.command.setConfig('local.scope', 'hello-scope',  '--local');
+      helper.command.setConfig('local.scope', 'hello-scope', '--local');
     });
     it('should save to the scope when using "--local"', () => {
       const list = helper.command.listConfigLocally('scope');
