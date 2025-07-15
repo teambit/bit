@@ -186,7 +186,8 @@ class BitLogger implements IBitLogger {
     const isSuccess = code === 0;
     const level = isSuccess ? 'info' : 'error';
     if (cliOutput) {
-      if (commandName === 'schema') this.logger.info(`[+] CLI-OUTPUT: <output-is-truncated-for-this-command-it-can-be-too-long>`);
+      if (commandName === 'schema')
+        this.logger.info(`[+] CLI-OUTPUT: <output-is-truncated-for-this-command-it-can-be-too-long>`);
       else this.logger.info(`[+] CLI-OUTPUT: ${cliOutput}`);
     }
     const msg = isSuccess

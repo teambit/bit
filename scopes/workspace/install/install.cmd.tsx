@@ -111,6 +111,7 @@ export default class InstallCmd implements Command {
       updateAll: options.update,
       recurringInstall: options.recurringInstall,
       lockfileOnly: options.lockfileOnly,
+      showExternalPackageManagerPrompt: true,
     };
     const components = await this.install.install(packages, installOpts);
     const endTime = Date.now();

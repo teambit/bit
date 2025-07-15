@@ -74,6 +74,8 @@ export class McpSetupUtils {
         return 'Roo Code';
       case 'cline':
         return 'Cline';
+      case 'claude-code':
+        return 'Claude Code';
       default:
         return editor;
     }
@@ -482,5 +484,107 @@ export class McpSetupUtils {
       const targetDir = workspaceDir || process.cwd();
       return path.join(targetDir, '.clinerules', 'bit.instructions.md');
     }
+  }
+
+  /**
+   * Get Claude Code mcp.json path based on global/workspace scope
+   */
+  static getClaudeCodeSettingsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Global Claude Code MCP configuration
+      const platform = process.platform;
+      switch (platform) {
+        case 'win32':
+          return path.join(homedir(), 'AppData', 'Roaming', 'Claude', 'claude_desktop_config.json');
+        case 'darwin':
+          return path.join(homedir(), 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json');
+        case 'linux':
+          return path.join(homedir(), '.config', 'claude', 'claude_desktop_config.json');
+        default:
+          throw new Error(`Unsupported platform: ${platform}`);
+      }
+    } else {
+      // Workspace-specific MCP configuration
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.mcp.json');
+    }
+  }
+
+  /**
+   * Setup Claude Code MCP integration
+   */
+  static async setupClaudeCode(options: SetupOptions): Promise<void> {
+    const { isGlobal, workspaceDir } = options;
+
+    // Determine mcp.json path
+    const mcpConfigPath = this.getClaudeCodeSettingsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(mcpConfigPath));
+
+    // Read existing MCP configuration or create empty object
+    const mcpConfig = await this.readJsonFile(mcpConfigPath);
+
+    // Build MCP server args
+    const args = this.buildMcpServerArgs(options);
+
+    // Create or update MCP configuration for Claude Code
+    if (!mcpConfig.mcpServers) {
+      mcpConfig.mcpServers = {};
+    }
+
+    mcpConfig.mcpServers.bit = {
+      command: 'bit',
+      args: args,
+    };
+
+    // Write updated MCP configuration
+    await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
+  }
+
+  /**
+   * Get Claude Code prompts path based on global/workspace scope
+   */
+  static getClaudeCodePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Global Claude Code rules - using .claude directory
+      return path.join(homedir(), '.claude', 'bit.md');
+    } else {
+      // Workspace-specific rules in .claude directory
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.claude', 'bit.md');
+    }
+  }
+
+  /**
+   * Write Bit MCP rules file for Claude Code
+   */
+  static async writeClaudeCodeRules(options: RulesOptions): Promise<void> {
+    const { isGlobal, workspaceDir, consumerProject = false } = options;
+
+    // Determine prompts file path
+    const promptsPath = this.getClaudeCodePromptsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(promptsPath));
+
+    // Get base rules content
+    const rulesContent = await this.getDefaultRulesContent(consumerProject);
+
+    // Add integration instructions at the top
+    const integrationInstructions = `<!--
+To use these Bit instructions, add the following to your main CLAUDE.md file:
+
+@.claude/bit.md
+
+This will automatically include all Bit-specific instructions in your Claude Code context.
+-->
+
+`;
+
+    const finalContent = integrationInstructions + rulesContent;
+
+    // Write rules content with integration instructions
+    await fs.writeFile(promptsPath, finalContent);
   }
 }

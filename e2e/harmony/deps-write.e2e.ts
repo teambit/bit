@@ -10,10 +10,7 @@ describe('dependencies write', function () {
 
     helper.fixtures.populateComponents(1);
     helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
-    helper.fs.outputFile(
-      `comp1/index.js`,
-      `const React = require("react"); require("is-odd"); // eslint-disable-line`
-    );
+    helper.fs.outputFile(`comp1/index.js`, `const React = require("react"); require("is-odd"); // eslint-disable-line`);
     helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
       dependencies: {
         'is-odd': '1.0.0',
@@ -53,4 +50,3 @@ describe('dependencies write', function () {
     });
   });
 });
-

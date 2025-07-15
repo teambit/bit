@@ -39,13 +39,13 @@ export function useCodeCompare({ fileName }: UseCodeCompareProps): UseCodeCompar
     compareId,
     fileName,
     componentCompareContext?.hidden || loadingFromContext || !!codeCompareDataForFile?.compareContent,
-    comparingLocalChanges ? 'teambit.workspace/workspace' : 'teambit.scope/scope',
+    comparingLocalChanges ? 'teambit.workspace/workspace' : 'teambit.scope/scope'
   );
   const { fileContent: downloadedBaseFileContent, loading: loadingDownloadedBaseFileContent } = useFileContent(
     baseId,
     fileName,
     componentCompareContext?.hidden || loadingFromContext || !!codeCompareDataForFile?.baseContent,
-    'teambit.scope/scope',
+    'teambit.scope/scope'
   );
   const loading =
     loadingFromContext ||

@@ -5,7 +5,7 @@ import { WorkspaceAspect, type Workspace } from '@teambit/workspace';
 import { BuilderAspect, type BuilderMain } from '@teambit/builder';
 import { StatusAspect, type StatusMain } from '@teambit/status';
 import { LanesAspect, type LanesMain } from '@teambit/lanes';
-import { SnappingAspect, SnapResults, type SnappingMain } from '@teambit/snapping';
+import { SnappingAspect, SnapResults, tagResultOutput, type SnappingMain } from '@teambit/snapping';
 import { ExportAspect, type ExportMain } from '@teambit/export';
 import { ImporterAspect, type ImporterMain } from '@teambit/importer';
 import { CheckoutAspect, type CheckoutMain } from '@teambit/checkout';
@@ -108,6 +108,26 @@ export class CiMain {
       return branch.current;
     } catch (e: any) {
       throw new Error(`Unable to read branch: ${e.toString()}`);
+    }
+  }
+
+  async getDefaultBranchName() {
+    try {
+      // Try to get the default branch from git symbolic-ref
+      const result = await git.raw(['symbolic-ref', 'refs/remotes/origin/HEAD']);
+      const defaultBranch = result.trim().split('/').pop();
+      return defaultBranch || 'master';
+    } catch (e: any) {
+      // Fallback to common default branch names
+      try {
+        const branches = await git.branch(['-r']);
+        if (branches.all.includes('origin/main')) return 'main';
+        if (branches.all.includes('origin/master')) return 'master';
+        return 'master'; // Final fallback
+      } catch {
+        this.logger.console(chalk.yellow(`Unable to detect default branch, using 'master': ${e.toString()}`));
+        return 'master';
+      }
     }
   }
 
@@ -390,38 +410,32 @@ export class CiMain {
   }
 
   async mergePr({ message: argMessage, build, strict }: { message?: string; build?: boolean; strict?: boolean }) {
-    let message: string;
-
-    if (argMessage) {
-      message = argMessage;
-    } else {
-      const commitMessage = await this.getGitCommitMessage();
-      if (!commitMessage) {
-        return { code: 1, data: 'Failed to get commit message' };
-      }
-      message = commitMessage;
+    const message = argMessage || (await this.getGitCommitMessage());
+    if (!message) {
+      throw new Error('Failed to get commit message from git. Please provide a message using --message option.');
     }
 
     const currentLane = await this.lanes.getCurrentLane();
 
-    await this.lanes.checkout.checkout({
-      forceOurs: true,
-      head: true,
-      skipNpmInstall: true,
-    });
-
     if (currentLane) {
+      // this doesn't normally happen. we expect this mergePr to be called from the default branch, which normally checks
+      // out to main lane.
       this.logger.console(chalk.blue(`Currently on lane ${currentLane.name}, switching to main`));
       await this.switchToLane('main', { skipDependencyInstallation: true });
-      this.logger.console(chalk.green('Switched to main'));
+      this.logger.console(chalk.green('Switched to main lane'));
     }
 
+    // Pull latest changes from remote to ensure we have the most up-to-date .bitmap
+    // This prevents issues when multiple PRs are merged in sequence
+    const defaultBranch = await this.getDefaultBranchName();
+    this.logger.console(chalk.blue(`Pulling latest git changes from ${defaultBranch} branch`));
+    await git.pull('origin', defaultBranch);
+    this.logger.console(chalk.green('Pulled latest git changes'));
+
+    this.logger.console('🔄 Checking out to main head');
     await this.checkout.checkout({
       forceOurs: true,
       head: true,
-      main: true,
-      mergeStrategy: 'ours',
-      workspaceOnly: true,
       skipNpmInstall: true,
     });
 
@@ -432,30 +446,48 @@ export class CiMain {
 
     this.logger.console('📦 Component Operations');
     this.logger.console(chalk.blue('Tagging components'));
-    await this.snapping.tag({
+    const tagResults = await this.snapping.tag({
       all: true,
       message,
       build,
       failFast: true,
       persist: hasSoftTaggedComponents,
     });
-    this.logger.console(chalk.green('Tagged components'));
 
-    this.logger.console(chalk.blue('Exporting components'));
-    await this.exporter.export();
-    this.logger.console(chalk.green('Exported components'));
+    if (tagResults) {
+      const tagOutput = tagResultOutput(tagResults);
+      this.logger.console(tagOutput);
+    } else {
+      this.logger.console(chalk.yellow('No components to tag'));
+    }
 
-    this.logger.console('🔄 Git Operations');
-    // Set user.email and user.name
-    await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
-    await git.addConfig('user.name', 'Bit CI');
+    const hasTaggedComponents = tagResults?.taggedComponents && tagResults.taggedComponents.length > 0;
 
-    // Commit the .bitmap and pnpm-lock.yaml files using Git
-    await git.add(['.bitmap', 'pnpm-lock.yaml']);
-    await git.commit('chore: update .bitmap and pnpm-lock.yaml');
+    if (hasTaggedComponents) {
+      this.logger.console(chalk.blue('Exporting components'));
+      const exportResult = await this.exporter.export();
 
-    // Push the commit to the remote repository
-    await git.push('origin', 'main');
+      if (exportResult.componentsIds.length > 0) {
+        this.logger.console(chalk.green(`Exported ${exportResult.componentsIds.length} component(s)`));
+      } else {
+        this.logger.console(chalk.yellow('Nothing to export'));
+      }
+
+      this.logger.console('🔄 Git Operations');
+      // Set user.email and user.name
+      await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
+      await git.addConfig('user.name', 'Bit CI');
+
+      // Commit the .bitmap and pnpm-lock.yaml files using Git
+      await git.add(['.bitmap', 'pnpm-lock.yaml']);
+      await git.commit('chore: update .bitmap and lockfiles as needed [skip ci]');
+
+      // Pull latest changes and push the commit to the remote repository
+      await git.pull('origin', defaultBranch);
+      await git.push('origin', defaultBranch);
+    } else {
+      this.logger.console(chalk.yellow('No components were tagged, skipping export and git operations'));
+    }
 
     this.logger.console(chalk.green('Merged PR'));
 

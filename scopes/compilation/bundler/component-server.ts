@@ -32,7 +32,7 @@ export class ComponentServer {
      * env dev server.
      */
     readonly devServer: DevServer
-  ) { }
+  ) {}
 
   hostname: string | undefined;
   private _server?: Server;
@@ -44,7 +44,7 @@ export class ComponentServer {
 
   get envId() {
     return this.context.envRuntime.id;
-  };
+  }
   /**
    * determine whether component server contains a component.
    */
@@ -59,7 +59,7 @@ export class ComponentServer {
   _port: number;
 
   async listen(specificPort?: number) {
-    const port = specificPort || await selectPort(this.portRange);
+    const port = specificPort || (await selectPort(this.portRange));
     this._port = port;
     this._server = await this.devServer.listen(port);
     const address = this._server.address();
@@ -67,10 +67,7 @@ export class ComponentServer {
     if (!address) throw new BindError();
     this.hostname = hostname;
 
-    this.pubsub.pub(
-      BundlerAspect.id,
-      this.createComponentsServerStartedEvent(this, this.context, hostname, port)
-    );
+    this.pubsub.pub(BundlerAspect.id, this.createComponentsServerStartedEvent(this, this.context, hostname, port));
   }
 
   async close(): Promise<void> {
@@ -98,12 +95,10 @@ export class ComponentServer {
     try {
       await this.close();
       await this.listen(useNewPort ? undefined : this._port);
-    }
-    catch (error) {
+    } catch (error) {
       if (!this.errors) this.errors = [];
       this.errors.push(error as Error);
-    }
-    finally {
+    } finally {
       this._isRestarting = false;
     }
   }
@@ -120,7 +115,7 @@ export class ComponentServer {
     return hostname;
   }
 
-  private onChange() { }
+  private onChange() {}
 
   private createComponentsServerStartedEvent: (
     componentsServer,

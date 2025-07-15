@@ -24,7 +24,7 @@ export class ComponentsServerStartedEvent extends BitBaseEvent<ComponentsServerS
     readonly componentsServer: ComponentServer,
     readonly context: ExecutionContext,
     readonly hostname?: string,
-    readonly port?: number,
+    readonly port?: number
   ) {
     super(
       ComponentsServerStartedEvent.TYPE,
@@ -48,9 +48,7 @@ export class NewDevServersCreatedEvent extends BitBaseEvent<ComponentsServerStar
       NewDevServersCreatedEvent.TYPE,
       '0.0.1',
       timestamp,
-      componentsServers.map(c => new ComponentsServerStartedEventData(c, c.context, c.hostname, c.port))
+      componentsServers.map((c) => new ComponentsServerStartedEventData(c, c.context, c.hostname, c.port))
     );
   }
-
 }
-

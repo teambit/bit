@@ -29,7 +29,7 @@ function ParameterComponent(props: APINodeRenderProps) {
   const typeRenderer = renderers.find((renderer) => renderer.predicate(type));
   const typeRef = type.name
     ? apiRefModel.apiByName.get(type.name) ||
-    apiRefModel.apiByName.get(apiRefModel.generateInternalAPIKey(type.location.filePath, type.name))
+      apiRefModel.apiByName.get(apiRefModel.generateInternalAPIKey(type.location.filePath, type.name))
     : undefined;
   const headings = ['name', 'type', 'default', 'description'];
 
@@ -48,7 +48,8 @@ function ParameterComponent(props: APINodeRenderProps) {
             (typeRefCorrespondingNode as any)?.type?.__schema === TypeRefSchema.name;
 
           const typeRefBindingNode = isTypeRefCorrespondingNodeReference
-            ? (typeRefCorrespondingNode as any).type as TypeRefSchema : undefined;
+            ? ((typeRefCorrespondingNode as any).type as TypeRefSchema)
+            : undefined;
 
           // @todo - temp fix. This should be fixed at the schema extractor level
           const doesTypeHaveIncorrectName = typeRefBindingNode && typeRefBindingNode.name !== _bindingNode.name;
@@ -79,7 +80,7 @@ function ParameterComponent(props: APINodeRenderProps) {
               }}
               className={styles.paramRow}
               row={{
-                name: doesTypeHaveIncorrectName ? _bindingNode.name : (bindingNode.name || ''),
+                name: doesTypeHaveIncorrectName ? _bindingNode.name : bindingNode.name || '',
                 description: bindingNode.doc?.comment || bindingNode.doc?.raw || bindingNode.doc?.tags?.join() || '',
                 required:
                   (typeRefCorrespondingNode as any)?.isOptional !== undefined &&

@@ -55,7 +55,7 @@ export class UIServer {
     private logger: Logger,
     private publicDir: string,
     private plugins: StartPlugin[]
-  ) { }
+  ) {}
 
   getName() {
     return this.uiRoot.name;

@@ -25,7 +25,7 @@ export class ComponentCompareUI {
     private navSlot: ComponentCompareNavSlot,
     private routeSlot: RouteSlot,
     private compUI: ComponentUI
-  ) { }
+  ) {}
 
   static runtime = UIRuntime;
 

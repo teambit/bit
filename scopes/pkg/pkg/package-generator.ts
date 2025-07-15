@@ -3,7 +3,9 @@ import { Component } from '@teambit/component';
 import { PackageJsonProps } from './pkg.main.runtime';
 
 export type ModifyPackageJsonFunc = (
-  component: Component, packageJsonObject: PackageJsonProps) => Promise<PackageJsonProps>;
+  component: Component,
+  packageJsonObject: PackageJsonProps
+) => Promise<PackageJsonProps>;
 
 export type PackageGeneratorOptions = {
   packageJson: PackageJsonProps;
@@ -20,7 +22,7 @@ export class PackageGenerator {
     private context: EnvContext,
     private _packageJson: PackageJsonProps = {},
     private _npmIgnore: string[] = [],
-    private _modifyPackageJson?: ModifyPackageJsonFunc,
+    private _modifyPackageJson?: ModifyPackageJsonFunc
   ) {}
 
   get packageJsonProps() {
