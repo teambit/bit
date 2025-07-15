@@ -18,6 +18,10 @@ import { CiPrCmd } from './commands/pr.cmd';
 import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
 
+export interface CiWorkspaceConfig {
+  commitMessageScript?: string;
+}
+
 export class CiMain {
   static runtime = MainRuntime as RuntimeDefinition;
 
@@ -53,34 +57,28 @@ export class CiMain {
 
     private checkout: CheckoutMain,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private config: CiWorkspaceConfig
   ) {}
 
-  static async provider([
-    cli,
-    workspace,
-    loggerAspect,
-    builder,
-    status,
-    lanes,
-    snapping,
-    exporter,
-    importer,
-    checkout,
-  ]: [
-    CLIMain,
-    Workspace,
-    LoggerMain,
-    BuilderMain,
-    StatusMain,
-    LanesMain,
-    SnappingMain,
-    ExportMain,
-    ImporterMain,
-    CheckoutMain,
-  ]) {
+  static async provider(
+    [cli, workspace, loggerAspect, builder, status, lanes, snapping, exporter, importer, checkout]: [
+      CLIMain,
+      Workspace,
+      LoggerMain,
+      BuilderMain,
+      StatusMain,
+      LanesMain,
+      SnappingMain,
+      ExportMain,
+      ImporterMain,
+      CheckoutMain,
+    ],
+    config: CiWorkspaceConfig
+  ) {
     const logger = loggerAspect.createLogger(CiAspect.id);
-    const ci = new CiMain(workspace, builder, status, lanes, snapping, exporter, importer, checkout, logger);
+    const ci = new CiMain(workspace, builder, status, lanes, snapping, exporter, importer, checkout, logger, config);
     const ciCmd = new CiCmd(workspace, logger);
     ciCmd.commands = [
       new CiVerifyCmd(workspace, logger, ci),
@@ -141,10 +139,7 @@ export class CiMain {
 
   async getCustomCommitMessage() {
     try {
-      // Check for custom commit message generator script in workspace config
-      const workspaceConfig = this.workspace.getWorkspaceConfig();
-      const ciConfig = workspaceConfig.extension(CiAspect.id, true);
-      const commitMessageScript = ciConfig?.commitMessageScript;
+      const commitMessageScript = this.config.commitMessageScript;
 
       if (commitMessageScript) {
         this.logger.console(chalk.blue(`Running custom commit message script: ${commitMessageScript}`));
