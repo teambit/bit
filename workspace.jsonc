@@ -827,5 +827,8 @@
     "components/semantics/doc-parser": {
       "teambit.pkg/pkg": {}
     }
+  },
+  "teambit.git/ci": {
+    "commitMessageScript": "node scripts/generate-merge-commit-message.js"
   }
 }

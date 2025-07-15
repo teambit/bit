@@ -139,6 +139,41 @@ export class CiMain {
     }
   }
 
+  async getCustomCommitMessage() {
+    try {
+      // Check for custom commit message generator script in workspace config
+      const workspaceConfig = this.workspace.getWorkspaceConfig();
+      const ciConfig = workspaceConfig.extension(CiAspect.id, true);
+      const commitMessageScript = ciConfig?.commitMessageScript;
+
+      if (commitMessageScript) {
+        this.logger.console(chalk.blue(`Running custom commit message script: ${commitMessageScript}`));
+        const { execa } = await import('execa');
+
+        // Parse the command to avoid shell injection
+        const parts = commitMessageScript.split(' ');
+        const command = parts[0];
+        const args = parts.slice(1);
+
+        const result = await execa(command, args, {
+          cwd: this.workspace.path,
+          encoding: 'utf8',
+        });
+        const customMessage = result.stdout.trim();
+
+        if (customMessage) {
+          this.logger.console(chalk.green(`Using custom commit message: ${customMessage}`));
+          return customMessage;
+        }
+      }
+    } catch (e: any) {
+      this.logger.console(chalk.yellow(`Failed to run custom commit message script: ${e.toString()}`));
+    }
+
+    // Fallback to default message
+    return 'chore: update .bitmap and lockfiles as needed [skip ci]';
+  }
+
   private async verifyWorkspaceStatusInternal(strict: boolean = false) {
     this.logger.console('📊 Workspace Status');
     this.logger.console(chalk.blue('Verifying status of workspace'));
@@ -412,7 +447,9 @@ export class CiMain {
 
       // Commit the .bitmap and pnpm-lock.yaml files using Git
       await git.add(['.bitmap', 'pnpm-lock.yaml']);
-      await git.commit('chore: update .bitmap and lockfiles as needed [skip ci]');
+
+      const commitMessage = await this.getCustomCommitMessage();
+      await git.commit(commitMessage);
 
       // Pull latest changes and push the commit to the remote repository
       await git.pull('origin', defaultBranch, { '--rebase': 'true' });
