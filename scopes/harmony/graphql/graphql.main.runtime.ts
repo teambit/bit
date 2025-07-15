@@ -44,7 +44,7 @@ export type GraphQLServerOptions = {
   remoteSchemas?: GraphQLServer[];
   subscriptionsPortRange?: number[];
   onWsConnect?: Function;
-  customExecuteFn: (args: any) => Promise<any>;
+  customExecuteFn?: (args: any) => Promise<any>;
 };
 
 export class GraphqlMain {
