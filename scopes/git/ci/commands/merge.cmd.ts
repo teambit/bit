@@ -24,7 +24,7 @@ export class CiMergeCmd implements Command {
   group = 'collaborate';
 
   options: CommandOptions = [
-    ['m', 'message <message>', 'If set, use it as the snap message, if not, try and grab from git-commit-message'],
+    ['m', 'message <message>', 'If set, use it as the tag message, if not, try and grab from git-commit-message'],
     ['b', 'build', 'Set to true to build the app locally, false (default) will build on Ripple CI'],
     ['s', 'strict', 'Set to true to fail on warnings as well as errors, false (default) only fails on errors'],
     [
