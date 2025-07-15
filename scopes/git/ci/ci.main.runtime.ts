@@ -8,8 +8,9 @@ import { LanesAspect, type LanesMain } from '@teambit/lanes';
 import { SnappingAspect, SnapResults, tagResultOutput, snapResultOutput, type SnappingMain } from '@teambit/snapping';
 import { ExportAspect, type ExportMain } from '@teambit/export';
 import { ImporterAspect, type ImporterMain } from '@teambit/importer';
-import { CheckoutAspect, type CheckoutMain } from '@teambit/checkout';
+import { CheckoutAspect, checkoutOutput, type CheckoutMain } from '@teambit/checkout';
 import { SwitchLaneOptions } from '@teambit/lanes';
+import execa from 'execa';
 import chalk from 'chalk';
 import { CiAspect } from './ci.aspect';
 import { CiCmd } from './ci.cmd';
@@ -17,6 +18,10 @@ import { CiVerifyCmd } from './commands/verify.cmd';
 import { CiPrCmd } from './commands/pr.cmd';
 import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
+
+export interface CiWorkspaceConfig {
+  commitMessageScript?: string;
+}
 
 export class CiMain {
   static runtime = MainRuntime as RuntimeDefinition;
@@ -53,34 +58,28 @@ export class CiMain {
 
     private checkout: CheckoutMain,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private config: CiWorkspaceConfig
   ) {}
 
-  static async provider([
-    cli,
-    workspace,
-    loggerAspect,
-    builder,
-    status,
-    lanes,
-    snapping,
-    exporter,
-    importer,
-    checkout,
-  ]: [
-    CLIMain,
-    Workspace,
-    LoggerMain,
-    BuilderMain,
-    StatusMain,
-    LanesMain,
-    SnappingMain,
-    ExportMain,
-    ImporterMain,
-    CheckoutMain,
-  ]) {
+  static async provider(
+    [cli, workspace, loggerAspect, builder, status, lanes, snapping, exporter, importer, checkout]: [
+      CLIMain,
+      Workspace,
+      LoggerMain,
+      BuilderMain,
+      StatusMain,
+      LanesMain,
+      SnappingMain,
+      ExportMain,
+      ImporterMain,
+      CheckoutMain,
+    ],
+    config: CiWorkspaceConfig
+  ) {
     const logger = loggerAspect.createLogger(CiAspect.id);
-    const ci = new CiMain(workspace, builder, status, lanes, snapping, exporter, importer, checkout, logger);
+    const ci = new CiMain(workspace, builder, status, lanes, snapping, exporter, importer, checkout, logger, config);
     const ciCmd = new CiCmd(workspace, logger);
     ciCmd.commands = [
       new CiVerifyCmd(workspace, logger, ci),
@@ -137,6 +136,37 @@ export class CiMain {
     } catch (e: any) {
       throw new Error(`Unable to read commit message: ${e.toString()}`);
     }
+  }
+
+  private async getCustomCommitMessage() {
+    try {
+      const commitMessageScript = this.config.commitMessageScript;
+
+      if (commitMessageScript) {
+        this.logger.console(chalk.blue(`Running custom commit message script: ${commitMessageScript}`));
+
+        // Parse the command to avoid shell injection
+        const parts = commitMessageScript.split(' ');
+        const command = parts[0];
+        const args = parts.slice(1);
+
+        const result = await execa(command, args, {
+          cwd: this.workspace.path,
+          encoding: 'utf8',
+        });
+        const customMessage = result.stdout.trim();
+
+        if (customMessage) {
+          this.logger.console(chalk.green(`Using custom commit message: ${customMessage}`));
+          return customMessage;
+        }
+      }
+    } catch (e: any) {
+      this.logger.console(chalk.yellow(`Failed to run custom commit message script: ${e.toString()}`));
+    }
+
+    // Fallback to default message
+    return 'chore: update .bitmap and lockfiles as needed [skip ci]';
   }
 
   private async verifyWorkspaceStatusInternal(strict: boolean = false) {
@@ -361,11 +391,18 @@ export class CiMain {
     this.logger.console(chalk.green('Pulled latest git changes'));
 
     this.logger.console('🔄 Checking out to main head');
-    await this.checkout.checkout({
+    await this.importer.importCurrentObjects();
+
+    const checkoutProps = {
+      ids: this.workspace.listIds(),
       forceOurs: true,
       head: true,
       skipNpmInstall: true,
-    });
+    };
+    const checkoutResults = await this.checkout.checkout(checkoutProps);
+    await this.workspace.bitMap.write('checkout head');
+    // all: true is to make it less verbose in the output. this workaround will be fixed later.
+    this.logger.console(checkoutOutput(checkoutResults, { ...checkoutProps, all: true }));
 
     const { status } = await this.verifyWorkspaceStatusInternal(strict);
 
@@ -407,7 +444,9 @@ export class CiMain {
 
       // Commit the .bitmap and pnpm-lock.yaml files using Git
       await git.add(['.bitmap', 'pnpm-lock.yaml']);
-      await git.commit('chore: update .bitmap and lockfiles as needed [skip ci]');
+
+      const commitMessage = await this.getCustomCommitMessage();
+      await git.commit(commitMessage);
 
       // Pull latest changes and push the commit to the remote repository
       // At this point we have just committed changes, so no need to stash
