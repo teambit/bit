@@ -8,7 +8,7 @@ import { LanesAspect, type LanesMain } from '@teambit/lanes';
 import { SnappingAspect, SnapResults, tagResultOutput, snapResultOutput, type SnappingMain } from '@teambit/snapping';
 import { ExportAspect, type ExportMain } from '@teambit/export';
 import { ImporterAspect, type ImporterMain } from '@teambit/importer';
-import { CheckoutAspect, type CheckoutMain } from '@teambit/checkout';
+import { CheckoutAspect, checkoutOutput, type CheckoutMain } from '@teambit/checkout';
 import { SwitchLaneOptions } from '@teambit/lanes';
 import execa from 'execa';
 import chalk from 'chalk';
@@ -411,11 +411,18 @@ export class CiMain {
     this.logger.console(chalk.green('Pulled latest git changes'));
 
     this.logger.console('🔄 Checking out to main head');
-    await this.checkout.checkout({
+    await this.importer.importCurrentObjects();
+
+    const checkoutProps = {
+      ids: this.workspace.listIds(),
       forceOurs: true,
       head: true,
       skipNpmInstall: true,
-    });
+    };
+    const checkoutResults = await this.checkout.checkout(checkoutProps);
+    await this.workspace.bitMap.write('checkout head');
+    // all: true is to make it less verbose in the output. this workaround will be fixed later.
+    this.logger.console(checkoutOutput(checkoutResults, { ...checkoutProps, all: true }));
 
     const { code, data, status } = await this.verifyWorkspaceStatusInternal(strict);
     if (code !== 0) return { code, data };
