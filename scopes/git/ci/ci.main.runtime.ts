@@ -10,6 +10,7 @@ import { ExportAspect, type ExportMain } from '@teambit/export';
 import { ImporterAspect, type ImporterMain } from '@teambit/importer';
 import { CheckoutAspect, type CheckoutMain } from '@teambit/checkout';
 import { SwitchLaneOptions } from '@teambit/lanes';
+import execa from 'execa';
 import chalk from 'chalk';
 import { CiAspect } from './ci.aspect';
 import { CiCmd } from './ci.cmd';
@@ -143,7 +144,6 @@ export class CiMain {
 
       if (commitMessageScript) {
         this.logger.console(chalk.blue(`Running custom commit message script: ${commitMessageScript}`));
-        const { execa } = await import('execa');
 
         // Parse the command to avoid shell injection
         const parts = commitMessageScript.split(' ');
