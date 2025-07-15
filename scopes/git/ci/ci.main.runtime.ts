@@ -361,7 +361,7 @@ export class CiMain {
     // This prevents issues when multiple PRs are merged in sequence
     const defaultBranch = await this.getDefaultBranchName();
     this.logger.console(chalk.blue(`Pulling latest git changes from ${defaultBranch} branch`));
-    await git.pull('origin', defaultBranch);
+    await git.pull('origin', defaultBranch, { '--rebase': 'true' });
     this.logger.console(chalk.green('Pulled latest git changes'));
 
     this.logger.console('🔄 Checking out to main head');
@@ -415,7 +415,7 @@ export class CiMain {
       await git.commit('chore: update .bitmap and lockfiles as needed [skip ci]');
 
       // Pull latest changes and push the commit to the remote repository
-      await git.pull('origin', defaultBranch);
+      await git.pull('origin', defaultBranch, { '--rebase': 'true' });
       await git.push('origin', defaultBranch);
     } else {
       this.logger.console(chalk.yellow('No components were tagged, skipping export and git operations'));
