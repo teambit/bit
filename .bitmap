@@ -215,7 +215,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "1.11.46",
+        "version": "1.11.48",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -271,7 +271,7 @@
     "ci": {
         "name": "ci",
         "scope": "teambit.git",
-        "version": "0.0.13",
+        "version": "0.0.15",
         "mainFile": "index.ts",
         "rootDir": "scopes/git/ci"
     },
@@ -1685,7 +1685,7 @@
     "status": {
         "name": "status",
         "scope": "teambit.component",
-        "version": "1.0.653",
+        "version": "1.0.654",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/status"
     },

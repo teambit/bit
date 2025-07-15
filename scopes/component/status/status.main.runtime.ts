@@ -19,6 +19,7 @@ import { StatusAspect } from './status.aspect';
 import { MiniStatusCmd, MiniStatusOpts } from './mini-status-cmd';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { MergingAspect, MergingMain } from '@teambit/merging';
+import { formatStatusOutput, StatusFormatterOptions } from './status-formatter';
 
 type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
 const BEFORE_STATUS = 'fetching status';
@@ -192,6 +193,13 @@ export class StatusMain {
     const compWithIssues = comps.filter((c) => !c.state.issues.isEmpty());
 
     return { modified, newComps, compWithIssues };
+  }
+
+  async formatStatusOutput(
+    statusResult: StatusResult,
+    formatterOptions: StatusFormatterOptions = {}
+  ): Promise<{ data: string; code: number }> {
+    return formatStatusOutput(statusResult, formatterOptions);
   }
 
   private async addRemovedStagedIfNeeded(stagedComponents: ModelComponent[]) {

@@ -173,42 +173,24 @@ export class CiMain {
   private async verifyWorkspaceStatusInternal(strict: boolean = false) {
     this.logger.console('📊 Workspace Status');
     this.logger.console(chalk.blue('Verifying status of workspace'));
-    const status = await this.status.status({
-      lanes: true,
-      ignoreCircularDependencies: false,
-    });
 
-    // Check for blocking issues (errors) vs warnings
-    const componentsWithErrors = status.componentsWithIssues.filter(({ issues }) => issues.hasTagBlockerIssues());
+    const status = await this.status.status({ lanes: true });
+    const { data: statusOutput, code } = await this.status.formatStatusOutput(
+      status,
+      strict
+        ? { strict: true, warnings: true } // When strict=true, fail on both errors and warnings
+        : { failOnError: true, warnings: false } // By default, fail only on errors (tag blockers)
+    );
 
-    const componentsWithWarnings = status.componentsWithIssues.filter(({ issues }) => !issues.hasTagBlockerIssues());
+    // Log the formatted status output
+    this.logger.console(statusOutput);
 
-    if (componentsWithWarnings.length > 0) {
-      if (strict) {
-        this.logger.console(
-          chalk.red(
-            `Found ${componentsWithWarnings.length} components with warnings (strict mode), run 'bit status' to see the warnings.`
-          )
-        );
-        return { code: 1, data: '', status };
-      } else {
-        this.logger.console(
-          chalk.yellow(
-            `Found ${componentsWithWarnings.length} components with warnings, run 'bit status' to see the warnings.`
-          )
-        );
-      }
+    if (code !== 0) {
+      throw new Error('Workspace status verification failed');
     }
 
-    if (componentsWithErrors.length > 0) {
-      this.logger.console(
-        chalk.red(`Found ${componentsWithErrors.length} components with errors, run 'bit status' to see the errors.`)
-      );
-      return { code: 1, data: '', status };
-    }
-
-    this.logger.console(chalk.green('Workspace status is correct'));
-    return { code: 0, data: '', status };
+    this.logger.consoleSuccess(chalk.green('Workspace status is correct'));
+    return { status };
   }
 
   private async switchToLane(laneName: string, options: SwitchLaneOptions = {}) {
@@ -232,8 +214,7 @@ export class CiMain {
   }
 
   async verifyWorkspaceStatus() {
-    const { code, data } = await this.verifyWorkspaceStatusInternal();
-    if (code !== 0) return { code, data };
+    await this.verifyWorkspaceStatusInternal();
 
     this.logger.console('🔨 Build Process');
     const components = await this.workspace.list();
@@ -266,8 +247,7 @@ export class CiMain {
 
     const laneId = await this.lanes.parseLaneId(laneIdStr);
 
-    const { code, data } = await this.verifyWorkspaceStatusInternal(strict);
-    if (code !== 0) return { code, data };
+    await this.verifyWorkspaceStatusInternal(strict);
 
     await this.importer
       .import({
@@ -439,8 +419,7 @@ export class CiMain {
     // all: true is to make it less verbose in the output. this workaround will be fixed later.
     this.logger.console(checkoutOutput(checkoutResults, { ...checkoutProps, all: true }));
 
-    const { code, data, status } = await this.verifyWorkspaceStatusInternal(strict);
-    if (code !== 0) return { code, data };
+    const { status } = await this.verifyWorkspaceStatusInternal(strict);
 
     const hasSoftTaggedComponents = status.softTaggedComponents.length > 0;
 
