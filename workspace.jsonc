@@ -157,7 +157,7 @@
         "@teambit/defender.ui.test-loader": "^0.0.504",
         "@teambit/defender.ui.test-table": "^0.0.510",
         "@teambit/dependencies.modules.packages-excluder": "^1.0.8",
-        "@teambit/dependencies.pnpm.dep-path": "1.0.0",
+        "@teambit/dependencies.pnpm.dep-path": "1.0.1",
         "@teambit/design.buttons.action-button": "^0.0.3",
         "@teambit/design.content.table": "^0.0.2",
         "@teambit/design.controls.menu": "^0.0.1",
