@@ -115,3 +115,40 @@ bit ci merge [--message <string>] [--build]
 ### CI hint
 
 Gate this step behind a branch-protection rule so only fast-forward merges trigger a release.
+
+---
+
+## Configuration
+
+The CI aspect supports configuration in `workspace.jsonc`:
+
+```json
+{
+  "teambit.git/ci": {
+    "commitMessageScript": "node scripts/generate-commit-message.js"
+  }
+}
+```
+
+### `commitMessageScript`
+
+**Optional.** Path to a script that generates custom commit messages for the `bit ci merge` command.
+
+- **Default**: Uses `"chore: update .bitmap and lockfiles as needed [skip ci]"`
+- **Usage**: The script should output the desired commit message to stdout
+- **Security**: Commands are parsed to avoid shell injection - no chaining allowed
+- **Working Directory**: Script runs in the workspace root directory
+
+**Example script:**
+
+```javascript
+#!/usr/bin/env node
+const { execSync } = require('child_process');
+
+try {
+  const version = execSync('npm show @my/package version', { encoding: 'utf8' }).trim();
+  console.log(`bump version to ${version} [skip ci]`);
+} catch {
+  console.log('chore: update .bitmap and lockfiles as needed [skip ci]');
+}
+```
