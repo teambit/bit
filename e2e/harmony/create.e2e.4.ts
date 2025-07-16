@@ -183,7 +183,7 @@ describe('create extension', function () {
     });
     it('should write dependencies to package.json', () => {
       const pkgJson = helper.fs.readJsonFile('package.json');
-      expect(pkgJson.dependencies['eslint'] != null).to.eq(true);
+      expect(pkgJson.dependencies.eslint != null).to.eq(true);
     })
     it('should not run installation', () => {
       expect(helper.fs.exists('node_modules/eslint')).to.eq(false);

@@ -213,12 +213,12 @@ export class InstallMain {
     return res;
   }
 
-  async writeDependenciesToPackageJson() {
+  async writeDependenciesToPackageJson(): Promise<void> {
     const installer = this.dependencyResolver.getInstaller({});
     const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy();
     await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
     const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, {});
-    this.workspace.writeDependenciesToPackageJson(componentsAndManifests.manifests[this.workspace.path].dependencies);
+    return this.workspace.writeDependenciesToPackageJson(componentsAndManifests.manifests[this.workspace.path].dependencies);
   }
 
   registerPreLink(fn: PreLink) {
