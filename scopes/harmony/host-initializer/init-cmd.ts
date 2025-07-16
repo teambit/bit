@@ -1,16 +1,13 @@
 import chalk from 'chalk';
 import * as pathlib from 'path';
-import * as fs from 'fs-extra';
-import { prompt } from 'enquirer';
 import { BitError } from '@teambit/bit-error';
 import { getConfig } from '@teambit/config-store';
 import { initScope } from '@teambit/legacy.scope-api';
 import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy.constants';
-import { WorkspaceExtensionProps, WorkspaceConfig } from '@teambit/config';
+import { WorkspaceExtensionProps } from '@teambit/config';
 import { Command, CommandOptions } from '@teambit/cli';
-import { HostInitializerMain } from './host-initializer.main.runtime';
+import { HostInitializerMain, InteractiveConfig } from './host-initializer.main.runtime';
 import { Logger } from '@teambit/logger';
-import { McpConfigWriter, SetupOptions, RulesOptions } from '@teambit/mcp.mcp-config-writer';
 
 export class InitCmd implements Command {
   name = 'init [path]';
@@ -70,295 +67,55 @@ export class InitCmd implements Command {
     private logger: Logger
   ) {}
 
-  /**
-   * Check if the directory contains a .git folder
-   */
-  private async hasGitDirectory(path: string): Promise<boolean> {
-    try {
-      const gitPath = pathlib.join(path, '.git');
-      const stat = await fs.stat(gitPath);
-      return stat.isDirectory();
-    } catch {
-      return false;
+  private async handleInteractiveMode(
+    projectPath: string,
+    flags: Record<string, any>
+  ): Promise<InteractiveConfig | null> {
+    const {
+      reset,
+      resetNew,
+      resetLaneNew,
+      resetHard,
+      resetScope,
+      standalone,
+      skipInteractive,
+      externalPackageManager,
+    } = flags;
+
+    // Check if we should run interactive mode
+    if (
+      reset ||
+      resetNew ||
+      resetLaneNew ||
+      resetHard ||
+      resetScope ||
+      standalone ||
+      skipInteractive ||
+      externalPackageManager ||
+      !(await HostInitializerMain.hasGitDirectory(projectPath)) ||
+      (await HostInitializerMain.hasWorkspaceInitialized(projectPath))
+    ) {
+      return null;
     }
-  }
 
-  /**
-   * Check if the directory already has a bit workspace initialized
-   */
-  private async hasWorkspaceInitialized(path: string): Promise<boolean> {
-    try {
-      const isExist = await WorkspaceConfig.isExist(path);
-      return Boolean(isExist);
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Prompt user for environment selection
-   */
-  private async promptForEnvironment(): Promise<string | null> {
-    const envChoices = [
-      { name: 'none', message: 'None (default)' },
-      { name: 'bitdev.node/node-env', message: 'Node.js environment' },
-      { name: 'bitdev.react/react-env', message: 'React environment' },
-      { name: 'bitdev.vue/vue-env', message: 'Vue environment' },
-      { name: 'bitdev.angular/angular-env', message: 'Angular environment' },
-      { name: 'bitdev.symphony/envs/symphony-env', message: 'Symphony environment' },
-    ];
-
-    try {
-      const response = (await prompt({
-        type: 'select',
-        name: 'environment',
-        message: 'Which environment would you like to use?',
-        choices: envChoices,
-        initial: 0, // Default to 'none'
-        cancel() {
-          // By default, canceling the prompt via Ctrl+c throws an empty string.
-          // The custom cancel function prevents that behavior.
-          // Otherwise, Bit CLI would print an error and confuse users.
-          // See related issue: https://github.com/enquirer/enquirer/issues/225
-        },
-      } as any)) as { environment: string };
-
-      return response.environment === 'none' ? null : response.environment;
-    } catch (err: any) {
-      if (!err || err === '') {
-        // for some reason, when the user clicks Ctrl+C, the error is an empty string
-        throw new Error('The prompt has been canceled');
-      }
-      throw err;
-    }
-  }
-
-  /**
-   * Prompt user for package manager preference
-   */
-  private async promptForPackageManager(): Promise<boolean> {
-    try {
-      const response = (await prompt({
-        type: 'confirm',
-        name: 'useExternalPackageManager',
-        message: 'Would you like to use your own package manager (npm/yarn/pnpm) instead of Bit?',
-        initial: false,
-        cancel() {
-          // By default, canceling the prompt via Ctrl+c throws an empty string.
-          // The custom cancel function prevents that behavior.
-          // Otherwise, Bit CLI would print an error and confuse users.
-          // See related issue: https://github.com/enquirer/enquirer/issues/225
-        },
-      } as any)) as { useExternalPackageManager: boolean };
-
-      return response.useExternalPackageManager;
-    } catch (err: any) {
-      if (!err || err === '') {
-        // for some reason, when the user clicks Ctrl+C, the error is an empty string
-        throw new Error('The prompt has been canceled');
-      }
-      throw err;
-    }
-  }
-
-  /**
-   * Prompt user for MCP server configuration
-   */
-  private async promptForMcpServer(): Promise<string | null> {
-    try {
-      const setupMcp = (await prompt({
-        type: 'confirm',
-        name: 'setupMcp',
-        message: 'Would you like to set up the MCP server for AI-powered development?',
-        initial: false,
-        cancel() {
-          // By default, canceling the prompt via Ctrl+c throws an empty string.
-          // The custom cancel function prevents that behavior.
-          // Otherwise, Bit CLI would print an error and confuse users.
-          // See related issue: https://github.com/enquirer/enquirer/issues/225
-        },
-      } as any)) as { setupMcp: boolean };
-
-      if (!setupMcp.setupMcp) {
-        return null;
-      }
-
-      const editorChoices = [
-        { name: 'vscode', message: 'VS Code' },
-        { name: 'cursor', message: 'Cursor' },
-        { name: 'windsurf', message: 'Windsurf' },
-        { name: 'roo', message: 'Roo Code' },
-        { name: 'cline', message: 'Cline' },
-        { name: 'claude-code', message: 'Claude Code' },
-      ];
-
-      const editorResponse = (await prompt({
-        type: 'select',
-        name: 'editor',
-        message: 'Which editor would you like to configure?',
-        choices: editorChoices,
-        initial: 0, // Default to VS Code
-        cancel() {
-          // By default, canceling the prompt via Ctrl+c throws an empty string.
-          // The custom cancel function prevents that behavior.
-          // Otherwise, Bit CLI would print an error and confuse users.
-          // See related issue: https://github.com/enquirer/enquirer/issues/225
-        },
-      } as any)) as { editor: string };
-
-      return editorResponse.editor;
-    } catch (err: any) {
-      if (!err || err === '') {
-        // for some reason, when the user clicks Ctrl+C, the error is an empty string
-        throw new Error('The prompt has been canceled');
-      }
-      throw err;
-    }
-  }
-
-  /**
-   * Create or update .gitignore file with Bit-specific entries
-   */
-  private async updateGitignore(projectPath: string): Promise<void> {
-    const gitignorePath = pathlib.join(projectPath, '.gitignore');
-    const bitGitignoreSection = `
-# Bit
-.bit
-public
-# Bit files - generated during bit ws-config write command
-tsconfig.json
-.eslintrc.json
-.prettierrc.cjs
-# allow tsconfig from the env's config dir to be tracked
-!**/config/tsconfig.json
-node_modules
-`;
-    try {
-      const exists = await fs.pathExists(gitignorePath);
-      if (exists) {
-        const content = await fs.readFile(gitignorePath, 'utf8');
-        if (!content.includes('# Bit')) {
-          await fs.appendFile(gitignorePath, bitGitignoreSection);
-        }
-      } else {
-        await fs.writeFile(gitignorePath, bitGitignoreSection.trim());
-      }
-    } catch (error: any) {
-      // Don't fail the initialization if gitignore update fails
-      this.logger.consoleWarning(`Warning: Could not update .gitignore file:, ${error.message}`);
-    }
-  }
-
-  /**
-   * Run interactive mode for Git repositories
-   */
-  private async runInteractiveMode(projectPath: string): Promise<{
-    generator?: string;
-    externalPackageManager: boolean;
-    defaultDirectory: string;
-    mcpEditor?: string;
-  }> {
     this.logger.off();
     this.logger.console(chalk.cyan('🔧 Interactive setup for existing Git repository\n'));
 
-    const selectedEnv = await this.promptForEnvironment();
-    const useExternalPackageManager = await this.promptForPackageManager();
-    const mcpEditor = await this.promptForMcpServer();
-
-    // Set up MCP server if user selected an editor
-    if (mcpEditor) {
-      await this.setupMcpServer(mcpEditor, projectPath);
-    }
-
-    await this.updateGitignore(projectPath);
-
-    return {
-      generator: selectedEnv || undefined,
-      externalPackageManager: useExternalPackageManager,
-      defaultDirectory: 'bit-components/{scope}/{name}',
-      mcpEditor: mcpEditor || undefined,
-    };
-  }
-
-  /**
-   * Set up MCP server configuration for the selected editor
-   */
-  private async setupMcpServer(editor: string, projectPath: string): Promise<void> {
     try {
-      this.logger.console(chalk.cyan(`\n🔧 Setting up MCP server for ${editor}...`));
+      const interactiveConfig = await HostInitializerMain.runInteractiveMode(projectPath);
 
-      // Set up MCP server configuration
-      const setupOptions: SetupOptions = {
-        isGlobal: false,
-        workspaceDir: projectPath,
-        consumerProject: false,
-      };
-
-      await McpConfigWriter.setupEditor(editor, setupOptions);
-
-      // Write rules file for the editor
-      const rulesOptions: RulesOptions = {
-        isGlobal: false,
-        workspaceDir: projectPath,
-        consumerProject: false,
-      };
-
-      await McpConfigWriter.writeRulesFile(editor, rulesOptions);
-
-      this.logger.console(chalk.green(`✅ MCP server configured for ${editor}`));
-    } catch (error: any) {
-      this.logger.consoleWarning(
-        `Warning: Could not set up MCP server for ${editor}: ${error.message}`
-      );
-    }
-  }
-
-  /**
-   * Generate the final initialization message
-   */
-  private generateInitMessage(
-    created: boolean,
-    reset: boolean,
-    resetHard: boolean,
-    resetScope: boolean,
-    interactiveConfig: {
-      generator?: string;
-      externalPackageManager: boolean;
-      defaultDirectory: string;
-      mcpEditor?: string;
-    } | null
-  ): string {
-    let initMessage = `${chalk.green('successfully initialized a bit workspace.')}`;
-
-    if (!created) initMessage = `${chalk.grey('successfully re-initialized a bit workspace.')}`;
-    if (reset) initMessage = `${chalk.grey('your bit workspace has been reset successfully.')}`;
-    if (resetHard) initMessage = `${chalk.grey('your bit workspace has been hard-reset successfully.')}`;
-    if (resetScope) initMessage = `${chalk.grey('your local scope has been reset successfully.')}`;
-
-    // Add additional information for interactive mode
-    if (interactiveConfig) {
-      initMessage += `\n\n${chalk.cyan('ℹ️  Additional Information:')}`;
-      const defaultDirectory = interactiveConfig?.defaultDirectory || 'bit-components/{scope}/{name}';
-      initMessage += `\n📁 Components will be created in: ${chalk.cyan(defaultDirectory)}`;
-      initMessage += `\n📖 For CI/CD setup, visit: ${chalk.underline('https://bit.dev/docs/getting-started/collaborate/exporting-components#custom-ci/cd-setup')}`;
-
-      if (interactiveConfig.generator) {
-        initMessage += `\n🎯 Environment: ${chalk.cyan(interactiveConfig.generator)}`;
-      }
-
+      // Set up MCP server if user selected an editor
       if (interactiveConfig.mcpEditor) {
-        initMessage += `\n🤖 MCP server configured for: ${chalk.cyan(interactiveConfig.mcpEditor)}`;
+        this.logger.console(chalk.cyan(`\n🔧 Setting up MCP server for ${interactiveConfig.mcpEditor}...`));
+        await HostInitializerMain.setupMcpServer(interactiveConfig.mcpEditor, projectPath);
+        this.logger.console(chalk.green(`✅ MCP server configured for ${interactiveConfig.mcpEditor}`));
       }
 
-      if (interactiveConfig.externalPackageManager) {
-        initMessage += `\n📦 External package manager mode enabled`;
-        initMessage += `\n💡 Run ${chalk.cyan('pnpm install')} (or ${chalk.cyan('yarn install')}/${chalk.cyan('npm install')}) to install dependencies`;
-      } else if (interactiveConfig.generator) {
-        initMessage += `\n💡 Run ${chalk.cyan('bit install')} to install dependencies`;
-      }
+      return interactiveConfig;
+    } catch (error: any) {
+      this.logger.consoleWarning(`Warning: Interactive setup failed: ${error.message}`);
+      return null;
     }
-
-    return initMessage;
   }
 
   async report([path]: [string], flags: Record<string, any>) {
@@ -378,9 +135,10 @@ node_modules
       defaultDirectory,
       defaultScope,
       externalPackageManager,
-      skipInteractive,
     } = flags;
+
     if (path) path = pathlib.resolve(path);
+
     if (bare) {
       if (reset || resetHard) throw new BitError('--reset and --reset-hard flags are not available for bare scope');
       // Handle both cases init --bare and init --bare [scopeName]
@@ -388,33 +146,13 @@ node_modules
       await initScope(path, bareVal, shared);
       return `${chalk.green('successfully initialized an empty bare bit scope.')}`;
     }
+
     if (reset && resetHard) {
       throw new BitError('cannot use both --reset and --reset-hard, please use only one of them');
     }
 
     const projectPath = path || process.cwd();
-    let interactiveConfig: {
-      generator?: string;
-      externalPackageManager: boolean;
-      defaultDirectory: string;
-      mcpEditor?: string;
-    } | null = null;
-
-    // Check if this is a Git repository and run interactive mode
-    if (
-      !reset &&
-      !resetNew &&
-      !resetLaneNew &&
-      !resetHard &&
-      !resetScope &&
-      !standalone &&
-      !skipInteractive &&
-      !externalPackageManager &&
-      (await this.hasGitDirectory(projectPath)) &&
-      !(await this.hasWorkspaceInitialized(projectPath))
-    ) {
-      interactiveConfig = await this.runInteractiveMode(projectPath);
-    }
+    const interactiveConfig = await this.handleInteractiveMode(projectPath, flags);
 
     const workspaceExtensionProps: WorkspaceExtensionProps & { externalPackageManager?: boolean } = {
       defaultDirectory:
@@ -440,6 +178,6 @@ node_modules
       interactiveConfig?.generator || generator
     );
 
-    return this.generateInitMessage(created, reset, resetHard, resetScope, interactiveConfig);
+    return HostInitializerMain.generateInitMessage(created, reset, resetHard, resetScope, interactiveConfig);
   }
 }
