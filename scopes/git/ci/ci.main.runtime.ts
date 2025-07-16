@@ -5,22 +5,24 @@ import { WorkspaceAspect, type Workspace } from '@teambit/workspace';
 import { BuilderAspect, type BuilderMain } from '@teambit/builder';
 import { StatusAspect, type StatusMain } from '@teambit/status';
 import { LanesAspect, type LanesMain } from '@teambit/lanes';
-import { SnappingAspect, SnapResults, tagResultOutput, type SnappingMain } from '@teambit/snapping';
+import { SnappingAspect, SnapResults, tagResultOutput, snapResultOutput, type SnappingMain } from '@teambit/snapping';
 import { ExportAspect, type ExportMain } from '@teambit/export';
 import { ImporterAspect, type ImporterMain } from '@teambit/importer';
-import { CheckoutAspect, type CheckoutMain } from '@teambit/checkout';
-import { ComponentID } from '@teambit/component-id';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { AUTO_SNAPPED_MSG } from '@teambit/legacy.constants';
-import { outputIdsIfExists } from '@teambit/snapping';
+import { CheckoutAspect, checkoutOutput, type CheckoutMain } from '@teambit/checkout';
 import { SwitchLaneOptions } from '@teambit/lanes';
+import execa from 'execa';
 import chalk from 'chalk';
+import { ReleaseType } from 'semver';
 import { CiAspect } from './ci.aspect';
 import { CiCmd } from './ci.cmd';
 import { CiVerifyCmd } from './commands/verify.cmd';
 import { CiPrCmd } from './commands/pr.cmd';
 import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
+
+export interface CiWorkspaceConfig {
+  commitMessageScript?: string;
+}
 
 export class CiMain {
   static runtime = MainRuntime as RuntimeDefinition;
@@ -57,45 +59,36 @@ export class CiMain {
 
     private checkout: CheckoutMain,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private config: CiWorkspaceConfig
   ) {}
 
-  static async provider([
-    cli,
-    workspace,
-    loggerAspect,
-    builder,
-    status,
-    lanes,
-    snapping,
-    exporter,
-    importer,
-    checkout,
-  ]: [
-    CLIMain,
-    Workspace,
-    LoggerMain,
-    BuilderMain,
-    StatusMain,
-    LanesMain,
-    SnappingMain,
-    ExportMain,
-    ImporterMain,
-    CheckoutMain,
-  ]) {
+  static async provider(
+    [cli, workspace, loggerAspect, builder, status, lanes, snapping, exporter, importer, checkout]: [
+      CLIMain,
+      Workspace,
+      LoggerMain,
+      BuilderMain,
+      StatusMain,
+      LanesMain,
+      SnappingMain,
+      ExportMain,
+      ImporterMain,
+      CheckoutMain,
+    ],
+    config: CiWorkspaceConfig
+  ) {
     const logger = loggerAspect.createLogger(CiAspect.id);
-
-    const ci = new CiMain(workspace, builder, status, lanes, snapping, exporter, importer, checkout, logger);
-
+    const ci = new CiMain(workspace, builder, status, lanes, snapping, exporter, importer, checkout, logger, config);
     const ciCmd = new CiCmd(workspace, logger);
-
     ciCmd.commands = [
       new CiVerifyCmd(workspace, logger, ci),
       new CiPrCmd(workspace, logger, ci),
       new CiMergeCmd(workspace, logger, ci),
     ];
-
     cli.register(ciCmd);
+
     return ci;
   }
 
@@ -146,45 +139,58 @@ export class CiMain {
     }
   }
 
+  private async getCustomCommitMessage() {
+    try {
+      const commitMessageScript = this.config.commitMessageScript;
+
+      if (commitMessageScript) {
+        this.logger.console(chalk.blue(`Running custom commit message script: ${commitMessageScript}`));
+
+        // Parse the command to avoid shell injection
+        const parts = commitMessageScript.split(' ');
+        const command = parts[0];
+        const args = parts.slice(1);
+
+        const result = await execa(command, args, {
+          cwd: this.workspace.path,
+          encoding: 'utf8',
+        });
+        const customMessage = result.stdout.trim();
+
+        if (customMessage) {
+          this.logger.console(chalk.green(`Using custom commit message: ${customMessage}`));
+          return customMessage;
+        }
+      }
+    } catch (e: any) {
+      this.logger.console(chalk.yellow(`Failed to run custom commit message script: ${e.toString()}`));
+    }
+
+    // Fallback to default message
+    return 'chore: update .bitmap and lockfiles as needed [skip ci]';
+  }
+
   private async verifyWorkspaceStatusInternal(strict: boolean = false) {
     this.logger.console('📊 Workspace Status');
     this.logger.console(chalk.blue('Verifying status of workspace'));
-    const status = await this.status.status({
-      lanes: true,
-      ignoreCircularDependencies: false,
-    });
 
-    // Check for blocking issues (errors) vs warnings
-    const componentsWithErrors = status.componentsWithIssues.filter(({ issues }) => issues.hasTagBlockerIssues());
+    const status = await this.status.status({ lanes: true });
+    const { data: statusOutput, code } = await this.status.formatStatusOutput(
+      status,
+      strict
+        ? { strict: true, warnings: true } // When strict=true, fail on both errors and warnings
+        : { failOnError: true, warnings: false } // By default, fail only on errors (tag blockers)
+    );
 
-    const componentsWithWarnings = status.componentsWithIssues.filter(({ issues }) => !issues.hasTagBlockerIssues());
+    // Log the formatted status output
+    this.logger.console(statusOutput);
 
-    if (componentsWithWarnings.length > 0) {
-      if (strict) {
-        this.logger.console(
-          chalk.red(
-            `Found ${componentsWithWarnings.length} components with warnings (strict mode), run 'bit status' to see the warnings.`
-          )
-        );
-        return { code: 1, data: '', status };
-      } else {
-        this.logger.console(
-          chalk.yellow(
-            `Found ${componentsWithWarnings.length} components with warnings, run 'bit status' to see the warnings.`
-          )
-        );
-      }
+    if (code !== 0) {
+      throw new Error('Workspace status verification failed');
     }
 
-    if (componentsWithErrors.length > 0) {
-      this.logger.console(
-        chalk.red(`Found ${componentsWithErrors.length} components with errors, run 'bit status' to see the errors.`)
-      );
-      return { code: 1, data: '', status };
-    }
-
-    this.logger.console(chalk.green('Workspace status is correct'));
-    return { code: 0, data: '', status };
+    this.logger.consoleSuccess(chalk.green('Workspace status is correct'));
+    return { status };
   }
 
   private async switchToLane(laneName: string, options: SwitchLaneOptions = {}) {
@@ -194,6 +200,7 @@ export class CiMain {
         forceOurs: true,
         head: true,
         workspaceOnly: true,
+        skipDependencyInstallation: true,
         ...options,
       })
       .catch((e) => {
@@ -207,8 +214,7 @@ export class CiMain {
   }
 
   async verifyWorkspaceStatus() {
-    const { code, data } = await this.verifyWorkspaceStatusInternal();
-    if (code !== 0) return { code, data };
+    await this.verifyWorkspaceStatusInternal();
 
     this.logger.console('🔨 Build Process');
     const components = await this.workspace.list();
@@ -225,29 +231,23 @@ export class CiMain {
   }
 
   async snapPrCommit({
-    branch,
+    laneIdStr,
     message,
     build,
     strict,
   }: {
-    branch: string;
+    laneIdStr: string;
     message: string;
     build: boolean | undefined;
     strict: boolean | undefined;
   }) {
-    this.logger.console(chalk.blue(`Branch name: ${branch}`));
+    this.logger.console(chalk.blue(`Lane name: ${laneIdStr}`));
 
     const originalLane = await this.lanes.getCurrentLane();
 
-    const laneId = await this.lanes.parseLaneId(branch);
+    const laneId = await this.lanes.parseLaneId(laneIdStr);
 
-    if (!laneId) {
-      this.logger.console(chalk.yellow(`No lane found for branch ${branch}`));
-      return { code: 1, data: '' };
-    }
-
-    const { code, data } = await this.verifyWorkspaceStatusInternal(strict);
-    if (code !== 0) return { code, data };
+    await this.verifyWorkspaceStatusInternal(strict);
 
     await this.importer
       .import({
@@ -259,19 +259,20 @@ export class CiMain {
         throw new Error(`Failed to import components: ${e.toString()}`);
       });
 
+    this.logger.console('🔄 Lane Management');
+    const availableLanesInScope = await this.lanes
+      .getLanes({
+        remote: laneId.scope,
+      })
+      .catch((e) => {
+        throw new Error(`Failed to get lanes in scope ${laneId.scope}: ${e.toString()}`);
+      });
+
+    const laneExists = availableLanesInScope.find((lane) => lane.id.name === laneId.name);
+
+    let foundErr: Error | undefined;
     try {
-      this.logger.console('🔄 Lane Management');
-      const availableLanesInScope = await this.lanes
-        .getLanes({
-          remote: laneId.scope,
-        })
-        .catch((e) => {
-          throw new Error(`Failed to get lanes in scope ${laneId.scope}: ${e.toString()}`);
-        });
-
-      const newLaneExists = availableLanesInScope.find((lane) => lane.id.name === laneId.name);
-
-      if (newLaneExists) {
+      if (laneExists) {
         const lane = await this.lanes.importLaneObject(laneId, true);
         this.workspace.consumer.setCurrentLane(laneId, true);
         const laneIds = lane.toComponentIds();
@@ -283,22 +284,17 @@ export class CiMain {
       } else {
         this.logger.console(chalk.blue(`Creating lane ${laneId.toString()}`));
 
-        const createdLane = await this.lanes
-          .createLane(laneId.name, {
+        try {
+          await this.lanes.createLane(laneId.name, {
             scope: laneId.scope,
             forkLaneNewScope: true,
-          })
-          .catch((e) => {
-            if (e.toString().includes('already exists')) {
-              this.logger.console(chalk.yellow(`Lane ${laneId.toString()} already exists, skipping creation`));
-              return true;
-            }
-            this.logger.console(chalk.red(`Failed to create lane ${laneId.toString()}: ${e.toString()}`));
-            return null;
           });
-
-        if (!createdLane) {
-          return { code: 1, data: '' };
+        } catch (e: any) {
+          if (e.message.includes('already exists')) {
+            this.logger.console(chalk.yellow(`Lane ${laneId.toString()} already exists, skipping creation`));
+          } else {
+            throw new Error(`Failed to create lane ${laneId.toString()}: ${e.toString()}`);
+          }
         }
       }
 
@@ -317,91 +313,38 @@ export class CiMain {
         message,
         build,
         exitOnFirstFailedTask: true,
-        unmodified: false,
       });
 
       if (!results) {
-        this.logger.console(chalk.yellow('No changes detected, nothing to snap'));
-        this.logger.console(chalk.green('Lane is up to date'));
-        return { code: 0, data: 'No changes detected, nothing to snap' };
+        return 'No changes detected, nothing to snap';
       }
 
-      const {
-        snappedComponents,
-        autoSnappedResults,
-        warnings,
-        newComponents,
-        laneName,
-        removedComponents,
-      }: SnapResults = results;
-      const changedComponents = snappedComponents.filter((component) => {
-        return (
-          !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id)
-        );
-      });
-      const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
-      const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
+      const { snappedComponents }: SnapResults = results;
 
-      const warningsOutput = warnings?.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
-
-      const compInBold = (id: ComponentID) => {
-        const version = id.hasVersion() ? `@${id.version}` : '';
-        return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
-      };
-
-      const outputComponents = (comps: ConsumerComponent[]) => {
-        return comps
-          .map((component) => {
-            let componentOutput = `     > ${compInBold(component.id)}`;
-            const autoTag = autoSnappedResults.filter((result) =>
-              result.triggeredBy.searchWithoutVersion(component.id)
-            );
-            if (autoTag.length) {
-              const autoTagComp = autoTag.map((a) =>
-                // @ts-ignore
-                compInBold(a.component.id)
-              );
-              componentOutput += `\n       ${AUTO_SNAPPED_MSG} (${autoTagComp.length} total):
-            ${autoTagComp.join('\n            ')}`;
-            }
-            return componentOutput;
-          })
-          .join('\n');
-      };
-
-      const outputIfExists = (label, explanation, components) => {
-        if (!components.length) return '';
-        return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
-      };
-
-      const laneStr = laneName ? ` on "${laneName}" lane` : '';
+      const snapOutput = snapResultOutput(results);
+      this.logger.console(snapOutput);
 
       this.logger.console(chalk.blue(`Exporting ${snappedComponents.length} components`));
 
-      await this.exporter.export();
+      const exportResults = await this.exporter.export();
 
-      this.logger.console(chalk.green(`Exported ${snappedComponents.length} components`));
-
-      // Switch back to main
-      await this.switchToLane('main');
-
-      return (
-        outputIfExists('new components', 'first version for components', addedComponents) +
-        outputIfExists('changed components', 'components that got a version bump', changedComponents) +
-        outputIdsIfExists('removed components', removedComponents) +
-        warningsOutput +
-        chalk.green(`\n${snappedComponents.length + autoTaggedCount} component(s) snapped${laneStr}`)
-      );
+      this.logger.console(chalk.green(`Exported ${exportResults.componentsIds.length} components`));
     } catch (e: any) {
-      throw new Error(`Unhandled error: ${e.toString()}`);
+      foundErr = e;
+      throw e;
     } finally {
+      if (foundErr) {
+        this.logger.console(chalk.red(`Found error: ${foundErr.message}`));
+      }
       // Whatever happens, switch back to the original lane
       this.logger.console('🔄 Cleanup');
       this.logger.console(chalk.blue(`Switching back to ${originalLane?.name ?? 'main'}`));
       const lane = await this.lanes.getCurrentLane();
       if (!lane) {
+        this.logger.console(chalk.yellow('Already on main, no need to switch. Checking out to head'));
         await this.lanes.checkout.checkout({
           head: true,
+          skipNpmInstall: true,
         });
       } else {
         await this.switchToLane(originalLane?.name ?? 'main');
@@ -409,7 +352,21 @@ export class CiMain {
     }
   }
 
-  async mergePr({ message: argMessage, build, strict }: { message?: string; build?: boolean; strict?: boolean }) {
+  async mergePr({
+    message: argMessage,
+    build,
+    strict,
+    releaseType,
+    preReleaseId,
+    incrementBy,
+  }: {
+    message?: string;
+    build?: boolean;
+    strict?: boolean;
+    releaseType?: ReleaseType;
+    preReleaseId?: string;
+    incrementBy?: number;
+  }) {
     const message = argMessage || (await this.getGitCommitMessage());
     if (!message) {
       throw new Error('Failed to get commit message from git. Please provide a message using --message option.');
@@ -421,7 +378,7 @@ export class CiMain {
       // this doesn't normally happen. we expect this mergePr to be called from the default branch, which normally checks
       // out to main lane.
       this.logger.console(chalk.blue(`Currently on lane ${currentLane.name}, switching to main`));
-      await this.switchToLane('main', { skipDependencyInstallation: true });
+      await this.switchToLane('main');
       this.logger.console(chalk.green('Switched to main lane'));
     }
 
@@ -429,18 +386,40 @@ export class CiMain {
     // This prevents issues when multiple PRs are merged in sequence
     const defaultBranch = await this.getDefaultBranchName();
     this.logger.console(chalk.blue(`Pulling latest git changes from ${defaultBranch} branch`));
-    await git.pull('origin', defaultBranch);
+
+    // Check if there are any changes to stash before rebasing
+    const gitStatus = await git.status();
+    const hasChanges = gitStatus.files.length > 0;
+
+    if (hasChanges) {
+      this.logger.console(chalk.yellow('Stashing uncommitted changes before rebase'));
+      await git.stash(['push', '-u', '-m', 'CI merge temporary stash']);
+    }
+
+    await git.pull('origin', defaultBranch, { '--rebase': 'true' });
+
+    if (hasChanges) {
+      this.logger.console(chalk.yellow('Restoring stashed changes after rebase'));
+      await git.stash(['pop']);
+    }
+
     this.logger.console(chalk.green('Pulled latest git changes'));
 
     this.logger.console('🔄 Checking out to main head');
-    await this.checkout.checkout({
+    await this.importer.importCurrentObjects();
+
+    const checkoutProps = {
+      ids: this.workspace.listIds(),
       forceOurs: true,
       head: true,
       skipNpmInstall: true,
-    });
+    };
+    const checkoutResults = await this.checkout.checkout(checkoutProps);
+    await this.workspace.bitMap.write('checkout head');
+    // all: true is to make it less verbose in the output. this workaround will be fixed later.
+    this.logger.console(checkoutOutput(checkoutResults, { ...checkoutProps, all: true }));
 
-    const { code, data, status } = await this.verifyWorkspaceStatusInternal(strict);
-    if (code !== 0) return { code, data };
+    const { status } = await this.verifyWorkspaceStatusInternal(strict);
 
     const hasSoftTaggedComponents = status.softTaggedComponents.length > 0;
 
@@ -452,6 +431,9 @@ export class CiMain {
       build,
       failFast: true,
       persist: hasSoftTaggedComponents,
+      releaseType,
+      preReleaseId,
+      incrementBy,
     });
 
     if (tagResults) {
@@ -480,10 +462,13 @@ export class CiMain {
 
       // Commit the .bitmap and pnpm-lock.yaml files using Git
       await git.add(['.bitmap', 'pnpm-lock.yaml']);
-      await git.commit('chore: update .bitmap and lockfiles as needed [skip ci]');
+
+      const commitMessage = await this.getCustomCommitMessage();
+      await git.commit(commitMessage);
 
       // Pull latest changes and push the commit to the remote repository
-      await git.pull('origin', defaultBranch);
+      // At this point we have just committed changes, so no need to stash
+      await git.pull('origin', defaultBranch, { '--rebase': 'true' });
       await git.push('origin', defaultBranch);
     } else {
       this.logger.console(chalk.yellow('No components were tagged, skipping export and git operations'));
