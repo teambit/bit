@@ -58,12 +58,8 @@ export class CiMergeCmd implements Command {
     const { releaseType, preReleaseId } = validateOptions(options);
 
     // Check if user explicitly provided any version bump flags
-    const explicitVersionBump = !!(
-      options.increment ||
-      options.patch ||
-      options.minor ||
-      options.major ||
-      options.preRelease
+    const explicitVersionBump = Boolean(
+      options.increment || options.patch || options.minor || options.major || options.preRelease
     );
 
     return this.ci.mergePr({

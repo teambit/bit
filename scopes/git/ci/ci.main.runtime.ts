@@ -414,28 +414,7 @@ export class CiMain {
       throw new Error('Failed to get commit message from git. Please provide a message using --message option.');
     }
 
-    // Auto-detect version bump from commit messages if no explicit version bump was provided
-    let finalReleaseType = releaseType;
-    if (!explicitVersionBump) {
-      // Only auto-detect if user didn't specify any version flags
-      const lastCommit = await this.getGitCommitMessage();
-      if (lastCommit) {
-        const detectedReleaseType = this.parseVersionBumpFromCommit(lastCommit);
-        if (detectedReleaseType) {
-          finalReleaseType = detectedReleaseType;
-          this.logger.console(chalk.green(`Auto-detected version bump: ${finalReleaseType}`));
-        } else {
-          this.logger.console(chalk.blue('No specific version bump detected, using default patch'));
-        }
-      } else {
-        this.logger.console(chalk.blue('No commit message found, using default patch'));
-      }
-    } else {
-      this.logger.console(chalk.blue(`Using explicit version bump: ${finalReleaseType}`));
-    }
-
     const currentLane = await this.lanes.getCurrentLane();
-
     if (currentLane) {
       // this doesn't normally happen. we expect this mergePr to be called from the default branch, which normally checks
       // out to main lane.
@@ -487,6 +466,7 @@ export class CiMain {
 
     this.logger.console('📦 Component Operations');
     this.logger.console(chalk.blue('Tagging components'));
+    const finalReleaseType = await this.determineReleaseType(releaseType, explicitVersionBump);
     const tagResults = await this.snapping.tag({
       all: true,
       message,
@@ -551,6 +531,29 @@ export class CiMain {
     }
 
     return { code: 0, data: '' };
+  }
+
+  /**
+   * Auto-detect version bump from commit messages if no explicit version bump was provided
+   */
+  private async determineReleaseType(releaseType: ReleaseType, explicitVersionBump?: boolean): Promise<ReleaseType> {
+    if (explicitVersionBump) {
+      this.logger.console(chalk.blue(`Using explicit version bump: ${releaseType}`));
+      return releaseType;
+    }
+    // Only auto-detect if user didn't specify any version flags
+    const lastCommit = await this.getGitCommitMessage();
+    if (!lastCommit) {
+      this.logger.console(chalk.blue('No commit message found, using default patch'));
+      return releaseType;
+    }
+    const detectedReleaseType = this.parseVersionBumpFromCommit(lastCommit);
+    if (detectedReleaseType) {
+      this.logger.console(chalk.green(`Auto-detected version bump: ${detectedReleaseType}`));
+      return detectedReleaseType;
+    }
+    this.logger.console(chalk.blue('No specific version bump detected, using default patch'));
+    return releaseType;
   }
 }
 
