@@ -67,7 +67,7 @@ describe('run bit init', function () {
       before(() => {
         helper.scopeHelper.cleanWorkspace();
         helper.git.initNewGitRepo();
-        helper.command.init('--skip-interactive');
+        helper.command.init();
         gitFolder = path.join(helper.scopes.localPath, '.git');
         // gitHooksFolder = path.join(gitFolder, 'hooks');
       });
@@ -274,7 +274,7 @@ describe('run bit init', function () {
       before(() => {
         helper.scopeHelper.cleanWorkspace();
         helper.git.initNewGitRepo();
-        helper.command.init('--skip-interactive');
+        helper.command.init();
         helper.bitMap.createHarmony();
         helper.fs.deletePath('.git/bit');
       });
