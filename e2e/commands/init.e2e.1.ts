@@ -67,12 +67,12 @@ describe('run bit init', function () {
       before(() => {
         helper.scopeHelper.cleanWorkspace();
         helper.git.initNewGitRepo();
-        helper.command.init();
+        helper.command.init('--skip-interactive');
         gitFolder = path.join(helper.scopes.localPath, '.git');
         // gitHooksFolder = path.join(gitFolder, 'hooks');
       });
 
-      it.only('should nest the bit folder inside .git by default', () => {
+      it('should nest the bit folder inside .git by default', () => {
         const gitScopeDir = path.join(gitFolder, BIT_GIT_DIR);
         const scopeDir = path.join(helper.scopes.localPath, BIT_HIDDEN_DIR);
         expect(gitScopeDir).to.be.a.directory('bit dir is missing');
@@ -274,7 +274,7 @@ describe('run bit init', function () {
       before(() => {
         helper.scopeHelper.cleanWorkspace();
         helper.git.initNewGitRepo();
-        helper.command.init();
+        helper.command.init('--skip-interactive');
         helper.bitMap.createHarmony();
         helper.fs.deletePath('.git/bit');
       });
