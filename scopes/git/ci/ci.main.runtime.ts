@@ -22,6 +22,8 @@ import { git } from './git';
 
 export interface CiWorkspaceConfig {
   commitMessageScript?: string;
+  useConventionalCommitsForVersionBump?: boolean;
+  useExplicitBumpKeywords?: boolean;
 }
 
 export class CiMain {
@@ -137,6 +139,59 @@ export class CiMain {
     } catch (e: any) {
       throw new Error(`Unable to read commit message: ${e.toString()}`);
     }
+  }
+
+  private async getLastCommitMessage() {
+    try {
+      const commit = await git.log({
+        maxCount: 1,
+      });
+      if (!commit.latest) {
+        return null;
+      }
+      const { message, body } = commit.latest;
+      return body ? `${message}\n\n${body}` : message;
+    } catch (e: any) {
+      throw new Error(`Unable to read commit message: ${e.toString()}`);
+    }
+  }
+
+  private parseVersionBumpFromCommit(commitMessage: string): ReleaseType | null {
+    // Check explicit bump keywords (highest priority after env vars)
+    if (this.config.useExplicitBumpKeywords !== false) {
+      // default to true
+      if (commitMessage.includes('BIT-BUMP-MAJOR')) {
+        this.logger.console(chalk.blue('Found BIT-BUMP-MAJOR keyword in commit message'));
+        return 'major';
+      }
+      if (commitMessage.includes('BIT-BUMP-MINOR')) {
+        this.logger.console(chalk.blue('Found BIT-BUMP-MINOR keyword in commit message'));
+        return 'minor';
+      }
+    }
+
+    // Check conventional commits if enabled
+    if (this.config.useConventionalCommitsForVersionBump) {
+      // Check for breaking changes (major version bump)
+      if (/^feat!(\(.+\))?:|^fix!(\(.+\))?:|BREAKING CHANGE/m.test(commitMessage)) {
+        this.logger.console(chalk.blue('Found breaking changes in commit message (conventional commits)'));
+        return 'major';
+      }
+
+      // Check for features (minor version bump)
+      if (/^feat(\(.+\))?:/m.test(commitMessage)) {
+        this.logger.console(chalk.blue('Found feature commits (conventional commits)'));
+        return 'minor';
+      }
+
+      // Check for fixes (patch version bump) - explicit patch not needed as it's default
+      if (/^fix(\(.+\))?:/m.test(commitMessage)) {
+        this.logger.console(chalk.blue('Found fix commits (conventional commits) - using default patch'));
+        return 'patch';
+      }
+    }
+
+    return null; // No specific version bump detected
   }
 
   private async getCustomCommitMessage() {
@@ -359,17 +414,39 @@ export class CiMain {
     releaseType,
     preReleaseId,
     incrementBy,
+    explicitVersionBump,
   }: {
     message?: string;
     build?: boolean;
     strict?: boolean;
-    releaseType?: ReleaseType;
+    releaseType: ReleaseType;
     preReleaseId?: string;
     incrementBy?: number;
+    explicitVersionBump?: boolean;
   }) {
     const message = argMessage || (await this.getGitCommitMessage());
     if (!message) {
       throw new Error('Failed to get commit message from git. Please provide a message using --message option.');
+    }
+
+    // Auto-detect version bump from commit messages if no explicit version bump was provided
+    let finalReleaseType = releaseType;
+    if (!explicitVersionBump) {
+      // Only auto-detect if user didn't specify any version flags
+      const lastCommit = await this.getLastCommitMessage();
+      if (lastCommit) {
+        const detectedReleaseType = this.parseVersionBumpFromCommit(lastCommit);
+        if (detectedReleaseType) {
+          finalReleaseType = detectedReleaseType;
+          this.logger.console(chalk.green(`Auto-detected version bump: ${finalReleaseType}`));
+        } else {
+          this.logger.console(chalk.blue('No specific version bump detected, using default patch'));
+        }
+      } else {
+        this.logger.console(chalk.blue('No commit message found, using default patch'));
+      }
+    } else {
+      this.logger.console(chalk.blue(`Using explicit version bump: ${finalReleaseType}`));
     }
 
     const currentLane = await this.lanes.getCurrentLane();
@@ -431,7 +508,7 @@ export class CiMain {
       build,
       failFast: true,
       persist: hasSoftTaggedComponents,
-      releaseType,
+      releaseType: finalReleaseType,
       preReleaseId,
       incrementBy,
     });
