@@ -22,9 +22,12 @@ export interface RulesOptions {
 }
 
 /**
- * Utility class for setting up MCP server configurations across different editors
+ * MCP Configuration Writer - A utility component for writing MCP server configurations
+ * and rules files for various editors (VS Code, Cursor, Windsurf, Roo Code, Cline, Claude Code).
+ *
+ * This component can be used by various aspects including the CLI MCP server and the init command.
  */
-export class McpSetupUtils {
+export class McpConfigWriter {
   /**
    * Build MCP server arguments based on provided options
    */
@@ -273,141 +276,6 @@ export class McpSetupUtils {
   }
 
   /**
-   * Get VS Code prompts path based on global/workspace scope
-   */
-  static getVSCodePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
-    if (isGlobal) {
-      // Global VS Code prompts - use the official User Data prompts directory
-      const platform = process.platform;
-      switch (platform) {
-        case 'win32':
-          return path.join(homedir(), 'AppData', 'Roaming', 'Code', 'User', 'prompts', 'bit.instructions.md');
-        case 'darwin':
-          return path.join(
-            homedir(),
-            'Library',
-            'Application Support',
-            'Code',
-            'User',
-            'prompts',
-            'bit.instructions.md'
-          );
-        case 'linux':
-          return path.join(homedir(), '.config', 'Code', 'User', 'prompts', 'bit.instructions.md');
-        default:
-          throw new Error(`Unsupported platform: ${platform}`);
-      }
-    } else {
-      // Workspace-specific prompts
-      const targetDir = workspaceDir || process.cwd();
-      return path.join(targetDir, '.github', 'instructions', 'bit.instructions.md');
-    }
-  }
-
-  /**
-   * Get Cursor prompts path based on global/workspace scope
-   */
-  static getCursorPromptsPath(isGlobal: boolean, workspaceDir?: string): string {
-    if (isGlobal) {
-      throw new Error('Cursor does not support global prompts configuration in a file');
-    } else {
-      const targetDir = workspaceDir || process.cwd();
-      return path.join(targetDir, '.cursor', 'rules', 'bit.rules.mdc');
-    }
-  }
-
-  /**
-   * Get Roo Code prompts path based on global/workspace scope
-   */
-  static getRooCodePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
-    if (isGlobal) {
-      // Global Roo Code rules
-      return path.join(homedir(), '.roo', 'rules', 'bit.instructions.md');
-    } else {
-      // Workspace-specific rules
-      const targetDir = workspaceDir || process.cwd();
-      return path.join(targetDir, '.roo', 'rules', 'bit.instructions.md');
-    }
-  }
-
-  /**
-   * Get default Bit MCP rules content from template file
-   */
-  static getDefaultRulesContent(consumerProject: boolean = false): Promise<string> {
-    const templateName = consumerProject ? 'bit-rules-consumer-template.md' : 'bit-rules-template.md';
-    const templatePath = path.join(__dirname, templateName);
-    return fs.readFile(templatePath, 'utf8');
-  }
-
-  /**
-   * Write Bit MCP rules file for VS Code
-   */
-  static async writeVSCodeRules(options: RulesOptions): Promise<void> {
-    const { isGlobal, workspaceDir, consumerProject = false } = options;
-
-    // Determine prompts file path
-    const promptsPath = this.getVSCodePromptsPath(isGlobal, workspaceDir);
-
-    // Ensure directory exists
-    await fs.ensureDir(path.dirname(promptsPath));
-
-    // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject);
-    await fs.writeFile(promptsPath, rulesContent);
-  }
-
-  /**
-   * Write Bit MCP rules file for Cursor
-   */
-  static async writeCursorRules(options: RulesOptions): Promise<void> {
-    const { isGlobal, workspaceDir, consumerProject = false } = options;
-
-    // Determine prompts file path
-    const promptsPath = this.getCursorPromptsPath(isGlobal, workspaceDir);
-
-    // Ensure directory exists
-    await fs.ensureDir(path.dirname(promptsPath));
-
-    // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject);
-    await fs.writeFile(promptsPath, rulesContent);
-  }
-
-  /**
-   * Write Bit MCP rules file for Roo Code
-   */
-  static async writeRooCodeRules(options: RulesOptions): Promise<void> {
-    const { isGlobal, workspaceDir, consumerProject = false } = options;
-
-    // Determine prompts file path
-    const promptsPath = this.getRooCodePromptsPath(isGlobal, workspaceDir);
-
-    // Ensure directory exists
-    await fs.ensureDir(path.dirname(promptsPath));
-
-    // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject);
-    await fs.writeFile(promptsPath, rulesContent);
-  }
-
-  /**
-   * Write Bit MCP rules file for Cline
-   */
-  static async writeClineRules(options: RulesOptions): Promise<void> {
-    const { isGlobal, workspaceDir, consumerProject = false } = options;
-
-    // Determine prompts file path
-    const promptsPath = this.getClinePromptsPath(isGlobal, workspaceDir);
-
-    // Ensure directory exists
-    await fs.ensureDir(path.dirname(promptsPath));
-
-    // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject);
-    await fs.writeFile(promptsPath, rulesContent);
-  }
-
-  /**
    * Get Roo Code mcp.json path based on global/workspace scope
    */
   static getRooCodeSettingsPath(isGlobal: boolean, workspaceDir?: string): string {
@@ -460,30 +328,6 @@ export class McpSetupUtils {
 
     // Write updated MCP configuration
     await fs.writeFile(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
-  }
-
-  /**
-   * Get Cline prompts path based on global/workspace scope
-   */
-  static getClinePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
-    if (isGlobal) {
-      // Global Cline rules - using Mac path as specified, error for others
-      const platform = process.platform;
-      if (platform === 'darwin') {
-        return path.join(homedir(), 'Documents', 'Cline', 'Rules', 'bit.instructions.md');
-      } else {
-        throw new Error(
-          `Global Cline rules configuration is not supported on ${platform}. ` +
-            'The global path is only known for macOS (~/Documents/Cline/Rules/). ' +
-            'For other operating systems, please use the --print flag to get the rules content ' +
-            'and add it manually to your global Cline configuration.'
-        );
-      }
-    } else {
-      // Workspace-specific rules
-      const targetDir = workspaceDir || process.cwd();
-      return path.join(targetDir, '.clinerules', 'bit.instructions.md');
-    }
   }
 
   /**
@@ -543,6 +387,88 @@ export class McpSetupUtils {
   }
 
   /**
+   * Get VS Code prompts path based on global/workspace scope
+   */
+  static getVSCodePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Global VS Code prompts - use the official User Data prompts directory
+      const platform = process.platform;
+      switch (platform) {
+        case 'win32':
+          return path.join(homedir(), 'AppData', 'Roaming', 'Code', 'User', 'prompts', 'bit.instructions.md');
+        case 'darwin':
+          return path.join(
+            homedir(),
+            'Library',
+            'Application Support',
+            'Code',
+            'User',
+            'prompts',
+            'bit.instructions.md'
+          );
+        case 'linux':
+          return path.join(homedir(), '.config', 'Code', 'User', 'prompts', 'bit.instructions.md');
+        default:
+          throw new Error(`Unsupported platform: ${platform}`);
+      }
+    } else {
+      // Workspace-specific prompts
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.github', 'instructions', 'bit.instructions.md');
+    }
+  }
+
+  /**
+   * Get Cursor prompts path based on global/workspace scope
+   */
+  static getCursorPromptsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      throw new Error('Cursor does not support global prompts configuration in a file');
+    } else {
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.cursor', 'rules', 'bit.rules.mdc');
+    }
+  }
+
+  /**
+   * Get Roo Code prompts path based on global/workspace scope
+   */
+  static getRooCodePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Global Roo Code rules
+      return path.join(homedir(), '.roo', 'rules', 'bit.instructions.md');
+    } else {
+      // Workspace-specific rules
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.roo', 'rules', 'bit.instructions.md');
+    }
+  }
+
+  /**
+   * Get Cline prompts path based on global/workspace scope
+   */
+  static getClinePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
+    if (isGlobal) {
+      // Global Cline rules - using Mac path as specified, error for others
+      const platform = process.platform;
+      if (platform === 'darwin') {
+        return path.join(homedir(), 'Documents', 'Cline', 'Rules', 'bit.instructions.md');
+      } else {
+        throw new Error(
+          `Global Cline rules configuration is not supported on ${platform}. ` +
+            'The global path is only known for macOS (~/Documents/Cline/Rules/). ' +
+            'For other operating systems, please use the --print flag to get the rules content ' +
+            'and add it manually to your global Cline configuration.'
+        );
+      }
+    } else {
+      // Workspace-specific rules
+      const targetDir = workspaceDir || process.cwd();
+      return path.join(targetDir, '.clinerules', 'bit.instructions.md');
+    }
+  }
+
+  /**
    * Get Claude Code prompts path based on global/workspace scope
    */
   static getClaudeCodePromptsPath(isGlobal: boolean, workspaceDir?: string): string {
@@ -557,9 +483,86 @@ export class McpSetupUtils {
   }
 
   /**
+   * Get default Bit MCP rules content from template file
+   */
+  static async getDefaultRulesContent(consumerProject: boolean = false, templateBaseDir?: string): Promise<string> {
+    const templateName = consumerProject ? 'bit-rules-consumer-template.md' : 'bit-rules-template.md';
+    const templatePath = path.join(templateBaseDir || __dirname, templateName);
+    return fs.readFile(templatePath, 'utf8');
+  }
+
+  /**
+   * Write Bit MCP rules file for VS Code
+   */
+  static async writeVSCodeRules(options: RulesOptions, templateBaseDir?: string): Promise<void> {
+    const { isGlobal, workspaceDir, consumerProject = false } = options;
+
+    // Determine prompts file path
+    const promptsPath = this.getVSCodePromptsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(promptsPath));
+
+    // Write rules content
+    const rulesContent = await this.getDefaultRulesContent(consumerProject, templateBaseDir);
+    await fs.writeFile(promptsPath, rulesContent);
+  }
+
+  /**
+   * Write Bit MCP rules file for Cursor
+   */
+  static async writeCursorRules(options: RulesOptions, templateBaseDir?: string): Promise<void> {
+    const { isGlobal, workspaceDir, consumerProject = false } = options;
+
+    // Determine prompts file path
+    const promptsPath = this.getCursorPromptsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(promptsPath));
+
+    // Write rules content
+    const rulesContent = await this.getDefaultRulesContent(consumerProject, templateBaseDir);
+    await fs.writeFile(promptsPath, rulesContent);
+  }
+
+  /**
+   * Write Bit MCP rules file for Roo Code
+   */
+  static async writeRooCodeRules(options: RulesOptions, templateBaseDir?: string): Promise<void> {
+    const { isGlobal, workspaceDir, consumerProject = false } = options;
+
+    // Determine prompts file path
+    const promptsPath = this.getRooCodePromptsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(promptsPath));
+
+    // Write rules content
+    const rulesContent = await this.getDefaultRulesContent(consumerProject, templateBaseDir);
+    await fs.writeFile(promptsPath, rulesContent);
+  }
+
+  /**
+   * Write Bit MCP rules file for Cline
+   */
+  static async writeClineRules(options: RulesOptions, templateBaseDir?: string): Promise<void> {
+    const { isGlobal, workspaceDir, consumerProject = false } = options;
+
+    // Determine prompts file path
+    const promptsPath = this.getClinePromptsPath(isGlobal, workspaceDir);
+
+    // Ensure directory exists
+    await fs.ensureDir(path.dirname(promptsPath));
+
+    // Write rules content
+    const rulesContent = await this.getDefaultRulesContent(consumerProject, templateBaseDir);
+    await fs.writeFile(promptsPath, rulesContent);
+  }
+
+  /**
    * Write Bit MCP rules file for Claude Code
    */
-  static async writeClaudeCodeRules(options: RulesOptions): Promise<void> {
+  static async writeClaudeCodeRules(options: RulesOptions, templateBaseDir?: string): Promise<void> {
     const { isGlobal, workspaceDir, consumerProject = false } = options;
 
     // Determine prompts file path
@@ -569,7 +572,7 @@ export class McpSetupUtils {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Get base rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject, templateBaseDir);
 
     // Add integration instructions at the top
     const integrationInstructions = `<!--
@@ -586,5 +589,81 @@ This will automatically include all Bit-specific instructions in your Claude Cod
 
     // Write rules content with integration instructions
     await fs.writeFile(promptsPath, finalContent);
+  }
+
+  /**
+   * Setup MCP server configuration for a specific editor
+   */
+  static async setupEditor(editor: string, options: SetupOptions): Promise<void> {
+    const supportedEditors = ['vscode', 'cursor', 'windsurf', 'roo', 'cline', 'claude-code'];
+    const editorLower = editor.toLowerCase();
+
+    if (!supportedEditors.includes(editorLower)) {
+      throw new Error(`Editor "${editor}" is not supported yet. Currently supported: ${supportedEditors.join(', ')}`);
+    }
+
+    if (editorLower === 'vscode') {
+      await this.setupVSCode(options);
+    } else if (editorLower === 'cursor') {
+      await this.setupCursor(options);
+    } else if (editorLower === 'windsurf') {
+      await this.setupWindsurf(options);
+    } else if (editorLower === 'roo') {
+      await this.setupRooCode(options);
+    } else if (editorLower === 'cline') {
+      // Cline doesn't need MCP server setup, only rules files
+      // This is a no-op but we include it for consistency
+      // Users should use the 'rules' command to set up Cline instructions
+    } else if (editorLower === 'claude-code') {
+      await this.setupClaudeCode(options);
+    }
+  }
+
+  /**
+   * Write rules file for a specific editor
+   */
+  static async writeRulesFile(editor: string, options: RulesOptions, templateBaseDir?: string): Promise<void> {
+    const supportedEditors = ['vscode', 'cursor', 'roo', 'cline', 'claude-code'];
+    const editorLower = editor.toLowerCase();
+
+    if (!supportedEditors.includes(editorLower)) {
+      throw new Error(`Editor "${editor}" is not supported yet. Currently supported: ${supportedEditors.join(', ')}`);
+    }
+
+    if (editorLower === 'vscode') {
+      await this.writeVSCodeRules(options, templateBaseDir);
+    } else if (editorLower === 'cursor') {
+      await this.writeCursorRules(options, templateBaseDir);
+    } else if (editorLower === 'roo') {
+      await this.writeRooCodeRules(options, templateBaseDir);
+    } else if (editorLower === 'cline') {
+      await this.writeClineRules(options, templateBaseDir);
+    } else if (editorLower === 'claude-code') {
+      await this.writeClaudeCodeRules(options, templateBaseDir);
+    }
+  }
+
+  /**
+   * Get the path to the editor config file based on editor type and scope
+   */
+  static getEditorConfigPath(editor: string, isGlobal: boolean, workspaceDir?: string): string {
+    const editorLower = editor.toLowerCase();
+
+    if (editorLower === 'vscode') {
+      // For VS Code, return appropriate config path based on global vs workspace scope
+      return isGlobal ? this.getVSCodeSettingsPath(isGlobal, workspaceDir) : this.getVSCodeMcpConfigPath(workspaceDir);
+    } else if (editorLower === 'cursor') {
+      return this.getCursorSettingsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'windsurf') {
+      return this.getWindsurfSettingsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'roo') {
+      return this.getRooCodeSettingsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'cline') {
+      return this.getClinePromptsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'claude-code') {
+      return this.getClaudeCodeSettingsPath(isGlobal, workspaceDir);
+    }
+
+    throw new Error(`Editor "${editor}" is not supported yet.`);
   }
 }
