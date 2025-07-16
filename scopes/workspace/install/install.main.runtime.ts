@@ -217,8 +217,11 @@ export class InstallMain {
     const installer = this.dependencyResolver.getInstaller({});
     const mergedRootPolicy = await this.addConfiguredAspectsToWorkspacePolicy();
     await this.addConfiguredGeneratorEnvsToWorkspacePolicy(mergedRootPolicy);
-    const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, {});
-    return this.workspace.writeDependenciesToPackageJson(componentsAndManifests.manifests[this.workspace.path].dependencies);
+    const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, {
+      dedupe: true,
+    });
+    const { dependencies } = componentsAndManifests.manifests[this.workspace.path];
+    return this.workspace.writeDependenciesToPackageJson(dependencies);
   }
 
   registerPreLink(fn: PreLink) {
