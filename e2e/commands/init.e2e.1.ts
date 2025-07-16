@@ -302,11 +302,15 @@ describe('run bit init', function () {
         const workspaceConfig = helper.workspaceJsonc.read();
         expect(workspaceConfig['teambit.dependencies/dependency-resolver']).to.have.property('rootComponent', false);
       });
-      it('should set enableWorkspaceConfigWrite to false', () => {
+      it('should set enableWorkspaceConfigWrite and useDefaultDirectory to true', () => {
         const workspaceConfig = helper.workspaceJsonc.read();
         expect(workspaceConfig['teambit.workspace/workspace-config-files']).to.have.property(
           'enableWorkspaceConfigWrite',
-          false
+          true
+        );
+        expect(workspaceConfig['teambit.workspace/workspace-config-files']).to.have.property(
+          'useDefaultDirectory',
+          true
         );
       });
       it('should create package.json with type module', () => {
@@ -385,18 +389,6 @@ describe('run bit init', function () {
 
         const statusCmd = () => helper.command.runCmd('bit status');
         expect(statusCmd).to.throw('rootComponent cannot be true when externalPackageManager is enabled');
-      });
-      it('should throw error when manually setting enableWorkspaceConfigWrite to true', () => {
-        // Reset to clean state
-        helper.scopeHelper.cleanWorkspace();
-        helper.command.init('--external-package-manager');
-
-        const workspaceConfig = helper.workspaceJsonc.read();
-        workspaceConfig['teambit.workspace/workspace-config-files'].enableWorkspaceConfigWrite = true;
-        helper.workspaceJsonc.write(workspaceConfig);
-
-        const statusCmd = () => helper.command.runCmd('bit status');
-        expect(statusCmd).to.throw('enableWorkspaceConfigWrite cannot be true when externalPackageManager is enabled');
       });
     });
     describe('preserving existing package.json', () => {
