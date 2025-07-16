@@ -933,6 +933,14 @@
         "mainFile": "index.ts",
         "rootDir": "components/legacy/loader"
     },
+    "mcp-config-writer": {
+        "name": "mcp-config-writer",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.mcp",
+        "mainFile": "index.ts",
+        "rootDir": "components/mcp/mcp-config-writer"
+    },
     "mdx": {
         "name": "mdx",
         "scope": "teambit.mdx",
