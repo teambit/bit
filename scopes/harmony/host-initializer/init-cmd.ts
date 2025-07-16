@@ -10,6 +10,7 @@ import { WorkspaceExtensionProps, WorkspaceConfig } from '@teambit/config';
 import { Command, CommandOptions } from '@teambit/cli';
 import { HostInitializerMain } from './host-initializer.main.runtime';
 import { Logger } from '@teambit/logger';
+import { McpConfigWriter, SetupOptions, RulesOptions } from '@teambit/mcp.mcp-config-writer';
 
 export class InitCmd implements Command {
   name = 'init [path]';
@@ -161,6 +162,61 @@ export class InitCmd implements Command {
   }
 
   /**
+   * Prompt user for MCP server configuration
+   */
+  private async promptForMcpServer(): Promise<string | null> {
+    try {
+      const setupMcp = (await prompt({
+        type: 'confirm',
+        name: 'setupMcp',
+        message: 'Would you like to set up the MCP server for AI-powered development?',
+        initial: false,
+        cancel() {
+          // By default, canceling the prompt via Ctrl+c throws an empty string.
+          // The custom cancel function prevents that behavior.
+          // Otherwise, Bit CLI would print an error and confuse users.
+          // See related issue: https://github.com/enquirer/enquirer/issues/225
+        },
+      } as any)) as { setupMcp: boolean };
+
+      if (!setupMcp.setupMcp) {
+        return null;
+      }
+
+      const editorChoices = [
+        { name: 'vscode', message: 'VS Code' },
+        { name: 'cursor', message: 'Cursor' },
+        { name: 'windsurf', message: 'Windsurf' },
+        { name: 'roo', message: 'Roo Code' },
+        { name: 'cline', message: 'Cline' },
+        { name: 'claude-code', message: 'Claude Code' },
+      ];
+
+      const editorResponse = (await prompt({
+        type: 'select',
+        name: 'editor',
+        message: 'Which editor would you like to configure?',
+        choices: editorChoices,
+        initial: 0, // Default to VS Code
+        cancel() {
+          // By default, canceling the prompt via Ctrl+c throws an empty string.
+          // The custom cancel function prevents that behavior.
+          // Otherwise, Bit CLI would print an error and confuse users.
+          // See related issue: https://github.com/enquirer/enquirer/issues/225
+        },
+      } as any)) as { editor: string };
+
+      return editorResponse.editor;
+    } catch (err: any) {
+      if (!err || err === '') {
+        // for some reason, when the user clicks Ctrl+C, the error is an empty string
+        throw new Error('The prompt has been canceled');
+      }
+      throw err;
+    }
+  }
+
+  /**
    * Create or update .gitignore file with Bit-specific entries
    */
   private async updateGitignore(projectPath: string): Promise<void> {
@@ -200,12 +256,19 @@ node_modules
     generator?: string;
     externalPackageManager: boolean;
     defaultDirectory: string;
+    mcpEditor?: string;
   }> {
     this.logger.off();
     this.logger.console(chalk.cyan('🔧 Interactive setup for existing Git repository\n'));
 
     const selectedEnv = await this.promptForEnvironment();
     const useExternalPackageManager = await this.promptForPackageManager();
+    const mcpEditor = await this.promptForMcpServer();
+
+    // Set up MCP server if user selected an editor
+    if (mcpEditor) {
+      await this.setupMcpServer(mcpEditor, projectPath);
+    }
 
     await this.updateGitignore(projectPath);
 
@@ -213,7 +276,41 @@ node_modules
       generator: selectedEnv || undefined,
       externalPackageManager: useExternalPackageManager,
       defaultDirectory: 'bit-components/{scope}/{name}',
+      mcpEditor: mcpEditor || undefined,
     };
+  }
+
+  /**
+   * Set up MCP server configuration for the selected editor
+   */
+  private async setupMcpServer(editor: string, projectPath: string): Promise<void> {
+    try {
+      this.logger.console(chalk.cyan(`\n🔧 Setting up MCP server for ${editor}...`));
+
+      // Set up MCP server configuration
+      const setupOptions: SetupOptions = {
+        isGlobal: false,
+        workspaceDir: projectPath,
+        consumerProject: false,
+      };
+
+      await McpConfigWriter.setupEditor(editor, setupOptions);
+
+      // Write rules file for the editor
+      const rulesOptions: RulesOptions = {
+        isGlobal: false,
+        workspaceDir: projectPath,
+        consumerProject: false,
+      };
+
+      await McpConfigWriter.writeRulesFile(editor, rulesOptions);
+
+      this.logger.console(chalk.green(`✅ MCP server configured for ${editor}`));
+    } catch (error: any) {
+      this.logger.consoleWarning(
+        `Warning: Could not set up MCP server for ${editor}: ${error.message}`
+      );
+    }
   }
 
   /**
@@ -228,6 +325,7 @@ node_modules
       generator?: string;
       externalPackageManager: boolean;
       defaultDirectory: string;
+      mcpEditor?: string;
     } | null
   ): string {
     let initMessage = `${chalk.green('successfully initialized a bit workspace.')}`;
@@ -246,6 +344,10 @@ node_modules
 
       if (interactiveConfig.generator) {
         initMessage += `\n🎯 Environment: ${chalk.cyan(interactiveConfig.generator)}`;
+      }
+
+      if (interactiveConfig.mcpEditor) {
+        initMessage += `\n🤖 MCP server configured for: ${chalk.cyan(interactiveConfig.mcpEditor)}`;
       }
 
       if (interactiveConfig.externalPackageManager) {
@@ -295,6 +397,7 @@ node_modules
       generator?: string;
       externalPackageManager: boolean;
       defaultDirectory: string;
+      mcpEditor?: string;
     } | null = null;
 
     // Check if this is a Git repository and run interactive mode
