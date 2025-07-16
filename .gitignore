@@ -72,3 +72,6 @@ package-lock.json
 !.yarn/plugins
 !.yarn/sdks
 !.yarn/versions
+
+# Claude Code files
+.claude/
