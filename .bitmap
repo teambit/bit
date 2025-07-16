@@ -215,15 +215,9 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "1.11.50",
+        "version": "1.12.0",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/bit",
-        "nextVersion": {
-            "version": "minor",
-            "message": "chore: bump minor version due to pnpm 10 upgrade",
-            "username": "david2",
-            "email": "davidnet@gmail.com"
-        }
+        "rootDir": "scopes/harmony/bit"
     },
     "bit-map": {
         "name": "bit-map",
