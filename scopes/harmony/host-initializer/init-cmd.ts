@@ -306,6 +306,7 @@ node_modules
       !resetScope &&
       !standalone &&
       !skipInteractive &&
+      !externalPackageManager &&
       (await this.hasGitDirectory(projectPath)) &&
       !(await this.hasWorkspaceInitialized(projectPath))
     ) {
@@ -314,7 +315,9 @@ node_modules
 
     const workspaceExtensionProps: WorkspaceExtensionProps & { externalPackageManager?: boolean } = {
       defaultDirectory:
-        interactiveConfig?.defaultDirectory || defaultDirectory || getConfig(CFG_INIT_DEFAULT_DIRECTORY),
+        interactiveConfig?.defaultDirectory ||
+        (externalPackageManager ? 'bit-components/{scope}/{name}' : defaultDirectory) ||
+        getConfig(CFG_INIT_DEFAULT_DIRECTORY),
       defaultScope: defaultScope || getConfig(CFG_INIT_DEFAULT_SCOPE),
       name,
       externalPackageManager: interactiveConfig?.externalPackageManager || externalPackageManager,

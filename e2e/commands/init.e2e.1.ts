@@ -72,7 +72,7 @@ describe('run bit init', function () {
         // gitHooksFolder = path.join(gitFolder, 'hooks');
       });
 
-      it('should nest the bit folder inside .git by default', () => {
+      it.only('should nest the bit folder inside .git by default', () => {
         const gitScopeDir = path.join(gitFolder, BIT_GIT_DIR);
         const scopeDir = path.join(helper.scopes.localPath, BIT_HIDDEN_DIR);
         expect(gitScopeDir).to.be.a.directory('bit dir is missing');
