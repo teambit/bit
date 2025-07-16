@@ -21,7 +21,64 @@ import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
 
 export interface CiWorkspaceConfig {
+  /**
+   * Path to a custom script that generates commit messages for `bit ci merge` operations.
+   * The script will be executed when components are tagged and committed to the repository.
+   * If not specified, falls back to the default commit message:
+   * "chore: update .bitmap and lockfiles as needed [skip ci]"
+   *
+   * @example
+   * ```json
+   * {
+   *   "teambit.git/ci": {
+   *     "commitMessageScript": "node scripts/generate-commit-message.js"
+   *   }
+   * }
+   * ```
+   */
   commitMessageScript?: string;
+
+  /**
+   * Enables automatic version bump detection from conventional commit messages.
+   * When enabled, the system analyzes commit messages to determine the appropriate version bump:
+   * - `feat!:` or `BREAKING CHANGE` → major version bump
+   * - `feat:` → minor version bump
+   * - `fix:` → patch version bump
+   *
+   * Only applies when no explicit version flags (--patch, --minor, --major) are provided.
+   *
+   * @default false
+   * @example
+   * ```json
+   * {
+   *   "teambit.git/ci": {
+   *     "useConventionalCommitsForVersionBump": true
+   *   }
+   * }
+   * ```
+   */
+  useConventionalCommitsForVersionBump?: boolean;
+
+  /**
+   * Enables detection of explicit version bump keywords in commit messages.
+   * When enabled, the system looks for these keywords in commit messages:
+   * - `BIT-BUMP-MAJOR` → major version bump
+   * - `BIT-BUMP-MINOR` → minor version bump
+   *
+   * These keywords have higher priority than conventional commits parsing.
+   * Only applies when no explicit version flags are provided.
+   *
+   * @default true
+   * @example
+   * ```json
+   * {
+   *   "teambit.git/ci": {
+   *     "useExplicitBumpKeywords": true
+   *   }
+   * }
+   * ```
+   */
+  useExplicitBumpKeywords?: boolean;
 }
 
 export class CiMain {
@@ -137,6 +194,44 @@ export class CiMain {
     } catch (e: any) {
       throw new Error(`Unable to read commit message: ${e.toString()}`);
     }
+  }
+
+  private parseVersionBumpFromCommit(commitMessage: string): ReleaseType | null {
+    // Check explicit bump keywords (highest priority after env vars)
+    if (this.config.useExplicitBumpKeywords !== false) {
+      // default to true
+      if (commitMessage.includes('BIT-BUMP-MAJOR')) {
+        this.logger.console(chalk.blue('Found BIT-BUMP-MAJOR keyword in commit message'));
+        return 'major';
+      }
+      if (commitMessage.includes('BIT-BUMP-MINOR')) {
+        this.logger.console(chalk.blue('Found BIT-BUMP-MINOR keyword in commit message'));
+        return 'minor';
+      }
+    }
+
+    // Check conventional commits if enabled
+    if (this.config.useConventionalCommitsForVersionBump) {
+      // Check for breaking changes (major version bump)
+      if (/^feat!(\(.+\))?:|^fix!(\(.+\))?:|BREAKING CHANGE/m.test(commitMessage)) {
+        this.logger.console(chalk.blue('Found breaking changes in commit message (conventional commits)'));
+        return 'major';
+      }
+
+      // Check for features (minor version bump)
+      if (/^feat(\(.+\))?:/m.test(commitMessage)) {
+        this.logger.console(chalk.blue('Found feature commits (conventional commits)'));
+        return 'minor';
+      }
+
+      // Check for fixes (patch version bump) - explicit patch not needed as it's default
+      if (/^fix(\(.+\))?:/m.test(commitMessage)) {
+        this.logger.console(chalk.blue('Found fix commits (conventional commits) - using default patch'));
+        return 'patch';
+      }
+    }
+
+    return null; // No specific version bump detected
   }
 
   private async getCustomCommitMessage() {
@@ -359,13 +454,15 @@ export class CiMain {
     releaseType,
     preReleaseId,
     incrementBy,
+    explicitVersionBump,
   }: {
     message?: string;
     build?: boolean;
     strict?: boolean;
-    releaseType?: ReleaseType;
+    releaseType: ReleaseType;
     preReleaseId?: string;
     incrementBy?: number;
+    explicitVersionBump?: boolean;
   }) {
     const message = argMessage || (await this.getGitCommitMessage());
     if (!message) {
@@ -373,7 +470,6 @@ export class CiMain {
     }
 
     const currentLane = await this.lanes.getCurrentLane();
-
     if (currentLane) {
       // this doesn't normally happen. we expect this mergePr to be called from the default branch, which normally checks
       // out to main lane.
@@ -425,13 +521,14 @@ export class CiMain {
 
     this.logger.console('📦 Component Operations');
     this.logger.console(chalk.blue('Tagging components'));
+    const finalReleaseType = await this.determineReleaseType(releaseType, explicitVersionBump);
     const tagResults = await this.snapping.tag({
       all: true,
       message,
       build,
       failFast: true,
       persist: hasSoftTaggedComponents,
-      releaseType,
+      releaseType: finalReleaseType,
       preReleaseId,
       incrementBy,
     });
@@ -489,6 +586,29 @@ export class CiMain {
     }
 
     return { code: 0, data: '' };
+  }
+
+  /**
+   * Auto-detect version bump from commit messages if no explicit version bump was provided
+   */
+  private async determineReleaseType(releaseType: ReleaseType, explicitVersionBump?: boolean): Promise<ReleaseType> {
+    if (explicitVersionBump) {
+      this.logger.console(chalk.blue(`Using explicit version bump: ${releaseType}`));
+      return releaseType;
+    }
+    // Only auto-detect if user didn't specify any version flags
+    const lastCommit = await this.getGitCommitMessage();
+    if (!lastCommit) {
+      this.logger.console(chalk.blue('No commit message found, using default patch'));
+      return releaseType;
+    }
+    const detectedReleaseType = this.parseVersionBumpFromCommit(lastCommit);
+    if (detectedReleaseType) {
+      this.logger.console(chalk.green(`Auto-detected version bump: ${detectedReleaseType}`));
+      return detectedReleaseType;
+    }
+    this.logger.console(chalk.blue('No specific version bump detected, using default patch'));
+    return releaseType;
   }
 }
 
