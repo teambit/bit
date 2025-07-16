@@ -96,6 +96,25 @@ bit ci merge [--message <string>] [--build] [--increment <level>] [--patch|--min
 | `--prerelease-id` |           | Prerelease identifier (e.g. "dev" to get "1.0.0-dev.1").                                                            |
 | `--increment-by`  |           | Increment by more than 1 (e.g. `--increment-by 2` with patch: 0.0.1 → 0.0.3).                                       |
 
+### Automatic Version Bump Detection
+
+When **no explicit version flags** are provided, `bit ci merge` can automatically determine the version bump level from the commit message:
+
+1. **Explicit Keywords** (highest priority):
+
+   - `BIT-BUMP-MAJOR` anywhere in commit message → major version bump
+   - `BIT-BUMP-MINOR` anywhere in commit message → minor version bump
+
+2. **Conventional Commits** (when enabled):
+
+   - `feat!:` or `BREAKING CHANGE` → major version bump
+   - `feat:` → minor version bump
+   - `fix:` → patch version bump
+
+3. **Default**: patch version bump
+
+**Note**: Auto-detection only occurs when no version flags (`--patch`, `--minor`, `--major`, etc.) are provided. Explicit flags always take precedence.
+
 ### Internal flow
 
 1. **Ensure main lane**
@@ -123,20 +142,34 @@ bit ci merge [--message <string>] [--build] [--increment <level>] [--patch|--min
 ### Version bump examples
 
 ```bash
-# Default patch increment (1.0.0 → 1.0.1)
-bit ci merge --message "fix: resolve memory leak"
-
-# Minor version bump (1.0.0 → 1.1.0)
+# Explicit version bump (takes precedence over auto-detection)
 bit ci merge --minor --message "feat: add new API endpoint"
-
-# Major version bump (1.0.0 → 2.0.0)
 bit ci merge --major --message "feat!: breaking API changes"
-
-# Prerelease increment (1.0.0 → 1.0.1-dev.1)
-bit ci merge --pre-release dev --message "feat: experimental feature"
-
-# Custom increment amount (1.0.0 → 1.0.3)
 bit ci merge --patch --increment-by 3 --message "fix: critical patches"
+
+# Automatic detection from commit message (no flags needed)
+git commit -m "feat: add new API endpoint"
+bit ci merge --build  # → auto-detects minor bump
+
+git commit -m "feat!: breaking API changes"
+bit ci merge --build  # → auto-detects major bump
+
+git commit -m "fix: resolve memory leak"
+bit ci merge --build  # → auto-detects patch bump (if conventional commits enabled)
+
+# Using explicit keywords for auto-detection
+git commit -m "feat: add new feature BIT-BUMP-MINOR"
+bit ci merge --build  # → auto-detects minor bump
+
+git commit -m "refactor: major code restructure BIT-BUMP-MAJOR"
+bit ci merge --build  # → auto-detects major bump
+
+# Default patch increment (when no detection rules match)
+git commit -m "chore: update dependencies"
+bit ci merge --build  # → defaults to patch bump
+
+# Prerelease increment (explicit flag required)
+bit ci merge --pre-release dev --message "feat: experimental feature"
 ```
 
 ### CI hint
@@ -152,7 +185,9 @@ The CI aspect supports configuration in `workspace.jsonc`:
 ```json
 {
   "teambit.git/ci": {
-    "commitMessageScript": "node scripts/generate-commit-message.js"
+    "commitMessageScript": "node scripts/generate-commit-message.js",
+    "useConventionalCommitsForVersionBump": true,
+    "useExplicitBumpKeywords": true
   }
 }
 ```
@@ -178,4 +213,46 @@ try {
 } catch {
   console.log('chore: update .bitmap and lockfiles as needed [skip ci]');
 }
+```
+
+### `useConventionalCommitsForVersionBump`
+
+**Optional.** Enable automatic version bump detection based on conventional commit patterns.
+
+- **Default**: `false` (disabled)
+- **When enabled**: Analyzes commit messages for conventional commit patterns:
+  - `feat!:` or `BREAKING CHANGE` → major version bump
+  - `feat:` → minor version bump
+  - `fix:` → patch version bump
+
+```json
+{
+  "teambit.git/ci": {
+    "useConventionalCommitsForVersionBump": true
+  }
+}
+```
+
+### `useExplicitBumpKeywords`
+
+**Optional.** Enable automatic version bump detection using explicit keywords.
+
+- **Default**: `true` (enabled)
+- **Keywords**:
+  - `BIT-BUMP-MAJOR` anywhere in commit message → major version bump
+  - `BIT-BUMP-MINOR` anywhere in commit message → minor version bump
+
+```json
+{
+  "teambit.git/ci": {
+    "useExplicitBumpKeywords": false // disable explicit keywords
+  }
+}
+```
+
+**Example usage:**
+
+```bash
+git commit -m "feat: add new feature BIT-BUMP-MINOR"
+bit ci merge --build  # → automatically uses minor version bump
 ```

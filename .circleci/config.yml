@@ -185,8 +185,8 @@ commands: # reusable commands
     steps:
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
-      # - run: bvm upgrade
-      - run: bvm install 1.11.42
+      - run: bvm upgrade
+      # - run: bvm install 1.11.42
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
@@ -667,7 +667,7 @@ jobs:
       - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
       - run:
           name: 'bit ci merge'
-          command: 'cd bit && bit ci merge --build'
+          command: 'cd bit && bit ci merge --build ${BIT_CI_MERGE_EXTRA_FLAGS}'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=32000
