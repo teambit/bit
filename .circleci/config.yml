@@ -667,7 +667,7 @@ jobs:
       - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
       - run:
           name: 'bit ci merge'
-          command: 'cd bit && ./scripts/ci-merge-wrapper.sh'
+          command: 'cd bit && bit ci merge --build ${BIT_CI_MERGE_EXTRA_FLAGS}'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=32000

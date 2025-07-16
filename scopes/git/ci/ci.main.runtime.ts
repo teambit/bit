@@ -141,21 +141,6 @@ export class CiMain {
     }
   }
 
-  private async getLastCommitMessage() {
-    try {
-      const commit = await git.log({
-        maxCount: 1,
-      });
-      if (!commit.latest) {
-        return null;
-      }
-      const { message, body } = commit.latest;
-      return body ? `${message}\n\n${body}` : message;
-    } catch (e: any) {
-      throw new Error(`Unable to read commit message: ${e.toString()}`);
-    }
-  }
-
   private parseVersionBumpFromCommit(commitMessage: string): ReleaseType | null {
     // Check explicit bump keywords (highest priority after env vars)
     if (this.config.useExplicitBumpKeywords !== false) {
@@ -433,7 +418,7 @@ export class CiMain {
     let finalReleaseType = releaseType;
     if (!explicitVersionBump) {
       // Only auto-detect if user didn't specify any version flags
-      const lastCommit = await this.getLastCommitMessage();
+      const lastCommit = await this.getGitCommitMessage();
       if (lastCommit) {
         const detectedReleaseType = this.parseVersionBumpFromCommit(lastCommit);
         if (detectedReleaseType) {
