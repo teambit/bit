@@ -460,15 +460,22 @@ describe('bit import', function () {
       helper.command.tagWithoutBuild('global/simple');
       helper.command.exportIds('global/simple');
 
+      helper.command.removeComponent('global/simple');
+      helper.fs.createFile('global2', 'simple.js', 'const isOdd = require("is-odd")');
+      helper.command.addComponent('global2', { i: 'global2/simple' });
+      helper.command.install('is-odd@2.0.0');
+      helper.command.tagWithoutBuild('global2/simple');
+      helper.command.exportIds('global2/simple');
+
       // create a new workspace that uses an external package manager
       helper.scopeHelper.cleanWorkspace();
       helper.command.init('--external-package-manager');
       helper.scopeHelper.addRemoteScope();
-      helper.command.importComponent('global/simple');
+      helper.command.importManyComponents(['global/simple', 'global2/simple']);
     });
     it('should write dependencies to package.json', () => {
       const pkgJson = helper.fs.readJsonFile('package.json');
-      expect(pkgJson.dependencies['is-odd']).to.eq('1.0.0');
+      expect(pkgJson.dependencies['is-odd']).to.eq('2.0.0');
     })
     it('should not run installation', () => {
       expect(helper.fs.exists('node_modules/is-odd')).to.eq(false);

@@ -220,8 +220,8 @@ export class InstallMain {
     const componentsAndManifests = await this._getComponentsManifests(installer, mergedRootPolicy, {
       dedupe: true,
     });
-    const { dependencies } = componentsAndManifests.manifests[this.workspace.path];
-    return this.workspace.writeDependenciesToPackageJson(dependencies);
+    const { dependencies, devDependencies } = componentsAndManifests.manifests[this.workspace.path];
+    return this.workspace.writeDependenciesToPackageJson({ ...devDependencies, ...dependencies });
   }
 
   registerPreLink(fn: PreLink) {
