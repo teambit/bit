@@ -36,6 +36,7 @@ export async function handleExtendingConfigFiles(
   envCompsDirsMap: EnvCompsDirsMap,
   writtenRealConfigFiles: WrittenRealConfigFilesByHash,
   configsRootDir: string,
+  componentsRootDir: string | undefined,
   workspaceDir: string,
   opts: WriteConfigFilesOptions
 ): Promise<EnvsWrittenExtendingConfigFiles> {
@@ -46,7 +47,7 @@ export async function handleExtendingConfigFiles(
     configsRootDir,
     workspaceDir
   );
-  const fileHashPerDedupedPaths = dedupePaths(extendingConfigFilesMap, envCompsDirsMap);
+  const fileHashPerDedupedPaths = dedupePaths(extendingConfigFilesMap, envCompsDirsMap, componentsRootDir);
   await postProcessExtendingConfigFiles(
     envEntries,
     envCompsDirsMap,

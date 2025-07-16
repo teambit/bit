@@ -177,3 +177,9 @@ This repository is built using Bit itself, demonstrating the "dogfooding" approa
 - Use `bit watch` for faster development cycles
 - E2E tests run in parallel on CI
 - Component compilation can be parallelized
+
+### Aspect Configuration
+
+- Aspects accept config as 2nd parameter in `provider` method: `provider(deps, config)`
+- Define TypeScript interface for config and inject into main class constructor
+- Configure in `workspace.jsonc` under aspect ID key
