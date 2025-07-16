@@ -185,8 +185,8 @@ commands: # reusable commands
     steps:
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
-      # - run: bvm upgrade
-      - run: bvm install 1.11.42
+      - run: bvm upgrade
+      # - run: bvm install 1.11.42
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
