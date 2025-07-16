@@ -557,15 +557,42 @@ export class CiMain {
       await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
       await git.addConfig('user.name', 'Bit CI');
 
+      // Check git status before commit
+      const statusBeforeCommit = await git.status();
+      this.logger.console(chalk.blue(`Git status before commit: ${statusBeforeCommit.files.length} files`));
+      statusBeforeCommit.files.forEach((file) => {
+        this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
+      });
+
       // Commit the .bitmap and pnpm-lock.yaml files using Git
       await git.add(['.bitmap', 'pnpm-lock.yaml']);
 
       const commitMessage = await this.getCustomCommitMessage();
       await git.commit(commitMessage);
 
+      // Check git status after commit
+      const statusAfterCommit = await git.status();
+      this.logger.console(chalk.blue(`Git status after commit: ${statusAfterCommit.files.length} files`));
+      statusAfterCommit.files.forEach((file) => {
+        this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
+      });
+
       // Pull latest changes and push the commit to the remote repository
-      // At this point we have just committed changes, so no need to stash
+      // Check if there are any unstaged changes before pulling
+      const hasUnstagedChanges = statusAfterCommit.files.length > 0;
+
+      if (hasUnstagedChanges) {
+        this.logger.console(chalk.yellow('Stashing uncommitted changes before final rebase'));
+        await git.stash(['push', '-u', '-m', 'CI merge post-commit stash']);
+      }
+
       await git.pull('origin', defaultBranch, { '--rebase': 'true' });
+
+      if (hasUnstagedChanges) {
+        this.logger.console(chalk.yellow('Restoring stashed changes after final rebase'));
+        await git.stash(['pop']);
+      }
+
       await git.push('origin', defaultBranch);
     } else {
       this.logger.console(chalk.yellow('No components were tagged, skipping export and git operations'));
