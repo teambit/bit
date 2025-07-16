@@ -21,8 +21,63 @@ import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
 
 export interface CiWorkspaceConfig {
+  /**
+   * Path to a custom script that generates commit messages for `bit ci merge` operations.
+   * The script will be executed when components are tagged and committed to the repository.
+   * If not specified, falls back to the default commit message:
+   * "chore: update .bitmap and lockfiles as needed [skip ci]"
+   *
+   * @example
+   * ```json
+   * {
+   *   "teambit.git/ci": {
+   *     "commitMessageScript": "node scripts/generate-commit-message.js"
+   *   }
+   * }
+   * ```
+   */
   commitMessageScript?: string;
+
+  /**
+   * Enables automatic version bump detection from conventional commit messages.
+   * When enabled, the system analyzes commit messages to determine the appropriate version bump:
+   * - `feat!:` or `BREAKING CHANGE` → major version bump
+   * - `feat:` → minor version bump
+   * - `fix:` → patch version bump
+   *
+   * Only applies when no explicit version flags (--patch, --minor, --major) are provided.
+   *
+   * @default false
+   * @example
+   * ```json
+   * {
+   *   "teambit.git/ci": {
+   *     "useConventionalCommitsForVersionBump": true
+   *   }
+   * }
+   * ```
+   */
   useConventionalCommitsForVersionBump?: boolean;
+
+  /**
+   * Enables detection of explicit version bump keywords in commit messages.
+   * When enabled, the system looks for these keywords in commit messages:
+   * - `BIT-BUMP-MAJOR` → major version bump
+   * - `BIT-BUMP-MINOR` → minor version bump
+   *
+   * These keywords have higher priority than conventional commits parsing.
+   * Only applies when no explicit version flags are provided.
+   *
+   * @default true
+   * @example
+   * ```json
+   * {
+   *   "teambit.git/ci": {
+   *     "useExplicitBumpKeywords": true
+   *   }
+   * }
+   * ```
+   */
   useExplicitBumpKeywords?: boolean;
 }
 
