@@ -19,7 +19,7 @@ import { CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constant
 import fetch from 'node-fetch';
 import { McpSetupCmd } from './setup-cmd';
 import { McpRulesCmd } from './rules-cmd';
-import { McpSetupUtils, SetupOptions, RulesOptions } from './setup-utils';
+import { McpConfigWriter, SetupOptions, RulesOptions } from '@teambit/mcp.mcp-config-writer';
 
 interface CommandFilterOptions {
   additionalCommandsSet?: Set<string>;
@@ -1256,95 +1256,41 @@ export class CliMcpServerMain {
 
   // Setup command business logic methods
   getEditorDisplayName(editor: string): string {
-    return McpSetupUtils.getEditorDisplayName(editor);
+    return McpConfigWriter.getEditorDisplayName(editor);
   }
 
   /**
    * Get the path to the editor config file based on editor type and scope
    */
   getEditorConfigPath(editor: string, isGlobal: boolean, workspaceDir?: string): string {
-    const editorLower = editor.toLowerCase();
-
-    if (editorLower === 'vscode') {
-      // For VS Code, return appropriate config path based on global vs workspace scope
-      return isGlobal
-        ? McpSetupUtils.getVSCodeSettingsPath(isGlobal, workspaceDir)
-        : McpSetupUtils.getVSCodeMcpConfigPath(workspaceDir);
-    } else if (editorLower === 'cursor') {
-      return McpSetupUtils.getCursorSettingsPath(isGlobal, workspaceDir);
-    } else if (editorLower === 'windsurf') {
-      return McpSetupUtils.getWindsurfSettingsPath(isGlobal, workspaceDir);
-    } else if (editorLower === 'roo') {
-      return McpSetupUtils.getRooCodeSettingsPath(isGlobal, workspaceDir);
-    } else if (editorLower === 'cline') {
-      return McpSetupUtils.getClinePromptsPath(isGlobal, workspaceDir);
-    } else if (editorLower === 'claude-code') {
-      return McpSetupUtils.getClaudeCodeSettingsPath(isGlobal, workspaceDir);
-    }
-
-    throw new Error(`Editor "${editor}" is not supported yet.`);
+    return McpConfigWriter.getEditorConfigPath(editor, isGlobal, workspaceDir);
   }
 
   async setupEditor(editor: string, options: SetupOptions, workspaceDir?: string): Promise<void> {
-    const supportedEditors = ['vscode', 'cursor', 'windsurf', 'roo', 'cline', 'claude-code'];
-    const editorLower = editor.toLowerCase();
-
-    if (!supportedEditors.includes(editorLower)) {
-      throw new Error(`Editor "${editor}" is not supported yet. Currently supported: ${supportedEditors.join(', ')}`);
-    }
-
     // Add workspaceDir to options if provided
     const setupOptions: SetupOptions = { ...options };
     if (workspaceDir) {
       setupOptions.workspaceDir = workspaceDir;
     }
 
-    if (editorLower === 'vscode') {
-      await McpSetupUtils.setupVSCode(setupOptions);
-    } else if (editorLower === 'cursor') {
-      await McpSetupUtils.setupCursor(setupOptions);
-    } else if (editorLower === 'windsurf') {
-      await McpSetupUtils.setupWindsurf(setupOptions);
-    } else if (editorLower === 'roo') {
-      await McpSetupUtils.setupRooCode(setupOptions);
-    } else if (editorLower === 'cline') {
-      // Cline doesn't need MCP server setup, only rules files
-      // This is a no-op but we include it for consistency
-      // Users should use the 'rules' command to set up Cline instructions
-    } else if (editorLower === 'claude-code') {
-      await McpSetupUtils.setupClaudeCode(setupOptions);
-    }
+    await McpConfigWriter.setupEditor(editor, setupOptions);
   }
 
   async writeRulesFile(editor: string, options: RulesOptions, workspaceDir?: string): Promise<void> {
-    const supportedEditors = ['vscode', 'cursor', 'roo', 'cline', 'claude-code'];
-    const editorLower = editor.toLowerCase();
-
-    if (!supportedEditors.includes(editorLower)) {
-      throw new Error(`Editor "${editor}" is not supported yet. Currently supported: ${supportedEditors.join(', ')}`);
-    }
-
     // Add workspaceDir to options if provided
     const rulesOptions: RulesOptions = { ...options };
     if (workspaceDir) {
       rulesOptions.workspaceDir = workspaceDir;
     }
 
-    if (editorLower === 'vscode') {
-      await McpSetupUtils.writeVSCodeRules(rulesOptions);
-    } else if (editorLower === 'cursor') {
-      await McpSetupUtils.writeCursorRules(rulesOptions);
-    } else if (editorLower === 'roo') {
-      await McpSetupUtils.writeRooCodeRules(rulesOptions);
-    } else if (editorLower === 'cline') {
-      await McpSetupUtils.writeClineRules(rulesOptions);
-    } else if (editorLower === 'claude-code') {
-      await McpSetupUtils.writeClaudeCodeRules(rulesOptions);
-    }
+    // Pass the template base directory to the component
+    const templateBaseDir = path.join(__dirname);
+    await McpConfigWriter.writeRulesFile(editor, rulesOptions, templateBaseDir);
   }
 
   async getRulesContent(consumerProject: boolean = false): Promise<string> {
-    return McpSetupUtils.getDefaultRulesContent(consumerProject);
+    const templateBaseDir = path.join(__dirname);
+    return McpConfigWriter.getDefaultRulesContent(consumerProject, templateBaseDir);
   }
 
   static slots = [];

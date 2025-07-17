@@ -5,7 +5,7 @@ import { loadBit } from '@teambit/bit';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import { specFileFailingFixture } from './jest.e2e';
+import { specFileFailingFixture } from './jest-fixtures';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
