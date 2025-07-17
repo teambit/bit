@@ -34,12 +34,15 @@ import CapsuleList from './capsule-list';
  * I changed only comp2.
  * From comp2 perspective, comp1 is a “dependent”, comp3 is a “dependency”.
  *
- * When I run bit build with no args, it finds only one modified component: comp2, however, it doesn’t stop here. It also look for the dependents, in this case, comp1. So the seeders of this bit-build command are two: “comp1” and “comp2".
- * The reason why the dependents are included is because you modified comp2, it’s possible you broke comp1. We want to build comp1 as well to make sure it’s still okay.
+ * When I run bit build with no args, it finds only one modified component: comp2, however, it doesn’t stop here.
+ * It also look for the dependents, in this case, comp1. So the seeders of this bit-build command are two: “comp1” and “comp2".
+ * The reason why the dependents are included is because you modified comp2, it’s possible you broke comp1.
+ * We want to build comp1 as well to make sure it’s still okay.
  * (btw, bit test command also include dependents when it provided with no args).
  *
  * Keep in mind that also bit tag normally runs on the dependents as well (when it runs the build pipeline), because these are the “auto-tag”.
- * With these two seeders it builds the graph. The graph calculates all the dependencies of the given seeders recursively. Eventually, it puts them in an instance of Network class.
+ * With these two seeders it builds the graph. The graph calculates all the dependencies of the given seeders recursively.
+ * Eventually, it puts them in an instance of Network class.
  * In our case, if all components use the same env, the Network consist of:
  * seedersCapsules:          [comp1, comp2]
  * originalSeedersCapsules:  [comp1, comp2]
@@ -62,9 +65,13 @@ import CapsuleList from './capsule-list';
  * seedersCapsules:          [comp3]
  * originalSeedersCapsules:  []
  * graphCapsules:            [comp3].
+ *
  * As you can see, in network3, the originalSeeders is empty, because comp3 wasn’t part of the original seeders.
  * These 3 networks are created for build-pipeline. This pipeline asks for all components in the graph and then create the network per env.
- * Snap/Tag pipelines are different. They ask only for the components about to tag/snap, which are the original-seeders, and create the network per env. For them, we end up with 2 network instances only. network1 and network2. Also, the seedersCapsules and originalSeedersCapsules are the same because we create the network instances out of the seeders only, without the dependencies.
+ *
+ * Snap/Tag pipelines are different. They ask only for the components about to tag/snap, which are the original-seeders, and create the network per env.
+ * For them, we end up with 2 network instances only. network1 and network2. Also, the seedersCapsules and originalSeedersCapsules
+ * are the same because we create the network instances out of the seeders only, without the dependencies.
  * A build-task provides context with a network instance to the execute() method. (it also provide Component[] which are the “seeders”. not “originalSeeders”).
  *
  * Each build-task can decide on what components to operate. It has 3 options:
@@ -72,7 +79,9 @@ import CapsuleList from './capsule-list';
  * run on seedersCapsules. With this option you make sure that your task is running for each one of the capsules and it runs only once. This is good for example for the compiler task. It needs to make sure all capsules are built. Otherwise, if it’s running only on originalSeedersCapsules, the comp3 won’t be compiled, the dists will be missing and comp2 won’t be able to run its tests.
  * run on originalSeedersCapsules . With this option you ensure that your task runs only on the ids you started with and you don’t run them on the dependencies. This is the option that most tasks probably need. An example is the test task, it should test only the seeders, no need to test the dependencies.
  *
- * Again, the distinction between seedersCapsules and originalSeedersCapsules is relevant for build-pipeline only. For tag-pipeline and snap-pipeline, these two are the same. You can see for example that Publisher task runs on seedersCapsules and that’s fine, it won’t be running on dependencies unexpectedly, only on the components it’s now tagging.
+ * Again, the distinction between seedersCapsules and originalSeedersCapsules is relevant for build-pipeline only.
+ * For tag-pipeline and snap-pipeline, these two are the same. You can see for example that Publisher task runs on
+ * seedersCapsules and that’s fine, it won’t be running on dependencies unexpectedly, only on the components it’s now tagging.
  */
 export class Network {
   _originalSeeders: ComponentID[] | undefined;
