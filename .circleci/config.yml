@@ -320,6 +320,8 @@ commands: # reusable commands
             echo "✅ File count verified"
       - run:
           name: 'Run e2e tests with debugging'
+          # NOTE: If tests are missing due to timing issues, replace --split-by=timings
+          # with --split-by=filesize in the ASSIGNED_FILES line below
           command: |
             cd bit
             echo "=== E2E Test Debug Information ==="
@@ -339,13 +341,34 @@ commands: # reusable commands
             echo "$ASSIGNED_FILES"
             echo "Count of files assigned to this container: $(echo "$ASSIGNED_FILES" | wc -l)"
 
-            # Create a summary file for this container
+            # Debug: Show if any files were skipped due to timing issues
+            echo "=== Timing Debug Info ==="
+            echo "Total files found: $(echo "$GLOB_FILES" | wc -l)"
+            echo "Files assigned to this container: $(echo "$ASSIGNED_FILES" | wc -l)"
+            MISSED_COUNT=$(($(echo "$GLOB_FILES" | wc -l) - $(echo "$ASSIGNED_FILES" | wc -l)))
+            echo "Files potentially missed by this container: $MISSED_COUNT"
+
+            if [ "$MISSED_COUNT" -gt 0 ]; then
+              echo "⚠️  WARNING: This container may have missed files due to timing data issues"
+              echo "Consider using --split-by=filesize instead of --split-by=timings"
+            fi
+
+            # Test alternative splitting method
+            echo "=== Testing filesize-based splitting ==="
+            FILESIZE_FILES=$(echo "$GLOB_FILES" | circleci tests split --split-by=filesize)
+            echo "Files assigned with filesize splitting: $(echo "$FILESIZE_FILES" | wc -l)"
+            echo "Files assigned with filesize method:"
+            echo "$FILESIZE_FILES"
+
+            # Create a summary file for this container with actual filenames
             echo "Container $CIRCLE_NODE_INDEX files:" > /tmp/container-files.txt
             echo "$ASSIGNED_FILES" | wc -l >> /tmp/container-files.txt
+            echo "=== Files assigned to container $CIRCLE_NODE_INDEX ===" >> /tmp/container-files.txt
+            echo "$ASSIGNED_FILES" >> /tmp/container-files.txt
 
             echo "=== Starting Test Execution ==="
 
-            # Run the tests
+            # Run the tests (use the timing-based assignment for now)
             echo "$ASSIGNED_FILES" | xargs -n 1 npm run mocha-circleci << parameters.bit_bin >>
           # Original command for reference:
           # command: 'cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci << parameters.bit_bin >>'
