@@ -349,10 +349,6 @@ export class IsolatorMain {
         Object.assign({}, opts, { host: opts.host?.name })
       )}`
     );
-    const isOptimizationDisabled = isFeatureEnabled(DISABLE_CAPSULE_OPTIMIZATION);
-    this.logger.console(
-      `[OPTIMIZATION] isolateComponents called with seeders: ${seeders.join(', ')}, optimization-disabled: ${isOptimizationDisabled}`
-    );
     const createGraphOpts = pick(opts, ['includeFromNestedHosts', 'host']);
     const componentsToIsolate = opts.seedersOnly
       ? await host.getMany(seeders)
@@ -413,11 +409,10 @@ export class IsolatorMain {
 
     // Optimization: exclude unmodified exported dependencies from capsule creation
     if (!isFeatureEnabled(DISABLE_CAPSULE_OPTIMIZATION)) {
-      this.logger.console(
-        `[OPTIMIZATION] Starting with ${componentsToInclude.length} components, seeders: ${seeders.join(', ')}`
-      );
       filteredComps = await this.filterUnmodifiedExportedDependencies(filteredComps, seeders, host);
-      this.logger.console(`[OPTIMIZATION] After filtering: ${filteredComps.length} components remaining`);
+      this.logger.debug(
+        `[OPTIMIZATION] Before filtering: ${componentsToInclude.length}. After filtering: ${filteredComps.length} components remaining`
+      );
     }
 
     return filteredComps;
@@ -1403,27 +1398,39 @@ export class IsolatorMain {
     // @ts-ignore it's there, but we can't have the type of ScopeMain here to not create a circular dependency
     const remotes = await scope.getRemoteScopes();
 
-    const filtered: Component[] = components.filter((component) => {
+    const filtered: Component[] = [];
+
+    for (const component of components) {
       const componentIdStr = component.id.toString();
       const isSeeder = seederIds.some((seederId) => component.id.isEqual(seederId, { ignoreVersion: true }));
 
       if (isSeeder) {
         // Always include seeders (modified components and their dependents)
-        this.logger.console(`[OPTIMIZATION] Including seeder: ${componentIdStr}`);
-        return true;
+        filtered.push(component);
+        continue;
       }
       // For dependencies, check if they are exported and unmodified
+
+      // Check if component is modified
+      // Normally, when running "bit build" with no args, only the seeders are modified, so this check is not needed.
+      // However, when running "bit build comp1", comp1 might have modified dependencies. we want to include them.
+      // In terms of performance, I checked on a big workspace, it costs zero time, because the modification data is cached.
+      const isModified = await component.isModified();
+      if (isModified) {
+        // Always include modified components
+        filtered.push(component);
+        continue;
+      }
+
       const isPublished = component.get('teambit.pkg/pkg')?.config?.packageJson?.publishConfig;
       const canBeInstalled = host.isExported(component.id) && (remotes.isHub(component.id.scope) || isPublished);
 
       if (canBeInstalled) {
-        // This is an unmodified exported dependency - exclude from capsules
-        this.logger.console(`[OPTIMIZATION] Excluding unmodified exported dependency: ${componentIdStr}`);
-        return false;
+        this.logger.debug(`[OPTIMIZATION] Excluding unmodified exported dependency: ${componentIdStr}`);
+      } else {
+        filtered.push(component);
       }
-      this.logger.console(`[OPTIMIZATION] Including non-exported dependency: ${componentIdStr}`);
-      return true;
-    });
+    }
 
     this.logger.debug(
       `filterUnmodifiedExportedDependencies: kept ${filtered.length} out of ${components.length} components`
