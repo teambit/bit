@@ -38,7 +38,7 @@ describe('run bit init', function () {
     });
     it('should not tell you there is already a scope when running "bit init"', () => {
       const init = helper.command.init();
-      expect(init).to.have.string('successfully initialized a bit workspace.');
+      expect(init).to.have.string('successfully re-initialized a bit workspace.');
     });
     it('should create bitmap"', () => {
       const bitmapPath = path.join(helper.scopes.localPath, '.bitmap');
@@ -104,7 +104,7 @@ describe('run bit init', function () {
         output = helper.command.init();
       });
       it('should show a success message', () => {
-        expect(output).to.have.string('successfully initialized');
+        expect(output).to.have.string('successfully re-initialized');
       });
       it('should recreate scope.json file', () => {
         expect(scopeJsonPath).to.be.a.file();
