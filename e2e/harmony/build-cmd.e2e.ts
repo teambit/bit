@@ -4,8 +4,8 @@ import fs from 'fs-extra';
 import { loadBit } from '@teambit/bit';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
-import { Helper } from '@teambit/legacy.e2e-helper';
-import { specFileFailingFixture } from './jest.e2e';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import { specFileFailingFixture } from './jest-fixtures';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -158,6 +158,78 @@ describe('build command', function () {
       it('bit build --loose should still throw an error for compilation errors', () => {
         expect(() => helper.command.build(undefined, '--loose')).to.throw();
       });
+    });
+  });
+
+  (supportNpmCiRegistryTesting ? describe : describe.skip)(
+    'optimized capsule creation for exported dependencies',
+    () => {
+      let npmCiRegistry: NpmCiRegistry;
+      before(async () => {
+        helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+        helper.scopeHelper.setWorkspaceWithRemoteScope();
+        npmCiRegistry = new NpmCiRegistry(helper);
+        await npmCiRegistry.init();
+        npmCiRegistry.configureCiInPackageJsonHarmony();
+
+        // Create 3 dependent components: comp1 -> comp2 -> comp3
+        helper.fixtures.populateComponents(3);
+
+        // Tag and export all components (this will publish them to local registry)
+        helper.command.tagAllComponents();
+        helper.command.export();
+
+        // Only modify comp2 to trigger rebuild
+        helper.fs.appendFile('comp2/index.js', '\n// modification to comp2');
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      it('should only create capsules for modified components and their dependents, not for unmodified exported dependencies', () => {
+        helper.command.build();
+
+        // comp1 and comp2 should have capsules since comp1 depends on modified comp2
+        const comp1Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp1@0.0.1`);
+        const comp2Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp2@0.0.1`);
+        expect(comp1Capsule).to.be.a.directory();
+        expect(comp2Capsule).to.be.a.directory();
+
+        // comp3 should NOT have a capsule since it's an unmodified exported dependency
+        // Instead, comp3 should be available as a package in the capsule node_modules
+        expect(() => helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp3@0.0.1`)).to.throw();
+
+        // comp3 should be available as a package in the root of node_modules
+        const comp2NodeModules = path.join(
+          comp2Capsule,
+          '..',
+          'node_modules',
+          helper.general.getPackageNameByCompName('comp3', true)
+        );
+        expect(comp2NodeModules).to.be.a.directory();
+      });
+    }
+  );
+  describe('optimized capsule creation for exported dependencies for self hosting', () => {
+    before(async () => {
+      helper = new Helper();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      // Only modify comp2 to trigger rebuild
+      helper.fs.appendFile('comp2/index.js', '\n// modification to comp2');
+    });
+    it('should create capsules not only for modified components and their dependents, but also for unmodified exported dependencies', () => {
+      helper.command.build();
+
+      // comp1 and comp2 should have capsules since comp1 depends on modified comp2
+      const comp1Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp1@0.0.1`);
+      const comp2Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp2@0.0.1`);
+      const comp3Capsule = helper.command.getCapsuleOfComponent(`${helper.scopes.remote}/comp3@0.0.1`);
+      expect(comp1Capsule).to.be.a.directory();
+      expect(comp2Capsule).to.be.a.directory();
+      expect(comp3Capsule).to.be.a.directory();
     });
   });
 });

@@ -185,8 +185,8 @@ commands: # reusable commands
     steps:
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm config set RELEASE_TYPE nightly
-      # - run: bvm upgrade
-      - run: bvm install 1.11.42
+      - run: bvm upgrade
+      # - run: bvm install 1.11.42
       - run: bvm link --verbose
       - bit_config:
           env: "hub"
@@ -307,7 +307,7 @@ commands: # reusable commands
       # - run: 'rm -rf bit/node_modules/.bin/bit'
       - run:
           name: 'Run e2e tests'
-          command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs -n 1 npm run mocha-circleci << parameters.bit_bin >>'
+          command: 'cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci << parameters.bit_bin >>'
           # command which support only - for debug purpose
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
@@ -1017,6 +1017,8 @@ jobs:
 
   e2e_test:
     <<: *defaults
+    # changing from medium to large, doesn't affect the performance
+    # resource_class: large
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
@@ -1361,6 +1363,7 @@ workflows:
       - set_ssh_key
       - set_npm_registries
       - setup_harmony:
+      # changing to xlarge doesn't make any change
           requires:
             - set_npm_registries
             - checkout_code
