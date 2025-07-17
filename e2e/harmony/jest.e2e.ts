@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import { specFilePassingFixture, specFileFailingFixture, specFileErroringFixture } from './jest-fixtures';
 
 chai.use(require('chai-fs'));
 
@@ -184,31 +185,3 @@ describe('Jest Tester', function () {
     });
   });
 });
-
-function specFilePassingFixture(describeText = 'test', itText = 'should pass') {
-  return `describe('${describeText}', () => {
-  it('${itText}', () => {
-    expect(true).toBeTruthy();
-  });
-});
-`;
-}
-
-export function specFileFailingFixture() {
-  return `describe('test', () => {
-  it('should fail', () => {
-    expect(false).toBeTruthy();
-  });
-});
-`;
-}
-
-function specFileErroringFixture() {
-  return `describe('test', () => {
-    throw new Error('SomeError');
-  it('should not reach here', () => {
-    expect(true).toBeTruthy();
-  });
-});
-`;
-}
