@@ -188,8 +188,6 @@ export class WorkspaceConfig implements HostConfig {
       // Override template defaults to be compatible with external package manager mode
       template['teambit.dependencies/dependency-resolver'] = template['teambit.dependencies/dependency-resolver'] || {};
       template['teambit.dependencies/dependency-resolver'].rootComponent = false;
-      template['teambit.workspace/workspace-config-files'] = template['teambit.workspace/workspace-config-files'] || {};
-      template['teambit.workspace/workspace-config-files'].enableWorkspaceConfigWrite = false;
     }
 
     const merged = assign(template, {
@@ -427,12 +425,6 @@ export class WorkspaceConfig implements HostConfig {
     // Check dependency-resolver aspect conflicts
     if (depResolverExt?.rootComponent === true) {
       conflicts.push('rootComponent cannot be true when externalPackageManager is enabled');
-    }
-
-    // Check workspace-config-files aspect conflicts
-    const workspaceConfigFilesExt = this.extension('teambit.workspace/workspace-config-files', true);
-    if (workspaceConfigFilesExt?.enableWorkspaceConfigWrite === true) {
-      conflicts.push('enableWorkspaceConfigWrite cannot be true when externalPackageManager is enabled');
     }
 
     if (conflicts.length > 0) {
