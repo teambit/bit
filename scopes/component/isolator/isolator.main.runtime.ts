@@ -4,6 +4,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
 import { compact, flatten, isEqual, pick } from 'lodash';
+import { isFeatureEnabled, DISABLE_CAPSULE_OPTIMIZATION } from '@teambit/harmony.modules.feature-toggle';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Component, ComponentMap, ComponentAspect } from '@teambit/component';
 import type { ComponentMain, ComponentFactory } from '@teambit/component';
@@ -46,6 +47,7 @@ import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { type DependenciesGraph } from '@teambit/objects';
+
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
 import path, { basename } from 'path';
@@ -402,8 +404,18 @@ export class IsolatorMain {
         return undefined;
       })
     );
-    const existingComps = await host.getMany(compact(existingCompsIds));
-    return existingComps;
+    const componentsToInclude = compact(existingCompsIds);
+    let filteredComps = await host.getMany(componentsToInclude);
+
+    // Optimization: exclude unmodified exported dependencies from capsule creation
+    if (!isFeatureEnabled(DISABLE_CAPSULE_OPTIMIZATION)) {
+      filteredComps = await this.filterUnmodifiedExportedDependencies(filteredComps, seeders, host);
+      this.logger.debug(
+        `[OPTIMIZATION] Before filtering: ${componentsToInclude.length}. After filtering: ${filteredComps.length} components remaining`
+      );
+    }
+
+    return filteredComps;
   }
 
   private registerMoveCapsuleOnProcessExit(
@@ -1369,6 +1381,61 @@ export class IsolatorMain {
       artifactsVinylFlattened.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
     }
     return artifactsVinylFlattened;
+  }
+
+  /**
+   * Filter out unmodified exported dependencies to optimize capsule creation.
+   * These dependencies can be installed as packages instead of creating capsules.
+   */
+  private async filterUnmodifiedExportedDependencies(
+    components: Component[],
+    seederIds: ComponentID[],
+    host: ComponentFactory
+  ): Promise<Component[]> {
+    this.logger.debug(`filterUnmodifiedExportedDependencies: filtering ${components.length} components`);
+
+    const scope = this.componentAspect.getHost('teambit.scope/scope');
+    // @ts-ignore it's there, but we can't have the type of ScopeMain here to not create a circular dependency
+    const remotes = await scope.getRemoteScopes();
+
+    const filtered: Component[] = [];
+
+    for (const component of components) {
+      const componentIdStr = component.id.toString();
+      const isSeeder = seederIds.some((seederId) => component.id.isEqual(seederId, { ignoreVersion: true }));
+
+      if (isSeeder) {
+        // Always include seeders (modified components and their dependents)
+        filtered.push(component);
+        continue;
+      }
+      // For dependencies, check if they are exported and unmodified
+
+      // Check if component is modified
+      // Normally, when running "bit build" with no args, only the seeders are modified, so this check is not needed.
+      // However, when running "bit build comp1", comp1 might have modified dependencies. we want to include them.
+      // In terms of performance, I checked on a big workspace, it costs zero time, because the modification data is cached.
+      const isModified = await component.isModified();
+      if (isModified) {
+        // Always include modified components
+        filtered.push(component);
+        continue;
+      }
+
+      const isPublished = component.get('teambit.pkg/pkg')?.config?.packageJson?.publishConfig;
+      const canBeInstalled = host.isExported(component.id) && (remotes.isHub(component.id.scope) || isPublished);
+
+      if (canBeInstalled) {
+        this.logger.debug(`[OPTIMIZATION] Excluding unmodified exported dependency: ${componentIdStr}`);
+      } else {
+        filtered.push(component);
+      }
+    }
+
+    this.logger.debug(
+      `filterUnmodifiedExportedDependencies: kept ${filtered.length} out of ${components.length} components`
+    );
+    return filtered;
   }
 }
 
