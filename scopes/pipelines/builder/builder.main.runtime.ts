@@ -380,7 +380,6 @@ export class BuilderMain {
     const baseIsolateOpts = {
       baseDir: capsulesBaseDir,
       useHash: !capsulesBaseDir,
-      usePackagesForUnmodifiedDeps: true, // Enable optimization for build pipeline
     };
     const mergedIsolateOpts = {
       ...baseIsolateOpts,

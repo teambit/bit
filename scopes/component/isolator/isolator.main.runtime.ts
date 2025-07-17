@@ -4,6 +4,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
 import { compact, flatten, isEqual, pick } from 'lodash';
+import { isFeatureEnabled, DISABLE_CAPSULE_OPTIMIZATION } from '@teambit/harmony.modules.feature-toggle';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Component, ComponentMap, ComponentAspect } from '@teambit/component';
 import type { ComponentMain, ComponentFactory } from '@teambit/component';
@@ -46,6 +47,7 @@ import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { type DependenciesGraph } from '@teambit/objects';
+
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
 import path, { basename } from 'path';
@@ -140,12 +142,6 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * create a new capsule with a random string attached to the path suffix
    */
   alwaysNew?: boolean;
-
-  /**
-   * optimize capsule creation by using package manager for unmodified exported dependencies
-   * instead of creating capsules for them. This is useful for build/tag/snap operations.
-   */
-  usePackagesForUnmodifiedDeps?: boolean;
 
   /**
    * If this is true -
@@ -353,13 +349,14 @@ export class IsolatorMain {
         Object.assign({}, opts, { host: opts.host?.name })
       )}`
     );
+    const isOptimizationDisabled = isFeatureEnabled(DISABLE_CAPSULE_OPTIMIZATION);
     this.logger.console(
-      `[OPTIMIZATION] isolateComponents called with seeders: ${seeders.join(', ')}, usePackagesForUnmodifiedDeps: ${opts.usePackagesForUnmodifiedDeps}`
+      `[OPTIMIZATION] isolateComponents called with seeders: ${seeders.join(', ')}, optimization-disabled: ${isOptimizationDisabled}`
     );
     const createGraphOpts = pick(opts, ['includeFromNestedHosts', 'host']);
     const componentsToIsolate = opts.seedersOnly
       ? await host.getMany(seeders)
-      : await this.createGraph(seeders, createGraphOpts, opts);
+      : await this.createGraph(seeders, createGraphOpts);
     this.logger.debug(`isolateComponents, total componentsToIsolate: ${componentsToIsolate.length}`);
     const seedersWithVersions = seeders.map((seeder) => {
       if (seeder._legacy.hasVersion()) return seeder;
@@ -391,11 +388,7 @@ export class IsolatorMain {
     return new Network(capsuleList, seedersWithVersions, capsuleDir);
   }
 
-  private async createGraph(
-    seeders: ComponentID[],
-    opts: CreateGraphOptions = {},
-    isolateOpts?: IsolateComponentsOptions
-  ): Promise<Component[]> {
+  private async createGraph(seeders: ComponentID[], opts: CreateGraphOptions = {}): Promise<Component[]> {
     const host = opts.host || this.componentAspect.getHost();
     const getGraphOpts = pick(opts, ['host']);
     const graph = await this.graph.getGraphIds(seeders, getGraphOpts);
@@ -419,7 +412,7 @@ export class IsolatorMain {
     let filteredComps = await host.getMany(componentsToInclude);
 
     // Optimization: exclude unmodified exported dependencies from capsule creation
-    if (isolateOpts?.usePackagesForUnmodifiedDeps) {
+    if (!isFeatureEnabled(DISABLE_CAPSULE_OPTIMIZATION)) {
       this.logger.console(
         `[OPTIMIZATION] Starting with ${componentsToInclude.length} components, seeders: ${seeders.join(', ')}`
       );
