@@ -306,12 +306,72 @@ commands: # reusable commands
       # Make sure when we run bit from e2e tests we run it from the global not from here
       # - run: 'rm -rf bit/node_modules/.bin/bit'
       - run:
-          name: 'Run e2e tests'
-          command: 'cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci << parameters.bit_bin >>'
-          # command which support only - for debug purpose
-          # command: cd bit && npm run e2e-test-circle --debug
+          name: 'Verify e2e test file count'
+          command: |
+            cd bit
+            EXPECTED=168
+            FOUND=$(circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | wc -l)
+            echo "Expected e2e files: $EXPECTED"
+            echo "Found e2e files: $FOUND"
+            if [ "$FOUND" -ne "$EXPECTED" ]; then
+              echo "ERROR: File count mismatch!"
+              exit 1
+            fi
+            echo "✅ File count verified"
+      - run:
+          name: 'Run e2e tests with debugging'
+          command: |
+            cd bit
+            echo "=== E2E Test Debug Information ==="
+
+            # Count total files that should be tested
+            TOTAL_FILES=$(find "$(pwd)/e2e" -name "*.e2e*.ts" | wc -l)
+            echo "Total e2e test files found: $TOTAL_FILES"
+
+            # Show files found by circleci glob
+            echo "Files found by CircleCI glob:"
+            GLOB_FILES=$(circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts")
+            echo "$GLOB_FILES" | wc -l
+
+            # Show files assigned to this container
+            echo "Files assigned to this container:"
+            ASSIGNED_FILES=$(echo "$GLOB_FILES" | circleci tests split --split-by=timings --timings-type=name)
+            echo "$ASSIGNED_FILES"
+            echo "Count of files assigned to this container: $(echo "$ASSIGNED_FILES" | wc -l)"
+
+            # Create a summary file for this container
+            echo "Container $CIRCLE_NODE_INDEX files:" > /tmp/container-files.txt
+            echo "$ASSIGNED_FILES" | wc -l >> /tmp/container-files.txt
+
+            echo "=== Starting Test Execution ==="
+
+            # Run the tests
+            echo "$ASSIGNED_FILES" | xargs -n 1 npm run mocha-circleci << parameters.bit_bin >>
+          # Original command for reference:
+          # command: 'cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci << parameters.bit_bin >>'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
+          when: always
+      - run:
+          name: 'E2E Test Summary'
+          command: |
+            cd bit
+            echo "=== E2E Test Execution Summary ==="
+            echo "Container: $CIRCLE_NODE_INDEX"
+            if [ -f /tmp/container-files.txt ]; then
+              echo "Files executed by this container:"
+              cat /tmp/container-files.txt
+            fi
+
+            # Show test results
+            if [ -f junit/e2e-test-results.xml ]; then
+              echo "✅ Test results file exists: junit/e2e-test-results.xml"
+              # Count tests in XML (basic count)
+              TEST_COUNT=$(grep -c "<testcase" junit/e2e-test-results.xml 2>/dev/null || echo "0")
+              echo "Test cases in results: $TEST_COUNT"
+            else
+              echo "❌ WARNING: No test results file found!"
+            fi
           when: always
       - store_test_results:
           path: bit/junit
