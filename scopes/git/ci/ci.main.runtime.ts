@@ -5,22 +5,81 @@ import { WorkspaceAspect, type Workspace } from '@teambit/workspace';
 import { BuilderAspect, type BuilderMain } from '@teambit/builder';
 import { StatusAspect, type StatusMain } from '@teambit/status';
 import { LanesAspect, type LanesMain } from '@teambit/lanes';
-import { SnappingAspect, SnapResults, tagResultOutput, type SnappingMain } from '@teambit/snapping';
+import { SnappingAspect, SnapResults, tagResultOutput, snapResultOutput, type SnappingMain } from '@teambit/snapping';
 import { ExportAspect, type ExportMain } from '@teambit/export';
 import { ImporterAspect, type ImporterMain } from '@teambit/importer';
-import { CheckoutAspect, type CheckoutMain } from '@teambit/checkout';
-import { ComponentID } from '@teambit/component-id';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { AUTO_SNAPPED_MSG } from '@teambit/legacy.constants';
-import { outputIdsIfExists } from '@teambit/snapping';
+import { CheckoutAspect, checkoutOutput, type CheckoutMain } from '@teambit/checkout';
 import { SwitchLaneOptions } from '@teambit/lanes';
+import execa from 'execa';
 import chalk from 'chalk';
+import { ReleaseType } from 'semver';
 import { CiAspect } from './ci.aspect';
 import { CiCmd } from './ci.cmd';
 import { CiVerifyCmd } from './commands/verify.cmd';
 import { CiPrCmd } from './commands/pr.cmd';
 import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
+
+export interface CiWorkspaceConfig {
+  /**
+   * Path to a custom script that generates commit messages for `bit ci merge` operations.
+   * The script will be executed when components are tagged and committed to the repository.
+   * If not specified, falls back to the default commit message:
+   * "chore: update .bitmap and lockfiles as needed [skip ci]"
+   *
+   * @example
+   * ```json
+   * {
+   *   "teambit.git/ci": {
+   *     "commitMessageScript": "node scripts/generate-commit-message.js"
+   *   }
+   * }
+   * ```
+   */
+  commitMessageScript?: string;
+
+  /**
+   * Enables automatic version bump detection from conventional commit messages.
+   * When enabled, the system analyzes commit messages to determine the appropriate version bump:
+   * - `feat!:` or `BREAKING CHANGE` → major version bump
+   * - `feat:` → minor version bump
+   * - `fix:` → patch version bump
+   *
+   * Only applies when no explicit version flags (--patch, --minor, --major) are provided.
+   *
+   * @default false
+   * @example
+   * ```json
+   * {
+   *   "teambit.git/ci": {
+   *     "useConventionalCommitsForVersionBump": true
+   *   }
+   * }
+   * ```
+   */
+  useConventionalCommitsForVersionBump?: boolean;
+
+  /**
+   * Enables detection of explicit version bump keywords in commit messages.
+   * When enabled, the system looks for these keywords in commit messages:
+   * - `BIT-BUMP-MAJOR` → major version bump
+   * - `BIT-BUMP-MINOR` → minor version bump
+   *
+   * These keywords have higher priority than conventional commits parsing.
+   * Only applies when no explicit version flags are provided.
+   *
+   * @default true
+   * @example
+   * ```json
+   * {
+   *   "teambit.git/ci": {
+   *     "useExplicitBumpKeywords": true
+   *   }
+   * }
+   * ```
+   */
+  useExplicitBumpKeywords?: boolean;
+}
 
 export class CiMain {
   static runtime = MainRuntime as RuntimeDefinition;
@@ -57,45 +116,36 @@ export class CiMain {
 
     private checkout: CheckoutMain,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private config: CiWorkspaceConfig
   ) {}
 
-  static async provider([
-    cli,
-    workspace,
-    loggerAspect,
-    builder,
-    status,
-    lanes,
-    snapping,
-    exporter,
-    importer,
-    checkout,
-  ]: [
-    CLIMain,
-    Workspace,
-    LoggerMain,
-    BuilderMain,
-    StatusMain,
-    LanesMain,
-    SnappingMain,
-    ExportMain,
-    ImporterMain,
-    CheckoutMain,
-  ]) {
+  static async provider(
+    [cli, workspace, loggerAspect, builder, status, lanes, snapping, exporter, importer, checkout]: [
+      CLIMain,
+      Workspace,
+      LoggerMain,
+      BuilderMain,
+      StatusMain,
+      LanesMain,
+      SnappingMain,
+      ExportMain,
+      ImporterMain,
+      CheckoutMain,
+    ],
+    config: CiWorkspaceConfig
+  ) {
     const logger = loggerAspect.createLogger(CiAspect.id);
-
-    const ci = new CiMain(workspace, builder, status, lanes, snapping, exporter, importer, checkout, logger);
-
+    const ci = new CiMain(workspace, builder, status, lanes, snapping, exporter, importer, checkout, logger, config);
     const ciCmd = new CiCmd(workspace, logger);
-
     ciCmd.commands = [
       new CiVerifyCmd(workspace, logger, ci),
       new CiPrCmd(workspace, logger, ci),
       new CiMergeCmd(workspace, logger, ci),
     ];
-
     cli.register(ciCmd);
+
     return ci;
   }
 
@@ -146,45 +196,96 @@ export class CiMain {
     }
   }
 
-  private async verifyWorkspaceStatusInternal(strict: boolean = false) {
-    this.logger.console('📊 Workspace Status');
-    this.logger.console(chalk.blue('Verifying status of workspace'));
-    const status = await this.status.status({
-      lanes: true,
-      ignoreCircularDependencies: false,
-    });
-
-    // Check for blocking issues (errors) vs warnings
-    const componentsWithErrors = status.componentsWithIssues.filter(({ issues }) => issues.hasTagBlockerIssues());
-
-    const componentsWithWarnings = status.componentsWithIssues.filter(({ issues }) => !issues.hasTagBlockerIssues());
-
-    if (componentsWithWarnings.length > 0) {
-      if (strict) {
-        this.logger.console(
-          chalk.red(
-            `Found ${componentsWithWarnings.length} components with warnings (strict mode), run 'bit status' to see the warnings.`
-          )
-        );
-        return { code: 1, data: '', status };
-      } else {
-        this.logger.console(
-          chalk.yellow(
-            `Found ${componentsWithWarnings.length} components with warnings, run 'bit status' to see the warnings.`
-          )
-        );
+  private parseVersionBumpFromCommit(commitMessage: string): ReleaseType | null {
+    // Check explicit bump keywords (highest priority after env vars)
+    if (this.config.useExplicitBumpKeywords !== false) {
+      // default to true
+      if (commitMessage.includes('BIT-BUMP-MAJOR')) {
+        this.logger.console(chalk.blue('Found BIT-BUMP-MAJOR keyword in commit message'));
+        return 'major';
+      }
+      if (commitMessage.includes('BIT-BUMP-MINOR')) {
+        this.logger.console(chalk.blue('Found BIT-BUMP-MINOR keyword in commit message'));
+        return 'minor';
       }
     }
 
-    if (componentsWithErrors.length > 0) {
-      this.logger.console(
-        chalk.red(`Found ${componentsWithErrors.length} components with errors, run 'bit status' to see the errors.`)
-      );
-      return { code: 1, data: '', status };
+    // Check conventional commits if enabled
+    if (this.config.useConventionalCommitsForVersionBump) {
+      // Check for breaking changes (major version bump)
+      if (/^feat!(\(.+\))?:|^fix!(\(.+\))?:|BREAKING CHANGE/m.test(commitMessage)) {
+        this.logger.console(chalk.blue('Found breaking changes in commit message (conventional commits)'));
+        return 'major';
+      }
+
+      // Check for features (minor version bump)
+      if (/^feat(\(.+\))?:/m.test(commitMessage)) {
+        this.logger.console(chalk.blue('Found feature commits (conventional commits)'));
+        return 'minor';
+      }
+
+      // Check for fixes (patch version bump) - explicit patch not needed as it's default
+      if (/^fix(\(.+\))?:/m.test(commitMessage)) {
+        this.logger.console(chalk.blue('Found fix commits (conventional commits) - using default patch'));
+        return 'patch';
+      }
     }
 
-    this.logger.console(chalk.green('Workspace status is correct'));
-    return { code: 0, data: '', status };
+    return null; // No specific version bump detected
+  }
+
+  private async getCustomCommitMessage() {
+    try {
+      const commitMessageScript = this.config.commitMessageScript;
+
+      if (commitMessageScript) {
+        this.logger.console(chalk.blue(`Running custom commit message script: ${commitMessageScript}`));
+
+        // Parse the command to avoid shell injection
+        const parts = commitMessageScript.split(' ');
+        const command = parts[0];
+        const args = parts.slice(1);
+
+        const result = await execa(command, args, {
+          cwd: this.workspace.path,
+          encoding: 'utf8',
+        });
+        const customMessage = result.stdout.trim();
+
+        if (customMessage) {
+          this.logger.console(chalk.green(`Using custom commit message: ${customMessage}`));
+          return customMessage;
+        }
+      }
+    } catch (e: any) {
+      this.logger.console(chalk.yellow(`Failed to run custom commit message script: ${e.toString()}`));
+    }
+
+    // Fallback to default message
+    return 'chore: update .bitmap and lockfiles as needed [skip ci]';
+  }
+
+  private async verifyWorkspaceStatusInternal(strict: boolean = false) {
+    this.logger.console('📊 Workspace Status');
+    this.logger.console(chalk.blue('Verifying status of workspace'));
+
+    const status = await this.status.status({ lanes: true });
+    const { data: statusOutput, code } = await this.status.formatStatusOutput(
+      status,
+      strict
+        ? { strict: true, warnings: true } // When strict=true, fail on both errors and warnings
+        : { failOnError: true, warnings: false } // By default, fail only on errors (tag blockers)
+    );
+
+    // Log the formatted status output
+    this.logger.console(statusOutput);
+
+    if (code !== 0) {
+      throw new Error('Workspace status verification failed');
+    }
+
+    this.logger.consoleSuccess(chalk.green('Workspace status is correct'));
+    return { status };
   }
 
   private async switchToLane(laneName: string, options: SwitchLaneOptions = {}) {
@@ -194,6 +295,7 @@ export class CiMain {
         forceOurs: true,
         head: true,
         workspaceOnly: true,
+        skipDependencyInstallation: true,
         ...options,
       })
       .catch((e) => {
@@ -207,8 +309,7 @@ export class CiMain {
   }
 
   async verifyWorkspaceStatus() {
-    const { code, data } = await this.verifyWorkspaceStatusInternal();
-    if (code !== 0) return { code, data };
+    await this.verifyWorkspaceStatusInternal();
 
     this.logger.console('🔨 Build Process');
     const components = await this.workspace.list();
@@ -225,29 +326,23 @@ export class CiMain {
   }
 
   async snapPrCommit({
-    branch,
+    laneIdStr,
     message,
     build,
     strict,
   }: {
-    branch: string;
+    laneIdStr: string;
     message: string;
     build: boolean | undefined;
     strict: boolean | undefined;
   }) {
-    this.logger.console(chalk.blue(`Branch name: ${branch}`));
+    this.logger.console(chalk.blue(`Lane name: ${laneIdStr}`));
 
     const originalLane = await this.lanes.getCurrentLane();
 
-    const laneId = await this.lanes.parseLaneId(branch);
+    const laneId = await this.lanes.parseLaneId(laneIdStr);
 
-    if (!laneId) {
-      this.logger.console(chalk.yellow(`No lane found for branch ${branch}`));
-      return { code: 1, data: '' };
-    }
-
-    const { code, data } = await this.verifyWorkspaceStatusInternal(strict);
-    if (code !== 0) return { code, data };
+    await this.verifyWorkspaceStatusInternal(strict);
 
     await this.importer
       .import({
@@ -259,19 +354,20 @@ export class CiMain {
         throw new Error(`Failed to import components: ${e.toString()}`);
       });
 
+    this.logger.console('🔄 Lane Management');
+    const availableLanesInScope = await this.lanes
+      .getLanes({
+        remote: laneId.scope,
+      })
+      .catch((e) => {
+        throw new Error(`Failed to get lanes in scope ${laneId.scope}: ${e.toString()}`);
+      });
+
+    const laneExists = availableLanesInScope.find((lane) => lane.id.name === laneId.name);
+
+    let foundErr: Error | undefined;
     try {
-      this.logger.console('🔄 Lane Management');
-      const availableLanesInScope = await this.lanes
-        .getLanes({
-          remote: laneId.scope,
-        })
-        .catch((e) => {
-          throw new Error(`Failed to get lanes in scope ${laneId.scope}: ${e.toString()}`);
-        });
-
-      const newLaneExists = availableLanesInScope.find((lane) => lane.id.name === laneId.name);
-
-      if (newLaneExists) {
+      if (laneExists) {
         const lane = await this.lanes.importLaneObject(laneId, true);
         this.workspace.consumer.setCurrentLane(laneId, true);
         const laneIds = lane.toComponentIds();
@@ -283,22 +379,17 @@ export class CiMain {
       } else {
         this.logger.console(chalk.blue(`Creating lane ${laneId.toString()}`));
 
-        const createdLane = await this.lanes
-          .createLane(laneId.name, {
+        try {
+          await this.lanes.createLane(laneId.name, {
             scope: laneId.scope,
             forkLaneNewScope: true,
-          })
-          .catch((e) => {
-            if (e.toString().includes('already exists')) {
-              this.logger.console(chalk.yellow(`Lane ${laneId.toString()} already exists, skipping creation`));
-              return true;
-            }
-            this.logger.console(chalk.red(`Failed to create lane ${laneId.toString()}: ${e.toString()}`));
-            return null;
           });
-
-        if (!createdLane) {
-          return { code: 1, data: '' };
+        } catch (e: any) {
+          if (e.message.includes('already exists')) {
+            this.logger.console(chalk.yellow(`Lane ${laneId.toString()} already exists, skipping creation`));
+          } else {
+            throw new Error(`Failed to create lane ${laneId.toString()}: ${e.toString()}`);
+          }
         }
       }
 
@@ -317,91 +408,38 @@ export class CiMain {
         message,
         build,
         exitOnFirstFailedTask: true,
-        unmodified: false,
       });
 
       if (!results) {
-        this.logger.console(chalk.yellow('No changes detected, nothing to snap'));
-        this.logger.console(chalk.green('Lane is up to date'));
-        return { code: 0, data: 'No changes detected, nothing to snap' };
+        return 'No changes detected, nothing to snap';
       }
 
-      const {
-        snappedComponents,
-        autoSnappedResults,
-        warnings,
-        newComponents,
-        laneName,
-        removedComponents,
-      }: SnapResults = results;
-      const changedComponents = snappedComponents.filter((component) => {
-        return (
-          !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id)
-        );
-      });
-      const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
-      const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
+      const { snappedComponents }: SnapResults = results;
 
-      const warningsOutput = warnings?.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
-
-      const compInBold = (id: ComponentID) => {
-        const version = id.hasVersion() ? `@${id.version}` : '';
-        return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
-      };
-
-      const outputComponents = (comps: ConsumerComponent[]) => {
-        return comps
-          .map((component) => {
-            let componentOutput = `     > ${compInBold(component.id)}`;
-            const autoTag = autoSnappedResults.filter((result) =>
-              result.triggeredBy.searchWithoutVersion(component.id)
-            );
-            if (autoTag.length) {
-              const autoTagComp = autoTag.map((a) =>
-                // @ts-ignore
-                compInBold(a.component.id)
-              );
-              componentOutput += `\n       ${AUTO_SNAPPED_MSG} (${autoTagComp.length} total):
-            ${autoTagComp.join('\n            ')}`;
-            }
-            return componentOutput;
-          })
-          .join('\n');
-      };
-
-      const outputIfExists = (label, explanation, components) => {
-        if (!components.length) return '';
-        return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
-      };
-
-      const laneStr = laneName ? ` on "${laneName}" lane` : '';
+      const snapOutput = snapResultOutput(results);
+      this.logger.console(snapOutput);
 
       this.logger.console(chalk.blue(`Exporting ${snappedComponents.length} components`));
 
-      await this.exporter.export();
+      const exportResults = await this.exporter.export();
 
-      this.logger.console(chalk.green(`Exported ${snappedComponents.length} components`));
-
-      // Switch back to main
-      await this.switchToLane('main');
-
-      return (
-        outputIfExists('new components', 'first version for components', addedComponents) +
-        outputIfExists('changed components', 'components that got a version bump', changedComponents) +
-        outputIdsIfExists('removed components', removedComponents) +
-        warningsOutput +
-        chalk.green(`\n${snappedComponents.length + autoTaggedCount} component(s) snapped${laneStr}`)
-      );
+      this.logger.console(chalk.green(`Exported ${exportResults.componentsIds.length} components`));
     } catch (e: any) {
-      throw new Error(`Unhandled error: ${e.toString()}`);
+      foundErr = e;
+      throw e;
     } finally {
+      if (foundErr) {
+        this.logger.console(chalk.red(`Found error: ${foundErr.message}`));
+      }
       // Whatever happens, switch back to the original lane
       this.logger.console('🔄 Cleanup');
       this.logger.console(chalk.blue(`Switching back to ${originalLane?.name ?? 'main'}`));
       const lane = await this.lanes.getCurrentLane();
       if (!lane) {
+        this.logger.console(chalk.yellow('Already on main, no need to switch. Checking out to head'));
         await this.lanes.checkout.checkout({
           head: true,
+          skipNpmInstall: true,
         });
       } else {
         await this.switchToLane(originalLane?.name ?? 'main');
@@ -409,19 +447,34 @@ export class CiMain {
     }
   }
 
-  async mergePr({ message: argMessage, build, strict }: { message?: string; build?: boolean; strict?: boolean }) {
+  async mergePr({
+    message: argMessage,
+    build,
+    strict,
+    releaseType,
+    preReleaseId,
+    incrementBy,
+    explicitVersionBump,
+  }: {
+    message?: string;
+    build?: boolean;
+    strict?: boolean;
+    releaseType: ReleaseType;
+    preReleaseId?: string;
+    incrementBy?: number;
+    explicitVersionBump?: boolean;
+  }) {
     const message = argMessage || (await this.getGitCommitMessage());
     if (!message) {
       throw new Error('Failed to get commit message from git. Please provide a message using --message option.');
     }
 
     const currentLane = await this.lanes.getCurrentLane();
-
     if (currentLane) {
       // this doesn't normally happen. we expect this mergePr to be called from the default branch, which normally checks
       // out to main lane.
       this.logger.console(chalk.blue(`Currently on lane ${currentLane.name}, switching to main`));
-      await this.switchToLane('main', { skipDependencyInstallation: true });
+      await this.switchToLane('main');
       this.logger.console(chalk.green('Switched to main lane'));
     }
 
@@ -429,29 +482,55 @@ export class CiMain {
     // This prevents issues when multiple PRs are merged in sequence
     const defaultBranch = await this.getDefaultBranchName();
     this.logger.console(chalk.blue(`Pulling latest git changes from ${defaultBranch} branch`));
-    await git.pull('origin', defaultBranch);
+
+    // Check if there are any changes to stash before rebasing
+    const gitStatus = await git.status();
+    const hasChanges = gitStatus.files.length > 0;
+
+    if (hasChanges) {
+      this.logger.console(chalk.yellow('Stashing uncommitted changes before rebase'));
+      await git.stash(['push', '-u', '-m', 'CI merge temporary stash']);
+    }
+
+    await git.pull('origin', defaultBranch, { '--rebase': 'true' });
+
+    if (hasChanges) {
+      this.logger.console(chalk.yellow('Restoring stashed changes after rebase'));
+      await git.stash(['pop']);
+    }
+
     this.logger.console(chalk.green('Pulled latest git changes'));
 
     this.logger.console('🔄 Checking out to main head');
-    await this.checkout.checkout({
+    await this.importer.importCurrentObjects();
+
+    const checkoutProps = {
+      ids: this.workspace.listIds(),
       forceOurs: true,
       head: true,
       skipNpmInstall: true,
-    });
+    };
+    const checkoutResults = await this.checkout.checkout(checkoutProps);
+    await this.workspace.bitMap.write('checkout head');
+    // all: true is to make it less verbose in the output. this workaround will be fixed later.
+    this.logger.console(checkoutOutput(checkoutResults, { ...checkoutProps, all: true }));
 
-    const { code, data, status } = await this.verifyWorkspaceStatusInternal(strict);
-    if (code !== 0) return { code, data };
+    const { status } = await this.verifyWorkspaceStatusInternal(strict);
 
     const hasSoftTaggedComponents = status.softTaggedComponents.length > 0;
 
     this.logger.console('📦 Component Operations');
     this.logger.console(chalk.blue('Tagging components'));
+    const finalReleaseType = await this.determineReleaseType(releaseType, explicitVersionBump);
     const tagResults = await this.snapping.tag({
       all: true,
       message,
       build,
       failFast: true,
       persist: hasSoftTaggedComponents,
+      releaseType: finalReleaseType,
+      preReleaseId,
+      incrementBy,
     });
 
     if (tagResults) {
@@ -478,12 +557,42 @@ export class CiMain {
       await git.addConfig('user.email', 'bit-ci[bot]@bit.cloud');
       await git.addConfig('user.name', 'Bit CI');
 
+      // Check git status before commit
+      const statusBeforeCommit = await git.status();
+      this.logger.console(chalk.blue(`Git status before commit: ${statusBeforeCommit.files.length} files`));
+      statusBeforeCommit.files.forEach((file) => {
+        this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
+      });
+
       // Commit the .bitmap and pnpm-lock.yaml files using Git
       await git.add(['.bitmap', 'pnpm-lock.yaml']);
-      await git.commit('chore: update .bitmap and lockfiles as needed [skip ci]');
+
+      const commitMessage = await this.getCustomCommitMessage();
+      await git.commit(commitMessage);
+
+      // Check git status after commit
+      const statusAfterCommit = await git.status();
+      this.logger.console(chalk.blue(`Git status after commit: ${statusAfterCommit.files.length} files`));
+      statusAfterCommit.files.forEach((file) => {
+        this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
+      });
 
       // Pull latest changes and push the commit to the remote repository
-      await git.pull('origin', defaultBranch);
+      // Check if there are any unstaged changes before pulling
+      const hasUnstagedChanges = statusAfterCommit.files.length > 0;
+
+      if (hasUnstagedChanges) {
+        this.logger.console(chalk.yellow('Stashing uncommitted changes before final rebase'));
+        await git.stash(['push', '-u', '-m', 'CI merge post-commit stash']);
+      }
+
+      await git.pull('origin', defaultBranch, { '--rebase': 'true' });
+
+      if (hasUnstagedChanges) {
+        this.logger.console(chalk.yellow('Restoring stashed changes after final rebase'));
+        await git.stash(['pop']);
+      }
+
       await git.push('origin', defaultBranch);
     } else {
       this.logger.console(chalk.yellow('No components were tagged, skipping export and git operations'));
@@ -504,6 +613,29 @@ export class CiMain {
     }
 
     return { code: 0, data: '' };
+  }
+
+  /**
+   * Auto-detect version bump from commit messages if no explicit version bump was provided
+   */
+  private async determineReleaseType(releaseType: ReleaseType, explicitVersionBump?: boolean): Promise<ReleaseType> {
+    if (explicitVersionBump) {
+      this.logger.console(chalk.blue(`Using explicit version bump: ${releaseType}`));
+      return releaseType;
+    }
+    // Only auto-detect if user didn't specify any version flags
+    const lastCommit = await this.getGitCommitMessage();
+    if (!lastCommit) {
+      this.logger.console(chalk.blue('No commit message found, using default patch'));
+      return releaseType;
+    }
+    const detectedReleaseType = this.parseVersionBumpFromCommit(lastCommit);
+    if (detectedReleaseType) {
+      this.logger.console(chalk.green(`Auto-detected version bump: ${detectedReleaseType}`));
+      return detectedReleaseType;
+    }
+    this.logger.console(chalk.blue('No specific version bump detected, using default patch'));
+    return releaseType;
   }
 }
 
