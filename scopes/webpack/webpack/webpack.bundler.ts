@@ -44,7 +44,7 @@ export class WebpackBundler implements Bundler {
       const components = this.getComponents(compiler.outputPath);
       const componentsLengthMessage = `running on ${components.length} components`;
       const fullMessage = `${initiatorMessage} ${envIdMessage} ${componentsLengthMessage}`;
-      this.logger.console(
+      this.logger.debug(
         `${fullMessage} memory usage: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
       );
       const ids = components.map((component) => component.id.toString()).join(', ');
@@ -93,7 +93,6 @@ export class WebpackBundler implements Bundler {
         });
       });
 
-      // Clean up compiler resources and force garbage collection
       try {
         // Close the compiler to free up file watchers and resources
         await new Promise<void>((resolve) => {
@@ -101,19 +100,9 @@ export class WebpackBundler implements Bundler {
             resolve();
           });
         });
-
-        // Clear webpack's internal cache to free memory
         if (compiler.cache) {
           // Force purge of webpack's internal cache
           (compiler as any).cache?.purge?.();
-        }
-
-        // Force garbage collection if available (in Node.js with --expose-gc flag)
-        if ((global as any).gc) {
-          (global as any).gc();
-          this.logger.debug(
-            `Forced garbage collection after compiler run. Memory usage: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
-          );
         }
       } catch (error) {
         this.logger.debug('Error during compiler cleanup:', error);
