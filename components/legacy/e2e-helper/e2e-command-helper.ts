@@ -988,7 +988,8 @@ export default class CommandHelper {
     return value;
   }
 
-  init(options = '') {
-    return this.runCmd(`bit init ${options}`);
+  init(options = '', shouldBeInteractive = false) {
+    const interactiveFlag = shouldBeInteractive ? '' : '--skip-interactive';
+    return this.runCmd(`bit init ${options} ${interactiveFlag}`);
   }
 }
