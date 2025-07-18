@@ -38,7 +38,7 @@ describe('run bit init', function () {
     });
     it('should not tell you there is already a scope when running "bit init"', () => {
       const init = helper.command.init();
-      expect(init).to.have.string('successfully initialized a bit workspace.');
+      expect(init).to.have.string('successfully re-initialized a bit workspace.');
     });
     it('should create bitmap"', () => {
       const bitmapPath = path.join(helper.scopes.localPath, '.bitmap');
@@ -104,7 +104,7 @@ describe('run bit init', function () {
         output = helper.command.init();
       });
       it('should show a success message', () => {
-        expect(output).to.have.string('successfully initialized');
+        expect(output).to.have.string('successfully re-initialized');
       });
       it('should recreate scope.json file', () => {
         expect(scopeJsonPath).to.be.a.file();
@@ -302,11 +302,15 @@ describe('run bit init', function () {
         const workspaceConfig = helper.workspaceJsonc.read();
         expect(workspaceConfig['teambit.dependencies/dependency-resolver']).to.have.property('rootComponent', false);
       });
-      it('should set enableWorkspaceConfigWrite to false', () => {
+      it('should set enableWorkspaceConfigWrite and useDefaultDirectory to true', () => {
         const workspaceConfig = helper.workspaceJsonc.read();
         expect(workspaceConfig['teambit.workspace/workspace-config-files']).to.have.property(
           'enableWorkspaceConfigWrite',
-          false
+          true
+        );
+        expect(workspaceConfig['teambit.workspace/workspace-config-files']).to.have.property(
+          'useDefaultDirectory',
+          true
         );
       });
       it('should create package.json with type module', () => {
@@ -385,18 +389,6 @@ describe('run bit init', function () {
 
         const statusCmd = () => helper.command.runCmd('bit status');
         expect(statusCmd).to.throw('rootComponent cannot be true when externalPackageManager is enabled');
-      });
-      it('should throw error when manually setting enableWorkspaceConfigWrite to true', () => {
-        // Reset to clean state
-        helper.scopeHelper.cleanWorkspace();
-        helper.command.init('--external-package-manager');
-
-        const workspaceConfig = helper.workspaceJsonc.read();
-        workspaceConfig['teambit.workspace/workspace-config-files'].enableWorkspaceConfigWrite = true;
-        helper.workspaceJsonc.write(workspaceConfig);
-
-        const statusCmd = () => helper.command.runCmd('bit status');
-        expect(statusCmd).to.throw('enableWorkspaceConfigWrite cannot be true when externalPackageManager is enabled');
       });
     });
     describe('preserving existing package.json', () => {
@@ -497,6 +489,103 @@ describe('run bit init', function () {
         expect(finalPackageJson.scripts).to.have.property('start', 'node index.js');
         expect(finalPackageJson.scripts).to.have.property('test', 'jest');
         expect(finalPackageJson.scripts).to.not.have.property('postinstall');
+      });
+    });
+  });
+
+  describe('interactive mode', () => {
+    describe('when git repository exists and workspace is not initialized', () => {
+      beforeEach(() => {
+        helper.scopeHelper.cleanWorkspace();
+        helper.git.initNewGitRepo();
+      });
+
+      it('should skip interactive mode with --skip-interactive flag', () => {
+        const output = helper.command.init('--skip-interactive', true);
+        expect(output).to.not.have.string('Interactive setup for existing Git repository');
+        expect(output).to.have.string('successfully initialized a bit workspace');
+      });
+
+      it('should skip interactive mode with --external-package-manager flag', () => {
+        const output = helper.command.init('--external-package-manager', true);
+        expect(output).to.not.have.string('Interactive setup for existing Git repository');
+        expect(output).to.have.string('successfully initialized a bit workspace');
+      });
+
+      it('should skip interactive mode with --standalone flag', () => {
+        const output = helper.command.init('--standalone', true);
+        expect(output).to.not.have.string('Interactive setup for existing Git repository');
+        expect(output).to.have.string('successfully initialized a bit workspace');
+      });
+
+      it('should skip interactive mode with reset flags', () => {
+        helper.command.init(); // Initialize first
+        const output = helper.command.init('--reset', true);
+        expect(output).to.not.have.string('Interactive setup for existing Git repository');
+        expect(output).to.have.string('your bit workspace has been reset successfully');
+      });
+
+      it('should run interactive mode by default in git repository', () => {
+        // First verify we have a clean git repo and no existing workspace
+        const gitDir = path.join(helper.scopes.localPath, '.git');
+        expect(gitDir).to.be.a.directory();
+
+        const workspaceJsonc = path.join(helper.scopes.localPath, 'workspace.jsonc');
+        expect(workspaceJsonc).to.not.be.a.path();
+
+        // Test that interactive mode is triggered when running bit init in a git repo
+        // Use timeout to prevent hanging and just verify interactive mode starts
+        let output;
+        try {
+          output = helper.command.runCmd('timeout 5s bash -c \'printf "0\\nn\\nn\\n" | bit init\' 2>/dev/null || true');
+        } catch (e: any) {
+          // If timeout occurs, still check if interactive mode was triggered
+          output = e.message || '';
+        }
+
+        // Verify interactive mode was triggered
+        expect(output).to.have.string('Interactive setup for existing Git repository');
+
+        // Complete the initialization manually with skip-interactive to verify workspace creation
+        const finalOutput = helper.command.init('--skip-interactive');
+        expect(finalOutput).to.have.string('successfully initialized a bit workspace');
+        expect(workspaceJsonc).to.be.a.file();
+      });
+
+      // find a good way to test it
+      it.skip('should preserve existing .gitignore content when adding Bit entries', () => {
+        const existingGitignore = `# Existing content
+*.log
+dist/
+`;
+        helper.fs.createFile('.gitignore', existingGitignore);
+
+        // Simulate user input: none environment, no external PM, no MCP
+        helper.command.runCmd('timeout 5s bash -c \'printf "0\\nn\\nn\\n" | bit init\' 2>/dev/null || true');
+
+        const gitignoreContent = helper.fs.readFile('.gitignore');
+        expect(gitignoreContent).to.have.string('# Existing content');
+        expect(gitignoreContent).to.have.string('*.log');
+        expect(gitignoreContent).to.have.string('dist/');
+        expect(gitignoreContent).to.have.string('# Bit');
+        expect(gitignoreContent).to.have.string('.bit');
+      });
+
+      // find a good way to test it
+      it.skip('should not duplicate Bit entries in .gitignore if already present', () => {
+        const existingGitignore = `# Existing content
+# Bit
+.bit
+node_modules
+`;
+        helper.fs.createFile('.gitignore', existingGitignore);
+
+        // Simulate user input: none environment, no external PM, no MCP
+        helper.command.runCmd('echo -e "0\nn\nn" | bit init');
+
+        const gitignoreContent = helper.fs.readFile('.gitignore');
+        const bitSectionMatches = gitignoreContent.match(/# Bit/g);
+        expect(bitSectionMatches).to.have.lengthOf(1);
       });
     });
   });

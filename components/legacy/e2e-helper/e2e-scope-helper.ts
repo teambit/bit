@@ -21,6 +21,7 @@ type SetupWorkspaceOpts = {
   generatePackageJson?: boolean;
   yarnRCConfig?: any;
   npmrcConfig?: any;
+  interactive?: boolean; // default to false. relevant only when ".git" exits.
 };
 
 export default class ScopeHelper {
@@ -65,8 +66,8 @@ export default class ScopeHelper {
   reInitWorkspace(opts?: SetupWorkspaceOpts) {
     this.cleanWorkspace();
     if (opts?.initGit) this.command.runCmd('git init');
-    const initWsOpts = opts?.generatePackageJson ? undefined : '--no-package-json';
-    this.command.init(initWsOpts);
+    const pkgJsonFlag = opts?.generatePackageJson ? undefined : '--no-package-json';
+    this.command.init(pkgJsonFlag, opts?.interactive);
 
     if (opts?.addRemoteScopeAsDefaultScope ?? true) this.workspaceJsonc.addDefaultScope();
     if (opts?.disablePreview ?? true) this.workspaceJsonc.disablePreview();
