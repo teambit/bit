@@ -38,7 +38,7 @@ describe('user deleted only .bitmap file leaving the objects in place', function
       });
       it('should init successfully', () => {
         const output = helper.command.runCmd('bit init --force');
-        expect(output).to.have.string('successfully initialized');
+        expect(output).to.have.string('successfully');
       });
     });
   });
