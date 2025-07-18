@@ -306,153 +306,15 @@ commands: # reusable commands
       # Make sure when we run bit from e2e tests we run it from the global not from here
       # - run: 'rm -rf bit/node_modules/.bin/bit'
       - run:
-          name: 'Verify e2e test file count'
-          command: |
-            cd bit
-            EXPECTED=168
-            FOUND=$(circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | wc -l)
-            echo "Expected e2e files: $EXPECTED"
-            echo "Found e2e files: $FOUND"
-            if [ "$FOUND" -ne "$EXPECTED" ]; then
-              echo "ERROR: File count mismatch!"
-              exit 1
-            fi
-            echo "✅ File count verified"
-      - run:
-          name: 'Run e2e tests with debugging'
-          command: |
-            cd bit
-            echo "=== E2E Test Debug Information ==="
-
-            # Count total files that should be tested
-            TOTAL_FILES=$(find "$(pwd)/e2e" -name "*.e2e*.ts" | wc -l)
-            echo "Total e2e test files found: $TOTAL_FILES"
-
-            # Show files found by circleci glob
-            echo "Files found by CircleCI glob:"
-            GLOB_FILES=$(circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts")
-            echo "$GLOB_FILES" | wc -l
-
-            # Show files assigned to this container
-            echo "Files assigned to this container:"
-            ASSIGNED_FILES=$(echo "$GLOB_FILES" | circleci tests split --split-by=timings)
-            echo "$ASSIGNED_FILES"
-            echo "Count of files assigned to this container: $(echo "$ASSIGNED_FILES" | wc -l)"
-
-            # Debug: Show if any files were skipped due to timing issues
-            echo "=== Timing Debug Info ==="
-            echo "Total files found: $(echo "$GLOB_FILES" | wc -l)"
-            echo "Files assigned to this container: $(echo "$ASSIGNED_FILES" | wc -l)"
-
-            # Enhanced debugging for timing data issues
-            echo "=== Timing Data Analysis ==="
-            echo "Files with 'No timing found' in this container:"
-            echo "$GLOB_FILES" | while read -r file; do
-              if ! echo "$ASSIGNED_FILES" | grep -q "$file"; then
-                # This file was found but not assigned - might have timing issues
-                echo "Not assigned to this container: $file"
-              fi
-            done
-
-            # Show the specific files that have timing data vs those that don't
-            echo "Sample of files WITH timing data (assigned to this container):"
-            echo "$ASSIGNED_FILES" | head -3
-
-            # Try to identify patterns in files without timing data
-            echo "=== Pattern Analysis for Missing Timing Data ==="
-            echo "Check if the 'No timing found' files follow any pattern..."
-
-            # The files that consistently show "No timing found":
-            # /home/circleci/bit/bit/e2e/flows/permissions-errors.e2e.3.ts
-            # /home/circleci/bit/bit/e2e/harmony/app.e2e.ts
-            # /home/circleci/bit/bit/e2e/harmony/clear-cache.e2e.ts
-            # /home/circleci/bit/bit/e2e/harmony/install-angular.e2e.ts
-            # /home/circleci/bit/bit/e2e/harmony/install-missing-peer-dependencies.e2e.ts
-            # /home/circleci/bit/bit/e2e/harmony/mix-harmony-legacy.e2e.ts
-
-            # Potential solutions to try:
-            # 1. Force these files to run a few times to build timing history
-            # 2. Check if these files were recently renamed/moved
-            # 3. Check if these files historically had test failures
-            echo "Note: Files consistently missing timing data may need to be run"
-            echo "several times successfully to build timing history in CircleCI"
-
-            # Create a summary file for this container with actual filenames
-            echo "Container $CIRCLE_NODE_INDEX files:" > /tmp/container-files.txt
-            echo "$ASSIGNED_FILES" | wc -l >> /tmp/container-files.txt
-            echo "=== Files assigned to container $CIRCLE_NODE_INDEX ===" >> /tmp/container-files.txt
-            echo "$ASSIGNED_FILES" >> /tmp/container-files.txt
-
-            # CRITICAL DEBUG: Track which files are actually being executed
-            echo "=== Execution Tracking Debug ===" >> /tmp/container-files.txt
-            echo "The following files are about to be executed in container $CIRCLE_NODE_INDEX:" >> /tmp/container-files.txt
-
-            # Check specifically for the problematic files
-            PROBLEMATIC_FILES="permissions-errors.e2e.3.ts app.e2e.ts clear-cache.e2e.ts install-angular.e2e.ts install-missing-peer-dependencies.e2e.ts mix-harmony-legacy.e2e.ts"
-
-            for problem_file in $PROBLEMATIC_FILES; do
-              if echo "$ASSIGNED_FILES" | grep -q "$problem_file"; then
-                echo "✅ FOUND: $problem_file will be executed in container $CIRCLE_NODE_INDEX" >> /tmp/container-files.txt
-              else
-                echo "❌ MISSING: $problem_file NOT assigned to container $CIRCLE_NODE_INDEX" >> /tmp/container-files.txt
-              fi
-            done
-
-            echo "=== Starting Test Execution ==="
-
-            # Simple fix: Run all test files as arguments to a single mocha command
-            # This avoids the XML overwriting issue completely
-            if [ -n "$ASSIGNED_FILES" ]; then
-              echo "Running all assigned tests in a single mocha command..."
-              echo "$ASSIGNED_FILES" | tr '\n' ' ' | xargs npm run mocha-circleci << parameters.bit_bin >>
-            else
-              echo "⚠️  No test files assigned to this container"
-            fi
-          # Original command for reference:
-          # command: 'cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci << parameters.bit_bin >>'
+          name: 'Run e2e tests'
+          command: 'cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings | xargs npm run mocha-circleci << parameters.bit_bin >>'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
-          when: always
-      - run:
-          name: 'E2E Test Summary'
-          command: |
-            cd bit
-            echo "=== E2E Test Execution Summary ==="
-            echo "Container: $CIRCLE_NODE_INDEX"
-            if [ -f /tmp/container-files.txt ]; then
-              echo "Files executed by this container:"
-              cat /tmp/container-files.txt
-            fi
-
-            # Show test results
-            if [ -f junit/e2e-test-results.xml ]; then
-              echo "✅ Test results file exists: junit/e2e-test-results.xml"
-              # Count tests in XML (basic count)
-              TEST_COUNT=$(grep -c "<testcase" junit/e2e-test-results.xml 2>/dev/null || echo "0")
-              echo "Test cases in results: $TEST_COUNT"
-
-              # CRITICAL: Check if any of the problematic files appear in test results
-              echo "=== Checking for problematic files in test results ==="
-              PROBLEMATIC_FILES="permissions-errors.e2e.3.ts app.e2e.ts clear-cache.e2e.ts install-angular.e2e.ts install-missing-peer-dependencies.e2e.ts mix-harmony-legacy.e2e.ts"
-
-              for problem_file in $PROBLEMATIC_FILES; do
-                if grep -q "$problem_file" junit/e2e-test-results.xml 2>/dev/null; then
-                  echo "✅ EXECUTED: $problem_file found in test results of container $CIRCLE_NODE_INDEX"
-                else
-                  echo "❌ NOT EXECUTED: $problem_file NOT found in test results of container $CIRCLE_NODE_INDEX"
-                fi
-              done
-            else
-              echo "❌ WARNING: No test results file found!"
-            fi
           when: always
       - store_test_results:
           path: bit/junit
       - store_artifacts:
           path: bit/junit
-      - store_artifacts:
-          path: /tmp/container-files.txt
-          destination: e2e-tracking/container-$CIRCLE_NODE_INDEX-tracking.txt
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
@@ -1492,41 +1354,6 @@ jobs:
       #   store_artifacts:
       #     path: ~/Library/Caches/Bit/logs/debug.log
 
-  e2e_test_analysis:
-    <<: *defaults
-    steps:
-      - run:
-          name: 'Analyze E2E Test Distribution'
-          command: |
-            echo "=== E2E Test Distribution Analysis ==="
-            echo "This job consolidates findings from all 25 e2e test containers"
-            echo ""
-            
-            # The tracking files are stored as artifacts in each container
-            # Format: e2e-tracking/container-X-tracking.txt
-            echo "To analyze the complete e2e test distribution:"
-            echo "1. Download all artifacts from this build"
-            echo "2. Look for files: e2e-tracking/container-*-tracking.txt"
-            echo "3. Search each file for:"
-            echo "   - '✅ FOUND:' - shows which containers got the problematic files"
-            echo "   - '✅ EXECUTED:' - shows which containers actually ran them"
-            echo "   - '❌ MISSING:' and '❌ NOT EXECUTED:' - shows the gaps"
-            echo ""
-            echo "Key files to track:"
-            echo "- permissions-errors.e2e.3.ts"
-            echo "- app.e2e.ts"
-            echo "- clear-cache.e2e.ts"
-            echo "- install-angular.e2e.ts"
-            echo "- install-missing-peer-dependencies.e2e.ts"
-            echo "- mix-harmony-legacy.e2e.ts"
-            echo ""
-            echo "Expected outcome:"
-            echo "- If NO containers show '✅ EXECUTED:' for a file → File is not being run anywhere"
-            echo "- If some containers show '✅ FOUND:' but '❌ NOT EXECUTED:' → Execution issue"
-            echo "- If all containers show '❌ MISSING:' → Distribution/splitting issue"
-            echo ""
-            echo "This analysis will help determine why timing data is missing!"
-
 workflows:
   build_and_test:
     jobs:
@@ -1551,9 +1378,6 @@ workflows:
       - e2e_test:
           requires:
             - setup_harmony
-      - e2e_test_analysis:
-          requires:
-            - e2e_test
       - bit_pr:
           requires:
             - setup_harmony
