@@ -451,6 +451,9 @@ commands: # reusable commands
       - store_artifacts:
           path: bit/junit
       - store_artifacts:
+          path: /tmp/container-files.txt
+          destination: e2e-tracking/container-$CIRCLE_NODE_INDEX-tracking.txt
+      - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
 
@@ -1489,6 +1492,41 @@ jobs:
       #   store_artifacts:
       #     path: ~/Library/Caches/Bit/logs/debug.log
 
+  e2e_test_analysis:
+    <<: *defaults
+    steps:
+      - run:
+          name: 'Analyze E2E Test Distribution'
+          command: |
+            echo "=== E2E Test Distribution Analysis ==="
+            echo "This job consolidates findings from all 25 e2e test containers"
+            echo ""
+            
+            # The tracking files are stored as artifacts in each container
+            # Format: e2e-tracking/container-X-tracking.txt
+            echo "To analyze the complete e2e test distribution:"
+            echo "1. Download all artifacts from this build"
+            echo "2. Look for files: e2e-tracking/container-*-tracking.txt"
+            echo "3. Search each file for:"
+            echo "   - '✅ FOUND:' - shows which containers got the problematic files"
+            echo "   - '✅ EXECUTED:' - shows which containers actually ran them"
+            echo "   - '❌ MISSING:' and '❌ NOT EXECUTED:' - shows the gaps"
+            echo ""
+            echo "Key files to track:"
+            echo "- permissions-errors.e2e.3.ts"
+            echo "- app.e2e.ts"
+            echo "- clear-cache.e2e.ts"
+            echo "- install-angular.e2e.ts"
+            echo "- install-missing-peer-dependencies.e2e.ts"
+            echo "- mix-harmony-legacy.e2e.ts"
+            echo ""
+            echo "Expected outcome:"
+            echo "- If NO containers show '✅ EXECUTED:' for a file → File is not being run anywhere"
+            echo "- If some containers show '✅ FOUND:' but '❌ NOT EXECUTED:' → Execution issue"
+            echo "- If all containers show '❌ MISSING:' → Distribution/splitting issue"
+            echo ""
+            echo "This analysis will help determine why timing data is missing!"
+
 workflows:
   build_and_test:
     jobs:
@@ -1513,6 +1551,9 @@ workflows:
       - e2e_test:
           requires:
             - setup_harmony
+      - e2e_test_analysis:
+          requires:
+            - e2e_test
       - bit_pr:
           requires:
             - setup_harmony
