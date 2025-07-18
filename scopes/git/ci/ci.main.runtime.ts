@@ -577,6 +577,19 @@ export class CiMain {
         this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
       });
 
+      // Show git diff if there are uncommitted changes
+      if (statusAfterCommit.files.length > 0) {
+        try {
+          const diff = await git.diff();
+          if (diff) {
+            this.logger.console(chalk.blue('Git diff after commit:'));
+            this.logger.console(diff);
+          }
+        } catch (error) {
+          this.logger.console(chalk.yellow(`Failed to show git diff: ${error}`));
+        }
+      }
+
       // Pull latest changes and push the commit to the remote repository
       // Check if there are any unstaged changes before pulling
       const hasUnstagedChanges = statusAfterCommit.files.length > 0;
@@ -591,6 +604,20 @@ export class CiMain {
       if (hasUnstagedChanges) {
         this.logger.console(chalk.yellow('Restoring stashed changes after final rebase'));
         await git.stash(['pop']);
+
+        // Show git diff after stash pop to see what changes remain
+        try {
+          const finalStatus = await git.status();
+          if (finalStatus.files.length > 0) {
+            const diff = await git.diff();
+            if (diff) {
+              this.logger.console(chalk.blue('Git diff after stash pop:'));
+              this.logger.console(diff);
+            }
+          }
+        } catch (error) {
+          this.logger.console(chalk.yellow(`Failed to show git diff after stash pop: ${error}`));
+        }
       }
 
       await git.push('origin', defaultBranch);
