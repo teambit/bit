@@ -344,11 +344,59 @@ commands: # reusable commands
             echo "Total files found: $(echo "$GLOB_FILES" | wc -l)"
             echo "Files assigned to this container: $(echo "$ASSIGNED_FILES" | wc -l)"
 
+            # Enhanced debugging for timing data issues
+            echo "=== Timing Data Analysis ==="
+            echo "Files with 'No timing found' in this container:"
+            echo "$GLOB_FILES" | while read -r file; do
+              if ! echo "$ASSIGNED_FILES" | grep -q "$file"; then
+                # This file was found but not assigned - might have timing issues
+                echo "Not assigned to this container: $file"
+              fi
+            done
+
+            # Show the specific files that have timing data vs those that don't
+            echo "Sample of files WITH timing data (assigned to this container):"
+            echo "$ASSIGNED_FILES" | head -3
+
+            # Try to identify patterns in files without timing data
+            echo "=== Pattern Analysis for Missing Timing Data ==="
+            echo "Check if the 'No timing found' files follow any pattern..."
+
+            # The files that consistently show "No timing found":
+            # /home/circleci/bit/bit/e2e/flows/permissions-errors.e2e.3.ts
+            # /home/circleci/bit/bit/e2e/harmony/app.e2e.ts
+            # /home/circleci/bit/bit/e2e/harmony/clear-cache.e2e.ts
+            # /home/circleci/bit/bit/e2e/harmony/install-angular.e2e.ts
+            # /home/circleci/bit/bit/e2e/harmony/install-missing-peer-dependencies.e2e.ts
+            # /home/circleci/bit/bit/e2e/harmony/mix-harmony-legacy.e2e.ts
+
+            # Potential solutions to try:
+            # 1. Force these files to run a few times to build timing history
+            # 2. Check if these files were recently renamed/moved
+            # 3. Check if these files historically had test failures
+            echo "Note: Files consistently missing timing data may need to be run"
+            echo "several times successfully to build timing history in CircleCI"
+
             # Create a summary file for this container with actual filenames
             echo "Container $CIRCLE_NODE_INDEX files:" > /tmp/container-files.txt
             echo "$ASSIGNED_FILES" | wc -l >> /tmp/container-files.txt
             echo "=== Files assigned to container $CIRCLE_NODE_INDEX ===" >> /tmp/container-files.txt
             echo "$ASSIGNED_FILES" >> /tmp/container-files.txt
+
+            # CRITICAL DEBUG: Track which files are actually being executed
+            echo "=== Execution Tracking Debug ===" >> /tmp/container-files.txt
+            echo "The following files are about to be executed in container $CIRCLE_NODE_INDEX:" >> /tmp/container-files.txt
+
+            # Check specifically for the problematic files
+            PROBLEMATIC_FILES="permissions-errors.e2e.3.ts app.e2e.ts clear-cache.e2e.ts install-angular.e2e.ts install-missing-peer-dependencies.e2e.ts mix-harmony-legacy.e2e.ts"
+
+            for problem_file in $PROBLEMATIC_FILES; do
+              if echo "$ASSIGNED_FILES" | grep -q "$problem_file"; then
+                echo "✅ FOUND: $problem_file will be executed in container $CIRCLE_NODE_INDEX" >> /tmp/container-files.txt
+              else
+                echo "❌ MISSING: $problem_file NOT assigned to container $CIRCLE_NODE_INDEX" >> /tmp/container-files.txt
+              fi
+            done
 
             echo "=== Starting Test Execution ==="
 
@@ -382,6 +430,18 @@ commands: # reusable commands
               # Count tests in XML (basic count)
               TEST_COUNT=$(grep -c "<testcase" junit/e2e-test-results.xml 2>/dev/null || echo "0")
               echo "Test cases in results: $TEST_COUNT"
+
+              # CRITICAL: Check if any of the problematic files appear in test results
+              echo "=== Checking for problematic files in test results ==="
+              PROBLEMATIC_FILES="permissions-errors.e2e.3.ts app.e2e.ts clear-cache.e2e.ts install-angular.e2e.ts install-missing-peer-dependencies.e2e.ts mix-harmony-legacy.e2e.ts"
+
+              for problem_file in $PROBLEMATIC_FILES; do
+                if grep -q "$problem_file" junit/e2e-test-results.xml 2>/dev/null; then
+                  echo "✅ EXECUTED: $problem_file found in test results of container $CIRCLE_NODE_INDEX"
+                else
+                  echo "❌ NOT EXECUTED: $problem_file NOT found in test results of container $CIRCLE_NODE_INDEX"
+                fi
+              done
             else
               echo "❌ WARNING: No test results file found!"
             fi
