@@ -36,14 +36,22 @@ export class WebpackBundler implements Bundler {
     const envIdMessage = envId ? `config created by env: ${envId}.` : '';
 
     const longProcessLogger = this.logger.createLongProcessLogger('running Webpack bundler', compilers.length);
-    const componentOutput = await mapSeries(compilers, (compiler: Compiler) => {
+
+    // Process compilers sequentially to control memory usage
+    // For better memory management, webpack compilers are run one at a time
+    // and cleaned up after each run to prevent memory accumulation
+    const componentOutput = await mapSeries(compilers, async (compiler: Compiler) => {
       const components = this.getComponents(compiler.outputPath);
       const componentsLengthMessage = `running on ${components.length} components`;
       const fullMessage = `${initiatorMessage} ${envIdMessage} ${componentsLengthMessage}`;
+      this.logger.debug(
+        `${fullMessage} memory usage: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
+      );
       const ids = components.map((component) => component.id.toString()).join(', ');
       longProcessLogger.logProgress(`${fullMessage}`);
       this.logger.debug(`${fullMessage}\ncomponents ids: ${ids}`);
-      return new Promise((resolve) => {
+
+      const result = await new Promise<any>((resolve) => {
         // TODO: split to multiple processes to reduce time and configure concurrent builds.
         // @see https://github.com/trivago/parallel-webpack
         return compiler.run((err, stats) => {
@@ -84,6 +92,23 @@ export class WebpackBundler implements Bundler {
           });
         });
       });
+
+      try {
+        // Close the compiler to free up file watchers and resources
+        await new Promise<void>((resolve) => {
+          compiler.close(() => {
+            resolve();
+          });
+        });
+        if (compiler.cache) {
+          // Force purge of webpack's internal cache
+          (compiler as any).cache?.purge?.();
+        }
+      } catch (error) {
+        this.logger.debug('Error during compiler cleanup:', error);
+      }
+
+      return result;
     });
     longProcessLogger.end();
     return componentOutput as BundlerResult[];
