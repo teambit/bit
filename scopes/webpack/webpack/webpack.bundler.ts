@@ -40,6 +40,9 @@ export class WebpackBundler implements Bundler {
       const components = this.getComponents(compiler.outputPath);
       const componentsLengthMessage = `running on ${components.length} components`;
       const fullMessage = `${initiatorMessage} ${envIdMessage} ${componentsLengthMessage}`;
+      this.logger.console(
+        `${fullMessage} memory usage: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
+      );
       const ids = components.map((component) => component.id.toString()).join(', ');
       longProcessLogger.logProgress(`${fullMessage}`);
       this.logger.debug(`${fullMessage}\ncomponents ids: ${ids}`);
