@@ -368,8 +368,14 @@ commands: # reusable commands
 
             echo "=== Starting Test Execution ==="
 
-            # Run the tests (use the timing-based assignment for now)
-            echo "$ASSIGNED_FILES" | xargs -n 1 npm run mocha-circleci << parameters.bit_bin >>
+            # Simple fix: Run all test files as arguments to a single mocha command
+            # This avoids the XML overwriting issue completely
+            if [ -n "$ASSIGNED_FILES" ]; then
+              echo "Running all assigned tests in a single mocha command..."
+              echo "$ASSIGNED_FILES" | tr '\n' ' ' | xargs npm run mocha-circleci << parameters.bit_bin >>
+            else
+              echo "⚠️  No test files assigned to this container"
+            fi
           # Original command for reference:
           # command: 'cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci << parameters.bit_bin >>'
           environment:
