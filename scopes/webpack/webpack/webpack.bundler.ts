@@ -5,9 +5,12 @@ import { compact, isEmpty } from 'lodash';
 import mapSeries from 'p-map-series';
 import type { Compiler, Configuration, StatsCompilation, StatsAsset } from 'webpack';
 import { sep } from 'path';
+import { MemoryProfiler } from './memory-profiler';
 
 type AssetsMap = { [assetId: string]: Asset };
 export class WebpackBundler implements Bundler {
+  private memoryProfiler: MemoryProfiler;
+
   constructor(
     /**
      * targets to bundle.
@@ -24,10 +27,22 @@ export class WebpackBundler implements Bundler {
     private webpack,
 
     private metaData?: BundlerContextMetaData | undefined
-  ) {}
+  ) {
+    this.memoryProfiler = new MemoryProfiler(logger);
+  }
 
   async run(): Promise<BundlerResult[]> {
     const startTime = Date.now();
+
+    // Memory analysis before webpack bundling starts
+    this.memoryProfiler.analyzeMemoryUsage('webpack-bundling-start');
+    const memoryPressure = this.memoryProfiler.checkMemoryPressure();
+    this.logger.console(`🧠 Memory pressure: ${memoryPressure.usagePercent}% - ${memoryPressure.recommendation}`);
+
+    // Take heap snapshot if memory pressure is high or if we're in GeneratePreview task
+    const isPreviewTask = this.metaData?.initiator === 'GeneratePreview';
+    this.memoryProfiler.takeHeapSnapshot('before-webpack-bundling');
+
     const compilers = this.configs.map((config: any) => this.webpack(config));
 
     const initiator = this.metaData?.initiator;
@@ -40,10 +55,21 @@ export class WebpackBundler implements Bundler {
     // Process compilers sequentially to control memory usage
     // For better memory management, webpack compilers are run one at a time
     // and cleaned up after each run to prevent memory accumulation
-    const componentOutput = await mapSeries(compilers, async (compiler: Compiler) => {
+    const componentOutput = await mapSeries(compilers, async (compiler: Compiler, index: number) => {
       const components = this.getComponents(compiler.outputPath);
       const componentsLengthMessage = `running on ${components.length} components`;
       const fullMessage = `${initiatorMessage} ${envIdMessage} ${componentsLengthMessage}`;
+
+      // Memory analysis before each compiler run
+      const compilerLabel = `compiler-${index + 1}-of-${compilers.length}`;
+      this.memoryProfiler.analyzeMemoryUsage(`before-${compilerLabel}`);
+      const preCompileMemory = this.memoryProfiler.checkMemoryPressure();
+
+      if (preCompileMemory.isHigh) {
+        this.logger.console(`⚠️  HIGH MEMORY before ${compilerLabel}: ${preCompileMemory.usagePercent}%`);
+        this.memoryProfiler.takeHeapSnapshot(`before-${compilerLabel}`);
+      }
+
       this.logger.debug(
         `${fullMessage} memory usage: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
       );
@@ -108,9 +134,32 @@ export class WebpackBundler implements Bundler {
         this.logger.debug('Error during compiler cleanup:', error);
       }
 
+      // Memory analysis after compiler cleanup
+      const postCompileMemory = this.memoryProfiler.checkMemoryPressure();
+      this.memoryProfiler.analyzeMemoryUsage(`after-${compilerLabel}`, false); // Don't save file for every compiler
+
+      if (postCompileMemory.isHigh) {
+        this.logger.console(`⚠️  HIGH MEMORY after ${compilerLabel}: ${postCompileMemory.usagePercent}%`);
+        this.memoryProfiler.takeHeapSnapshot(`after-${compilerLabel}`);
+
+        // Try to force garbage collection if available
+        this.memoryProfiler.forceGarbageCollection();
+      }
+
       return result;
     });
+
     longProcessLogger.end();
+
+    // Final memory analysis after all webpack bundling
+    this.memoryProfiler.analyzeMemoryUsage('webpack-bundling-end');
+    const finalMemory = this.memoryProfiler.checkMemoryPressure();
+    this.logger.console(`🏁 Final memory usage: ${finalMemory.usagePercent}% - ${finalMemory.recommendation}`);
+
+    if (finalMemory.isHigh || isPreviewTask) {
+      this.memoryProfiler.takeHeapSnapshot('after-webpack-bundling');
+    }
+
     return componentOutput as BundlerResult[];
   }
 
