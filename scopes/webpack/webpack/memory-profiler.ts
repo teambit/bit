@@ -98,15 +98,42 @@ export class MemoryProfiler {
       `Contexts: ${details.v8HeapStats.numberOfNativeContexts} native, ${details.v8HeapStats.numberOfDetachedContexts} detached`
     );
 
-    // Log heap spaces that are using significant memory
+    // Show heap utilization percentage
+    const heapUtilization = Math.round(
+      (parseInt(details.processMemory.heapUsed.replace(/[^0-9.]/g, '')) /
+        parseInt(details.processMemory.heapTotal.replace(/[^0-9.]/g, ''))) *
+        100
+    );
+    this.logger.console(
+      `📊 Heap Utilization: ${heapUtilization}% (${details.processMemory.heapUsed}/${details.processMemory.heapTotal})`
+    );
+
+    // Calculate V8 heap expansion potential
+    const v8HeapStats = v8.getHeapStatistics();
+    const heapExpansionPotential =
+      Math.round(((v8HeapStats.heap_size_limit - v8HeapStats.total_heap_size) / (1024 * 1024 * 1024)) * 100) / 100;
+    this.logger.console(
+      `🚀 V8 Heap Expansion Available: ${heapExpansionPotential}GB (${details.v8HeapStats.totalHeapSize} → ${details.v8HeapStats.heapSizeLimit})`
+    );
+
+    // Log heap spaces that are using significant memory (lowered threshold to 50MB for debugging)
     const significantSpaces = details.heapSpaces.filter(
-      (space) => parseInt(space.spaceUsedSize) > 100 // > 100MB
+      (space) => parseInt(space.spaceUsedSize) > 50 // > 50MB
     );
     if (significantSpaces.length > 0) {
-      this.logger.console('Large heap spaces:');
+      this.logger.console('Heap spaces > 50MB:');
       significantSpaces.forEach((space) => {
-        this.logger.console(`  ${space.spaceName}: ${space.spaceUsedSize}/${space.spaceSize}`);
+        this.logger.console(
+          `  ${space.spaceName}: ${space.spaceUsedSize}/${space.spaceSize} (${Math.round((parseInt(space.spaceUsedSize) / parseInt(space.spaceSize)) * 100)}% full)`
+        );
       });
+    }
+
+    // Warn about critical heap utilization
+    if (heapUtilization > 90) {
+      this.logger.console(`🚨 CRITICAL: Heap utilization ${heapUtilization}% - heap expansion needed!`);
+    } else if (heapUtilization > 80) {
+      this.logger.console(`⚠️  HIGH: Heap utilization ${heapUtilization}% - approaching critical levels`);
     }
 
     if (saveToFile) {

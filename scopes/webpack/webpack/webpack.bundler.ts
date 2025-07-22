@@ -39,11 +39,30 @@ export class WebpackBundler implements Bundler {
     const memoryPressure = this.memoryProfiler.checkMemoryPressure();
     this.logger.console(`🧠 Memory pressure: ${memoryPressure.usagePercent}% - ${memoryPressure.recommendation}`);
 
+    // Try to free up memory if we're already at high usage
+    if (memoryPressure.usagePercent > 50) {
+      this.logger.console(
+        `⚡ High memory detected (${memoryPressure.usagePercent}%), attempting garbage collection...`
+      );
+      this.memoryProfiler.forceGarbageCollection();
+      const afterGcMemory = this.memoryProfiler.checkMemoryPressure();
+      this.logger.console(`🗑️ After GC: ${afterGcMemory.usagePercent}% (was ${memoryPressure.usagePercent}%)`);
+    }
+
     // Take heap snapshot if memory pressure is high or if we're in GeneratePreview task
     const isPreviewTask = this.metaData?.initiator === 'GeneratePreview';
-    this.memoryProfiler.takeHeapSnapshot('before-webpack-bundling');
+    if (memoryPressure.isHigh || (isPreviewTask && memoryPressure.usagePercent < 60)) {
+      this.memoryProfiler.takeHeapSnapshot('before-webpack-bundling');
+    }
+
+    // Check memory right before creating webpack compilers
+    this.logger.console(`📋 About to create ${this.configs.length} webpack compilers...`);
+    this.memoryProfiler.analyzeMemoryUsage('before-creating-webpack-compilers', false);
 
     const compilers = this.configs.map((config: any) => this.webpack(config));
+
+    // Check memory right after creating webpack compilers
+    this.memoryProfiler.analyzeMemoryUsage('after-creating-webpack-compilers', false);
 
     const initiator = this.metaData?.initiator;
     const envId = this.metaData?.envId;
@@ -77,6 +96,9 @@ export class WebpackBundler implements Bundler {
       longProcessLogger.logProgress(`${fullMessage}`);
       this.logger.debug(`${fullMessage}\ncomponents ids: ${ids}`);
 
+      // Track heap before webpack run
+      const preWebpackHeap = this.memoryProfiler.getMemoryUsageDetails();
+
       const result = await new Promise<any>((resolve) => {
         // TODO: split to multiple processes to reduce time and configure concurrent builds.
         // @see https://github.com/trivago/parallel-webpack
@@ -104,6 +126,18 @@ export class WebpackBundler implements Bundler {
           });
           const assetsMap = this.getAssets(info);
           const entriesAssetsMap = this.getEntriesAssetsMap(info, assetsMap);
+
+          // Track heap after webpack compilation
+          const postWebpackHeap = this.memoryProfiler.getMemoryUsageDetails();
+          const heapGrowthGB = (
+            (parseInt(postWebpackHeap.v8HeapStats.totalHeapSize.replace(/[^0-9.]/g, '')) -
+              parseInt(preWebpackHeap.v8HeapStats.totalHeapSize.replace(/[^0-9.]/g, ''))) /
+            1000
+          ).toFixed(2);
+
+          this.logger.console(
+            `📈 Heap Growth During Webpack: +${heapGrowthGB}GB (${preWebpackHeap.v8HeapStats.totalHeapSize} → ${postWebpackHeap.v8HeapStats.totalHeapSize})`
+          );
 
           return resolve({
             assets: Object.values(assetsMap),

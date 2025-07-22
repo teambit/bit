@@ -566,7 +566,7 @@ jobs:
     <<: *defaults
     environment:
       # BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=15000 --expose-gc
+      NODE_OPTIONS: --max-old-space-size=15000 --initial-old-space-size=6000 --max-semi-space-size=128 --expose-gc
     steps:
       - attach_workspace:
           at: ./
@@ -591,7 +591,7 @@ jobs:
           command: 'cd bit && bit ci pr --build'
           no_output_timeout: '50m'
           environment:
-            NODE_OPTIONS: --max-old-space-size=15000 --expose-gc
+            NODE_OPTIONS: --max-old-space-size=15000 --initial-old-space-size=6000 --max-semi-space-size=128 --expose-gc
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
