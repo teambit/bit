@@ -1,4 +1,5 @@
 import { join, resolve, basename, dirname } from 'path';
+import pLimit from 'p-limit';
 import { existsSync, mkdirpSync } from 'fs-extra';
 import { Component } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
@@ -57,9 +58,11 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
     const origComponents = context.capsuleNetwork.originalSeedersCapsules.map((capsule) => capsule.component);
 
+    const limit = pLimit(10);
+
     const entriesArr = await Promise.all(
       origComponents.map((component) => {
-        return this.computeComponentEntry(previewDefs, component, context);
+        return limit(() => this.computeComponentEntry(previewDefs, component, context));
       }, {})
     );
 
