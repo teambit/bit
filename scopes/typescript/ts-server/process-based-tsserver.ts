@@ -155,6 +155,7 @@ export class ProcessBasedTsServer {
 
   private logger: Logger;
   private cancellationPipeName: string | undefined;
+  private memoryMonitorInterval: NodeJS.Timeout | null = null;
 
   constructor(
     private options: TspClientOptions,
@@ -163,9 +164,58 @@ export class ProcessBasedTsServer {
     this.logger = options.logger;
   }
 
+  private startMemoryMonitoring() {
+    // Monitor memory usage every 30 seconds
+    this.memoryMonitorInterval = setInterval(() => {
+      if (this.tsServerProcess && this.tsServerProcess.pid) {
+        const memUsage = process.memoryUsage();
+        this.logger.info(
+          `[TSServer Memory Monitor] Main process - RSS: ${Math.round(memUsage.rss / 1024 / 1024)}MB, Heap Used: ${Math.round(memUsage.heapUsed / 1024 / 1024)}MB, External: ${Math.round(memUsage.external / 1024 / 1024)}MB`
+        );
+
+        // Try to get child process memory info (this may not always work cross-platform)
+        try {
+          const pid = this.tsServerProcess.pid;
+
+          // Use ps command to get memory info for the child process
+          if (process.platform === 'darwin' || process.platform === 'linux') {
+            const psOutput = cp.execSync(`ps -o pid,ppid,rss,vsz,comm -p ${pid}`, { encoding: 'utf8', timeout: 1000 });
+            this.logger.info(`[TSServer Memory Monitor] Child process (PID: ${pid}):\n${psOutput}`);
+          } else if (process.platform === 'win32') {
+            const wmicOutput = cp.execSync(
+              `wmic process where ProcessId=${pid} get ProcessId,WorkingSetSize,VirtualSize,Name /format:csv`,
+              { encoding: 'utf8', timeout: 1000 }
+            );
+            this.logger.info(`[TSServer Memory Monitor] Child process (PID: ${pid}):\n${wmicOutput}`);
+          }
+        } catch {
+          // Silently ignore errors when getting child process memory info
+          // This can happen if the process doesn't exist or we don't have permissions
+        }
+      }
+    }, 30000);
+  }
+
+  private stopMemoryMonitoring() {
+    if (this.memoryMonitorInterval) {
+      clearInterval(this.memoryMonitorInterval);
+      this.memoryMonitorInterval = null;
+    }
+  }
+
   async restart() {
+    const memBefore = process.memoryUsage();
+    this.logger.info(
+      `[TSServer Memory] Before restart - RSS: ${Math.round(memBefore.rss / 1024 / 1024)}MB, Heap Used: ${Math.round(memBefore.heapUsed / 1024 / 1024)}MB`
+    );
+
     this.kill();
     await this.start();
+
+    const memAfter = process.memoryUsage();
+    this.logger.info(
+      `[TSServer Memory] After restart - RSS: ${Math.round(memAfter.rss / 1024 / 1024)}MB, Heap Used: ${Math.round(memAfter.heapUsed / 1024 / 1024)}MB`
+    );
   }
 
   start() {
@@ -200,14 +250,44 @@ export class ProcessBasedTsServer {
       };
       this.tsServerProcess = tsserverPathIsModule ? cp.fork(tsserverPath, args, options) : cp.spawn(tsserverPath, args);
 
+      // Log process information for debugging
+      if (this.tsServerProcess.pid) {
+        this.logger.info(`[TSServer Process] Started with PID: ${this.tsServerProcess.pid}, PPID: ${process.pid}`);
+        this.logger.info(`[TSServer Process] Command: ${tsserverPath} ${args.join(' ')}`);
+        this.logger.info(`[TSServer Process] Node options: ${JSON.stringify(options.execArgv)}`);
+      }
+
+      // Start memory monitoring
+      this.startMemoryMonitoring();
+
       this.readlineInterface = readline.createInterface(
         this.tsServerProcess.stdout as Readable,
         this.tsServerProcess.stdin as Writable,
         undefined
       );
+      // Handle various process termination scenarios
       process.on('exit', () => {
+        this.logger.info('[TSServer Process] Main process exiting, killing TSServer');
         this.kill();
-        reject(new Error('TSServer was killed'));
+        reject(new Error('TSServer was killed due to main process exit'));
+      });
+
+      // Monitor the child process for termination
+      this.tsServerProcess.on('exit', (code, signal) => {
+        this.logger.error(
+          `[TSServer Process] Child process exited with code: ${code}, signal: ${signal}, PID: ${this.tsServerProcess?.pid}`
+        );
+        this.stopMemoryMonitoring();
+        if (signal === 'SIGKILL') {
+          this.logger.error('[TSServer Process] Process was killed (likely OOM)');
+        }
+      });
+
+      this.tsServerProcess.on('error', (error) => {
+        this.logger.error(
+          `[TSServer Process] Child process error: ${error.message}, PID: ${this.tsServerProcess?.pid}`
+        );
+        this.stopMemoryMonitoring();
       });
 
       this.readlineInterface.on('line', (line) => {
@@ -238,6 +318,15 @@ export class ProcessBasedTsServer {
     token?: CancellationToken
   ): Promise<TypeScriptRequestTypes[K][1]> {
     await this.ensureServerIsRunning();
+
+    // Log memory usage for potentially expensive operations
+    if (['navto', 'references', 'getApplicableRefactors', 'getCodeFixes'].includes(command.toLowerCase())) {
+      const mem = process.memoryUsage();
+      this.logger.info(
+        `[TSServer Memory] Before ${command} - RSS: ${Math.round(mem.rss / 1024 / 1024)}MB, Heap Used: ${Math.round(mem.heapUsed / 1024 / 1024)}MB`
+      );
+    }
+
     this.sendMessage(command, false, args);
     const seq = this.seq;
     const deferred = new Deferred<TypeScriptRequestTypes[K][1]>();
@@ -275,11 +364,18 @@ export class ProcessBasedTsServer {
   }
 
   kill() {
+    if (this.tsServerProcess?.pid) {
+      this.logger.info(`[TSServer Process] Killing process with PID: ${this.tsServerProcess.pid}`);
+    }
+
+    this.stopMemoryMonitoring();
     this.tsServerProcess?.kill();
     this.tsServerProcess?.stdin?.destroy();
     this.readlineInterface?.close();
     this.tsServerProcess = null;
     this.readlineInterface = null;
+
+    this.logger.info('[TSServer Process] Process cleanup completed');
   }
 
   private log(msg: string, obj: Record<string, any> = {}) {

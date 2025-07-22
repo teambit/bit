@@ -32,7 +32,9 @@ const moduleFileExtensions = [
 ];
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
-const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
+const shouldUseSourceMap = false; // process.env.GENERATE_SOURCEMAP !== 'false';
+
+console.log('shouldUseSourceMap', shouldUseSourceMap);
 
 const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
 

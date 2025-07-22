@@ -112,14 +112,18 @@ export class BuildPipe {
     const startTask = process.hrtime();
     const taskStartTime = Date.now();
     let buildTaskResult: BuiltTaskResult;
-    this.logger.debug(
-      `${taskLogPrefix} memory usage: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
+    this.logger.console(
+      `${taskLogPrefix} memory usage BEFORE: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
     );
     try {
       buildTaskResult = await task.execute(buildContext);
     } catch (err) {
       this.logger.consoleFailure(`env: ${env.id}, task "${taskId}" threw an error`);
       throw err;
+    } finally {
+      this.logger.console(
+        `${taskLogPrefix} memory usage AFTER: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
+      );
     }
 
     const endTime = Date.now();

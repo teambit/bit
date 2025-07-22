@@ -1,4 +1,5 @@
 import { join } from 'path';
+import mapSeries from 'p-map-series';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import type { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
 import { Capsule } from '@teambit/isolator';
@@ -37,14 +38,12 @@ export class BundleUiTask implements BuildTask {
     }
 
     try {
-      await Promise.all(
-        Object.values(UIROOT_ASPECT_IDS).map(async (uiRootAspectId) => {
-          const outputPath = join(capsule.path, BundleUiTask.getArtifactDirectory(uiRootAspectId));
-          this.logger.info(`Generating UI bundle at ${outputPath}...`);
-          await this.ui.build(uiRootAspectId, outputPath);
-          await this.generateHash(outputPath);
-        })
-      );
+      await mapSeries(Object.values(UIROOT_ASPECT_IDS), async (uiRootAspectId) => {
+        const outputPath = join(capsule.path, BundleUiTask.getArtifactDirectory(uiRootAspectId));
+        this.logger.info(`Generating UI bundle at ${outputPath}...`);
+        await this.ui.build(uiRootAspectId, outputPath);
+        await this.generateHash(outputPath);
+      });
     } catch (error) {
       this.logger.error('Generating UI bundle failed', error);
       throw new Error('Generating UI bundle failed');

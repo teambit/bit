@@ -263,6 +263,9 @@ export class UiMain {
   private async runWebpackPromise(
     compiler: webpack.MultiCompiler
   ): Promise<[webpack.MultiStats | undefined, string | undefined]> {
+    this.logger.console(
+      `runWebpackPromise memory usage BEFORE: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
+    );
     return new Promise((resolve) =>
       // TODO: split to multiple processes to reduce time and configure concurrent builds.
       // @see https://github.com/trivago/parallel-webpack
@@ -272,6 +275,10 @@ export class UiMain {
 
           return resolve([undefined, `${err.toString()}\n${err.stack}`]);
         }
+        console.log('stats size', stats?.toString().length);
+        this.logger.console(
+          `runWebpackPromise memory usage AFTER: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
+        );
         return resolve([stats, undefined]);
       })
     );
