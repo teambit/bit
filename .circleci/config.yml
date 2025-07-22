@@ -566,7 +566,7 @@ jobs:
     <<: *defaults
     environment:
       # BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=12000
+      NODE_OPTIONS: --max-old-space-size=14000
     steps:
       - attach_workspace:
           at: ./
@@ -647,7 +647,7 @@ jobs:
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=12000
+      NODE_OPTIONS: --max-old-space-size=14000
     steps:
       - attach_workspace:
           at: ./
