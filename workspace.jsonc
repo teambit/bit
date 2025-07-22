@@ -671,7 +671,7 @@
   },
   "teambit.preview/preview": {
     "bundlingStrategy": "component",
-    "maxChunkSize": 20
+    "maxChunkSize": 5
   },
   "teambit.generator/generator": {
     "aspects": [
