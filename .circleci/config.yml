@@ -566,7 +566,7 @@ jobs:
     <<: *defaults
     environment:
       # BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=15000
+      NODE_OPTIONS: --max-old-space-size=12000
     steps:
       - attach_workspace:
           at: ./
@@ -587,11 +587,17 @@ jobs:
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
       - run:
+          name: 'Debug: Show memory allocation'
+          command: |
+            echo "NODE_OPTIONS: $NODE_OPTIONS"
+            echo "Available memory info:"
+            free -h || vm_stat || echo "Memory info not available"
+            echo "Node.js heap info:"
+            node -e "console.log('Max old space size:', v8.getHeapStatistics().heap_size_limit / 1024 / 1024, 'MB')"
+      - run:
           name: 'bit ci pr'
           command: 'cd bit && bit ci pr --build'
           no_output_timeout: '50m'
-          environment:
-            NODE_OPTIONS: --max-old-space-size=30000
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
@@ -641,7 +647,7 @@ jobs:
     <<: *defaults
     environment:
       BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=30000
+      NODE_OPTIONS: --max-old-space-size=12000
     steps:
       - attach_workspace:
           at: ./
@@ -664,11 +670,17 @@ jobs:
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
       - run:
+          name: 'Debug: Show memory allocation'
+          command: |
+            echo "NODE_OPTIONS: $NODE_OPTIONS"
+            echo "Available memory info:"
+            free -h || vm_stat || echo "Memory info not available"
+            echo "Node.js heap info:"
+            node -e "console.log('Max old space size:', v8.getHeapStatistics().heap_size_limit / 1024 / 1024, 'MB')"
+      - run:
           name: 'bit ci merge'
           command: 'cd bit && bit ci merge --build ${BIT_CI_MERGE_EXTRA_FLAGS}'
           no_output_timeout: '50m'
-          environment:
-            NODE_OPTIONS: --max-old-space-size=32000
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
