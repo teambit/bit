@@ -925,7 +925,9 @@ export class InstallMain {
   }
 
   private async _getEnvDependencies(envId: ComponentID): Promise<Record<string, string>> {
-    const policy = await this.dependencyResolver.getEnvPolicyFromEnvId(envId);
+    const envComponent = await this.envs.getEnvComponentByEnvId(envId.toString(), envId.toString());
+    const extendedDeps = envComponent.state._consumer.dependencies.dependencies;
+    const policy = await this.dependencyResolver.getEnvPolicyFromEnvId(envId, undefined, extendedDeps);
     if (!policy) return {};
     return Object.fromEntries(
       policy.selfPolicy.entries
