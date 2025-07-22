@@ -505,15 +505,13 @@ export class CiMain {
     await this.importer.importCurrentObjects();
 
     const checkoutProps = {
-      ids: this.workspace.listIds(),
       forceOurs: true,
       head: true,
       skipNpmInstall: true,
     };
     const checkoutResults = await this.checkout.checkout(checkoutProps);
     await this.workspace.bitMap.write('checkout head');
-    // all: true is to make it less verbose in the output. this workaround will be fixed later.
-    this.logger.console(checkoutOutput(checkoutResults, { ...checkoutProps, all: true }));
+    this.logger.console(checkoutOutput(checkoutResults, checkoutProps));
 
     const { status } = await this.verifyWorkspaceStatusInternal(strict);
 

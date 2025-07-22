@@ -70,8 +70,8 @@ export class CheckoutMain {
   ) {}
 
   async checkout(checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
+    await this.ensureCheckoutConfiguration(checkoutProps);
     this.workspace.inInstallContext = true;
-    const consumer = this.workspace.consumer;
     const { version, ids, promptMergeOptions } = checkoutProps;
     await this.syncNewComponents(checkoutProps);
     const addedComponents = await this.restoreMissingComponents(checkoutProps);
@@ -99,7 +99,7 @@ export class CheckoutMain {
       cache: true,
       lane: checkoutProps.lane,
     });
-
+    const consumer = this.workspace.consumer;
     const getComponentsStatusOfMergeNeeded = async (): Promise<ComponentStatus[]> => {
       const tmp = new Tmp(consumer.scope);
       try {
@@ -307,7 +307,35 @@ export class CheckoutMain {
     this.workspace.bitMap.makeComponentsAvailableOnMain(unavailableOnMain);
   }
 
+  private async ensureCheckoutConfiguration(checkoutProps: CheckoutProps) {
+    if (checkoutProps.reset || checkoutProps.head) {
+      checkoutProps.includeLocallyDeleted = true;
+    }
+    if (checkoutProps.head || checkoutProps.latest) {
+      checkoutProps.all = true;
+    }
+    if (checkoutProps.ids?.length) {
+      return;
+    }
+
+    const idsOnWorkspace = checkoutProps.includeLocallyDeleted
+      ? this.workspace.listIdsIncludeRemoved()
+      : this.workspace.listIds();
+
+    const currentLane = await this.workspace.consumer.getCurrentLaneObject();
+    const currentLaneIds = currentLane?.toComponentIds();
+
+    // When on a lane and doing head checkout, only checkout lane components
+    const ids =
+      currentLaneIds && checkoutProps.head
+        ? idsOnWorkspace.filter((id) => currentLaneIds.hasWithoutVersion(id))
+        : idsOnWorkspace;
+
+    checkoutProps.ids = ids.map((id) => (checkoutProps.head || checkoutProps.latest ? id.changeVersion(LATEST) : id));
+  }
+
   private async parseValues(componentPattern: string, checkoutProps: CheckoutProps) {
+    // CLI-specific validations and deprecation warnings
     if (checkoutProps.head && !componentPattern) {
       if (checkoutProps.all) {
         this.logger.console(`"--all" is deprecated for "bit checkout ${HEAD}", please omit it.`);
