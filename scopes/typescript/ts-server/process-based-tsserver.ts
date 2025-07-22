@@ -167,33 +167,85 @@ export class ProcessBasedTsServer {
   private startMemoryMonitoring() {
     // Monitor memory usage every 30 seconds
     this.memoryMonitorInterval = setInterval(() => {
-      if (this.tsServerProcess && this.tsServerProcess.pid) {
-        const memUsage = process.memoryUsage();
-        this.logger.info(
-          `[TSServer Memory Monitor] Main process - RSS: ${Math.round(memUsage.rss / 1024 / 1024)}MB, Heap Used: ${Math.round(memUsage.heapUsed / 1024 / 1024)}MB, External: ${Math.round(memUsage.external / 1024 / 1024)}MB`
-        );
-
-        // Try to get child process memory info (this may not always work cross-platform)
-        try {
-          const pid = this.tsServerProcess.pid;
-
-          // Use ps command to get memory info for the child process
-          if (process.platform === 'darwin' || process.platform === 'linux') {
-            const psOutput = cp.execSync(`ps -o pid,ppid,rss,vsz,comm -p ${pid}`, { encoding: 'utf8', timeout: 1000 });
-            this.logger.info(`[TSServer Memory Monitor] Child process (PID: ${pid}):\n${psOutput}`);
-          } else if (process.platform === 'win32') {
-            const wmicOutput = cp.execSync(
-              `wmic process where ProcessId=${pid} get ProcessId,WorkingSetSize,VirtualSize,Name /format:csv`,
-              { encoding: 'utf8', timeout: 1000 }
-            );
-            this.logger.info(`[TSServer Memory Monitor] Child process (PID: ${pid}):\n${wmicOutput}`);
-          }
-        } catch {
-          // Silently ignore errors when getting child process memory info
-          // This can happen if the process doesn't exist or we don't have permissions
-        }
-      }
+      this.logMemoryUsage();
     }, 30000);
+  }
+
+  private logMemoryUsage() {
+    if (this.tsServerProcess && this.tsServerProcess.pid) {
+      const memUsage = process.memoryUsage();
+      const mainRssMB = Math.round(memUsage.rss / 1024 / 1024);
+      const mainHeapMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+      const mainExternalMB = Math.round(memUsage.external / 1024 / 1024);
+
+      this.logger.info(
+        `[TSServer Memory Monitor] Main process - RSS: ${mainRssMB}MB, Heap Used: ${mainHeapMB}MB, External: ${mainExternalMB}MB`
+      );
+
+      // Log warning if main process uses too much memory
+      if (mainRssMB > 4000) {
+        this.logger.warn(
+          `[TSServer Memory Monitor] WARNING: Main process using ${mainRssMB}MB RSS - potential OOM risk!`
+        );
+      }
+
+      // Try to get child process memory info (this may not always work cross-platform)
+      try {
+        const pid = this.tsServerProcess.pid;
+
+        // Use ps command to get memory info for the child process
+        if (process.platform === 'darwin' || process.platform === 'linux') {
+          const psOutput = cp.execSync(`ps -o pid,ppid,rss,vsz,comm -p ${pid}`, { encoding: 'utf8', timeout: 1000 });
+          // Parse RSS value to make it more readable
+          const lines = psOutput.trim().split('\n');
+          if (lines.length > 1) {
+            const data = lines[1].trim().split(/\s+/);
+            const rssKB = parseInt(data[2], 10);
+            const rssMB = Math.round(rssKB / 1024);
+            const vszKB = parseInt(data[3], 10);
+            const vszGB = Math.round((vszKB / 1024 / 1024) * 10) / 10; // Round to 1 decimal
+            this.logger.info(
+              `[TSServer Memory Monitor] Child process (PID: ${pid}) - RSS: ${rssMB}MB, VSZ: ${vszGB}GB`
+            );
+
+            // Calculate combined memory usage
+            const combinedRssMB = mainRssMB + rssMB;
+            this.logger.info(
+              `[TSServer Memory Monitor] Combined RSS: ${combinedRssMB}MB (Main: ${mainRssMB}MB + Child: ${rssMB}MB)`
+            );
+
+            // Log warning if child process uses too much memory
+            if (rssMB > 2000) {
+              this.logger.warn(
+                `[TSServer Memory Monitor] WARNING: Child process using ${rssMB}MB RSS - potential OOM risk!`
+              );
+            }
+
+            // Log warning for combined memory usage
+            if (combinedRssMB > 6000) {
+              this.logger.warn(
+                `[TSServer Memory Monitor] WARNING: Combined memory usage ${combinedRssMB}MB - high OOM risk!`
+              );
+              // Switch to more frequent monitoring when memory is high
+              if (this.memoryMonitorInterval) {
+                clearInterval(this.memoryMonitorInterval);
+                this.memoryMonitorInterval = setInterval(() => this.logMemoryUsage(), 10000); // Every 10 seconds
+              }
+            }
+          }
+          this.logger.debug(`[TSServer Memory Monitor] Raw ps output:\n${psOutput}`);
+        } else if (process.platform === 'win32') {
+          const wmicOutput = cp.execSync(
+            `wmic process where ProcessId=${pid} get ProcessId,WorkingSetSize,VirtualSize,Name /format:csv`,
+            { encoding: 'utf8', timeout: 1000 }
+          );
+          this.logger.info(`[TSServer Memory Monitor] Child process (PID: ${pid}):\n${wmicOutput}`);
+        }
+      } catch {
+        // Silently ignore errors when getting child process memory info
+        // This can happen if the process doesn't exist or we don't have permissions
+      }
+    }
   }
 
   private stopMemoryMonitoring() {
@@ -255,6 +307,19 @@ export class ProcessBasedTsServer {
         this.logger.info(`[TSServer Process] Started with PID: ${this.tsServerProcess.pid}, PPID: ${process.pid}`);
         this.logger.info(`[TSServer Process] Command: ${tsserverPath} ${args.join(' ')}`);
         this.logger.info(`[TSServer Process] Node options: ${JSON.stringify(options.execArgv)}`);
+
+        // Log memory limits
+        if (maxTsServerMemory) {
+          this.logger.info(`[TSServer Process] Max memory limit set to: ${maxTsServerMemory}MB`);
+        } else {
+          this.logger.info(`[TSServer Process] No memory limit set (using Node.js defaults)`);
+        }
+
+        // Log initial memory state
+        const initialMem = process.memoryUsage();
+        this.logger.info(
+          `[TSServer Process] Initial main process memory - RSS: ${Math.round(initialMem.rss / 1024 / 1024)}MB, Heap: ${Math.round(initialMem.heapUsed / 1024 / 1024)}MB`
+        );
       }
 
       // Start memory monitoring
@@ -274,12 +339,62 @@ export class ProcessBasedTsServer {
 
       // Monitor the child process for termination
       this.tsServerProcess.on('exit', (code, signal) => {
+        const pid = this.tsServerProcess?.pid || 'unknown';
+
+        // Capture memory usage immediately when process exits
+        let finalMemoryInfo = '';
+        if (pid !== 'unknown') {
+          try {
+            // Get final memory state before the process is completely gone
+            if (process.platform === 'darwin' || process.platform === 'linux') {
+              const psOutput = cp.execSync(`ps -o pid,ppid,rss,vsz,comm -p ${pid}`, {
+                encoding: 'utf8',
+                timeout: 500, // Quick timeout since process might already be gone
+              });
+              const lines = psOutput.trim().split('\n');
+              if (lines.length > 1) {
+                const data = lines[1].trim().split(/\s+/);
+                const rssKB = parseInt(data[2], 10);
+                const rssMB = Math.round(rssKB / 1024);
+                const vszKB = parseInt(data[3], 10);
+                const vszGB = Math.round((vszKB / 1024 / 1024) * 10) / 10;
+                finalMemoryInfo = ` - Final memory: RSS: ${rssMB}MB, VSZ: ${vszGB}GB`;
+              }
+            }
+          } catch {
+            // Process might already be gone, that's expected
+            finalMemoryInfo = ' - Final memory: unavailable (process already terminated)';
+          }
+        }
+
         this.logger.error(
-          `[TSServer Process] Child process exited with code: ${code}, signal: ${signal}, PID: ${this.tsServerProcess?.pid}`
+          `[TSServer Process] Child process exited with code: ${code}, signal: ${signal}, PID: ${pid}${finalMemoryInfo}`
         );
         this.stopMemoryMonitoring();
+
+        // Enhanced signal analysis with memory context
         if (signal === 'SIGKILL') {
-          this.logger.error('[TSServer Process] Process was killed (likely OOM)');
+          this.logger.error('[TSServer Process] Process was KILLED (likely OOM) - system forcefully terminated');
+          // Log current main process memory for context
+          const mainMem = process.memoryUsage();
+          this.logger.error(
+            `[TSServer Process] Main process memory at time of SIGKILL - RSS: ${Math.round(mainMem.rss / 1024 / 1024)}MB, Heap: ${Math.round(mainMem.heapUsed / 1024 / 1024)}MB`
+          );
+        } else if (signal === 'SIGTERM') {
+          this.logger.warn('[TSServer Process] Process was TERMINATED (graceful) - parent process requested shutdown');
+          // Log main process memory to understand if this was due to memory pressure
+          const mainMem = process.memoryUsage();
+          this.logger.warn(
+            `[TSServer Process] Main process memory at time of SIGTERM - RSS: ${Math.round(mainMem.rss / 1024 / 1024)}MB, Heap: ${Math.round(mainMem.heapUsed / 1024 / 1024)}MB`
+          );
+        } else if (signal === 'SIGINT') {
+          this.logger.info('[TSServer Process] Process received INTERRUPT signal');
+        } else if (code !== null && code !== 0) {
+          this.logger.error(`[TSServer Process] Process exited with error code: ${code}`);
+        } else if (code === 0) {
+          this.logger.info('[TSServer Process] Process exited normally');
+        } else {
+          this.logger.warn(`[TSServer Process] Process exited with unknown signal: ${signal}`);
         }
       });
 
