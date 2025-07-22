@@ -63,7 +63,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
       }, {})
     );
 
-    const chunkSize = this.preview.config.maxChunkSize;
+    const chunkSize = this.preview.config.maxChunkSize || 10; // Default max 10 components per chunk to reduce memory usage
 
     const chunks = chunkSize ? chunk(entriesArr, chunkSize) : [entriesArr];
 

@@ -36,27 +36,49 @@ export class WebpackBundler implements Bundler {
     const envIdMessage = envId ? `config created by env: ${envId}.` : '';
 
     const longProcessLogger = this.logger.createLongProcessLogger('running Webpack bundler', compilers.length);
-    const componentOutput = await mapSeries(compilers, (compiler: Compiler) => {
+
+    // Log memory usage before starting
+    this.logMemoryUsage('before webpack bundling');
+
+    const componentOutput = await mapSeries(compilers, async (compiler: Compiler) => {
       const components = this.getComponents(compiler.outputPath);
       const componentsLengthMessage = `running on ${components.length} components`;
       const fullMessage = `${initiatorMessage} ${envIdMessage} ${componentsLengthMessage}`;
       const ids = components.map((component) => component.id.toString()).join(', ');
       longProcessLogger.logProgress(`${fullMessage}`);
       this.logger.debug(`${fullMessage}\ncomponents ids: ${ids}`);
+
+      this.logMemoryUsage(`before compiling ${components.length} components`);
+
       return new Promise((resolve) => {
         // TODO: split to multiple processes to reduce time and configure concurrent builds.
         // @see https://github.com/trivago/parallel-webpack
         return compiler.run((err, stats) => {
+          // Clean up compiler resources after run
+          const cleanup = () => {
+            try {
+              if (compiler.watching) {
+                compiler.watching.close(() => {});
+              }
+              // Close the compiler to free up memory
+              compiler.close(() => {});
+            } catch (cleanupErr) {
+              this.logger.warn('Error during webpack compiler cleanup:', cleanupErr);
+            }
+          };
+
           if (err) {
             this.logger.error('get error from webpack compiler, full error:', err);
-
+            cleanup();
             return resolve({
               errors: [`${err.toString()}\n${err.stack}`],
               components,
             });
           }
-          if (!stats) throw new BitError('unknown build error');
-          // const info = stats.toJson();
+          if (!stats) {
+            cleanup();
+            throw new BitError('unknown build error');
+          }
 
           const info = stats.toJson({
             all: false,
@@ -71,7 +93,7 @@ export class WebpackBundler implements Bundler {
           const assetsMap = this.getAssets(info);
           const entriesAssetsMap = this.getEntriesAssetsMap(info, assetsMap);
 
-          return resolve({
+          const result = {
             assets: Object.values(assetsMap),
             assetsByChunkName: info.assetsByChunkName,
             entriesAssetsMap,
@@ -81,12 +103,27 @@ export class WebpackBundler implements Bundler {
             warnings: info.warnings,
             startTime,
             endTime: Date.now(),
-          });
+          };
+
+          cleanup();
+          this.logMemoryUsage(`after compiling ${components.length} components`);
+
+          return resolve(result);
         });
       });
     });
+
     longProcessLogger.end();
+    this.logMemoryUsage('after webpack bundling completed');
+
     return componentOutput as BundlerResult[];
+  }
+
+  private logMemoryUsage(stage: string): void {
+    const memUsage = process.memoryUsage();
+    const heapUsedGB = Math.round((memUsage.heapUsed / 1024 / 1024 / 1024) * 100) / 100;
+    const heapTotalGB = Math.round((memUsage.heapTotal / 1024 / 1024 / 1024) * 100) / 100;
+    this.logger.debug(`Memory usage ${stage}: ${heapUsedGB}GB used / ${heapTotalGB}GB total`);
   }
 
   private getErrors(stats: StatsCompilation): Error[] {

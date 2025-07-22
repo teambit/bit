@@ -112,6 +112,9 @@ export class BuildPipe {
     const startTask = process.hrtime();
     const taskStartTime = Date.now();
     let buildTaskResult: BuiltTaskResult;
+    this.logger.console(
+      `${taskLogPrefix} memory usage: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
+    );
     try {
       buildTaskResult = await task.execute(buildContext);
     } catch (err) {

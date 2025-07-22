@@ -117,13 +117,23 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
       seedersOnly: options.seedersOnly,
     };
 
+    this.logger.console(
+      `memory usage: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
+    );
+
     await pMapSeries(envsExecutionContext, async (executionContext) => {
       const componentIds = executionContext.components.map((component) => component.id);
       const { originalSeeders } = options;
       const originalSeedersOfThisEnv = componentIds.filter((compId) =>
         originalSeeders ? originalSeeders.find((seeder) => compId.isEqual(seeder)) : true
       );
+      this.logger.console(
+        `isolateComponents-before: memory usage: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
+      );
       const capsuleNetwork = await this.isolator.isolateComponents(componentIds, isolateOptions);
+      this.logger.console(
+        `isolateComponents-after: memory usage: ${Math.round((process.memoryUsage().heapUsed / 1024 / 1024 / 1024) * 100) / 100} GB`
+      );
       capsuleNetwork._originalSeeders = originalSeedersOfThisEnv;
       const msg = `building ${chalk.cyan(originalSeedersOfThisEnv.length.toString())} components of env ${chalk.cyan(executionContext.id)}`;
       const extraDetails = `original seeders of this env: ${originalSeedersOfThisEnv.length}, graph of this env: ${capsuleNetwork.seedersCapsules.length}, graph total (include other envs): ${capsuleNetwork.graphCapsules.length}`;

@@ -36,12 +36,24 @@ export function configFactory(target: Target, context: BundlerContext): Configur
       level: 'error',
     },
 
+    // Memory optimization settings
+    cache: false, // Disable webpack cache to reduce memory usage in CI
+
     output: {
       // The build folder.
       path: `${target.outputPath}${sep}public`,
+      // Clear output directory to prevent memory leaks from previous builds
+      clean: true,
     },
+
     stats: {
       errorDetails: true,
+      // Reduce memory usage of stats object
+      modules: false,
+      chunks: false,
+      children: false,
+      source: false,
+      publicPath: false,
     },
 
     resolve: {
@@ -49,6 +61,14 @@ export function configFactory(target: Target, context: BundlerContext): Configur
       alias: fallbacksAliases,
 
       fallback: fallbacks,
+    },
+
+    // Memory optimization
+    optimization: {
+      // Reduce memory usage during compilation
+      removeAvailableModules: false,
+      removeEmptyChunks: false,
+      splitChunks: false,
     },
 
     plugins: [new webpack.ProvidePlugin(fallbacksProvidePluginConfig), getAssetManifestPlugin()],
