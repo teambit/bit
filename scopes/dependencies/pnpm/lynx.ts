@@ -292,6 +292,7 @@ export async function install(
     },
     userAgent: networkConfig.userAgent,
     ...options,
+    injectWorkspacePackages: true,
     neverBuiltDependencies: options.neverBuiltDependencies ?? [],
     returnListOfDepsRequiringBuild: true,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
@@ -421,15 +422,15 @@ export function createReadPackageHooks(options: {
 function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string): PackageManifest {
   // workspaceDir is set only for workspace packages
   if (workspaceDir) {
-    return readDependencyPackageHook({
+    return {
       ...pkg,
       dependencies: {
         ...pkg.peerDependencies,
         ...pkg.dependencies,
       },
-    });
+    };
   }
-  return readDependencyPackageHook(pkg);
+  return pkg;
 }
 
 /**
@@ -478,25 +479,7 @@ function readPackageHook(pkg: PackageManifest, workspaceDir?: string): PackageMa
   if (workspaceDir && !workspaceDir.includes(BIT_ROOTS_DIR)) {
     return readWorkspacePackageHook(pkg);
   }
-  return readDependencyPackageHook(pkg);
-}
-
-/**
- * This hook adds the "injected" option to any workspace dependency.
- * The injected option tell pnpm to hard link the packages instead of symlinking them.
- */
-function readDependencyPackageHook(pkg: PackageManifest): PackageManifest {
-  const dependenciesMeta = pkg.dependenciesMeta ?? {};
-  for (const [name, version] of Object.entries(pkg.dependencies ?? {})) {
-    if (version.startsWith('workspace:')) {
-      // This instructs pnpm to hard link the component from the workspace, not symlink it.
-      dependenciesMeta[name] = { injected: true };
-    }
-  }
-  return {
-    ...pkg,
-    dependenciesMeta,
-  };
+  return pkg;
 }
 
 /**
