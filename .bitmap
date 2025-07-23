@@ -2077,7 +2077,7 @@
     "ui/inputs/lane-selector": {
         "name": "ui/inputs/lane-selector",
         "scope": "teambit.lanes",
-        "version": "0.0.262",
+        "version": "0.0.264",
         "mainFile": "index.ts",
         "rootDir": "components/ui/inputs/lane-selector_1"
     },
