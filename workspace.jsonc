@@ -806,7 +806,7 @@
     "components/bit": {
       "teambit.pkg/pkg": {}
     },
-     "components/mcp": {
+    "components/mcp": {
       "teambit.pkg/pkg": {}
     },
     "components/typescript-compiler": {
