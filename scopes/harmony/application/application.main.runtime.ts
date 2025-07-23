@@ -371,6 +371,7 @@ export class ApplicationMain {
     errors?: Error[];
     isOldApi: boolean;
   }> {
+    await this.workspace.setComponentPathsRegExps();
     options = this.computeOptions(options);
     const app = this.getAppOrThrow(appName);
     const context = await this.createAppContext(app.name, options.port, options.args);
