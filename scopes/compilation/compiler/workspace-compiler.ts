@@ -380,16 +380,30 @@ export class WorkspaceCompiler {
   }
 
   async onPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
-    if (watchOpts.preCompile) {
-      const start = Date.now();
-      this.logger.console(`compiling ${componentIds.length} components`);
-      await this.compileComponents(
-        componentIds.map((id) => id),
-        { initiator: CompilationInitiator.PreWatch, generateTypes: watchOpts.generateTypes }
-      );
-      const end = Date.now() - start;
-      this.logger.consoleSuccess(`compiled ${componentIds.length} components successfully (${end / 1000} sec)`);
+    if (!watchOpts.preCompile) {
+      return;
     }
+    const start = Date.now();
+    this.logger.console(`compiling ${componentIds.length} components`);
+    const compile = async () => {
+      await this.compileComponents(componentIds, {
+        initiator: CompilationInitiator.PreWatch,
+        generateTypes: watchOpts.generateTypes,
+      });
+    };
+    try {
+      await compile();
+    } catch (err: any) {
+      if (err.constructor.name === 'ComponentsPendingImport') {
+        await this.workspace.importCurrentObjects();
+        this.logger.console('re-trying to compile after importing the pending components');
+        await compile();
+      } else {
+        throw err;
+      }
+    }
+    const end = Date.now() - start;
+    this.logger.consoleSuccess(`compiled ${componentIds.length} components successfully (${end / 1000} sec)`);
   }
 
   async compileComponents(

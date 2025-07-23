@@ -1189,6 +1189,40 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   /**
+   * This is pretty much the same as `importer.importCurrentObjects`.
+   * The reason for the duplication is that many aspects can't depend on the `importer` aspect, due to circular dependencies.
+   * The importer aspect is reacher in a way that it shows the results of what was imported by comparing the before and after.
+   */
+  async importCurrentObjects() {
+    const lane = await this.importCurrentLaneIfMissing();
+    if (lane) {
+      return; // it was all imported in the function above.
+    }
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
+    const allIds = this.consumer.bitMap.getAllBitIdsFromAllLanes();
+    const ids = ComponentIdList.fromArray(allIds.filter((id) => id.hasScope()));
+    await scopeComponentsImporter.importWithoutDeps(ids.toVersionLatest(), {
+      cache: false,
+      includeVersionHistory: true,
+      fetchHeadIfLocalIsBehind: true,
+      ignoreMissingHead: true,
+      reason: `of their latest on main`,
+    });
+
+    this.logger.setStatusLine(`import ${ids.length} components with their dependencies (if missing)`);
+    const results = await scopeComponentsImporter.importMany({
+      ids,
+      ignoreMissingHead: true,
+      preferDependencyGraph: true,
+      reFetchUnBuiltVersion: true,
+      throwForSeederNotFound: false,
+      reason: 'for getting all dependencies',
+    });
+
+    return results;
+  }
+
+  /**
    * This will make sure to fetch the objects prior to load them
    * do not use it if you are not sure you need it.
    * It will influence the performance
