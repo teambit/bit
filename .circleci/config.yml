@@ -35,20 +35,6 @@ windows_default_executor: &windows_default_executor
 windows_defaults: &windows_defaults
   <<: [*windows_default_executor, *windows_default_working_dir]
 
-# macOS configurations
-mac_default_resource_class: &mac_default_resource_class
-  resource_class: macos.x86.medium.gen2
-
-mac_default_xcode_version: &mac_default_xcode_version
-  xcode: 14.3.1
-
-mac_default_executor: &mac_default_executor
-  macos:
-    <<: [*mac_default_xcode_version, *mac_default_resource_class]
-
-mac_defaults: &mac_defaults
-  <<: *mac_default_executor
-
 # Filters
 semver_tags_only_filters: &semver_tags_only_filters
   filters:
@@ -513,21 +499,6 @@ jobs:
           paths:
             - DOC_GEN_BUILD_NUM.txt
 
-  slack_deploy_notification:
-    <<: *defaults
-    steps:
-      - attach_workspace:
-          at: ./
-      - run:
-          name: Setup generate doc build number environment variable
-          command: echo "export DOC_GEN_BUILD_NUM=$(cat DOC_GEN_BUILD_NUM.txt)" >> $BASH_ENV && source $BASH_ENV
-      - run:
-          name: 'notify slack'
-          command: 'cd bit && node ./scripts/slack-deploy-notification.js'
-      - run:
-          name: 'notify community slack'
-          command: 'cd bit && node ./scripts/slack-deploy-notification.js community'
-
   # ========== Bit CI Jobs ==========
   bit_pr:
     resource_class: xlarge
@@ -560,47 +531,6 @@ jobs:
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=30000
-      - store_artifacts:
-          path: ~/Library/Caches/Bit/logs
-
-  bit_build:
-    resource_class: xlarge
-    <<: *defaults
-    environment:
-      BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=15000
-    steps:
-      - attach_workspace:
-          at: ./
-      - bit_global_for_npm
-      - bit_config
-      - restore_cache:
-          key: bitsrc-ssh-key3
-      - restore_cache:
-          key: bitsrc-registry10
-      - run: npm view @teambit/bit version > ./version.txt
-      - restore_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
-      - restore_cache:
-          key: core-aspect-env-v0.0.72-v1
-      # - update_ssh_agent
-      # temporary, check if we can remove it
-      - run: cd bit && bit cc
-      - run:
-          name: 'bit status'
-          command: 'cd bit && bit status'
-      # run second time until we do real bit export
-      - run:
-          name: 'bit status'
-          command: 'cd bit && ./scripts/bit-status.sh'
-      - run:
-          name: 'bit diff'
-          command: cd bit && bit diff
-      - run:
-          name: 'bit build'
-          command: 'cd bit && bit build'
-          environment:
-            NODE_OPTIONS: --max-old-space-size=15000
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
@@ -640,131 +570,6 @@ jobs:
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
-  bit_tag:
-    resource_class: xlarge
-    <<: *defaults
-    environment:
-      BIT_FEATURES: cloud-importer-v2
-      NODE_OPTIONS: --max-old-space-size=15000
-    steps:
-      - attach_workspace:
-          at: ./
-      - bit_global_for_npm
-      - install_bvm
-      - run: npm view @teambit/bit version > ./version.txt
-      - restore_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
-      - restore_cache:
-          key: core-aspect-env-v0.0.72-v1
-      - bit_config:
-          env: "hub"
-      - restore_cache:
-          key: bitsrc-ssh-key3
-      - restore_cache:
-          key: bitsrc-registry10
-      - update_ssh_agent
-      - set_git_credentials
-      - run:
-          name: setting npmjs registry with publishing permission
-          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
-      - run: bvm link
-      - run: cd bit && bit config set force_local_build true
-      # temporary, check if we can remove it
-      - run: cd bit && bit cc
-      - run: cd bit && bit status
-      - run: cd bit && bit diff
-      - run:
-          name: If no component has changed, fail the job
-          command: |
-            if cd bit && bit diff | grep -q "there are no modified components to diff"; then
-              echo "No changes detected, failing job to prevent further workflow execution."
-              exit 1
-            fi
-      # - run: cd bit && rm -rf node_modules/.bin/bit
-      - run: cd bit && npm run generate-cli-reference
-      - run: cd bit && npm run generate-cli-reference-json
-      - run: cd bit && npm run generate-cli-reference-docs
-      - run: cd bit && bit status # just to make sure that the new cli-reference.mdx file is valid
-      - run: cd bit && npm run generate-core-aspects-ids
-      - run: cd bit && bit checkout head teambit.harmony/content/cli-reference --auto-merge-resolve ours --skip-dependency-installation
-      - run: cd bit && bit checkout head --skip-dependency-installation
-      - run: cd bit && git diff
-      # - run: cd bit && rm -rf node_modules/@teambit/legacy
-      # - run: cd bit && bbit checkout head
-      # since we removed the node_modules we need to make sure we compile, install and link everything again
-      # - run: cd bit && bbit install --skip-import
-      # - run: cd bit && bbit compile
-      # temporary, check if we can remove it
-      - run: cd bit && bit cc
-      # - run: cd bit && bit config set cache.max.objects 100000
-      # - run: cd bit && node scripts/soft-tag-scope-teambit.js
-      - run:
-          name: tag persist
-          # command: cd bit && bit tag --ignore-newest-version
-          # command: cd bit && bit tag --increment-by 3
-          # command: cd bit && bit tag --increment-by 2
-          command: cd bit && bit tag
-          # command: cd bit && bit tag --persist
-          # command: cd bit && bit tag --persist --ignore-newest-version
-          no_output_timeout: '25m'
-          environment:
-            NODE_OPTIONS: --max-old-space-size=15000
-      - run: cd bit && git diff
-      - run:
-          name: backup bit objects (before export)
-          command: cd bit && tar -zcvf objects-before-export.tar .git/bit/objects
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bit/.git/bit
-            - bit/.bitmap
-            - bit/workspace.jsonc
-            - bit/scopes
-            - bit/components
-      - store_artifacts:
-          path: ~/Library/Caches/Bit/logs
-      - store_artifacts:
-          path: bit/scopes/harmony/testing/load-aspect/core-aspects-ids.json
-      - store_artifacts:
-          path: bit/objects-before-export.tar
-
-  bit_export:
-    <<: *defaults
-    environment:
-      BIT_FEATURES: cloud-importer-v2
-    steps:
-      - attach_workspace:
-          at: ./
-      - bit_global_for_npm
-      - bit_config:
-          env: "hub"
-      - restore_cache:
-          key: bitsrc-ssh-key3
-      - restore_cache:
-          key: bitsrc-registry10
-      - update_ssh_agent
-      - set_git_credentials
-      - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
-      - run: cd bit && git diff
-      - run:
-          name: export components
-          command: cd bit && bit export --verbose
-          no_output_timeout: '20m'
-      - run:
-          name: backup bit objects (after export)
-          command: cd bit && tar -zcvf objects-after-export.tar .git/bit/objects
-      - run: cd bit && git commit -am "bump teambit version to `npm show @teambit/bit version` [skip ci]"
-      # git pull first in case another commit entered to master so then the push could work with no errors.
-      - run: cd bit && git config pull.rebase true && GIT_MERGE_AUTOEDIT=no git pull origin master
-      # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
-      - run: cd bit && git push origin master
-      - store_artifacts:
-          path: ~/Library/Caches/Bit/logs
-      - store_artifacts:
-          path: bit/objects-after-export.tar
-      - store_artifacts:
-          path: bit/.bitmap
-
   # ========== Testing Jobs ==========
   e2e_test:
     <<: *defaults
@@ -799,15 +604,6 @@ jobs:
          bit_bin: "--bin_bit=bbit"
 
   # ========== Utility Jobs ==========
-  # This is a special task that just wait 5 minutes (sleep)
-  # it required before we install @teambit/bit from the registry
-  # because sometime the registry metedata is cached which lead to sometimes getting missing packages during install
-  sleep_5_minutes:
-    <<: *defaults
-    resource_class: small
-    steps:
-      - run: sleep 300;
-
   harmony_deploy_approval_job:
     <<: *defaults
     steps:
@@ -1073,65 +869,6 @@ jobs:
             - id_rsa
             - id_rsa.pub
 
-  windows_set_npm_registries:
-    <<: *windows_defaults
-    steps:
-      # npmjs registry
-      - run:
-          name: setting npmjs registry
-          command: Add-Content C:\Users\circleci\.npmrc ("//registry.npmjs.org/:_authToken=" + $Env:npmjsRegistryToken)
-      # prod registry
-      # -
-      # run: npm config set @bit:registry https://node.bit.dev
-      # - run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node.bit.dev'
-      - run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node-registry.bit.cloud'
-      # -
-      #   run: Get-Content -Path C:\Users\circleci\.npmrc
-      # -
-      #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryProdToken'
-      - run:
-          name: setting bit registry
-          command: Add-Content C:\Users\circleci\.npmrc ("//node.bit.dev/:_authToken=" + $Env:registryProdToken)
-      - run:
-          name: setting bit registry
-          command: Add-Content C:\Users\circleci\.npmrc ("//node-registry.bit.cloud /:_authToken=" + $Env:registryProdToken)
-      # stage registry
-      # -
-      #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '@bit:registry=https://node-stg.bit.dev'
-      # -
-      #   run:
-      #     name: setting bit registry
-      #     command: Add-Content C:\Users\circleci\.npmrc ("//node-stg.bit.dev/:_authToken=" + $Env:registryStgToken)
-      # -
-      #   run: Add-Content -Path C:\Users\circleci\.npmrc  -Value '//node.bit.dev/:_authToken=$Env:registryStgToken'
-      - save_cache:
-          key: windows_bitsrc-registry-v6
-          # key: windows_bitsrc-registry-stg-v2
-          paths:
-            - C:\Users\circleci\.npmrc
-
-  windows_install_npm_deps:
-    <<: *windows_defaults
-    # skipping the pre-built binaries to make sure we build them by the pack step
-    # testing the install script will be done in different workflow dedicated for this
-    environment:
-      SKIP_FETCH_BINARY: "true"
-    steps:
-      - attach_workspace:
-          at: .
-      - restore_cache:
-          key: windows_bitsrc-registry-v6
-          # key: windows_bitsrc-registry-stg-v2
-      # -
-      #   run: 'npm config list'
-      - run:
-          name: 'Install npm dependencies'
-          command: 'cd bit; npm install'
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bit/node_modules
-
   windows_bvm_install:
     <<: *windows_defaults
     # environment:
@@ -1277,70 +1014,6 @@ jobs:
           path: bit\junit
       - store_artifacts:
           path: C:\Users\circleci\AppData\Local\Bit\logs\debug.log
-
-  windows_e2e_test:
-    <<: *windows_defaults
-    environment:
-      BITSRC_ENV: stg
-      SKIP_REGISTRY_TESTS: "true"
-      SKIP_BIT_DEV_TESTS: "true"
-    parallelism: 25
-    steps:
-      - attach_workspace:
-          at: .
-      - run: $Env:Path
-      - run: corepack enable && corepack prepare yarn@4.0.1 --activate
-      - run: 'npm -v'
-      # -
-      #   run:
-      #     # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
-      #     name: 'update npm to latest version'
-      #     command: 'npm i -g npm@latest'
-      #
-      # this might be required if you try to update npm version
-      # - run: setx path "C:\Users\circleci\.npm-global"
-      - run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      - restore_cache:
-          key: windows_bitsrc-ssh-key-v1
-      - restore_cache:
-          key: windows_bitsrc-registry-v1
-          # key: windows_bitsrc-registry-stg-v2
-      # -
-      #   restore_cache:
-      #     keys:
-      #       - 'builded-{{ checksum ".circle-sha" }}'
-      # -
-      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
-      #   run: 'chmod 400 ~/.ssh/id_rsa'
-      # -
-      #   run: 'ssh-add ~/.ssh/id_rsa'
-      - run: 'cd bit; mkdir junit'
-      - run:
-          name: 'npm link bit to global'
-          command: cd bit; npm link
-      - bit_config
-      - run:
-          name: 'write e2e files'
-          command: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings > spec-files.txt'
-      - run:
-          name: 'run e2e tests'
-          command: 'cd bit; $content = get-content spec-files.txt; npm run mocha-circleci $content'
-          # command which support only - for debug purpose - this needed to be tested on windows (the glob might not work)
-          # command: cd bit; npm run e2e-test-circle --debug
-          environment:
-            MOCHA_FILE: junit\e2e-test-results.xml
-            NODE_OPTIONS: --no-warnings
-          when: always
-      - store_test_results:
-          path: bit\junit
-      - store_artifacts:
-          path: bit\junit
-      # TODO: make it work for windows
-      # -
-      #   store_artifacts:
-      #     path: ~/Library/Caches/Bit/logs/debug.log
 
 # ========================================
 # WORKFLOWS
