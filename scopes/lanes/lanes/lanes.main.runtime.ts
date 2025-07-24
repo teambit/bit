@@ -649,17 +649,16 @@ please create a new lane instead, which will include all components of this lane
       }
 
       const gitExecutablePath = getGitExecutablePath();
-      const branchName = laneName.replace(/[^a-zA-Z0-9-_]/g, '-'); // Sanitize branch name
 
       // Create and checkout to the new git branch
-      await execa(gitExecutablePath, ['checkout', '-b', branchName], {
+      await execa(gitExecutablePath, ['checkout', '-b', laneName], {
         cwd: this.workspace.path,
       });
 
-      this.logger.info(`Created and checked out git branch: ${branchName}`);
+      this.logger.info(`Created and checked out git branch: ${laneName}`);
     } catch (err: any) {
       // Don't fail the lane import if git branch creation fails
-      this.logger.warn(`Failed to create git branch: ${err.message}`);
+      this.logger.warn(`Failed to create git branch "${laneName}": ${err.message}`);
     }
   }
 
