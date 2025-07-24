@@ -311,13 +311,15 @@ export class CheckoutMain {
     if (checkoutProps.reset || checkoutProps.head) {
       checkoutProps.includeLocallyDeleted = true;
     }
-    if (checkoutProps.head || checkoutProps.latest) {
-      checkoutProps.all = true;
-    }
     if (checkoutProps.ids?.length) {
       return;
     }
-
+    if (checkoutProps.head || checkoutProps.latest) {
+      checkoutProps.all = true;
+    }
+    if (!checkoutProps.all) {
+      return; // no ids and no all.
+    }
     const idsOnWorkspace = checkoutProps.includeLocallyDeleted
       ? this.workspace.listIdsIncludeRemoved()
       : this.workspace.listIds();
