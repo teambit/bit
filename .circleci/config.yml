@@ -290,6 +290,104 @@ commands:
       - run: cd bit && docker push <<parameters.image_name>>:`npm show @teambit/bit version`<<parameters.docker_tag_suffix>>
       - run: cd bit && docker push <<parameters.image_name>>:latest<<parameters.docker_tag_suffix>>
 
+  # Common cache operations
+  restore_common_caches:
+    steps:
+      - restore_cache:
+          key: bitsrc-registry10
+      - restore_cache:
+          key: core-aspect-env-v0.0.72-v1
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
+
+  # Complete Bit environment setup
+  setup_bit_environment:
+    parameters:
+      env:
+        default: "hub"
+        type: string
+      token_env_var:
+        default: "BIT_CLOUD_PROD_TOKEN"
+        type: string
+    steps:
+      - bit_global_for_npm
+      - bit_config:
+          env: "<<parameters.env>>"
+      - restore_cache:
+          key: bitsrc-ssh-key3
+      - restore_common_caches
+      - run: bit config set user.token ${<<parameters.token_env_var>>}
+
+  # Test results and artifacts storage
+  store_test_results_and_artifacts:
+    parameters:
+      test_results_path:
+        default: "junit"
+        type: string
+      artifacts_path:
+        default: "junit"
+        type: string
+      logs_path:
+        default: "~/Library/Caches/Bit/logs"
+        type: string
+    steps:
+      - store_test_results:
+          path: <<parameters.test_results_path>>
+      - store_artifacts:
+          path: <<parameters.artifacts_path>>
+      - store_artifacts:
+          path: <<parameters.logs_path>>
+
+  # Bundle environment setup
+  setup_bundle_environment:
+    steps:
+      - attach_workspace:
+          at: ./
+      - set_bit_cloud_registry
+      - setup_bit_version
+      - setup_pnpm
+
+  # Platform-specific bit installation for bundles
+  install_bit_for_platform:
+    parameters:
+      platform_configs:
+        type: string
+        default: ""
+      arch_suffix:
+        type: string
+        default: ""
+    steps:
+      - run:
+          name: install bit for platform
+          command: >
+            cd bit-${BIT_VERSION} &&
+            pnpm init &&
+            echo "node-linker=hoisted" >> .npmrc &&
+            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
+            <<parameters.platform_configs>> &&
+            pnpm add @teambit/bit
+
+  # Windows Bit environment setup
+  windows_setup_bit_environment:
+    steps:
+      - attach_workspace:
+          at: .
+      - windows_add_bvm_to_path
+      - windows_set_node_version
+      - restore_cache:
+          key: v2-bvm-folder-{{ checksum "version.txt" }}
+      - run: bit -v
+      - run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      - restore_cache:
+          key: windows_bitsrc-ssh-key-v1
+      - restore_cache:
+          key: windows_bitsrc-registry-v1
+      - bit_config:
+          token: "fake-token"
+
   # E2E test command
   e2e_test_cmd:
     parameters:
@@ -398,10 +496,7 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - restore_cache:
-          key: bitsrc-registry10
-      - restore_cache:
-          key: core-aspect-env-v0.0.72-v1
+      - restore_common_caches
       - run: echo $BIT_FEATURES
       - run: node -v
       - run: npm -v
@@ -409,9 +504,6 @@ jobs:
       #     name: 'install husky globally'
       #     command: 'npm i -g husky'
       - install_bvm
-      - run: npm view @teambit/bit version > ./version.txt
-      - restore_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - bvm_upgrade
       - run: cd bit && bbit init
       - run:
@@ -457,10 +549,9 @@ jobs:
           command: 'cd bit && node --max-old-space-size=4096 node_modules/eslint/bin/eslint.js "{src,e2e,scopes,components}/**/*.{ts,tsx}" --format junit -o junit/eslint-results.xml'
           environment:
             NODE_OPTIONS: --max-old-space-size=4096
-      - store_test_results:
-          path: bit/junit
-      - store_artifacts:
-          path: bit/junit
+      - store_test_results_and_artifacts:
+          test_results_path: bit/junit
+          artifacts_path: bit/junit
 
   generate_and_check_types:
     <<: *defaults
@@ -509,22 +600,10 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - bit_global_for_npm
-      - bit_config:
-          env: "hub"
-      - restore_cache:
-          key: bitsrc-ssh-key3
-      - restore_cache:
-          key: bitsrc-registry10
-      - run: npm view @teambit/bit version > ./version.txt
-      - restore_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
-      - restore_cache:
-          key: core-aspect-env-v0.0.72-v1
+      - setup_bit_environment
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
-      - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
       - run:
           name: 'bit ci pr'
           command: 'cd bit && bit ci pr --build'
@@ -543,24 +622,12 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - bit_global_for_npm
-      - bit_config:
-          env: "hub"
-      - restore_cache:
-          key: bitsrc-ssh-key3
-      - restore_cache:
-          key: bitsrc-registry10
-      - run: npm view @teambit/bit version > ./version.txt
-      - restore_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
-      - restore_cache:
-          key: core-aspect-env-v0.0.72-v1
+      - setup_bit_environment
       - update_ssh_agent
       - set_git_credentials
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
-      - run: bit config set user.token ${BIT_CLOUD_PROD_TOKEN}
       - run:
           name: 'bit ci merge'
           command: 'cd bit && bit ci merge --build ${BIT_CI_MERGE_EXTRA_FLAGS}'
@@ -593,12 +660,8 @@ jobs:
       - attach_workspace:
           at: ./
       - bit_global_for_npm
-      - restore_cache:
-          key: bitsrc-registry10
+      - restore_common_caches
       - install_bvm
-      - run: npm view @teambit/bit version > ./version.txt
-      - restore_cache:
-          key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
       - bvm_upgrade
       - e2e_test_cmd:
          bit_bin: "--bin_bit=bbit"
@@ -909,25 +972,8 @@ jobs:
       SKIP_BIT_DEV_TESTS: "true"
       BIT_FEATURES: cloud-importer-v2
     steps:
-      - attach_workspace:
-          at: .
       # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
-      - windows_add_bvm_to_path
-      - windows_set_node_version
-      # - run: Get-Content -Path .\version.txt
-      # - restore_cache:
-      #     key: bvm-folder-v1
-      - restore_cache:
-          key: v2-bvm-folder-{{ checksum "version.txt" }}
-      - run: bit -v
-      - run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      - restore_cache:
-          key: windows_bitsrc-ssh-key-v1
-      - restore_cache:
-          key: windows_bitsrc-registry-v1
-          # key: windows_bitsrc-registry-stg-v2
+      - windows_setup_bit_environment
       # -
       #   restore_cache:
       #     keys:
@@ -937,8 +983,6 @@ jobs:
       #   run: 'chmod 400 ~/.ssh/id_rsa'
       # -
       #   run: 'ssh-add ~/.ssh/id_rsa'
-      - bit_config:
-          token: "fake-token"
       - run: 'pwd'
       - run: 'ls'
       - run: 'ls bit\bit'
@@ -957,31 +1001,13 @@ jobs:
       SKIP_BIT_DEV_TESTS: "true"
     parallelism: 25
     steps:
-      - attach_workspace:
-          at: .
       # We can't use Node.js newer than 16.13.2 due to this issue with npm: https://github.com/npm/cli/issues/4234
-      - windows_add_bvm_to_path
-      - windows_set_node_version
-      # - run: Get-Content -Path .\version.txt
-      # - restore_cache:
-      #     key: bvm-folder-v1
-      - restore_cache:
-          key: v2-bvm-folder-{{ checksum "version.txt" }}
-      # - run: bit -v
+      - windows_setup_bit_environment
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
-      - run: bit -v
       # - run: 'npm i -g @teambit/bvm'
       # - run: 'bvm list'
       # - run: 'bvm link'
       # - run: bit -v
-      - run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      - restore_cache:
-          key: windows_bitsrc-ssh-key-v1
-      - restore_cache:
-          key: windows_bitsrc-registry-v1
-          # key: windows_bitsrc-registry-stg-v2
       # -
       #   restore_cache:
       #     keys:
