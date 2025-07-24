@@ -259,7 +259,7 @@ export default class CommandHelper {
   setConfig(configName: string, configVal: string, flags = '') {
     return this.runCmd(`bit config set ${configName} ${configVal} ${flags}`);
   }
-  setScope(scopeName: string, component: string) {
+  setScope(scopeName: string, component = '') {
     return this.runCmd(`bit scope set ${scopeName} ${component}`);
   }
   renameScope(oldScope: string, newScope: string, flags = '') {

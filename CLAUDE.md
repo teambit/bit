@@ -28,6 +28,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Running specific e2e tests:** To run a specific test during development, add `.only` to the describe or it block (e.g., `describe.only(...)` or `it.only(...)`), then run `npm run e2e-test`.
 
+**Bug reproduction testing:** When asked to reproduce a bug, create an e2e test instead of creating test directories in the current workspace. You cannot create nested Bit workspaces. E2E test helpers provide workspace creation methods that use temporary directories and automatically clean up after tests.
+
 ### Linting and Formatting
 
 - `npm run lint` - Run ESLint and TypeScript type checking
@@ -72,10 +74,6 @@ Bit is built using a component-based architecture where the entire codebase is c
 - `scopes/dependencies/` - Dependency management
 - `scopes/workspace/` - Workspace management
 - `scopes/scope/` - Remote scope operations
-
-**Legacy Code:**
-
-- `components/legacy/` - Legacy Bit implementation for backward compatibility
 
 ### Aspect System
 
