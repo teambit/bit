@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import { parse } from 'comment-json';
 import mapSeries from 'p-map-series';
+import pMap from 'p-map';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
@@ -1212,6 +1213,95 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
       reason,
     });
     return this.getMany(ids, loadOpts, throwOnError);
+  }
+
+  /**
+   * This is happening when the user is running "git pull", which updates ".bitmap" file, but the local scope objects
+   * are not updated yet ("bit import" is not run yet).
+   * Although it might happen on a lane. This is rare. Because using git with bit normally means that locally you don't have
+   * any lane. The CI is the one that creates the lanes.
+   * The following conditions are checked:
+   * 1. we're on main.
+   * 2. git is enabled.
+   * 3. components on .bitmap has tags that are not in the local scope.
+   *
+   * It is designed to be performant. On mac M1 with 337 components, it takes around 100ms.
+   *
+   * @returns array of component IDs that have tags in .bitmap but not in local scope, or empty array if not outdated
+   */
+  private async getOutdatedIdsAgainstGit(): Promise<ComponentID[]> {
+    if (!this.consumer.isOnMain()) {
+      return [];
+    }
+    if (!(await fs.pathExists(path.join(this.path, '.git')))) {
+      return [];
+    }
+
+    // Collect bitmap components that have tags not in local scope
+    const bitmapIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
+    const outdatedIds = await pMap(
+      bitmapIds,
+      async (bitmapId) => {
+        if (!bitmapId.version) return;
+        const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(bitmapId.changeVersion(undefined));
+        if (!modelComponent || !modelComponent.hasTag(bitmapId.version)) {
+          // Component doesn't exist in scope or exists but this tag version is missing
+          return bitmapId;
+        }
+
+        return null;
+      },
+      { concurrency: 30 }
+    );
+
+    return compact(outdatedIds);
+  }
+
+  /**
+   * This is relevant when the user is running "git pull", which updates ".bitmap" file, but the local scope objects
+   * are not updated yet ("bit import" is not run yet). In case it found outdated components, it imports them.
+   *
+   * Important: this is only for main (not lanes) and only when using git and only for tags, not snaps.
+   * see `getOutdatedIdsAgainstGit` for more info.
+   */
+  async importObjectsIfOutdatedAgainstBitmap(): Promise<void> {
+    const outdatedIds = await this.getOutdatedIdsAgainstGit();
+    if (outdatedIds.length) {
+      await this.importCurrentObjects(outdatedIds);
+      this.logger.setStatusLine(`imported ${outdatedIds.length} components that were outdated against bitmap`);
+    }
+  }
+
+  /**
+   * This is pretty much the same as `importer.importCurrentObjects`.
+   * The reason for the duplication is that many aspects can't depend on the `importer` aspect, due to circular dependencies.
+   * The importer aspect is reacher in a way that it shows the results of what was imported by comparing the before and after.
+   */
+  async importCurrentObjects(compIds?: ComponentID[]) {
+    const lane = await this.importCurrentLaneIfMissing();
+    if (lane) {
+      return; // it was all imported in the function above.
+    }
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope.legacyScope);
+    const allIds = compIds || this.consumer.bitMap.getAllBitIdsFromAllLanes();
+    const ids = ComponentIdList.fromArray(allIds.filter((id) => id.hasScope()));
+    await scopeComponentsImporter.importWithoutDeps(ids.toVersionLatest(), {
+      cache: false,
+      includeVersionHistory: true,
+      fetchHeadIfLocalIsBehind: true,
+      ignoreMissingHead: true,
+      reason: `of their latest on main`,
+    });
+
+    this.logger.setStatusLine(`import ${ids.length} components with their dependencies (if missing)`);
+    await scopeComponentsImporter.importMany({
+      ids,
+      ignoreMissingHead: true,
+      preferDependencyGraph: true,
+      reFetchUnBuiltVersion: true,
+      throwForSeederNotFound: false,
+      reason: 'for getting all dependencies',
+    });
   }
 
   async importCurrentLaneIfMissing(): Promise<Lane | undefined> {

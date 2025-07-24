@@ -437,6 +437,10 @@ export class APIForIDE {
     return this.adjustCheckoutResultsToIde(results);
   }
 
+  async importObjectsIfOutdatedAgainstBitmap(): Promise<void> {
+    return this.workspace.importObjectsIfOutdatedAgainstBitmap();
+  }
+
   async getTemplates() {
     const templates = await this.generator.listTemplates();
     return templates;
