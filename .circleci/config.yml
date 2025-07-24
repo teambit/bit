@@ -339,35 +339,6 @@ commands:
       - store_artifacts:
           path: <<parameters.logs_path>>
 
-  # Bundle environment setup
-  setup_bundle_environment:
-    steps:
-      - attach_workspace:
-          at: ./
-      - set_bit_cloud_registry
-      - setup_bit_version
-      - setup_pnpm
-
-  # Platform-specific bit installation for bundles
-  install_bit_for_platform:
-    parameters:
-      platform_configs:
-        type: string
-        default: ""
-      arch_suffix:
-        type: string
-        default: ""
-    steps:
-      - run:
-          name: install bit for platform
-          command: >
-            cd bit-${BIT_VERSION} &&
-            pnpm init &&
-            echo "node-linker=hoisted" >> .npmrc &&
-            echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
-            <<parameters.platform_configs>> &&
-            pnpm add @teambit/bit
-
   # Windows Bit environment setup
   windows_setup_bit_environment:
     steps:
