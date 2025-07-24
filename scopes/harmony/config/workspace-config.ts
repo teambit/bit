@@ -99,7 +99,10 @@ export class WorkspaceConfig implements HostConfig {
     const existing = this.extension(extensionId, options.ignoreVersion);
     if (existing) {
       if (options.mergeIntoExisting) {
-        config = { ...existing, ...config };
+        // Use assign from comment-json to preserve comments when merging
+        assign(this.raw[extensionId], config);
+        this.loadExtensions();
+        return;
       } else if (!options.overrideExisting) {
         throw new ExtensionAlreadyConfigured(extensionId);
       }
