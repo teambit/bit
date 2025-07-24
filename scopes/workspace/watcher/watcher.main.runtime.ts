@@ -30,6 +30,9 @@ export class WatcherMain {
 
   async watch(opts: WatchOptions, msgs?: EventMessages) {
     if (!this.workspace) throw new OutsideWorkspaceError();
+    if (opts.preImport) {
+      await this.workspace.importObjectsIfOutdatedAgainstBitmap();
+    }
     const watcher = new Watcher(this.workspace, this.pubsub, this, opts, msgs);
     await watcher.watch();
   }
