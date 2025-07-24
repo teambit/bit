@@ -1015,6 +1015,21 @@ jobs:
       - store_artifacts:
           path: C:\Users\circleci\AppData\Local\Bit\logs\debug.log
 
+  # # simple job just to print node version on windows
+  # # this is to check what version of node you get when you update the windows orb
+  # # as it's missing in their docs
+  # windows_print_node_version:
+    # <<: *windows_defaults
+    # steps:
+      # # - checkout
+      # - run: node -v
+      # - run: npm -v
+      # - run: yarn -v
+      # # - run: choco install nodejs --version 22.14.0
+      # # - run: node -v
+      # - run: cinst nodejs --version 22.14.0
+      # - run: node -v
+
 # ========================================
 # WORKFLOWS
 # ========================================
@@ -1185,3 +1200,78 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - docker_build_node_22
+
+  # ========================================
+  # DEBUG & TESTING WORKFLOWS (COMMENTED)
+  # ========================================
+
+  # Uncomment in case you want to run the windows tests
+  # build_and_test_windows:
+  #   jobs:
+  #     - windows_set_ssh_key
+  #     - windows_checkout_code
+  #     - windows_bvm_install
+  #     # - windows_bvm_install:
+  #         # requires:
+  #         #   - windows_checkout_code
+  #     - windows_build_bvm:
+  #         requires:
+  #           - windows_bvm_install
+  #           - windows_checkout_code
+  #     - windows_e2e_test_bvm:
+  #         requires:
+  #           - windows_checkout_code
+  #           - windows_set_ssh_key
+  #           - windows_bvm_install
+  #           - windows_build_bvm
+
+  # uncomment to print node version on windows default orb
+  # windows_print_node_version_workflow:
+  #   jobs:
+  #     - windows_print_node_version:
+  #         filters:
+  #           branches:
+  #             only: update-circle-node-versions
+
+  # uncomment to update esbuild arm64 cache
+  # get_arm64_workflow_packages:
+  #   jobs:
+  #     - get_darwin_arm64_packages:
+  #         filters:
+  #           branches:
+  #             only: circle-esbuild-cache
+
+  # uncomment and change the filter branch name to debug the bvm bundle jobs
+  # bvm_bundle_debug:
+  #   jobs:
+  #     - checkout_code:
+  #         filters:
+  #           branches:
+  #             only: manual-release
+  #     - bundle_version_linux:
+  #         filters:
+  #           branches:
+  #             only: manual-release
+  #         requires:
+  #           - checkout_code
+  #     - bundle_version_macos:
+  #         filters:
+  #           branches:
+  #             only: manual-release
+  #         requires:
+  #           - checkout_code
+  #     - bundle_version_windows:
+  #         filters:
+  #           branches:
+  #             only: manual-release
+  #         requires:
+  #           - checkout_code
+  #     - harmony_publish_to_gcloud:
+  #         filters:
+  #           branches:
+  #             only: manual-release
+  #         requires:
+  #           - bundle_version_linux
+  #           - bundle_version_macos
+  #           - bundle_version_windows
+  #           - checkout_code
