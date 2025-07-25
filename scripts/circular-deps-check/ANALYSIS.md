@@ -148,20 +148,20 @@ grep -r "import.*Workspace" scopes/ | grep -v "from.*workspace"
 
 ---
 
-### 2. **HIGH PRIORITY**: Workspace-Config-Files Minimal Dependency Issue
+### 2. **CRITICAL INSIGHT**: Understanding DI Direction vs Circular Dependencies
 
-**Current Dependency Chain:**
+**IMPORTANT**: The DI (Dependency Injection) direction is CORRECT and should NOT be changed:
 
 ```
-workspace-config-files → workspace (FULL DEPENDENCY)
-install → workspace-config-files
-react/react → workspace-config-files
-eslint → workspace-config-files
-prettier → workspace-config-files
+✅ CORRECT (Keep): workspace-config-files → workspace (via DI provider)
+❌ PROBLEM (Fix): workspace → workspace-config-files (likely type import)
 ```
 
 **Root Cause:**
-`workspace-config-files` only needs minimal workspace functionality but imports the full workspace.
+
+- `workspace-config-files` aspect legitimately depends on `workspace` via DI (this is architectural and correct)
+- The circular dependency is created by `workspace` importing types/functionality FROM `workspace-config-files`
+- **Focus should be on removing imports FROM workspace TO workspace-config-files, not the other way around**
 
 **Actual Usage (from `scopes/workspace/workspace-config-files/workspace-config-files.main.runtime.ts`):**
 
@@ -351,13 +351,22 @@ import type { Workspace } from '@teambit/workspace';
 // Solution: Create minimal interface or use generics
 ```
 
-## REALISTIC Implementation Strategy (Based on Findings)
+## REALISTIC Implementation Strategy (CORRECTED Understanding)
 
-### Key Insight: Most "Prod" Dependencies Are Actually Type Dependencies
+### Key Insight: Focus on DI Direction Understanding
 
-- Many cycles marked as "prod" are just `aspect + type` import patterns
-- **The problem is much more solvable than initially thought**
-- Focus on **removing unnecessary type imports** first
+**CRITICAL CORRECTION**: The circular dependency problem is NOT about aspects importing workspace types. It's about components that:
+
+1. **Legitimately depend on workspace-config-files, install, etc. via DI** (correct, keep these)
+2. **But also import types FROM workspace** creating the circular path
+
+**Example Circular Path:**
+
+```
+workspace → (type import) → some-aspect → (DI dependency) → workspace-config-files → (DI dependency) → workspace
+```
+
+**Real Strategy**: Find and remove unnecessary type imports FROM workspace TO other aspects, not the other way around.
 
 ### Phase 1: Easy Wins - Remove Unnecessary Type Imports (Target: 2,056 → 1,600 cycles)
 

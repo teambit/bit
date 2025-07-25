@@ -15,6 +15,8 @@
  *   --verbose: Show detailed output
  */
 
+const bitBin = 'bbit';
+
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -26,7 +28,7 @@ function runBitGraphCycles() {
     console.log('Running bit graph --json --cycles...');
     console.log('(This may take a few minutes for large repositories)');
 
-    const output = execSync('bit graph --json --cycles', {
+    const output = execSync(`${bitBin} graph --json --cycles`, {
       encoding: 'utf8',
       cwd: path.join(__dirname, '../..'),
       stdio: ['inherit', 'pipe', 'inherit'],
