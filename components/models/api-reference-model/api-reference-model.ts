@@ -121,6 +121,8 @@ export class APIReferenceModel {
 
     const exportedAPINodes: APINode[] = exportedSchemaNodes.map((schemaNode) => {
       const targetNode = ExportSchema.isExportSchema(schemaNode) ? schemaNode.exportNode : schemaNode;
+      // @ts-ignore
+      targetNode.name = schemaNode.name === 'default' ? `${targetNode.name} (default)` : targetNode.name;
       return {
         componentId,
         api: targetNode,
