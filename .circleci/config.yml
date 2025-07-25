@@ -526,19 +526,12 @@ jobs:
 
   check_circular_dependencies:
     <<: *defaults
-    resource_class: medium
     steps:
-      - run:
-          name: 'save SHA to a file'
-          command: 'echo $CIRCLE_SHA1 > .circle-sha'
-      - restore_cache:
-          keys:
-            - 'repo-{{ checksum ".circle-sha" }}'
       - attach_workspace:
           at: ./
       - run:
           name: 'check circular dependencies'
-          command: 'cd bit/scripts/circular-deps-check && ./ci-check.sh'
+          command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
 
   generate_and_check_types:
     <<: *defaults
