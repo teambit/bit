@@ -16,11 +16,32 @@ This document provides detailed analysis of circular dependencies in the Bit rep
 - Each aspect's `main.runtime.ts` has a `provider` method that receives dependency instances via dependency injection
 - **Runtime dependencies are enforced to be acyclic** by the aspect system
 
-### The Real Problem: TypeScript Import Types
+### The Real Problem: Pseudo-Runtime Dependencies (Actually Type Usage)
 
-- **Most circular dependencies are from `import type` statements** for TypeScript types
-- Even though these are "dev dependencies", they appear in `bit graph` (correctly)
-- **From TypeScript's perspective, type imports are still circular dependencies**
+**CRITICAL FINDING**: Analysis of actual cycles reveals a misleading pattern:
+
+- **14,147 cycles marked as "prod" dependencies** in bit graph
+- **Only 315 cycles marked as "dev" dependencies**
+- **BUT**: Many "prod" dependencies are actually used primarily for types!
+
+**Key Discovery Pattern**:
+
+```typescript
+// Common pattern causing "prod" circular dependencies:
+import { WorkspaceAspect } from '@teambit/workspace';  // For DI - runtime
+import type { Workspace } from '@teambit/workspace';   // For typing - the actual usage
+
+// Actual usage is often minimal:
+private getWorkspaceIfExist(): Workspace | undefined {  // Only for typing!
+  return this.componentAspect.getHost('...') as Workspace;
+}
+```
+
+**Reality**: Most "prod" circular dependencies are:
+
+1. **Aspect imports for dependency injection** (minimal runtime)
+2. **Type imports for method signatures** (the primary usage)
+3. **Easily breakable** by removing type dependencies or using minimal interfaces
 
 ### Business Impact of Circular Dependencies
 
@@ -288,64 +309,85 @@ grep -r "import.*{.*}.*@teambit/workspace" scopes/ | head -20
 grep -r "import type.*Workspace" scopes/ | wc -l
 ```
 
-### Common Type Import Patterns to Look For
+### Actual Examples Found in Codebase
 
-1. **Unnecessary Generic Imports**:
+**Example 1: component/graph (Easy Fix)**
 
 ```typescript
-// Often found - probably removable
+// Current: Only used for typing return value
 import type { Workspace } from '@teambit/workspace';
-// When only using it for: someMethod(workspace: Workspace)
-// Can be replaced with: someMethod(workspace: any) or generic
+
+private getWorkspaceIfExist(): Workspace | undefined {
+  return this.componentAspect.getHost('teambit.workspace/workspace') as Workspace;
+}
+
+// Fix: Remove type import entirely
+private getWorkspaceIfExist(): any {
+  return this.componentAspect.getHost('teambit.workspace/workspace');
+}
 ```
 
-2. **Method Parameter Types**:
+**Example 2: typescript/typescript (Mixed Usage)**
 
 ```typescript
-// Often found - can use module augmentation
-import type { Component } from '@teambit/component';
-function processComponent(comp: Component) { ... }
+// Has both runtime usage AND type usage
+import { WorkspaceAspect } from '@teambit/workspace';  // Keep - needed for DI
+import type { Workspace } from '@teambit/workspace';   // Remove - replace with any/generic
 
-// Can become:
-function processComponent(comp: { id: ComponentID, files: SourceFile[] }) { ... }
+// Runtime usage (keep):
+workspace.registerOnComponentChange(tsMain.onComponentChange.bind(tsMain));
+
+// Type usage (removable):
+readonly workspace: Workspace, // Change to: readonly workspace: any,
 ```
 
-3. **Return Type Imports**:
+**Example 3: workspace-config-files (Refactorable)**
 
 ```typescript
-// Often found - might be removable
-import type { ComponentGraph } from '@teambit/graph';
-async function getGraph(): Promise<ComponentGraph> { ... }
+// Imports full workspace but only uses minimal interface
+import type { Workspace } from '@teambit/workspace';
 
-// Can become:
-async function getGraph(): Promise<any> { ... } // or better generic
+// Only uses: workspace.path, workspace.list(), workspace.componentDir()
+// Solution: Create minimal interface or use generics
 ```
 
-## Implementation Strategy
+## REALISTIC Implementation Strategy (Based on Findings)
 
-### Phase 0: Analysis & Categorization (1 week)
+### Key Insight: Most "Prod" Dependencies Are Actually Type Dependencies
 
-1. **Identify type-only vs runtime circular dependencies**
-2. **Map most impactful cycles for auto-tagging reduction**
-3. **Prioritize by business impact** (auto-tagging reduction)
+- Many cycles marked as "prod" are just `aspect + type` import patterns
+- **The problem is much more solvable than initially thought**
+- Focus on **removing unnecessary type imports** first
 
-### Phase 1: Type Import Cycles (Target: 2,056 → 1,500 cycles)
+### Phase 1: Easy Wins - Remove Unnecessary Type Imports (Target: 2,056 → 1,600 cycles)
 
-1. **Remove unnecessary type imports** - Many might not be needed at all
-2. **Use module augmentation** for the remaining necessary type imports
-3. **Create minimal interfaces** only for frequently-used subsets (not full Workspace)
-4. **Use generic/utility types** instead of importing concrete types
+**Immediate Actions (Low Risk, High Impact):**
 
-**Realistic Approach**: Focus on **removing** and **localizing** type imports rather than extracting large interfaces
+1. **component/graph**: Remove `import type { Workspace }` → use `any`
+2. **docs/docs**: Remove `import type { Workspace }` if only used for typing
+3. **git/ci**: Remove `import type { Workspace }` if minimal usage
+4. **compilation/compiler**: Check if `WorkspaceComponentLoadOptions` type is necessary
 
-**Expected reduction:** ~500+ cycles (25%+ improvement)
+**Expected reduction:** ~400+ cycles (20%+ improvement)
 
-### Phase 2: Runtime Import Cycles (Target: 1,500 → 1,000 cycles)
+### Phase 2: Refactor Minimal Runtime Usages (Target: 1,600 → 1,200 cycles)
 
-4. **Refactor actual circular dependencies** using dependency injection
-5. **Split concerns** in tightly coupled components
+**Medium Effort Actions:**
 
-**Expected reduction:** ~500 cycles (aggressive architectural changes)
+5. **typescript/typescript**: Replace `Workspace` type with `any` or minimal interface
+6. **workspace-config-files**: Create minimal interface for the 4 methods it actually uses
+7. **Other components**: Apply same pattern - remove type imports, use `any` or generics
+
+**Expected reduction:** ~400 cycles (systematic type import removal)
+
+### Phase 3: Architectural Changes (Target: 1,200 → 800 cycles)
+
+**Higher Effort (only if needed):**
+
+8. **Address remaining legitimate circular dependencies** using dependency injection
+9. **Focus on the most impactful cycles** for auto-tagging reduction
+
+**Expected reduction:** ~400 cycles (if required)
 
 ## Architecture Insights
 
@@ -457,4 +499,37 @@ Breaking key circular dependencies should dramatically reduce auto-tagging:
 - **Secondary**: Auto-tagging reduction (150+ → ~10-20 components)
 - **Tertiary**: TypeScript project references enablement
 
-The goal is systematic reduction with business impact focus: 2,056 → 1,800 → 1,500 → 1,200 cycles over time.
+## UPDATED NEXT STEPS (Based on Analysis)
+
+1. **Run current measurement**: `node check-circular-deps.js --verbose`
+
+2. **Start with Easiest Win - component/graph**:
+
+   ```bash
+   # Edit: scopes/component/graph/graph-cmd.ts
+   # Change: import type { Workspace } from '@teambit/workspace';
+   # To: Remove the import entirely
+   # Change: private getWorkspaceIfExist(): Workspace | undefined {
+   # To: private getWorkspaceIfExist(): any {
+   ```
+
+3. **Test the impact**:
+
+   ```bash
+   node check-circular-deps.js --verbose
+   # Should see cycle count reduction
+
+   # Test auto-tagging impact:
+   bit tag component/graph --dry-run --verbose
+   ```
+
+4. **Apply same pattern to other easy wins**:
+
+   - Remove `import type { Workspace }` from docs/docs, git/ci, etc.
+   - Replace return types with `any` or remove type annotations
+
+5. **Measure after each change** and scale successful patterns
+
+### **Key Strategy**: Replace unnecessary type imports with `any` - the problem is much more solvable than initially thought!
+
+**Expected Outcome**: 2,056 → 1,600 cycles (20%+ reduction) with low-risk changes.
