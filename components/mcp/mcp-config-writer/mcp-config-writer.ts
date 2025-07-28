@@ -485,16 +485,16 @@ export class McpConfigWriter {
   /**
    * Get default Bit MCP rules content from template file
    */
-  static async getDefaultRulesContent(consumerProject: boolean = false, templateBaseDir?: string): Promise<string> {
+  static async getDefaultRulesContent(consumerProject: boolean = false): Promise<string> {
     const templateName = consumerProject ? 'bit-rules-consumer-template.md' : 'bit-rules-template.md';
-    const templatePath = path.join(templateBaseDir || __dirname, templateName);
+    const templatePath = path.join(__dirname, templateName);
     return fs.readFile(templatePath, 'utf8');
   }
 
   /**
    * Write Bit MCP rules file for VS Code
    */
-  static async writeVSCodeRules(options: RulesOptions, templateBaseDir?: string): Promise<void> {
+  static async writeVSCodeRules(options: RulesOptions): Promise<void> {
     const { isGlobal, workspaceDir, consumerProject = false } = options;
 
     // Determine prompts file path
@@ -504,14 +504,14 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject, templateBaseDir);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject);
     await fs.writeFile(promptsPath, rulesContent);
   }
 
   /**
    * Write Bit MCP rules file for Cursor
    */
-  static async writeCursorRules(options: RulesOptions, templateBaseDir?: string): Promise<void> {
+  static async writeCursorRules(options: RulesOptions): Promise<void> {
     const { isGlobal, workspaceDir, consumerProject = false } = options;
 
     // Determine prompts file path
@@ -521,14 +521,14 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject, templateBaseDir);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject);
     await fs.writeFile(promptsPath, rulesContent);
   }
 
   /**
    * Write Bit MCP rules file for Roo Code
    */
-  static async writeRooCodeRules(options: RulesOptions, templateBaseDir?: string): Promise<void> {
+  static async writeRooCodeRules(options: RulesOptions): Promise<void> {
     const { isGlobal, workspaceDir, consumerProject = false } = options;
 
     // Determine prompts file path
@@ -538,14 +538,14 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject, templateBaseDir);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject);
     await fs.writeFile(promptsPath, rulesContent);
   }
 
   /**
    * Write Bit MCP rules file for Cline
    */
-  static async writeClineRules(options: RulesOptions, templateBaseDir?: string): Promise<void> {
+  static async writeClineRules(options: RulesOptions): Promise<void> {
     const { isGlobal, workspaceDir, consumerProject = false } = options;
 
     // Determine prompts file path
@@ -555,14 +555,14 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject, templateBaseDir);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject);
     await fs.writeFile(promptsPath, rulesContent);
   }
 
   /**
    * Write Bit MCP rules file for Claude Code
    */
-  static async writeClaudeCodeRules(options: RulesOptions, templateBaseDir?: string): Promise<void> {
+  static async writeClaudeCodeRules(options: RulesOptions): Promise<void> {
     const { isGlobal, workspaceDir, consumerProject = false } = options;
 
     // Determine prompts file path
@@ -572,7 +572,7 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Get base rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject, templateBaseDir);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject);
 
     // Add integration instructions at the top
     const integrationInstructions = `<!--
@@ -622,7 +622,7 @@ This will automatically include all Bit-specific instructions in your Claude Cod
   /**
    * Write rules file for a specific editor
    */
-  static async writeRulesFile(editor: string, options: RulesOptions, templateBaseDir?: string): Promise<void> {
+  static async writeRulesFile(editor: string, options: RulesOptions): Promise<void> {
     const supportedEditors = ['vscode', 'cursor', 'roo', 'cline', 'claude-code'];
     const editorLower = editor.toLowerCase();
 
@@ -631,15 +631,15 @@ This will automatically include all Bit-specific instructions in your Claude Cod
     }
 
     if (editorLower === 'vscode') {
-      await this.writeVSCodeRules(options, templateBaseDir);
+      await this.writeVSCodeRules(options);
     } else if (editorLower === 'cursor') {
-      await this.writeCursorRules(options, templateBaseDir);
+      await this.writeCursorRules(options);
     } else if (editorLower === 'roo') {
-      await this.writeRooCodeRules(options, templateBaseDir);
+      await this.writeRooCodeRules(options);
     } else if (editorLower === 'cline') {
-      await this.writeClineRules(options, templateBaseDir);
+      await this.writeClineRules(options);
     } else if (editorLower === 'claude-code') {
-      await this.writeClaudeCodeRules(options, templateBaseDir);
+      await this.writeClaudeCodeRules(options);
     }
   }
 

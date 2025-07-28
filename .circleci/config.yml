@@ -78,7 +78,7 @@ commands:
     steps:
       - run: '<<parameters.bin_name>> config set analytics_reporting false'
       - run: '<<parameters.bin_name>> config set error_reporting false'
-      - run: '<<parameters.bin_name>> config set user.name tester'
+      - run: '<<parameters.bin_name>> config set user.name CI'
       - run: '<<parameters.bin_name>> config set user.email ci@bit.dev'
       - run: '<<parameters.bin_name>> config set registry https://node-registry.bit.cloud'
       # - run: '<<parameters.bin_name>> config set user.token <<parameters.token>>'

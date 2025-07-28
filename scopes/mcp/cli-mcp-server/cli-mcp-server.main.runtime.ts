@@ -1283,14 +1283,11 @@ export class CliMcpServerMain {
       rulesOptions.workspaceDir = workspaceDir;
     }
 
-    // Pass the template base directory to the component
-    const templateBaseDir = path.join(__dirname);
-    await McpConfigWriter.writeRulesFile(editor, rulesOptions, templateBaseDir);
+    await McpConfigWriter.writeRulesFile(editor, rulesOptions);
   }
 
   async getRulesContent(consumerProject: boolean = false): Promise<string> {
-    const templateBaseDir = path.join(__dirname);
-    return McpConfigWriter.getDefaultRulesContent(consumerProject, templateBaseDir);
+    return McpConfigWriter.getDefaultRulesContent(consumerProject);
   }
 
   static slots = [];
