@@ -630,22 +630,31 @@ please create a new lane instead, which will include all components of this lane
     };
 
     // Create git branch if requested and git is available
+    let gitBranchWarning: string | undefined;
     if (branch) {
-      await this.createGitBranchForLane(laneName);
+      gitBranchWarning = await this.createGitBranchForLane(laneName);
     }
 
-    return new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps, this).switch();
+    const switchResult = await new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps, this).switch();
+
+    // Add git branch warning to the result if present
+    if (gitBranchWarning) {
+      switchResult.gitBranchWarning = gitBranchWarning;
+    }
+
+    return switchResult;
   }
 
-  private async createGitBranchForLane(laneName: string): Promise<void> {
+  private async createGitBranchForLane(laneName: string): Promise<string | undefined> {
     if (!this.workspace) return;
 
     try {
       // Check if git exists in the project
       const isGit = await fs.pathExists('.git');
       if (!isGit) {
-        this.logger.warn('Git repository not found. Skipping git branch creation.');
-        return;
+        const warning = 'Git repository not found. Skipping git branch creation.';
+        this.logger.warn(warning);
+        return warning;
       }
 
       const gitExecutablePath = getGitExecutablePath();
@@ -656,9 +665,16 @@ please create a new lane instead, which will include all components of this lane
       });
 
       this.logger.info(`Created and checked out git branch: ${laneName}`);
+      return undefined; // No warning
     } catch (err: any) {
       // Don't fail the lane import if git branch creation fails
-      this.logger.warn(`Failed to create git branch "${laneName}": ${err.message}`);
+      const detailedError = err.stderr?.trim() || err.message;
+      const warning = `Failed to create git branch "${laneName}".
+  - Command: ${err.command}
+  - Reason: ${detailedError}`;
+
+      this.logger.warn(warning);
+      return warning;
     }
   }
 
