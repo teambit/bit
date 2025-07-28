@@ -24,8 +24,7 @@ describe('bit lane import with --branch flag', function () {
       // Initialize a new workspace and setup git
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
-      helper.git.initNewGitRepo();
-
+      helper.git.initNewGitRepo(true);
       const laneNameWithoutScope = 'my-test-lane';
 
       helper.command.importLane(laneNameWithoutScope, '--branch');
