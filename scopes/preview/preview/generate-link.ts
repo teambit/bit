@@ -110,8 +110,38 @@ function getModuleImports(moduleLinks: ModuleLink[] = [], tempPackageDir?: strin
 function getComponentImports(componentLinks: ComponentLink[] = []): string {
   return componentLinks
     .map((link) =>
-      link.modules.map((module) => `import * as ${module.varName} from "${module.resolveFrom}";`).join('\n')
+      link.modules
+        .map((module) => {
+          const chunkName = `comp-${link.componentIdentifier.replace(/[^a-z0-9_-]/gi, '_')}`;
+          const compIdJson = JSON.stringify(link.componentIdentifier);
+          const pathJson = JSON.stringify(module.resolveFrom);
+          const chunkNameJson = JSON.stringify(chunkName);
+
+          return `
+function ${module.varName}() {
+  var compId = ${compIdJson};
+  var modPath = ${pathJson};
+  var cache = (typeof window !== 'undefined' && window.__BIT_LOADER_CACHE__) || null;
+
+  if (cache && cache[modPath]) return cache[modPath];
+
+  var p = import(
+    /* webpackChunkName: ${chunkNameJson}, webpackMode: "lazy-once" */ ${pathJson}
+  ).then(function (mod) {
+    return mod || {};
+  }).catch(function (err) {
+    var msg = (err && err.message) ? err.message : String(err);
+    console.error('[preview][load:fail]', compId, msg);
+    return {}; // swallow to keep the rest rendering
+  });
+
+  if (cache) cache[modPath] = p;
+  return p;
+}
+`;
+        })
+        .join('\n')
     )
-    .filter((line) => line !== '') // prevent empty lines
+    .filter(Boolean)
     .join('\n');
 }
