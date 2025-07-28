@@ -1,9 +1,10 @@
+import util from 'util';
 import rimraf from 'rimraf';
 import { v4 } from 'uuid';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
-import { compact, flatten, isEqual, pick } from 'lodash';
+import { compact, flatten, isEqual, pick, partition } from 'lodash';
 import { isFeatureEnabled, DISABLE_CAPSULE_OPTIMIZATION } from '@teambit/harmony.modules.feature-toggle';
 import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import { Component, ComponentMap, ComponentAspect } from '@teambit/component';
@@ -656,18 +657,28 @@ export class IsolatorMain {
     }
 
     if (opts.skipIfExists) {
+      const capsuleHasNodeModules = (capsule: Capsule) => {
+        if (!capsule.fs.existsSync('package.json')) {
+          return false;
+        }
+        try {
+          return capsule.fs.readdirSync('node_modules').length > 0;
+        } catch (error) {
+          if (util.types.isNativeError(error) && 'code' in error && error.code === 'ENOENT') {
+            return false;
+          }
+          throw error;
+        }
+      };
+      const [existingCapsules, capsulesWithNoNodeModules] = partition(capsuleList, capsuleHasNodeModules);
       if (!installOptions.useNesting) {
-        const existingCapsules = CapsuleList.fromArray(
-          capsuleList.filter((capsule) => capsule.fs.existsSync('package.json'))
-        );
-
         if (existingCapsules.length === capsuleList.length) {
           longProcessLogger?.end();
-          return existingCapsules;
+          return CapsuleList.fromArray(existingCapsules);
         }
       } else {
-        capsules = capsules.filter((capsule) => !capsule.fs.existsSync('package.json'));
-        capsuleList = CapsuleList.fromArray(capsules);
+        capsules = capsulesWithNoNodeModules;
+        capsuleList = CapsuleList.fromArray(capsulesWithNoNodeModules);
       }
     }
     const capsulesWithPackagesData = await this.getCapsulesPreviousPackageJson(capsules);
