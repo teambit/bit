@@ -602,10 +602,11 @@ export class CiMain {
 
     if (currentLane) {
       this.logger.console('🗑️ Lane Cleanup');
-      const laneId = currentLane.id;
-      this.logger.console(chalk.blue(`Archiving lane ${laneId.toString()}`));
-      const archiveLane = await this.lanes.removeLanes([laneId()]);
-      if (archiveLane) {
+      const laneId = currentLane.id();
+      this.logger.console(chalk.blue(`Archiving lane ${laneId}`));
+      // force means to remove the lane even if it was not merged. in this case, we don't care much because main already has the changes.
+      const archiveLane = await this.lanes.removeLanes([laneId], { remote: true, force: true });
+      if (archiveLane.length) {
         this.logger.console(chalk.green('Lane archived'));
       } else {
         this.logger.console(chalk.yellow('Failed to archive lane'));
