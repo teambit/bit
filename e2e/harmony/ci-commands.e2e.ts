@@ -3,7 +3,7 @@ import { Helper } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));
 
-describe.only('ci commands', function () {
+describe('ci commands', function () {
   this.timeout(0);
   let helper: Helper;
 
@@ -44,7 +44,13 @@ describe.only('ci commands', function () {
     // Initial git commit and push to remote
     helper.command.runCmd('git add .');
     helper.command.runCmd('git commit -m "initial commit"');
-    helper.command.runCmd('git push -u origin main');
+
+    // Get the current branch name (could be main or master depending on git version)
+    const currentBranch = helper.command.runCmd('git branch --show-current').trim();
+    helper.command.runCmd(`git push -u origin ${currentBranch}`);
+
+    // Store the default branch name for later use
+    return currentBranch;
   }
 
   describe('bit ci pr workflow', () => {
@@ -103,7 +109,7 @@ describe.only('ci commands', function () {
     let mergeOutput: string;
     before(() => {
       setupWorkspaceWithGitRemote();
-      setupComponentsAndInitialCommit();
+      const defaultBranch = setupComponentsAndInitialCommit();
 
       // Create feature branch and make changes
       helper.command.runCmd('git checkout -b feature/test-merge');
@@ -111,8 +117,8 @@ describe.only('ci commands', function () {
       helper.command.runCmd('git add comp1/comp1.js');
       helper.command.runCmd('git commit -m "fix: component update for merge"');
 
-      // Simulate PR merge scenario by going back to main
-      helper.command.runCmd('git checkout main');
+      // Simulate PR merge scenario by going back to default branch
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
       helper.command.runCmd('git merge feature/test-merge');
 
       // Run bit ci merge command
@@ -189,7 +195,7 @@ describe.only('ci commands', function () {
     let mergeOutput: string;
     before(() => {
       setupWorkspaceWithGitRemote();
-      setupComponentsAndInitialCommit();
+      const defaultBranch = setupComponentsAndInitialCommit();
 
       helper.fs.outputFile('comp1/comp1.js', 'console.log("merge test");');
       helper.command.createLane('test-merge-lane');
@@ -200,8 +206,8 @@ describe.only('ci commands', function () {
       helper.command.runCmd('git add .');
       helper.command.runCmd('git commit -m "fix: component update for merge"');
 
-      // Simulate PR merge scenario by going back to main
-      helper.command.runCmd('git checkout main');
+      // Simulate PR merge scenario by going back to default branch
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
       helper.command.runCmd('git merge feature/test-merge');
 
       // Run bit ci merge command
