@@ -688,4 +688,63 @@ describe('CliMcpServer Direct Aspect Tests', function () {
       });
     });
   });
+
+  describe('Rules Methods', () => {
+    it('should get rules content without error', async () => {
+      // This test reproduces the bug where bit-rules-template.md was not found
+      const rulesContent = await mcpServer.getRulesContent(false);
+      expect(rulesContent).to.be.a('string');
+      expect(rulesContent).to.contain('# Bit MCP Agent Instructions');
+      expect(rulesContent).to.contain('Core Objectives');
+    });
+
+    it('should get consumer project rules content without error', async () => {
+      const rulesContent = await mcpServer.getRulesContent(true);
+      expect(rulesContent).to.be.a('string');
+      expect(rulesContent).to.contain('## How to Install and Use Bit Components');
+      expect(rulesContent).to.contain('Bit Components are reusable pieces of code');
+    });
+
+    it('should write rules file for VS Code without error', async () => {
+      await mcpServer.writeRulesFile(
+        'vscode',
+        {
+          isGlobal: false,
+          consumerProject: false,
+        },
+        workspacePath
+      );
+
+      // Check that the rules file was created
+      const rulesPath = path.join(workspacePath, '.github', 'instructions', 'bit.instructions.md');
+      const rulesExists = await fs.pathExists(rulesPath);
+      expect(rulesExists).to.be.true;
+
+      // Check content
+      const rulesContent = await fs.readFile(rulesPath, 'utf8');
+      expect(rulesContent).to.contain('# Bit MCP Agent Instructions');
+      expect(rulesContent).to.contain('Core Objectives');
+    });
+
+    it('should write consumer project rules file without error', async () => {
+      await mcpServer.writeRulesFile(
+        'vscode',
+        {
+          isGlobal: false,
+          consumerProject: true,
+        },
+        workspacePath
+      );
+
+      // Check that the rules file was created
+      const rulesPath = path.join(workspacePath, '.github', 'instructions', 'bit.instructions.md');
+      const rulesExists = await fs.pathExists(rulesPath);
+      expect(rulesExists).to.be.true;
+
+      // Check content is different for consumer project
+      const rulesContent = await fs.readFile(rulesPath, 'utf8');
+      expect(rulesContent).to.contain('## How to Install and Use Bit Components');
+      expect(rulesContent).to.contain('Bit Components are reusable pieces of code');
+    });
+  });
 });
