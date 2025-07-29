@@ -661,6 +661,7 @@ export class IsolatorMain {
         if (!capsule.fs.existsSync('package.json')) {
           return false;
         }
+        if (!installOptions.useNesting) return true;
         try {
           return capsule.fs.readdirSync('node_modules').length > 0;
         } catch (error) {
