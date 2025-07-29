@@ -1,25 +1,30 @@
 import semver from 'semver';
 import { isEmpty } from 'lodash';
-import {
-  DependencyResolverAspect,
+import type {
   DependencyResolverMain,
   WorkspacePolicy,
   WorkspacePolicyConfigKeysNames,
   WorkspacePolicyEntry,
 } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { snapToSemver } from '@teambit/component-package-version';
 import tempy from 'tempy';
 import fs from 'fs-extra';
 import { MainRuntime } from '@teambit/cli';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
-import { ConfigAspect, ConfigMain } from '@teambit/config';
-import { MergeStrategy, mergeFiles, MergeFileParams } from '@teambit/merging';
+import type { ConfigMain } from '@teambit/config';
+import { ConfigAspect } from '@teambit/config';
+import type { MergeStrategy, MergeFileParams } from '@teambit/merging';
+import { mergeFiles } from '@teambit/merging';
 import { isRange1GreaterThanRange2Naively } from '@teambit/pkg.modules.semver-helper';
-import { ConfigMergeResult, parseVersionLineWithConflict } from './config-merge-result';
+import type { ConfigMergeResult } from './config-merge-result';
+import { parseVersionLineWithConflict } from './config-merge-result';
 import { ConfigMergerAspect } from './config-merger.aspect';
 import { AggregatedDeps } from './aggregated-deps';
 

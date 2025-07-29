@@ -1,11 +1,11 @@
 import { pickBy, isEmpty } from 'lodash';
 import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_PACKAGE_MANAGER } from '@teambit/legacy.constants';
-import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import AbstractConfig from './abstract-config';
 import { InvalidPackageJson } from './exceptions';
 import InvalidPackageManager from './exceptions/invalid-package-manager';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { ILegacyWorkspaceConfig, PackageManagerClients } from './legacy-workspace-config-interface';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { ILegacyWorkspaceConfig, PackageManagerClients } from './legacy-workspace-config-interface';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;

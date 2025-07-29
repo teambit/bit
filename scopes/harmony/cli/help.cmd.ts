@@ -1,5 +1,5 @@
 import type { Command, CommandOptions } from './command';
-import { CLIMain } from './cli.main.runtime';
+import type { CLIMain } from './cli.main.runtime';
 import { formatHelp } from './help';
 
 export class HelpCmd implements Command {

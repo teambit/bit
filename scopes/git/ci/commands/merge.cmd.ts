@@ -1,9 +1,9 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import { OutsideWorkspaceError, type Workspace } from '@teambit/workspace';
-import { ReleaseType } from 'semver';
+import type { ReleaseType } from 'semver';
 import { validateOptions } from '@teambit/snapping';
-import { CiMain } from '../ci.main.runtime';
+import type { CiMain } from '../ci.main.runtime';
 
 type Options = {
   message?: string;

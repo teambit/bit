@@ -1,8 +1,10 @@
 import { cloneDeep, uniqBy } from 'lodash';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BitIdStr } from '@teambit/legacy-bit-id';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
+import type { BitIdStr } from '@teambit/legacy-bit-id';
 import { ValidationError } from '@teambit/legacy.cli.error';
-import { Scope, validateType } from '@teambit/legacy.scope';
+import type { Scope } from '@teambit/legacy.scope';
+import { validateType } from '@teambit/legacy.scope';
 import { fetchRemoteVersions } from '@teambit/scope.remotes';
 import { isValidPath } from '@teambit/legacy.utils';
 import Dependency from './dependency';

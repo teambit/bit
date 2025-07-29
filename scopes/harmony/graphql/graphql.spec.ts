@@ -1,9 +1,10 @@
 import chai, { expect } from 'chai';
 import { loadManyAspects } from '@teambit/harmony.testing.load-aspect';
 import { WorkspaceAspect } from '@teambit/workspace';
-import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { GraphqlAspect } from './graphql.aspect';
-import { GraphqlMain } from './graphql.main.runtime';
+import type { GraphqlMain } from './graphql.main.runtime';
 import { LanesAspect } from '@teambit/lanes';
 
 chai.use(require('chai-fs'));

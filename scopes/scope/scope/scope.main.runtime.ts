@@ -3,51 +3,67 @@ import path from 'path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import semver from 'semver';
 import multimatch from 'multimatch';
-import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import { RawBuilderData, BuilderAspect } from '@teambit/builder';
-import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import type { AspectData, ComponentMain, ComponentMap, ResolveAspectsOptions } from '@teambit/component';
-import { Component, ComponentAspect, ComponentFactory, Snap, State, AspectEntry } from '@teambit/component';
+import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
+import type { RawBuilderData } from '@teambit/builder';
+import { BuilderAspect } from '@teambit/builder';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type {
+  AspectData,
+  ComponentMain,
+  ComponentMap,
+  ResolveAspectsOptions,
+  Component,
+  ComponentFactory,
+  Snap,
+  State,
+} from '@teambit/component';
+import { ComponentAspect, AspectEntry } from '@teambit/component';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
-import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
-import { ExpressAspect, ExpressMain } from '@teambit/express';
+import type { Harmony, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
+import { IsolatorAspect } from '@teambit/isolator';
+import type { LoggerMain, Logger } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { ExpressMain } from '@teambit/express';
+import { ExpressAspect } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import {
-  Ref,
-  Repository,
-  DependenciesGraph,
-  DepEdge,
-  ObjectList,
-  ModelComponent,
-  Lane,
-  Version,
-} from '@teambit/objects';
-import { Scope as LegacyScope, LegacyOnTagResult, Scope, Types, loadScopeIfExist } from '@teambit/legacy.scope';
-import { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
+import type { DependenciesGraph, DepEdge, ModelComponent, Lane, Version } from '@teambit/objects';
+import { Ref, Repository, ObjectList } from '@teambit/objects';
+import type { Scope as LegacyScope, LegacyOnTagResult, Types } from '@teambit/legacy.scope';
+import { Scope, loadScopeIfExist } from '@teambit/legacy.scope';
+import type { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { ExportPersist, PostSign } from '@teambit/scope.remote-actions';
-import { DependencyResolverAspect, DependencyResolverMain, NodeLinker } from '@teambit/dependency-resolver';
-import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
+import type { DependencyResolverMain, NodeLinker } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { Remotes } from '@teambit/scope.remotes';
+import { getScopeRemotes } from '@teambit/scope.remotes';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import { isLikelyPackageName, resolveComponentIdFromPackageName } from '@teambit/pkg.modules.component-package-name';
-import { CompIdGraph, DepEdgeType } from '@teambit/graph';
-import chokidar, { WatchOptions } from 'chokidar';
-import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
-import { SnapsDistance, getDivergeData } from '@teambit/component.snap-distance';
-import { Http, DEFAULT_AUTH_TYPE, AuthData, getAuthDataFromHeader } from '@teambit/scope.network';
-import { remove, FETCH_OPTIONS, ExternalActions } from '@teambit/legacy.scope-api';
+import type { CompIdGraph, DepEdgeType } from '@teambit/graph';
+import type { WatchOptions } from 'chokidar';
+import chokidar from 'chokidar';
+import type { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
+import type { SnapsDistance } from '@teambit/component.snap-distance';
+import { getDivergeData } from '@teambit/component.snap-distance';
+import type { AuthData } from '@teambit/scope.network';
+import { Http, DEFAULT_AUTH_TYPE, getAuthDataFromHeader } from '@teambit/scope.network';
+import type { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
+import { remove, ExternalActions } from '@teambit/legacy.scope-api';
 import { BitError } from '@teambit/bit-error';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { resumeExport } from '@teambit/export';
 import { GLOBAL_SCOPE } from '@teambit/legacy.constants';
 import { BitId } from '@teambit/legacy-bit-id';
-import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
 import { compact, slice, difference, partition } from 'lodash';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
@@ -58,14 +74,16 @@ import { ScopeComponentLoader } from './scope-component-loader';
 import { ScopeCmd } from './scope-cmd';
 import { StagedConfig } from './staged-config';
 import { NoIdMatchPattern } from './exceptions/no-id-match-pattern';
-import { ScopeAspectsLoader, ScopeLoadAspectsOptions } from './scope-aspects-loader';
+import type { ScopeLoadAspectsOptions } from './scope-aspects-loader';
+import { ScopeAspectsLoader } from './scope-aspects-loader';
 import { ClearCacheAction } from './clear-cache-action';
 import { CatScopeCmd } from './debug-commands/cat-scope-cmd';
 import { CatComponentCmd } from './debug-commands/cat-component-cmd';
 import CatObjectCmd from './debug-commands/cat-object-cmd';
 import CatLaneCmd from './debug-commands/cat-lane-cmd';
 import { RunActionCmd } from './run-action/run-action.cmd';
-import { ConfigStoreAspect, ConfigStoreMain, Store } from '@teambit/config-store';
+import type { ConfigStoreMain, Store } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store';
 
 type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;

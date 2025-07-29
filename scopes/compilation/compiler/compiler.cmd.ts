@@ -1,10 +1,10 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
 import type { PubsubMain } from '@teambit/pubsub';
 import chalk from 'chalk';
 import prettyTime from 'pretty-time';
 import { formatCompileResults } from './output-formatter';
-import { WorkspaceCompiler, CompileOptions, BuildResult } from './workspace-compiler';
+import type { WorkspaceCompiler, CompileOptions, BuildResult } from './workspace-compiler';
 import { CompilationInitiator } from './types';
 
 export class CompileCmd implements Command {

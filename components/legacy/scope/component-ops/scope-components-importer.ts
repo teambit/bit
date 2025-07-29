@@ -1,38 +1,42 @@
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Mutex, withTimeout, MutexInterface } from 'async-mutex';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
+import type { MutexInterface } from 'async-mutex';
+import { Mutex, withTimeout } from 'async-mutex';
 import mapSeries from 'p-map-series';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import groupArray from 'group-array';
 import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { uniq, partition, compact, flatten, isEmpty } from 'lodash';
-import { Scope } from '..';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { Scope } from '..';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
-import { ComponentVersion } from '../component-version';
+import type { ComponentVersion } from '../component-version';
 import { ComponentNotFound, HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
-import {
+import type {
   Lane,
   ModelComponent,
   Version,
   VersionHistory,
   BitObjectList,
   ObjectItemsStream,
-  ObjectList,
-  Ref,
   Repository,
 } from '@teambit/objects';
-import SourcesRepository, { ComponentDef } from '../repositories/sources';
-import { Remotes, getScopeRemotes } from '@teambit/scope.remotes';
+import { ObjectList, Ref } from '@teambit/objects';
+import type { ComponentDef } from '../repositories/sources';
+import type SourcesRepository from '../repositories/sources';
+import type { Remotes } from '@teambit/scope.remotes';
+import { getScopeRemotes } from '@teambit/scope.remotes';
 import { VersionDependencies } from '../version-dependencies';
 import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { BuildStatus } from '@teambit/legacy.constants';
 import { NoHeadNoVersion } from '../exceptions/no-head-no-version';
-import { HashesPerRemotes, MissingObjects } from '../exceptions/missing-objects';
+import type { HashesPerRemotes } from '../exceptions/missing-objects';
+import { MissingObjects } from '../exceptions/missing-objects';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
-import { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
+import type { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 
 type HashesPerRemote = { [remoteName: string]: string[] };
 

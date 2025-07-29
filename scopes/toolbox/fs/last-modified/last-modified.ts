@@ -1,5 +1,6 @@
 import globby from 'globby';
-import fs, { Stats } from 'fs-extra';
+import type { Stats } from 'fs-extra';
+import fs from 'fs-extra';
 import { compact } from 'lodash';
 
 /**

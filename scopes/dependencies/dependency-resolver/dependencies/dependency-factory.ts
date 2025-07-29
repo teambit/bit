@@ -1,6 +1,6 @@
-import { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
-import { Dependency, SerializedDependency } from './dependency';
-import { DependencyList } from './dependency-list';
+import type { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
+import type { Dependency, SerializedDependency } from './dependency';
+import type { DependencyList } from './dependency-list';
 
 // export interface DependencyFactory<T extends Dependency, U extends SerializedDependency> {
 //   parse(serializedDependency: U): T;

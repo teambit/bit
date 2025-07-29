@@ -1,5 +1,7 @@
-import { UIAspect, UIRuntime, UiUI } from '@teambit/ui';
-import React, { ReactNode } from 'react';
+import type { UiUI } from '@teambit/ui';
+import { UIAspect, UIRuntime } from '@teambit/ui';
+import type { ReactNode } from 'react';
+import React from 'react';
 import UAParser from 'ua-parser-js';
 import { UserAgentProvider } from '@teambit/ui-foundation.ui.hooks.use-user-agent';
 import { UserAgentAspect } from './user-agent.aspect';

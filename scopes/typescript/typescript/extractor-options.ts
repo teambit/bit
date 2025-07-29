@@ -1,4 +1,4 @@
-import { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
+import type { SchemaNodeTransformer, SchemaTransformer } from './schema-transformer';
 
 export type ExtractorOptions = {
   /**

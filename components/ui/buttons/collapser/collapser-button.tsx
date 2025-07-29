@@ -1,6 +1,7 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import classNames from 'classnames';
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React from 'react';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 
 import styles from './collapser-button.module.scss';

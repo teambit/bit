@@ -1,11 +1,12 @@
-import React, { HTMLAttributes } from 'react';
-import { SchemaNode, EnumMemberSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { HTMLAttributes } from 'react';
+import React from 'react';
+import type { SchemaNode, EnumMemberSchema } from '@teambit/semantics.entities.semantic-schema';
 import {
   groupByNodeSignatureType,
   sortSignatureType,
 } from '@teambit/api-reference.utils.group-schema-node-by-signature';
 import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
-import { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
 import {
   FunctionNodeSummary,
   VariableNodeSummary,

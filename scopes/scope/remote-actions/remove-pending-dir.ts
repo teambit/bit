@@ -1,5 +1,5 @@
-import { Scope } from '@teambit/legacy.scope';
-import { Action } from './action';
+import type { Scope } from '@teambit/legacy.scope';
+import type { Action } from './action';
 
 type Options = { clientId: string };
 

@@ -1,12 +1,16 @@
-import { ComponentID } from '@teambit/component-id';
-import { fetch, put, remove, action, FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
-import { ComponentsList, ListScopeResult } from '@teambit/legacy.component-list';
-import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { ComponentID } from '@teambit/component-id';
+import type { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
+import { fetch, put, remove, action } from '@teambit/legacy.scope-api';
+import type { ListScopeResult } from '@teambit/legacy.component-list';
+import { ComponentsList } from '@teambit/legacy.component-list';
+import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import { ComponentLog, ObjectItemsStream, ObjectList, Ref } from '@teambit/objects';
-import { RemovedObjects, LaneData, loadScope, Scope, ScopeDescriptor } from '@teambit/legacy.scope';
+import type { ComponentLog, ObjectItemsStream, ObjectList } from '@teambit/objects';
+import { Ref } from '@teambit/objects';
+import type { LaneData, Scope, ScopeDescriptor } from '@teambit/legacy.scope';
+import { RemovedObjects, loadScope } from '@teambit/legacy.scope';
 import { FsScopeNotLoaded } from '../exceptions';
-import { Network } from '../network';
+import type { Network } from '../network';
 
 export default class Fs implements Network {
   scopePath: string;

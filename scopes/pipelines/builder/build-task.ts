@@ -1,12 +1,12 @@
 import type { Component } from '@teambit/component';
-import { LaneId } from '@teambit/lane-id';
-import { ExecutionContext } from '@teambit/envs';
+import type { LaneId } from '@teambit/lane-id';
+import type { ExecutionContext } from '@teambit/envs';
 import type { Network } from '@teambit/isolator';
 import type { ComponentResult } from './types';
 import type { ArtifactDefinition } from './artifact';
-import { TaskResultsList } from './task-results-list';
-import { TaskResults } from './build-pipe';
-import { PipeName } from './builder.service';
+import type { TaskResultsList } from './task-results-list';
+import type { TaskResults } from './build-pipe';
+import type { PipeName } from './builder.service';
 
 export type TaskLocation = 'start' | 'end';
 

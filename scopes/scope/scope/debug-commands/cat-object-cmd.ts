@@ -1,5 +1,5 @@
 import { catObject } from './cat-object';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 
 export default class CatObjectCmd implements Command {
   name = 'cat-object <hash>';

@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-import { Modules, readModulesManifest } from '@pnpm/modules-yaml';
+import type { Modules } from '@pnpm/modules-yaml';
+import { readModulesManifest } from '@pnpm/modules-yaml';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import rimraf from 'rimraf';
 import { Extensions } from '@teambit/legacy.constants';

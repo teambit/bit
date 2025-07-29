@@ -4,8 +4,8 @@ import fs from 'fs-extra';
 import { join } from 'path';
 import pMapSeries from 'p-map-series';
 import { compact } from 'lodash';
-import { ConfigFile, MergeConfigFilesFunc } from '../config-writer-entry';
-import {
+import type { ConfigFile, MergeConfigFilesFunc } from '../config-writer-entry';
+import type {
   EnvCompsDirsMap,
   EnvConfigWriterEntry,
   EnvMapValue,

@@ -1,9 +1,11 @@
 import chai, { expect } from 'chai';
 import { loadManyAspects } from '@teambit/harmony.testing.load-aspect';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents } from '@teambit/component.testing.mock-components';
-import { RenamingMain } from './renaming.main.runtime';
+import type { RenamingMain } from './renaming.main.runtime';
 import { RenamingAspect } from './renaming.aspect';
 
 chai.use(require('chai-fs'));

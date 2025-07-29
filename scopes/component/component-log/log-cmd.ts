@@ -1,8 +1,8 @@
 import c from 'chalk';
 import Table from 'cli-table';
-import { Command, CommandOptions } from '@teambit/cli';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import { ComponentLogMain, LogOpts } from './component-log.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { LegacyComponentLog } from '@teambit/legacy-component-log';
+import type { ComponentLogMain, LogOpts } from './component-log.main.runtime';
 
 type LogFlags = {
   remote?: boolean;

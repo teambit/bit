@@ -1,6 +1,6 @@
-import { BuildContext } from '@teambit/builder';
-import { Component } from '@teambit/component';
-import { LinterContext } from './linter-context';
+import type { BuildContext } from '@teambit/builder';
+import type { Component } from '@teambit/component';
+import type { LinterContext } from './linter-context';
 
 export type ComponentLintResult = {
   /**

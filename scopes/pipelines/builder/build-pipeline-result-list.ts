@@ -1,9 +1,11 @@
-import { ComponentID, ComponentMap, Component } from '@teambit/component';
+import type { ComponentID, Component } from '@teambit/component';
+import { ComponentMap } from '@teambit/component';
 import { isEmpty, compact } from 'lodash';
 import type { ArtifactObject } from '@teambit/component.sources';
-import { Artifact, ArtifactList } from './artifact';
-import { TaskResults } from './build-pipe';
-import { TaskMetadata } from './types';
+import type { Artifact } from './artifact';
+import { ArtifactList } from './artifact';
+import type { TaskResults } from './build-pipe';
+import type { TaskMetadata } from './types';
 
 export type PipelineReport = {
   taskId: string; // task aspect-id

@@ -4,10 +4,14 @@ import { flatten } from 'lodash';
 import { SubMenu } from '@teambit/design.controls.menu';
 // import { useThemePicker, useNextTheme } from '@teambit/base-react.themes.theme-switcher';
 import { Slot } from '@teambit/harmony';
-import { UserBar, UserBarItem, UserBarItemSlot, UserBarSection, UserBarSectionSlot } from '@teambit/cloud.ui.user-bar';
-import { LanesAspect, LanesUI } from '@teambit/lanes';
-import { WorkspaceAspect, WorkspaceUI } from '@teambit/workspace';
-import { ComponentAspect, ComponentUI } from '@teambit/component';
+import type { UserBarItem, UserBarItemSlot, UserBarSection, UserBarSectionSlot } from '@teambit/cloud.ui.user-bar';
+import { UserBar } from '@teambit/cloud.ui.user-bar';
+import type { LanesUI } from '@teambit/lanes';
+import { LanesAspect } from '@teambit/lanes';
+import type { WorkspaceUI } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { ComponentUI } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import { CloudAspect } from './cloud.aspect';
 
 export class CloudUI {

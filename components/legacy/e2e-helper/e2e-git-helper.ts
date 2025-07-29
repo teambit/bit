@@ -2,9 +2,9 @@ import fs from 'fs-extra';
 import glob from 'glob';
 import * as path from 'path';
 
-import CommandHelper from './e2e-command-helper';
-import ScopeHelper from './e2e-scope-helper';
-import ScopesData from './e2e-scopes';
+import type CommandHelper from './e2e-command-helper';
+import type ScopeHelper from './e2e-scope-helper';
+import type ScopesData from './e2e-scopes';
 
 export default class GitHelper {
   scopes: ScopesData;

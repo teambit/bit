@@ -1,7 +1,7 @@
 import c from 'chalk';
 import semver from 'semver';
 import Table from 'cli-table';
-import { ListScopeResult } from './lister.main.runtime';
+import type { ListScopeResult } from './lister.main.runtime';
 
 type Row = { id: string; localVersion: string; currentVersion: string; remoteVersion?: string };
 

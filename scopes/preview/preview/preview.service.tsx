@@ -1,14 +1,14 @@
 import filenamify from 'filenamify';
-import { EnvService, ExecutionContext, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
-import { EnvPreviewConfig, PreviewMain } from './preview.main.runtime';
+import type { EnvService, ExecutionContext, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
+import type { EnvPreviewConfig, PreviewMain } from './preview.main.runtime';
 import { BitError } from '@teambit/bit-error';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { Logger } from '@teambit/logger';
-import { Bundler, BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
-import { Component, ComponentID } from '@teambit/component';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { Logger } from '@teambit/logger';
+import type { Bundler, BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
+import type { Component, ComponentID } from '@teambit/component';
 import { join, resolve } from 'path';
 import { outputFileSync, pathExists, readJsonSync } from 'fs-extra';
-import { ScopeMain } from '@teambit/scope';
+import type { ScopeMain } from '@teambit/scope';
 import { html } from './bundler/html-template';
 
 type PreviewTransformationMap = ServiceTransformationMap & {

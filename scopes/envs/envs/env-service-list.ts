@@ -1,5 +1,5 @@
-import { EnvDefinition } from './env-definition';
-import { EnvService } from './services';
+import type { EnvDefinition } from './env-definition';
+import type { EnvService } from './services';
 
 export class EnvServiceList {
   constructor(

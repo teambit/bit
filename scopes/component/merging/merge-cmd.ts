@@ -1,6 +1,6 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
-import { ComponentID } from '@teambit/component-id';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ComponentID } from '@teambit/component-id';
 import { compact } from 'lodash';
 import {
   COMPONENT_PATTERN_HELP,
@@ -9,11 +9,12 @@ import {
   FILE_CHANGES_CHECKOUT_MSG,
   CFG_FORCE_LOCAL_BUILD,
 } from '@teambit/legacy.constants';
-import { ConfigMergeResult, WorkspaceConfigUpdateResult, WorkspaceDepsUpdates } from '@teambit/config-merger';
+import type { ConfigMergeResult, WorkspaceConfigUpdateResult, WorkspaceDepsUpdates } from '@teambit/config-merger';
 import { BitError } from '@teambit/bit-error';
-import { FileStatus, MergeStrategy } from './merge-version';
-import { ApplyVersionResults, MergingMain, ApplyVersionResult } from './merging.main.runtime';
-import { ConfigStoreMain } from '@teambit/config-store';
+import type { MergeStrategy } from './merge-version';
+import { FileStatus } from './merge-version';
+import type { ApplyVersionResults, MergingMain, ApplyVersionResult } from './merging.main.runtime';
+import type { ConfigStoreMain } from '@teambit/config-store';
 
 export class MergeCmd implements Command {
   name = 'merge [component-pattern]';

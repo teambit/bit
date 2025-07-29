@@ -1,6 +1,6 @@
-import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
-import { AsyncEnvHandler, EnvHandler } from '@teambit/envs';
-import { EnvPreviewConfig } from './preview.main.runtime';
+import type { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
+import type { AsyncEnvHandler, EnvHandler } from '@teambit/envs';
+import type { EnvPreviewConfig } from './preview.main.runtime';
 
 /**
  * interface for implementing component previews

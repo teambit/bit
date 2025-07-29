@@ -3,7 +3,7 @@ import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { ComponentModel } from './component-model';
-import { ComponentQueryResult, Filters } from './use-component.model';
+import type { ComponentQueryResult, Filters } from './use-component.model';
 import { GET_COMPONENT } from './use-component.fragments';
 import { useComponentLogs } from './use-component-logs';
 import { ComponentError } from './component-error';

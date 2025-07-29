@@ -1,7 +1,8 @@
 import React from 'react';
-import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
+import type { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
-import { CompareStatusResolver, CompareStatus } from '@teambit/component.ui.component-compare.status-resolver';
+import type { CompareStatus } from '@teambit/component.ui.component-compare.status-resolver';
+import { CompareStatusResolver } from '@teambit/component.ui.component-compare.status-resolver';
 import { WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
 
 import styles from './code-compare.module.scss';

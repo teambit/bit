@@ -1,7 +1,7 @@
-import { Component } from '@teambit/component';
-import { Schema } from '@teambit/graphql';
+import type { Component } from '@teambit/component';
+import type { Schema } from '@teambit/graphql';
 import { gql } from 'graphql-tag';
-import { ForkingMain } from './forking.main.runtime';
+import type { ForkingMain } from './forking.main.runtime';
 
 export function forkingSchema(forking: ForkingMain): Schema {
   return {

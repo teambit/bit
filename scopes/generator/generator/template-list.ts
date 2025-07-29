@@ -1,5 +1,5 @@
-import { EnvContext, EnvHandler } from '@teambit/envs';
-import { ComponentTemplate } from './component-template';
+import type { EnvContext, EnvHandler } from '@teambit/envs';
+import type { ComponentTemplate } from './component-template';
 
 export type TemplateListOptions = {
   name?: string;

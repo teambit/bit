@@ -1,8 +1,9 @@
-import React, { HTMLAttributes } from 'react';
+import type { HTMLAttributes } from 'react';
+import React from 'react';
 import classNames from 'classnames';
 import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
 import { useUpdatedUrlFromQuery } from '@teambit/api-reference.hooks.use-api-ref-url';
-import { TreeNode } from '@teambit/design.ui.tree';
+import type { TreeNode } from '@teambit/design.ui.tree';
 
 import styles from './api-reference-explorer.module.scss';
 

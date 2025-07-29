@@ -1,7 +1,7 @@
 import prettyTime from 'pretty-time';
-import { Route, Request, Response } from '@teambit/express';
-import { Logger } from '@teambit/logger';
-import { APIForIDE } from './api-for-ide';
+import type { Route, Request, Response } from '@teambit/express';
+import type { Logger } from '@teambit/logger';
+import type { APIForIDE } from './api-for-ide';
 
 /**
  * example usage:

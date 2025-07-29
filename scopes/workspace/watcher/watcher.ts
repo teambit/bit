@@ -1,32 +1,34 @@
-import { PubsubMain } from '@teambit/pubsub';
+import type { PubsubMain } from '@teambit/pubsub';
 import fs from 'fs-extra';
 import { dirname, basename, join, sep } from 'path';
 import { compact, difference, partition } from 'lodash';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BIT_MAP, WORKSPACE_JSONC } from '@teambit/legacy.constants';
-import { Consumer } from '@teambit/legacy.consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
-import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import mapSeries from 'p-map-series';
 import chalk from 'chalk';
-import { ChildProcess } from 'child_process';
+import type { ChildProcess } from 'child_process';
 import { UNMERGED_FILENAME } from '@teambit/legacy.scope';
-import chokidar, { FSWatcher } from 'chokidar';
-import { ComponentMap } from '@teambit/legacy.bit-map';
-import { CompilationInitiator } from '@teambit/compiler';
+import type { FSWatcher } from 'chokidar';
+import chokidar from 'chokidar';
+import type { ComponentMap } from '@teambit/legacy.bit-map';
+import type { CompilationInitiator } from '@teambit/compiler';
+import type { Workspace, OnComponentEventResult } from '@teambit/workspace';
 import {
   WorkspaceAspect,
-  Workspace,
-  OnComponentEventResult,
   OnComponentChangeEvent,
   OnComponentAddEvent,
   OnComponentRemovedEvent,
 } from '@teambit/workspace';
-import { CheckTypes } from './check-types';
-import { WatcherMain } from './watcher.main.runtime';
+import type { CheckTypes } from './check-types';
+import type { WatcherMain } from './watcher.main.runtime';
 import { WatchQueue } from './watch-queue';
-import { Logger } from '@teambit/logger';
-import ParcelWatcher, { Event } from '@parcel/watcher';
+import type { Logger } from '@teambit/logger';
+import type { Event } from '@parcel/watcher';
+import ParcelWatcher from '@parcel/watcher';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';
 
 export type WatcherProcessData = { watchProcess: ChildProcess; compilerId: ComponentID; componentIds: ComponentID[] };

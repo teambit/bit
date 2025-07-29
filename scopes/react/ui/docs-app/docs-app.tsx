@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Docs } from '@teambit/docs';
 import { defaultDocs } from '@teambit/docs';
-import { RenderingContext } from '@teambit/preview';
+import type { RenderingContext } from '@teambit/preview';
 import { PropertiesTable } from '@teambit/react.ui.docs.properties-table';
 import { CompositionsCarousel } from '@teambit/react.ui.docs.compositions-carousel';
 import { DocsContent } from '@teambit/react.ui.docs.docs-content';

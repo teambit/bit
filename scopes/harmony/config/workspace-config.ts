@@ -1,20 +1,22 @@
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
-import { LegacyWorkspaceConfig, ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
+import type { ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
+import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { logger } from '@teambit/legacy.logger';
-import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { currentDateAndTimeToFileName } from '@teambit/legacy.consumer';
-import { assign, parse, stringify, CommentObject } from 'comment-json';
+import type { CommentObject } from 'comment-json';
+import { assign, parse, stringify } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { omit } from 'lodash';
 import { WorkspaceAspect } from '@teambit/workspace';
-import { SetExtensionOptions } from './config.main.runtime';
+import type { SetExtensionOptions } from './config.main.runtime';
 import { ExtensionAlreadyConfigured } from './exceptions';
 import InvalidConfigFile from './exceptions/invalid-config-file';
-import { HostConfig } from './types';
+import type { HostConfig } from './types';
 
 const INTERNAL_CONFIG_PROPS = ['$schema', '$schemaVersion', 'require'];
 

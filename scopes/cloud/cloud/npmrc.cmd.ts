@@ -1,8 +1,8 @@
 /* eslint-disable max-classes-per-file */
 import chalk from 'chalk';
 import yesno from 'yesno';
-import { Command, CommandOptions, Flags } from '@teambit/cli';
-import { CloudMain } from './cloud.main.runtime';
+import type { Command, CommandOptions, Flags } from '@teambit/cli';
+import type { CloudMain } from './cloud.main.runtime';
 
 export class NpmrcGenerateCmd implements Command {
   name = 'generate';

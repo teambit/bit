@@ -1,10 +1,10 @@
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { ComponentID } from '@teambit/component';
 import mapSeries from 'p-map-series';
 import { EnvNotFoundInRuntime } from '../exceptions';
 import { ExecutionContext } from '../context';
-import { EnvService, ServiceExecutionResult } from '../services';
-import { EnvRuntime } from './env-runtime';
+import type { EnvService, ServiceExecutionResult } from '../services';
+import type { EnvRuntime } from './env-runtime';
 import { EnvsExecutionResult } from './envs-execution-result';
 
 export interface EnvResult<T extends ServiceExecutionResult> {

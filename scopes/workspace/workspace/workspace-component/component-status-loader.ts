@@ -1,12 +1,16 @@
 import mapSeries from 'p-map-series';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { ModelComponent, VERSION_ZERO } from '@teambit/objects';
-import { Consumer, ComponentsPendingImport, ComponentOutOfSync } from '@teambit/legacy.consumer';
+import type { ModelComponent } from '@teambit/objects';
+import { VERSION_ZERO } from '@teambit/objects';
+import type { Consumer } from '@teambit/legacy.consumer';
+import { ComponentsPendingImport, ComponentOutOfSync } from '@teambit/legacy.consumer';
 import { LATEST } from '@teambit/legacy.constants';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
-import { ComponentNotFoundInPath, ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { Workspace } from '..';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
+import type { Workspace } from '..';
 
 export type ComponentStatusLegacy = {
   modified: boolean;

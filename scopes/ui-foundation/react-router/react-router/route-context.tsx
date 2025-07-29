@@ -1,11 +1,13 @@
-import React, { ReactNode } from 'react';
-import { BrowserRouter, MemoryRouter, HashRouter, RouteProps } from 'react-router-dom';
+import type { ReactNode } from 'react';
+import React from 'react';
+import type { RouteProps } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter, HashRouter } from 'react-router-dom';
 import { StaticRouter } from 'react-router-dom/server';
 import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { NavigationProvider } from '@teambit/base-react.navigation.link';
 import { reactRouterAdapter } from '@teambit/ui-foundation.ui.navigation.react-router-adapter';
-import { ReactRouterUI } from './react-router.ui.runtime';
+import type { ReactRouterUI } from './react-router.ui.runtime';
 import { Routing } from './routing-method';
 
 type RouterContextProps = {

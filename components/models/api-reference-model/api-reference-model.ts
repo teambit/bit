@@ -1,6 +1,8 @@
-import { APISchema, ExportSchema, SchemaNode, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
-import { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
-import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import type { SchemaNode, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
+import { APISchema, ExportSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import type { ComponentIdObj } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 import compact from 'lodash.compact';
 import head from 'lodash.head';
 

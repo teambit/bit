@@ -1,4 +1,4 @@
-import { AppBuildResult } from '@teambit/application';
+import type { AppBuildResult } from '@teambit/application';
 
 export type ReactAppBuildResult = {
   /**

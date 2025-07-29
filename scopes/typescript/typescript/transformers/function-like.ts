@@ -1,8 +1,10 @@
-import { FunctionLikeSchema, ParameterSchema, SchemaNode, Modifier } from '@teambit/semantics.entities.semantic-schema';
-import ts, { Node, SignatureDeclaration } from 'typescript';
+import type { ParameterSchema, SchemaNode, Modifier } from '@teambit/semantics.entities.semantic-schema';
+import { FunctionLikeSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { Node, SignatureDeclaration } from 'typescript';
+import ts from 'typescript';
 import pMapSeries from 'p-map-series';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { SchemaTransformer } from '../schema-transformer';
 import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
 import { Identifier } from '../identifier';
 

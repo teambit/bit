@@ -1,19 +1,19 @@
 import chalk from 'chalk';
-import { ComponentID } from '@teambit/component-id';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ComponentID } from '@teambit/component-id';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import {
   NOTHING_TO_SNAP_MSG,
   AUTO_SNAPPED_MSG,
   COMPONENT_PATTERN_HELP,
   CFG_FORCE_LOCAL_BUILD,
 } from '@teambit/legacy.constants';
-import { Logger } from '@teambit/logger';
-import { SnappingMain, SnapResults } from './snapping.main.runtime';
+import type { Logger } from '@teambit/logger';
+import type { SnappingMain, SnapResults } from './snapping.main.runtime';
 import { outputIdsIfExists } from './tag-cmd';
-import { BasicTagSnapParams } from './version-maker';
-import { ConfigStoreMain } from '@teambit/config-store';
+import type { BasicTagSnapParams } from './version-maker';
+import type { ConfigStoreMain } from '@teambit/config-store';
 
 export class SnapCmd implements Command {
   name = 'snap [component-pattern]';

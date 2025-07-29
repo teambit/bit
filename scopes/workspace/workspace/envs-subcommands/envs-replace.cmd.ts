@@ -1,6 +1,6 @@
-import { Command } from '@teambit/cli';
+import type { Command } from '@teambit/cli';
 import chalk from 'chalk';
-import { Workspace } from '../workspace';
+import type { Workspace } from '../workspace';
 import { installAfterEnvChangesMsg } from './envs-set.cmd';
 
 export class EnvsReplaceCmd implements Command {

@@ -7,24 +7,21 @@ import pMapSeries from 'p-map-series';
 import { ConsumerNotFound } from '@teambit/legacy.consumer';
 import yesno from 'yesno';
 import { defaults, flatMap, isFunction, pick, uniq } from 'lodash';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { Workspace } from '@teambit/workspace';
-import { Environment, EnvsAspect, ExecutionContext } from '@teambit/envs';
-import type { EnvsMain } from '@teambit/envs';
-import { Logger, LoggerAspect } from '@teambit/logger';
-import type { LoggerMain } from '@teambit/logger';
+import { EnvsAspect } from '@teambit/envs';
+import type { EnvsMain, Environment, ExecutionContext } from '@teambit/envs';
+import { LoggerAspect } from '@teambit/logger';
+import type { LoggerMain, Logger } from '@teambit/logger';
 import { WorkspaceConfigFilesAspect } from './workspace-config-files.aspect';
-import { ConfigWriterEntry } from './config-writer-entry';
+import type { ConfigWriterEntry } from './config-writer-entry';
 import { WsConfigCleanCmd, WsConfigCmd, WsConfigListCmd, WsConfigWriteCmd } from './ws-config.cmd';
 import WriteConfigFilesFailed from './exceptions/write-failed';
 import { WorkspaceConfigFilesService } from './workspace-config-files.service';
-import {
-  handleRealConfigFiles,
-  handleExtendingConfigFiles,
-  EnvsWrittenExtendingConfigFiles,
-  EnvsWrittenRealConfigFiles,
-} from './writers';
+import type { EnvsWrittenExtendingConfigFiles, EnvsWrittenRealConfigFiles } from './writers';
+import { handleRealConfigFiles, handleExtendingConfigFiles } from './writers';
 
 /**
  * Configs that can be configured in the workspace.jsonc file

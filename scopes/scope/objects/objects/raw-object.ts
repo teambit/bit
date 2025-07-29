@@ -1,7 +1,7 @@
 import { NULL_BYTE, SPACE_DELIMITER } from '@teambit/legacy.constants';
 import { getStringifyArgs, inflate } from '@teambit/legacy.utils';
 import { typesObj as types } from '@teambit/legacy.scope';
-import BitObject from './object';
+import type BitObject from './object';
 import { clone } from 'lodash';
 
 export default class BitRawObject {

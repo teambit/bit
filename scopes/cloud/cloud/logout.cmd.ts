@@ -1,6 +1,6 @@
 import chalk from 'chalk';
-import { Command } from '@teambit/cli';
-import { CloudMain } from './cloud.main.runtime';
+import type { Command } from '@teambit/cli';
+import type { CloudMain } from './cloud.main.runtime';
 
 export class LogoutCmd implements Command {
   name = 'logout';

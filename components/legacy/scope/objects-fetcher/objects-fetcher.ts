@@ -1,23 +1,25 @@
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { omit, uniq } from 'lodash';
 // @ts-ignore
 import { pipeline } from 'stream/promises';
-import { Scope } from '..';
-import { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
+import type { Scope } from '..';
+import type { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import { loader } from '@teambit/legacy.loader';
 import { logger } from '@teambit/legacy.logger';
 import { ScopeNotFound } from '../exceptions';
 import { ErrorFromRemote } from '../exceptions/error-from-remote';
 import { UnexpectedNetworkError } from '@teambit/scope.network';
-import { Repository, ObjectItemsStream, Lane } from '@teambit/objects';
+import type { Repository, ObjectItemsStream, Lane } from '@teambit/objects';
 import { ObjectsWritable } from './objects-writable-stream';
 import { WriteObjectsQueue } from './write-objects-queue';
 import { groupByScopeName } from '../component-ops/scope-components-importer';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
-import { Remotes, Remote, ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
-import { ComponentsPerRemote, MultipleComponentMerger } from '../component-ops/multiple-component-merger';
+import type { Remotes, Remote } from '@teambit/scope.remotes';
+import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
+import type { ComponentsPerRemote } from '../component-ops/multiple-component-merger';
+import { MultipleComponentMerger } from '../component-ops/multiple-component-merger';
 
 /**
  * due to the use of streams, this is memory efficient and can handle easily GBs of objects.

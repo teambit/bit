@@ -1,13 +1,13 @@
 import { ComponentID } from '@teambit/component-id';
 import { Dependency, ConsumerComponent, CURRENT_SCHEMA } from '@teambit/legacy.consumer-component';
 import { SourceFile } from '@teambit/component.sources';
-import { ScopeMain } from '@teambit/scope';
+import type { ScopeMain } from '@teambit/scope';
 import { ComponentOverrides } from '@teambit/legacy.consumer-config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { Component } from '@teambit/component';
-import { DependenciesMain } from '@teambit/dependencies';
-import { DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
-import { FileData, SnappingMain, SnapDataParsed } from './snapping.main.runtime';
+import type { Component } from '@teambit/component';
+import type { DependenciesMain } from '@teambit/dependencies';
+import type { DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
+import type { FileData, SnappingMain, SnapDataParsed } from './snapping.main.runtime';
 
 export type NewDependency = {
   id: string; // component-id or package-name. e.g. "teambit.react/react" or "lodash".

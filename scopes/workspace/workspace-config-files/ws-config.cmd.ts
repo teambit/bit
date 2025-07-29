@@ -1,8 +1,8 @@
 /* eslint-disable max-classes-per-file */
 
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { WorkspaceConfigFilesMain, WriteConfigFilesResult } from './workspace-config-files.main.runtime';
+import type { WorkspaceConfigFilesMain, WriteConfigFilesResult } from './workspace-config-files.main.runtime';
 import { formatCleanOutput, formatListOutput, formatWriteOutput, verboseFormatWriteOutput } from './outputs';
 
 export type CleanConfigCmdFlags = {

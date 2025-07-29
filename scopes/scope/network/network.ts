@@ -1,10 +1,10 @@
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { PushOptions, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { ListScopeResult } from '@teambit/legacy.component-list';
-import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import { ComponentLog, ObjectItemsStream, ObjectList } from '@teambit/objects';
-import { LaneData, ScopeDescriptor, RemovedObjects } from '@teambit/legacy.scope';
+import type { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { PushOptions, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ListScopeResult } from '@teambit/legacy.component-list';
+import type { DependencyGraph } from '@teambit/legacy.dependency-graph';
+import type { ComponentLog, ObjectItemsStream, ObjectList } from '@teambit/objects';
+import type { LaneData, ScopeDescriptor, RemovedObjects } from '@teambit/legacy.scope';
 
 export interface Network {
   // @todo: this causes ts errors in the ssh class for some reason

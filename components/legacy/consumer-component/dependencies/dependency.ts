@@ -1,6 +1,6 @@
 import { cloneDeep } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
-import { PathLinux } from '@teambit/toolbox.path.path';
+import type { PathLinux } from '@teambit/toolbox.path.path';
 
 /**
  * Import Specifier data.

@@ -1,11 +1,12 @@
-import { UIRuntime, UIAspect, UiUI } from '@teambit/ui';
+import type { UiUI } from '@teambit/ui';
+import { UIRuntime, UIAspect } from '@teambit/ui';
 import { EventEmitter2 } from 'eventemitter2';
 import { connectToChild } from 'penpal';
 import type { AsyncMethodReturns } from 'penpal/lib/types';
-import { BitBaseEvent } from './bit-base-event';
+import type { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
 import { createProvider } from './pubsub-context';
-import { Callback } from './types';
+import type { Callback } from './types';
 
 type PubOptions = {
   /** forward the event to adjacent windows (including the preview iframe)  */

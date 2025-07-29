@@ -5,7 +5,7 @@ import { useAPI } from '@teambit/api-reference.hooks.use-api';
 import { BlockSkeleton, WordSkeleton, CircleSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { useAPIRefRenderers } from '@teambit/api-reference.hooks.use-api-renderers';
 import { APIReferenceTableOfContents } from '@teambit/api-reference.overview.api-reference-table-of-contents';
-import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
+import type { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 
 import styles from './tagged-exports.module.scss';
 

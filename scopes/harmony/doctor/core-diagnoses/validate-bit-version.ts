@@ -1,7 +1,8 @@
 import semver from 'semver';
 import { listRemote } from '@teambit/bvm.list';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
-import Diagnosis, { ExamineBareResult } from '../diagnosis';
+import type { ExamineBareResult } from '../diagnosis';
+import Diagnosis from '../diagnosis';
 
 export default class ValidateBitVersion extends Diagnosis {
   name = 'validate bit version';

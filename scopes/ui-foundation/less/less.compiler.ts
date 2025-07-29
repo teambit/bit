@@ -1,6 +1,6 @@
-import { BuildContext, BuiltTaskResult } from '@teambit/builder';
+import type { BuildContext, BuiltTaskResult } from '@teambit/builder';
 import { render, version } from 'less';
-import { Compiler } from '@teambit/compiler';
+import type { Compiler } from '@teambit/compiler';
 
 export class LessCompiler implements Compiler {
   distDir = 'dist';

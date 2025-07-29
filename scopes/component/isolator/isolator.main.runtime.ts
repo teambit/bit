@@ -1,19 +1,22 @@
 import rimraf from 'rimraf';
 import { v4 } from 'uuid';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
 import { compact, flatten, isEqual, pick } from 'lodash';
 import { isFeatureEnabled, DISABLE_CAPSULE_OPTIMIZATION } from '@teambit/harmony.modules.feature-toggle';
-import { AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
-import { Component, ComponentMap, ComponentAspect } from '@teambit/component';
-import type { ComponentMain, ComponentFactory } from '@teambit/component';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
+import { ComponentMap, ComponentAspect } from '@teambit/component';
+import type { ComponentMain, ComponentFactory, Component } from '@teambit/component';
 import { getComponentPackageVersion, snapToSemver } from '@teambit/component-package-version';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
-import { GraphAspect, GraphMain } from '@teambit/graph';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import {
-  DependencyResolverAspect,
+import type { GraphMain } from '@teambit/graph';
+import { GraphAspect } from '@teambit/graph';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type {
   DependencyResolverMain,
   LinkingOptions,
   LinkDetail,
@@ -21,16 +24,20 @@ import {
   InstallOptions,
   DependencyList,
   ComponentDependency,
-  KEY_NAME_BY_LIFECYCLE_TYPE,
   PackageManagerInstallOptions,
   NodeLinker,
 } from '@teambit/dependency-resolver';
-import { Logger, LoggerAspect, LoggerMain, LongProcessLogger } from '@teambit/logger';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Scope, Scope as LegacyScope } from '@teambit/legacy.scope';
-import { GlobalConfigAspect, GlobalConfigMain } from '@teambit/global-config';
+import { DependencyResolverAspect, KEY_NAME_BY_LIFECYCLE_TYPE } from '@teambit/dependency-resolver';
+import type { Logger, LoggerMain, LongProcessLogger } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
+import type { Scope, Scope as LegacyScope } from '@teambit/legacy.scope';
+import type { GlobalConfigMain } from '@teambit/global-config';
+import { GlobalConfigAspect } from '@teambit/global-config';
 import { DEPENDENCIES_FIELDS, PACKAGE_JSON, CFG_CAPSULES_SCOPES_ASPECTS_DATED_DIR } from '@teambit/legacy.constants';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { AbstractVinyl, ArtifactVinyl } from '@teambit/component.sources';
 import {
   PackageJsonFile,
   ArtifactFiles,
@@ -38,12 +45,11 @@ import {
   getArtifactFilesByExtension,
   getArtifactFilesExcludeExtension,
   importMultipleDistsArtifacts,
-  AbstractVinyl,
-  ArtifactVinyl,
   DataToPersist,
   RemovePath,
 } from '@teambit/component.sources';
-import { pathNormalizeToLinux, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { type DependenciesGraph } from '@teambit/objects';
@@ -58,7 +64,8 @@ import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
-import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
+import type { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store';
 
 export type ListResults = {
   capsules: string[];
