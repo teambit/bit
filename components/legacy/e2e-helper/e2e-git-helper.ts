@@ -23,8 +23,12 @@ export default class GitHelper {
     const hookPath = path.join(this.scopes.localPath, '.git', 'hooks', hookName);
     return fs.outputFileSync(hookPath, content);
   }
-  initNewGitRepo() {
-    return this.command.runCmd('git init');
+  initNewGitRepo(setTestUser = false) {
+    this.command.runCmd('git init');
+    if (setTestUser) {
+      this.addGitConfig('user.name', 'Test User');
+      this.addGitConfig('user.email', 'test@example.com');
+    }
   }
 
   addGitConfig(key: string, val: string, location = 'local') {
