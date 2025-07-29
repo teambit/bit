@@ -1,9 +1,9 @@
-import type WorkspaceJsoncHelper from './e2e-workspace-jsonc-helper';
-import type CommandHelper from './e2e-command-helper';
-import type FixtureHelper from './e2e-fixtures-helper';
-import type FsHelper from './e2e-fs-helper';
-import type ScopeHelper from './e2e-scope-helper';
-import type ScopesData from './e2e-scopes';
+import WorkspaceJsoncHelper from './e2e-workspace-jsonc-helper';
+import CommandHelper from './e2e-command-helper';
+import FixtureHelper from './e2e-fixtures-helper';
+import FsHelper from './e2e-fs-helper';
+import ScopeHelper from './e2e-scope-helper';
+import ScopesData from './e2e-scopes';
 
 export default class ExtensionsHelper {
   scopes: ScopesData;

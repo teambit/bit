@@ -1,10 +1,10 @@
 import fs from 'fs-extra';
-import type { FsCache } from '@teambit/workspace.modules.fs-cache';
-import type { SourceFile } from '@teambit/component.sources';
-import type { PathOsBased } from '@teambit/toolbox.path.path';
+import { FsCache } from '@teambit/workspace.modules.fs-cache';
+import { SourceFile } from '@teambit/component.sources';
+import { PathOsBased } from '@teambit/toolbox.path.path';
 import jsDocParse from './jsdoc';
 import reactParse from './react';
-import type { Doclet } from './types';
+import { Doclet } from './types';
 
 export default async function parse(file: SourceFile, componentFsCache: FsCache): Promise<Doclet[]> {
   const docsFromCache = await componentFsCache.getDocsFromCache(file.path);

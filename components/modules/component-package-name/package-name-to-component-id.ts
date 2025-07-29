@@ -1,5 +1,4 @@
-import type { ComponentIdObj } from '@teambit/component-id';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 
 /**

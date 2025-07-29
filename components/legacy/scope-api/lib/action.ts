@@ -1,7 +1,6 @@
-import type { Scope } from '@teambit/legacy.scope';
-import { ActionNotFound, loadScope } from '@teambit/legacy.scope';
-import type { Action } from '@teambit/scope.remote-actions';
+import { ActionNotFound, loadScope, Scope } from '@teambit/legacy.scope';
 import {
+  Action,
   ExportValidate,
   ExportPersist,
   RemovePendingDir,
@@ -9,7 +8,7 @@ import {
   PostSign,
   FetchMissingHistory,
 } from '@teambit/scope.remote-actions';
-import type { AuthData } from '@teambit/scope.network';
+import { AuthData } from '@teambit/scope.network';
 
 type ActionClassesList = new () => Action<any, any>;
 type ExternalAction = { name: string; execute: Function };

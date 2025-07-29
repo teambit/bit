@@ -1,7 +1,6 @@
 import { H1 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
-import type { HTMLAttributes } from 'react';
-import React, { useMemo } from 'react';
+import React, { HTMLAttributes, useMemo } from 'react';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 import { createElement } from 'react-syntax-highlighter';
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
@@ -10,7 +9,7 @@ import markDownSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/ma
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { useLocation, useNavigate } from '@teambit/base-react.navigation.link';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import type { DependencyType } from '@teambit/code.ui.queries.get-component-code';
+import { DependencyType } from '@teambit/code.ui.queries.get-component-code';
 import { ComponentID } from '@teambit/component';
 import { useCoreAspects } from '@teambit/harmony.ui.hooks.use-core-aspects';
 import styles from './code-view.module.scss';

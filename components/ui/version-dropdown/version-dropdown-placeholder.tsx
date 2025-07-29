@@ -1,5 +1,4 @@
-import type { HTMLAttributes } from 'react';
-import React from 'react';
+import React, { HTMLAttributes } from 'react';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import classNames from 'classnames';
 import * as semver from 'semver';
@@ -7,7 +6,7 @@ import { Icon } from '@teambit/evangelist.elements.icon';
 import { TimeAgo } from '@teambit/design.ui.time-ago';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { WordSkeleton } from '@teambit/base-ui.loaders.skeleton';
-import type { DropdownComponentVersion } from './version-dropdown';
+import { DropdownComponentVersion } from './version-dropdown';
 
 import styles from './version-dropdown-placeholder.module.scss';
 

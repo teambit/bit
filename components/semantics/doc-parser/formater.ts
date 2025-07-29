@@ -1,4 +1,4 @@
-import type { Doclet } from './types';
+import { Doclet } from './types';
 
 export default function format(doc: Doclet): string {
   let args;

@@ -1,13 +1,12 @@
-import type { CommentObject } from 'comment-json';
-import json from 'comment-json';
+import json, { CommentObject } from 'comment-json';
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 
 import { BIT_MAP } from '@teambit/legacy.constants';
 import { LANE_KEY, SCHEMA_FIELD } from '@teambit/legacy.bit-map';
-import type FsHelper from './e2e-fs-helper';
-import type ScopesData from './e2e-scopes';
+import FsHelper from './e2e-fs-helper';
+import ScopesData from './e2e-scopes';
 
 export default class BitMapHelper {
   scopes: ScopesData;

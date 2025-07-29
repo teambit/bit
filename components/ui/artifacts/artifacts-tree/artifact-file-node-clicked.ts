@@ -1,4 +1,4 @@
-import type { ArtifactFile } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
+import { ArtifactFile } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
 
 export const fileNodeClicked =
   (files: (ArtifactFile & { id: string })[], opts: 'download' | 'new tab') => (e, node) => {

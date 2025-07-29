@@ -1,7 +1,6 @@
 import prettifier from 'pino-pretty';
 import type { PrettyOptions } from 'pino-pretty';
-import type { Logger as PinoLogger, LoggerOptions } from 'pino';
-import pino from 'pino';
+import pino, { Logger as PinoLogger, LoggerOptions } from 'pino';
 import { DEBUG_LOG } from '@teambit/legacy.constants';
 import { Writable } from 'stream';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';

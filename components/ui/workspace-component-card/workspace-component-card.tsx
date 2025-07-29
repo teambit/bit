@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import type { ComponentDescriptor } from '@teambit/component-descriptor';
+import { ComponentDescriptor } from '@teambit/component-descriptor';
 import classNames from 'classnames';
-import type { ScopeID } from '@teambit/scopes.scope-id';
+import { ScopeID } from '@teambit/scopes.scope-id';
 import { ComponentCard, type ComponentCardPluginType, type PluginProps } from '@teambit/explorer.ui.component-card';
-import type { ComponentModel } from '@teambit/component';
+import { ComponentModel } from '@teambit/component';
 import { LoadPreview } from '@teambit/workspace.ui.load-preview';
 import styles from './workspace-component-card.module.scss';
 

@@ -1,9 +1,8 @@
-import type { HTMLAttributes } from 'react';
-import React from 'react';
+import React, { HTMLAttributes } from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import type { LaneId } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import classnames from 'classnames';
-import type { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
+import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import { LaneMenuItem } from './lane-menu-item';
 
 import styles from './lane-grouped-menu-item.module.scss';

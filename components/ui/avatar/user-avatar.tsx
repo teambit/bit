@@ -7,7 +7,7 @@ import { letterBgColors } from '@teambit/design.ui.styles.colors-by-letter';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import type { Placement as TooltipPlacement } from '@teambit/design.ui.tooltip';
-import type { AccountObj } from './avatar';
+import { AccountObj } from './avatar';
 import styles from './styles.module.scss';
 
 export type UserAvatarProps = {

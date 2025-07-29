@@ -1,5 +1,4 @@
-import type { SchemaLocation } from '../schema-node';
-import { SchemaNode } from '../schema-node';
+import { SchemaLocation, SchemaNode } from '../schema-node';
 import { TemplateLiteralTypeSpanSchema } from './template-literal-type-span';
 
 export class TemplateLiteralTypeSchema extends SchemaNode {

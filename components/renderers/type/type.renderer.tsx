@@ -1,6 +1,6 @@
 import React from 'react';
 import { TypeSchema } from '@teambit/semantics.entities.semantic-schema';
-import type { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { SchemaNodesSummary } from '@teambit/api-reference.overview.renderers.grouped-schema-nodes-overview-summary';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 

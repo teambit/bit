@@ -1,14 +1,13 @@
-import type { ComponentID } from '@teambit/component-id';
-import type { PushOptions, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
-import { CURRENT_FETCH_SCHEMA } from '@teambit/legacy.scope-api';
-import type { ListScopeResult } from '@teambit/legacy.component-list';
-import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import { ComponentID } from '@teambit/component-id';
+import { PushOptions, CURRENT_FETCH_SCHEMA, FETCH_OPTIONS } from '@teambit/legacy.scope-api';
+import { ListScopeResult } from '@teambit/legacy.component-list';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
-import type { Scope, RemovedObjects, LaneData, ComponentObjects } from '@teambit/legacy.scope';
-import type { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import type { Network } from '@teambit/scope.network';
-import { connect } from '@teambit/scope.network';
-import type { ComponentLog, ObjectItemsStream, ObjectList } from '@teambit/objects';
+import type { Scope } from '@teambit/legacy.scope';
+import { RemovedObjects, LaneData, ComponentObjects } from '@teambit/legacy.scope';
+import { DependencyGraph } from '@teambit/legacy.dependency-graph';
+import { Network, connect } from '@teambit/scope.network';
+import { ComponentLog, ObjectItemsStream, ObjectList } from '@teambit/objects';
 import { isBitUrl } from '@teambit/legacy.utils';
 import { InvalidRemote } from './exceptions';
 

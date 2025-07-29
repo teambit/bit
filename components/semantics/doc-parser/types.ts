@@ -1,5 +1,5 @@
-import type { PathLinux } from '@teambit/toolbox.path.path';
-import type { Example } from './example-tag-parser';
+import { PathLinux } from '@teambit/toolbox.path.path';
+import { Example } from './example-tag-parser';
 
 export type Method = {
   name: string;

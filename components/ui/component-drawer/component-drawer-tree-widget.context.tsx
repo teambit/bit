@@ -1,5 +1,4 @@
-import type { ReactNode } from 'react';
-import React, { createContext, useState } from 'react';
+import React, { createContext, ReactNode, useState } from 'react';
 
 export type ComponentTreeContextType = {
   collapsed: boolean;

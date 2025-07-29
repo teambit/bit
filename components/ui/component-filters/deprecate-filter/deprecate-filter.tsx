@@ -1,8 +1,10 @@
 import classNames from 'classnames';
 import React from 'react';
 import { Toggle } from '@teambit/design.ui.input.toggle';
-import type { ComponentFilterCriteria } from '@teambit/component.ui.component-filters.component-filter-context';
-import { useComponentFilter } from '@teambit/component.ui.component-filters.component-filter-context';
+import {
+  ComponentFilterCriteria,
+  useComponentFilter,
+} from '@teambit/component.ui.component-filters.component-filter-context';
 import styles from './deprecate-filter.module.scss';
 
 export type DeprecateFilterCriteria = ComponentFilterCriteria<boolean>;

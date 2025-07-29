@@ -1,8 +1,6 @@
-import type { ReactNode } from 'react';
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { Assets } from '@teambit/ui-foundation.ui.rendering.html';
-import { Html } from '@teambit/ui-foundation.ui.rendering.html';
+import { Html, Assets } from '@teambit/ui-foundation.ui.rendering.html';
 
 export function fullPageToStaticString(content: ReactNode, assets?: Assets) {
   const html = (

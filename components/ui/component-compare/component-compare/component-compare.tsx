@@ -1,20 +1,25 @@
 /* eslint-disable react/destructuring-assignment */
 /* eslint-disable react/require-default-props */
-import type { HTMLAttributes } from 'react';
-import React, { useContext, useMemo } from 'react';
+import React, { useContext, useMemo, HTMLAttributes } from 'react';
 import classnames from 'classnames';
-import type { LegacyComponentLog } from '@teambit/legacy-component-log';
-import type { ComponentID, NavPlugin } from '@teambit/component';
-import { CollapsibleMenuNav, ComponentContext, ComponentDescriptorContext, useComponent } from '@teambit/component';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import {
+  CollapsibleMenuNav,
+  ComponentContext,
+  ComponentDescriptorContext,
+  ComponentID,
+  NavPlugin,
+  useComponent,
+} from '@teambit/component';
 import { ComponentCompareContext } from '@teambit/component.ui.component-compare.context';
 import { useComponentCompareQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare';
-import type {
+import {
   FileCompareResult,
   FieldCompareResult,
 } from '@teambit/component.ui.component-compare.models.component-compare-model';
 import { useCompareQueryParam } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { ComponentCompareVersionPicker } from '@teambit/component.ui.component-compare.version-picker';
-import type { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
+import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import type {

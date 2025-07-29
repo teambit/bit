@@ -1,6 +1,5 @@
-import type { HTMLAttributes } from 'react';
-import React, { useMemo, useContext } from 'react';
-import type { LegacyComponentLog } from '@teambit/legacy-component-log';
+import React, { HTMLAttributes, useMemo, useContext } from 'react';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { VersionBlock } from '@teambit/component.ui.version-block';
 import { ComponentContext } from '@teambit/component';
 import classNames from 'classnames';

@@ -1,16 +1,13 @@
-import type { ComponentModel } from '@teambit/component';
-import { useIdFromLocation } from '@teambit/component';
+import { ComponentModel, useIdFromLocation } from '@teambit/component';
 import React, { useMemo } from 'react';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
-import type { TreeNodeRenderer, TreeNode as TreeNodeType } from '@teambit/design.ui.tree';
-import { Tree } from '@teambit/design.ui.tree';
+import { Tree, TreeNodeRenderer, TreeNode as TreeNodeType } from '@teambit/design.ui.tree';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { LanesContext } from '@teambit/lanes.hooks.use-lanes';
-import type { PayloadType } from './payload-type';
-import { ScopePayload } from './payload-type';
+import { PayloadType, ScopePayload } from './payload-type';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
 
 type ComponentTreeProps = {

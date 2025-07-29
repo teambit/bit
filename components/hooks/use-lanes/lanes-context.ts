@@ -1,7 +1,7 @@
-import type { LaneId } from '@teambit/lane-id';
-import type { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import { LaneId } from '@teambit/lane-id';
+import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { createContext, useContext } from 'react';
-import type { FetchMoreLanes, UseLanesOptions } from './use-lanes';
+import { FetchMoreLanes, UseLanesOptions } from './use-lanes';
 
 export type LanesContextModel = {
   lanesModel?: LanesModel;

@@ -1,9 +1,17 @@
 import { Writable } from 'stream';
 import { logger } from '@teambit/legacy.logger';
-import type { ObjectItem, Repository } from '@teambit/objects';
-import { BitObject, Lane, LaneHistory, ModelComponent, Version, VersionHistory } from '@teambit/objects';
-import type { WriteObjectsQueue } from './write-objects-queue';
-import type { ComponentsPerRemote } from '../component-ops/multiple-component-merger';
+import {
+  ObjectItem,
+  BitObject,
+  Repository,
+  Lane,
+  LaneHistory,
+  ModelComponent,
+  Version,
+  VersionHistory,
+} from '@teambit/objects';
+import { WriteObjectsQueue } from './write-objects-queue';
+import { ComponentsPerRemote } from '../component-ops/multiple-component-merger';
 
 const TIMEOUT_MINUTES_WARNING = 3;
 const TIMEOUT_MINUTES_EXIT = 30;

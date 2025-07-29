@@ -5,12 +5,12 @@ import * as path from 'path';
 import tar from 'tar';
 
 import * as fixtures from './fixtures';
-import type CommandHelper from './e2e-command-helper';
-import type FsHelper from './e2e-fs-helper';
-import type NpmHelper from './e2e-npm-helper';
-import type PackageJsonHelper from './e2e-package-json-helper';
-import type ScopeHelper from './e2e-scope-helper';
-import type ScopesData from './e2e-scopes';
+import CommandHelper from './e2e-command-helper';
+import FsHelper from './e2e-fs-helper';
+import NpmHelper from './e2e-npm-helper';
+import PackageJsonHelper from './e2e-package-json-helper';
+import ScopeHelper from './e2e-scope-helper';
+import ScopesData from './e2e-scopes';
 
 export type GenerateEnvJsoncOptions = {
   extends?: string;

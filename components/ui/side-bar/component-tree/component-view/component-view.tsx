@@ -1,17 +1,17 @@
 /* eslint-disable complexity */
-import type { ComponentTreeSlot } from '@teambit/component-tree';
+import { ComponentTreeSlot } from '@teambit/component-tree';
 import { Link, useLocation } from '@teambit/base-react.navigation.link';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import classNames from 'classnames';
 import { ComponentID } from '@teambit/component-id';
-import type { ComponentModel } from '@teambit/component';
+import { ComponentModel } from '@teambit/component';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
-import type { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
+import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { LanesContext } from '@teambit/lanes.hooks.use-lanes';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { getName } from '../utils/get-name';

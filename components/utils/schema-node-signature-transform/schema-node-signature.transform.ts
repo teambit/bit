@@ -1,5 +1,4 @@
-import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
-import { ConstructorSchema } from '@teambit/semantics.entities.semantic-schema';
+import { ConstructorSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 
 export function transformSignature({ __schema, signature }: SchemaNode): string | undefined {
   if (!signature) return undefined;

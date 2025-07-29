@@ -2,16 +2,15 @@ import React, { useState } from 'react';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { Tab } from '@teambit/ui-foundation.ui.use-box.tab';
-import type { LegacyComponentLog } from '@teambit/legacy-component-log';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { LineSkeleton } from '@teambit/base-ui.loaders.skeleton';
-import type { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
+import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 import classNames from 'classnames';
 import styles from './version-dropdown.module.scss';
 import { VersionInfo } from './version-info';
 import { LaneInfo } from './lane-info';
-import type { VersionProps } from './version-dropdown-placeholder';
-import { SimpleVersion } from './version-dropdown-placeholder';
+import { SimpleVersion, VersionProps } from './version-dropdown-placeholder';
 
 export const LOCAL_VERSION = 'workspace';
 

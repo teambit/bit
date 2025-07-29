@@ -1,14 +1,12 @@
-import type { Readable } from 'stream';
+import { Readable } from 'stream';
 import Queue from 'p-queue';
 import { ComponentIdList } from '@teambit/component-id';
 import semver from 'semver';
 import { LaneId } from '@teambit/lane-id';
 import { LATEST_BIT_VERSION } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import type { Scope } from '@teambit/legacy.scope';
-import { loadScope } from '@teambit/legacy.scope';
-import type { Lane, LaneHistory, ComponentWithCollectOptions } from '@teambit/objects';
-import { Ref, ObjectsReadableGenerator } from '@teambit/objects';
+import { loadScope, Scope } from '@teambit/legacy.scope';
+import { Lane, LaneHistory, Ref, ComponentWithCollectOptions, ObjectsReadableGenerator } from '@teambit/objects';
 import { LaneNotFound } from './exceptions/lane-not-found';
 
 /**

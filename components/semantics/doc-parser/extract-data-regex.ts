@@ -1,9 +1,8 @@
 import doctrine from 'doctrine';
 
-import type { PathOsBased } from '@teambit/legacy.utils';
-import { pathNormalizeToLinux } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux, PathOsBased } from '@teambit/legacy.utils';
 import exampleTagParser from './example-tag-parser';
-import type { Doclet } from './types';
+import { Doclet } from './types';
 
 function formatTag(tag: Record<string, any>): Record<string, any> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

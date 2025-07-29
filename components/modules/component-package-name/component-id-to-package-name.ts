@@ -1,6 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import { Extensions, NODE_PATH_COMPONENT_SEPARATOR } from '@teambit/legacy.constants';
-import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { parseScope, replacePlaceHolderForPackageValue } from '@teambit/legacy.utils';
 import { getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
 

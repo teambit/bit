@@ -1,4 +1,4 @@
-import type { APINode } from '@teambit/api-reference.models.api-reference-model';
+import { APINode } from '@teambit/api-reference.models.api-reference-model';
 
 export function sortAPINodes(apiNodeA: APINode, apiNodeB: APINode): 1 | -1 | 0 {
   const aNodeType = apiNodeA.renderer.nodeType;

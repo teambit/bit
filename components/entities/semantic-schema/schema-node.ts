@@ -1,6 +1,6 @@
 import { pickBy } from 'lodash';
 import pluralize from 'pluralize';
-import type { DocSchema } from './schemas';
+import { DocSchema } from './schemas';
 
 export interface ISchemaNode {
   __schema: string;

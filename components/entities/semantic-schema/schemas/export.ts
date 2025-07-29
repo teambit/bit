@@ -1,5 +1,4 @@
-import type { SchemaLocation } from '../schema-node';
-import { SchemaNode } from '../schema-node';
+import { SchemaNode, SchemaLocation } from '../schema-node';
 import { DocSchema } from './docs';
 import { SchemaRegistry } from '../schema-registry';
 

@@ -1,7 +1,6 @@
 import { gql } from '@apollo/client';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import type { Artifact } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
-import { mapToArtifacts } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
+import { mapToArtifacts, Artifact } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
 
 const ARTIFACTS_QUERY = gql`
   query ComponentArtifacts($id: String!, $extensionId: String!) {

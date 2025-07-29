@@ -1,7 +1,6 @@
-import type { SchemaLocation } from '../schema-node';
+import { SchemaLocation } from '../schema-node';
 import { ParameterSchema } from './parameter';
-import type { Modifier } from './function-like';
-import { FunctionLikeSchema } from './function-like';
+import { FunctionLikeSchema, Modifier } from './function-like';
 import { DocSchema } from './docs';
 import { ThisTypeSchema } from './this-type';
 

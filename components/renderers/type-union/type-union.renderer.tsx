@@ -1,6 +1,5 @@
 import React from 'react';
-import type { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
-import { nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { TypeUnionSchema } from '@teambit/semantics.entities.semantic-schema';
 
 import classnames from 'classnames';

@@ -1,13 +1,11 @@
-import type { HTMLAttributes } from 'react';
-import React, { useMemo, useRef, useEffect, useState, useCallback } from 'react';
+import React, { HTMLAttributes, useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import classnames from 'classnames';
 import { compact, isFunction } from 'lodash';
-import type { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
-import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
-import type { LaneId } from '@teambit/lane-id';
-import type { FetchMoreLanesResult } from '@teambit/lanes.hooks.use-lanes';
-import type { LaneDropdownItems, GroupedLaneDropdownItem } from './lane-selector';
+import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import { LaneId } from '@teambit/lane-id';
+import { FetchMoreLanesResult } from '@teambit/lanes.hooks.use-lanes';
+import { LaneDropdownItems, GroupedLaneDropdownItem } from './lane-selector';
 import { LaneMenuItem } from './lane-menu-item';
 import { LaneGroupedMenuItem } from './lane-grouped-menu-item';
 

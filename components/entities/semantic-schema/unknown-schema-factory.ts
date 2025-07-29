@@ -1,4 +1,4 @@
-import type { SchemaLocation } from './schema-node';
+import { SchemaLocation } from './schema-node';
 
 export class UnknownSchemaFactory {
   static create(location: SchemaLocation, name: string, schemaObj: Record<string, any>): any {

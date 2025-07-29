@@ -1,12 +1,9 @@
 /* eslint-disable react/require-default-props */
-import type { ComponentType, HTMLAttributes } from 'react';
-import React, { useState } from 'react';
+import React, { ComponentType, HTMLAttributes, useState } from 'react';
 import { SafeImage } from '@teambit/base-react.content.image';
-import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
-import { getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
-import type { NavPlugin } from '@teambit/component';
-import { CollapsibleMenuNav } from '@teambit/component';
-import type { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
+import { FileIconMatch, getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
+import { NavPlugin, CollapsibleMenuNav } from '@teambit/component';
+import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
 import classNames from 'classnames';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 

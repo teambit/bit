@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash';
-import type { ComponentID } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 
 type ExtensionConfig = { [extName: string]: any } | RemoveExtensionSpecialSign;
 

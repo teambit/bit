@@ -1,8 +1,6 @@
-import type { PropsWithChildren } from 'react';
-import React from 'react';
-import type { SlotRegistry } from '@teambit/harmony';
-import type { RouteProps } from 'react-router-dom';
-import { Routes, Route } from 'react-router-dom';
+import React, { PropsWithChildren } from 'react';
+import { SlotRegistry } from '@teambit/harmony';
+import { Routes, Route, RouteProps } from 'react-router-dom';
 import { flatten } from 'lodash';
 import type { LinkProps } from '@teambit/base-react.navigation.link';
 

@@ -1,7 +1,7 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
 import { ComponentID, ComponentModel, componentOverviewFields } from '@teambit/component';
-import type { LaneId } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { compact } from 'lodash';
 

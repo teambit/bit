@@ -1,13 +1,12 @@
 import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
-import type { ComponentID } from '@teambit/component-id';
-import { ComponentIdList } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LATEST_BIT_VERSION } from '@teambit/legacy.constants';
-import type { Consumer } from '@teambit/legacy.consumer';
+import { Consumer } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
-import type { Ref, Lane } from '@teambit/objects';
+import { Ref, Lane } from '@teambit/objects';
 import { RemovedObjects } from '../removed-components';
-import type Scope from '../scope';
+import Scope from '../scope';
 
 /**
  * remove components from the model.

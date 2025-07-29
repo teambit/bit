@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
-import type ScopesData from './e2e-scopes';
+import ScopesData from './e2e-scopes';
 
 // TODO: improve this by combine into a base class shared between this and e2e-bit-json-helper
 export default class ComponentJsonHelper {

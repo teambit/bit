@@ -1,5 +1,5 @@
 import React from 'react';
-import type { AccountDescriptor } from '@teambit/accounts.account-descriptor';
+import { AccountDescriptor } from '@teambit/accounts.account-descriptor';
 import type { Placement as TooltipPlacement } from '@teambit/design.ui.tooltip';
 import { DefaultAvatar } from './default-avatar';
 import { OrgAvatar } from './org-avatar';

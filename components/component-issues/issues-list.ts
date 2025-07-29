@@ -1,4 +1,4 @@
-import type { ComponentIssue, IssueObject } from './component-issue';
+import { ComponentIssue, IssueObject } from './component-issue';
 import { ImportNonMainFiles } from './import-non-main-files';
 import { MissingDependenciesOnFs } from './missing-dependencies-on-fs';
 import { MissingDists } from './missing-dists';

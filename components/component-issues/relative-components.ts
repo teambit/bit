@@ -1,4 +1,4 @@
-import type { ComponentID } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 import { ComponentIssue, deserializeWithBitId } from './component-issue';
 
 export class RelativeComponents extends ComponentIssue {

@@ -1,6 +1,5 @@
 import chalk from 'chalk';
-import type { SchemaLocation } from '../schema-node';
-import { SchemaNode } from '../schema-node';
+import { SchemaLocation, SchemaNode } from '../schema-node';
 import { ParameterSchema } from './parameter';
 
 export class SetAccessorSchema extends SchemaNode {

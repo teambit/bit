@@ -1,8 +1,6 @@
-import type { ComponentModelProps } from '@teambit/component';
-import { ComponentModel } from '@teambit/component';
+import { ComponentModel, ComponentModelProps } from '@teambit/component';
 import { LaneId } from '@teambit/lane-id';
-import type { ComponentIdObj } from '@teambit/component-id';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdObj } from '@teambit/component-id';
 import { pathToRegexp } from 'path-to-regexp';
 import { compact, uniqBy } from 'lodash';
 

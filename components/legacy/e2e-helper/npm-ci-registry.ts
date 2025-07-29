@@ -1,12 +1,12 @@
 /* eslint no-console: 0 */
 import { addUser, REGISTRY_MOCK_PORT, start as startRegistryMock, prepare } from '@pnpm/registry-mock';
-import type { ChildProcess } from 'child_process';
+import { ChildProcess } from 'child_process';
 import { fetch } from '@pnpm/fetch';
 import fs from 'fs-extra';
 import execa from 'execa';
 import * as path from 'path';
 
-import type { Helper } from './e2e-helper';
+import { Helper } from './e2e-helper';
 
 const skipRegistryTests = process.env.SKIP_REGISTRY_TESTS === 'True' || process.env.SKIP_REGISTRY_TESTS === 'true';
 export const supportNpmCiRegistryTesting = !skipRegistryTests;

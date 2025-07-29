@@ -1,7 +1,7 @@
 import execa from 'execa';
 
 import { logger } from '@teambit/legacy.logger';
-import type { PathOsBased } from '@teambit/toolbox.path.path';
+import { PathOsBased } from '@teambit/toolbox.path.path';
 import { GitNotFound, getGitExecutablePath } from '@teambit/git.modules.git-executable';
 
 /**

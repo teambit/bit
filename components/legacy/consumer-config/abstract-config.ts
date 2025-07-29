@@ -3,7 +3,7 @@ import * as path from 'path';
 import { pickBy, isEqual } from 'lodash';
 import { BitIds } from '@teambit/legacy-bit-id';
 import { DEFAULT_EXTENSIONS, DEFAULT_LANGUAGE, PACKAGE_JSON } from '@teambit/legacy.constants';
-import type { PathLinux, PathOsBased } from '@teambit/legacy.utils';
+import { PathLinux, PathOsBased } from '@teambit/legacy.utils';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 
 export type EnvFile = {

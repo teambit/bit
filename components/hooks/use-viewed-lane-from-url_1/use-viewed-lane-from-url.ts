@@ -1,6 +1,6 @@
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
-import type { LaneId } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 
 export function useViewedLaneFromUrl(): LaneId | undefined {

@@ -1,5 +1,4 @@
-import type { SchemaLocation } from '../schema-node';
-import { SchemaNode } from '../schema-node';
+import { SchemaLocation, SchemaNode } from '../schema-node';
 
 /**
  * where there is no explicit type, the type is taken from the "quickinfo" of tsserver

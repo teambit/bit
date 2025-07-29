@@ -2,7 +2,7 @@ import * as path from 'path';
 import globby from 'globby';
 import ignore from 'ignore';
 import { pickBy, isNil, sortBy, isEmpty } from 'lodash';
-import type { ComponentID } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 import { BIT_MAP, Extensions, PACKAGE_JSON, IGNORE_ROOT_ONLY_LIST } from '@teambit/legacy.constants';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
@@ -13,13 +13,15 @@ import {
   getBitIgnoreFile,
   getGitIgnoreFile,
 } from '@teambit/git.modules.ignore-file-reader';
-import type {
+import {
   PathLinux,
   PathLinuxRelative,
   PathOsBasedAbsolute,
   PathOsBasedRelative,
+  pathJoinLinux,
+  pathNormalizeToLinux,
+  pathRelativeLinux,
 } from '@teambit/toolbox.path.path';
-import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '@teambit/toolbox.path.path';
 import { removeInternalConfigFields } from '@teambit/legacy.extension-data';
 import OutsideRootDir from './exceptions/outside-root-dir';
 import { IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { APINodeRenderer, APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderer, APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
 import { UnresolvedSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 

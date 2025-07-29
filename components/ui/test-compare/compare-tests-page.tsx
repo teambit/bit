@@ -1,8 +1,7 @@
-import type { HTMLAttributes } from 'react';
-import React from 'react';
+import React, { HTMLAttributes } from 'react';
 import { gql, useQuery, useSubscription } from '@apollo/client';
-import type { ComponentModel } from '@teambit/component';
-import type { EmptyStateSlot } from '@teambit/compositions';
+import { ComponentModel } from '@teambit/component';
+import { EmptyStateSlot } from '@teambit/compositions';
 import { TestLoader } from '@teambit/defender.ui.test-loader';
 import { TestTable } from '@teambit/defender.ui.test-table';
 import { AlertCard } from '@teambit/design.ui.alert-card';

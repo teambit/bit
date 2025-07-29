@@ -4,7 +4,7 @@ import { v4 } from 'uuid';
 
 import { BIT_TMP_DIRNAME } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import type { PathOsBased } from '@teambit/toolbox.path.path';
+import { PathOsBased } from '@teambit/toolbox.path.path';
 import Repository from '../repository';
 
 export default class Tmp extends Repository {

@@ -1,16 +1,13 @@
-import type { HTMLAttributes, ComponentType } from 'react';
-import React, { useState, useMemo, useContext } from 'react';
+import React, { HTMLAttributes, useState, useMemo, ComponentType, useContext } from 'react';
 import classNames from 'classnames';
-import type { FileIconSlot } from '@teambit/code';
+import { FileIconSlot } from '@teambit/code';
 import flatten from 'lodash.flatten';
-import type { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
-import { TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
+import { WidgetProps, TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { FileTree, useFileTreeContext } from '@teambit/ui-foundation.ui.tree.file-tree';
 import { FolderTreeNode } from '@teambit/ui-foundation.ui.tree.folder-tree-node';
-import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
-import { getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
-import type { TreeNode, TreeNodeProps } from '@teambit/design.ui.tree';
+import { FileIconMatch, getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
+import { TreeNode, TreeNodeProps } from '@teambit/design.ui.tree';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import styles from './code-compare-tree.module.scss';
 

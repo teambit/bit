@@ -1,17 +1,16 @@
 import arrayDifference from 'array-difference';
 import tempy from 'tempy';
 import chalk from 'chalk';
-import type { ComponentIdList } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import Table from 'cli-table';
 import normalize from 'normalize-path';
 import diff from 'object-diff';
 import { compact, find, get, isEmpty, isNil, union } from 'lodash';
 import { lt, gt } from 'semver';
-import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import type { DiffOptions, FieldsDiff } from './components-diff';
-import { getOneFileDiff } from './components-diff';
+import { DiffOptions, FieldsDiff, getOneFileDiff } from './components-diff';
 
 type ConfigDiff = {
   fieldName: string;

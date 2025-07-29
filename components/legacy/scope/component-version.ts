@@ -1,7 +1,6 @@
-import type { ComponentIdList } from '@teambit/component-id';
-import { ComponentID } from '@teambit/component-id';
-import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import type { Repository, Version, ModelComponent } from '@teambit/objects';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { Repository, Version, ModelComponent } from '@teambit/objects';
 
 export class ComponentVersion {
   readonly component: ModelComponent;

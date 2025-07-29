@@ -2,16 +2,18 @@ import pFilter from 'p-filter';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { uniqBy } from 'lodash';
 import { LATEST } from '@teambit/legacy.constants';
-import type { Lane } from '@teambit/objects';
-import { ModelComponent } from '@teambit/objects';
-import type { Scope } from '@teambit/legacy.scope';
+import { ModelComponent, Lane } from '@teambit/objects';
+import { Scope } from '@teambit/legacy.scope';
 import { fetchRemoteVersions } from '@teambit/scope.remotes';
 import { isBitIdMatchByWildcards } from '@teambit/legacy.utils';
-import type { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
-import type { InvalidComponent, ComponentLoadOptions } from '@teambit/legacy.consumer-component';
-import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
-import type { Consumer } from '@teambit/legacy.consumer';
-import type { Workspace } from '@teambit/workspace';
+import { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
+import {
+  ConsumerComponent as Component,
+  InvalidComponent,
+  ComponentLoadOptions,
+} from '@teambit/legacy.consumer-component';
+import { Consumer } from '@teambit/legacy.consumer';
+import { Workspace } from '@teambit/workspace';
 
 export type ListScopeResult = {
   id: ComponentID;

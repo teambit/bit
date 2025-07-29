@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import type { EditorProps } from '@monaco-editor/react';
+import React, { createContext, useContext, ReactNode, useEffect, useState } from 'react';
+import { EditorProps } from '@monaco-editor/react';
 
 const CodeEditorContext = createContext<React.FC<EditorProps> | null>(null);
 

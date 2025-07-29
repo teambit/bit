@@ -1,4 +1,4 @@
-import type { AccountObj } from '@teambit/design.ui.avatar';
+import { AccountObj } from '@teambit/design.ui.avatar';
 
 type SemVer = string;
 type TimeStamp = string;

@@ -3,8 +3,8 @@ import * as pathLib from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { reject, isNil } from 'lodash';
-import type { BitIdStr } from '@teambit/legacy-bit-id';
-import type { LaneId } from '@teambit/lane-id';
+import { BitIdStr } from '@teambit/legacy-bit-id';
+import { LaneId } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
 import { isTag } from '@teambit/component-version';
@@ -21,30 +21,34 @@ import {
   SCOPE_JSON,
   PENDING_OBJECTS_DIR,
 } from '@teambit/legacy.constants';
-import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
-import type { ExtensionDataEntry } from '@teambit/legacy.extension-data';
-import type { Consumer } from '@teambit/legacy.consumer';
-import { UnexpectedPackageName } from '@teambit/legacy.consumer';
+import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
+import { Consumer, UnexpectedPackageName } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
-import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import { ScopeComponentsImporter } from './component-ops/scope-components-importer';
-import type { ComponentVersion } from './component-version';
+import { ComponentVersion } from './component-version';
 import { ComponentNotFound, ScopeNotFound } from './exceptions';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import Lanes from './lanes/lanes';
-import type {
+import {
+  ModelComponent,
+  Symlink,
   Version,
+  BitObject,
   BitRawObject,
+  Ref,
+  Repository,
   Lane,
   ComponentLog,
   ComponentItem,
+  IndexType,
   ObjectItem,
   ObjectList,
   DependenciesGraph,
 } from '@teambit/objects';
-import { ModelComponent, Symlink, BitObject, Ref, Repository, IndexType } from '@teambit/objects';
-import type { RemovedObjects } from './removed-components';
+import { RemovedObjects } from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
 import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-json';

@@ -1,7 +1,6 @@
 import React from 'react';
 import type { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
-import type { PayloadType } from '../payload-type';
-import { ScopePayload } from '../payload-type';
+import { PayloadType, ScopePayload } from '../payload-type';
 
 import { ComponentView } from '../component-view';
 import { ScopeTreeNode } from '../scope-tree-node';

@@ -1,9 +1,7 @@
-import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { compact } from 'lodash';
 import { ConfigStoreAspect } from './config-store.aspect';
-import type { Store } from './config-getter';
-import { configGetter } from './config-getter';
+import { configGetter, Store } from './config-getter';
 import { ConfigCmd } from './config-cmd';
 
 export type StoreOrigin = 'scope' | 'workspace' | 'global';

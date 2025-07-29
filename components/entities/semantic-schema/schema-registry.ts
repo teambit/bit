@@ -1,4 +1,4 @@
-import type { SchemaNodeConstructor } from './schema-node-constructor';
+import { SchemaNodeConstructor } from './schema-node-constructor';
 import { UnknownSchemaFactory } from './unknown-schema-factory';
 
 type GetSchemaFunc = () => SchemaNodeConstructor[];

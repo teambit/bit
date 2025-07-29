@@ -8,8 +8,7 @@ import {
 } from '@teambit/component.sources';
 import { ExtensionDataEntry, REMOVE_EXTENSION_SPECIAL_SIGN } from './extension-data';
 import { EnvsAspect } from '@teambit/envs';
-import type { VariantPolicyConfigArr } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 
 type ExtensionConfig = { [extName: string]: any } | RemoveExtensionSpecialSign;
 type ConfigOnlyEntry = {

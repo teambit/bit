@@ -1,7 +1,6 @@
 import React from 'react';
 import { VariableLikeSchema } from '@teambit/semantics.entities.semantic-schema';
-import type { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
-import { nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
+import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 
 export const variableRenderer: APINodeRenderer = {

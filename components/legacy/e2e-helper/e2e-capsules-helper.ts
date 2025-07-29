@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import type CommandHelper from './e2e-command-helper';
+import CommandHelper from './e2e-command-helper';
 
 export default class CapsulesHelper {
   command: CommandHelper;

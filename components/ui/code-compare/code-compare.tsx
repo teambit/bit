@@ -1,10 +1,9 @@
-import type { HTMLAttributes } from 'react';
-import React, { useState, useMemo, useRef } from 'react';
+import React, { HTMLAttributes, useState, useMemo, useRef } from 'react';
 import { uniq } from 'lodash';
 import classNames from 'classnames';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
-import type { FileIconSlot } from '@teambit/code';
+import { FileIconSlot } from '@teambit/code';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import {
   useCompareQueryParam,
@@ -16,8 +15,7 @@ import { DarkTheme } from '@teambit/design.themes.dark-theme';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { CodeCompareTree } from './code-compare-tree';
-import type { CodeCompareViewProps } from './code-compare-view';
-import { CodeCompareView } from './code-compare-view';
+import { CodeCompareView, CodeCompareViewProps } from './code-compare-view';
 import { Widget } from './code-compare.widgets';
 
 import styles from './code-compare.module.scss';

@@ -3,21 +3,18 @@ import { PackageJsonValidator as PJV } from '@teambit/pkg.package-json.validator
 import { forEach, isEmpty } from 'lodash';
 import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
-import type { ComponentIdList } from '@teambit/component-id';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { isSnap, isTag } from '@teambit/component-version';
 import { DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
 import { SchemaName, Dependencies, DEPENDENCIES_TYPES } from '@teambit/legacy.consumer-component';
 import { getArtifactsFiles, PackageJsonFile } from '@teambit/component.sources';
 import { componentOverridesForbiddenFields, nonPackageJsonFields } from '@teambit/legacy.consumer-config';
-import type { ExtensionDataEntry } from '@teambit/legacy.extension-data';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import type { PathLinux } from '@teambit/legacy.utils';
-import { isValidPath } from '@teambit/legacy.utils';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
+import { PathLinux, isValidPath } from '@teambit/legacy.utils';
 import { validateType } from './validate-type';
 import VersionInvalid from './exceptions/version-invalid';
-import type { Version } from '@teambit/objects';
+import { Version } from '@teambit/objects';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.

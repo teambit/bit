@@ -1,5 +1,5 @@
 import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
-import type { ComponentID } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 
 export type UseCodeCompareProps = {

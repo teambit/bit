@@ -1,10 +1,8 @@
-import type { ReactNode } from 'react';
-import React from 'react';
+import React, { ReactNode } from 'react';
 import classnames from 'classnames';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
-import type { TippyProps } from '@tippyjs/react';
-import Tippy from '@tippyjs/react';
+import Tippy, { TippyProps } from '@tippyjs/react';
 import { roundArrow } from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/dist/svg-arrow.css';

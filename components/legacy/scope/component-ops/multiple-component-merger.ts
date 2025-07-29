@@ -1,7 +1,7 @@
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import type { ModelComponent } from '@teambit/objects';
-import type { SourceRepository } from '../repositories';
+import { ModelComponent } from '@teambit/objects';
+import { SourceRepository } from '../repositories';
 import { ModelComponentMerger } from './model-components-merger';
 
 export type ComponentsPerRemote = { [remoteName: string]: ModelComponent[] };

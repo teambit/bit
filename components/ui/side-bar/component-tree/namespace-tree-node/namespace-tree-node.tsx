@@ -3,9 +3,8 @@ import classNames from 'classnames';
 import React, { useState, useEffect, useRef } from 'react';
 import AnimateHeight from 'react-animate-height';
 import { indentClass, indentStyle } from '@teambit/base-ui.graph.tree.indent';
-import type { TreeNodeProps } from '@teambit/design.ui.tree';
-import { useTree, TreeLayer } from '@teambit/design.ui.tree';
-import type { PayloadType } from '../payload-type';
+import { useTree, TreeNodeProps, TreeLayer } from '@teambit/design.ui.tree';
+import { PayloadType } from '../payload-type';
 import { getName } from '../utils/get-name';
 import styles from './namespace-tree-node.module.scss';
 
