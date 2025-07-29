@@ -9,8 +9,9 @@ import {
   BitAppTemplate,
 } from '@bitdev/node.generators.node-templates';
 
-import { EnvContext } from '@teambit/envs';
-import { ComponentTemplate, TemplateList } from '@teambit/generator';
+import type { EnvContext } from '@teambit/envs';
+import type { ComponentTemplate } from '@teambit/generator';
+import { TemplateList } from '@teambit/generator';
 
 const templateListHandler = TemplateList.from([
   NodeModuleTemplate.from({ env: 'bitdev.node/node-env' }),

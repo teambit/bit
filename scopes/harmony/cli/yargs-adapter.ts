@@ -1,8 +1,8 @@
-import { Command } from './command';
-import { Arguments, CommandModule, Argv, Options } from 'yargs';
+import type { Command } from './command';
+import type { Arguments, CommandModule, Argv, Options } from 'yargs';
 import { TOKEN_FLAG } from '@teambit/legacy.constants';
 import { CommandRunner } from './command-runner';
-import { OnCommandStartSlot } from './cli.main.runtime';
+import type { OnCommandStartSlot } from './cli.main.runtime';
 import { getArgsData, getFlagsData } from './command-helper';
 
 export const GLOBAL_GROUP = 'Global';

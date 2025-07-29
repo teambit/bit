@@ -1,8 +1,9 @@
 import React from 'react';
-import { Section } from '@teambit/component';
-import { APIReferenceUI } from '@teambit/api-reference';
-import { Overview, TitleBadgeSlot, OverviewOptionsSlot } from './overview';
-import { DocsUI, UsePreviewSandboxSlot } from './docs.ui.runtime';
+import type { Section } from '@teambit/component';
+import type { APIReferenceUI } from '@teambit/api-reference';
+import type { TitleBadgeSlot, OverviewOptionsSlot } from './overview';
+import { Overview } from './overview';
+import type { DocsUI, UsePreviewSandboxSlot } from './docs.ui.runtime';
 
 export class OverviewSection implements Section {
   constructor(

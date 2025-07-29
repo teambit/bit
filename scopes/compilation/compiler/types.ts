@@ -1,6 +1,6 @@
-import { BuildContext, BuildTask, BuiltTaskResult, TaskResultsList } from '@teambit/builder';
+import type { BuildContext, BuildTask, BuiltTaskResult, TaskResultsList } from '@teambit/builder';
 import type { Component } from '@teambit/component';
-import { ServiceHandler } from '@teambit/envs';
+import type { ServiceHandler } from '@teambit/envs';
 
 export type TranspileFileParams = {
   componentDir: string; // absolute path of the component's root directory

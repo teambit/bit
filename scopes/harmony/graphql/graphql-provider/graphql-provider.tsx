@@ -1,4 +1,5 @@
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React from 'react';
 import { ApolloProvider } from '@apollo/client';
 import type { GraphQLClient } from '../graphql.ui.runtime';
 

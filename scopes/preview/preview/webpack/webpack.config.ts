@@ -1,6 +1,7 @@
 import { configBaseFactory } from '@teambit/react.webpack.react-webpack';
 
-import { Configuration, ProvidePlugin } from 'webpack';
+import type { Configuration } from 'webpack';
+import { ProvidePlugin } from 'webpack';
 import { merge } from 'webpack-merge';
 import { fallbacksProvidePluginConfig, fallbacks } from '@teambit/webpack';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';

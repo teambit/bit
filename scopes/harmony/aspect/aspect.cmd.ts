@@ -1,10 +1,10 @@
 // eslint-disable-next-line max-classes-per-file
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { CLITable } from '@teambit/cli-table';
 import chalk from 'chalk';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { AspectMain } from './aspect.main.runtime';
+import type { AspectMain } from './aspect.main.runtime';
 
 export class ListAspectCmd implements Command {
   name = 'list [pattern]';

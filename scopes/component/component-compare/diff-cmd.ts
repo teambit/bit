@@ -1,8 +1,9 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { DiffResults, outputDiffResults } from '@teambit/legacy.component-diff';
-import { ComponentCompareMain } from './component-compare.main.runtime';
+import type { DiffResults } from '@teambit/legacy.component-diff';
+import { outputDiffResults } from '@teambit/legacy.component-diff';
+import type { ComponentCompareMain } from './component-compare.main.runtime';
 
 export class DiffCmd implements Command {
   name = 'diff [component-pattern] [version] [to-version]';

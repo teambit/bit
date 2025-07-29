@@ -3,7 +3,8 @@ import glob from 'glob';
 import path from 'path';
 import { loadConsumer } from '@teambit/legacy.consumer';
 import { Scope } from '@teambit/legacy.scope';
-import Diagnosis, { ExamineBareResult } from '../diagnosis';
+import type { ExamineBareResult } from '../diagnosis';
+import Diagnosis from '../diagnosis';
 import { uniq } from 'lodash';
 
 type BrokenSymlink = { symlinkPath: string; brokenPath: string; pathToDelete: string };

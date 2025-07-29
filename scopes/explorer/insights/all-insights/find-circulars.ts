@@ -1,9 +1,9 @@
-import { Component } from '@teambit/component';
+import type { Component } from '@teambit/component';
 import { IssuesClasses } from '@teambit/component-issues';
-import { GraphMain } from '@teambit/graph';
+import type { GraphMain } from '@teambit/graph';
 import { uniq } from 'lodash';
-import { Insight, InsightResult, RawResult } from '../insight';
-import { RunInsightOptions } from '../insight-manager';
+import type { Insight, InsightResult, RawResult } from '../insight';
+import type { RunInsightOptions } from '../insight-manager';
 
 export const INSIGHT_CIRCULAR_DEPS_NAME = 'circular';
 

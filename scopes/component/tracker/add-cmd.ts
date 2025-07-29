@@ -1,10 +1,10 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import * as path from 'path';
 import { BitError } from '@teambit/bit-error';
-import { PathLinux, PathOsBased } from '@teambit/legacy.utils';
-import { AddActionResults, Warnings } from './add-components';
-import { TrackerMain } from './tracker.main.runtime';
+import type { PathLinux, PathOsBased } from '@teambit/legacy.utils';
+import type { AddActionResults, Warnings } from './add-components';
+import type { TrackerMain } from './tracker.main.runtime';
 
 type AddFlags = {
   id: string | null | undefined;

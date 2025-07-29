@@ -1,10 +1,14 @@
 import { clone, isEmpty, set } from 'lodash';
 import path from 'path';
 import { resolvePackageData } from '../resolve-pkg-data';
-import generateTree, { MadgeTree } from './generate-tree-madge';
-import { FoundPackages, MissingGroupItem, MissingHandler } from './missing-handler';
-import { convertPathMapToRelativePaths, PathMapItem } from './path-map';
-import { DependencyTreeParams, FileObject, DependenciesTree, DependenciesTreeItem } from './types/dependency-tree-type';
+import type { MadgeTree } from './generate-tree-madge';
+import generateTree from './generate-tree-madge';
+import type { FoundPackages, MissingGroupItem } from './missing-handler';
+import { MissingHandler } from './missing-handler';
+import type { PathMapItem } from './path-map';
+import { convertPathMapToRelativePaths } from './path-map';
+import type { DependencyTreeParams, FileObject, DependenciesTree } from './types/dependency-tree-type';
+import { DependenciesTreeItem } from './types/dependency-tree-type';
 
 /**
  * Gets a list of dependencies and group them by types (files, components, packages)

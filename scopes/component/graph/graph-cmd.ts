@@ -1,12 +1,13 @@
 import chalk from 'chalk';
 import GraphLib from 'graphlib';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
-import { GraphConfig, VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
+import type { GraphConfig } from '@teambit/legacy.dependency-graph';
+import { VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
 import { getRemoteByName } from '@teambit/scope.remotes';
-import { ComponentMain } from '@teambit/component';
+import type { ComponentMain } from '@teambit/component';
 import type { Workspace } from '@teambit/workspace';
-import { GraphMain } from './graph.main.runtime';
+import type { GraphMain } from './graph.main.runtime';
 
 export type GraphOpt = {
   remote?: string;

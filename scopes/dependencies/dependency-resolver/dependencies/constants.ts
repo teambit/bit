@@ -1,4 +1,4 @@
-import { DependencyLifecycleType } from './dependency';
+import type { DependencyLifecycleType } from './dependency';
 
 export const RUNTIME_DEP_LIFECYCLE_TYPE: DependencyLifecycleType = 'runtime';
 export const DEV_DEP_LIFECYCLE_TYPE: DependencyLifecycleType = 'dev';

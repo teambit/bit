@@ -2,8 +2,8 @@ import React from 'react';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import type { TabItem } from '@teambit/component.ui.component-compare.models.component-compare-props';
 import { ChangeType } from '@teambit/component.ui.component-compare.models.component-compare-change-type';
-import { Section } from '@teambit/component';
-import { ComponentCompareUI } from './component-compare.ui.runtime';
+import type { Section } from '@teambit/component';
+import type { ComponentCompareUI } from './component-compare.ui.runtime';
 
 export class AspectsCompareSection implements TabItem, Section {
   constructor(private compareUI: ComponentCompareUI) {}

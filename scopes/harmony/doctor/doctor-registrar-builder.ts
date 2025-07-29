@@ -5,7 +5,7 @@ import ValidateGitExec from './core-diagnoses/validate-git-exec';
 import ValidateNpmExec from './core-diagnoses/validate-npm-exec';
 import ValidateWorkspaceBitJsonSyntax from './core-diagnoses/validate-workspace-bit-json-syntax';
 import ValidateYarnExec from './core-diagnoses/validate-yarn-exec';
-import Diagnosis from './diagnosis';
+import type Diagnosis from './diagnosis';
 import DoctorRegistrar from './doctor-registrar';
 
 export default function registerCoreAndExtensionsDiagnoses(extensionDiagnoses: Diagnosis[] = []) {

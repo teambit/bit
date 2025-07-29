@@ -1,7 +1,8 @@
 import chai, { expect } from 'chai';
 import { loadBit } from '@teambit/bit';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { Component } from '@teambit/component';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { Component } from '@teambit/component';
 import { Helper } from '@teambit/legacy.e2e-helper';
 
 chai.use(require('chai-fs'));

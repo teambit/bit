@@ -6,9 +6,11 @@ import {
   DEFAULT_INDEX_NAME,
   DEFAULT_SEPARATOR,
 } from '@teambit/legacy.constants';
-import { pathJoinLinux, PathLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
-import { ComponentMap, MissingMainFile } from '@teambit/legacy.bit-map';
-import { AddedComponent } from './add-components';
+import type { PathLinux } from '@teambit/legacy.utils';
+import { pathJoinLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
+import type { ComponentMap } from '@teambit/legacy.bit-map';
+import { MissingMainFile } from '@teambit/legacy.bit-map';
+import type { AddedComponent } from './add-components';
 
 export default function determineMainFile(
   addedComponent: AddedComponent,

@@ -1,5 +1,6 @@
-import { EnvDefinition } from '@teambit/envs';
-import { BuildTask, BuildTaskHelper } from './build-task';
+import type { EnvDefinition } from '@teambit/envs';
+import type { BuildTask } from './build-task';
+import { BuildTaskHelper } from './build-task';
 import { InvalidTask } from './exceptions';
 
 type EnvTask = { env: EnvDefinition; task: BuildTask };

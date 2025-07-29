@@ -2,10 +2,10 @@
 import pMapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
-import { ComponentMain, ComponentFactory, Component } from '@teambit/component';
-import { EnvsMain } from './environments.main.runtime';
+import type { ComponentMain, ComponentFactory, Component } from '@teambit/component';
+import type { EnvsMain } from './environments.main.runtime';
 
 export class ListEnvsCmd implements Command {
   name = 'list';

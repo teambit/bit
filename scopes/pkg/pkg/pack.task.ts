@@ -1,7 +1,7 @@
-import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
+import type { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
 import { TypescriptAspect } from '@teambit/typescript';
-import { Logger } from '@teambit/logger';
-import { Packer } from './packer';
+import type { Logger } from '@teambit/logger';
+import type { Packer } from './packer';
 
 /**
  * pack components to a .tgz file

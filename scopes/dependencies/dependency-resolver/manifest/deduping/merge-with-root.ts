@@ -1,8 +1,8 @@
-import { SemVer } from 'semver';
+import type { SemVer } from 'semver';
 import { forEach } from 'lodash';
-import { PackageName } from '../../dependencies';
-import { ManifestDependenciesObject, ManifestDependenciesKeysNames, DepObjectValue } from '../manifest';
-import { DedupedDependencies } from './dedupe-dependencies';
+import type { PackageName } from '../../dependencies';
+import type { ManifestDependenciesObject, ManifestDependenciesKeysNames, DepObjectValue } from '../manifest';
+import type { DedupedDependencies } from './dedupe-dependencies';
 
 /**
  * This is the third phase of the deduping process

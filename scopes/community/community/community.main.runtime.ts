@@ -6,7 +6,8 @@ import { BASE_COMMUNITY_DOMAIN, BASE_DOCS_DOMAIN } from '@teambit/legacy.constan
 // import {} from '@teambit/community.starters.wiki';
 // import {} from '@teambit/community.starters.data-fetching';
 // import {} from '@teambit/community.starters.analytics';
-import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
+import type { GeneratorMain } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator';
 
 import { CommunityAspect } from './community.aspect';
 

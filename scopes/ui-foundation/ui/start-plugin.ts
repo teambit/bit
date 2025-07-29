@@ -1,4 +1,4 @@
-import { ProxyEntry } from './ui-root';
+import type { ProxyEntry } from './ui-root';
 
 export type StartPluginOptions = {
   /**

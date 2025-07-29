@@ -1,9 +1,10 @@
 import chalk from 'chalk';
 import { compact } from 'lodash';
-import { applyVersionReport, installationErrorOutput, MergeStrategy, compilationErrorOutput } from '@teambit/merging';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { MergeStrategy } from '@teambit/merging';
+import { applyVersionReport, installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { LanesMain } from './lanes.main.runtime';
+import type { LanesMain } from './lanes.main.runtime';
 
 export class SwitchCmd implements Command {
   name = 'switch <lane>';

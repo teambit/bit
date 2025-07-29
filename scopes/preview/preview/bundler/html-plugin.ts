@@ -1,6 +1,6 @@
 import compact from 'lodash.compact';
 import type { BundlerHtmlConfig } from '@teambit/bundler';
-import { PreviewDefinition } from '../preview-definition';
+import type { PreviewDefinition } from '../preview-definition';
 import { html } from './html-template';
 
 import { CHUNK_NAMES } from './chunks';

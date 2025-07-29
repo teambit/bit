@@ -1,11 +1,11 @@
 // eslint-disable-next-line max-classes-per-file
 import chalk from 'chalk';
-import { MergeStrategy } from '@teambit/merging';
-import { Command, CommandOptions } from '@teambit/cli';
-import { CheckoutProps } from '@teambit/checkout';
+import type { MergeStrategy } from '@teambit/merging';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { CheckoutProps } from '@teambit/checkout';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
-import { StashMain } from './stash.main.runtime';
+import type { StashMain } from './stash.main.runtime';
 
 export class StashSaveCmd implements Command {
   name = 'save';

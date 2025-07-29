@@ -1,14 +1,11 @@
-import ts, { Node, ConstructorDeclaration } from 'typescript';
-import {
-  ConstructorSchema,
-  ParameterSchema,
-  ThisTypeSchema,
-  Modifier,
-} from '@teambit/semantics.entities.semantic-schema';
+import type { Node, ConstructorDeclaration } from 'typescript';
+import ts from 'typescript';
+import type { ParameterSchema, Modifier } from '@teambit/semantics.entities.semantic-schema';
+import { ConstructorSchema, ThisTypeSchema } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { Identifier } from '../identifier';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { Identifier } from '../identifier';
 
 export class ConstructorTransformer implements SchemaTransformer {
   predicate(node: Node) {

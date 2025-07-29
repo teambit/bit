@@ -1,5 +1,5 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { StatusMain, StatusResult } from './status.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { StatusMain, StatusResult } from './status.main.runtime';
 import { formatStatusOutput } from './status-formatter';
 
 type StatusFlags = {

@@ -1,8 +1,8 @@
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { BASE_DOCS_DOMAIN, COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { SnappingMain } from './snapping.main.runtime';
+import type { SnappingMain } from './snapping.main.runtime';
 
 export default class ResetCmd implements Command {
   name = 'reset [component-pattern]';

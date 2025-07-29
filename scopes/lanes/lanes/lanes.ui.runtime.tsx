@@ -1,30 +1,39 @@
-import React, { ReactNode, useContext } from 'react';
-import { Route, RouteProps } from 'react-router-dom';
-import { Slot, Harmony, SlotRegistry } from '@teambit/harmony';
+import type { ReactNode } from 'react';
+import React, { useContext } from 'react';
+import type { RouteProps } from 'react-router-dom';
+import { Route } from 'react-router-dom';
+import type { Harmony, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import { LaneCompare, type LaneCompareProps as DefaultLaneCompareProps } from '@teambit/lanes.ui.compare.lane-compare';
-import { UIRuntime, UiUI, UIAspect } from '@teambit/ui';
+import type { UiUI } from '@teambit/ui';
+import { UIRuntime, UIAspect } from '@teambit/ui';
 import type { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
-import { ScopeAspect, ScopeContext, ScopeUI } from '@teambit/scope';
-import { WorkspaceAspect, WorkspaceUI } from '@teambit/workspace';
-import { ComponentAspect, ComponentUI, useIdFromLocation, ComponentID } from '@teambit/component';
-import { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
-import { LaneOverview, LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.lane-overview';
-import {
-  LanesNavPlugin,
-  LanesOrderedNavigationSlot,
-  LanesOverviewMenu,
-} from '@teambit/lanes.ui.menus.lanes-overview-menu';
+import type { ScopeUI } from '@teambit/scope';
+import { ScopeAspect, ScopeContext } from '@teambit/scope';
+import type { WorkspaceUI } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { ComponentUI } from '@teambit/component';
+import { ComponentAspect, useIdFromLocation, ComponentID } from '@teambit/component';
+import type { MenuWidget, MenuWidgetSlot } from '@teambit/ui-foundation.ui.menu';
+import type { LaneOverviewLine, LaneOverviewLineSlot } from '@teambit/lanes.ui.lane-overview';
+import { LaneOverview } from '@teambit/lanes.ui.lane-overview';
+import type { LanesNavPlugin, LanesOrderedNavigationSlot } from '@teambit/lanes.ui.menus.lanes-overview-menu';
+import { LanesOverviewMenu } from '@teambit/lanes.ui.menus.lanes-overview-menu';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { UseLaneMenu } from '@teambit/lanes.ui.menus.use-lanes-menu';
-import { LanesHost, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
-import { LanesProvider, useLanes, IgnoreDerivingFromUrl } from '@teambit/lanes.hooks.use-lanes';
+import type { LanesHost } from '@teambit/lanes.ui.models.lanes-model';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import type { IgnoreDerivingFromUrl } from '@teambit/lanes.hooks.use-lanes';
+import { LanesProvider, useLanes } from '@teambit/lanes.hooks.use-lanes';
 import { LaneSwitcher } from '@teambit/lanes.ui.navigation.lane-switcher';
 import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';
-import { ComponentCompareAspect, ComponentCompareUI } from '@teambit/component-compare';
+import type { ComponentCompareUI } from '@teambit/component-compare';
+import { ComponentCompareAspect } from '@teambit/component-compare';
 import { LaneComparePage } from '@teambit/lanes.ui.compare.lane-compare-page';
 import { ScopeIcon } from '@teambit/scope.ui.scope-icon';
-import { CommandBarUI, CommandBarAspect } from '@teambit/command-bar';
+import type { CommandBarUI } from '@teambit/command-bar';
+import { CommandBarAspect } from '@teambit/command-bar';
 
 import { LanesAspect } from './lanes.aspect';
 import styles from './lanes.ui.module.scss';

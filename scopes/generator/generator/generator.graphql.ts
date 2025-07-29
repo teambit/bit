@@ -1,7 +1,7 @@
-import { Schema } from '@teambit/graphql';
+import type { Schema } from '@teambit/graphql';
 import { gql } from 'graphql-tag';
-import { GeneratorMain } from './generator.main.runtime';
-import { CreateOptions } from './create.cmd';
+import type { GeneratorMain } from './generator.main.runtime';
+import type { CreateOptions } from './create.cmd';
 
 export type CreateQueryOptions = CreateOptions & { templateName: string };
 

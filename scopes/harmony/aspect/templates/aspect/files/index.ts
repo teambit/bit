@@ -1,4 +1,4 @@
-import { ComponentContext } from '@teambit/generator';
+import type { ComponentContext } from '@teambit/generator';
 
 export function indexFile({ namePascalCase, name }: ComponentContext) {
   return `import { ${namePascalCase}Aspect } from './${name}.aspect';

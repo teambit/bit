@@ -1,5 +1,5 @@
-import { ShowFragment, Component } from '@teambit/component';
-import { DevFilesMain } from './dev-files.main.runtime';
+import type { ShowFragment, Component } from '@teambit/component';
+import type { DevFilesMain } from './dev-files.main.runtime';
 
 export class DevFilesFragment implements ShowFragment {
   constructor(private devFiles: DevFilesMain) {}

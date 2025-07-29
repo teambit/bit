@@ -1,4 +1,4 @@
-import {
+import type {
   EnvService,
   EnvDefinition,
   Env,
@@ -8,7 +8,7 @@ import {
 } from '@teambit/envs';
 import highlight from 'cli-highlight';
 import chalk from 'chalk';
-import { PackageJsonProps } from './pkg.main.runtime';
+import type { PackageJsonProps } from './pkg.main.runtime';
 
 export type PkgDescriptor = {
   id: string;

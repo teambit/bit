@@ -1,4 +1,5 @@
-import { Configuration, ProvidePlugin } from 'webpack';
+import type { Configuration } from 'webpack';
+import { ProvidePlugin } from 'webpack';
 import TerserPlugin from 'terser-webpack-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import path from 'path';

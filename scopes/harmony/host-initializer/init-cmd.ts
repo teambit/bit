@@ -4,10 +4,11 @@ import { BitError } from '@teambit/bit-error';
 import { getConfig } from '@teambit/config-store';
 import { initScope } from '@teambit/legacy.scope-api';
 import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy.constants';
-import { WorkspaceExtensionProps } from '@teambit/config';
-import { Command, CommandOptions } from '@teambit/cli';
-import { HostInitializerMain, InteractiveConfig } from './host-initializer.main.runtime';
-import { Logger } from '@teambit/logger';
+import type { WorkspaceExtensionProps } from '@teambit/config';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { InteractiveConfig } from './host-initializer.main.runtime';
+import { HostInitializerMain } from './host-initializer.main.runtime';
+import type { Logger } from '@teambit/logger';
 
 export class InitCmd implements Command {
   name = 'init [path]';

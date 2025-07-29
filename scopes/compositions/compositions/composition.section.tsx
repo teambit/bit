@@ -1,4 +1,4 @@
-import { Section } from '@teambit/component';
+import type { Section } from '@teambit/component';
 import React from 'react';
 import { Compositions } from './compositions';
 import type {

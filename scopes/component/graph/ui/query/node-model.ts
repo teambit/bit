@@ -1,5 +1,5 @@
 import { ComponentID, ComponentModel } from '@teambit/component';
-import { RawNode } from './get-graph.query';
+import type { RawNode } from './get-graph.query';
 
 export class NodeModel {
   id: string;

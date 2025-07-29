@@ -4,15 +4,16 @@
 import { expect } from 'chai';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents } from '@teambit/component.testing.mock-components';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import fs from 'fs-extra';
 import path from 'path';
 
 import { CliMcpServerAspect } from './cli-mcp-server.aspect';
-import { CliMcpServerMain } from './cli-mcp-server.main.runtime';
+import type { CliMcpServerMain } from './cli-mcp-server.main.runtime';
 
 describe('CliMcpServer Integration Tests', function () {
   this.timeout(30000); // Increased timeout for MCP server operations

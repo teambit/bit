@@ -1,14 +1,14 @@
-import { Graph } from '@teambit/graph.cleargraph';
-import { BitId } from '@teambit/legacy-bit-id';
-import { ComponentID } from '@teambit/component-id';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { CompIdGraph } from '@teambit/graph';
+import type { Graph } from '@teambit/graph.cleargraph';
+import type { BitId } from '@teambit/legacy-bit-id';
+import type { ComponentID } from '@teambit/component-id';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { CompIdGraph } from '@teambit/graph';
 import type { ComponentLog } from '@teambit/objects';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import type { DependencyList } from '@teambit/dependency-resolver';
-import { Component, InvalidComponent } from './component';
-import { State } from './state';
-import { Snap } from './snap';
+import type { Component, InvalidComponent } from './component';
+import type { State } from './state';
+import type { Snap } from './snap';
 
 export type ResolveAspectsOptions = FilterAspectsOptions & {
   throwOnError?: boolean;

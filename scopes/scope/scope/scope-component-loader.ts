@@ -1,11 +1,14 @@
-import { Component, ComponentFS, ComponentID, Config, Snap, State, Tag, TagMap } from '@teambit/component';
+import type { ComponentID } from '@teambit/component';
+import { Component, ComponentFS, Config, Snap, State, Tag, TagMap } from '@teambit/component';
 import pMapSeries from 'p-map-series';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { SemVer } from 'semver';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { VERSION_ZERO, Ref, ModelComponent, Version } from '@teambit/objects';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ModelComponent, Version } from '@teambit/objects';
+import { VERSION_ZERO, Ref } from '@teambit/objects';
 import { BitError } from '@teambit/bit-error';
-import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import type { ScopeMain } from './scope.main.runtime';
 
 export class ScopeComponentLoader {

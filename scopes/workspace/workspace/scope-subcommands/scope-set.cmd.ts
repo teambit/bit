@@ -1,7 +1,7 @@
-import { Command } from '@teambit/cli';
+import type { Command } from '@teambit/cli';
 import { PATTERN_HELP, COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
-import { Workspace } from '../workspace';
+import type { Workspace } from '../workspace';
 
 export class ScopeSetCmd implements Command {
   name = 'set <scope-name> [component-pattern]';

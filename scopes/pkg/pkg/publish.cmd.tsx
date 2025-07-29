@@ -1,9 +1,9 @@
-import { ComponentResult } from '@teambit/builder';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { ComponentResult } from '@teambit/builder';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 
-import { Publisher, PublisherOptions } from './publisher';
+import type { Publisher, PublisherOptions } from './publisher';
 
 type PublishArgs = [string];
 

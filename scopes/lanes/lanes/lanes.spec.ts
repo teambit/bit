@@ -1,19 +1,25 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { Harmony } from '@teambit/harmony';
+import type { Harmony } from '@teambit/harmony';
 import { loadAspect, loadManyAspects } from '@teambit/harmony.testing.load-aspect';
-import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { SnappingAspect, SnappingMain } from '@teambit/snapping';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { ExportAspect, ExportMain } from '@teambit/export';
-import { LaneId } from '@teambit/lane-id';
-import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import type { RemoveMain } from '@teambit/remove';
+import { RemoveAspect } from '@teambit/remove';
+import type { SnappingMain } from '@teambit/snapping';
+import { SnappingAspect } from '@teambit/snapping';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { ExportMain } from '@teambit/export';
+import { ExportAspect } from '@teambit/export';
+import type { LaneId } from '@teambit/lane-id';
+import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { LanesAspect } from './lanes.aspect';
-import { LanesMain } from './lanes.main.runtime';
-import { MergeLanesAspect, MergeLanesMain } from '@teambit/merge-lanes';
+import type { LanesMain } from './lanes.main.runtime';
+import type { MergeLanesMain } from '@teambit/merge-lanes';
+import { MergeLanesAspect } from '@teambit/merge-lanes';
 
 describe('LanesAspect', function () {
   this.timeout(0);
