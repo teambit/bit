@@ -54,7 +54,7 @@ describe('bit lane import with --branch flag', function () {
       // Initialize a new workspace and setup git
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
-      helper.git.initNewGitRepo();
+      helper.git.initNewGitRepo(true);
       helper.fs.outputFile('.gitignore', 'node_modules/\n.bit/\n');
       helper.command.runCmd('git add .');
       helper.command.runCmd('git commit -m "initial commit"');
