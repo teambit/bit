@@ -1,4 +1,4 @@
-import { ExportSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { ExportSchema, SchemaNode, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import { Node, SyntaxKind, ExportAssignment as ExportAssignmentNode } from 'typescript';
 import { ExportIdentifier } from '../export-identifier';
 import { SchemaExtractorContext } from '../schema-extractor-context';
@@ -25,9 +25,22 @@ export class ExportAssignmentTransformer implements SchemaTransformer {
     const exportNode = await context.getTypeRef(specifier.getText(), absoluteFilePath, location);
 
     if (exportNode) {
-      return new ExportSchema(location, 'default', exportNode);
+      return new ExportSchema(
+        location,
+        `${exportNode.name} (default)`,
+        new TypeRefSchema(
+          exportNode.location,
+          exportNode.name,
+          exportNode.componentId,
+          exportNode.packageName,
+          exportNode.internalFilePath
+        ),
+        `${exportNode.name} (default)`
+      );
     }
 
-    return new ExportSchema(location, 'default', await context.computeSchema(specifier));
+    const schemaNode = await context.computeSchema(specifier);
+    const nodeName = schemaNode.name ? `${schemaNode.name} (default)` : 'default';
+    return new ExportSchema(location, nodeName, schemaNode, nodeName);
   }
 }
