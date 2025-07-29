@@ -111,6 +111,7 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
       import: !skipImport,
       trigger: trigger ? ComponentID.fromString(trigger) : undefined,
       generateTypes: watchCmdOpts.generateTypes,
+      preImport: !skipImport,
     };
     await this.watcher.watch(watchOpts, getMessages(this.logger));
   }
