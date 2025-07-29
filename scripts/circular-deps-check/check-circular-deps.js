@@ -15,7 +15,7 @@
  *   --verbose: Show detailed output
  */
 
-const bitBin = 'bbit';
+const bitBin = 'bit';
 
 const { execSync } = require('child_process');
 const fs = require('fs');

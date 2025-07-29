@@ -529,6 +529,14 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
+      - bit_global_for_npm
+      - bit_config
+      - restore_cache:
+          key: bitsrc-ssh-key3
+      - restore_cache:
+          key: bitsrc-registry10
+      - restore_cache:
+          key: core-aspect-env-v0.0.72-v1
       - run:
           name: 'check circular dependencies'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
