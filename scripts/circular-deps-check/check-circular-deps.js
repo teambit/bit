@@ -124,7 +124,7 @@ function loadBaseline() {
   }
 }
 
-function checkAgainstBaseline(current, baseline, maxCycles = null) {
+function checkAgainstBaseline(current, baseline, maxCycles = null, graphData = null) {
   const allowedCycles = maxCycles !== null ? maxCycles : baseline.totalCycles;
 
   console.log('\n=== Circular Dependencies Check ===');
@@ -154,8 +154,47 @@ function checkAgainstBaseline(current, baseline, maxCycles = null) {
   } else {
     console.log(`❌ FAIL: ${current.totalCycles} cycles > ${allowedCycles} allowed`);
     console.log(`\nCircular dependencies have increased beyond the allowed threshold.`);
+
+    // Show what new circular dependencies were introduced
+    showNewCircularDependencies(graphData);
+
     console.log(`Please fix the circular dependencies before merging.`);
     return false;
+  }
+}
+
+function showNewCircularDependencies(graphData) {
+  try {
+    const { spawn } = require('child_process');
+    const diffPath = path.join(__dirname, 'diff-cycles.js');
+    const baselinePath = path.join(__dirname, 'baseline-cycles-full.json');
+
+    if (!fs.existsSync(baselinePath)) {
+      console.log('\n⚠️  No baseline-cycles-full.json found for detailed diff.');
+      console.log('Create one with: bit graph --json --cycles > scripts/circular-deps-check/baseline-cycles-full.json');
+      return;
+    }
+
+    // Save current graph data temporarily
+    const tempCurrentFile = path.join(__dirname, 'temp-current-cycles.json');
+    fs.writeFileSync(tempCurrentFile, JSON.stringify(graphData, null, 2));
+
+    console.log('\n=== IDENTIFYING NEW CIRCULAR DEPENDENCIES ===');
+    const diffProcess = spawn('node', [diffPath, baselinePath, tempCurrentFile], {
+      stdio: 'inherit',
+      cwd: __dirname,
+    });
+
+    diffProcess.on('close', (_code) => {
+      // Clean up temp file
+      try {
+        fs.unlinkSync(tempCurrentFile);
+      } catch {
+        // Ignore cleanup errors
+      }
+    });
+  } catch (error) {
+    console.log('\n⚠️  Could not show detailed diff:', error.message);
   }
 }
 
@@ -214,7 +253,7 @@ Examples:
     process.exit(0);
   }
 
-  const passed = checkAgainstBaseline(current, baseline, maxCycles);
+  const passed = checkAgainstBaseline(current, baseline, maxCycles, graphData);
 
   if (!passed) {
     process.exit(1);

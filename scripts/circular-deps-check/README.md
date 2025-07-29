@@ -68,7 +68,11 @@ The check runs automatically on every PR and push to master as part of the build
 ## Files
 
 - `check-circular-deps.js` - Main checker script
-- `baseline-cycles.json` - Stored baseline (created when you run `--baseline`)
+- `diff-cycles.js` - Utility to diff two cycle files and show new/removed cycles  
+- `create-baseline.js` - Helper to create baseline from current state
+- `baseline-cycles.json` - Summary baseline (cycles count, components count, timestamp)
+- `baseline-cycles-full.json` - Full baseline with complete graph data for diffs
+- `ANALYSIS.md` - Detailed analysis and strategy document
 - `README.md` - This file
 
 ## How It Works
@@ -76,7 +80,28 @@ The check runs automatically on every PR and push to master as part of the build
 1. Runs `bit graph --json --cycles` to get circular dependency data
 2. Counts total circular dependency edges and unique components involved
 3. Compares against stored baseline or specified limit
-4. Returns exit code 0 (success) or 1 (failure) for CI
+4. **NEW**: If cycles increased, automatically shows which specific circular dependencies were added
+5. Returns exit code 0 (success) or 1 (failure) for CI
+
+## New Circular Dependencies Detection
+
+When the check fails (cycles increased), the script will automatically:
+
+1. Compare current graph with `baseline-cycles-full.json`
+2. Show exactly which new circular dependencies were introduced
+3. Ignore version number changes to focus on structural changes
+
+Example output when new cycles are detected:
+```
+❌ FAIL: 2070 cycles > 2066 allowed
+
+=== IDENTIFYING NEW CIRCULAR DEPENDENCIES ===
+=== NEW Circular Dependencies (4) ===
+1. teambit.workspace/install->teambit.new-component/helper
+2. teambit.new-component/helper->teambit.workspace/workspace
+3. teambit.scope/export->teambit.dependencies/analyzer
+4. teambit.dependencies/analyzer->teambit.scope/objects
+```
 
 ## Baseline File Format
 
