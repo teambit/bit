@@ -5,7 +5,7 @@
 
 set -e
 
-echo "=== Circular Dependencies CI Check ==="
+echo "=== Workspace Cycle Monitoring CI Check ==="
 echo "Repository: $(pwd)"
 echo "Commit: ${GITHUB_SHA:-${CIRCLE_SHA1:-$(git rev-parse HEAD)}}"
 echo "Branch: ${GITHUB_REF_NAME:-${CIRCLE_BRANCH:-$(git branch --show-current)}}"
@@ -14,25 +14,24 @@ echo ""
 # Change to script directory
 cd "$(dirname "$0")"
 
-# Check if baseline exists
-if [ ! -f "baseline-cycles.json" ]; then
-    echo "❌ Error: No baseline found!"
-    echo "Run 'node check-circular-deps.js --baseline' to establish a baseline"
+# Check if workspace cycle baseline exists
+if [ ! -f "workspace-cycle-baseline.json" ]; then
+    echo "❌ Error: No workspace cycle baseline found!"
+    echo "Run 'node monitor-workspace-cycle.js --baseline' to establish a baseline"
     exit 1
 fi
 
 # Show baseline info
-echo "Current baseline:"
+echo "Current workspace cycle baseline:"
 node -e "
-const baseline = require('./baseline-cycles.json');
-console.log(\`  Cycles: \${baseline.totalCycles}\`);
-console.log(\`  Components: \${baseline.uniqueComponents}\`);
+const baseline = require('./workspace-cycle-baseline.json');
+console.log(\`  Components: \${baseline.count}\`);
 console.log(\`  Created: \${baseline.timestamp}\`);
 "
 echo ""
 
-# Run the check
-echo "Running circular dependencies check..."
-node check-circular-deps.js
+# Run the workspace cycle check
+echo "Running workspace cycle monitoring..."
+node monitor-workspace-cycle.js
 
-echo "✅ Circular dependencies check passed!"
+echo "✅ Workspace cycle monitoring check passed!"
