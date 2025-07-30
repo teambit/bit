@@ -1,4 +1,5 @@
-import React, { HTMLAttributes } from 'react';
+import type { HTMLAttributes } from 'react';
+import React from 'react';
 import { CheckboxItem } from '@teambit/design.inputs.selectors.checkbox-item';
 import { Radio } from '@teambit/design.ui.input.radio';
 import classnames from 'classnames';

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { ReactSchema } from '@teambit/react';
-import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
 import classnames from 'classnames';

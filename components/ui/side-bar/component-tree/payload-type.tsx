@@ -1,5 +1,5 @@
-import { ComponentModel } from '@teambit/component';
-import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
+import type { ComponentModel } from '@teambit/component';
+import type { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
 
 export class ScopePayload {
   get isScope() {
