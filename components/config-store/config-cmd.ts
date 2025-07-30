@@ -2,8 +2,8 @@
 import chalk from 'chalk';
 import rightpad from 'pad-right';
 import { BASE_DOCS_DOMAIN } from '@teambit/legacy.constants';
-import { Command, CommandOptions } from '@teambit/cli';
-import { ConfigStoreMain, StoreOrigin } from './config-store.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ConfigStoreMain, StoreOrigin } from './config-store.main.runtime';
 
 class ConfigSet implements Command {
   name = 'set <key> <val>';

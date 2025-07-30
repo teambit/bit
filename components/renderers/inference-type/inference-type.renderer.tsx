@@ -1,5 +1,6 @@
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { InferenceTypeSchema } from '@teambit/semantics.entities.semantic-schema';
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
 import tsxSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';

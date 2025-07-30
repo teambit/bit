@@ -1,5 +1,5 @@
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { TupleTypeSchema } from '@teambit/semantics.entities.semantic-schema';
 import styles from './tuple-type.renderer.module.scss';
 

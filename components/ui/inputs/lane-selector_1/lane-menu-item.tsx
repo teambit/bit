@@ -1,7 +1,9 @@
-import React, { HTMLAttributes, forwardRef } from 'react';
+import type { HTMLAttributes } from 'react';
+import React, { forwardRef } from 'react';
 import classnames from 'classnames';
-import { LaneId } from '@teambit/lane-id';
-import { LaneModel, LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import type { LaneId } from '@teambit/lane-id';
+import type { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { TimeAgo } from '@teambit/design.ui.time-ago';
