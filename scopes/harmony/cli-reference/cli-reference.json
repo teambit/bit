@@ -1958,6 +1958,11 @@
         "",
         "peers",
         "link peer dependencies of the components too"
+      ],
+      [
+        "",
+        "comp-summary",
+        "show only a summary of component links instead of listing all components"
       ]
     ],
     "description": "create links in the node_modules directory, to core aspects and to components in the workspace",
@@ -4090,7 +4095,12 @@
       [
         "",
         "strict",
-        "in case issues found, exit with code 1"
+        "exit with code 1 if any issues are found (both errors and warnings)"
+      ],
+      [
+        "",
+        "fail-on-error",
+        "exit with code 1 only when tag/snap blocker issues are found (not warnings)"
       ],
       [
         "c",
@@ -4170,6 +4180,11 @@
             "b",
             "build",
             "Set to true to build the app locally, false (default) will build on Ripple CI"
+          ],
+          [
+            "s",
+            "strict",
+            "Set to true to fail on warnings as well as errors, false (default) only fails on errors"
           ]
         ],
         "description": "This command is meant to run when a PR was open/updated and meant to export a lane to bit-cloud.",
@@ -4184,12 +4199,57 @@
           [
             "m",
             "message <message>",
-            "If set, use it as the snap message, if not, try and grab from git-commit-message"
+            "If set, use it as the tag message, if not, try and grab from git-commit-message"
           ],
           [
             "b",
             "build",
             "Set to true to build the app locally, false (default) will build on Ripple CI"
+          ],
+          [
+            "s",
+            "strict",
+            "Set to true to fail on warnings as well as errors, false (default) only fails on errors"
+          ],
+          [
+            "l",
+            "increment <level>",
+            "options are: [major, premajor, minor, preminor, patch, prepatch, prerelease], default to patch"
+          ],
+          [
+            "",
+            "prerelease-id <id>",
+            "prerelease identifier (e.g. \"dev\" to get \"1.0.0-dev.1\")"
+          ],
+          [
+            "p",
+            "patch",
+            "syntactic sugar for \"--increment patch\""
+          ],
+          [
+            "",
+            "minor",
+            "syntactic sugar for \"--increment minor\""
+          ],
+          [
+            "",
+            "major",
+            "syntactic sugar for \"--increment major\""
+          ],
+          [
+            "",
+            "pre-release [identifier]",
+            "syntactic sugar for \"--increment prerelease\" and `--prerelease-id <identifier>`"
+          ],
+          [
+            "",
+            "increment-by <number>",
+            "(default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3."
+          ],
+          [
+            "",
+            "verbose",
+            "show verbose output"
           ]
         ],
         "description": "Merges a PR",
@@ -4269,14 +4329,14 @@
             "Setup global configuration (default: workspace-specific)"
           ]
         ],
-        "description": "Setup MCP integration with VS Code, Cursor, Windsurf, Roo Code, Cline, or other editors",
-        "extendedDescription": "Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, Windsurf, Roo Code, and Cline.",
+        "description": "Setup MCP integration with VS Code, Cursor, Windsurf, Roo Code, Cline, Claude Code, or other editors",
+        "extendedDescription": "Creates or updates configuration files to integrate Bit MCP server with supported editors. Currently supports VS Code, Cursor, Windsurf, Roo Code, Cline, and Claude Code.",
         "group": "ungrouped",
         "private": false,
         "arguments": [
           {
             "name": "editor",
-            "description": "Editor to setup (default: vscode). Available: vscode, cursor, windsurf, roo, cline"
+            "description": "Editor to setup (default: vscode). Available: vscode, cursor, windsurf, roo, cline, claude-code"
           }
         ]
       },
@@ -4300,14 +4360,14 @@
             "Generate rules for consumer projects that only use Bit components as packages"
           ]
         ],
-        "description": "Write Bit MCP rules/instructions file for VS Code, Cursor, Roo Code, Cline, or print to screen",
-        "extendedDescription": "Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, Roo Code, and Cline. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.",
+        "description": "Write Bit MCP rules/instructions file for VS Code, Cursor, Roo Code, Cline, Claude Code, or print to screen",
+        "extendedDescription": "Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, Roo Code, Cline, and Claude Code. For Claude Code, creates .claude/bit.md to avoid overwriting existing CLAUDE.md files. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.",
         "group": "ungrouped",
         "private": false,
         "arguments": [
           {
             "name": "editor",
-            "description": "Editor to write rules for (default: vscode). Available: vscode, cursor, roo, cline"
+            "description": "Editor to write rules for (default: vscode). Available: vscode, cursor, roo, cline, claude-code"
           }
         ]
       }
@@ -4431,6 +4491,16 @@
         "s",
         "shared <groupname>",
         "add group write permissions to a scope properly"
+      ],
+      [
+        "",
+        "external-package-manager",
+        "enable external package manager mode (npm/yarn/pnpm)"
+      ],
+      [
+        "",
+        "skip-interactive",
+        "skip interactive mode for Git repositories"
       ]
     ],
     "description": "create or reinitialize an empty workspace",
