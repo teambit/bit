@@ -3,7 +3,7 @@ import * as path from 'path';
 import { compact, isEmpty, sortBy } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
-import { BitIdStr } from '@teambit/legacy-bit-id';
+import type { BitIdStr } from '@teambit/legacy-bit-id';
 import { BitError } from '@teambit/bit-error';
 import { Analytics } from '@teambit/legacy.analytics';
 import {
@@ -17,34 +17,32 @@ import {
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import { NoHeadNoVersion, Scope, ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
-import { Lane, ModelComponent, Version } from '@teambit/objects';
+import type { Lane, ModelComponent } from '@teambit/objects';
+import { Version } from '@teambit/objects';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import format from 'string-format';
-import {
+import type {
   PathAbsolute,
   PathLinuxRelative,
   PathOsBased,
   PathOsBasedAbsolute,
   PathOsBasedRelative,
   PathRelative,
-  parseScope,
 } from '@teambit/legacy.utils';
-import { BitMap, NextVersion } from '@teambit/legacy.bit-map';
-import {
-  ConsumerComponent as Component,
-  Dependencies,
-  ComponentLoader,
-  ComponentLoadOptions,
-  LoadManyResult,
-} from '@teambit/legacy.consumer-component';
+import { parseScope } from '@teambit/legacy.utils';
+import type { NextVersion } from '@teambit/legacy.bit-map';
+import { BitMap } from '@teambit/legacy.bit-map';
+import type { Dependencies, ComponentLoadOptions, LoadManyResult } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent as Component, ComponentLoader } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile } from '@teambit/component.sources';
-import { LegacyWorkspaceConfig, ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
+import type { ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
+import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound } from './exceptions';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
-import { FsCache } from '@teambit/workspace.modules.fs-cache';
+import type { FsCache } from '@teambit/workspace.modules.fs-cache';
 
 type ConsumerProps = {
   projectPath: string;

@@ -1,26 +1,28 @@
-import React, { useContext, ReactNode, useMemo } from 'react';
+import type { ReactNode } from 'react';
+import React, { useContext, useMemo } from 'react';
 import classNames from 'classnames';
 import { ComponentTree } from '@teambit/ui-foundation.ui.side-bar';
 import type { PayloadType } from '@teambit/ui-foundation.ui.side-bar';
-import { ComponentTreeSlot } from '@teambit/component-tree';
+import type { ComponentTreeSlot } from '@teambit/component-tree';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { ComponentModel } from '@teambit/component';
-import { TreeNode as TreeNodeType, TreeNodeRenderer } from '@teambit/design.ui.tree';
-import { Composer, ComponentTuple } from '@teambit/base-ui.utils.composer';
+import type { ComponentModel } from '@teambit/component';
+import type { TreeNode as TreeNodeType, TreeNodeRenderer } from '@teambit/design.ui.tree';
+import type { ComponentTuple } from '@teambit/base-ui.utils.composer';
+import { Composer } from '@teambit/base-ui.utils.composer';
 import flatten from 'lodash.flatten';
+import type { ComponentFilters } from '@teambit/component.ui.component-filters.component-filter-context';
 import {
   ComponentFiltersProvider,
   ComponentFilterContext,
   runAllFilters,
-  ComponentFilters,
 } from '@teambit/component.ui.component-filters.component-filter-context';
 import { useLanes } from '@teambit/lanes.hooks.use-lanes';
-import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
-import { SlotRegistry } from '@teambit/harmony';
-import { ScopeModel } from '@teambit/scope.models.scope-model';
-import { WorkspaceModel } from '@teambit/workspace';
+import type { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import type { SlotRegistry } from '@teambit/harmony';
+import type { ScopeModel } from '@teambit/scope.models.scope-model';
+import type { WorkspaceModel } from '@teambit/workspace';
 import { ComponentTreeLoader } from '@teambit/design.ui.skeletons.sidebar-loader';
 import { ComponentFilterWidgetProvider, ComponentFilterWidgetContext } from './component-drawer-filter-widget.context';
 import { ComponentTreeContext, ComponentTreeProvider } from './component-drawer-tree-widget.context';

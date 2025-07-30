@@ -8,7 +8,7 @@ import { serializeError } from 'serialize-error';
 import uniqid from 'uniqid';
 import yn from 'yn';
 import { getConfig, setGlobalConfig } from '@teambit/config-store';
-import { CLIArgs } from '@teambit/cli';
+import type { CLIArgs } from '@teambit/cli';
 import {
   CFG_ANALYTICS_ANONYMOUS_KEY,
   CFG_ANALYTICS_ENVIRONMENT_KEY,
