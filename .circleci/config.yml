@@ -392,7 +392,7 @@ commands:
       # - run: 'rm -rf bit/node_modules/.bin/bit'
       - run:
           name: 'Run e2e tests'
-          command: 'cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings | xargs npm run mocha-circleci << parameters.bit_bin >>'
+          command: 'cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings --timings-type=classname | xargs npm run mocha-circleci << parameters.bit_bin >>'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
@@ -1015,7 +1015,7 @@ jobs:
           token: "fake-token"
       - run:
           name: 'write e2e files'
-          command: 'cd bit\bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=filesize | Out-File -FilePath .\spec-files.txt'
+          command: 'cd bit\bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings --timings-type=classname | Out-File -FilePath .\spec-files.txt'
       - run: Get-Content -Path .\bit\bit\spec-files.txt
       - run: 'cd bit\bit; cmd /c rmdir /s /q .\node_modules\@teambit\legacy; New-Item -Path node_modules\@teambit\legacy -ItemType SymbolicLink -Value .'
       - run:
