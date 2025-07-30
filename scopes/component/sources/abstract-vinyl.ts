@@ -4,9 +4,9 @@ import Vinyl from 'vinyl';
 
 import { logger } from '@teambit/legacy.logger';
 import { Source } from '@teambit/objects';
-import { PathOsBased } from '@teambit/toolbox.path.path';
+import type { PathOsBased } from '@teambit/toolbox.path.path';
 import * as eol from '@teambit/toolbox.string.eol';
-import { FileConstructor } from './vinyl-types';
+import type { FileConstructor } from './vinyl-types';
 
 type AbstractVinylProps = {
   cwd: PathOsBased;

@@ -1,5 +1,5 @@
-import { EnvService, ExecutionContext, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
-import { SchemaExtractor } from './schema-extractor';
+import type { EnvService, ExecutionContext, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
+import type { SchemaExtractor } from './schema-extractor';
 // import { APISchema } from './schema';
 
 type SchemaTransformationMap = ServiceTransformationMap & {

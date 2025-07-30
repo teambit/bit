@@ -1,15 +1,15 @@
 import chalk from 'chalk';
 import moment from 'moment';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import type { BitBaseEvent, PubsubMain } from '@teambit/pubsub';
-import { OnComponentEventResult, Workspace } from '@teambit/workspace';
+import type { OnComponentEventResult, Workspace } from '@teambit/workspace';
 import { ComponentID } from '@teambit/component-id';
 import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
-import { EventMessages, RootDirs, WatchOptions } from './watcher';
+import type { EventMessages, RootDirs, WatchOptions } from './watcher';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 import { CheckTypes } from './check-types';
-import { WatcherMain } from './watcher.main.runtime';
+import type { WatcherMain } from './watcher.main.runtime';
 
 type WatchCmdOpts = {
   verbose?: boolean;

@@ -1,11 +1,11 @@
 import { execFile } from 'child_process';
 import { parse, join } from 'path';
-import { Logger } from '@teambit/logger';
-import { ReactEnv } from '@teambit/react';
-import { Application, DeployFn, AppBuildContext, AppContext, ApplicationInstance } from '@teambit/application';
+import type { Logger } from '@teambit/logger';
+import type { ReactEnv } from '@teambit/react';
+import type { Application, DeployFn, AppBuildContext, AppContext, ApplicationInstance } from '@teambit/application';
 import { Port } from '@teambit/toolbox.network.get-port';
-import { NodeEnv } from './node.env';
-import { DeployContext, NodeAppMetadata } from './node-app-options';
+import type { NodeEnv } from './node.env';
+import type { DeployContext, NodeAppMetadata } from './node-app-options';
 
 export class NodeApp implements Application {
   constructor(

@@ -1,4 +1,4 @@
-import { Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
 import globby from 'globby';
 import path from 'path';
 import fs from 'fs-extra';

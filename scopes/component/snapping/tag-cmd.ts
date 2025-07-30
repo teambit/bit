@@ -1,15 +1,15 @@
 import chalk from 'chalk';
-import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import { Command, CommandOptions } from '@teambit/cli';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ComponentIdList, ComponentID } from '@teambit/component-id';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { DEFAULT_BIT_RELEASE_TYPE, COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
 import { IssuesClasses } from '@teambit/component-issues';
-import { ReleaseType } from 'semver';
+import type { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
-import { Logger } from '@teambit/logger';
-import { TagResults, SnappingMain } from './snapping.main.runtime';
-import { BasicTagParams } from './version-maker';
-import { ConfigStoreMain } from '@teambit/config-store';
+import type { Logger } from '@teambit/logger';
+import type { TagResults, SnappingMain } from './snapping.main.runtime';
+import type { BasicTagParams } from './version-maker';
+import type { ConfigStoreMain } from '@teambit/config-store';
 
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
 export const AUTO_TAGGED_MSG = 'auto-tagged dependents';

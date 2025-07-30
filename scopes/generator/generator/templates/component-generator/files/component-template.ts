@@ -1,4 +1,4 @@
-import { ComponentContext } from '../../../component-template';
+import type { ComponentContext } from '../../../component-template';
 
 export function componentTemplate({ namePascalCase, name }: ComponentContext) {
   return `import {

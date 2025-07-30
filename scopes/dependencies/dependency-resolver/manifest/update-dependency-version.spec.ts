@@ -1,5 +1,5 @@
 import { updateDependencyVersion } from './update-dependency-version';
-import { DependencyLifecycleType } from '../dependencies';
+import type { DependencyLifecycleType } from '../dependencies';
 
 describe('updateDependencyVersion()', function () {
   it('should pick version from root policy, when no variation policy is present', function () {

@@ -1,11 +1,12 @@
-import { ComponentID, AspectList, AspectEntry, ResolveComponentIdFunc } from '@teambit/component';
+import type { AspectList, ResolveComponentIdFunc } from '@teambit/component';
+import { ComponentID, AspectEntry } from '@teambit/component';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
 import {
   ExtensionDataList,
   configEntryToDataEntry,
   REMOVE_EXTENSION_SPECIAL_SIGN,
 } from '@teambit/legacy.extension-data';
-import { PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { JsonVinyl } from '@teambit/component.sources';
 import detectIndent from 'detect-indent';
 import detectNewline from 'detect-newline';

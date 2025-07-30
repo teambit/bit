@@ -1,7 +1,7 @@
-import { Logger } from '@teambit/logger';
-import { ApplicationType } from '@teambit/application';
-import { ReactEnv } from '@teambit/react';
-import { NodeEnv } from './node.env';
+import type { Logger } from '@teambit/logger';
+import type { ApplicationType } from '@teambit/application';
+import type { ReactEnv } from '@teambit/react';
+import type { NodeEnv } from './node.env';
 import { NodeApp } from './node.application';
 import type { NodeAppOptions } from './node-app-options';
 

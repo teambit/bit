@@ -1,8 +1,8 @@
 /* eslint max-classes-per-file: 0 */
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { Command, CommandOptions } from '@teambit/cli';
-import { Workspace } from '../workspace';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { Workspace } from '../workspace';
 
 export class LocalOnlySetCmd implements Command {
   name = 'set <component-pattern>';

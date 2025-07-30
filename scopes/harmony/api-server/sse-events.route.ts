@@ -1,6 +1,6 @@
-import { CLIMain } from '@teambit/cli';
-import { Route, Request, Response } from '@teambit/express';
-import { Logger } from '@teambit/logger';
+import type { CLIMain } from '@teambit/cli';
+import type { Route, Request, Response } from '@teambit/express';
+import type { Logger } from '@teambit/logger';
 import { addClient, removeClient } from '@teambit/harmony.modules.send-server-sent-events';
 
 type CLIENT = {

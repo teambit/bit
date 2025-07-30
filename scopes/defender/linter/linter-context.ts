@@ -1,5 +1,5 @@
-import { ComponentMap } from '@teambit/component';
-import { ExecutionContext } from '@teambit/envs';
+import type { ComponentMap } from '@teambit/component';
+import type { ExecutionContext } from '@teambit/envs';
 
 export type EslintFixType = 'problem' | 'suggestion' | 'layout';
 export type OxlintFixType = 'all' | 'suggestions' | 'dangerously';

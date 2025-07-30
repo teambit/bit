@@ -1,6 +1,6 @@
-import { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
-import { ComponentType, ReactNode } from 'react';
-import { ComponentUrlResolver } from '@teambit/component.modules.component-url';
+import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
+import type { ComponentType, ReactNode } from 'react';
+import type { ComponentUrlResolver } from '@teambit/component.modules.component-url';
 import type { ScopeModel } from '@teambit/scope.models.scope-model';
 
 export type GetScopeOptions = {

@@ -24,9 +24,7 @@ describe('ci commands', function () {
     helper.command.runCmd(`git init --bare ${bareRepoPath}`);
 
     // Initialize git in workspace and set up remote
-    helper.git.initNewGitRepo();
-    helper.git.addGitConfig('user.name', 'Test User');
-    helper.git.addGitConfig('user.email', 'test@example.com');
+    helper.git.initNewGitRepo(true);
     helper.command.runCmd(`git remote add origin ${bareRepoPath}`);
 
     return bareRepoPath;

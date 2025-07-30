@@ -1,14 +1,19 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
-import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import type { EnvsMain, ExecutionContext } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { LinterAspect } from './linter.aspect';
 import { LinterService } from './linter.service';
 import { LintTask } from './lint.task';
 import { LintCmd } from './lint.cmd';
-import { FixTypes, LinterOptions } from './linter-context';
-import { Linter } from './linter';
+import type { FixTypes, LinterOptions } from './linter-context';
+import type { Linter } from './linter';
 
 export type LinterConfig = {
   /**

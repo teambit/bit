@@ -1,9 +1,9 @@
 // eslint-disable-next-line max-classes-per-file
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import padRight from 'pad-right';
 import { CACHE_GLOBALS_ENV } from '@teambit/legacy.constants';
-import { GlobalConfigMain } from './global-config.main.runtime';
+import type { GlobalConfigMain } from './global-config.main.runtime';
 
 export class GlobalsCmd implements Command {
   name = 'globals';

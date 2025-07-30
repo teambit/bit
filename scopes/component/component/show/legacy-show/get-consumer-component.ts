@@ -1,4 +1,5 @@
-import { Consumer, loadConsumer } from '@teambit/legacy.consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
+import { loadConsumer } from '@teambit/legacy.consumer';
 import { NothingToCompareTo } from './nothing-to-compare-to';
 
 export async function getConsumerComponent({ id, compare }: { id: string; compare: boolean }) {

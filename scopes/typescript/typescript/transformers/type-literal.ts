@@ -1,9 +1,10 @@
-import ts, { Node, TypeLiteralNode } from 'typescript';
+import type { Node, TypeLiteralNode } from 'typescript';
+import ts from 'typescript';
 import { TypeLiteralSchema } from '@teambit/semantics.entities.semantic-schema';
 import pMapSeries from 'p-map-series';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { Identifier } from '../identifier';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { Identifier } from '../identifier';
 
 /**
  * not to be confused with "LiteralType", which is string/boolean/null.

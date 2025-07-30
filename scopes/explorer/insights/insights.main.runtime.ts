@@ -1,13 +1,17 @@
-import { CLIAspect, MainRuntime, CLIMain } from '@teambit/cli';
-import { GraphAspect, GraphMain } from '@teambit/graph';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { GraphMain } from '@teambit/graph';
+import { GraphAspect } from '@teambit/graph';
 import { IssuesClasses } from '@teambit/component-issues';
-import { IssuesAspect, IssuesMain } from '@teambit/issues';
+import type { IssuesMain } from '@teambit/issues';
+import { IssuesAspect } from '@teambit/issues';
 import pMapSeries from 'p-map-series';
-import { Component } from '@teambit/component';
+import type { Component } from '@teambit/component';
 import { InsightsAspect } from './insights.aspect';
 import getCoreInsights from './core-insights-getter';
-import { Insight, InsightResult } from './insight';
-import { InsightManager, RunInsightOptions } from './insight-manager';
+import type { Insight, InsightResult } from './insight';
+import type { RunInsightOptions } from './insight-manager';
+import { InsightManager } from './insight-manager';
 import InsightsCmd from './insights.cmd';
 
 export class InsightsMain {

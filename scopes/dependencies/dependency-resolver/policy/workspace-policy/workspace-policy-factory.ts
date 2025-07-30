@@ -1,12 +1,13 @@
-import {
-  WorkspacePolicy,
+import type {
   WorkspacePolicyConfigObject,
   WorkspacePolicyConfigKeysNames,
   WorkspacePolicyEntry,
   WorkspacePolicyConfigEntryValue,
   WorkspacePolicyEntryValue,
 } from './workspace-policy';
-import { LIFECYCLE_TYPE_BY_KEY_NAME, WorkspaceDependencyLifecycleType } from '../../dependencies';
+import { WorkspacePolicy } from './workspace-policy';
+import type { WorkspaceDependencyLifecycleType } from '../../dependencies';
+import { LIFECYCLE_TYPE_BY_KEY_NAME } from '../../dependencies';
 
 export class WorkspacePolicyFactory {
   fromConfigObject(configObject: WorkspacePolicyConfigObject): WorkspacePolicy {

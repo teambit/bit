@@ -1,13 +1,14 @@
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
-import { DependenciesEnv, PackageEnv, PipeServiceModifier, PipeServiceModifiersMap } from '@teambit/envs';
-import { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
-import { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
-import { ReactMain } from '@teambit/react';
-import { Tester } from '@teambit/tester';
-import { BuildTask } from '@teambit/builder';
-import { COMPONENT_PREVIEW_STRATEGY_NAME, PreviewStrategyName } from '@teambit/preview';
-import { SchemaExtractor } from '@teambit/schema';
-import { TsConfigSourceFile } from 'typescript';
+import type { DependenciesEnv, PackageEnv, PipeServiceModifier, PipeServiceModifiersMap } from '@teambit/envs';
+import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
+import type { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
+import type { ReactMain } from '@teambit/react';
+import type { Tester } from '@teambit/tester';
+import type { BuildTask } from '@teambit/builder';
+import type { PreviewStrategyName } from '@teambit/preview';
+import { COMPONENT_PREVIEW_STRATEGY_NAME } from '@teambit/preview';
+import type { SchemaExtractor } from '@teambit/schema';
+import type { TsConfigSourceFile } from 'typescript';
 import { join } from 'path';
 
 export const NodeEnvType = 'node';

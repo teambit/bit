@@ -1,8 +1,10 @@
-import { LiteralValueSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
-import ts, { Node, StringLiteral } from 'typescript';
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { LiteralValueSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { Node, StringLiteral } from 'typescript';
+import ts from 'typescript';
 import type { SchemaExtractorContext } from '../schema-extractor-context';
-import { SchemaTransformer } from '../schema-transformer';
-import { Identifier } from '../identifier';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { Identifier } from '../identifier';
 
 export type LiteralValueNode =
   | StringLiteral

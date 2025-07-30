@@ -1,8 +1,9 @@
-import { GraphqlMain } from '@teambit/graphql';
+import type { GraphqlMain } from '@teambit/graphql';
 import { gql } from 'graphql-tag';
 
-import { ComponentAdded, ComponentChanged, ComponentRemoved, Workspace } from './workspace';
-import { WorkspaceComponent } from './workspace-component';
+import type { Workspace } from './workspace';
+import { ComponentAdded, ComponentChanged, ComponentRemoved } from './workspace';
+import type { WorkspaceComponent } from './workspace-component';
 
 export default (workspace: Workspace, graphql: GraphqlMain) => {
   return {

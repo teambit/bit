@@ -1,6 +1,6 @@
-import { SlotRegistry } from '@teambit/harmony';
-import { UserBarItem } from './item';
-import { UserBarSection } from './section';
+import type { SlotRegistry } from '@teambit/harmony';
+import type { UserBarItem } from './item';
+import type { UserBarSection } from './section';
 
 export { UserBar } from './user-bar';
 export type { UserBarProps } from './user-bar';

@@ -1,6 +1,6 @@
 import { ProtocolNotSupported } from './exceptions';
 import Fs from './fs';
-import { Network } from './network';
+import type { Network } from './network';
 import { Http } from './http';
 
 export default function connect(host: string, name: string, localScopeName?: string): Promise<Network> {

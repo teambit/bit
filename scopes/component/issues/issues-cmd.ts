@@ -1,6 +1,6 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
-import { IssuesMain } from './issues.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { IssuesMain } from './issues.main.runtime';
 
 export class ComponentIssuesCmd implements Command {
   name = 'component-issues';

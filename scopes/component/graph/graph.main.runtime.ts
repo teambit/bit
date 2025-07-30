@@ -1,15 +1,22 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { ComponentMain, ComponentAspect, ComponentID } from '@teambit/component';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { ComponentMain, ComponentID } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import { compact, intersection } from 'lodash';
-import { GetGraphOpts, GraphBuilder } from './graph-builder';
+import type { GetGraphOpts } from './graph-builder';
+import { GraphBuilder } from './graph-builder';
 import { graphSchema } from './graph.graphql';
 import { GraphAspect } from './graph.aspect';
-import { GraphCmd, GraphOpt } from './graph-cmd';
-import { ComponentGraph } from './component-graph';
-import { ComponentIdGraph } from './component-id-graph';
-import { GraphConfig, VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
+import type { GraphOpt } from './graph-cmd';
+import { GraphCmd } from './graph-cmd';
+import type { ComponentGraph } from './component-graph';
+import type { ComponentIdGraph } from './component-id-graph';
+import type { GraphConfig } from '@teambit/legacy.dependency-graph';
+import { VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
 
 export class GraphMain {
   constructor(

@@ -1,5 +1,5 @@
-import { DependencySource } from '../policy/variant-policy/variant-policy';
-import { Dependency, DependencyLifecycleType, DependencyManifest } from './dependency';
+import type { DependencySource } from '../policy/variant-policy/variant-policy';
+import type { Dependency, DependencyLifecycleType, DependencyManifest } from './dependency';
 
 export abstract class BaseDependency implements Dependency {
   _type: string;

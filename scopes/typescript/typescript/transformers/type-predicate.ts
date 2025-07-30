@@ -1,8 +1,9 @@
-import { isIdentifier, Node, SyntaxKind, TypePredicateNode } from 'typescript';
+import type { Node, TypePredicateNode } from 'typescript';
+import { isIdentifier, SyntaxKind } from 'typescript';
 import { TypePredicateSchema } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { Identifier } from '../identifier';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { Identifier } from '../identifier';
 
 export class TypePredicateTransformer implements SchemaTransformer {
   predicate(node: Node) {

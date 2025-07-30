@@ -1,6 +1,6 @@
 import queryString from 'query-string';
 import { affix } from '@teambit/base-ui.utils.string.affix';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { baseUrl } from './constants';
 
 /** stringifies a component id to a url */

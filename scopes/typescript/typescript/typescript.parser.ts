@@ -1,6 +1,7 @@
-import { Parser } from '@teambit/schema';
-import { Export, StaticProperties } from '@teambit/semantics.entities.semantic-schema';
-import { Logger } from '@teambit/logger';
+import type { Parser } from '@teambit/schema';
+import type { StaticProperties } from '@teambit/semantics.entities.semantic-schema';
+import { Export } from '@teambit/semantics.entities.semantic-schema';
+import type { Logger } from '@teambit/logger';
 import { readFileSync } from 'fs-extra';
 import ts from 'typescript';
 

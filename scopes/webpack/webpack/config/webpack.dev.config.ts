@@ -6,9 +6,9 @@ import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
 import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
 import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
 import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
-import { PubsubMain } from '@teambit/pubsub';
+import type { PubsubMain } from '@teambit/pubsub';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
-import { WebpackConfigWithDevServer } from '../webpack.dev-server';
+import type { WebpackConfigWithDevServer } from '../webpack.dev-server';
 import { fallbacks } from './webpack-fallbacks';
 
 import { html } from './html';

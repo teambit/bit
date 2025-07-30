@@ -1,5 +1,5 @@
 import LRU from 'lru-cache';
-import { InMemoryCache, CacheOptions } from './in-memory-cache';
+import type { InMemoryCache, CacheOptions } from './in-memory-cache';
 
 export class LRUCacheAdapter<T> implements InMemoryCache<T> {
   private cache: LRU;

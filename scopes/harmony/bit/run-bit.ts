@@ -15,7 +15,7 @@ gracefulFs.gracefulify(fs);
 import './hook-require';
 import { bootstrap } from './bootstrap';
 import { handleErrorAndExit } from '@teambit/cli';
-import { Aspect } from '@teambit/harmony';
+import type { Aspect } from '@teambit/harmony';
 import { runCLI } from './load-bit';
 import { autocomplete } from './autocomplete';
 import { ServerCommander, shouldUseBitServer } from './server-commander';

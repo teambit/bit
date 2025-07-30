@@ -1,4 +1,4 @@
-import { RenderingContextSlot } from './preview.preview.runtime';
+import type { RenderingContextSlot } from './preview.preview.runtime';
 
 export type RenderingContextOptions = { aspectsFilter?: string[] };
 export type RenderingContextProvider = (options: RenderingContextOptions) => { [key: string]: any };

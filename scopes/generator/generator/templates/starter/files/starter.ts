@@ -1,4 +1,4 @@
-import { ComponentContext } from '../../../component-template';
+import type { ComponentContext } from '../../../component-template';
 
 export function starterFile({ namePascalCase, name }: ComponentContext) {
   return `import { WorkspaceContext, WorkspaceTemplate } from '@teambit/generator';

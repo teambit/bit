@@ -1,15 +1,17 @@
-import { EnvDefinition } from '@teambit/envs';
-import { ComponentMap, ComponentID } from '@teambit/component';
-import { Logger, LongProcessLogger } from '@teambit/logger';
+import type { EnvDefinition } from '@teambit/envs';
+import type { ComponentMap } from '@teambit/component';
+import { ComponentID } from '@teambit/component';
+import type { Logger, LongProcessLogger } from '@teambit/logger';
 import mapSeries from 'p-map-series';
 import prettyTime from 'pretty-time';
 import { capitalize } from '@teambit/toolbox.string.capitalize';
 import chalk from 'chalk';
-import { ArtifactFactory, ArtifactList, FsArtifact } from './artifact';
-import { BuildContext, BuildTask, BuildTaskHelper, BuiltTaskResult } from './build-task';
-import { ComponentResult } from './types';
-import { TasksQueue } from './tasks-queue';
-import { EnvsBuildContext } from './builder.service';
+import type { ArtifactFactory, ArtifactList, FsArtifact } from './artifact';
+import type { BuildContext, BuildTask, BuiltTaskResult } from './build-task';
+import { BuildTaskHelper } from './build-task';
+import type { ComponentResult } from './types';
+import type { TasksQueue } from './tasks-queue';
+import type { EnvsBuildContext } from './builder.service';
 import { TaskResultsList } from './task-results-list';
 
 export type TaskResults = {

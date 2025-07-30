@@ -1,10 +1,11 @@
 /* eslint-disable complexity */
-import React, { IframeHTMLAttributes, useState, useRef, useEffect } from 'react';
+import type { IframeHTMLAttributes } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import classNames from 'classnames';
 import { compact } from 'lodash';
 import { connectToChild } from 'penpal';
 import { usePubSubIframe } from '@teambit/pubsub';
-import { ComponentModel } from '@teambit/component';
+import type { ComponentModel } from '@teambit/component';
 import { ERROR_EVENT, LOAD_EVENT } from '@teambit/ui-foundation.ui.rendering.html';
 import { toPreviewUrl } from './urls';
 import { computePreviewScale } from './compute-preview-scale';

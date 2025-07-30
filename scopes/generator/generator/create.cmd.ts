@@ -1,7 +1,7 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { ComponentID } from '@teambit/component';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ComponentID } from '@teambit/component';
 import chalk from 'chalk';
-import { GeneratorMain } from './generator.main.runtime';
+import type { GeneratorMain } from './generator.main.runtime';
 import type { BaseComponentTemplateOptions } from './component-template';
 
 /**

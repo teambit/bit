@@ -1,8 +1,9 @@
-import { Node, SyntaxKind, NamedTupleMember } from 'typescript';
+import type { Node, NamedTupleMember } from 'typescript';
+import { SyntaxKind } from 'typescript';
 import { NamedTupleSchema } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { Identifier } from '../identifier';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { Identifier } from '../identifier';
 
 export class NamedTupleTransformer implements SchemaTransformer {
   predicate(node: Node) {

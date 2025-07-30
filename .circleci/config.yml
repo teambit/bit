@@ -524,6 +524,23 @@ jobs:
           test_results_path: bit/junit
           artifacts_path: bit/junit
 
+  check_circular_dependencies:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ./
+      - bit_global_for_npm
+      - bit_config
+      - restore_cache:
+          key: bitsrc-ssh-key3
+      - restore_cache:
+          key: bitsrc-registry10
+      - restore_cache:
+          key: core-aspect-env-v0.0.72-v1
+      - run:
+          name: 'check circular dependencies'
+          command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
+
   generate_and_check_types:
     <<: *defaults
     steps:
@@ -1044,6 +1061,9 @@ workflows:
             - set_npm_registries
             - checkout_code
       - lint:
+          requires:
+            - setup_harmony
+      - check_circular_dependencies:
           requires:
             - setup_harmony
       - generate_and_check_types:

@@ -1,9 +1,9 @@
-import { SlotRegistry } from '@teambit/harmony';
+import type { SlotRegistry } from '@teambit/harmony';
 import type { LinkProps } from '@teambit/base-react.navigation.link';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
-import { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
-import { ComponentID } from '@teambit/component-id';
-import { ComponentModel } from '../component-model';
+import type { LaneModel } from '@teambit/lanes.ui.models.lanes-model';
+import type { ComponentID } from '@teambit/component-id';
+import type { ComponentModel } from '../component-model';
 
 export type NavPluginProps = {
   displayName?: string;

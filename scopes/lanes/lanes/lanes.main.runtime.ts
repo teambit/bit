@@ -1,38 +1,57 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import pMapSeries from 'p-map-series';
 import pMap from 'p-map';
-import { ScopeMain, ScopeAspect } from '@teambit/scope';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { ExpressAspect, ExpressMain } from '@teambit/express';
-import { OutsideWorkspaceError, Workspace, WorkspaceAspect } from '@teambit/workspace';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { ExpressMain } from '@teambit/express';
+import { ExpressAspect } from '@teambit/express';
+import type { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError, WorkspaceAspect } from '@teambit/workspace';
 import { getRemoteByName } from '@teambit/scope.remotes';
-import { LaneDiffCmd, LaneDiffGenerator, LaneDiffResults, LaneHistoryDiffCmd } from '@teambit/lanes.modules.diff';
-import { NoCommonSnap, Scope as LegacyScope, TrackLane, LaneData } from '@teambit/legacy.scope';
+import type { LaneDiffResults } from '@teambit/lanes.modules.diff';
+import { LaneDiffCmd, LaneDiffGenerator, LaneHistoryDiffCmd } from '@teambit/lanes.modules.diff';
+import type { Scope as LegacyScope, TrackLane, LaneData } from '@teambit/legacy.scope';
+import { NoCommonSnap } from '@teambit/legacy.scope';
 import { LaneId, DEFAULT_LANE, LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
 import { BitError } from '@teambit/bit-error';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { DiffOptions } from '@teambit/legacy.component-diff';
-import { MergeStrategy, MergeOptions, MergingMain, MergingAspect } from '@teambit/merging';
-import { FetchCmd, ImporterAspect, ImporterMain } from '@teambit/importer';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { DiffOptions } from '@teambit/legacy.component-diff';
+import type { MergeStrategy, MergingMain } from '@teambit/merging';
+import { MergeOptions, MergingAspect } from '@teambit/merging';
+import type { ImporterMain } from '@teambit/importer';
+import { FetchCmd, ImporterAspect } from '@teambit/importer';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
-import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
-import { Ref, HistoryItem, Lane, LaneHistory, Version } from '@teambit/objects';
-import { SnapsDistance, getDivergeData } from '@teambit/component.snap-distance';
-import { ExportAspect, ExportMain } from '@teambit/export';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import type { HistoryItem, LaneHistory, Version } from '@teambit/objects';
+import { Ref, Lane } from '@teambit/objects';
+import type { SnapsDistance } from '@teambit/component.snap-distance';
+import { getDivergeData } from '@teambit/component.snap-distance';
+import type { ExportMain } from '@teambit/export';
+import { ExportAspect } from '@teambit/export';
 import { compact } from 'lodash';
-import { ComponentCompareMain, ComponentCompareAspect } from '@teambit/component-compare';
-import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { CheckoutAspect, CheckoutMain } from '@teambit/checkout';
+import type { ComponentCompareMain } from '@teambit/component-compare';
+import { ComponentCompareAspect } from '@teambit/component-compare';
+import type { ComponentWriterMain } from '@teambit/component-writer';
+import { ComponentWriterAspect } from '@teambit/component-writer';
+import type { RemoveMain } from '@teambit/remove';
+import { RemoveAspect } from '@teambit/remove';
+import type { CheckoutMain } from '@teambit/checkout';
+import { CheckoutAspect } from '@teambit/checkout';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
-import { ComponentsList } from '@teambit/legacy.component-list';
+import type { ComponentsList } from '@teambit/legacy.component-list';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import fs from 'fs-extra';
 import execa from 'execa';
 import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
 import { removeLanes } from './remove-lanes';
 import { LanesAspect } from './lanes.aspect';
+import type { LaneCheckoutOpts } from './lane.cmd';
 import {
   LaneCmd,
   LaneCreateCmd,
@@ -48,7 +67,6 @@ import {
   CatLaneHistoryCmd,
   LaneHistoryCmd,
   LaneCheckoutCmd,
-  LaneCheckoutOpts,
   LaneRevertCmd,
   LaneFetchCmd,
   LaneEjectCmd,
@@ -60,7 +78,8 @@ import { createLane, createLaneInScope, throwForInvalidLaneName } from '@teambit
 import { LanesCreateRoute } from './lanes.create.route';
 import { LanesDeleteRoute } from './lanes.delete.route';
 import { LanesRestoreRoute } from './lanes.restore.route';
-import { InstallAspect, InstallMain } from '@teambit/install';
+import type { InstallMain } from '@teambit/install';
+import { InstallAspect } from '@teambit/install';
 
 export { Lane };
 
@@ -630,22 +649,31 @@ please create a new lane instead, which will include all components of this lane
     };
 
     // Create git branch if requested and git is available
+    let gitBranchWarning: string | undefined;
     if (branch) {
-      await this.createGitBranchForLane(laneName);
+      gitBranchWarning = await this.createGitBranchForLane(laneName);
     }
 
-    return new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps, this).switch();
+    const switchResult = await new LaneSwitcher(this.workspace, this.logger, switchProps, checkoutProps, this).switch();
+
+    // Add git branch warning to the result if present
+    if (gitBranchWarning) {
+      switchResult.gitBranchWarning = gitBranchWarning;
+    }
+
+    return switchResult;
   }
 
-  private async createGitBranchForLane(laneName: string): Promise<void> {
+  private async createGitBranchForLane(laneName: string): Promise<string | undefined> {
     if (!this.workspace) return;
 
     try {
       // Check if git exists in the project
       const isGit = await fs.pathExists('.git');
       if (!isGit) {
-        this.logger.warn('Git repository not found. Skipping git branch creation.');
-        return;
+        const warning = 'Git repository not found. Skipping git branch creation.';
+        this.logger.warn(warning);
+        return warning;
       }
 
       const gitExecutablePath = getGitExecutablePath();
@@ -656,9 +684,16 @@ please create a new lane instead, which will include all components of this lane
       });
 
       this.logger.info(`Created and checked out git branch: ${laneName}`);
+      return undefined; // No warning
     } catch (err: any) {
       // Don't fail the lane import if git branch creation fails
-      this.logger.warn(`Failed to create git branch "${laneName}": ${err.message}`);
+      const detailedError = err.stderr?.trim() || err.message;
+      const warning = `Failed to create git branch "${laneName}".
+  - Command: ${err.command}
+  - Reason: ${detailedError}`;
+
+      this.logger.warn(warning);
+      return warning;
     }
   }
 
