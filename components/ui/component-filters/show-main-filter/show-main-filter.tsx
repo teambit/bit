@@ -1,11 +1,11 @@
 import classNames from 'classnames';
 import React from 'react';
 import { Toggle } from '@teambit/design.ui.input.toggle';
-import {
+import type {
   ComponentFilterCriteria,
   ComponentFilterRenderProps,
-  useComponentFilter,
 } from '@teambit/component.ui.component-filters.component-filter-context';
+import { useComponentFilter } from '@teambit/component.ui.component-filters.component-filter-context';
 import { LaneIcon } from '@teambit/lanes.ui.icons.lane-icon';
 
 import styles from './show-main-filter.module.scss';

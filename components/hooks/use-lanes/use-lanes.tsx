@@ -1,10 +1,12 @@
 import { useMemo, useCallback } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
-import { LaneModel, LanesModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
+import type { LaneModel, LanesQuery } from '@teambit/lanes.ui.models.lanes-model';
+import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { gql } from '@apollo/client';
-import { LaneId } from '@teambit/lane-id';
+import type { LaneId } from '@teambit/lane-id';
 import { isEqual } from 'lodash';
-import { LanesContextModel, useLanesContext } from './lanes-context';
+import type { LanesContextModel } from './lanes-context';
+import { useLanesContext } from './lanes-context';
 
 const GET_LANES = gql`
   query Lanes(

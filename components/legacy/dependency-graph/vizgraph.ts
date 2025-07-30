@@ -2,13 +2,13 @@ import execa from 'execa';
 import tempy from 'tempy';
 import os from 'os';
 import fs from 'fs-extra';
-import { Graph } from 'graphlib';
+import type { Graph } from 'graphlib';
 import { Digraph, Subgraph, Node, Edge, toDot } from 'ts-graphviz';
 // @ts-ignore
 // eslint-disable-next-line import/no-unresolved
 import { toFile } from 'ts-graphviz/adapter';
 import { instance } from '@viz-js/viz';
-import { Graph as ClearGraph } from '@teambit/graph.cleargraph';
+import type { Graph as ClearGraph } from '@teambit/graph.cleargraph';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import * as path from 'path';
 import { logger } from '@teambit/legacy.logger';

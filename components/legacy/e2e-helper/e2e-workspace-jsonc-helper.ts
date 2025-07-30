@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 
 import { WORKSPACE_JSONC } from '@teambit/legacy.constants';
-import ScopesData from './e2e-scopes';
+import type ScopesData from './e2e-scopes';
 
 // TODO: improve this by combine into a base class shared between this and e2e-bit-json-helper
 export default class WorkspaceJsoncHelper {

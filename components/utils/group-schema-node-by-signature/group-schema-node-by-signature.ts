@@ -1,4 +1,5 @@
-import { ConstructorSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { ConstructorSchema } from '@teambit/semantics.entities.semantic-schema';
 import pluralize from 'pluralize';
 
 export function sortSignatureType(

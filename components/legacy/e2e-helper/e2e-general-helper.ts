@@ -8,10 +8,11 @@ import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { defaultErrorHandler } from '@teambit/cli';
 import { BIT_HIDDEN_DIR, MergeConfigFilename, REMOTE_REFS_DIR, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
-import CommandHelper from './e2e-command-helper';
+import type CommandHelper from './e2e-command-helper';
 import { ensureAndWriteJson } from './e2e-helper';
-import NpmHelper from './e2e-npm-helper';
-import ScopesData, { DEFAULT_OWNER } from './e2e-scopes';
+import type NpmHelper from './e2e-npm-helper';
+import type ScopesData from './e2e-scopes';
+import { DEFAULT_OWNER } from './e2e-scopes';
 
 export default class GeneralHelper {
   scopes: ScopesData;

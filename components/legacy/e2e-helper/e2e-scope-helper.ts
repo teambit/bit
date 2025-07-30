@@ -6,11 +6,12 @@ import * as yaml from 'yaml';
 import * as ini from 'ini';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
-import CommandHelper from './e2e-command-helper';
-import FsHelper from './e2e-fs-helper';
-import NpmHelper from './e2e-npm-helper';
-import ScopesData, { DEFAULT_OWNER } from './e2e-scopes';
-import WorkspaceJsoncHelper from './e2e-workspace-jsonc-helper';
+import type CommandHelper from './e2e-command-helper';
+import type FsHelper from './e2e-fs-helper';
+import type NpmHelper from './e2e-npm-helper';
+import type ScopesData from './e2e-scopes';
+import { DEFAULT_OWNER } from './e2e-scopes';
+import type WorkspaceJsoncHelper from './e2e-workspace-jsonc-helper';
 
 type SetupWorkspaceOpts = {
   addRemoteScopeAsDefaultScope?: boolean; // default to true, otherwise, the scope is "my-scope"
