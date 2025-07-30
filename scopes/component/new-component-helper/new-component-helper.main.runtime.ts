@@ -13,14 +13,13 @@ import { ComponentID } from '@teambit/component-id';
 import type { Harmony } from '@teambit/harmony';
 import type { Workspace, WorkspaceComponentLoadOptions } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
-import { PkgAspect } from '@teambit/pkg';
-import { RenamingAspect } from '@teambit/renaming';
 import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
 import { EnvsAspect } from '@teambit/envs';
 import { NewComponentHelperAspect } from './new-component-helper.aspect';
 import { incrementPathRecursively } from '@teambit/component-writer';
+import { Extensions } from '@teambit/legacy.constants';
 
-const aspectsConfigToIgnore: string[] = [PkgAspect.id, RenamingAspect.id];
+const aspectsConfigToIgnore: string[] = [Extensions.pkg, Extensions.renaming];
 type File = { path: string; content: string };
 
 export class NewComponentHelperMain {
