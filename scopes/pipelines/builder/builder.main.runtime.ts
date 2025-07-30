@@ -16,7 +16,6 @@ import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
-import { AspectAspect } from '@teambit/aspect';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import type { Workspace } from '@teambit/workspace';
@@ -54,6 +53,7 @@ import { BuilderRoute } from './builder.route';
 import { ComponentsHaveIssues } from './exceptions/components-have-issues';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
+import { Extensions } from '@teambit/legacy.constants';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
 export type OnTagResults = { builderDataMap: ComponentMap<RawBuilderData>; pipeResults: TaskResultsList[] };
@@ -147,7 +147,7 @@ export class BuilderMain {
       {
         ...builderOptions,
         // even when build is skipped (in case of tag-from-scope), the pre-build/post-build and teambit.harmony/aspect tasks are needed
-        tasks: populateArtifactsFrom ? [AspectAspect.id] : undefined,
+        tasks: populateArtifactsFrom ? [Extensions.aspect] : undefined,
       },
       { ignoreIssues: '*' }
     );

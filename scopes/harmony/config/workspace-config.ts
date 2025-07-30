@@ -1,5 +1,5 @@
 import type { ComponentID } from '@teambit/component-id';
-import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy.constants';
+import { DEFAULT_LANGUAGE, WORKSPACE_JSONC, Extensions } from '@teambit/legacy.constants';
 import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
 import type { ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
@@ -12,7 +12,6 @@ import { assign, parse, stringify } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { omit } from 'lodash';
-import { WorkspaceAspect } from '@teambit/workspace';
 import type { SetExtensionOptions } from './config.main.runtime';
 import { ExtensionAlreadyConfigured } from './exceptions';
 import InvalidConfigFile from './exceptions/invalid-config-file';
@@ -182,22 +181,19 @@ export class WorkspaceConfig implements HostConfig {
     const template = await getWorkspaceConfigTemplateParsed();
     // previously, we just did `assign(template, props)`, but it was replacing the entire workspace config with the "props".
     // so for example, if the props only had defaultScope, it was removing the defaultDirectory.
-    const workspaceAspectConf = assign(template[WorkspaceAspect.id], props[WorkspaceAspect.id]);
+    const workspaceAspectConf = assign(template['teambit.workspace/workspace'], props['teambit.workspace/workspace']);
 
     // When external package manager mode is enabled, set conflicting properties to false in the template
-    const depResolverConf = assign(
-      template['teambit.dependencies/dependency-resolver'],
-      props['teambit.dependencies/dependency-resolver']
-    );
+    const depResolverConf = assign(template[Extensions.dependencyResolver], props[Extensions.dependencyResolver]);
     if (depResolverConf.externalPackageManager) {
       // Override template defaults to be compatible with external package manager mode
-      template['teambit.dependencies/dependency-resolver'] = template['teambit.dependencies/dependency-resolver'] || {};
-      template['teambit.dependencies/dependency-resolver'].rootComponent = false;
+      template[Extensions.dependencyResolver] = template[Extensions.dependencyResolver] || {};
+      template[Extensions.dependencyResolver].rootComponent = false;
     }
 
     const merged = assign(template, {
-      [WorkspaceAspect.id]: workspaceAspectConf,
-      'teambit.dependencies/dependency-resolver': depResolverConf,
+      [Extensions.workspace]: workspaceAspectConf,
+      [Extensions.dependencyResolver]: depResolverConf,
     });
 
     if (generator) {
