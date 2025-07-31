@@ -1,5 +1,5 @@
 import type { EnvHandler } from '@teambit/envs';
-import type { DependencyDetector } from './dependency-detector';
+import type { DependencyDetector } from './detector-hook';
 
 export interface DependencyEnv {
   detectors?(): EnvHandler<DependencyDetector[] | null>;
