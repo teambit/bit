@@ -43,8 +43,8 @@ export default class FindCycles implements Insight {
     }
     const string = data.data
       .map((cycle) => {
-        return `\nCyclic dependency
------------------
+        return `\nCyclic dependency (${cycle.length - 1} components)
+---------------------------------
 - ${cycle.join('\n- ')}`;
       })
       .join('\n');

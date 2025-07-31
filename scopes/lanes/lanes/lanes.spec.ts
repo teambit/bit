@@ -20,6 +20,7 @@ import { LanesAspect } from './lanes.aspect';
 import type { LanesMain } from './lanes.main.runtime';
 import type { MergeLanesMain } from '@teambit/merge-lanes';
 import { MergeLanesAspect } from '@teambit/merge-lanes';
+import { GraphqlAspect, type GraphqlMain } from '@teambit/graphql';
 
 describe('LanesAspect', function () {
   this.timeout(0);
@@ -467,6 +468,41 @@ describe('LanesAspect', function () {
       const workspace: Workspace = harmony.get(WorkspaceAspect.id);
       const ids = workspace.listIds();
       expect(ids.length).to.equal(1);
+    });
+  });
+});
+
+/**
+ * TODO: this should not be here. It belongs to the GraphQL aspect.
+ * The reason it was moved here is that otherwise, it forms circular dependencies.
+ * we should think of a better way to handle this.
+ */
+describe('GraphQL Aspect', function () {
+  this.timeout(0);
+
+  describe('getSchemas and getSchema APIs', () => {
+    let graphql: GraphqlMain;
+    let workspaceData: WorkspaceData;
+    before(async () => {
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      const harmony = await loadManyAspects([WorkspaceAspect, GraphqlAspect, LanesAspect], workspacePath);
+      graphql = harmony.get<GraphqlMain>(GraphqlAspect.id);
+    });
+    after(async () => {
+      await destroyWorkspace(workspaceData);
+    });
+    it('should bring the schemas when calling getSchemas API', async () => {
+      const schemas = graphql.getSchemas([LanesAspect.id]);
+      expect(schemas).to.be.an('array');
+      expect(schemas).to.have.lengthOf(1);
+      expect(schemas[0]).to.be.an('object');
+      expect(schemas[0]).to.not.be.an('function');
+    });
+    it('should bring the schemas when calling getSchema API', async () => {
+      const schema = graphql.getSchema(LanesAspect.id);
+      expect(schema).to.be.an('object');
+      expect(schema).to.not.be.an('function');
     });
   });
 });

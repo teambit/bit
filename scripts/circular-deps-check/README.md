@@ -68,7 +68,7 @@ The check runs automatically on every PR and push to master as part of the build
 ## Files
 
 - `check-circular-deps.js` - Main checker script
-- `diff-cycles.js` - Utility to diff two cycle files and show new/removed cycles  
+- `diff-cycles.js` - Utility to diff two cycle files and show new/removed cycles
 - `create-baseline.js` - Helper to create baseline from current state
 - `baseline-cycles.json` - Summary baseline (cycles count, components count, timestamp)
 - `baseline-cycles-full.json` - Full baseline with complete graph data for diffs
@@ -92,6 +92,7 @@ When the check fails (cycles increased), the script will automatically:
 3. Ignore version number changes to focus on structural changes
 
 Example output when new cycles are detected:
+
 ```
 ❌ FAIL: 2070 cycles > 2066 allowed
 

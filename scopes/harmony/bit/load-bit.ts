@@ -55,6 +55,7 @@ import type { EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import type { GeneratorMain } from '@teambit/generator';
 import { GeneratorAspect } from '@teambit/generator';
+import { HostInitializerMain } from '@teambit/host-initializer';
 
 async function loadLegacyConfig(config: any) {
   const harmony = await Harmony.load([ConfigAspect], ConfigRuntime.name, config.toObject());
@@ -63,6 +64,9 @@ async function loadLegacyConfig(config: any) {
 
 async function getConfig(cwd = process.cwd()) {
   const consumerInfo = await getWorkspaceInfo(cwd);
+  if (consumerInfo && !consumerInfo.hasScope && consumerInfo.hasBitMap && consumerInfo.hasWorkspaceConfig) {
+    await HostInitializerMain.init(consumerInfo.path);
+  }
   const scopePath = findScopePath(cwd);
 
   let wsConfig;
@@ -283,7 +287,6 @@ export async function loadBit(path = process.cwd(), additionalAspects?: Aspect[]
     logger.isDaemon = true;
   }
   const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
-
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
   if (loadCLIOnly) return harmony;
   const aspectLoader = harmony.get<AspectLoaderMain>(AspectLoaderAspect.id);
