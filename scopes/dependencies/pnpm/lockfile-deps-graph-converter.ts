@@ -61,8 +61,8 @@ export function convertLockfileToGraph(
   if (componentDevImporter.devDependencies != null) {
     directDependencies.push(...importerDepsToNeighbours(componentDevImporter.devDependencies, 'dev', false));
   }
-  const lockedPkg =
-    lockfile.snapshots![`${pkgName}@${lockfile.importers![componentRootDir].dependencies![pkgName].version}`];
+  const lockedPkgDepPath = `${pkgName}@${lockfile.importers![componentRootDir].dependencies![pkgName].version}`
+  const lockedPkg = lockfile.snapshots![lockedPkgDepPath];
   for (const depType of ['dependencies' as const, 'optionalDependencies' as const]) {
     const optional = depType === 'optionalDependencies';
     for (const [name, version] of Object.entries(lockedPkg[depType] ?? {})) {
@@ -76,6 +76,8 @@ export function convertLockfileToGraph(
       });
     }
   }
+  delete lockfile.snapshots![lockedPkgDepPath]
+  delete lockfile.packages![dp.removeSuffix(lockedPkgDepPath)]
   return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
 }
 
