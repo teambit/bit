@@ -19,7 +19,6 @@ export {
   MergeOptions,
   MergeResultsThreeWay,
 } from './merge-version';
-export { MergeFileResult, MergeFileParams, mergeFiles } from './merge-files';
 export type {
   MergingMain,
   ComponentMergeStatus,

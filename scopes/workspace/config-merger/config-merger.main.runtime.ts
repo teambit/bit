@@ -20,8 +20,8 @@ import { DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import type { ConfigMain } from '@teambit/config';
 import { ConfigAspect } from '@teambit/config';
-import type { MergeStrategy, MergeFileParams } from '@teambit/merging';
-import { mergeFiles } from '@teambit/merging';
+import type { MergeFileParams } from '@teambit/toolbox.fs.file-merger';
+import { mergeFiles } from '@teambit/toolbox.fs.file-merger';
 import { isRange1GreaterThanRange2Naively } from '@teambit/pkg.modules.semver-helper';
 import type { ConfigMergeResult } from './config-merge-result';
 import { parseVersionLineWithConflict } from './config-merge-result';
@@ -270,7 +270,7 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
 
   async updateDepsInWorkspaceConfig(
     components: ConsumerComponent[],
-    mergeStrategy?: MergeStrategy
+    mergeStrategy?: 'ours' | 'theirs' | 'manual'
   ): Promise<WorkspaceConfigUpdateResult | undefined> {
     if (mergeStrategy === 'ours') {
       this.logger.debug('mergeStrategy is "ours", skipping the workspace.jsonc update');
