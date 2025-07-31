@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
-import type { MergeStrategy } from '@teambit/merging';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { mergeReport } from '@teambit/merging';
 import { COMPONENT_PATTERN_HELP, CFG_FORCE_LOCAL_BUILD } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';

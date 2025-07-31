@@ -1,11 +1,6 @@
 import semver from 'semver';
 import { isEmpty } from 'lodash';
-import type {
-  DependencyResolverMain,
-  WorkspacePolicy,
-  WorkspacePolicyConfigKeysNames,
-  WorkspacePolicyEntry,
-} from '@teambit/dependency-resolver';
+import type { DependencyResolverMain, WorkspacePolicy, WorkspacePolicyEntry } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { snapToSemver } from '@teambit/component-package-version';
 import tempy from 'tempy';
@@ -20,29 +15,25 @@ import { DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
 import { BitError } from '@teambit/bit-error';
 import type { ConfigMain } from '@teambit/config';
 import { ConfigAspect } from '@teambit/config';
-import type { MergeStrategy, MergeFileParams } from '@teambit/merging';
-import { mergeFiles } from '@teambit/merging';
+import { mergeFiles } from '@teambit/component.modules.merge-helper';
 import { isRange1GreaterThanRange2Naively } from '@teambit/pkg.modules.semver-helper';
 import type { ConfigMergeResult } from './config-merge-result';
 import { parseVersionLineWithConflict } from './config-merge-result';
 import { ConfigMergerAspect } from './config-merger.aspect';
 import { AggregatedDeps } from './aggregated-deps';
+import type {
+  MergeFileParams,
+  MergeStrategy,
+  WorkspaceConfigUpdateResult,
+  WorkspaceDepsConflicts,
+  WorkspaceDepsUnchanged,
+  WorkspaceDepsUpdates,
+} from '@teambit/component.modules.merge-helper';
 
 export type PkgEntry = { name: string; version: string; force: boolean };
 
 const WS_DEPS_FIELDS = ['dependencies', 'peerDependencies'];
 
-export type WorkspaceDepsUpdates = { [pkgName: string]: [string, string] }; // from => to
-export type WorkspaceDepsConflicts = Record<WorkspacePolicyConfigKeysNames, Array<{ name: string; version: string }>>; // the pkg value is in a format of CONFLICT::OURS::THEIRS
-export type WorkspaceDepsUnchanged = { [pkgName: string]: string }; // the pkg value is the message why it wasn't updated
-
-export type WorkspaceConfigUpdateResult = {
-  workspaceDepsUpdates?: WorkspaceDepsUpdates; // in case workspace.jsonc has been updated with dependencies versions
-  workspaceDepsConflicts?: WorkspaceDepsConflicts; // in case workspace.jsonc has conflicts
-  workspaceDepsUnchanged?: WorkspaceDepsUnchanged; // in case the deps in workspace.jsonc couldn't be updated
-  workspaceConfigConflictWriteError?: Error; // in case workspace.jsonc has conflicts and we failed to write the conflicts to the file
-  logs?: string[]; // verbose details about the updates/conflicts for each one of the deps
-};
 export class ConfigMergerMain {
   constructor(
     private workspace: Workspace,

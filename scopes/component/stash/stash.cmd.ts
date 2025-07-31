@@ -1,6 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
 import chalk from 'chalk';
-import type { MergeStrategy } from '@teambit/merging';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import type { Command, CommandOptions } from '@teambit/cli';
 import type { CheckoutProps } from '@teambit/checkout';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';

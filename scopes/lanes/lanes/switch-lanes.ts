@@ -2,7 +2,7 @@ import type { Consumer } from '@teambit/legacy.consumer';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
-import type { ApplyVersionResults } from '@teambit/merging';
+import type { ApplyVersionResults } from '@teambit/component.modules.merge-helper';
 import type { Lane } from '@teambit/objects';
 import type { CheckoutProps } from '@teambit/checkout';
 import type { Workspace } from '@teambit/workspace';

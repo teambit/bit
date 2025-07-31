@@ -8,7 +8,7 @@ import { DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-res
 import type { Lane } from '@teambit/objects';
 import { EnvsAspect } from '@teambit/envs';
 import type { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
-import type { MergeStrategy } from '@teambit/merging';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { compact, omit, uniqBy } from 'lodash';
 import { ConfigMergeResult } from './config-merge-result';
 

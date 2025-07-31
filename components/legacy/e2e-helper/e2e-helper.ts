@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import { fromPairs } from 'lodash';
-import { FileStatus } from '@teambit/merging';
+import { FileStatus } from '@teambit/component.modules.merge-helper';
 import { VERSION_DELIMITER } from '@teambit/legacy.constants';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
 import WorkspaceJsoncHelper from './e2e-workspace-jsonc-helper';
@@ -95,7 +95,7 @@ export function ensureAndWriteJson(filePath: string, fileContent: any) {
 
 export const FileStatusWithoutChalk = fromPairs(
   Object.entries(FileStatus)
-    .map(([status, value]) => [status, removeChalkCharacters(value)])
+    .map(([status, value]) => [status, removeChalkCharacters(value as string)])
     .filter(([, value]) => value !== undefined && value !== null && value !== '')
 );
 
