@@ -1,4 +1,4 @@
-import { Identifier } from './identifier';
+import type { Identifier } from './identifier';
 
 export class IdentifierList {
   constructor(readonly identifiers: Identifier[]) {}

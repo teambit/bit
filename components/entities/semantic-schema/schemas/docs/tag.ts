@@ -1,4 +1,5 @@
-import { SchemaLocation, SchemaNode } from '../../schema-node';
+import type { SchemaLocation } from '../../schema-node';
+import { SchemaNode } from '../../schema-node';
 
 /**
  * e.g. `@deprecated please use something else`

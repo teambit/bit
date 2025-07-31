@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import Table from 'cli-table';
 import { forEach, isEmpty } from 'lodash';
 import { add, list, remove } from './remote';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 
 class RemoteAdd implements Command {
   name = 'add <url>';

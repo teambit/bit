@@ -1,10 +1,11 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { Logger } from '@teambit/logger';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { Logger } from '@teambit/logger';
 import prettyTime from 'pretty-time';
-import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError } from '@teambit/workspace';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
-import { BuilderMain } from './builder.main.runtime';
+import type { BuilderMain } from './builder.main.runtime';
 import { IssuesClasses } from '@teambit/component-issues';
 
 type BuildOpts = {

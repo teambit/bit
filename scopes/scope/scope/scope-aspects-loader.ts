@@ -1,5 +1,5 @@
 import mapSeries from 'p-map-series';
-import { Lane } from '@teambit/objects';
+import type { Lane } from '@teambit/objects';
 import { existsSync } from 'fs-extra';
 import { join } from 'path';
 import {
@@ -9,20 +9,20 @@ import {
   CFG_USE_DATED_CAPSULES,
   CFG_CACHE_LOCK_ONLY_CAPSULES,
 } from '@teambit/legacy.constants';
-import { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
-import { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
-import { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
+import type { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
+import type { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
+import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { compact, uniq, difference, groupBy, defaultsDeep } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
-import { ExtensionManifest, Aspect } from '@teambit/harmony';
-import { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
-import { Logger } from '@teambit/logger';
-import { EnvsMain } from '@teambit/envs';
-import { NodeLinker } from '@teambit/dependency-resolver';
+import type { ExtensionManifest, Aspect } from '@teambit/harmony';
+import type { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
+import type { Logger } from '@teambit/logger';
+import type { EnvsMain } from '@teambit/envs';
+import type { NodeLinker } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
-import { ScopeMain } from './scope.main.runtime';
-import { ConfigStoreMain } from '@teambit/config-store';
+import type { ScopeMain } from './scope.main.runtime';
+import type { ConfigStoreMain } from '@teambit/config-store';
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
 

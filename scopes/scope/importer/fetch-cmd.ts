@@ -1,9 +1,9 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
-import { ComponentID } from '@teambit/component-id';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ComponentID } from '@teambit/component-id';
 import { FileStatus } from '@teambit/merging';
 import type { ImporterMain } from './importer.main.runtime';
-import { ImportDetails, ImportStatus } from './import-components';
+import type { ImportDetails, ImportStatus } from './import-components';
 
 export class FetchCmd implements Command {
   name = 'fetch [ids...]';

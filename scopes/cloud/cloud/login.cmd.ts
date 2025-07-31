@@ -1,9 +1,9 @@
 import chalk from 'chalk';
 import yesno from 'yesno';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { isEmpty } from 'lodash';
 import { BitError } from '@teambit/bit-error';
-import { CloudMain } from './cloud.main.runtime';
+import type { CloudMain } from './cloud.main.runtime';
 
 export class LoginCmd implements Command {
   name = 'login';

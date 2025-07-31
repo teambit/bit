@@ -1,4 +1,5 @@
-import { Menu, MenuProps } from '@teambit/ui-foundation.ui.menu';
+import type { MenuProps } from '@teambit/ui-foundation.ui.menu';
+import { Menu } from '@teambit/ui-foundation.ui.menu';
 import { ScopeContext } from '@teambit/scope.ui.hooks.scope-context';
 import classNames from 'classnames';
 import React, { useContext } from 'react';

@@ -1,6 +1,6 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { Logger } from '@teambit/logger';
-import { ApplicationMain } from './application.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { Logger } from '@teambit/logger';
+import type { ApplicationMain } from './application.main.runtime';
 
 type RunOptions = {
   dev: boolean;

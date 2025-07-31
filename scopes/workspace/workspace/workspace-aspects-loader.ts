@@ -1,16 +1,11 @@
 import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy.constants';
 import findRoot from 'find-root';
 import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
-import { Graph } from '@teambit/graph.cleargraph';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { ExtensionManifest, Harmony, Aspect } from '@teambit/harmony';
-import {
-  AspectDefinition,
-  AspectLoaderMain,
-  AspectResolver,
-  getAspectDef,
-  ResolvedAspect,
-} from '@teambit/aspect-loader';
+import type { Graph } from '@teambit/graph.cleargraph';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { ExtensionManifest, Harmony, Aspect } from '@teambit/harmony';
+import type { AspectDefinition, AspectLoaderMain, AspectResolver, ResolvedAspect } from '@teambit/aspect-loader';
+import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
 import fs from 'fs-extra';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
@@ -19,24 +14,24 @@ import { ComponentID } from '@teambit/component-id';
 import { ComponentNotFound } from '@teambit/legacy.scope';
 import pMapSeries from 'p-map-series';
 import { difference, compact, groupBy, partition } from 'lodash';
-import { Consumer } from '@teambit/legacy.consumer';
-import { Component, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
-import { ScopeMain } from '@teambit/scope';
-import { Logger } from '@teambit/logger';
+import type { Consumer } from '@teambit/legacy.consumer';
+import type { Component, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
+import type { ScopeMain } from '@teambit/scope';
+import type { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
-import { EnvsMain } from '@teambit/envs';
-import { ConfigMain } from '@teambit/config';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { ShouldLoadFunc } from './build-graph-from-fs';
+import type { EnvsMain } from '@teambit/envs';
+import type { ConfigMain } from '@teambit/config';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { ShouldLoadFunc } from './build-graph-from-fs';
 import type { Workspace } from './workspace';
-import {
+import type {
   OnAspectsResolve,
   OnAspectsResolveSlot,
   OnRootAspectAdded,
   OnRootAspectAddedSlot,
 } from './workspace.main.runtime';
-import { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
-import { ConfigStoreMain } from '@teambit/config-store';
+import type { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
+import type { ConfigStoreMain } from '@teambit/config-store';
 
 export type GetConfiguredUserAspectsPackagesOptions = {
   externalsOnly?: boolean;

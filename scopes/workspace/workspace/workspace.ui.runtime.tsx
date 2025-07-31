@@ -1,28 +1,32 @@
-import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component';
+import type { ComponentUI, ComponentModel } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import { compact, flatten } from 'lodash';
-import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import type { ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
+import { ComponentTreeAspect } from '@teambit/component-tree';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { MenuWidgetSlot, MenuWidget } from '@teambit/ui-foundation.ui.menu';
-import { SidebarAspect, SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
-import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
-import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
-import { GraphAspect, GraphUI } from '@teambit/graph';
-import React, { ReactNode } from 'react';
-import { RouteProps } from 'react-router-dom';
-import { CommandBarAspect, CommandBarUI, CommandHandler } from '@teambit/command-bar';
+import type { MenuWidgetSlot, MenuWidget } from '@teambit/ui-foundation.ui.menu';
+import type { SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
+import { SidebarAspect } from '@teambit/sidebar';
+import type { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
+import type { UIRootUI as UIRoot, UiUI } from '@teambit/ui';
+import { UIAspect, UIRuntime } from '@teambit/ui';
+import type { GraphUI } from '@teambit/graph';
+import { GraphAspect } from '@teambit/graph';
+import type { ReactNode } from 'react';
+import React from 'react';
+import type { RouteProps } from 'react-router-dom';
+import type { CommandBarUI, CommandHandler } from '@teambit/command-bar';
+import { CommandBarAspect } from '@teambit/command-bar';
 import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
-import { ComponentFilters } from '@teambit/component.ui.component-filters.component-filter-context';
+import type { ComponentFilters } from '@teambit/component.ui.component-filters.component-filter-context';
 import { DeprecateFilter } from '@teambit/component.ui.component-filters.deprecate-filter';
 import { EnvsFilter } from '@teambit/component.ui.component-filters.env-filter';
 import { ShowMainFilter } from '@teambit/component.ui.component-filters.show-main-filter';
-import {
-  DrawerWidgetSlot,
-  FilterWidget,
-  TreeToggleWidget,
-  ComponentFiltersSlot,
-} from '@teambit/component.ui.component-drawer';
+import type { DrawerWidgetSlot, ComponentFiltersSlot } from '@teambit/component.ui.component-drawer';
+import { FilterWidget, TreeToggleWidget } from '@teambit/component.ui.component-drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace, WorkspaceMenu } from './ui';
 import { WorkspaceAspect } from './workspace.aspect';

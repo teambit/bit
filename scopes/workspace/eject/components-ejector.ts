@@ -7,16 +7,17 @@
  * since installing the component via NPM client is an error prone process, we do it first, before
  * removing the component files, so then it's easier to rollback.
  */
-import { Workspace } from '@teambit/workspace';
-import { Consumer } from '@teambit/legacy.consumer';
-import { ComponentIdList, ComponentID } from '@teambit/component-id';
+import type { Workspace } from '@teambit/workspace';
+import type { Consumer } from '@teambit/legacy.consumer';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { defaultErrorHandler } from '@teambit/cli';
 import { getScopeRemotes } from '@teambit/scope.remotes';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DataToPersist, RemovePath } from '@teambit/component.sources';
-import { Logger } from '@teambit/logger';
-import { InstallMain } from '@teambit/install';
+import type { Logger } from '@teambit/logger';
+import type { InstallMain } from '@teambit/install';
 import { removeComponentsFromNodeModules } from '@teambit/remove';
 
 export type EjectResults = {

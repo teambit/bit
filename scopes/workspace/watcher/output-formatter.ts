@@ -1,8 +1,8 @@
 import { Logger } from '@teambit/logger';
 import { CompilerAspect } from '@teambit/compiler';
-import { OnComponentEventResult } from '@teambit/workspace';
+import type { OnComponentEventResult } from '@teambit/workspace';
 import chalk from 'chalk';
-import { RootDirs } from './watcher';
+import type { RootDirs } from './watcher';
 import { compact } from 'lodash';
 
 export function formatWatchPathsSortByComponent(trackDirs: RootDirs) {

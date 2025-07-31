@@ -1,11 +1,11 @@
 import chalk from 'chalk';
 import yesno from 'yesno';
-import { Command, CommandOptions } from '@teambit/cli';
-import { Workspace } from '@teambit/workspace';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
-import { RemovedObjects } from '@teambit/legacy.scope';
+import type { RemovedObjects } from '@teambit/legacy.scope';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { RemoveMain } from './remove.main.runtime';
+import type { RemoveMain } from './remove.main.runtime';
 import { removeTemplate } from './remove-template';
 
 export class DeleteCmd implements Command {

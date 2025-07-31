@@ -1,13 +1,15 @@
-import { Harmony } from '@teambit/harmony';
-import { Component } from '@teambit/component';
-import { UnmergedComponent } from '@teambit/legacy.scope';
-import { ComponentID } from '@teambit/component-id';
+import type { Harmony } from '@teambit/harmony';
+import type { Component } from '@teambit/component';
+import type { UnmergedComponent } from '@teambit/legacy.scope';
+import type { ComponentID } from '@teambit/component-id';
 import { EnvsAspect } from '@teambit/envs';
-import { DependencyResolverAspect, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
+import type { VariantPolicyConfigArr } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { ExtensionDataList, getCompareExtPredicate } from '@teambit/legacy.extension-data';
 import { partition, mergeWith, merge, uniq, uniqWith, compact } from 'lodash';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
-import { AspectSpecificField, ExtensionsOrigin, Workspace } from './workspace';
+import type { ExtensionsOrigin, Workspace } from './workspace';
+import { AspectSpecificField } from './workspace';
 import { MergeConflictFile } from './merge-conflict-file';
 
 export class AspectsMerger {

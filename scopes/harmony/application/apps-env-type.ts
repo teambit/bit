@@ -1,5 +1,5 @@
-import { EnvHandler } from '@teambit/envs';
-import { AppTypeList } from './app-type-list';
+import type { EnvHandler } from '@teambit/envs';
+import type { AppTypeList } from './app-type-list';
 
 export interface AppsEnv {
   /**

@@ -4,15 +4,16 @@
 import { expect } from 'chai';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents } from '@teambit/component.testing.mock-components';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import fs from 'fs-extra';
 import path from 'path';
 
 import { CliMcpServerAspect } from './cli-mcp-server.aspect';
-import { CliMcpServerMain } from './cli-mcp-server.main.runtime';
+import type { CliMcpServerMain } from './cli-mcp-server.main.runtime';
 
 describe('CliMcpServer Integration Tests', function () {
   this.timeout(30000); // Increased timeout for MCP server operations
@@ -686,6 +687,65 @@ describe('CliMcpServer Direct Aspect Tests', function () {
         command: 'bit',
         args: ['mcp-server', 'start'],
       });
+    });
+  });
+
+  describe('Rules Methods', () => {
+    it('should get rules content without error', async () => {
+      // This test reproduces the bug where bit-rules-template.md was not found
+      const rulesContent = await mcpServer.getRulesContent(false);
+      expect(rulesContent).to.be.a('string');
+      expect(rulesContent).to.contain('# Bit MCP Agent Instructions');
+      expect(rulesContent).to.contain('Core Objectives');
+    });
+
+    it('should get consumer project rules content without error', async () => {
+      const rulesContent = await mcpServer.getRulesContent(true);
+      expect(rulesContent).to.be.a('string');
+      expect(rulesContent).to.contain('## How to Install and Use Bit Components');
+      expect(rulesContent).to.contain('Bit Components are reusable pieces of code');
+    });
+
+    it('should write rules file for VS Code without error', async () => {
+      await mcpServer.writeRulesFile(
+        'vscode',
+        {
+          isGlobal: false,
+          consumerProject: false,
+        },
+        workspacePath
+      );
+
+      // Check that the rules file was created
+      const rulesPath = path.join(workspacePath, '.github', 'instructions', 'bit.instructions.md');
+      const rulesExists = await fs.pathExists(rulesPath);
+      expect(rulesExists).to.be.true;
+
+      // Check content
+      const rulesContent = await fs.readFile(rulesPath, 'utf8');
+      expect(rulesContent).to.contain('# Bit MCP Agent Instructions');
+      expect(rulesContent).to.contain('Core Objectives');
+    });
+
+    it('should write consumer project rules file without error', async () => {
+      await mcpServer.writeRulesFile(
+        'vscode',
+        {
+          isGlobal: false,
+          consumerProject: true,
+        },
+        workspacePath
+      );
+
+      // Check that the rules file was created
+      const rulesPath = path.join(workspacePath, '.github', 'instructions', 'bit.instructions.md');
+      const rulesExists = await fs.pathExists(rulesPath);
+      expect(rulesExists).to.be.true;
+
+      // Check content is different for consumer project
+      const rulesContent = await fs.readFile(rulesPath, 'utf8');
+      expect(rulesContent).to.contain('## How to Install and Use Bit Components');
+      expect(rulesContent).to.contain('Bit Components are reusable pieces of code');
     });
   });
 });

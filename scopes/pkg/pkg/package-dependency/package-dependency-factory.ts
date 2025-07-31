@@ -1,11 +1,8 @@
-import {
-  DependencyLifecycleType,
-  SerializedDependency,
-  DependencyFactory,
-  DependencyList,
-} from '@teambit/dependency-resolver';
-import { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
-import { PackageDependency, SerializedPackageDependency } from './package-dependency';
+import type { DependencyLifecycleType, SerializedDependency, DependencyFactory } from '@teambit/dependency-resolver';
+import { DependencyList } from '@teambit/dependency-resolver';
+import type { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
+import type { SerializedPackageDependency } from './package-dependency';
+import { PackageDependency } from './package-dependency';
 
 const TYPE = 'package';
 // TODO: think about where is the right place to put this

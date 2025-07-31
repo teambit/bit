@@ -1,8 +1,9 @@
-import React, { HTMLAttributes } from 'react';
+import type { HTMLAttributes } from 'react';
+import React from 'react';
 import { DetailedVersion, VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { useUpdatedUrlFromQuery } from '@teambit/component.ui.component-compare.hooks.use-component-compare-url';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
-import { UseComponentType } from '@teambit/component';
+import type { UseComponentType } from '@teambit/component';
 import classNames from 'classnames';
 import * as semver from 'semver';
 

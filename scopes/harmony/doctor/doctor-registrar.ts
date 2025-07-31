@@ -1,4 +1,4 @@
-import Diagnosis from './diagnosis';
+import type Diagnosis from './diagnosis';
 
 /*
  * Setting up block level variable to store class state

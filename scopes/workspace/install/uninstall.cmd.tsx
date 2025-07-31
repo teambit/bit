@@ -1,6 +1,6 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 
-import { InstallMain } from './install.main.runtime';
+import type { InstallMain } from './install.main.runtime';
 
 export default class UninstallCmd implements Command {
   name = 'uninstall [packages...]';

@@ -1,4 +1,4 @@
-import { ComponentContext } from '../../../component-template';
+import type { ComponentContext } from '../../../component-template';
 
 export function docFile(context: ComponentContext) {
   const { name, componentId } = context;

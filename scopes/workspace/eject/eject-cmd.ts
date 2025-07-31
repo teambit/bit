@@ -1,8 +1,8 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { Workspace } from '@teambit/workspace';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { Workspace } from '@teambit/workspace';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { ejectTemplate } from './eject-template';
-import { EjectMain } from './eject.main.runtime';
+import type { EjectMain } from './eject.main.runtime';
 
 export class EjectCmd implements Command {
   name = 'eject <component-pattern>';

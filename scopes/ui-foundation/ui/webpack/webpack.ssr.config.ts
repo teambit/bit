@@ -1,4 +1,4 @@
-import { Configuration } from 'webpack';
+import type { Configuration } from 'webpack';
 import path from 'path';
 import { merge } from 'webpack-merge';
 import createBaseConfig from './webpack.base.config';

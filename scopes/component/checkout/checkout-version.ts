@@ -1,21 +1,17 @@
 import * as path from 'path';
-import { Consumer } from '@teambit/legacy.consumer';
-import { ComponentID } from '@teambit/component-id';
-import { Version } from '@teambit/objects';
-import { SourceFile, RemovePath, DataToPersist } from '@teambit/component.sources';
-import { pathNormalizeToLinux, PathOsBased } from '@teambit/legacy.utils';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { Consumer } from '@teambit/legacy.consumer';
+import type { ComponentID } from '@teambit/component-id';
+import type { Version } from '@teambit/objects';
+import type { SourceFile } from '@teambit/component.sources';
+import { RemovePath, DataToPersist } from '@teambit/component.sources';
+import type { PathOsBased } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux } from '@teambit/legacy.utils';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
-import {
-  ApplyVersionResult,
-  FilesStatus,
-  FileStatus,
-  MergeOptions,
-  MergeStrategy,
-  MergeResultsThreeWay,
-} from '@teambit/merging';
-import { CheckoutProps } from './checkout.main.runtime';
+import type { ApplyVersionResult, FilesStatus, MergeStrategy, MergeResultsThreeWay } from '@teambit/merging';
+import { FileStatus, MergeOptions } from '@teambit/merging';
+import type { CheckoutProps } from './checkout.main.runtime';
 
 export type ComponentStatusBase = {
   currentComponent?: ConsumerComponent;

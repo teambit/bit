@@ -1,4 +1,4 @@
-import { DependencyDetector } from '../detector-hook';
+import type { DependencyDetector } from '../detector-hook';
 
 const assert = require('assert');
 const path = require('path');

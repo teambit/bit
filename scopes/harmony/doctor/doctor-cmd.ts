@@ -1,7 +1,7 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import formatDiagnosesList from './diagnosis-list-template';
 import formatDiagnosesResult from './doctor-results-template';
-import { DoctorMain, DoctorOptions } from './doctor.main.runtime';
+import type { DoctorMain, DoctorOptions } from './doctor.main.runtime';
 
 type Flags = {
   list?: boolean;

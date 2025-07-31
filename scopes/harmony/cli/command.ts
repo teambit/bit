@@ -1,4 +1,4 @@
-import { Group } from './command-groups';
+import type { Group } from './command-groups';
 
 type CommandOption = [string, string, string];
 export type CommandOptions = Array<CommandOption>;

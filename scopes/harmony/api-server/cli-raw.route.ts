@@ -1,12 +1,13 @@
-import { CLIMain, CLIParser, YargsExitWorkaround } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIParser, YargsExitWorkaround } from '@teambit/cli';
 import fs from 'fs-extra';
 import chalk from 'chalk';
-import { Route, Request, Response } from '@teambit/express';
-import { Logger } from '@teambit/logger';
+import type { Route, Request, Response } from '@teambit/express';
+import type { Logger } from '@teambit/logger';
 import { logger as legacyLogger, getLevelFromArgv } from '@teambit/legacy.logger';
 import { reloadFeatureToggle } from '@teambit/harmony.modules.feature-toggle';
 import { loader } from '@teambit/legacy.loader';
-import { APIForIDE } from './api-for-ide';
+import type { APIForIDE } from './api-for-ide';
 
 /**
  * example usage:

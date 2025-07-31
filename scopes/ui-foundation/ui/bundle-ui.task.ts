@@ -1,10 +1,10 @@
 import { join } from 'path';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import type { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
-import { Capsule } from '@teambit/isolator';
-import { Logger } from '@teambit/logger';
+import type { Capsule } from '@teambit/isolator';
+import type { Logger } from '@teambit/logger';
 import { UIAspect } from './ui.aspect';
-import { UiMain } from './ui.main.runtime';
+import type { UiMain } from './ui.main.runtime';
 
 export const BUNDLE_UI_TASK_NAME = 'BundleUI';
 export const BUNDLE_UI_DIR = 'ui-bundle';

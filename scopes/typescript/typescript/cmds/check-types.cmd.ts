@@ -1,9 +1,10 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { Logger } from '@teambit/logger';
-import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { Logger } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError } from '@teambit/workspace';
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { TypescriptMain } from '../typescript.main.runtime';
+import type { TypescriptMain } from '../typescript.main.runtime';
 
 export class CheckTypesCmd implements Command {
   name = 'check-types [component-pattern]';

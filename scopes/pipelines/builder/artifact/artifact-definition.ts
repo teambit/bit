@@ -1,4 +1,4 @@
-import { ArtifactStorageResolver } from '..';
+import type { ArtifactStorageResolver } from '..';
 
 export type ArtifactDefinition = {
   /**

@@ -2,8 +2,10 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
 import { loadBit } from '@teambit/bit';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { BuilderMain, BuilderAspect } from '@teambit/builder';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { BuilderMain } from '@teambit/builder';
+import { BuilderAspect } from '@teambit/builder';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import { specFileFailingFixture } from './jest-fixtures';
 

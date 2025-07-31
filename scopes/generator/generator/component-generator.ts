@@ -2,21 +2,22 @@ import fs from 'fs-extra';
 import { prompt } from 'enquirer';
 import pMapSeries from 'p-map-series';
 import path from 'path';
-import { Workspace } from '@teambit/workspace';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import type { Workspace } from '@teambit/workspace';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
 import camelcase from 'camelcase';
 import { BitError } from '@teambit/bit-error';
-import { Logger } from '@teambit/logger';
-import { TrackerMain } from '@teambit/tracker';
+import type { Logger } from '@teambit/logger';
+import type { TrackerMain } from '@teambit/tracker';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { NewComponentHelperMain } from '@teambit/new-component-helper';
+import type { NewComponentHelperMain } from '@teambit/new-component-helper';
 import { ComponentID } from '@teambit/component-id';
-import { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 
-import { ComponentTemplate, ComponentConfig, PromptOption, PromptResults } from './component-template';
-import { CreateOptions } from './create.cmd';
-import { OnComponentCreateSlot } from './generator.main.runtime';
+import type { ComponentTemplate, ComponentConfig, PromptOption, PromptResults } from './component-template';
+import type { CreateOptions } from './create.cmd';
+import type { OnComponentCreateSlot } from './generator.main.runtime';
 
 export type GenerateResult = {
   id: ComponentID;

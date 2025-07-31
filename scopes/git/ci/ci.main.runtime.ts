@@ -4,15 +4,16 @@ import { LoggerAspect, type LoggerMain, type Logger } from '@teambit/logger';
 import { WorkspaceAspect, type Workspace } from '@teambit/workspace';
 import { BuilderAspect, type BuilderMain } from '@teambit/builder';
 import { StatusAspect, type StatusMain } from '@teambit/status';
-import { LanesAspect, type LanesMain } from '@teambit/lanes';
-import { SnappingAspect, SnapResults, tagResultOutput, snapResultOutput, type SnappingMain } from '@teambit/snapping';
+import { LanesAspect } from '@teambit/lanes';
+import type { SwitchLaneOptions, LanesMain } from '@teambit/lanes';
+import { SnappingAspect, tagResultOutput, snapResultOutput } from '@teambit/snapping';
+import type { SnapResults, SnappingMain } from '@teambit/snapping';
 import { ExportAspect, type ExportMain } from '@teambit/export';
 import { ImporterAspect, type ImporterMain } from '@teambit/importer';
 import { CheckoutAspect, checkoutOutput, type CheckoutMain } from '@teambit/checkout';
-import { SwitchLaneOptions } from '@teambit/lanes';
 import execa from 'execa';
 import chalk from 'chalk';
-import { ReleaseType } from 'semver';
+import type { ReleaseType } from 'semver';
 import { CiAspect } from './ci.aspect';
 import { CiCmd } from './ci.cmd';
 import { CiVerifyCmd } from './commands/verify.cmd';
@@ -455,6 +456,7 @@ export class CiMain {
     preReleaseId,
     incrementBy,
     explicitVersionBump,
+    verbose,
   }: {
     message?: string;
     build?: boolean;
@@ -463,6 +465,7 @@ export class CiMain {
     preReleaseId?: string;
     incrementBy?: number;
     explicitVersionBump?: boolean;
+    verbose?: boolean;
   }) {
     const message = argMessage || (await this.getGitCommitMessage());
     if (!message) {
@@ -505,15 +508,13 @@ export class CiMain {
     await this.importer.importCurrentObjects();
 
     const checkoutProps = {
-      ids: this.workspace.listIds(),
       forceOurs: true,
       head: true,
       skipNpmInstall: true,
     };
     const checkoutResults = await this.checkout.checkout(checkoutProps);
     await this.workspace.bitMap.write('checkout head');
-    // all: true is to make it less verbose in the output. this workaround will be fixed later.
-    this.logger.console(checkoutOutput(checkoutResults, { ...checkoutProps, all: true }));
+    this.logger.console(checkoutOutput(checkoutResults, checkoutProps));
 
     const { status } = await this.verifyWorkspaceStatusInternal(strict);
 
@@ -564,8 +565,23 @@ export class CiMain {
         this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
       });
 
-      // Commit the .bitmap and pnpm-lock.yaml files using Git
-      await git.add(['.bitmap', 'pnpm-lock.yaml']);
+      // Show git diff if there are uncommitted changes
+      if (verbose && statusBeforeCommit.files.length > 0) {
+        try {
+          const diff = await git.diff();
+          if (diff) {
+            this.logger.console(chalk.blue('Git diff before commit:'));
+            this.logger.console(diff);
+          }
+        } catch (error) {
+          this.logger.console(chalk.yellow(`Failed to show git diff: ${error}`));
+        }
+      }
+
+      // Previously we committed only .bitmap and pnpm-lock.yaml files.
+      // However, it's possible that "bit checkout head" we did above, modified other files as well.
+      // So now we commit all files that were changed.
+      await git.add(['.']);
 
       const commitMessage = await this.getCustomCommitMessage();
       await git.commit(commitMessage);
@@ -577,49 +593,7 @@ export class CiMain {
         this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
       });
 
-      // Show git diff if there are uncommitted changes
-      if (statusAfterCommit.files.length > 0) {
-        try {
-          const diff = await git.diff();
-          if (diff) {
-            this.logger.console(chalk.blue('Git diff after commit:'));
-            this.logger.console(diff);
-          }
-        } catch (error) {
-          this.logger.console(chalk.yellow(`Failed to show git diff: ${error}`));
-        }
-      }
-
-      // Pull latest changes and push the commit to the remote repository
-      // Check if there are any unstaged changes before pulling
-      const hasUnstagedChanges = statusAfterCommit.files.length > 0;
-
-      if (hasUnstagedChanges) {
-        this.logger.console(chalk.yellow('Stashing uncommitted changes before final rebase'));
-        await git.stash(['push', '-u', '-m', 'CI merge post-commit stash']);
-      }
-
       await git.pull('origin', defaultBranch, { '--rebase': 'true' });
-
-      if (hasUnstagedChanges) {
-        this.logger.console(chalk.yellow('Restoring stashed changes after final rebase'));
-        await git.stash(['pop']);
-
-        // Show git diff after stash pop to see what changes remain
-        try {
-          const finalStatus = await git.status();
-          if (finalStatus.files.length > 0) {
-            const diff = await git.diff();
-            if (diff) {
-              this.logger.console(chalk.blue('Git diff after stash pop:'));
-              this.logger.console(diff);
-            }
-          }
-        } catch (error) {
-          this.logger.console(chalk.yellow(`Failed to show git diff after stash pop: ${error}`));
-        }
-      }
-
       await git.push('origin', defaultBranch);
     } else {
       this.logger.console(chalk.yellow('No components were tagged, skipping export and git operations'));
@@ -629,10 +603,11 @@ export class CiMain {
 
     if (currentLane) {
       this.logger.console('🗑️ Lane Cleanup');
-      const laneId = currentLane.id;
-      this.logger.console(chalk.blue(`Archiving lane ${laneId.toString()}`));
-      const archiveLane = await this.lanes.removeLanes([laneId()]);
-      if (archiveLane) {
+      const laneId = currentLane.id();
+      this.logger.console(chalk.blue(`Archiving lane ${laneId}`));
+      // force means to remove the lane even if it was not merged. in this case, we don't care much because main already has the changes.
+      const archiveLane = await this.lanes.removeLanes([laneId], { remote: true, force: true });
+      if (archiveLane.length) {
         this.logger.console(chalk.green('Lane archived'));
       } else {
         this.logger.console(chalk.yellow('Failed to archive lane'));

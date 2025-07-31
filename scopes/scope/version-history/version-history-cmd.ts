@@ -1,8 +1,9 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { VisualDependencyGraph, GraphConfig } from '@teambit/legacy.dependency-graph';
+import type { GraphConfig } from '@teambit/legacy.dependency-graph';
+import { VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
 import chalk from 'chalk';
-import { VersionHistoryMain } from './version-history.main.runtime';
+import type { VersionHistoryMain } from './version-history.main.runtime';
 import { catVersionHistory } from './cat-version-history';
 
 export class VersionHistoryCmd implements Command {

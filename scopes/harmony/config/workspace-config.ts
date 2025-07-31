@@ -1,20 +1,21 @@
-import { ComponentID } from '@teambit/component-id';
-import { DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy.constants';
+import type { ComponentID } from '@teambit/component-id';
+import { DEFAULT_LANGUAGE, WORKSPACE_JSONC, Extensions } from '@teambit/legacy.constants';
 import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
-import { LegacyWorkspaceConfig, ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
+import type { ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
+import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { logger } from '@teambit/legacy.logger';
-import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { currentDateAndTimeToFileName } from '@teambit/legacy.consumer';
-import { assign, parse, stringify, CommentObject } from 'comment-json';
+import type { CommentObject } from 'comment-json';
+import { assign, parse, stringify } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { omit } from 'lodash';
-import { WorkspaceAspect } from '@teambit/workspace';
-import { SetExtensionOptions } from './config.main.runtime';
+import type { SetExtensionOptions } from './config.main.runtime';
 import { ExtensionAlreadyConfigured } from './exceptions';
 import InvalidConfigFile from './exceptions/invalid-config-file';
-import { HostConfig } from './types';
+import type { HostConfig } from './types';
 
 const INTERNAL_CONFIG_PROPS = ['$schema', '$schemaVersion', 'require'];
 
@@ -99,7 +100,10 @@ export class WorkspaceConfig implements HostConfig {
     const existing = this.extension(extensionId, options.ignoreVersion);
     if (existing) {
       if (options.mergeIntoExisting) {
-        config = { ...existing, ...config };
+        // Use assign from comment-json to preserve comments when merging
+        assign(this.raw[extensionId], config);
+        this.loadExtensions();
+        return;
       } else if (!options.overrideExisting) {
         throw new ExtensionAlreadyConfigured(extensionId);
       }
@@ -177,22 +181,19 @@ export class WorkspaceConfig implements HostConfig {
     const template = await getWorkspaceConfigTemplateParsed();
     // previously, we just did `assign(template, props)`, but it was replacing the entire workspace config with the "props".
     // so for example, if the props only had defaultScope, it was removing the defaultDirectory.
-    const workspaceAspectConf = assign(template[WorkspaceAspect.id], props[WorkspaceAspect.id]);
+    const workspaceAspectConf = assign(template['teambit.workspace/workspace'], props['teambit.workspace/workspace']);
 
     // When external package manager mode is enabled, set conflicting properties to false in the template
-    const depResolverConf = assign(
-      template['teambit.dependencies/dependency-resolver'],
-      props['teambit.dependencies/dependency-resolver']
-    );
+    const depResolverConf = assign(template[Extensions.dependencyResolver], props[Extensions.dependencyResolver]);
     if (depResolverConf.externalPackageManager) {
       // Override template defaults to be compatible with external package manager mode
-      template['teambit.dependencies/dependency-resolver'] = template['teambit.dependencies/dependency-resolver'] || {};
-      template['teambit.dependencies/dependency-resolver'].rootComponent = false;
+      template[Extensions.dependencyResolver] = template[Extensions.dependencyResolver] || {};
+      template[Extensions.dependencyResolver].rootComponent = false;
     }
 
     const merged = assign(template, {
-      [WorkspaceAspect.id]: workspaceAspectConf,
-      'teambit.dependencies/dependency-resolver': depResolverConf,
+      [Extensions.workspace]: workspaceAspectConf,
+      [Extensions.dependencyResolver]: depResolverConf,
     });
 
     if (generator) {

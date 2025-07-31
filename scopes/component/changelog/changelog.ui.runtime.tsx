@@ -1,11 +1,13 @@
-import { ComponentAspect, ComponentUI } from '@teambit/component';
+import type { ComponentUI } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
 import React from 'react';
-import { Harmony } from '@teambit/harmony';
+import type { Harmony } from '@teambit/harmony';
 
 import { ChangelogAspect } from './changelog.aspect';
 import { ChangelogSection } from './changelog.section';
-import { ChangeLogPage, ChangeLogPageProps } from './ui/change-log-page';
+import type { ChangeLogPageProps } from './ui/change-log-page';
+import { ChangeLogPage } from './ui/change-log-page';
 
 export class ChangeLogUI {
   constructor(private host: string) {}

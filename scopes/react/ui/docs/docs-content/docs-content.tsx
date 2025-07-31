@@ -5,7 +5,7 @@ import type { Docs } from '@teambit/docs';
 import { defaultDocs } from '@teambit/docs';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
-import { SectionProps } from '@teambit/documenter.ui.section';
+import type { SectionProps } from '@teambit/documenter.ui.section';
 import React from 'react';
 
 export interface DocsContentProps extends SectionProps {

@@ -1,8 +1,8 @@
 import * as path from 'path';
 
-import CommandHelper from './e2e-command-helper';
-import FsHelper from './e2e-fs-helper';
-import ScopesData from './e2e-scopes';
+import type CommandHelper from './e2e-command-helper';
+import type FsHelper from './e2e-fs-helper';
+import type ScopesData from './e2e-scopes';
 
 export default class NpmHelper {
   command: CommandHelper;

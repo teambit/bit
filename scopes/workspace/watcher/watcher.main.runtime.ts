@@ -1,18 +1,27 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { WatchOptions as ChokidarWatchOptions } from 'chokidar';
-import { SlotRegistry, Slot } from '@teambit/harmony';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { ComponentID } from '@teambit/component-id';
-import { IpcEventsAspect, IpcEventsMain } from '@teambit/ipc-events';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { WatchOptions as ChokidarWatchOptions } from 'chokidar';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { ComponentID } from '@teambit/component-id';
+import type { IpcEventsMain } from '@teambit/ipc-events';
+import { IpcEventsAspect } from '@teambit/ipc-events';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { PubsubMain } from '@teambit/pubsub';
+import { PubsubAspect } from '@teambit/pubsub';
 import { CFG_WATCH_USE_POLLING } from '@teambit/legacy.constants';
-import { WorkspaceAspect, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import pMapSeries from 'p-map-series';
 import { WatchCommand } from './watch.cmd';
-import { EventMessages, Watcher, WatchOptions } from './watcher';
+import type { EventMessages, WatchOptions } from './watcher';
+import { Watcher } from './watcher';
 import { WatcherAspect } from './watcher.aspect';
-import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
+import type { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store';
 
 export type OnPreWatch = (componentIds: ComponentID[], watchOpts: WatchOptions) => Promise<void>;
 export type OnPreWatchSlot = SlotRegistry<OnPreWatch>;
@@ -30,6 +39,9 @@ export class WatcherMain {
 
   async watch(opts: WatchOptions, msgs?: EventMessages) {
     if (!this.workspace) throw new OutsideWorkspaceError();
+    if (opts.preImport) {
+      await this.workspace.importObjectsIfOutdatedAgainstBitmap();
+    }
     const watcher = new Watcher(this.workspace, this.pubsub, this, opts, msgs);
     await watcher.watch();
   }

@@ -2,11 +2,11 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import fs from 'fs-extra';
 import * as path from 'path';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
-import { Symlink } from './symlink';
+import type { Symlink } from './symlink';
 import { logger } from '@teambit/legacy.logger';
 import { removeFilesAndEmptyDirsRecursively } from './remove-files-and-empty-dirs-recursively';
-import AbstractVinyl from './abstract-vinyl';
-import { RemovePath } from './remove-path';
+import type AbstractVinyl from './abstract-vinyl';
+import type { RemovePath } from './remove-path';
 
 export class DataToPersist {
   files: AbstractVinyl[];

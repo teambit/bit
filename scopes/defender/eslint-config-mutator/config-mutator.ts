@@ -1,7 +1,7 @@
 import { cloneDeep, set, get, has } from 'lodash';
-import { Linter } from 'eslint';
+import type { Linter } from 'eslint';
 // import { ESLintOptions } from '@teambit/eslint';
-import { ESLintOptions } from '@teambit/defender.eslint-linter';
+import type { ESLintOptions } from '@teambit/defender.eslint-linter';
 
 export type EslintConfigTransformContext = {
   fix: boolean;

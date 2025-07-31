@@ -1,9 +1,9 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import { OutsideWorkspaceError, type Workspace } from '@teambit/workspace';
-import { ReleaseType } from 'semver';
+import type { ReleaseType } from 'semver';
 import { validateOptions } from '@teambit/snapping';
-import { CiMain } from '../ci.main.runtime';
+import type { CiMain } from '../ci.main.runtime';
 
 type Options = {
   message?: string;
@@ -16,6 +16,7 @@ type Options = {
   preRelease?: string;
   prereleaseId?: string;
   incrementBy?: number;
+  verbose?: boolean;
 };
 
 export class CiMergeCmd implements Command {
@@ -42,6 +43,7 @@ export class CiMergeCmd implements Command {
       'increment-by <number>',
       '(default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3.',
     ],
+    ['', 'verbose', 'show verbose output'],
   ];
 
   constructor(
@@ -70,6 +72,7 @@ export class CiMergeCmd implements Command {
       preReleaseId,
       incrementBy: options.incrementBy,
       explicitVersionBump,
+      verbose: options.verbose,
     });
   }
 }

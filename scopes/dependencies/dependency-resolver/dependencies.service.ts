@@ -1,7 +1,7 @@
-import { EnvService, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
+import type { EnvService, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
 import highlight from 'cli-highlight';
 import chalk from 'chalk';
-import { DependencyDetector } from './dependency-detector';
+import type { DependencyDetector } from './dependency-detector';
 
 export type DependenciesDescriptor = {
   id: string;

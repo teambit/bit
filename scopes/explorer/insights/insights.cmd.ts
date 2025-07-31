@@ -1,7 +1,7 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
-import { InsightResult } from './insight';
-import { InsightsMain } from './insights.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { InsightResult } from './insight';
+import type { InsightsMain } from './insights.main.runtime';
 
 export default class InsightsCmd implements Command {
   name = 'insights [names...]';

@@ -1,12 +1,13 @@
 import graphlib, { Graph as GraphLib } from 'graphlib';
 import mapSeries from 'p-map-series';
 import { BitError } from '@teambit/bit-error';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BitIdStr } from '@teambit/legacy-bit-id';
-import { VersionDependencies, Scope } from '@teambit/legacy.scope';
-import { ConsumerComponent as Component, Dependencies } from '@teambit/legacy.consumer-component';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
+import type { BitIdStr } from '@teambit/legacy-bit-id';
+import type { VersionDependencies, Scope } from '@teambit/legacy.scope';
+import type { ConsumerComponent as Component, Dependencies } from '@teambit/legacy.consumer-component';
 import { logger } from '@teambit/legacy.logger';
-import { Lane } from '@teambit/objects';
+import type { Lane } from '@teambit/objects';
 import { compact, tail, uniq } from 'lodash';
 
 export class FlattenedDependenciesGetter {

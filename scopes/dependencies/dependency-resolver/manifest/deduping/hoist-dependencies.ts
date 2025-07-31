@@ -10,9 +10,9 @@ import {
   PEER_DEP_LIFECYCLE_TYPE,
   RUNTIME_DEP_LIFECYCLE_TYPE,
 } from '../../dependencies/constants';
-import { DependencyLifecycleType, SemverVersion, PackageName } from '../../dependencies';
-import { DedupedDependencies, DedupedDependenciesPeerConflicts } from './dedupe-dependencies';
-import { PackageNameIndex, PackageNameIndexItem, PackageNameIndexComponentItem } from './index-by-dep-id';
+import type { DependencyLifecycleType, SemverVersion, PackageName } from '../../dependencies';
+import type { DedupedDependencies, DedupedDependenciesPeerConflicts } from './dedupe-dependencies';
+import type { PackageNameIndex, PackageNameIndexItem, PackageNameIndexComponentItem } from './index-by-dep-id';
 
 type ItemsGroupedByRangeOrVersion = {
   ranges: PackageNameIndexComponentItem[];

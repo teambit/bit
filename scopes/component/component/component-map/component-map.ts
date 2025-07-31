@@ -1,5 +1,5 @@
-import { ComponentID } from '@teambit/component-id';
-import { Component } from '../component';
+import type { ComponentID } from '@teambit/component-id';
+import type { Component } from '../component';
 
 /**
  * allows to index components -> values.

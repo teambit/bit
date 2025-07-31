@@ -1,10 +1,10 @@
-import { GraphqlMain, Schema } from '@teambit/graphql';
-import { ComponentFactory } from '@teambit/component';
+import type { GraphqlMain, Schema } from '@teambit/graphql';
+import type { ComponentFactory } from '@teambit/component';
 import { withFilter } from 'graphql-subscriptions';
 import { ComponentID } from '@teambit/component-id';
 import { gql } from 'graphql-tag';
 
-import { TesterMain } from './tester.main.runtime';
+import type { TesterMain } from './tester.main.runtime';
 import { OnTestsChanged } from './tester.service';
 
 export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {

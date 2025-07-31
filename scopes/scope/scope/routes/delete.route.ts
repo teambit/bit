@@ -1,5 +1,6 @@
-import { Route, Verb, Request, Response } from '@teambit/express';
-import { ScopeMain } from '../scope.main.runtime';
+import type { Route, Request, Response } from '@teambit/express';
+import { Verb } from '@teambit/express';
+import type { ScopeMain } from '../scope.main.runtime';
 
 export class DeleteRoute implements Route {
   constructor(private scope: ScopeMain) {}

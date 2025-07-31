@@ -1,4 +1,4 @@
-import { Message } from '@teambit/ui-foundation.ui.notifications.store';
+import type { Message } from '@teambit/ui-foundation.ui.notifications.store';
 
 export type NotificationAction = {
   type: 'add' | 'dismiss' | 'clear';

@@ -1,6 +1,6 @@
-import { NextFunction } from './next';
-import { Request } from './request';
-import { Response } from './response';
+import type { NextFunction } from './next';
+import type { Request } from './request';
+import type { Response } from './response';
 
 /**
  * define express Middleware

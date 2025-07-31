@@ -1,8 +1,9 @@
-import { Node, SyntaxKind } from 'typescript';
+import type { Node } from 'typescript';
+import { SyntaxKind } from 'typescript';
 import { KeywordTypeSchema } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { Identifier } from '../identifier';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { Identifier } from '../identifier';
 
 /**
  * whether it's kind of `ts.KeywordTypeSyntaxKind`

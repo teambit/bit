@@ -1,9 +1,11 @@
 import Spinnies from 'dreidels';
 import { loader } from '@teambit/legacy.loader';
-import { logger, IBitLogger } from '@teambit/legacy.logger';
+import type { IBitLogger } from '@teambit/legacy.logger';
+import { logger } from '@teambit/legacy.logger';
 import chalk from 'chalk';
 import { platform } from 'os';
-import { ConsoleOnStart, LongProcessLogger } from './long-process-logger';
+import type { ConsoleOnStart } from './long-process-logger';
+import { LongProcessLogger } from './long-process-logger';
 
 export class Logger implements IBitLogger {
   private spinnies?: Spinnies;

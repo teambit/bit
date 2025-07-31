@@ -1,15 +1,19 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { isBinaryFile } from 'isbinaryfile';
 import camelCase from 'camelcase';
 import { compact } from 'lodash';
 import { replacePackageName } from '@teambit/legacy.utils';
-import { ComponentAspect, Component, ComponentID, ComponentMain } from '@teambit/component';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect, ComponentID } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
-import { AbstractVinyl } from '@teambit/component.sources';
-import { PkgAspect, PkgMain } from '@teambit/pkg';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import type { AbstractVinyl } from '@teambit/component.sources';
+import type { PkgMain } from '@teambit/pkg';
+import { PkgAspect } from '@teambit/pkg';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { SourceFileTransformer } from '@teambit/typescript';
 import {
-  SourceFileTransformer,
   classNamesTransformer,
   functionNamesTransformer,
   importTransformer,

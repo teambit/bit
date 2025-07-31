@@ -1,6 +1,12 @@
 import { uniqBy, property } from 'lodash';
 import { SNAP_VERSION_PREFIX, snapToSemver } from '@teambit/component-package-version';
-import { Dependency, DependencyLifecycleType, SerializedDependency, SemverVersion, PackageName } from './dependency';
+import type {
+  Dependency,
+  DependencyLifecycleType,
+  SerializedDependency,
+  SemverVersion,
+  PackageName,
+} from './dependency';
 import { KEY_NAME_BY_LIFECYCLE_TYPE } from './constants';
 import { ComponentDependency } from './component-dependency';
 

@@ -1,14 +1,15 @@
 import React, { useContext } from 'react';
 import classnames from 'classnames';
 import { mutedText } from '@teambit/base-ui.text.muted-text';
-import { ComponentID } from '@teambit/component';
+import type { ComponentID } from '@teambit/component';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import { EnvIcon } from '@teambit/envs.ui.env-icon';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
-import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
+import type { CardProps } from '@teambit/base-ui.surfaces.card';
+import { Card } from '@teambit/base-ui.surfaces.card';
 import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import { NodeModel } from '../query/node-model';
+import type { NodeModel } from '../query/node-model';
 import { ComponentGraphContext } from '../dependencies-graph/';
 
 // keep order: styles, then variants
