@@ -10,7 +10,7 @@ import {
   getRemovedOutput,
   getAddedOutput,
   getWorkspaceConfigUpdateOutput,
-} from '@teambit/merging';
+} from '@teambit/component.modules.merge-helper';
 import { COMPONENT_PATTERN_HELP, HEAD, LATEST } from '@teambit/legacy.constants';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';

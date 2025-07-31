@@ -19,3 +19,13 @@ export type {
   FailedComponents,
   FilesStatus,
 } from './types';
+
+export {
+  applyVersionReport,
+  conflictSummaryReport,
+  installationErrorOutput,
+  compilationErrorOutput,
+  getRemovedOutput,
+  getAddedOutput,
+  getWorkspaceConfigUpdateOutput,
+} from './merge-output';
