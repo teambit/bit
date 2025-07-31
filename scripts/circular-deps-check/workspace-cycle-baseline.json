@@ -38,16 +38,15 @@
     "teambit.component/dev-files",
     "teambit.component/component-compare",
     "teambit.scope/importer",
-    "teambit.component/checkout",
-    "teambit.component/remove",
     "teambit.component/lister",
-    "teambit.component/snapping",
-    "teambit.scope/export",
-    "teambit.workspace/eject",
     "teambit.defender/tester",
     "teambit.compositions/compositions",
     "teambit.semantics/schema",
     "teambit.defender/formatter",
+    "teambit.component/snapping",
+    "teambit.component/remove",
+    "teambit.scope/export",
+    "teambit.workspace/eject",
     "teambit.typescript/typescript",
     "teambit.git/git",
     "teambit.component/forking",
@@ -64,6 +63,6 @@
     "teambit.harmony/node",
     "teambit.api-reference/api-reference"
   ],
-  "count": 63,
-  "timestamp": "2025-07-31T20:00:18.317Z"
+  "count": 62,
+  "timestamp": "2025-07-31T20:34:35.914Z"
 }
