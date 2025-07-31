@@ -3,19 +3,23 @@ import * as path from 'path';
 import chalk from 'chalk';
 import { prompt } from 'enquirer';
 import { findScopePath } from '@teambit/scope.modules.find-scope-path';
-import { Consumer } from '@teambit/legacy.consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
 import { Scope } from '@teambit/legacy.scope';
 import { Repository } from '@teambit/objects';
 import { isDirEmpty } from '@teambit/toolbox.fs.is-dir-empty';
-import { WorkspaceExtensionProps, WorkspaceConfig } from '@teambit/config';
-import { McpConfigWriter, SetupOptions, RulesOptions } from '@teambit/mcp.mcp-config-writer';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { WorkspaceExtensionProps } from '@teambit/config';
+import { WorkspaceConfig } from '@teambit/config';
+import type { SetupOptions, RulesOptions } from '@teambit/mcp.mcp-config-writer';
+import { McpConfigWriter } from '@teambit/mcp.mcp-config-writer';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { ObjectsWithoutConsumer } from './objects-without-consumer';
 import { HostInitializerAspect } from './host-initializer.aspect';
 import { InitCmd } from './init-cmd';
 import { createConsumer, resetConsumer } from './create-consumer';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 
 export interface InteractiveConfig {
   generator?: string;

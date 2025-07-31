@@ -1,4 +1,4 @@
-import { Export } from '@teambit/semantics.entities.semantic-schema';
+import type { Export } from '@teambit/semantics.entities.semantic-schema';
 
 export interface Parser {
   /**

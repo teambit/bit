@@ -1,7 +1,10 @@
 import { MainRuntime } from '@teambit/cli';
-import { ComponentAspect, Component } from '@teambit/component';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { PreviewAspect, ComponentPreviewSize, PreviewMain } from '@teambit/preview';
+import type { Component } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { ComponentPreviewSize, PreviewMain } from '@teambit/preview';
+import { PreviewAspect } from '@teambit/preview';
 import { ComponentSizerAspect } from './component-sizer.aspect';
 import { componentSizerSchema } from './component-sizer.graphql';
 

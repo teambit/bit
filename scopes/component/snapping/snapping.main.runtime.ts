@@ -1,8 +1,9 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import fs from 'fs-extra';
+import type { LegacyOnTagResult } from '@teambit/legacy.scope';
 import {
-  LegacyOnTagResult,
   UnmergedComponents,
   VersionNotFound,
   ComponentNotFound,
@@ -10,62 +11,70 @@ import {
   ParentNotFound,
 } from '@teambit/legacy.scope';
 import { FlattenedDependenciesGetter } from './get-flattened-dependencies';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace, AutoTagResult } from '@teambit/workspace';
-import semver, { ReleaseType } from 'semver';
+import type { Workspace, AutoTagResult } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
+import type { ReleaseType } from 'semver';
+import semver from 'semver';
 import { compact, difference, uniq } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Extensions, LATEST, BuildStatus } from '@teambit/legacy.constants';
-import { ComponentsPendingImport, Consumer } from '@teambit/legacy.consumer';
+import type { BuildStatus } from '@teambit/legacy.constants';
+import { Extensions, LATEST } from '@teambit/legacy.constants';
+import type { Consumer } from '@teambit/legacy.consumer';
+import { ComponentsPendingImport } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import pMapSeries from 'p-map-series';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import pMap from 'p-map';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
-import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import {
-  BitObject,
-  Ref,
-  Repository,
-  Lane,
-  ModelComponent,
-  Version,
-  DepEdge,
-  DepEdgeType,
-  Log,
-  AddVersionOpts,
-} from '@teambit/objects';
-import { Component, ConsumerComponent } from '@teambit/component';
-import { DependencyResolverAspect, DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
+import type { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { Repository, Lane, ModelComponent, DepEdge, DepEdgeType, Log, AddVersionOpts } from '@teambit/objects';
+import { BitObject, Ref, Version } from '@teambit/objects';
+import type { Component, ConsumerComponent } from '@teambit/component';
+import type { DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
-import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import type { BuilderMain } from '@teambit/builder';
+import { BuilderAspect } from '@teambit/builder';
 import { LaneId } from '@teambit/lane-id';
-import { ImporterAspect, ImporterMain } from '@teambit/importer';
-import { ExportAspect, ExportMain } from '@teambit/export';
+import type { ImporterMain } from '@teambit/importer';
+import { ImporterAspect } from '@teambit/importer';
+import type { ExportMain } from '@teambit/export';
+import { ExportAspect } from '@teambit/export';
 import { isHash, isTag } from '@teambit/component-version';
-import { ArtifactFiles, ArtifactSource, getArtifactsFiles, SourceFile } from '@teambit/component.sources';
-import { DependenciesAspect, DependenciesMain } from '@teambit/dependencies';
+import type { ArtifactSource } from '@teambit/component.sources';
+import { ArtifactFiles, getArtifactsFiles, SourceFile } from '@teambit/component.sources';
+import type { DependenciesMain } from '@teambit/dependencies';
+import { DependenciesAspect } from '@teambit/dependencies';
 import { SnapCmd } from './snap-cmd';
 import { SnappingAspect } from './snapping.aspect';
 import { TagCmd } from './tag-cmd';
 import ResetCmd from './reset-cmd';
-import { addDeps, generateCompFromScope, NewDependencies } from './generate-comp-from-scope';
+import type { NewDependencies } from './generate-comp-from-scope';
+import { addDeps, generateCompFromScope } from './generate-comp-from-scope';
 import { FlattenedEdgesGetter } from './flattened-edges';
 import { SnapDistanceCmd } from './snap-distance-cmd';
+import type { ResetResult } from './reset-component';
 import {
   removeLocalVersionsForAllComponents,
-  ResetResult,
   getComponentsWithOptionToUntag,
   removeLocalVersionsForMultipleComponents,
 } from './reset-component';
-import { ApplicationAspect, ApplicationMain } from '@teambit/application';
+import type { ApplicationMain } from '@teambit/application';
+import { ApplicationAspect } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
-import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import { VersionMaker, BasicTagParams, BasicTagSnapParams, updateVersions, VersionMakerParams } from './version-maker';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import type { RemoveMain } from '@teambit/remove';
+import { RemoveAspect } from '@teambit/remove';
+import type { BasicTagParams, BasicTagSnapParams, VersionMakerParams } from './version-maker';
+import { VersionMaker, updateVersions } from './version-maker';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 
 export type PackageIntegritiesByPublishedPackages = Map<
   string,

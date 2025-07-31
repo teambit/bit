@@ -3,24 +3,27 @@ import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
 import { v4 } from 'uuid';
-import { BuildStatus, DEFAULT_BUNDLE_FILENAME, Extensions } from '@teambit/legacy.constants';
+import type { BuildStatus } from '@teambit/legacy.constants';
+import { DEFAULT_BUNDLE_FILENAME, Extensions } from '@teambit/legacy.constants';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import {
   isSchemaSupport,
   SchemaFeature,
   SchemaName,
   Dependencies,
   Dependency,
-  ConsumerComponent,
 } from '@teambit/legacy.consumer-component';
 import { getRefsFromExtensions, SourceFile } from '@teambit/component.sources';
-import { ComponentOverridesData } from '@teambit/legacy.consumer-config';
+import type { ComponentOverridesData } from '@teambit/legacy.consumer-config';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { Doclet } from '@teambit/semantics.doc-parser';
 import { logger } from '@teambit/legacy.logger';
-import { getStringifyArgs, PathLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
+import type { PathLinux } from '@teambit/legacy.utils';
+import { getStringifyArgs, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
-import { BitObject, Ref, Repository } from '../objects';
-import { ObjectItem } from '../objects/object-list';
+import type { Repository } from '../objects';
+import { BitObject, Ref } from '../objects';
+import type { ObjectItem } from '../objects/object-list';
 import { BitIdCompIdError, VersionInvalid, validateVersionInstance } from '@teambit/legacy.scope';
 import Source from './source';
 import { DependenciesGraph } from './dependencies-graph';

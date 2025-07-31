@@ -1,8 +1,10 @@
-import { ExportSchema, SchemaNode, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
-import { Node, SyntaxKind, ExportAssignment as ExportAssignmentNode } from 'typescript';
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { ExportSchema, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { Node, ExportAssignment as ExportAssignmentNode } from 'typescript';
+import { SyntaxKind } from 'typescript';
 import { ExportIdentifier } from '../export-identifier';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { SchemaTransformer } from '../schema-transformer';
 
 /**
  * This is either an export = or an export default declaration.

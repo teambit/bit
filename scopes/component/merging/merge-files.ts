@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import execa from 'execa';
 import { logger } from '@teambit/legacy.logger';
 import { GitNotFound, getGitExecutablePath } from '@teambit/git.modules.git-executable';
-import { PathLinux, PathOsBased } from '@teambit/legacy.utils';
+import type { PathLinux, PathOsBased } from '@teambit/legacy.utils';
 
 export type MergeFileResult = {
   filePath: PathLinux;

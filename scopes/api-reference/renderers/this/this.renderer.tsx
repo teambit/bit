@@ -1,5 +1,5 @@
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 import { ThisTypeSchema } from '@teambit/semantics.entities.semantic-schema';
 import { TypeRefName } from '@teambit/api-reference.renderers.type-ref';
 import { useUpdatedUrlFromQuery } from '@teambit/api-reference.hooks.use-api-ref-url';

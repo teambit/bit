@@ -1,7 +1,8 @@
-import { Command, CommandOptions, GenericObject } from '@teambit/cli';
+import type { Command, CommandOptions, GenericObject } from '@teambit/cli';
 import chalk from 'chalk';
-import { Logger } from '@teambit/logger';
-import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import type { Logger } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError } from '@teambit/workspace';
 import { Timer } from '@teambit/toolbox.time.timer';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { TesterMain, TestResults } from './tester.main.runtime';

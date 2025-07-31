@@ -1,8 +1,8 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { ComponentConfig } from '@teambit/generator';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ComponentConfig } from '@teambit/generator';
 import chalk from 'chalk';
-import { WorkspaceComponentLoadOptions } from '@teambit/workspace';
-import { ForkingMain } from './forking.main.runtime';
+import type { WorkspaceComponentLoadOptions } from '@teambit/workspace';
+import type { ForkingMain } from './forking.main.runtime';
 
 export type ForkOptions = {
   scope?: string;

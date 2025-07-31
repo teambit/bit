@@ -3,30 +3,29 @@ import uidNumber from 'uid-number';
 import { Mutex } from 'async-mutex';
 import { compact, uniqBy, differenceWith, isEqual } from 'lodash';
 import { BitError } from '@teambit/bit-error';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { OBJECTS_DIR } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { glob, writeFile, ChownOptions, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { ChownOptions, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { glob, writeFile } from '@teambit/legacy.utils';
 import { removeEmptyDir } from '@teambit/toolbox.fs.remove-empty-dir';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
-import {
-  Types,
-  HashNotFound,
-  OutdatedIndexJson,
-  ScopeJson,
-  UnmergedComponents,
-  RemoteLanes,
-} from '@teambit/legacy.scope';
-import { ScopeIndex, IndexType, IndexItem } from './scope-index';
+import type { Types, ScopeJson } from '@teambit/legacy.scope';
+import { HashNotFound, OutdatedIndexJson, UnmergedComponents, RemoteLanes } from '@teambit/legacy.scope';
+import type { IndexType, IndexItem } from './scope-index';
+import { ScopeIndex } from './scope-index';
 import BitObject from './object';
-import { ObjectItem, ObjectList } from './object-list';
+import type { ObjectItem } from './object-list';
+import { ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
-import { ContentTransformer, onPersist, onRead } from './repository-hooks';
-import { getMaxSizeForObjects, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { ContentTransformer } from './repository-hooks';
+import { onPersist, onRead } from './repository-hooks';
+import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { getMaxSizeForObjects, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { ScopeMeta, Lane, ModelComponent } from '../models';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;

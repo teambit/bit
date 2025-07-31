@@ -1,8 +1,9 @@
-import { SemVer } from 'semver';
-import { VariantPolicy } from '../policy';
+import type { SemVer } from 'semver';
+import type { VariantPolicy } from '../policy';
 
-import { ComponentsManifestsMap } from '../types';
-import { Manifest, ManifestToJsonOptions, ManifestDependenciesObject } from './manifest';
+import type { ComponentsManifestsMap } from '../types';
+import type { ManifestToJsonOptions, ManifestDependenciesObject } from './manifest';
+import { Manifest } from './manifest';
 
 export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {
   installPeersFromEnvs?: boolean;

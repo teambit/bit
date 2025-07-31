@@ -1,55 +1,53 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace, AutoTagResult } from '@teambit/workspace';
-import { Consumer } from '@teambit/legacy.consumer';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Workspace, AutoTagResult } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import { SnappingAspect, SnappingMain, TagResults } from '@teambit/snapping';
+import type { SnappingMain, TagResults } from '@teambit/snapping';
+import { SnappingAspect } from '@teambit/snapping';
 import mapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { LaneId } from '@teambit/lane-id';
-import { UnmergedComponent } from '@teambit/legacy.scope';
-import { Ref, Lane, ModelComponent } from '@teambit/objects';
+import type { UnmergedComponent } from '@teambit/legacy.scope';
+import type { Ref, Lane, ModelComponent } from '@teambit/objects';
 import chalk from 'chalk';
-import { ConfigAspect, ConfigMain } from '@teambit/config';
-import { RemoveAspect, RemoveMain, deleteComponentsFiles } from '@teambit/remove';
+import type { ConfigMain } from '@teambit/config';
+import { ConfigAspect } from '@teambit/config';
+import type { RemoveMain } from '@teambit/remove';
+import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { ImporterAspect, ImporterMain } from '@teambit/importer';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { ComponentWriterMain } from '@teambit/component-writer';
+import { ComponentWriterAspect } from '@teambit/component-writer';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ImporterMain } from '@teambit/importer';
+import { ImporterAspect } from '@teambit/importer';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import { compact } from 'lodash';
-import {
-  ApplyVersionWithComps,
-  CheckoutAspect,
-  CheckoutMain,
-  ComponentStatusBase,
-  applyModifiedVersion,
-  removeFilesIfNeeded,
-  updateFileStatus,
-} from '@teambit/checkout';
-import {
-  ConfigMergerAspect,
-  ConfigMergerMain,
-  ConfigMergeResult,
-  WorkspaceConfigUpdateResult,
-} from '@teambit/config-merger';
-import { SnapsDistance } from '@teambit/component.snap-distance';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { InstallMain, InstallAspect } from '@teambit/install';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import type { ApplyVersionWithComps, CheckoutMain, ComponentStatusBase } from '@teambit/checkout';
+import { CheckoutAspect, applyModifiedVersion, removeFilesIfNeeded, updateFileStatus } from '@teambit/checkout';
+import type { ConfigMergerMain, ConfigMergeResult, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
+import { ConfigMergerAspect } from '@teambit/config-merger';
+import type { SnapsDistance } from '@teambit/component.snap-distance';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { InstallMain } from '@teambit/install';
+import { InstallAspect } from '@teambit/install';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
-import { DataMergeResult, MergeStatusProvider, MergeStatusProviderOptions } from './merge-status-provider';
-import {
-  MergeStrategy,
-  FileStatus,
-  getMergeStrategyInteractive,
-  MergeResultsThreeWay,
-  MergeOptions,
-} from './merge-version';
-import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
-import { ApplicationAspect, ApplicationMain } from '@teambit/application';
+import type { DataMergeResult, MergeStatusProviderOptions } from './merge-status-provider';
+import { MergeStatusProvider } from './merge-status-provider';
+import type { MergeStrategy, MergeResultsThreeWay } from './merge-version';
+import { FileStatus, getMergeStrategyInteractive, MergeOptions } from './merge-version';
+import type { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store';
+import type { ApplicationMain } from '@teambit/application';
+import { ApplicationAspect } from '@teambit/application';
 
 type ResolveUnrelatedData = {
   strategy: MergeStrategy;
@@ -110,6 +108,7 @@ export type ApplyVersionResults = {
   installationError?: Error; // in case the package manager failed, it won't throw, instead, it'll return error here
   compilationError?: Error; // in case the compiler failed, it won't throw, instead, it'll return error here
   workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult;
+  gitBranchWarning?: string; // warning message when git branch creation fails
 };
 
 export class MergingMain {

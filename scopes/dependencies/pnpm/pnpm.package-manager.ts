@@ -1,35 +1,31 @@
-import { CloudMain } from '@teambit/cloud';
-import {
+import type { CloudMain } from '@teambit/cloud';
+import { extendWithComponentsFromDir, BIT_CLOUD_REGISTRY } from '@teambit/dependency-resolver';
+import type {
   DependencyResolverMain,
-  extendWithComponentsFromDir,
   InstallationContext,
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
-  BIT_CLOUD_REGISTRY,
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
-  type CalcDepsGraphOptions,
+  CalcDepsGraphOptions,
 } from '@teambit/dependency-resolver';
 import { Registries, Registry } from '@teambit/pkg.entities.registry';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { type LockfileFile } from '@pnpm/lockfile.types';
 import fs from 'fs';
 import { memoize, omit } from 'lodash';
-import { PeerDependencyIssuesByProjects } from '@pnpm/core';
+import type { PeerDependencyIssuesByProjects } from '@pnpm/core';
 import { filterLockfileByImporters } from '@pnpm/lockfile.filtering';
-import { Config } from '@pnpm/config';
+import type { Config } from '@pnpm/config';
 import { type ProjectId, type ProjectManifest, type DepPath } from '@pnpm/types';
-import { readModulesManifest, Modules } from '@pnpm/modules-yaml';
-import {
-  buildDependenciesHierarchy,
-  DependenciesHierarchy,
-  createPackagesSearcher,
-  PackageNode,
-} from '@pnpm/reviewing.dependencies-hierarchy';
+import type { Modules } from '@pnpm/modules-yaml';
+import { readModulesManifest } from '@pnpm/modules-yaml';
+import type { DependenciesHierarchy, PackageNode } from '@pnpm/reviewing.dependencies-hierarchy';
+import { buildDependenciesHierarchy, createPackagesSearcher } from '@pnpm/reviewing.dependencies-hierarchy';
 import { renderTree } from '@pnpm/list';
 import {
   readWantedLockfile,
@@ -42,7 +38,8 @@ import { join } from 'path';
 import { convertLockfileToGraph, convertGraphToLockfile } from './lockfile-deps-graph-converter';
 import { readConfig } from './read-config';
 import { pnpmPruneModules } from './pnpm-prune-modules';
-import { generateResolverAndFetcher, RebuildFn } from './lynx';
+import type { RebuildFn } from './lynx';
+import { generateResolverAndFetcher } from './lynx';
 import { type DependenciesGraph } from '@teambit/objects';
 
 export type { RebuildFn };

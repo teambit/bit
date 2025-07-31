@@ -1,5 +1,6 @@
 import { merge } from 'lodash';
-import webpack, { Configuration } from 'webpack';
+import type { Configuration } from 'webpack';
+import webpack from 'webpack';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';

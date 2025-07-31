@@ -1,6 +1,7 @@
 import { ComponentContext, ComponentID } from '@teambit/component';
 import classNames from 'classnames';
-import React, { useContext, useState, HTMLAttributes, useMemo } from 'react';
+import type { HTMLAttributes } from 'react';
+import React, { useContext, useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { flatten } from 'lodash';
 import { Label } from '@teambit/documenter.ui.label';
@@ -12,19 +13,18 @@ import type { FileIconSlot } from '@teambit/code';
 import { CodeView } from '@teambit/code.ui.code-view';
 import { CodeTabTree } from '@teambit/code.ui.code-tab-tree';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
-import { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
-import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
+import type { WidgetProps } from '@teambit/ui-foundation.ui.tree.tree-node';
+import type { FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
+import { getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
 import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import path from 'path-browserify';
-import { TreeNode } from '@teambit/design.ui.tree';
+import type { TreeNode } from '@teambit/design.ui.tree';
 import {
   useComponentArtifactFileContent,
   useComponentArtifacts,
 } from '@teambit/component.ui.artifacts.queries.use-component-artifacts';
-import {
-  ArtifactFile,
-  getArtifactFileDetailsFromUrl,
-} from '@teambit/component.ui.artifacts.models.component-artifacts-model';
+import type { ArtifactFile } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
+import { getArtifactFileDetailsFromUrl } from '@teambit/component.ui.artifacts.models.component-artifacts-model';
 import isBinaryPath from 'is-binary-path';
 import { FILE_SIZE_THRESHOLD } from '@teambit/component.ui.artifacts.artifacts-tree';
 import { useViewedLaneFromUrl } from '@teambit/lanes.hooks.use-viewed-lane-from-url';

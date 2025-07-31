@@ -1,6 +1,7 @@
-import { Route, Verb, Request, Response } from '@teambit/express';
-import { Logger } from '@teambit/logger';
-import { LanesMain } from './lanes.main.runtime';
+import type { Route, Request, Response } from '@teambit/express';
+import { Verb } from '@teambit/express';
+import type { Logger } from '@teambit/logger';
+import type { LanesMain } from './lanes.main.runtime';
 
 export class LanesDeleteRoute implements Route {
   constructor(

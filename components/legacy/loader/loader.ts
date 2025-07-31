@@ -1,4 +1,5 @@
-import ora, { Ora, PersistOptions } from 'ora';
+import type { Ora, PersistOptions } from 'ora';
+import ora from 'ora';
 import cliSpinners from 'cli-spinners';
 import prettyTime from 'pretty-time';
 import { sendEventsToClients } from '@teambit/harmony.modules.send-server-sent-events';

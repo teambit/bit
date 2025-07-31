@@ -1,5 +1,5 @@
 import { PackageJsonFile } from '@teambit/component.sources';
-import { BuildContext, BuildTask, BuiltTaskResult } from '@teambit/builder';
+import type { BuildContext, BuildTask, BuiltTaskResult } from '@teambit/builder';
 import { TypescriptAspect } from './typescript.aspect';
 
 export class RemoveTypesTask implements BuildTask {

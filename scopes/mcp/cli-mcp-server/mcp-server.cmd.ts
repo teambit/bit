@@ -1,6 +1,6 @@
 import { compact } from 'lodash';
-import { CLIArgs, Command, CommandOptions } from '@teambit/cli';
-import { CliMcpServerMain } from './cli-mcp-server.main.runtime';
+import type { CLIArgs, Command, CommandOptions } from '@teambit/cli';
+import type { CliMcpServerMain } from './cli-mcp-server.main.runtime';
 
 export type McpStartCmdOptions = {
   includeAdditional?: string;

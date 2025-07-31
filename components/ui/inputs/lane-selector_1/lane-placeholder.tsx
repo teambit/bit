@@ -1,7 +1,8 @@
-import React, { HTMLAttributes } from 'react';
+import type { HTMLAttributes } from 'react';
+import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { LaneIcon } from '@teambit/lanes.ui.icons.lane-icon';
-import { LaneId } from '@teambit/lane-id';
+import type { LaneId } from '@teambit/lane-id';
 import classnames from 'classnames';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 

@@ -1,5 +1,5 @@
 import { WebpackAspect, WebpackCompilationDoneEvent, WebpackCompilationStartedEvent } from '@teambit/webpack';
-import { PubsubMain, BitBaseEvent } from '@teambit/pubsub';
+import type { PubsubMain, BitBaseEvent } from '@teambit/pubsub';
 
 export type CompilationResult = {
   errors?: Error[];

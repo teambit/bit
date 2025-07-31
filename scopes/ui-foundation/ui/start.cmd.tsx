@@ -1,7 +1,7 @@
 import { BitError } from '@teambit/bit-error';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import openBrowser from 'react-dev-utils/openBrowser';
 import chalk from 'chalk';
 import type { UiMain } from './ui.main.runtime';

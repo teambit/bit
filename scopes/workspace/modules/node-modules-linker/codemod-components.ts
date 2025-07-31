@@ -1,12 +1,15 @@
 import path from 'path';
-import { Workspace } from '@teambit/workspace';
-import { IssuesClasses, RelativeComponentsAuthoredEntry } from '@teambit/component-issues';
-import { Component } from '@teambit/component';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { Workspace } from '@teambit/workspace';
+import type { RelativeComponentsAuthoredEntry } from '@teambit/component-issues';
+import { IssuesClasses } from '@teambit/component-issues';
+import type { Component } from '@teambit/component';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, replacePackageName } from '@teambit/legacy.utils';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { DataToPersist, SourceFile } from '@teambit/component.sources';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { SourceFile } from '@teambit/component.sources';
+import { DataToPersist } from '@teambit/component.sources';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 
 export type CodemodResult = {
   id: ComponentID;

@@ -1,20 +1,20 @@
-import { ComponentResult, TaskMetadata } from '@teambit/builder';
-import { Component, ComponentID } from '@teambit/component';
+import type { ComponentResult, TaskMetadata } from '@teambit/builder';
+import type { Component, ComponentID } from '@teambit/component';
 import { isSnap } from '@teambit/component-version';
-import { Capsule, IsolatorMain } from '@teambit/isolator';
-import { Logger } from '@teambit/logger';
-import { Workspace } from '@teambit/workspace';
+import type { Capsule, IsolatorMain } from '@teambit/isolator';
+import type { Logger } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
 import { ComponentIdList } from '@teambit/component-id';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
-import { Scope } from '@teambit/legacy.scope';
+import type { Scope } from '@teambit/legacy.scope';
 import fsx from 'fs-extra';
 import mapSeries from 'p-map-series';
 import { join } from 'path';
 import ssri from 'ssri';
 import execa from 'execa';
 import { PkgAspect } from './pkg.aspect';
-import { PkgExtensionConfig } from './pkg.main.runtime';
+import type { PkgExtensionConfig } from './pkg.main.runtime';
 import { DEFAULT_TAR_DIR_IN_CAPSULE } from './packer';
 
 export type PublisherOptions = {

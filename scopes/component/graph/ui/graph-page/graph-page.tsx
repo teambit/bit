@@ -7,7 +7,7 @@ import classNames from 'classnames';
 
 import { useGraphQuery } from '../query';
 import { DependenciesGraph } from '../dependencies-graph';
-import { ComponentWidgetSlot } from '../../graph.ui.runtime';
+import type { ComponentWidgetSlot } from '../../graph.ui.runtime';
 import type { GraphFilter } from '../../model/graph-filters';
 
 import { GraphFilters } from './graph-filters';

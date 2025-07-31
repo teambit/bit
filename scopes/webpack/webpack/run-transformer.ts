@@ -1,4 +1,4 @@
-import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
+import type { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 import type { WebpackConfigDevServerTransformer, WebpackConfigTransformer } from './webpack.main.runtime';
 
 export function runTransformersWithContext(

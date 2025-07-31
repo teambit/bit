@@ -1,12 +1,13 @@
 import { BitError } from '@teambit/bit-error';
-import { LaneId } from '@teambit/lane-id';
-import { Consumer } from '@teambit/legacy.consumer';
-import { ScopeMain } from '@teambit/scope';
+import type { LaneId } from '@teambit/lane-id';
+import type { Consumer } from '@teambit/legacy.consumer';
+import type { ScopeMain } from '@teambit/scope';
 // import { ComponentIdList } from '@teambit/component-id';
-import { Ref, Lane, LaneComponent } from '@teambit/objects';
+import type { LaneComponent } from '@teambit/objects';
+import { Ref, Lane } from '@teambit/objects';
 import { isSnap } from '@teambit/component-version';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import { Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
 import { compact } from 'lodash';
 import { getBitCloudUser } from '@teambit/cloud.modules.get-cloud-user';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';

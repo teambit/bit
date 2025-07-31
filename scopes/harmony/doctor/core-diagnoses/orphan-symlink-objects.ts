@@ -1,7 +1,8 @@
 import { ComponentIdList } from '@teambit/component-id';
 import { loadConsumer } from '@teambit/legacy.consumer';
 import { ModelComponent, Symlink } from '@teambit/objects';
-import Diagnosis, { ExamineBareResult } from '../diagnosis';
+import type { ExamineBareResult } from '../diagnosis';
+import Diagnosis from '../diagnosis';
 
 export const DIAGNOSIS_NAME = 'check orphan refs';
 export default class OrphanSymlinkObjects extends Diagnosis {

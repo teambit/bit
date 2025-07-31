@@ -1,6 +1,6 @@
-import { EnvService, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
-import { Bundler } from './bundler';
-import { BundlerContext } from './bundler-context';
+import type { EnvService, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
+import type { Bundler } from './bundler';
+import type { BundlerContext } from './bundler-context';
 
 type BundlerTransformationMap = ServiceTransformationMap & {
   getBundler?: (context: BundlerContext) => Promise<Bundler>;

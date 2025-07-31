@@ -1,10 +1,17 @@
 import chalk from 'chalk';
 import { defaults } from 'lodash';
-import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
+import type {
+  EnvService,
+  ExecutionContext,
+  EnvDefinition,
+  Env,
+  EnvContext,
+  ServiceTransformationMap,
+} from '@teambit/envs';
 import highlight from 'cli-highlight';
-import { Formatter, FormatResults } from './formatter';
-import { FormatterContext, FormatterOptions } from './formatter-context';
-import { FormatterConfig } from './formatter.main.runtime';
+import type { Formatter, FormatResults } from './formatter';
+import type { FormatterContext, FormatterOptions } from './formatter-context';
+import type { FormatterConfig } from './formatter.main.runtime';
 
 type FormatterTransformationMap = ServiceTransformationMap & {
   getFormatter: () => Formatter;

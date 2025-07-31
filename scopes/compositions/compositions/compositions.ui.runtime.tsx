@@ -1,15 +1,19 @@
-import type { ReactNode } from 'react';
-import React, { ComponentType } from 'react';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { ComponentAspect, ComponentUI } from '@teambit/component';
+import type { ReactNode, ComponentType } from 'react';
+import React from 'react';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { ComponentUI } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
 import { CompositionCompareSection } from '@teambit/compositions.ui.composition-compare-section';
 import { CompositionCompare } from '@teambit/compositions.ui.composition-compare';
-import { ComponentCompareUI, ComponentCompareAspect } from '@teambit/component-compare';
-import { UseSandboxPermission } from '@teambit/preview.ui.component-preview';
+import type { ComponentCompareUI } from '@teambit/component-compare';
+import { ComponentCompareAspect } from '@teambit/component-compare';
+import type { UseSandboxPermission } from '@teambit/preview.ui.component-preview';
 import { CompositionsSection } from './composition.section';
 import { CompositionsAspect } from './compositions.aspect';
-import { CompositionContent, MenuBarWidget } from './compositions';
+import type { MenuBarWidget } from './compositions';
+import { CompositionContent } from './compositions';
 
 export type CompositionsMenuSlot = SlotRegistry<MenuBarWidget[]>;
 export type EmptyStateSlot = SlotRegistry<ComponentType>;

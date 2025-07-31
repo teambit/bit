@@ -1,4 +1,5 @@
-import React, { useContext, createContext, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React, { useContext, createContext } from 'react';
 
 type SingletonObject = any;
 // topic: will be used in the future to specify which context to be used, when having more than one tooltip set

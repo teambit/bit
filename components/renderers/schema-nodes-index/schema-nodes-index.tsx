@@ -1,4 +1,5 @@
-import React, { HTMLAttributes, useEffect, useRef, useMemo } from 'react';
+import type { HTMLAttributes } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { useElementOnFold } from '@teambit/docs.ui.hooks.use-element-on-fold';
 import classnames from 'classnames';
 import { classes } from '@teambit/design.ui.surfaces.menu.item';

@@ -1,4 +1,4 @@
-import { Command } from '@teambit/cli';
+import type { Command } from '@teambit/cli';
 import chalk from 'chalk';
 
 const COMMAND_NAME = 'git';

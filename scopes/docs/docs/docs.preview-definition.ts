@@ -1,9 +1,9 @@
-import { Component, ComponentMap } from '@teambit/component';
+import type { Component, ComponentMap } from '@teambit/component';
 import type { Environment, ExecutionContext } from '@teambit/envs';
-import { PreviewDefinition } from '@teambit/preview';
-import { AbstractVinyl } from '@teambit/component.sources';
+import type { PreviewDefinition } from '@teambit/preview';
+import type { AbstractVinyl } from '@teambit/component.sources';
 
-import { DocsMain } from './docs.main.runtime';
+import type { DocsMain } from './docs.main.runtime';
 
 export class DocsPreviewDefinition implements PreviewDefinition {
   readonly prefix = 'overview';

@@ -1,5 +1,6 @@
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { TypeArraySchema } from '@teambit/semantics.entities.semantic-schema';
 import styles from './type-array.renderer.module.scss';
 

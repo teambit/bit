@@ -1,6 +1,6 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { RenameResult, RenamingMain } from './renaming.main.runtime';
+import type { RenameResult, RenamingMain } from './renaming.main.runtime';
 
 export class ScopeRenameCmd implements Command {
   name = 'rename <current-scope-name> <new-scope-name>';

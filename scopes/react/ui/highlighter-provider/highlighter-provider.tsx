@@ -1,6 +1,8 @@
-import React, { useMemo, useState, useEffect, ReactNode, FC } from 'react';
+import type { ReactNode, FC } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import classnames from 'classnames';
-import { ComponentHighlighter, HighlightClasses } from '@teambit/react.ui.component-highlighter';
+import type { HighlightClasses } from '@teambit/react.ui.component-highlighter';
+import { ComponentHighlighter } from '@teambit/react.ui.component-highlighter';
 import queryString from 'query-string';
 import styles from './highlighter-provider.module.scss';
 

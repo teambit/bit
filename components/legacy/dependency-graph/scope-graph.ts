@@ -3,12 +3,14 @@ import pMapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { VERSION_DELIMITER } from '@teambit/legacy.constants';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import { ConsumerComponent as Component, DEPENDENCIES_TYPES_UI_MAP } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import { DEPENDENCIES_TYPES_UI_MAP } from '@teambit/legacy.consumer-component';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { getAllVersionsInfo } from '@teambit/component.snap-distance';
-import { Scope, IdNotFoundInGraph } from '@teambit/legacy.scope';
-import { ModelComponent, Version } from '@teambit/objects';
-import { Workspace } from '@teambit/workspace';
+import type { Scope } from '@teambit/legacy.scope';
+import { IdNotFoundInGraph } from '@teambit/legacy.scope';
+import type { ModelComponent, Version } from '@teambit/objects';
+import type { Workspace } from '@teambit/workspace';
 
 export type DependenciesInfo = {
   id: ComponentID;

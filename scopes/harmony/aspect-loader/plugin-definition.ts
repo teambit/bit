@@ -1,4 +1,4 @@
-import { Aspect } from '@teambit/harmony';
+import type { Aspect } from '@teambit/harmony';
 
 export interface PluginDefinition {
   /**

@@ -1,24 +1,34 @@
-import React, { useMemo, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React, { useMemo } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import classnames from 'classnames';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { compact, flatten, groupBy, isFunction, orderBy } from 'lodash';
 import * as semver from 'semver';
-import { SlotRegistry } from '@teambit/harmony';
-import { DropdownComponentVersion, GetActiveTabIndex, VersionDropdown } from '@teambit/component.ui.version-dropdown';
-import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
+import type { SlotRegistry } from '@teambit/harmony';
+import type { DropdownComponentVersion, GetActiveTabIndex } from '@teambit/component.ui.version-dropdown';
+import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
+import type { MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
+import { MainDropdown } from '@teambit/ui-foundation.ui.main-dropdown';
 import { ComponentID } from '@teambit/component-id';
 import type { ConsumeMethod } from '@teambit/ui-foundation.ui.use-box.menu';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { useLanes as defaultUseLanes } from '@teambit/lanes.hooks.use-lanes';
-import { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
+import type { LanesModel } from '@teambit/lanes.ui.models.lanes-model';
 import { Menu as ConsumeMethodsMenu } from '@teambit/ui-foundation.ui.use-box.menu';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
-import { useComponent as useComponentQuery, UseComponentType, Filters } from '../use-component';
+import type { UseComponentType, Filters } from '../use-component';
+import { useComponent as useComponentQuery } from '../use-component';
 import { CollapsibleMenuNav } from './menu-nav';
-import { OrderedNavigationSlot, ConsumeMethodSlot, ConsumePluginProps, NavPlugin, NavPluginProps } from './nav-plugin';
+import type {
+  OrderedNavigationSlot,
+  ConsumeMethodSlot,
+  ConsumePluginProps,
+  NavPlugin,
+  NavPluginProps,
+} from './nav-plugin';
 import { useIdFromLocation } from '../use-component-from-location';
 import { TopBarNav } from '../top-bar-nav';
 

@@ -1,8 +1,10 @@
-import { DecoratorSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
-import ts, { Decorator, Node } from 'typescript';
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { DecoratorSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { Decorator, Node } from 'typescript';
+import ts from 'typescript';
 import pMapSeries from 'p-map-series';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { SchemaTransformer } from '../schema-transformer';
 import { Identifier } from '../identifier';
 
 export class DecoratorTransformer implements SchemaTransformer {

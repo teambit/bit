@@ -1,5 +1,6 @@
 import chalk from 'chalk';
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 import { DocSchema } from './docs';
 import { SchemaRegistry } from '../schema-registry';
 

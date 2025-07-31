@@ -4,15 +4,16 @@ import { LoggerAspect, type LoggerMain, type Logger } from '@teambit/logger';
 import { WorkspaceAspect, type Workspace } from '@teambit/workspace';
 import { BuilderAspect, type BuilderMain } from '@teambit/builder';
 import { StatusAspect, type StatusMain } from '@teambit/status';
-import { LanesAspect, type LanesMain } from '@teambit/lanes';
-import { SnappingAspect, SnapResults, tagResultOutput, snapResultOutput, type SnappingMain } from '@teambit/snapping';
+import { LanesAspect } from '@teambit/lanes';
+import type { SwitchLaneOptions, LanesMain } from '@teambit/lanes';
+import { SnappingAspect, tagResultOutput, snapResultOutput } from '@teambit/snapping';
+import type { SnapResults, SnappingMain } from '@teambit/snapping';
 import { ExportAspect, type ExportMain } from '@teambit/export';
 import { ImporterAspect, type ImporterMain } from '@teambit/importer';
 import { CheckoutAspect, checkoutOutput, type CheckoutMain } from '@teambit/checkout';
-import { SwitchLaneOptions } from '@teambit/lanes';
 import execa from 'execa';
 import chalk from 'chalk';
-import { ReleaseType } from 'semver';
+import type { ReleaseType } from 'semver';
 import { CiAspect } from './ci.aspect';
 import { CiCmd } from './ci.cmd';
 import { CiVerifyCmd } from './commands/verify.cmd';
@@ -602,10 +603,11 @@ export class CiMain {
 
     if (currentLane) {
       this.logger.console('🗑️ Lane Cleanup');
-      const laneId = currentLane.id;
-      this.logger.console(chalk.blue(`Archiving lane ${laneId.toString()}`));
-      const archiveLane = await this.lanes.removeLanes([laneId()]);
-      if (archiveLane) {
+      const laneId = currentLane.id();
+      this.logger.console(chalk.blue(`Archiving lane ${laneId}`));
+      // force means to remove the lane even if it was not merged. in this case, we don't care much because main already has the changes.
+      const archiveLane = await this.lanes.removeLanes([laneId], { remote: true, force: true });
+      if (archiveLane.length) {
         this.logger.console(chalk.green('Lane archived'));
       } else {
         this.logger.console(chalk.yellow('Failed to archive lane'));

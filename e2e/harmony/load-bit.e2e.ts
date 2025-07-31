@@ -1,6 +1,8 @@
 import { loadBit } from '@teambit/bit';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
 

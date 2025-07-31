@@ -1,19 +1,20 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { compact, uniq } from 'lodash';
+import type { MergeStrategy } from '@teambit/merging';
 import {
   installationErrorOutput,
   compilationErrorOutput,
   getWorkspaceConfigUpdateOutput,
   FileStatus,
   MergeOptions,
-  MergeStrategy,
 } from '@teambit/merging';
-import { ComponentIdList, ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import { immutableUnshift } from '@teambit/legacy.utils';
-import { ImporterMain } from './importer.main.runtime';
-import { ImportOptions, ImportDetails, ImportStatus, ImportResult } from './import-components';
+import type { ImporterMain } from './importer.main.runtime';
+import type { ImportOptions, ImportDetails, ImportStatus, ImportResult } from './import-components';
 
 type ImportFlags = {
   path?: string;

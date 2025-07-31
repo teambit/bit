@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { Compiler, CompilerOptions } from '@teambit/compiler';
+import type { Compiler, CompilerOptions } from '@teambit/compiler';
 import { MultiCompilerAspect } from './multi-compiler.aspect';
 import { MultiCompiler } from './multi-compiler.compiler';
 

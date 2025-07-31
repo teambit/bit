@@ -1,6 +1,6 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { CheckoutMain } from './checkout.main.runtime';
+import type { CheckoutMain } from './checkout.main.runtime';
 import { CheckoutCmd } from './checkout-cmd';
 
 export class RevertCmd implements Command {

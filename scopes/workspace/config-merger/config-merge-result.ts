@@ -1,6 +1,7 @@
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { compact } from 'lodash';
-import { MergeStrategyResult, conflictIndicator, GenericConfigOrRemoved } from './component-config-merger';
+import type { MergeStrategyResult, GenericConfigOrRemoved } from './component-config-merger';
+import { conflictIndicator } from './component-config-merger';
 
 const DEP_RESOLVER_VERSION_INDENTATION = 8;
 const CONFLICT_MARKER_INDENTATION = 7;

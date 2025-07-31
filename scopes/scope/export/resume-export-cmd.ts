@@ -1,6 +1,6 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
-import { ScopeMain } from '@teambit/scope';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ScopeMain } from '@teambit/scope';
 
 export class ResumeExportCmd implements Command {
   name = 'resume-export <export-id> <remotes...>';

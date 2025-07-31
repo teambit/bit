@@ -1,6 +1,6 @@
 import { realpathSync, existsSync } from 'fs';
-import { Aspect } from '@teambit/harmony';
-import { PluginDefinition } from './plugin-definition';
+import type { Aspect } from '@teambit/harmony';
+import type { PluginDefinition } from './plugin-definition';
 
 export class Plugin {
   constructor(

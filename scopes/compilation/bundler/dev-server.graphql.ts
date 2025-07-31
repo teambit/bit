@@ -1,7 +1,7 @@
-import { Component } from '@teambit/component';
-import { GraphqlMain, Schema } from '@teambit/graphql';
+import type { Component } from '@teambit/component';
+import type { GraphqlMain, Schema } from '@teambit/graphql';
 import { gql } from '@apollo/client';
-import { BundlerMain } from './bundler.main.runtime';
+import type { BundlerMain } from './bundler.main.runtime';
 import { ComponentServerStartedEvent } from './events';
 
 export function devServerSchema(bundler: BundlerMain, graphql: GraphqlMain): Schema {

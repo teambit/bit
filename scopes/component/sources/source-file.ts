@@ -1,7 +1,7 @@
 import vinylFile from 'vinyl-file';
 import { logger } from '@teambit/legacy.logger';
-import { Repository, SourceFileModel } from '@teambit/objects';
-import { PathOsBased } from '@teambit/toolbox.path.path';
+import type { Repository, SourceFileModel } from '@teambit/objects';
+import type { PathOsBased } from '@teambit/toolbox.path.path';
 import FileSourceNotFound from './file-source-not-found';
 import AbstractVinyl from './abstract-vinyl';
 import { forEach } from 'lodash';

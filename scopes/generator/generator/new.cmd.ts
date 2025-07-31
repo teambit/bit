@@ -1,7 +1,7 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { GeneratorMain } from './generator.main.runtime';
-import { BaseWorkspaceOptions } from './workspace-template';
+import type { GeneratorMain } from './generator.main.runtime';
+import type { BaseWorkspaceOptions } from './workspace-template';
 
 /**
  * NewOptions combines foundational properties with additional options for creating a workspace.

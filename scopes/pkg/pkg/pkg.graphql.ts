@@ -1,8 +1,8 @@
-import { Component } from '@teambit/component';
-import { Schema } from '@teambit/graphql';
+import type { Component } from '@teambit/component';
+import type { Schema } from '@teambit/graphql';
 import { gql } from 'graphql-tag';
 
-import { PkgMain } from './pkg.main.runtime';
+import type { PkgMain } from './pkg.main.runtime';
 
 export function pkgSchema(pkg: PkgMain): Schema {
   return {

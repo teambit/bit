@@ -1,5 +1,6 @@
-import { Component, ComponentFactory, ComponentID, ComponentMain } from '@teambit/component';
-import { Edge, Graph } from '@teambit/graph.cleargraph';
+import type { Component, ComponentFactory, ComponentID, ComponentMain } from '@teambit/component';
+import type { Graph } from '@teambit/graph.cleargraph';
+import { Edge } from '@teambit/graph.cleargraph';
 import { ComponentGraph } from './component-graph';
 import { ComponentIdGraph } from './component-id-graph';
 import { Dependency } from './model/dependency';

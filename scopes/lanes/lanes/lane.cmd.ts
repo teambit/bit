@@ -1,18 +1,21 @@
 // eslint-disable-next-line max-classes-per-file
 import chalk from 'chalk';
 import yn from 'yn';
-import { ScopeMain } from '@teambit/scope';
-import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
+import type { ScopeMain } from '@teambit/scope';
+import type { LaneId } from '@teambit/lane-id';
+import { DEFAULT_LANE } from '@teambit/lane-id';
 import { checkoutOutput } from '@teambit/checkout';
-import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { Command, CommandOptions } from '@teambit/cli';
-import { LaneData, serializeLaneData } from '@teambit/legacy.scope';
+import type { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError } from '@teambit/workspace';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { LaneData } from '@teambit/legacy.scope';
+import { serializeLaneData } from '@teambit/legacy.scope';
 import { BitError } from '@teambit/bit-error';
 import { approveOperation } from '@teambit/legacy.cli.prompts';
 import { COMPONENT_PATTERN_HELP, DEFAULT_CLOUD_DOMAIN } from '@teambit/legacy.constants';
-import { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
-import { SwitchCmd } from './switch.cmd';
-import { FetchCmd } from '@teambit/importer';
+import type { CreateLaneOptions, LanesMain } from './lanes.main.runtime';
+import type { SwitchCmd } from './switch.cmd';
+import type { FetchCmd } from '@teambit/importer';
 
 type LaneOptions = {
   details?: boolean;
