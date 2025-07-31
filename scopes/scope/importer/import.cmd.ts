@@ -2,8 +2,13 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { compact, uniq } from 'lodash';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
-import { installationErrorOutput, compilationErrorOutput, getWorkspaceConfigUpdateOutput } from '@teambit/merging';
-import { FileStatus, MergeOptions } from '@teambit/component.modules.merge-helper';
+import {
+  installationErrorOutput,
+  compilationErrorOutput,
+  getWorkspaceConfigUpdateOutput,
+  FileStatus,
+  MergeOptions,
+} from '@teambit/component.modules.merge-helper';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';

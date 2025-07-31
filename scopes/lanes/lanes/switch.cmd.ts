@@ -1,7 +1,11 @@
 import chalk from 'chalk';
 import { compact } from 'lodash';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
-import { applyVersionReport, installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
+import {
+  applyVersionReport,
+  installationErrorOutput,
+  compilationErrorOutput,
+} from '@teambit/component.modules.merge-helper';
 import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import type { LanesMain } from './lanes.main.runtime';
