@@ -54,6 +54,7 @@ import { ComponentsHaveIssues } from './exceptions/components-have-issues';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 import { Extensions } from '@teambit/legacy.constants';
+import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
 export type OnTagResults = { builderDataMap: ComponentMap<RawBuilderData>; pipeResults: TaskResultsList[] };
@@ -66,6 +67,11 @@ export type OnTagOpts = {
   loose?: boolean; // whether to ignore test/lint errors and allow tagging to succeed
 };
 export const FILE_PATH_PARAM_DELIM = '~';
+
+export type LegacyOnTagResult = {
+  id: ComponentID;
+  builderData: ExtensionDataEntry;
+};
 
 /**
  * builder data format for the bit object store
@@ -176,6 +182,19 @@ export class BuilderMain {
     await this.sanitizePreviewData(components);
 
     return { builderDataMap, pipeResults };
+  }
+
+  builderDataMapToLegacyOnTagResults(builderDataComponentMap: ComponentMap<RawBuilderData>): LegacyOnTagResult[] {
+    const builderDataToLegacyExtension = (component: Component, builderData: RawBuilderData) => {
+      const existingBuilder = component.state.aspects.get(BuilderAspect.id)?.legacy;
+      const builderExtension = existingBuilder || new ExtensionDataEntry(undefined, undefined, BuilderAspect.id);
+      builderExtension.data = builderData;
+      return builderExtension;
+    };
+    return builderDataComponentMap.toArray().map(([component, builderData]) => ({
+      id: component.id,
+      builderData: builderDataToLegacyExtension(component, builderData),
+    }));
   }
 
   /**

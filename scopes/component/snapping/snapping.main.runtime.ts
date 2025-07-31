@@ -2,7 +2,6 @@ import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import fs from 'fs-extra';
-import type { LegacyOnTagResult } from '@teambit/legacy.scope';
 import {
   UnmergedComponents,
   VersionNotFound,
@@ -39,7 +38,7 @@ import type { Component, ConsumerComponent } from '@teambit/component';
 import type { DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
-import type { BuilderMain } from '@teambit/builder';
+import type { BuilderMain, LegacyOnTagResult } from '@teambit/builder';
 import { BuilderAspect } from '@teambit/builder';
 import { LaneId } from '@teambit/lane-id';
 import type { ImporterMain } from '@teambit/importer';

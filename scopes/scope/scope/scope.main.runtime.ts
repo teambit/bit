@@ -4,15 +4,12 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import semver from 'semver';
 import multimatch from 'multimatch';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
-import type { RawBuilderData } from '@teambit/builder';
-import { BuilderAspect } from '@teambit/builder';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type {
   AspectData,
   ComponentMain,
-  ComponentMap,
   ResolveAspectsOptions,
   Component,
   ComponentFactory,
@@ -35,7 +32,7 @@ import { UIAspect } from '@teambit/ui';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import type { DependenciesGraph, DepEdge, ModelComponent, Lane, Version } from '@teambit/objects';
 import { Ref, Repository, ObjectList } from '@teambit/objects';
-import type { Scope as LegacyScope, LegacyOnTagResult, Types } from '@teambit/legacy.scope';
+import type { Scope as LegacyScope, Types } from '@teambit/legacy.scope';
 import { Scope, loadScopeIfExist } from '@teambit/legacy.scope';
 import type { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
 import { ExportPersist, PostSign } from '@teambit/scope.remote-actions';
@@ -416,19 +413,6 @@ export class ScopeMain implements ComponentFactory {
     this.logger.debug('clearing the components and the legacy cache');
     this.componentLoader.clearCache();
     await this.legacyScope.objects.clearCache();
-  }
-
-  builderDataMapToLegacyOnTagResults(builderDataComponentMap: ComponentMap<RawBuilderData>): LegacyOnTagResult[] {
-    const builderDataToLegacyExtension = (component: Component, builderData: RawBuilderData) => {
-      const existingBuilder = component.state.aspects.get(BuilderAspect.id)?.legacy;
-      const builderExtension = existingBuilder || new ExtensionDataEntry(undefined, undefined, BuilderAspect.id);
-      builderExtension.data = builderData;
-      return builderExtension;
-    };
-    return builderDataComponentMap.toArray().map(([component, builderData]) => ({
-      id: component.id,
-      builderData: builderDataToLegacyExtension(component, builderData),
-    }));
   }
 
   /**
