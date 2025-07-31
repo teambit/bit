@@ -2,10 +2,8 @@ import chalk from 'chalk';
 import moment from 'moment';
 import type { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
-import type { BitBaseEvent, PubsubMain } from '@teambit/pubsub';
 import type { OnComponentEventResult, Workspace } from '@teambit/workspace';
 import { ComponentID } from '@teambit/component-id';
-import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
 import type { EventMessages, RootDirs, WatchOptions } from './watcher';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
 import { CheckTypes } from './check-types';
@@ -55,33 +53,13 @@ if this doesn't work well for you, run "bit config set watch_use_polling true" t
     /**
      * logger extension.
      */
-    private pubsub: PubsubMain,
-
-    /**
-     * logger extension.
-     */
     private logger: Logger,
 
     /**
      * watcher extension.
      */
     private watcher: WatcherMain
-  ) {
-    this.registerToEvents();
-  }
-
-  private registerToEvents() {
-    this.pubsub.sub(CompilerAspect.id, this.eventsListener);
-  }
-
-  private eventsListener = (event: BitBaseEvent<any>) => {
-    switch (event.type) {
-      case CompilerErrorEvent.TYPE:
-        this.logger.console(`Watcher error ${event.data.error}, 'error'`);
-        break;
-      default:
-    }
-  };
+  ) {}
 
   async wait(cliArgs: [], watchCmdOpts: WatchCmdOpts) {
     const { verbose, checkTypes, import: importIfNeeded, skipImport, trigger } = watchCmdOpts;
