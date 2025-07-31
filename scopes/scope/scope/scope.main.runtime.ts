@@ -57,7 +57,6 @@ import type { FETCH_OPTIONS } from '@teambit/legacy.scope-api';
 import { remove, ExternalActions } from '@teambit/legacy.scope-api';
 import { BitError } from '@teambit/bit-error';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { resumeExport } from '@teambit/export';
 import { GLOBAL_SCOPE } from '@teambit/legacy.constants';
 import { BitId } from '@teambit/legacy-bit-id';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
@@ -1073,10 +1072,6 @@ export class ScopeMain implements ComponentFactory {
     const modelComponent = await this.legacyScope.getModelComponent(id);
     const versions = modelComponent.listVersions();
     return semver.maxSatisfying<string>(versions, range, { includePrerelease: true })?.toString();
-  }
-
-  async resumeExport(exportId: string, remotes: string[]): Promise<string[]> {
-    return resumeExport(this.legacyScope, exportId, remotes);
   }
 
   /**
