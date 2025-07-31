@@ -311,7 +311,7 @@ export class VersionMaker {
         isolateOptions,
         builderOptions
       );
-      const buildResult = this.scope.builderDataMapToLegacyOnTagResults(builderDataMap);
+      const buildResult = this.builder.builderDataMapToLegacyOnTagResults(builderDataMap);
 
       this.snapping._updateComponentsByTagResult(componentsToBuildLegacy, buildResult);
       const packageIntegritiesByPublishedPackages = this.snapping._getPublishedPackages(componentsToBuildLegacy);
