@@ -1,6 +1,6 @@
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
-import type { Workspace, AutoTagResult } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
@@ -29,7 +29,7 @@ import { LoggerAspect } from '@teambit/logger';
 import { compact } from 'lodash';
 import type { ApplyVersionWithComps, CheckoutMain, ComponentStatusBase } from '@teambit/checkout';
 import { CheckoutAspect, applyModifiedVersion, removeFilesIfNeeded, updateFileStatus } from '@teambit/checkout';
-import type { ConfigMergerMain, ConfigMergeResult, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
+import type { ConfigMergerMain, ConfigMergeResult } from '@teambit/config-merger';
 import { ConfigMergerAspect } from '@teambit/config-merger';
 import type { SnapsDistance } from '@teambit/component.snap-distance';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -42,8 +42,14 @@ import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
 import type { DataMergeResult, MergeStatusProviderOptions } from './merge-status-provider';
 import { MergeStatusProvider } from './merge-status-provider';
-import type { MergeStrategy, MergeResultsThreeWay } from './merge-version';
-import { FileStatus, getMergeStrategyInteractive, MergeOptions } from './merge-version';
+import type {
+  MergeStrategy,
+  MergeResultsThreeWay,
+  ApplyVersionResults,
+  FailedComponents,
+  MergeSnapResults,
+} from '@teambit/component.modules.merge-helper';
+import { FileStatus, getMergeStrategyInteractive, MergeOptions } from '@teambit/component.modules.merge-helper';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 import type { ApplicationMain } from '@teambit/application';
@@ -74,41 +80,6 @@ export type ComponentMergeStatusBeforeMergeAttempt = ComponentStatusBase & {
     currentId: ComponentID;
     modelComponent: ModelComponent;
   };
-};
-
-export type FailedComponents = { id: ComponentID; unchangedMessage: string; unchangedLegitimately?: boolean };
-
-// fileName is PathLinux. TS doesn't let anything else in the keys other than string and number
-export type FilesStatus = { [fileName: string]: keyof typeof FileStatus };
-
-export type MergeSnapResults = {
-  snappedComponents: ConsumerComponent[];
-  autoSnappedResults: AutoTagResult[];
-  removedComponents?: ComponentIdList;
-  exportedIds?: ComponentID[];
-} | null;
-
-export type ApplyVersionResult = { id: ComponentID; filesStatus: FilesStatus };
-
-export type ApplyVersionResults = {
-  components?: ApplyVersionResult[];
-  version?: string;
-  failedComponents?: FailedComponents[];
-  removedComponents?: ComponentID[];
-  addedComponents?: ComponentID[]; // relevant when restoreMissingComponents is true (e.g. bit lane merge-abort)
-  newComponents?: ComponentID[]; // relevant for "bit stash load". (stashedBitmapEntries is populated)
-  resolvedComponents?: ConsumerComponent[]; // relevant for bit merge --resolve
-  abortedComponents?: ApplyVersionResult[]; // relevant for bit merge --abort
-  mergeSnapResults?: MergeSnapResults;
-  mergeSnapError?: Error;
-  leftUnresolvedConflicts?: boolean;
-  verbose?: boolean;
-  newFromLane?: string[];
-  newFromLaneAdded?: boolean;
-  installationError?: Error; // in case the package manager failed, it won't throw, instead, it'll return error here
-  compilationError?: Error; // in case the compiler failed, it won't throw, instead, it'll return error here
-  workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult;
-  gitBranchWarning?: string; // warning message when git branch creation fails
 };
 
 export class MergingMain {

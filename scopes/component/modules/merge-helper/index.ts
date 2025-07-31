@@ -1,0 +1,21 @@
+export { mergeFiles } from './merge-files';
+export type { MergeFileParams, MergeFileResult } from './merge-files';
+export { threeWayMerge, MergeResultsThreeWay } from './three-way-merge';
+export {
+  FileStatus,
+  getMergeStrategyInteractive,
+  getMergeStrategy,
+  MergeOptions,
+  MergeStrategy,
+} from './merge-version';
+export type {
+  WorkspaceDepsUpdates,
+  WorkspaceDepsConflicts,
+  WorkspaceDepsUnchanged,
+  WorkspaceConfigUpdateResult,
+  MergeSnapResults,
+  ApplyVersionResult,
+  ApplyVersionResults,
+  FailedComponents,
+  FilesStatus,
+} from './types';

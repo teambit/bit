@@ -688,14 +688,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/fs/extension-getter"
     },
-    "fs/file-merger": {
-        "name": "fs/file-merger",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.toolbox",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/fs/file-merger"
-    },
     "fs/hard-link-directory": {
         "name": "fs/hard-link-directory",
         "scope": "teambit.toolbox",
@@ -1185,6 +1177,14 @@
         "version": "0.0.503",
         "mainFile": "index.ts",
         "rootDir": "scopes/pipelines/modules/merge-component-results"
+    },
+    "modules/merge-helper": {
+        "name": "modules/merge-helper",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.component",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/modules/merge-helper"
     },
     "modules/module-resolver": {
         "name": "modules/module-resolver",
