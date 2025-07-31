@@ -100,7 +100,7 @@ export class WatcherMain {
   ) {
     const logger = loggerMain.createLogger(WatcherAspect.id);
     const watcherMain = new WatcherMain(workspace, scope, pubsub, onPreWatchSlot, ipcEvents, logger, configStore);
-    const watchCmd = new WatchCommand(pubsub, logger, watcherMain);
+    const watchCmd = new WatchCommand(logger, watcherMain);
     cli.register(watchCmd);
     return watcherMain;
   }
