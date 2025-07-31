@@ -1,9 +1,9 @@
 import { Logger } from '@teambit/logger';
-import { CompilerAspect } from '@teambit/compiler';
 import type { OnComponentEventResult } from '@teambit/workspace';
 import chalk from 'chalk';
 import type { RootDirs } from './watcher';
 import { compact } from 'lodash';
+import { Extensions } from '@teambit/legacy.constants';
 
 export function formatWatchPathsSortByComponent(trackDirs: RootDirs) {
   const title = ` ${chalk.underline('STATUS\tCOMPONENT ID')}\n`;
@@ -19,7 +19,7 @@ export function formatCompileResults(compileResults: OnComponentEventResult[]) {
   return compact(
     compileResults
       // currently, we are interested only in the compiler results
-      .filter((compileResult) => compileResult.extensionId === CompilerAspect.id)
+      .filter((compileResult) => compileResult.extensionId === Extensions.compiler)
       .map((compileResult) => compileResult.results.toString())
   ).join('\n');
 }
