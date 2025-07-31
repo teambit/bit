@@ -17,13 +17,12 @@ import { pathNormalizeToLinux, pathRelativeLinux, removeFileExtension } from '@t
 import type { ResolvedPackageData } from '../resolve-pkg-data';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
-import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain, DependencyDetector } from '@teambit/dependency-resolver';
 import { getDependencyTree } from '../files-dependency-builder';
 import type { FileObject, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
 import type { DevFilesMain } from '@teambit/dev-files';
 import type { Workspace } from '@teambit/workspace';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
-import type { DependencyDetector } from '../files-dependency-builder/detector-hook';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 import { DependenciesData } from './dependencies-data';
 import type { AllDependencies, AllPackagesDependencies } from './apply-overrides';

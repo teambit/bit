@@ -1,6 +1,6 @@
 import type { ImportSpecifier } from '@teambit/legacy.consumer-component';
 import type { ResolvedPackageData } from '../../resolve-pkg-data';
-import type { DependencyDetector } from '../detector-hook';
+import type { DependencyDetector } from '@teambit/dependency-resolver';
 import { isEmpty } from 'lodash';
 
 export type FileObject = {
