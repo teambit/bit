@@ -7,9 +7,9 @@ import { ComponentsPendingMerge } from '@teambit/legacy.consumer';
 import type { Lane, ModelComponent, Version } from '@teambit/objects';
 import { getLatestVersionNumber, pathNormalizeToLinux, hasWildcard } from '@teambit/legacy.utils';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
-import { applyModifiedVersion } from '@teambit/checkout';
 import type { MergeStrategy, MergeResultsThreeWay, FilesStatus } from '@teambit/component.modules.merge-helper';
 import {
+  applyModifiedVersion,
   FileStatus,
   getMergeStrategyInteractive,
   MergeOptions,

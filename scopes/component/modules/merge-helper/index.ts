@@ -29,3 +29,5 @@ export {
   getAddedOutput,
   getWorkspaceConfigUpdateOutput,
 } from './merge-output';
+
+export { applyModifiedVersion } from './apply-version';

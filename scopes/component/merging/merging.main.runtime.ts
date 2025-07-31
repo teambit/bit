@@ -28,7 +28,7 @@ import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import { compact } from 'lodash';
 import type { ApplyVersionWithComps, CheckoutMain, ComponentStatusBase } from '@teambit/checkout';
-import { CheckoutAspect, applyModifiedVersion, removeFilesIfNeeded, updateFileStatus } from '@teambit/checkout';
+import { CheckoutAspect, removeFilesIfNeeded, updateFileStatus } from '@teambit/checkout';
 import type { ConfigMergerMain, ConfigMergeResult } from '@teambit/config-merger';
 import { ConfigMergerAspect } from '@teambit/config-merger';
 import type { SnapsDistance } from '@teambit/component.snap-distance';
@@ -49,7 +49,12 @@ import type {
   FailedComponents,
   MergeSnapResults,
 } from '@teambit/component.modules.merge-helper';
-import { FileStatus, getMergeStrategyInteractive, MergeOptions } from '@teambit/component.modules.merge-helper';
+import {
+  applyModifiedVersion,
+  FileStatus,
+  getMergeStrategyInteractive,
+  MergeOptions,
+} from '@teambit/component.modules.merge-helper';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 import type { ApplicationMain } from '@teambit/application';
