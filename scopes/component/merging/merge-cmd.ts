@@ -11,9 +11,9 @@ import {
 } from '@teambit/legacy.constants';
 import type { ConfigMergeResult, WorkspaceConfigUpdateResult, WorkspaceDepsUpdates } from '@teambit/config-merger';
 import { BitError } from '@teambit/bit-error';
-import type { MergeStrategy } from './merge-version';
-import { FileStatus } from './merge-version';
-import type { ApplyVersionResults, MergingMain, ApplyVersionResult } from './merging.main.runtime';
+import type { MergeStrategy, ApplyVersionResults, ApplyVersionResult } from '@teambit/component.modules.merge-helper';
+import { FileStatus } from '@teambit/component.modules.merge-helper';
+import type { MergingMain } from './merging.main.runtime';
 import type { ConfigStoreMain } from '@teambit/config-store';
 
 export class MergeCmd implements Command {

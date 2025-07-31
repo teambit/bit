@@ -9,8 +9,13 @@ import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
-import type { ApplyVersionResult, FilesStatus, MergeStrategy, MergeResultsThreeWay } from '@teambit/merging';
-import { FileStatus, MergeOptions } from '@teambit/merging';
+import type {
+  ApplyVersionResult,
+  FilesStatus,
+  MergeStrategy,
+  MergeResultsThreeWay,
+} from '@teambit/component.modules.merge-helper';
+import { FileStatus, MergeOptions } from '@teambit/component.modules.merge-helper';
 import type { CheckoutProps } from './checkout.main.runtime';
 
 export type ComponentStatusBase = {

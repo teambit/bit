@@ -10,7 +10,7 @@ import type { LanesMain } from '@teambit/lanes';
 import type { InstallMain } from '@teambit/install';
 import type { ExportMain } from '@teambit/export';
 import type { CheckoutMain } from '@teambit/checkout';
-import type { ApplyVersionResults } from '@teambit/merging';
+import type { ApplyVersionResults } from '@teambit/component.modules.merge-helper';
 import type { ComponentLogMain, FileHashDiffFromParent } from '@teambit/component-log';
 import type { LaneLog } from '@teambit/objects';
 import type { ComponentCompareMain } from '@teambit/component-compare';

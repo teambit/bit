@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { compact } from 'lodash';
-import type { MergeStrategy } from '@teambit/merging';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { applyVersionReport, installationErrorOutput, compilationErrorOutput } from '@teambit/merging';
 import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';

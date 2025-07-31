@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
-import type { ApplyVersionResults, MergeStrategy } from '@teambit/merging';
+import type { ApplyVersionResults, MergeStrategy } from '@teambit/component.modules.merge-helper';
 import {
   applyVersionReport,
   conflictSummaryReport,
