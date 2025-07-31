@@ -215,7 +215,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "1.12.28",
+        "version": "1.12.29",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -502,7 +502,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.677",
+        "version": "2.0.678",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
@@ -1377,7 +1377,7 @@
     "pnpm": {
         "name": "pnpm",
         "scope": "teambit.dependencies",
-        "version": "1.0.679",
+        "version": "1.0.680",
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/pnpm"
     },
