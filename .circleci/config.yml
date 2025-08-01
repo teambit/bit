@@ -112,7 +112,7 @@ commands:
           name: Install pnpm
           command: >
             npm config set prefix '~/.npm-global' &&
-            npm install --global pnpm@10.13.1 &&
+            npm install --global pnpm@10.14.0 &&
             echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
 
   # BVM setup
@@ -688,14 +688,12 @@ jobs:
             pnpm init &&
             echo "node-linker=hoisted" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values linux --values linux &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
-            pnpm add @teambit/bit
+            pnpm add @teambit/bit --os=linux --cpu=x64
       - run:
           name: copy lockfile
           command: mkdir lockfile && cp bit-${BIT_VERSION}/pnpm-lock.yaml lockfile
@@ -707,8 +705,7 @@ jobs:
           name: install bit for Linux arm64
           command: >
             cd bit-${BIT_VERSION} &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values arm64 --values arm64 &&
-            pnpm install
+            pnpm install --os=linux --cpu=arm64
       - compress_bit
       - run:
           name: move to linux-arm64 folder
@@ -744,14 +741,12 @@ jobs:
             pnpm init &&
             echo "node-linker=hoisted" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values darwin --values darwin &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
-            pnpm add @teambit/bit
+            pnpm add @teambit/bit --os=darwin --cpu=x64
       - compress_bit
       - run:
           name: move to macos folder
@@ -760,8 +755,7 @@ jobs:
           name: install bit for macOS arm64
           command: >
             cd bit-${BIT_VERSION} &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values arm64 --values arm64 &&
-            pnpm install
+            pnpm install --os=darwin --cpu=arm64
       - compress_bit
       - run:
           name: move to macos-arm64 folder
@@ -795,15 +789,13 @@ jobs:
             echo "node-linker=hoisted" >> .npmrc &&
             echo "registry=https://node-registry.bit.cloud" >> .npmrc &&
             echo "prefer-symlinked-executables=false" >> .npmrc &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.os --values win32 --values win32 &&
-            pnpm dlx @ialdama/jsonmod --key pnpm.supportedArchitectures.cpu --values x64 --values x64 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.neverBuiltDependencies --values cpu-features --values ssh2 &&
             pnpm dlx @ialdama/jsonmod --key pnpm.overrides.uri-js --values npm:uri-js-replace &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.cross-spawn@7" --values "^7.0.5" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.lodash@4" --values "4.17.21" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.trim@0" --values "0.0.3" &&
             pnpm dlx @ialdama/jsonmod --key "pnpm.overrides.@teambit/harmony" --values "0.4.7" &&
-            pnpm add @teambit/bit
+            pnpm add @teambit/bit --os=win32 --cpu=x64
       - compress_bit
       - run:
           name: move to windows folder
