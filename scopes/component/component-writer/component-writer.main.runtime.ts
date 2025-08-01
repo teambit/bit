@@ -23,7 +23,7 @@ import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
 import { DataToPersist } from '@teambit/component.sources';
 import type { ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import { ConfigMergerAspect } from '@teambit/config-merger';
-import type { MergeStrategy } from '@teambit/merging';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { ComponentWriterProps } from './component-writer';
 import ComponentWriter from './component-writer';

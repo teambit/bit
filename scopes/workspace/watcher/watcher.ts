@@ -15,7 +15,6 @@ import { UNMERGED_FILENAME } from '@teambit/legacy.scope';
 import type { FSWatcher } from 'chokidar';
 import chokidar from 'chokidar';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
-import type { CompilationInitiator } from '@teambit/compiler';
 import type { Workspace, OnComponentEventResult } from '@teambit/workspace';
 import {
   WorkspaceAspect,
@@ -52,7 +51,7 @@ export type OnFileEventFunc = (
 ) => void;
 
 export type WatchOptions = {
-  initiator?: CompilationInitiator;
+  initiator?: any; // the real type is CompilationInitiator, however it creates a circular dependency with the compiler aspect.
   verbose?: boolean; // print watch events to the console. (also ts-server events if spawnTSServer is true)
   spawnTSServer?: boolean; // needed for check types and extract API/docs.
   checkTypes?: CheckTypes; // if enabled, the spawnTSServer becomes true.

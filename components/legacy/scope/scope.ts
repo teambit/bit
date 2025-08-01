@@ -22,7 +22,6 @@ import {
   PENDING_OBJECTS_DIR,
 } from '@teambit/legacy.constants';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
-import type { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { UnexpectedPackageName } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
@@ -99,11 +98,6 @@ export type ComponentsAndVersions = {
   component: ModelComponent;
   version: Version;
   versionStr: string;
-};
-
-export type LegacyOnTagResult = {
-  id: ComponentID;
-  builderData: ExtensionDataEntry;
 };
 
 export type IsolateComponentsOptions = {

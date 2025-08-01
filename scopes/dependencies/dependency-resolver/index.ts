@@ -72,10 +72,10 @@ export type {
 } from './dependency-linker';
 export { DependencyInstaller } from './dependency-installer';
 export type { GetComponentManifestsOptions, InstallOptions, InstallArgs } from './dependency-installer';
-export type { DependencyDetector, FileContext } from './dependency-detector';
 export type { DependencySource, VariantPolicyEntry } from './policy/variant-policy/variant-policy';
 export type { OutdatedPkg, CurrentPkg } from './get-all-policy-pkgs';
 export { extendWithComponentsFromDir } from './extend-with-components-from-dir';
 export { isRange } from './manifest/deduping/hoist-dependencies';
 export type { DependencyEnv } from './dependency-env';
+export { DetectorHook, DependencyDetector, FileContext } from './detector-hook';
 export { DependencyResolverAspect as default, DependencyResolverAspect };

@@ -57,7 +57,7 @@ export function generateLink(
 import { linkModules } from '${normalizePath(join(previewDistDir, 'preview-modules.js'))}';
 
 ${getModuleImports(moduleLinks, tempPackageDir)}
-
+(async function initializeModules() {
 ${getComponentImports(componentLinks)}
 
 linkModules('${prefix}', {
@@ -80,6 +80,7 @@ ${componentLinks
   .join(',\n')}
   }
 });
+})();
 `;
   return contents;
 }
@@ -109,9 +110,21 @@ function getModuleImports(moduleLinks: ModuleLink[] = [], tempPackageDir?: strin
 
 function getComponentImports(componentLinks: ComponentLink[] = []): string {
   return componentLinks
-    .map((link) =>
-      link.modules.map((module) => `import * as ${module.varName} from "${module.resolveFrom}";`).join('\n')
+    .flatMap((link) =>
+      link.modules.map((module) => {
+        return `
+let ${module.varName};
+try {
+  ${module.varName} = await import("${module.resolveFrom}");
+} catch (err) {
+  const msg = (err && err.message) ? err.message : String(err);
+  console.error('[preview][load:fail]', "${link.componentIdentifier}", msg);
+  ${module.varName} = { 
+    default: function ErrorFallback() { return null; },
+    __loadError: err 
+  };
+}`;
+      })
     )
-    .filter((line) => line !== '') // prevent empty lines
     .join('\n');
 }

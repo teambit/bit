@@ -30,7 +30,7 @@ import {
 } from '@teambit/legacy.constants';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { DetectorHook } from '@teambit/dependencies';
+import { DetectorHook } from './detector-hook';
 import type { ProxyConfig, NetworkConfig } from '@teambit/scope.network';
 import { Http } from '@teambit/scope.network';
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
@@ -83,7 +83,7 @@ import type { SerializedDependency, DependencyFactory, ComponentDependency } fro
 import { DependencyListFactory, ComponentDependencyFactory, COMPONENT_DEP_TYPE, DependencyList } from './dependencies';
 import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment } from './show-fragments';
 import { dependencyResolverSchema } from './dependency-resolver.graphql';
-import type { DependencyDetector } from './dependency-detector';
+import type { DependencyDetector } from './detector-hook';
 import { DependenciesService } from './dependencies.service';
 import { EnvPolicy } from './policy/env-policy';
 import type { ConfigStoreMain } from '@teambit/config-store';

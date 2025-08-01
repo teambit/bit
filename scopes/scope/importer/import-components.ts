@@ -7,9 +7,14 @@ import { ComponentsPendingMerge } from '@teambit/legacy.consumer';
 import type { Lane, ModelComponent, Version } from '@teambit/objects';
 import { getLatestVersionNumber, pathNormalizeToLinux, hasWildcard } from '@teambit/legacy.utils';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
-import { applyModifiedVersion } from '@teambit/checkout';
-import type { MergeStrategy, MergeResultsThreeWay, FilesStatus } from '@teambit/merging';
-import { FileStatus, getMergeStrategyInteractive, MergeOptions, threeWayMerge } from '@teambit/merging';
+import type { MergeStrategy, MergeResultsThreeWay, FilesStatus } from '@teambit/component.modules.merge-helper';
+import {
+  applyModifiedVersion,
+  FileStatus,
+  getMergeStrategyInteractive,
+  MergeOptions,
+  threeWayMerge,
+} from '@teambit/component.modules.merge-helper';
 import type { VersionDependencies, Scope } from '@teambit/legacy.scope';
 import { multipleVersionDependenciesToConsumer, ScopeComponentsImporter } from '@teambit/legacy.scope';
 import type { GraphMain } from '@teambit/graph';
