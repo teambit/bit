@@ -2,7 +2,6 @@ import type { Graph } from '@teambit/graph.cleargraph';
 import type { BitId } from '@teambit/legacy-bit-id';
 import type { ComponentID } from '@teambit/component-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import type { CompIdGraph } from '@teambit/graph';
 import type { ComponentLog } from '@teambit/objects';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import type { DependencyList } from '@teambit/dependency-resolver';
@@ -51,6 +50,11 @@ export type LoadAspectsOptions = {
 
   [key: string]: any;
 };
+
+/**
+ * don't use this type from @teambit/graph to not create a circular dependency.
+ */
+type CompIdGraph = Graph<ComponentID, 'prod' | 'dev' | 'ext' | 'peer'>;
 
 export type FilterAspectsOptions = {
   /**

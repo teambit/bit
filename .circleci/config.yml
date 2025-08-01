@@ -392,7 +392,11 @@ commands:
       # - run: 'rm -rf bit/node_modules/.bin/bit'
       - run:
           name: 'Run e2e tests'
-          command: 'cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings --timings-type=classname | xargs npm run mocha-circleci << parameters.bit_bin >>'
+          # I tried really hard to split by timing. but it didn't work.
+          # CircleCI’s “split by timings” relies on per-testcase durations, but in our suite most time happens in
+          # before/after hooks, so testcase times are near-zero while the suite shows the full wall time.
+          # With no meaningful per-test weights, the splitter can’t balance work across 25 machines, leading to uneven distribution
+          command: 'cd bit && circleci tests glob "$(pwd)/e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs npm run mocha-circleci << parameters.bit_bin >>'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
