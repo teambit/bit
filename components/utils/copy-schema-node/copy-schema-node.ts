@@ -1,4 +1,4 @@
-import { SchemaNode, ISchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import type { SchemaNode, ISchemaNode } from '@teambit/semantics.entities.semantic-schema';
 
 export function copySchemaNode(source: ISchemaNode, update: Partial<ISchemaNode>): SchemaNode {
   return {

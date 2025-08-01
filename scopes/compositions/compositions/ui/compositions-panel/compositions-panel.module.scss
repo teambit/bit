@@ -7,6 +7,8 @@
 }
 
 .tab {
+  color: var(--on-background-color);
+
   > div:first-child {
     border: none;
     border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);

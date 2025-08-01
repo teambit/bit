@@ -6,19 +6,20 @@ import { BitError } from '@teambit/bit-error';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import pMapSeries from 'p-map-series';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import type { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
 import { BitId } from '@teambit/legacy-bit-id';
 import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '@teambit/legacy.constants';
-import { ConsumerComponent, SchemaName, Dependencies, Dependency } from '@teambit/legacy.consumer-component';
+import type { Dependencies, Dependency } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent, SchemaName } from '@teambit/legacy.consumer-component';
 import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
 import { ComponentOverrides, getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import { getLatestVersion, validateVersion } from '@teambit/pkg.modules.semver-helper';
+import type { SnapsDistance } from '@teambit/component.snap-distance';
 import {
-  SnapsDistance,
   getDivergeData,
   getAllVersionParents,
   getAllVersionsInfo,
@@ -36,15 +37,17 @@ import {
   errorIsTypeOfMissingObject,
   BitIdCompIdError,
 } from '@teambit/legacy.scope';
-import { Repository, BitObject, Ref } from '../objects';
-import Lane from './lane';
+import type { Repository } from '../objects';
+import { BitObject, Ref } from '../objects';
+import type Lane from './lane';
 import ScopeMeta from './scopeMeta';
-import Source from './source';
-import Version from './version';
-import VersionHistory, { VersionParents } from './version-history';
-import { ObjectItem } from '../objects/object-list';
+import type Source from './source';
+import type Version from './version';
+import type { VersionParents } from './version-history';
+import VersionHistory from './version-history';
+import type { ObjectItem } from '../objects/object-list';
 import type { Scope } from '@teambit/legacy.scope';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { DetachedHeads } from './detach-heads';
 
 type State = {

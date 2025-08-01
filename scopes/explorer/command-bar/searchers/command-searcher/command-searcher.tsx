@@ -1,8 +1,9 @@
 import React from 'react';
-import { FuzzySearcher, SearchResult, FuzzySearchItem } from '@teambit/explorer.ui.command-bar';
-import { SearchProvider } from '../search-provider';
+import type { SearchResult, FuzzySearchItem } from '@teambit/explorer.ui.command-bar';
+import { FuzzySearcher } from '@teambit/explorer.ui.command-bar';
+import type { SearchProvider } from '../search-provider';
 import { CommandResult } from './command-result';
-import { Command } from './command';
+import type { Command } from './command';
 
 const searchKeys: (keyof Command)[] = ['displayName'];
 

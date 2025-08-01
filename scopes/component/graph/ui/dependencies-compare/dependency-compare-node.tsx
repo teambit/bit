@@ -12,7 +12,7 @@ import React, { useMemo } from 'react';
 import { compare, valid } from 'semver';
 import { defaultNode, external } from '../../ui/component-node/variants';
 import { styles as componentNodeStyles } from '../../ui/component-node';
-import { CompareNodeModel } from './compare-node-model';
+import type { CompareNodeModel } from './compare-node-model';
 import styles from './dependency-compare-node.module.scss';
 import variants from './dependency-compare-variants.module.scss';
 

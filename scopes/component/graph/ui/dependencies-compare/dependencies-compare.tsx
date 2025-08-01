@@ -2,19 +2,10 @@ import classNames from 'classnames';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { useComponentCompare } from '@teambit/component.ui.component-compare.context';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import ReactFlow, {
-  Background,
-  Controls,
-  Handle,
-  MiniMap,
-  NodeProps,
-  NodeTypes,
-  Position,
-  ReactFlowProvider,
-  ReactFlowInstance,
-} from 'reactflow';
+import type { NodeProps, NodeTypes, ReactFlowInstance } from 'reactflow';
+import ReactFlow, { Background, Controls, Handle, MiniMap, Position, ReactFlowProvider } from 'reactflow';
 import { useGraphQuery } from '../query';
-import { GraphFilter } from '../../model/graph-filters';
+import type { GraphFilter } from '../../model/graph-filters';
 import { GraphFilters, styles as graphPageStyles } from '../graph-page';
 import { calcMinimapColors, calcElements, styles as dependenciesGraphStyles } from '../dependencies-graph';
 import styles from './dependencies-compare.module.scss';

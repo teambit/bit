@@ -1,4 +1,5 @@
-import React, { ReactElement } from 'react';
+import type { ReactElement } from 'react';
+import type React from 'react';
 
 export type Example = {
   title?: string;

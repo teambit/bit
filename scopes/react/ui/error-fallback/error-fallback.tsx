@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React from 'react';
 import classnames from 'classnames';
 import type { FallbackProps } from 'react-error-boundary';
 import { IconButton } from '@teambit/design.ui.icon-button';

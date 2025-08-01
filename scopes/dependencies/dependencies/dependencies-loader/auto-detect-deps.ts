@@ -2,40 +2,30 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import semver from 'semver';
 import { isSnap } from '@teambit/component-version';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { uniq, isEmpty, forEach, differenceWith } from 'lodash';
-import { IssuesList, IssuesClasses } from '@teambit/component-issues';
-import {
-  Dependency,
-  RelativePath,
-  ImportSpecifier,
-  ConsumerComponent as Component,
-} from '@teambit/legacy.consumer-component';
+import type { IssuesList } from '@teambit/component-issues';
+import { IssuesClasses } from '@teambit/component-issues';
+import type { RelativePath, ImportSpecifier, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import { Dependency } from '@teambit/legacy.consumer-component';
 import { DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '@teambit/legacy.constants';
-import { Consumer } from '@teambit/legacy.consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
 import { getExt } from '@teambit/toolbox.fs.extension-getter';
-import {
-  pathNormalizeToLinux,
-  pathRelativeLinux,
-  PathLinux,
-  PathLinuxRelative,
-  PathOsBased,
-  removeFileExtension,
-} from '@teambit/legacy.utils';
-import { ResolvedPackageData } from '../resolve-pkg-data';
-import { ComponentMap } from '@teambit/legacy.bit-map';
+import type { PathLinux, PathLinuxRelative, PathOsBased } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux, pathRelativeLinux, removeFileExtension } from '@teambit/legacy.utils';
+import type { ResolvedPackageData } from '../resolve-pkg-data';
+import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain, DependencyDetector } from '@teambit/dependency-resolver';
 import { getDependencyTree } from '../files-dependency-builder';
-import { FileObject, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
-import { DevFilesMain } from '@teambit/dev-files';
-import { Workspace } from '@teambit/workspace';
-import { AspectLoaderMain } from '@teambit/aspect-loader';
-import { DependencyDetector } from '../files-dependency-builder/detector-hook';
+import type { FileObject, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
+import type { DevFilesMain } from '@teambit/dev-files';
+import type { Workspace } from '@teambit/workspace';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 import { DependenciesData } from './dependencies-data';
-import { AllDependencies, AllPackagesDependencies } from './apply-overrides';
+import type { AllDependencies, AllPackagesDependencies } from './apply-overrides';
 
 export type FileType = {
   isTestFile: boolean;

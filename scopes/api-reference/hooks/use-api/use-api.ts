@@ -1,7 +1,7 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
 import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
-import { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 
 const GET_SCHEMA = gql`
   query Schema($componentId: String!, $skipInternals: Boolean) {

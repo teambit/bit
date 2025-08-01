@@ -1,4 +1,4 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { catVersionHistory } from './cat-version-history';
 
 export class CatVersionHistoryCmd implements Command {

@@ -1,14 +1,15 @@
-import { Consumer } from '@teambit/legacy.consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { ApplyVersionResults } from '@teambit/merging';
-import { Lane } from '@teambit/objects';
-import { CheckoutProps } from '@teambit/checkout';
-import { Workspace } from '@teambit/workspace';
-import { Logger } from '@teambit/logger';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
+import type { ApplyVersionResults } from '@teambit/component.modules.merge-helper';
+import type { Lane } from '@teambit/objects';
+import type { CheckoutProps } from '@teambit/checkout';
+import type { Workspace } from '@teambit/workspace';
+import type { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import { throwForStagedComponents } from '@teambit/lanes.modules.create-lane';
-import { LanesMain } from './lanes.main.runtime';
+import type { LanesMain } from './lanes.main.runtime';
 
 export type SwitchProps = {
   laneName: string;

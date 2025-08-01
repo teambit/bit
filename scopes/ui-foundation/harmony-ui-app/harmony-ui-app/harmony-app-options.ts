@@ -1,4 +1,4 @@
-import { AspectDefinition } from '@teambit/aspect-loader';
+import type { AspectDefinition } from '@teambit/aspect-loader';
 
 export type HarmonyAppOptions = {
   /**

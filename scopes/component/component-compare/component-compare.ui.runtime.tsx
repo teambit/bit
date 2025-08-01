@@ -1,8 +1,10 @@
 import React from 'react';
-import { RouteProps } from 'react-router-dom';
+import type { RouteProps } from 'react-router-dom';
 import flatten from 'lodash.flatten';
-import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { ComponentAspect, ComponentUI } from '@teambit/component';
+import type { Harmony, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { ComponentUI } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import { ComponentCompare } from '@teambit/component.ui.component-compare.component-compare';
 import { UIRuntime } from '@teambit/ui';
 import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';

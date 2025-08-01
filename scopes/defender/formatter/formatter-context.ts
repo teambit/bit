@@ -1,4 +1,4 @@
-import { ExecutionContext } from '@teambit/envs';
+import type { ExecutionContext } from '@teambit/envs';
 
 export type FormatterOptions = { check?: boolean };
 export interface FormatterContext extends ExecutionContext, FormatterOptions {}

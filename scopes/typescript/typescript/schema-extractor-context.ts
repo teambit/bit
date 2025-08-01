@@ -1,18 +1,18 @@
-import { TsserverClient } from '@teambit/ts-server';
+import type { TsserverClient } from '@teambit/ts-server';
 import { getTokenAtPosition, canHaveJsDoc, getJsDoc } from 'tsutils';
-import ts, { ExportAssignment, getTextOfJSDocComment, ExportDeclaration, Node, SyntaxKind, TypeNode } from 'typescript';
+import type { ExportAssignment, ExportDeclaration, Node, TypeNode } from 'typescript';
+import ts, { getTextOfJSDocComment, SyntaxKind } from 'typescript';
 import { head, uniqBy } from 'lodash';
 // @ts-ignore david we should figure fix this.
 // eslint-disable-next-line import/no-unresolved
-import protocol from 'typescript/lib/protocol';
+import type protocol from 'typescript/lib/protocol';
 import { pathNormalizeToLinux, isRelativeImport } from '@teambit/legacy.utils';
 import { resolve, sep, relative, join, isAbsolute, extname } from 'path';
-import { Component, ComponentID } from '@teambit/component';
+import type { Component, ComponentID } from '@teambit/component';
+import type { SchemaNode, Location } from '@teambit/semantics.entities.semantic-schema';
 import {
   TypeRefSchema,
-  SchemaNode,
   InferenceTypeSchema,
-  Location,
   DocSchema,
   IgnoredSchema,
   TagSchema,
@@ -21,10 +21,10 @@ import {
   ParameterSchema,
   FunctionLikeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
-import { ComponentDependency } from '@teambit/dependency-resolver';
-import { Formatter } from '@teambit/formatter';
+import type { ComponentDependency } from '@teambit/dependency-resolver';
+import type { Formatter } from '@teambit/formatter';
 import pMapSeries from 'p-map-series';
-import { TypeScriptExtractor } from './typescript.extractor';
+import type { TypeScriptExtractor } from './typescript.extractor';
 import { IdentifierList } from './identifier-list';
 import { parseTypeFromQuickInfo } from './transformers/utils/parse-type-from-quick-info';
 import { tagParser } from './transformers/utils/jsdoc-to-doc-schema';

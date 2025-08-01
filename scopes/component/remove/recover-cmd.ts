@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
-import { Command, CommandOptions } from '@teambit/cli';
-import { RemoveMain } from './remove.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { RemoveMain } from './remove.main.runtime';
 
 export type RecoverOptions = {
   skipDependencyInstallation?: boolean;

@@ -1,9 +1,10 @@
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import ComponentWithDependencies from './component-dependencies';
-import { ComponentVersion } from './component-version';
+import type { ComponentVersion } from './component-version';
 import { DependenciesNotFound } from './exceptions/dependencies-not-found';
-import { Repository, Version } from '@teambit/objects';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { Repository, Version } from '@teambit/objects';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 
 export class VersionDependencies {
   constructor(

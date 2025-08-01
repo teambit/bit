@@ -6,17 +6,19 @@ import {
   getLastModifiedPathsTimestampMs,
 } from '@teambit/toolbox.fs.last-modified';
 import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
-import { DependencyLoaderOpts, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { DependencyLoaderOpts, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
-import { Workspace } from '@teambit/workspace';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { DevFilesMain } from '@teambit/dev-files';
-import { Logger } from '@teambit/logger';
-import { AspectLoaderMain } from '@teambit/aspect-loader';
+import type { Workspace } from '@teambit/workspace';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { DevFilesMain } from '@teambit/dev-files';
+import type { Logger } from '@teambit/logger';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { DependenciesData } from './dependencies-data';
 import { updateDependenciesVersions } from './dependencies-versions-resolver';
-import { AutoDetectDeps, DebugDependencies } from './auto-detect-deps';
-import OverridesDependencies from './overrides-dependencies';
+import type { DebugDependencies } from './auto-detect-deps';
+import { AutoDetectDeps } from './auto-detect-deps';
+import type OverridesDependencies from './overrides-dependencies';
 import { ApplyOverrides } from './apply-overrides';
 
 export class DependenciesLoader {

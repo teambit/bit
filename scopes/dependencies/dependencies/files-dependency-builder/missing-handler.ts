@@ -1,6 +1,8 @@
 import { resolvePackageNameByPath, resolvePackagePath } from '@teambit/legacy.utils';
-import { ResolvedPackageData, resolvePackageData } from '../resolve-pkg-data';
-import { processPath, Missing } from './generate-tree-madge';
+import type { ResolvedPackageData } from '../resolve-pkg-data';
+import { resolvePackageData } from '../resolve-pkg-data';
+import type { Missing } from './generate-tree-madge';
+import { processPath } from './generate-tree-madge';
 import { groupBy } from 'lodash';
 
 export type MissingGroupItem = { originFile: string; packages?: string[]; files?: string[] };

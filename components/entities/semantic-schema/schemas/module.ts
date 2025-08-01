@@ -1,7 +1,8 @@
 import chalk from 'chalk';
-import { SchemaLocation, SchemaNode } from '../schema-node';
+import type { SchemaLocation } from '../schema-node';
+import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
-import { ExportSchema } from './export';
+import type { ExportSchema } from './export';
 
 export class ModuleSchema extends SchemaNode {
   // exports could either be re exports (export declarations) or nodes with export modifier

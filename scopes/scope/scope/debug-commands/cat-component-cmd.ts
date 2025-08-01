@@ -1,5 +1,5 @@
 import { catComponent } from './cat-component';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 
 export class CatComponentCmd implements Command {
   name = 'cat-component [id]';

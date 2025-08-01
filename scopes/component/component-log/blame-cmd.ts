@@ -1,6 +1,6 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { ComponentLogMain } from './component-log.main.runtime';
+import type { ComponentLogMain } from './component-log.main.runtime';
 import { getEmptyTableWithoutStyle } from './log-cmd';
 
 export class BlameCmd implements Command {

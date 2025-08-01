@@ -1,9 +1,10 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { ComponentMain } from '@teambit/component';
-import { BuilderMain } from '../builder.main.runtime';
-import { ArtifactExtractor, ExtractorArtifactResult, ExtractorResultGrouped } from './artifact-extractor';
+import type { ComponentMain } from '@teambit/component';
+import type { BuilderMain } from '../builder.main.runtime';
+import type { ExtractorArtifactResult, ExtractorResultGrouped } from './artifact-extractor';
+import { ArtifactExtractor } from './artifact-extractor';
 
 const INDENT_TITLE = ' '.repeat(2);
 const INDENT_SUB_TITLE = ' '.repeat(4);

@@ -1,7 +1,8 @@
-import React, { ReactNode } from 'react';
-import { NavigateFunction } from 'react-router-dom';
-import type { Location, NavigationType, RouteProps } from 'react-router-dom';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import type { ReactNode } from 'react';
+import React from 'react';
+import type { NavigateFunction, Location, NavigationType, RouteProps } from 'react-router-dom';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
 import type { SSR } from '@teambit/ui';
 import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';

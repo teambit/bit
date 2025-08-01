@@ -1,7 +1,7 @@
 import { BitError } from '@teambit/bit-error';
-import { ScopeMain } from '@teambit/scope';
-import { Command, CommandOptions } from '@teambit/cli';
-import { Workspace } from '@teambit/workspace';
+import type { ScopeMain } from '@teambit/scope';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { Workspace } from '@teambit/workspace';
 
 export class SnapDistanceCmd implements Command {
   name = 'snap-distance <component-id> [source-snap] [target-snap]';

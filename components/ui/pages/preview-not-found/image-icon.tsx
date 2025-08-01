@@ -1,4 +1,5 @@
-import React, { SVGProps } from 'react';
+import type { SVGProps } from 'react';
+import React from 'react';
 
 export function ImageIcon(props: SVGProps<SVGSVGElement>) {
   return (

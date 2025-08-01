@@ -1,11 +1,11 @@
-import { ComponentMain } from '@teambit/component';
-import { Schema } from '@teambit/graphql';
+import type { ComponentMain } from '@teambit/component';
+import type { Schema } from '@teambit/graphql';
 import { gql } from 'graphql-tag';
 
-import { GraphBuilder } from './graph-builder';
-import { ComponentGraph } from './component-graph';
-import { GraphFilter } from './model/graph-filters';
-import { DependencyType } from './model/dependency';
+import type { GraphBuilder } from './graph-builder';
+import type { ComponentGraph } from './component-graph';
+import type { GraphFilter } from './model/graph-filters';
+import type { DependencyType } from './model/dependency';
 import { EdgeType } from './edge-type';
 
 const textCmp = new Intl.Collator().compare;

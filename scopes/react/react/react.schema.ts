@@ -1,13 +1,11 @@
+import type { Location, Modifier, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import {
   DocSchema,
   FunctionLikeSchema,
-  Location,
-  Modifier,
   ParameterSchema,
   SchemaNode,
   SchemaRegistry,
   TagName,
-  TypeRefSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import chalk from 'chalk';
 import { compact } from 'lodash';

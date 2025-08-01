@@ -1,12 +1,15 @@
-import React, { HTMLAttributes } from 'react';
-import { SchemaNode, EnumMemberSchema, SetAccessorSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { HTMLAttributes } from 'react';
+import React from 'react';
+import type { SchemaNode, EnumMemberSchema } from '@teambit/semantics.entities.semantic-schema';
+import { SetAccessorSchema } from '@teambit/semantics.entities.semantic-schema';
 import {
   groupByNodeSignatureType,
   sortSignatureType,
 } from '@teambit/api-reference.utils.group-schema-node-by-signature';
 import { transformSignature } from '@teambit/api-reference.utils.schema-node-signature-transform';
 import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
-import { APINodeRenderProps, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
+import { nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { VariableNodeSummary, EnumMemberSummary } from '@teambit/api-reference.renderers.schema-node-member-summary';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';

@@ -1,4 +1,4 @@
-import { DeployFn, AppBuildResult } from '@teambit/application';
+import type { DeployFn, AppBuildResult } from '@teambit/application';
 
 export interface DeployContext extends AppBuildResult {
   metadata: NodeAppMetadata;

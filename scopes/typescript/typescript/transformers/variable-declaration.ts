@@ -1,15 +1,15 @@
+import type { SchemaNode, Modifier } from '@teambit/semantics.entities.semantic-schema';
 import {
-  SchemaNode,
   VariableLikeSchema,
   FunctionLikeSchema,
-  Modifier,
   ParameterSchema,
   TypeRefSchema,
 } from '@teambit/semantics.entities.semantic-schema';
-import ts, { Node, VariableDeclaration as VariableDeclarationNode, ArrowFunction } from 'typescript';
+import type { Node, VariableDeclaration as VariableDeclarationNode, ArrowFunction } from 'typescript';
+import ts from 'typescript';
 import pMapSeries from 'p-map-series';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
 import { parseTypeFromQuickInfo } from './utils/parse-type-from-quick-info';
 import { Identifier } from '../identifier';
 import { ParameterTransformer } from './parameter';

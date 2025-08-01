@@ -1,6 +1,7 @@
 import { loadBit } from '@teambit/bit';
-import { TsserverClient } from '@teambit/ts-server';
-import { TypescriptAspect, TypescriptMain } from '@teambit/typescript';
+import type { TsserverClient } from '@teambit/ts-server';
+import type { TypescriptMain } from '@teambit/typescript';
+import { TypescriptAspect } from '@teambit/typescript';
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
 

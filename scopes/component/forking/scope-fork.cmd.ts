@@ -1,7 +1,7 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import chalk from 'chalk';
-import { ForkingMain } from './forking.main.runtime';
+import type { ForkingMain } from './forking.main.runtime';
 
 export type ScopeForkOptions = {
   ast?: boolean;

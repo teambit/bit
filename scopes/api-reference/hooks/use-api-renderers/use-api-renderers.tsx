@@ -1,5 +1,6 @@
-import { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
-import React, { createContext, useContext, ReactNode } from 'react';
+import type { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import type { ReactNode } from 'react';
+import React, { createContext, useContext } from 'react';
 
 export const APIRefRenderersContext = createContext<{
   nodeRenderers: APINodeRenderer[];

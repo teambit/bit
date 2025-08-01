@@ -1,7 +1,7 @@
 import chalk from 'chalk';
-import { Command } from '@teambit/cli';
-import { PathChangeResult } from '@teambit/legacy.bit-map';
-import { MoverMain } from './mover.main.runtime';
+import type { Command } from '@teambit/cli';
+import type { PathChangeResult } from '@teambit/legacy.bit-map';
+import type { MoverMain } from './mover.main.runtime';
 
 export class MoveCmd implements Command {
   name = 'move <current-component-dir> <new-component-dir>';

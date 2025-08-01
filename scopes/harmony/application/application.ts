@@ -1,8 +1,8 @@
-import { AppContext } from './app-context';
-import { AppDeployContext } from './app-deploy-context';
-import { AppBuildContext } from './app-build-context';
-import { AppBuildResult } from './app-build-result';
-import { ApplicationDeployment, ApplicationInstance } from './app-instance';
+import type { AppContext } from './app-context';
+import type { AppDeployContext } from './app-deploy-context';
+import type { AppBuildContext } from './app-build-context';
+import type { AppBuildResult } from './app-build-result';
+import type { ApplicationDeployment, ApplicationInstance } from './app-instance';
 
 export type DeployFn = (context: AppDeployContext) => Promise<ApplicationDeployment | void | undefined>;
 

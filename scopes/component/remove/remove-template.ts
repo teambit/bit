@@ -1,4 +1,5 @@
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentIdList } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 import chalk from 'chalk';
 import { isEmpty } from 'lodash';
 

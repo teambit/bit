@@ -1,12 +1,20 @@
 import chalk from 'chalk';
 import { defaults } from 'lodash';
-import { EnvService, ExecutionContext, EnvDefinition, ServiceTransformationMap, EnvContext, Env } from '@teambit/envs';
-import { Workspace } from '@teambit/workspace';
+import type {
+  EnvService,
+  ExecutionContext,
+  EnvDefinition,
+  ServiceTransformationMap,
+  EnvContext,
+  Env,
+} from '@teambit/envs';
+import type { Workspace } from '@teambit/workspace';
 import highlight from 'cli-highlight';
-import { Component, ComponentMap } from '@teambit/component';
-import { Linter, LintResults } from './linter';
-import { LinterContext, LinterOptions } from './linter-context';
-import { LinterConfig } from './linter.main.runtime';
+import type { Component } from '@teambit/component';
+import { ComponentMap } from '@teambit/component';
+import type { Linter, LintResults } from './linter';
+import type { LinterContext, LinterOptions } from './linter-context';
+import type { LinterConfig } from './linter.main.runtime';
 
 type LinterTransformationMap = ServiceTransformationMap & {
   getLinter: () => Linter;

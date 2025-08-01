@@ -1,19 +1,28 @@
 import { CFG_CAPSULES_BUILD_COMPONENTS_BASE_DIR } from '@teambit/legacy.constants';
-import { EnvService, ExecutionContext, EnvDefinition, Env, EnvContext, ServiceTransformationMap } from '@teambit/envs';
+import type {
+  EnvService,
+  ExecutionContext,
+  EnvDefinition,
+  Env,
+  EnvContext,
+  ServiceTransformationMap,
+} from '@teambit/envs';
 import chalk from 'chalk';
 import { uniq } from 'lodash';
-import { ScopeMain } from '@teambit/scope';
+import type { ScopeMain } from '@teambit/scope';
 import pMapSeries from 'p-map-series';
-import { Logger } from '@teambit/logger';
-import { IsolatorMain } from '@teambit/isolator';
-import { Component, ComponentID } from '@teambit/component';
-import { BuildPipe, TaskResults } from './build-pipe';
-import { TaskResultsList } from './task-results-list';
-import { TaskSlot } from './builder.main.runtime';
-import { BuildContext, BuildTask, BuildTaskHelper } from './build-task';
-import { ArtifactFactory } from './artifact';
+import type { Logger } from '@teambit/logger';
+import type { IsolatorMain } from '@teambit/isolator';
+import type { Component, ComponentID } from '@teambit/component';
+import type { TaskResults } from './build-pipe';
+import { BuildPipe } from './build-pipe';
+import type { TaskResultsList } from './task-results-list';
+import type { TaskSlot } from './builder.main.runtime';
+import type { BuildContext, BuildTask } from './build-task';
+import { BuildTaskHelper } from './build-task';
+import type { ArtifactFactory } from './artifact';
 import { calculatePipelineOrder } from './build-pipeline-order';
-import { ConfigStoreMain } from '@teambit/config-store';
+import type { ConfigStoreMain } from '@teambit/config-store';
 
 export type BuildServiceResults = {
   id: string;

@@ -1,8 +1,8 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { ComponentMain } from '@teambit/component';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ComponentMain } from '@teambit/component';
 import pMapSeries from 'p-map-series';
-import { Logger } from '@teambit/logger';
-import { APISchema } from '@teambit/semantics.entities.semantic-schema';
+import type { Logger } from '@teambit/logger';
+import type { APISchema } from '@teambit/semantics.entities.semantic-schema';
 import { PATTERN_HELP } from '@teambit/legacy.constants';
 import type { SchemaMain } from './schema.main.runtime';
 

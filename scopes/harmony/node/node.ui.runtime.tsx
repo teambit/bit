@@ -1,7 +1,9 @@
 import React from 'react';
-import { CompositionsAspect, CompositionsUI } from '@teambit/compositions';
+import type { CompositionsUI } from '@teambit/compositions';
+import { CompositionsAspect } from '@teambit/compositions';
 import { UIRuntime } from '@teambit/ui';
-import { TesterAspect, TesterUI } from '@teambit/tester';
+import type { TesterUI } from '@teambit/tester';
+import { TesterAspect } from '@teambit/tester';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { NodeAspect } from './node.aspect';
 

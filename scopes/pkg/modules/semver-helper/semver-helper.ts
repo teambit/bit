@@ -1,4 +1,5 @@
-import { ReleaseType, valid, maxSatisfying, minVersion, gt } from 'semver';
+import type { ReleaseType } from 'semver';
+import { valid, maxSatisfying, minVersion, gt } from 'semver';
 import { InvalidVersion } from '@teambit/component-version';
 
 export function isStrReleaseType(str: string): boolean {

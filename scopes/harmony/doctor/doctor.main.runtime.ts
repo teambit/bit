@@ -1,17 +1,20 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import path from 'path';
 import fs from 'fs-extra';
 import os from 'os';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import Stream from 'stream';
+import type Stream from 'stream';
 import tar from 'tar-stream';
 import tarFS from 'tar-fs';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, DEBUG_LOG } from '@teambit/legacy.constants';
 import { BitMap } from '@teambit/legacy.bit-map';
 import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
-import { getWorkspaceInfo, WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
-import Diagnosis, { ExamineResult } from './diagnosis';
+import type { WorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
+import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
+import type { ExamineResult } from './diagnosis';
+import type Diagnosis from './diagnosis';
 import DoctorRegistrar from './doctor-registrar';
 import registerCoreAndExtensionsDiagnoses from './doctor-registrar-builder';
 import { compact } from 'lodash';
@@ -26,7 +29,8 @@ import { MissingDiagnosisName } from './exceptions/missing-diagnosis-name';
 
 import { DoctorAspect } from './doctor.aspect';
 import { DoctorCmd } from './doctor-cmd';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import chalk from 'chalk';
 
 // run specific check

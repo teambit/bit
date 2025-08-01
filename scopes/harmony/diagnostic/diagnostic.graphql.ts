@@ -1,6 +1,6 @@
-import { Schema } from '@teambit/graphql';
+import type { Schema } from '@teambit/graphql';
 import { gql } from 'graphql-tag';
-import { DiagnosticMain } from './diagnostic.main.runtime';
+import type { DiagnosticMain } from './diagnostic.main.runtime';
 
 export class DiagnosticGraphql implements Schema {
   constructor(private diagnosticMain: DiagnosticMain) {}

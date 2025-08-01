@@ -4,7 +4,8 @@ import mapSeries from 'p-map-series';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { MainRuntime } from '@teambit/cli';
 import { getRootComponentDir } from '@teambit/workspace.root-components';
-import { ComponentAspect, Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
+import type { Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import { isRange1GreaterThanRange2Naively } from '@teambit/pkg.modules.semver-helper';
 import type { ConfigMain } from '@teambit/config';
 import { join, relative } from 'path';
@@ -12,11 +13,13 @@ import { compact, get, pick, uniq, omit, cloneDeep } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect } from '@teambit/envs';
 import type { DependenciesEnv, EnvDefinition, EnvJsonc, EnvsMain } from '@teambit/envs';
-import { Slot, SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
-import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
-import type { LoggerMain } from '@teambit/logger';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { Logger, LoggerAspect } from '@teambit/logger';
+import type { SlotRegistry, ExtensionManifest, Aspect, RuntimeManifest } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
+import type { LoggerMain, Logger } from '@teambit/logger';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import { LoggerAspect } from '@teambit/logger';
 import {
   CFG_PACKAGE_MANAGER_CACHE,
   CFG_REGISTRY_URL_KEY,
@@ -27,82 +30,64 @@ import {
 } from '@teambit/legacy.constants';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { DetectorHook } from '@teambit/dependencies';
-import { Http, ProxyConfig, NetworkConfig } from '@teambit/scope.network';
-import {
-  ConsumerComponent as LegacyComponent,
-  Dependency as LegacyDependency,
-} from '@teambit/legacy.consumer-component';
+import { DetectorHook } from './detector-hook';
+import type { ProxyConfig, NetworkConfig } from '@teambit/scope.network';
+import { Http } from '@teambit/scope.network';
+import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
 import fs from 'fs-extra';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
-import { SourceFile } from '@teambit/component.sources';
-import { ProjectManifest, DependencyManifest } from '@pnpm/types';
+import type { SourceFile } from '@teambit/component.sources';
+import type { ProjectManifest, DependencyManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
-import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
-import { Registries, Registry } from '@teambit/pkg.entities.registry';
-import { applyUpdates, UpdatedComponent } from './apply-updates';
+import type { Registries } from '@teambit/pkg.entities.registry';
+import { Registry } from '@teambit/pkg.entities.registry';
+import type { UpdatedComponent } from './apply-updates';
+import { applyUpdates } from './apply-updates';
 import { ROOT_NAME } from './dependencies/constants';
-import {
-  DependencyInstaller,
-  PreInstallSubscriberList,
-  PostInstallSubscriberList,
-  DepInstallerContext,
-} from './dependency-installer';
+import type { PreInstallSubscriberList, PostInstallSubscriberList, DepInstallerContext } from './dependency-installer';
+import { DependencyInstaller } from './dependency-installer';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
-import { DepLinkerContext, DependencyLinker, LinkingOptions } from './dependency-linker';
-import {
+import type { DepLinkerContext, LinkingOptions } from './dependency-linker';
+import { DependencyLinker } from './dependency-linker';
+import type {
   ComponentRangePrefix,
   DependencyResolverWorkspaceConfig,
   NodeLinker,
 } from './dependency-resolver-workspace-config';
-import {
-  ComponentModelVersion,
-  getAllPolicyPkgs,
-  CurrentPkg,
-  OutdatedPkg,
-  CurrentPkgSource,
-} from './get-all-policy-pkgs';
+import type { ComponentModelVersion, CurrentPkg, OutdatedPkg, CurrentPkgSource } from './get-all-policy-pkgs';
+import { getAllPolicyPkgs } from './get-all-policy-pkgs';
 import { InvalidVersionWithPrefix, PackageManagerNotFound } from './exceptions';
-import {
-  CreateFromComponentsOptions,
-  WorkspaceManifest,
-  WorkspaceManifestFactory,
-  ManifestDependenciesObject,
-} from './manifest';
-import {
+import type { CreateFromComponentsOptions, WorkspaceManifest, ManifestDependenciesObject } from './manifest';
+import { WorkspaceManifestFactory } from './manifest';
+import type {
   WorkspacePolicyConfigObject,
   VariantPolicyConfigObject,
-  WorkspacePolicy,
-  WorkspacePolicyFactory,
-  VariantPolicy,
   WorkspacePolicyAddEntryOptions,
   WorkspacePolicyEntry,
   SerializedVariantPolicy,
 } from './policy';
-import {
+import { WorkspacePolicy, WorkspacePolicyFactory, VariantPolicy } from './policy';
+import type {
   PackageManager,
   PeerDependencyIssuesByProjects,
   PackageManagerGetPeerDependencyIssuesOptions,
 } from './package-manager';
 
-import {
-  SerializedDependency,
-  DependencyListFactory,
-  DependencyFactory,
-  ComponentDependencyFactory,
-  COMPONENT_DEP_TYPE,
-  DependencyList,
-  ComponentDependency,
-} from './dependencies';
+import type { SerializedDependency, DependencyFactory, ComponentDependency } from './dependencies';
+import { DependencyListFactory, ComponentDependencyFactory, COMPONENT_DEP_TYPE, DependencyList } from './dependencies';
 import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment } from './show-fragments';
 import { dependencyResolverSchema } from './dependency-resolver.graphql';
-import { DependencyDetector } from './dependency-detector';
+import type { DependencyDetector } from './detector-hook';
 import { DependenciesService } from './dependencies.service';
 import { EnvPolicy } from './policy/env-policy';
-import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
+import type { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store';
 
 export const BIT_CLOUD_REGISTRY = `https://node-registry.${getCloudDomain()}/`;
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';

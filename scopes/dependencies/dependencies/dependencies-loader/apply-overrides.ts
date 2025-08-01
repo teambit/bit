@@ -1,21 +1,26 @@
 import path from 'path';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { cloneDeep, difference, forEach, isEmpty, pick, pickBy, uniq } from 'lodash';
-import { IssuesList, IssuesClasses, MissingPackagesData } from '@teambit/component-issues';
+import type { IssuesList, MissingPackagesData } from '@teambit/component-issues';
+import { IssuesClasses } from '@teambit/component-issues';
 import { DEPENDENCIES_FIELDS, MANUALLY_REMOVE_DEPENDENCY } from '@teambit/legacy.constants';
-import { ConsumerComponent as Component, Dependency, Dependencies } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import { Dependency, Dependencies } from '@teambit/legacy.consumer-component';
 import { PackageJsonFile } from '@teambit/component.sources';
-import { PathLinux, resolvePackagePath } from '@teambit/legacy.utils';
-import { ResolvedPackageData, resolvePackageData } from '../resolve-pkg-data';
-import { Workspace } from '@teambit/workspace';
-import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { Consumer } from '@teambit/legacy.consumer';
-import { ComponentMap } from '@teambit/legacy.bit-map';
-import { Logger } from '@teambit/logger';
+import type { PathLinux } from '@teambit/legacy.utils';
+import { resolvePackagePath } from '@teambit/legacy.utils';
+import type { ResolvedPackageData } from '../resolve-pkg-data';
+import { resolvePackageData } from '../resolve-pkg-data';
+import type { Workspace } from '@teambit/workspace';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { Consumer } from '@teambit/legacy.consumer';
+import type { ComponentMap } from '@teambit/legacy.bit-map';
+import type { Logger } from '@teambit/logger';
 import { ComponentOverrides } from '@teambit/legacy.consumer-config';
 import OverridesDependencies from './overrides-dependencies';
 import { DependenciesData } from './dependencies-data';
-import { DebugDependencies, FileType } from './auto-detect-deps';
+import type { DebugDependencies, FileType } from './auto-detect-deps';
 
 export type AllDependencies = {
   dependencies: Dependency[];

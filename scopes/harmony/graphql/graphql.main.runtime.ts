@@ -2,21 +2,26 @@ import { mergeSchemas } from '@graphql-tools/schema';
 import NoIntrospection from 'graphql-disable-introspection';
 import { GraphQLModule } from '@graphql-modules/core';
 import { MainRuntime } from '@teambit/cli';
-import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import express, { Express } from 'express';
+import type { Harmony, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { Express } from 'express';
+import express from 'express';
 import { graphqlHTTP } from 'express-graphql';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { execute, subscribe } from 'graphql';
-import { PubSubEngine, PubSub } from 'graphql-subscriptions';
-import { createServer, Server } from 'http';
+import type { PubSubEngine } from 'graphql-subscriptions';
+import { PubSub } from 'graphql-subscriptions';
+import type { Server } from 'http';
+import { createServer } from 'http';
 import httpProxy from 'http-proxy';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import cors from 'cors';
-import { GraphQLServer } from './graphql-server';
+import type { GraphQLServer } from './graphql-server';
 import { createRemoteSchemas } from './create-remote-schemas';
 import { GraphqlAspect } from './graphql.aspect';
-import { Schema } from './schema';
+import type { Schema } from './schema';
 
 export enum Verb {
   WRITE = 'write',

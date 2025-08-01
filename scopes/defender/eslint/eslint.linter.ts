@@ -1,13 +1,13 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { flatten, compact } from 'lodash';
-import { Linter, LinterContext, LintResults, ComponentLintResult } from '@teambit/linter';
+import type { Linter, LinterContext, LintResults, ComponentLintResult } from '@teambit/linter';
 import { ESLint as ESLintLib } from 'eslint';
 import mapSeries from 'p-map-series';
 import objectHash from 'object-hash';
-import { ComponentMap } from '@teambit/component';
-import { Logger } from '@teambit/logger';
-import { ESLintOptions } from './eslint.main.runtime';
+import type { ComponentMap } from '@teambit/component';
+import type { Logger } from '@teambit/logger';
+import type { ESLintOptions } from './eslint.main.runtime';
 
 export class ESLintLinter implements Linter {
   constructor(

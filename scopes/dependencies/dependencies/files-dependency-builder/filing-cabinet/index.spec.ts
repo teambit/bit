@@ -5,7 +5,7 @@ import path from 'path';
 import rewire from 'rewire';
 import sinon from 'sinon';
 
-import { DependencyDetector } from '../detector-hook';
+import type { DependencyDetector } from '@teambit/dependency-resolver';
 
 const UNIT_TEST_DIR = path.join(BIT_TEMP_ROOT, 'unit-test');
 

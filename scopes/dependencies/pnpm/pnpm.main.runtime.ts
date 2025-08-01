@@ -1,7 +1,10 @@
 import { MainRuntime } from '@teambit/cli';
-import { CloudAspect, CloudMain } from '@teambit/cloud';
-import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { CloudMain } from '@teambit/cloud';
+import { CloudAspect } from '@teambit/cloud';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import type { LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 
 import { PnpmAspect } from './pnpm.aspect';
 import { PnpmPackageManager } from './pnpm.package-manager';

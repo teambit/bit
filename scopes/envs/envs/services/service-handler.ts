@@ -1,4 +1,4 @@
-import { ServiceHandlerContext } from './service-handler-context';
+import type { ServiceHandlerContext } from './service-handler-context';
 
 /**
  * definition of the service handler.

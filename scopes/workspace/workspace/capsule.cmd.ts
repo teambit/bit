@@ -1,9 +1,9 @@
 // eslint-disable-next-line max-classes-per-file
-import { Command, CommandOptions } from '@teambit/cli';
-import { CapsuleList, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { CapsuleList, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import type { ScopeMain } from '@teambit/scope';
 import chalk from 'chalk';
-import { Workspace } from './workspace';
+import type { Workspace } from './workspace';
 
 type CreateOpts = {
   baseDir?: string;

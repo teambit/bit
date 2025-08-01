@@ -2,8 +2,9 @@ import React from 'react';
 import { ApplyProviders } from '@teambit/react.ui.docs.apply-providers';
 import { CompositionsOverview } from '@teambit/compositions.ui.compositions-overview';
 import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
-import { Section, SectionProps } from '@teambit/documenter.ui.section';
-import { RenderingContext } from '@teambit/preview';
+import type { SectionProps } from '@teambit/documenter.ui.section';
+import { Section } from '@teambit/documenter.ui.section';
+import type { RenderingContext } from '@teambit/preview';
 
 export interface CompositionsCarouselProps extends SectionProps {
   compositions: {};

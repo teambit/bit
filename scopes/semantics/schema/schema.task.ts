@@ -1,17 +1,17 @@
-import {
+import type {
   BuildContext,
   BuiltTaskResult,
   BuildTask,
   TaskLocation,
-  CAPSULE_ARTIFACTS_DIR,
   ComponentResult,
   ArtifactDefinition,
 } from '@teambit/builder';
-import { Logger } from '@teambit/logger';
+import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
+import type { Logger } from '@teambit/logger';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import { join } from 'path';
-import { SchemaMain } from './schema.main.runtime';
+import type { SchemaMain } from './schema.main.runtime';
 
 export const SCHEMA_TASK_NAME = 'ExtractSchema';
 export const SCHEMA_ARTIFACT_NAME = 'schema';

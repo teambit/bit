@@ -4,7 +4,7 @@ import { EmptyWorkspace } from '@teambit/workspace.ui.empty-workspace';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { ComponentID } from '@teambit/component-id';
-import { ComponentModel } from '@teambit/component';
+import type { ComponentModel } from '@teambit/component';
 import { useCloudScopes } from '@teambit/cloud.hooks.use-cloud-scopes';
 import { ScopeID } from '@teambit/scopes.scope-id';
 import { compact } from 'lodash';

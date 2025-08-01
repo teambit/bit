@@ -1,27 +1,31 @@
-import { MainRuntime, CLIMain, CLIAspect } from '@teambit/cli';
-import { ComponentAspect, Component, ComponentMain } from '@teambit/component';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
-import {
-  APISchema,
-  Export,
-  Schemas,
-  SchemaNodeConstructor,
-  SchemaRegistry,
-} from '@teambit/semantics.entities.semantic-schema';
-import { BuilderMain, BuilderAspect } from '@teambit/builder';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { Formatter } from '@teambit/formatter';
-import { SchemaNodeTransformer, SchemaTransformer } from '@teambit/typescript';
+import type { CLIMain } from '@teambit/cli';
+import { MainRuntime, CLIAspect } from '@teambit/cli';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { PrettierConfigMutator } from '@teambit/defender.prettier.config-mutator';
+import type { Export, SchemaNodeConstructor } from '@teambit/semantics.entities.semantic-schema';
+import { APISchema, Schemas, SchemaRegistry } from '@teambit/semantics.entities.semantic-schema';
+import type { BuilderMain } from '@teambit/builder';
+import { BuilderAspect } from '@teambit/builder';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { Formatter } from '@teambit/formatter';
+import type { SchemaNodeTransformer, SchemaTransformer } from '@teambit/typescript';
 import { CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 import { Http } from '@teambit/scope.network';
-import { Parser } from './parser';
+import type { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
-import { SchemaExtractor } from './schema-extractor';
+import type { SchemaExtractor } from './schema-extractor';
 import { SchemaCommand } from './schema.cmd';
 import { schemaSchema } from './schema.graphql';
 import { SchemaTask, SCHEMA_TASK_NAME } from './schema.task';

@@ -1,5 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
-import { CompilerAspect, CompilerMain } from '@teambit/compiler';
+import type { CompilerMain } from '@teambit/compiler';
+import { CompilerAspect } from '@teambit/compiler';
 import { SassAspect } from './sass.aspect';
 import { SassCompiler } from './sass.compiler';
 

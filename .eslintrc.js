@@ -112,6 +112,14 @@ module.exports = {
 
     // ERRORS OF plugin:react/recommended
     'react/no-unescaped-entities': 'off',
+
+    '@typescript-eslint/consistent-type-imports': [
+      'warn',
+      {
+        prefer: 'type-imports',
+        fixStyle: 'separate-type-imports',
+      },
+    ],
   },
   // return the no-cycle once "import type" is working
   // overrides: [

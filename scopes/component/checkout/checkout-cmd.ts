@@ -1,21 +1,20 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
+import type { ApplyVersionResults, MergeStrategy } from '@teambit/component.modules.merge-helper';
 import {
-  ApplyVersionResults,
   applyVersionReport,
   conflictSummaryReport,
   installationErrorOutput,
   compilationErrorOutput,
   getRemovedOutput,
   getAddedOutput,
-  MergeStrategy,
   getWorkspaceConfigUpdateOutput,
-} from '@teambit/merging';
+} from '@teambit/component.modules.merge-helper';
 import { COMPONENT_PATTERN_HELP, HEAD, LATEST } from '@teambit/legacy.constants';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
+import type { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
 
 export class CheckoutCmd implements Command {
   name = 'checkout <to> [component-pattern]';

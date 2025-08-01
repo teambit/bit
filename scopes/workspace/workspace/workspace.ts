@@ -3,11 +3,10 @@ import { parse } from 'comment-json';
 import mapSeries from 'p-map-series';
 import pMap from 'p-map';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
-import { IssuesList } from '@teambit/component-issues';
+import type { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { generateNodeModulesPattern, PatternTarget } from '@teambit/dependencies.modules.packages-excluder';
-import {
-  AspectEntry,
+import type {
   ComponentMain,
   Component,
   ComponentFactory,
@@ -15,57 +14,60 @@ import {
   ResolveAspectsOptions,
   AspectList,
 } from '@teambit/component';
+import { AspectEntry } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
-import { ComponentScopeDirMap, ConfigMain, WorkspaceConfig } from '@teambit/config';
-import {
+import type { ComponentScopeDirMap, ConfigMain, WorkspaceConfig } from '@teambit/config';
+import type {
   CurrentPkg,
   DependencyResolverMain,
-  DependencyResolverAspect,
-  VariantPolicy,
   DependencyList,
   VariantPolicyConfigObject,
   VariantPolicyConfigArr,
   WorkspacePolicyEntry,
 } from '@teambit/dependency-resolver';
-import { EnvsMain, EnvsAspect, EnvJsonc } from '@teambit/envs';
-import { GraphqlMain } from '@teambit/graphql';
-import { Harmony } from '@teambit/harmony';
-import { Logger } from '@teambit/logger';
+import { DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
+import type { EnvsMain, EnvJsonc } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { GraphqlMain } from '@teambit/graphql';
+import type { Harmony } from '@teambit/harmony';
+import type { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/workspace.modules.match-pattern';
 import type { VariantsMain } from '@teambit/variants';
-import { ComponentID, ComponentIdList, ComponentIdObj } from '@teambit/component-id';
+import type { ComponentIdObj } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { InvalidScopeName, InvalidScopeNameFromRemote, isValidScopeName, BitId } from '@teambit/legacy-bit-id';
-import { LaneId } from '@teambit/lane-id';
-import { Consumer, loadConsumer } from '@teambit/legacy.consumer';
-import { GetBitMapComponentOptions, MissingBitMapComponent } from '@teambit/legacy.bit-map';
-import { getMaxSizeForComponents, InMemoryCache, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import type { LaneId } from '@teambit/lane-id';
+import type { Consumer } from '@teambit/legacy.consumer';
+import { loadConsumer } from '@teambit/legacy.consumer';
+import type { GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
+import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
+import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import { ExtensionDataList, ExtensionDataEntry, REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy.extension-data';
-import {
-  PathOsBased,
-  PathOsBasedRelative,
-  PathOsBasedAbsolute,
-  pathNormalizeToLinux,
-} from '@teambit/toolbox.path.path';
+import type { ExtensionDataEntry } from '@teambit/legacy.extension-data';
+import { ExtensionDataList, REMOVE_EXTENSION_SPECIAL_SIGN } from '@teambit/legacy.extension-data';
+import type { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { isPathInside } from '@teambit/toolbox.path.is-path-inside';
 import fs from 'fs-extra';
-import { CompIdGraph, DepEdgeType } from '@teambit/graph';
+import type { CompIdGraph, DepEdgeType } from '@teambit/graph';
 import { slice, isEmpty, merge, compact, uniqBy, uniq } from 'lodash';
 import { MergeConfigFilename, BIT_ROOTS_DIR, CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS } from '@teambit/legacy.constants';
 import path from 'path';
-import { ConsumerComponent, Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
-import { WatchOptions } from '@teambit/watcher';
-import type { ComponentLog } from '@teambit/objects';
-import { SourceFile, DataToPersist, JsonVinyl, PackageJsonFile } from '@teambit/component.sources';
+import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { WatchOptions } from '@teambit/watcher';
+import type { ComponentLog, Lane } from '@teambit/objects';
+import type { JsonVinyl } from '@teambit/component.sources';
+import { SourceFile, DataToPersist, PackageJsonFile } from '@teambit/component.sources';
 import { ScopeComponentsImporter } from '@teambit/legacy.scope';
-import { Lane } from '@teambit/objects';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import { isHash } from '@teambit/component-version';
-import { GlobalConfigMain } from '@teambit/global-config';
+import type { GlobalConfigMain } from '@teambit/global-config';
 import { ComponentConfigFile } from './component-config-file';
-import {
+import type {
   OnComponentAdd,
   OnComponentChange,
   OnComponentEventResult,
@@ -73,9 +75,9 @@ import {
   OnComponentRemove,
   SerializableResults,
 } from './on-component-events';
-import { WorkspaceExtConfig } from './types';
+import type { WorkspaceExtConfig } from './types';
 import { ComponentStatus } from './workspace-component/component-status';
-import {
+import type {
   OnAspectsResolve,
   OnAspectsResolveSlot,
   OnBitmapChange,
@@ -89,30 +91,30 @@ import {
   OnRootAspectAdded,
   OnRootAspectAddedSlot,
 } from './workspace.main.runtime';
-import { ComponentLoadOptions, WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
-import { GraphFromFsBuilder, ShouldLoadFunc } from './build-graph-from-fs';
+import type { ComponentLoadOptions } from './workspace-component/workspace-component-loader';
+import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
+import type { ShouldLoadFunc } from './build-graph-from-fs';
+import { GraphFromFsBuilder } from './build-graph-from-fs';
 import { BitMap } from './bit-map';
 import type { MergeOptions as BitmapMergeOptions } from './bit-map';
 import { WorkspaceAspect } from './workspace.aspect';
 import { GraphIdsFromFsBuilder } from './build-graph-ids-from-fs';
 import { AspectsMerger } from './aspects-merger';
-import {
+import type {
   AspectPackage,
   GetConfiguredUserAspectsPackagesOptions,
-  WorkspaceAspectsLoader,
   WorkspaceLoadAspectsOptions,
 } from './workspace-aspects-loader';
-import { MergeConflictFile } from './merge-conflict-file';
+import { WorkspaceAspectsLoader } from './workspace-aspects-loader';
+import type { MergeConflictFile } from './merge-conflict-file';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { CompFiles } from './workspace-component/comp-files';
 import { Filter } from './filter';
-import {
-  ComponentStatusLegacy,
-  ComponentStatusLoader,
-  ComponentStatusResult,
-} from './workspace-component/component-status-loader';
+import type { ComponentStatusLegacy, ComponentStatusResult } from './workspace-component/component-status-loader';
+import { ComponentStatusLoader } from './workspace-component/component-status-loader';
 import { getAutoTagInfo, getAutoTagPending } from './auto-tag';
-import { ConfigStoreAspect, ConfigStoreMain, Store } from '@teambit/config-store';
+import type { ConfigStoreMain, Store } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store';
 import type { DependenciesOverridesData } from '@teambit/legacy.consumer-config';
 
 export type EjectConfResult = {
