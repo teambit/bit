@@ -837,7 +837,6 @@ export class Http implements Network {
       localScope,
       customOrigin,
       { connection: 'keep-alive' },
-      { 'x-client-version': clientVersion },
       { 'x-client-version': clientVersion }
     );
   }
