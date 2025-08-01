@@ -825,6 +825,7 @@ export class Http implements Network {
   private getHeaders(headers: { [key: string]: string } = {}) {
     const authHeader = this.token ? getAuthHeader(this.token) : {};
     const localScope = this.localScopeName ? { 'x-request-scope': this.localScopeName } : {};
+    const customOrigin = process.env.__CUSTOM_ORIGIN ? { 'x-custom-origin': process.env.__CUSTOM_ORIGIN } : {};
     const clientVersion = this.getClientVersion() || 'unknown';
     if (clientVersion === 'unknown') {
       // Ignore the error, we don't want to fail the request if we can't get the client version
@@ -834,7 +835,9 @@ export class Http implements Network {
       headers,
       authHeader,
       localScope,
+      customOrigin,
       { connection: 'keep-alive' },
+      { 'x-client-version': clientVersion },
       { 'x-client-version': clientVersion }
     );
   }
