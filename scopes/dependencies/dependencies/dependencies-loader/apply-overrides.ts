@@ -95,7 +95,37 @@ export class ApplyOverrides {
     const wsDeps = this.allDependencies.dependencies || [];
     const modelDeps = this.component.componentFromModel?.dependencies.dependencies || [];
     const merged = Dependencies.merge([wsDeps, modelDeps]);
+    this.updateVersionOfMissingsInEnvJsonc(merged);
     return merged.get();
+  }
+
+  /**
+   * This function is aim to solve the following case:
+   * I have env1 extends env2 in my workspace
+   * env1 is tagged with env2@1.0.0 in the model
+   * env2 is in the workspace policy with version 2.0.0
+   * the node_modules is empty so env2@2.0.0 is missing
+   * Without this change, we will get the env2@1.0.0 from the model
+   * Then we will take the deps from its resolved env.jsonc
+   * instead of takeing those of v2.0.0
+   * This function fixing this issue
+   * @param deps
+   * @returns
+   */
+  private updateVersionOfMissingsInEnvJsonc(deps: Dependencies) {
+    const missingIssue = this.issues.getIssueByName('MissingPackagesDependenciesOnFs');
+    if (!missingIssue) return;
+    const envJsoncMissing = missingIssue.data.find((item) => item.filePath === 'env.jsonc');
+    if (envJsoncMissing && envJsoncMissing.missingPackages.length) {
+      const mergedRootPolicy = this.depsResolver.getWorkspacePolicy();
+      envJsoncMissing.missingPackages.forEach((missingPackage) => {
+        const foundInRootPolicy = mergedRootPolicy.find(missingPackage);
+        const foundInDeps = deps.getByPackageName(missingPackage);
+        if (foundInRootPolicy && foundInDeps) {
+          foundInDeps.id = foundInDeps.id.changeVersion(foundInRootPolicy.value.version);
+        }
+      });
+    }
   }
 
   private async getOverridesData() {
