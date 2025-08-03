@@ -375,7 +375,7 @@ export class EnvsMain {
       merged = { ...merged, ...oneMerged };
     }
     // This is important to make sure we won't keep the extends from the child
-    delete child.extends;
+    delete merged.extends;
     // Take extends specifically from the parent so we can propagate it to the next parent
     if (parent.extends) {
       merged.extends = parent.extends;

@@ -86,6 +86,10 @@ export default class Dependencies {
     return this.dependencies.find((dep) => dep.id.isEqual(id));
   }
 
+  getByPackageName(packageName: string): Dependency | null | undefined {
+    return this.dependencies.find((dep) => dep.packageName === packageName);
+  }
+
   getByIdStr(id: BitIdStr): Dependency | null | undefined {
     return this.dependencies.find((dep) => dep.id.toString() === id);
   }
