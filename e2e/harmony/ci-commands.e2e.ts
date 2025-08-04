@@ -250,6 +250,8 @@ describe('ci commands', function () {
       helper.scopeHelper.addRemoteScope();
       setupGitRemote();
       helper.fs.outputFile('.gitignore', 'node_modules/\n.bit/\n');
+      // Get the current branch name (could be main or master depending on git version)
+      const mainBranch = helper.command.runCmd('git branch --show-current').trim();
       helper.command.runCmd('git add .');
       helper.command.runCmd('git commit -m "initial commit"');
 
@@ -260,9 +262,9 @@ describe('ci commands', function () {
       helper.command.runCmd(`git push -u origin ${branchName}`);
 
       helper.command.runCmd('bit ci pr');
-      helper.command.runCmd('git checkout main');
+      helper.command.runCmd(`git checkout ${mainBranch}`);
       helper.command.runCmd(`git merge ${branchName}`);
-      helper.command.runCmd('git push origin main');
+      helper.command.runCmd(`git push origin ${mainBranch}`);
 
       mergeOutput = helper.command.runCmd('bit ci merge');
     });
