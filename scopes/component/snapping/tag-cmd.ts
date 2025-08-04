@@ -24,6 +24,7 @@ export const tagCmdOptions = [
     'editor [editor]',
     'open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim).',
   ],
+  ['', 'versions-file <path>', 'path to a file containing component versions. format: "component-id: version"'],
   ['v', 'ver <version>', 'tag with the given version'],
   ['l', 'increment <level>', `options are: [${RELEASE_TYPES.join(', ')}], default to patch`],
   ['', 'prerelease-id <id>', 'prerelease identifier (e.g. "dev" to get "1.0.0-dev.1")'],
@@ -93,6 +94,7 @@ export type TagParams = {
   failFast?: boolean;
   disableTagPipeline?: boolean;
   loose?: boolean;
+  versionsFile?: string;
 } & Partial<BasicTagParams>;
 
 export class TagCmd implements Command {
@@ -126,6 +128,7 @@ if patterns are entered, you can specify a version per pattern using "@" sign, e
       message = '',
       ver,
       editor = '',
+      versionsFile,
       snapped = false,
       unmerged = false,
       ignoreIssues,
@@ -176,6 +179,7 @@ To undo local tag use the "bit reset" command.`
       snapped,
       unmerged,
       editor,
+      versionsFile,
       message,
       releaseType,
       preReleaseId,

@@ -22,6 +22,7 @@ import type { ModelComponent, Log, Lane } from '@teambit/objects';
 import { DependenciesGraph } from '@teambit/objects';
 import type { MessagePerComponent } from './message-per-component';
 import { MessagePerComponentFetcher } from './message-per-component';
+import { VersionFileParser } from './version-file-parser';
 import type { DependencyResolverMain, ComponentRangePrefix } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect, COMPONENT_DEP_TYPE } from '@teambit/dependency-resolver';
 import type { ScopeMain, StagedConfig } from '@teambit/scope';
@@ -50,6 +51,7 @@ export type BasicTagParams = BasicTagSnapParams & {
   disableTagAndSnapPipelines?: boolean;
   preReleaseId?: string;
   editor?: string;
+  versionsFile?: string;
   unmodified?: boolean;
 };
 
@@ -112,6 +114,7 @@ export class VersionMaker {
     const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
     await this.triggerOnPreSnap(autoTagIds);
     this.allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
+    await this.parseVersionsFile(idsToTag, autoTagIds);
     const messagePerId = await this.getMessagePerId(idsToTag, autoTagIds);
     await this.checkForNewerVersions();
     this.setCurrentSchema();
@@ -343,6 +346,16 @@ export class VersionMaker {
     if (editor) return messagesFromEditorFetcher.getMessagesFromEditor(this.legacyScope.tmp, editor);
     if (tagDataPerComp) return tagDataPerComp.map((t) => ({ id: t.componentId, msg: t.message || message }));
     return [];
+  }
+
+  private async parseVersionsFile(idsToTag: ComponentIdList, autoTagIds: ComponentIdList) {
+    const { versionsFile } = this.params;
+    if (!versionsFile) return;
+
+    const allComponentsToTag = ComponentIdList.fromArray([...idsToTag, ...autoTagIds]);
+    const versionFileParser = new VersionFileParser(allComponentsToTag);
+    const tagDataFromFile = await versionFileParser.parseVersionsFile(versionsFile);
+    this.params.tagDataPerComp = tagDataFromFile;
   }
 
   private getUniqCompsToTag(): ConsumerComponent[] {

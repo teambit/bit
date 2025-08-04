@@ -194,6 +194,7 @@ export class SnappingMain {
     message = '',
     version,
     editor = '',
+    versionsFile,
     snapped = false,
     unmerged = false,
     releaseType,
@@ -262,6 +263,7 @@ export class SnappingMain {
     const params = {
       message,
       editor,
+      versionsFile,
       exactVersion: validExactVersion,
       releaseType,
       preReleaseId,

@@ -457,6 +457,7 @@ export class CiMain {
     incrementBy,
     explicitVersionBump,
     verbose,
+    versionsFile,
   }: {
     message?: string;
     build?: boolean;
@@ -466,6 +467,7 @@ export class CiMain {
     incrementBy?: number;
     explicitVersionBump?: boolean;
     verbose?: boolean;
+    versionsFile?: string;
   }) {
     const message = argMessage || (await this.getGitCommitMessage());
     if (!message) {
@@ -532,6 +534,7 @@ export class CiMain {
       releaseType: finalReleaseType,
       preReleaseId,
       incrementBy,
+      versionsFile,
     });
 
     if (tagResults) {
