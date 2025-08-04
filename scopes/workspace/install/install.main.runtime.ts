@@ -897,12 +897,8 @@ export class InstallMain {
   ): Promise<Record<string, ProjectManifest>> {
     const nonRootManifests = Object.values(manifests).filter(({ name }) => name !== 'workspace');
     const workspaceDeps = this.dependencyResolver.getWorkspaceDepsOfBitRoots(nonRootManifests);
-    const workspaceDepsMeta = Object.keys(workspaceDeps).reduce((acc, depName) => {
-      acc[depName] = { injected: true };
-      return acc;
-    }, {});
-    const envManifests = await this._getEnvManifests(workspaceDeps, workspaceDepsMeta);
-    const appManifests = await this._getAppManifests(manifests, workspaceDeps, workspaceDepsMeta);
+    const envManifests = await this._getEnvManifests(workspaceDeps);
+    const appManifests = await this._getAppManifests(manifests, workspaceDeps);
     return {
       ...envManifests,
       ...appManifests,
@@ -910,8 +906,7 @@ export class InstallMain {
   }
 
   private async _getEnvManifests(
-    workspaceDeps: Record<string, string>,
-    workspaceDepsMeta: Record<string, { injected: true }>
+    workspaceDeps: Record<string, string>
   ): Promise<Record<string, ProjectManifest>> {
     const envs = await this._getAllUsedEnvIds();
     return Object.fromEntries(
@@ -925,7 +920,6 @@ export class InstallMain {
                 ...workspaceDeps,
                 ...(await this._getEnvPackage(envId)),
               },
-              dependenciesMeta: workspaceDepsMeta,
               installConfig: {
                 hoistingLimits: 'workspaces',
               },
@@ -966,8 +960,7 @@ export class InstallMain {
 
   private async _getAppManifests(
     manifests: Record<string, ProjectManifest>,
-    workspaceDeps: Record<string, string>,
-    workspaceDepsMeta: Record<string, { injected: true }>
+    workspaceDeps: Record<string, string>
   ): Promise<Record<string, ProjectManifest>> {
     return Object.fromEntries(
       compact(
@@ -985,10 +978,6 @@ export class InstallMain {
                   ...(await this._getEnvDependencies(envId)),
                   ...appManifest.dependencies,
                   ...workspaceDeps,
-                },
-                dependenciesMeta: {
-                  ...appManifest.dependenciesMeta,
-                  ...workspaceDepsMeta,
                 },
                 installConfig: {
                   hoistingLimits: 'workspaces',
