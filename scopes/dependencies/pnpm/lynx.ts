@@ -419,8 +419,6 @@ export function createReadPackageHooks(options: {
  * This hook is used when installation is executed inside a capsule.
  * The components in the capsules should get their peer dependencies installed,
  * so this hook converts any peer dependencies into runtime dependencies.
- * Also, any local dependencies are extended with the "injected" option,
- * this tells pnpm to hard link the packages instead of symlinking them.
  */
 function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string): PackageManifest {
   // workspaceDir is set only for workspace packages
