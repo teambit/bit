@@ -1,4 +1,4 @@
-import chai, { expect } from 'chai';
+import { expect, use } from 'chai';
 import fs from 'fs-extra';
 import type { Harmony } from '@teambit/harmony';
 import type { ComponentID } from '@teambit/component-id';
@@ -15,7 +15,7 @@ import { ListerAspect } from '@teambit/lister';
 import type { CheckoutMain } from './checkout.main.runtime';
 import { CheckoutAspect } from './checkout.aspect';
 
-chai.use(require('chai-fs'));
+use(require('chai-fs'));
 
 describe('CheckoutAspect', function () {
   this.timeout(0);

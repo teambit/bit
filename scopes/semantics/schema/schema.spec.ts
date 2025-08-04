@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
-import chai, { expect } from 'chai';
+import { expect, use } from 'chai';
 import { APISchema, UnknownSchema } from '@teambit/semantics.entities.semantic-schema';
 import chaiSubset from 'chai-subset';
 import type { TrackerMain } from '@teambit/tracker';
@@ -14,7 +14,7 @@ import { WorkspaceAspect } from '@teambit/workspace';
 import type { SchemaMain } from './schema.main.runtime';
 import { SchemaAspect } from './schema.aspect';
 
-chai.use(chaiSubset);
+use(chaiSubset);
 
 describe('SchemaAspect', function () {
   this.timeout(0);
