@@ -287,8 +287,10 @@ export class BitMap {
   }
 
   resetLaneComponentsToNew() {
+    let hasChanged = false;
     this.components = this.components.map((component) => {
       if (component.isAvailableOnCurrentLane) return component;
+      hasChanged = true;
       return new ComponentMap({
         id: component.id.changeVersion(undefined).changeScope(component.scope || (component.defaultScope as string)),
         mainFile: component.mainFile,
@@ -299,6 +301,9 @@ export class BitMap {
         onLanesOnly: false,
       });
     });
+    if (hasChanged) {
+      this.markAsChanged();
+    }
   }
 
   private throwForDuplicateRootDirs(componentsJson: Record<string, any>) {

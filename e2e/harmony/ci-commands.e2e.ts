@@ -15,9 +15,7 @@ describe('ci commands', function () {
     helper.scopeHelper.destroy();
   });
 
-  function setupWorkspaceWithGitRemote() {
-    helper.scopeHelper.setWorkspaceWithRemoteScope();
-
+  function setupGitRemote() {
     // Create a bare git repository to serve as remote
     const { scopePath } = helper.scopeHelper.getNewBareScope();
     const bareRepoPath = scopePath.replace('.bit', '.git');
@@ -54,7 +52,8 @@ describe('ci commands', function () {
   describe('bit ci pr workflow', () => {
     let prOutput: string;
     before(() => {
-      setupWorkspaceWithGitRemote();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
       setupComponentsAndInitialCommit();
 
       // Create a feature branch
@@ -106,7 +105,8 @@ describe('ci commands', function () {
   describe('bit ci merge workflow', () => {
     let mergeOutput: string;
     before(() => {
-      setupWorkspaceWithGitRemote();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
       const defaultBranch = setupComponentsAndInitialCommit();
 
       // Create feature branch and make changes
@@ -192,7 +192,8 @@ describe('ci commands', function () {
   describe('bit ci merge when checked out to a lane', () => {
     let mergeOutput: string;
     before(() => {
-      setupWorkspaceWithGitRemote();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
       const defaultBranch = setupComponentsAndInitialCommit();
 
       helper.fs.outputFile('comp1/comp1.js', 'console.log("merge test");');
@@ -233,6 +234,45 @@ describe('ci commands', function () {
     it('should delete the remote lane', () => {
       const remoteLanes = helper.command.listRemoteLanesParsed();
       expect(remoteLanes.lanes).to.have.lengthOf(0);
+    });
+  });
+
+  describe('bit ci merge after lane import --branch', () => {
+    let mergeOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1);
+      helper.command.createLane('test-merge-lane');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      setupGitRemote();
+      helper.fs.outputFile('.gitignore', 'node_modules/\n.bit/\n');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "initial commit"');
+
+      helper.command.importLane('test-merge-lane', '--branch -x');
+      const branchName = `${helper.scopes.remote}/test-merge-lane`;
+      helper.fs.outputFile(`${helper.scopes.remote}/comp1/comp1.js`, 'console.log("merge test");');
+      helper.command.runCmd('git commit -am "fix: component update for merge"');
+      helper.command.runCmd(`git push -u origin ${branchName}`);
+
+      helper.command.runCmd('bit ci pr');
+      helper.command.runCmd('git checkout main');
+      helper.command.runCmd(`git merge ${branchName}`);
+      helper.command.runCmd('git push origin main');
+
+      mergeOutput = helper.command.runCmd('bit ci merge');
+    });
+    it('should tag the components that were created on the lane', () => {
+      expect(mergeOutput).not.to.include('No components to tag');
+
+      const list = helper.command.listParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      expect(comp1).to.exist;
+      expect(comp1?.currentVersion).to.equal('0.0.1');
     });
   });
 });
