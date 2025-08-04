@@ -286,9 +286,11 @@ export class BitMap {
     });
   }
 
-  resetLaneComponentsToNew() {
+  resetLaneComponentsToNew(): ComponentID[] {
+    const changedIds: ComponentID[] = [];
     this.components = this.components.map((component) => {
       if (component.isAvailableOnCurrentLane) return component;
+      changedIds.push(component.id);
       return new ComponentMap({
         id: component.id.changeVersion(undefined).changeScope(component.scope || (component.defaultScope as string)),
         mainFile: component.mainFile,
@@ -299,6 +301,10 @@ export class BitMap {
         onLanesOnly: false,
       });
     });
+    if (changedIds.length) {
+      this.markAsChanged();
+    }
+    return changedIds;
   }
 
   private throwForDuplicateRootDirs(componentsJson: Record<string, any>) {

@@ -457,6 +457,9 @@ export default class Consumer {
     await Scope.reset(this.scope.path, true);
   }
 
+  /**
+   * components that were created on the lane and considered as non-available on main are reset to be new components.
+   */
   async resetLaneNew() {
     this.bitMap.resetLaneComponentsToNew();
     this.bitMap.laneId = undefined;

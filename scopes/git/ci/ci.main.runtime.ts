@@ -20,6 +20,7 @@ import { CiVerifyCmd } from './commands/verify.cmd';
 import { CiPrCmd } from './commands/pr.cmd';
 import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
+import { ComponentIdList } from '@teambit/component-id';
 
 export interface CiWorkspaceConfig {
   /**
@@ -478,6 +479,18 @@ export class CiMain {
       // out to main lane.
       this.logger.console(chalk.blue(`Currently on lane ${currentLane.name}, switching to main`));
       await this.switchToLane('main');
+      // this is needed to make sure components that were created on the lane are now available on main.
+      // without this, the switch to main above, marks those components as not-available, and won't be tagged later on.
+      // don't use the high-level `consumer.resetLaneNew()`, because it deletes the entire local scope.
+      const changedIds = this.workspace.consumer.bitMap.resetLaneComponentsToNew();
+      if (changedIds.length) {
+        const changedIdsList = ComponentIdList.fromArray(changedIds);
+        await this.workspace.scope.legacyScope.removeMany(changedIdsList, true);
+
+        await this.workspace.clearCache();
+        await this.workspace.bitMap.write('reset lane new');
+      }
+
       this.logger.console(chalk.green('Switched to main lane'));
     }
 
