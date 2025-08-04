@@ -13,6 +13,7 @@ import { ImporterAspect, type ImporterMain } from '@teambit/importer';
 import { CheckoutAspect, checkoutOutput, type CheckoutMain } from '@teambit/checkout';
 import execa from 'execa';
 import chalk from 'chalk';
+import path from 'path';
 import type { ReleaseType } from 'semver';
 import { CiAspect } from './ci.aspect';
 import { CiCmd } from './ci.cmd';
@@ -469,6 +470,8 @@ export class CiMain {
     verbose?: boolean;
     versionsFile?: string;
   }) {
+    // Resolve versionsFile path to absolute path early, before any git operations that might change working directory
+    const resolvedVersionsFile = versionsFile ? path.resolve(versionsFile) : undefined;
     const message = argMessage || (await this.getGitCommitMessage());
     if (!message) {
       throw new Error('Failed to get commit message from git. Please provide a message using --message option.');
@@ -534,7 +537,7 @@ export class CiMain {
       releaseType: finalReleaseType,
       preReleaseId,
       incrementBy,
-      versionsFile,
+      versionsFile: resolvedVersionsFile,
     });
 
     if (tagResults) {

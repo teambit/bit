@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import path from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import type { TagDataPerComp } from './snapping.main.runtime';
@@ -7,11 +8,13 @@ export class VersionFileParser {
   constructor(private componentsToTag: ComponentIdList) {}
 
   async parseVersionsFile(filePath: string): Promise<TagDataPerComp[]> {
-    if (!(await fs.pathExists(filePath))) {
-      throw new BitError(`versions file not found: ${filePath}`);
+    // Resolve relative paths to absolute paths to handle working directory changes
+    const resolvedPath = path.resolve(filePath);
+    if (!(await fs.pathExists(resolvedPath))) {
+      throw new BitError(`versions file not found: ${resolvedPath}`);
     }
 
-    const fileContent = await fs.readFile(filePath, 'utf-8');
+    const fileContent = await fs.readFile(resolvedPath, 'utf-8');
     return this.parseVersionsContent(fileContent);
   }
 

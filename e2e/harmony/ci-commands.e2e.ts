@@ -189,6 +189,70 @@ describe('ci commands', function () {
     });
   });
 
+  describe('bit ci merge with versions file', () => {
+    let mergeOutput: string;
+    before(() => {
+      setupWorkspaceWithGitRemote();
+      const defaultBranch = setupComponentsAndInitialCommit(3);
+
+      // Create feature branch and make changes
+      helper.command.runCmd('git checkout -b feature/test-versions-file');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("versions file test");');
+      helper.fs.outputFile('comp2/comp2.js', 'console.log("versions file test 2");');
+      helper.fs.outputFile('comp3/comp3.js', 'console.log("versions file test 3");');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: update components for versions file test"');
+
+      // Simulate PR merge scenario by going back to default branch
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.runCmd('git merge feature/test-versions-file');
+
+      // Create versions file
+      const versionsFileContent = `# Default version for unspecified components
+DEFAULT: minor
+
+# Component-specific versions
+${helper.scopes.remote}/comp1: 2.0.0
+${helper.scopes.remote}/comp3: 1.5.0`;
+      helper.fs.outputFile('versions.txt', versionsFileContent);
+
+      // Add the versions file to git so it survives the git operations in ci merge
+      helper.command.runCmd('git add versions.txt');
+      helper.command.runCmd('git commit -m "add versions file"');
+
+      // Run bit ci merge command with versions file (use same approach as working tag test)
+      mergeOutput = helper.command.runCmd('bit ci merge --versions-file versions.txt');
+    });
+    it('should complete successfully', () => {
+      expect(mergeOutput).to.include('Merged PR');
+    });
+    it('should tag components according to the versions file', () => {
+      const list = helper.command.listParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      const comp2 = list.find((comp) => comp.id.includes('comp2'));
+      const comp3 = list.find((comp) => comp.id.includes('comp3'));
+
+      expect(comp1?.currentVersion).to.equal('2.0.0'); // specific version from file
+      expect(comp2?.currentVersion).to.equal('0.1.0'); // default version (minor) from file
+      expect(comp3?.currentVersion).to.equal('1.5.0'); // specific version from file
+    });
+    it('status should be clean', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(0);
+      helper.command.expectStatusToBeClean();
+    });
+    it('should export tagged components to remote', () => {
+      const list = helper.command.listRemoteScopeParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      const comp2 = list.find((comp) => comp.id.includes('comp2'));
+      const comp3 = list.find((comp) => comp.id.includes('comp3'));
+
+      expect(comp1?.localVersion).to.equal('2.0.0');
+      expect(comp2?.localVersion).to.equal('0.1.0');
+      expect(comp3?.localVersion).to.equal('1.5.0');
+    });
+  });
+
   describe('bit ci merge when checked out to a lane', () => {
     let mergeOutput: string;
     before(() => {
