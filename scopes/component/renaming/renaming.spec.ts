@@ -1,4 +1,4 @@
-import chai, { expect } from 'chai';
+import { expect, use } from 'chai';
 import { loadManyAspects } from '@teambit/harmony.testing.load-aspect';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
@@ -8,7 +8,7 @@ import { mockComponents } from '@teambit/component.testing.mock-components';
 import type { RenamingMain } from './renaming.main.runtime';
 import { RenamingAspect } from './renaming.aspect';
 
-chai.use(require('chai-fs'));
+use(require('chai-fs'));
 
 describe('Renaming Aspect', function () {
   this.timeout(0);
