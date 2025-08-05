@@ -561,7 +561,6 @@
         "serialize-error": "5.0.0",
         "simple-git": "^3.28.0",
         "sinon": "17.0.1",
-        "sinon-chai": "^4.0.0",
         "socks-proxy-agent": "5.0.0",
         "ssri": "10.0.1",
         "string-format": "0.5.0",
