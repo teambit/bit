@@ -2812,6 +2812,11 @@
         "open an editor to write a tag message for each component. optionally, specify the editor-name (defaults to vim)."
       ],
       [
+        "",
+        "versions-file <path>",
+        "path to a file containing component versions. format: \"component-id: version\""
+      ],
+      [
         "v",
         "ver <version>",
         "tag with the given version"
@@ -4245,6 +4250,11 @@
             "",
             "increment-by <number>",
             "(default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3."
+          ],
+          [
+            "",
+            "versions-file <path>",
+            "path to a file containing component versions. format: \"component-id: version\""
           ],
           [
             "",
