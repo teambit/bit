@@ -7,6 +7,7 @@ import type {
   ComponentFormatResult,
 } from '@teambit/formatter';
 import type { Options as PrettierModuleOptions } from 'prettier';
+// eslint-disable-next-line import/default
 import PrettierLib from 'prettier';
 import mapSeries from 'p-map-series';
 import type { Logger } from '@teambit/logger';
