@@ -2081,13 +2081,6 @@
         "mainFile": "index.ts",
         "rootDir": "components/ui/hooks/use-core-aspects"
     },
-    "ui/inputs/lane-selector": {
-        "name": "ui/inputs/lane-selector",
-        "scope": "teambit.lanes",
-        "version": "0.0.266",
-        "mainFile": "index.ts",
-        "rootDir": "components/ui/inputs/lane-selector_1"
-    },
     "ui/lane-overview": {
         "name": "ui/lane-overview",
         "scope": "teambit.lanes",
@@ -2122,6 +2115,13 @@
         "version": "0.0.229",
         "mainFile": "index.ts",
         "rootDir": "components/ui/models/lanes-model"
+    },
+    "ui/navigation/lane-switcher": {
+        "name": "ui/navigation/lane-switcher",
+        "scope": "teambit.lanes",
+        "version": "0.0.234",
+        "mainFile": "index.ts",
+        "rootDir": "components/ui/navigation/lane-switcher"
     },
     "ui/pages/preview-not-found": {
         "name": "ui/pages/preview-not-found",

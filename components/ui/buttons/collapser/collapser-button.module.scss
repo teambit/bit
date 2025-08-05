@@ -12,7 +12,7 @@
   &.open {
     .circle {
       > div {
-        transform: rotate(-0.5turn) translateY(2px);
+        transform: rotate(-0.5turn) translateY(1px);
         transform-origin: center;
       }
     }
@@ -20,13 +20,10 @@
 }
 .circle {
   height: 100%;
-  font-size: 12px;
-  padding: 10px;
+  font-size: 10px;
+  padding: 8.5px;
   background-color: var(--bit-bg-color, #fff);
-  // TODO - @oded - unify with other shadows. this shadow is different. talk to amir
-  box-shadow:
-    0 -1px 1px 0 rgba(0, 0, 0, 0.09),
-    0 1px 2px 0 rgba(0, 0, 0, 0.23);
+  border: 1px solid var(--border-medium-color, #ededed);
   transition: padding 300ms ease-in-out;
 
   > div {
