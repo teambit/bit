@@ -532,7 +532,13 @@
         "scope": "teambit.dependencies",
         "version": "1.0.683",
         "mainFile": "index.ts",
-        "rootDir": "scopes/dependencies/dependency-resolver"
+        "rootDir": "scopes/dependencies/dependency-resolver",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@0.0.72": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "deprecation": {
         "name": "deprecation",
