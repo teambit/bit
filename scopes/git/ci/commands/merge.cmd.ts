@@ -17,6 +17,7 @@ type Options = {
   prereleaseId?: string;
   incrementBy?: number;
   verbose?: boolean;
+  versionsFile?: string;
 };
 
 export class CiMergeCmd implements Command {
@@ -43,6 +44,7 @@ export class CiMergeCmd implements Command {
       'increment-by <number>',
       '(default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3.',
     ],
+    ['', 'versions-file <path>', 'path to a file containing component versions. format: "component-id: version"'],
     ['', 'verbose', 'show verbose output'],
   ];
 
@@ -73,6 +75,7 @@ export class CiMergeCmd implements Command {
       incrementBy: options.incrementBy,
       explicitVersionBump,
       verbose: options.verbose,
+      versionsFile: options.versionsFile,
     });
   }
 }
