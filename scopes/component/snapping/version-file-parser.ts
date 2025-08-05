@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import type { TagDataPerComp } from './snapping.main.runtime';
 
