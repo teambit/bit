@@ -192,7 +192,8 @@ describe('ci commands', function () {
   describe('bit ci merge with versions file', () => {
     let mergeOutput: string;
     before(() => {
-      setupWorkspaceWithGitRemote();
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
       const defaultBranch = setupComponentsAndInitialCommit(3);
 
       // Create feature branch and make changes
