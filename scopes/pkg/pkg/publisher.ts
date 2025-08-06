@@ -9,7 +9,7 @@ import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import type { Scope } from '@teambit/legacy.scope';
 import fsx from 'fs-extra';
-import mapSeries from 'p-map-series';
+import pMap from 'p-map';
 import { join } from 'path';
 import ssri from 'ssri';
 import execa from 'execa';
@@ -43,10 +43,14 @@ export class Publisher {
   public async publishMultipleCapsules(capsules: Capsule[]): Promise<ComponentResult[]> {
     const description = `publish components${this.options.dryRun ? ' (dry-run)' : ''}`;
     const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
-    const results = mapSeries(capsules, (capsule) => {
-      longProcessLogger.logProgress(capsule.component.id.toString());
-      return this.publishOneCapsule(capsule);
-    });
+    const results = pMap(
+      capsules,
+      (capsule) => {
+        longProcessLogger.logProgress(capsule.component.id.toString());
+        return this.publishOneCapsule(capsule);
+      },
+      { concurrency: 10, stopOnError: true }
+    );
     longProcessLogger.end();
     return results;
   }
@@ -62,6 +66,7 @@ export class Publisher {
       cwd = tarFolderPath;
       publishParams.push(tarPath);
     }
+    publishParams.push('--quiet');
     if (this.options.dryRun) publishParams.push('--dry-run');
     publishParams.push(...this.getTagFlagForPreRelease(capsule.component.id));
     publishParams.push(...this.getTagFlagForSnap(capsule.component.id));
@@ -73,6 +78,8 @@ export class Publisher {
     const publishParamsStr = publishParams.join(' ');
     const getPkgJson = async () => fsx.readJSON(`${capsule.path}/package.json`);
     const componentIdStr = capsule.id.toString();
+    const pkgJson = await getPkgJson();
+    this.logger.console(`publishing ${pkgJson.name}@${pkgJson.version}`);
     const errors: string[] = [];
     try {
       this.logger.off();
