@@ -9,13 +9,15 @@ import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import type { Scope } from '@teambit/legacy.scope';
 import fsx from 'fs-extra';
-import mapSeries from 'p-map-series';
+import { chunk } from 'lodash';
 import { join } from 'path';
 import ssri from 'ssri';
 import execa from 'execa';
 import { PkgAspect } from './pkg.aspect';
 import type { PkgExtensionConfig } from './pkg.main.runtime';
 import { DEFAULT_TAR_DIR_IN_CAPSULE } from './packer';
+
+const PUBLISH_CONCURRENCY = 10;
 
 export type PublisherOptions = {
   dryRun?: boolean;
@@ -42,11 +44,14 @@ export class Publisher {
 
   public async publishMultipleCapsules(capsules: Capsule[]): Promise<ComponentResult[]> {
     const description = `publish components${this.options.dryRun ? ' (dry-run)' : ''}`;
-    const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
-    const results = mapSeries(capsules, (capsule) => {
-      longProcessLogger.logProgress(capsule.component.id.toString());
-      return this.publishOneCapsule(capsule);
-    });
+    const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length / PUBLISH_CONCURRENCY);
+    const chunks = chunk(capsules, PUBLISH_CONCURRENCY);
+    const results: ComponentResult[] = [];
+    for (const aChunk of chunks) {
+      longProcessLogger.logProgress(aChunk.map((c) => c.component.id.toString()).join(', '));
+      const chunkResults = await Promise.all(aChunk.map((capsule) => this.publishOneCapsule(capsule)));
+      results.push(...chunkResults);
+    }
     longProcessLogger.end();
     return results;
   }
@@ -62,6 +67,7 @@ export class Publisher {
       cwd = tarFolderPath;
       publishParams.push(tarPath);
     }
+    publishParams.push('--quiet');
     if (this.options.dryRun) publishParams.push('--dry-run');
     publishParams.push(...this.getTagFlagForPreRelease(capsule.component.id));
     publishParams.push(...this.getTagFlagForSnap(capsule.component.id));
@@ -73,6 +79,8 @@ export class Publisher {
     const publishParamsStr = publishParams.join(' ');
     const getPkgJson = async () => fsx.readJSON(`${capsule.path}/package.json`);
     const componentIdStr = capsule.id.toString();
+    const pkgJson = await getPkgJson();
+    this.logger.console(`publishing ${pkgJson.name}@${pkgJson.version}`);
     const errors: string[] = [];
     try {
       this.logger.off();
@@ -87,7 +95,6 @@ export class Publisher {
       this.logger.error(`${componentIdStr}, ${errorMsg}`);
       let isPublished = false;
       if (typeof errorDetails === 'string' && errorDetails.includes('EPERM') && tarPath) {
-        const pkgJson = await getPkgJson();
         // sleep 5 seconds
         await new Promise((resolve) => setTimeout(resolve, Number(process.env.NPM_WAKE_UP || 5000)));
         const integrityOnNpm = await this.getIntegrityOnNpm(pkgJson.name, pkgJson.version);
