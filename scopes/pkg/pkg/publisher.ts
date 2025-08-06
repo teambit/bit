@@ -94,7 +94,6 @@ export class Publisher {
       this.logger.error(`${componentIdStr}, ${errorMsg}`);
       let isPublished = false;
       if (typeof errorDetails === 'string' && errorDetails.includes('EPERM') && tarPath) {
-        const pkgJson = await getPkgJson();
         // sleep 5 seconds
         await new Promise((resolve) => setTimeout(resolve, Number(process.env.NPM_WAKE_UP || 5000)));
         const integrityOnNpm = await this.getIntegrityOnNpm(pkgJson.name, pkgJson.version);
