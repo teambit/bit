@@ -17,6 +17,8 @@ import { PkgAspect } from './pkg.aspect';
 import type { PkgExtensionConfig } from './pkg.main.runtime';
 import { DEFAULT_TAR_DIR_IN_CAPSULE } from './packer';
 
+const PUBLISH_CONCURRENCY = 10;
+
 export type PublisherOptions = {
   dryRun?: boolean;
   allowStaged?: boolean;
@@ -42,8 +44,8 @@ export class Publisher {
 
   public async publishMultipleCapsules(capsules: Capsule[]): Promise<ComponentResult[]> {
     const description = `publish components${this.options.dryRun ? ' (dry-run)' : ''}`;
-    const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
-    const chunks = chunk(capsules, 10);
+    const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length / PUBLISH_CONCURRENCY);
+    const chunks = chunk(capsules, PUBLISH_CONCURRENCY);
     const results: ComponentResult[] = [];
     for (const aChunk of chunks) {
       longProcessLogger.logProgress(aChunk.map((c) => c.component.id.toString()).join(', '));
