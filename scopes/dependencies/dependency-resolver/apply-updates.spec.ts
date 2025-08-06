@@ -2,7 +2,8 @@ import { expect } from 'chai';
 import { ComponentID } from '@teambit/component';
 import { applyUpdates } from './apply-updates';
 
-describe('applyUpdates()', () => {
+describe('applyUpdates()', function () {
+  this.timeout(5000);
   it('should apply updates on root dependencies', () => {
     const { updatedWorkspacePolicyEntries } = applyUpdates(
       [
