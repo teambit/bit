@@ -21,32 +21,32 @@
 .circle {
   height: 100%;
   font-size: 10px;
-  padding: 8.5px;
+  padding: 8px;
   background-color: var(--bit-bg-color, #fff);
   border: 1px solid var(--border-medium-color, #ededed);
-  transition: padding 300ms ease-in-out;
+  transition: padding 200ms ease-in-out;
 
   > div {
-    transition: transform 300ms ease-in-out;
+    transition: transform 200ms ease-in-out;
   }
 
   .right & {
-    border-top-right-radius: 50%;
-    border-bottom-right-radius: 50%;
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
 
-    padding-left: 10px;
+    // padding-left: 10px;
     &:hover {
-      padding-left: 16px;
+      padding-left: 12px;
     }
   }
 
   .left & {
-    border-top-left-radius: 50%;
-    border-bottom-left-radius: 50%;
+    border-top-left-radius: 12px;
+    border-bottom-left-radius: 12px;
 
-    padding-right: 10px;
+    // padding-right: 10px;
     &:hover {
-      padding-right: 16px;
+      padding-right: 12px;
     }
   }
 }
