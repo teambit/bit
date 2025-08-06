@@ -9,7 +9,7 @@ import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import type { Scope } from '@teambit/legacy.scope';
 import fsx from 'fs-extra';
-import pMap from 'p-map';
+import { chunk } from 'lodash';
 import { join } from 'path';
 import ssri from 'ssri';
 import execa from 'execa';
@@ -43,14 +43,13 @@ export class Publisher {
   public async publishMultipleCapsules(capsules: Capsule[]): Promise<ComponentResult[]> {
     const description = `publish components${this.options.dryRun ? ' (dry-run)' : ''}`;
     const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
-    const results = pMap(
-      capsules,
-      (capsule) => {
-        longProcessLogger.logProgress(capsule.component.id.toString());
-        return this.publishOneCapsule(capsule);
-      },
-      { concurrency: 10, stopOnError: true }
-    );
+    const chunks = chunk(capsules, 10);
+    const results: ComponentResult[] = [];
+    for (const aChunk of chunks) {
+      longProcessLogger.logProgress(aChunk.map((c) => c.component.id.toString()).join(', '));
+      const chunkResults = await Promise.all(aChunk.map((capsule) => this.publishOneCapsule(capsule)));
+      results.push(...chunkResults);
+    }
     longProcessLogger.end();
     return results;
   }
