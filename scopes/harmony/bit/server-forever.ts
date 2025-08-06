@@ -35,7 +35,7 @@ export function spawnPTY() {
   let didGetClient = false;
   let outputNotForClients = '';
 
-  // @ts-ignore
+  // @ts-expect-error
   ptyProcess.on('data', (data) => {
     if (!clients.length) outputNotForClients += data.toString();
     // Forward data from the ptyProcess to connected clients
@@ -112,7 +112,7 @@ This means another instance may already be running in this workspace.
     console.log(`Socket listening on port ${PORT}`);
   });
 
-  // @ts-ignore
+  // @ts-expect-error
   ptyProcess.on('exit', (code, signal) => {
     server.close();
     if (didGetClient) {

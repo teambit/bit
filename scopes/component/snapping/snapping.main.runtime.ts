@@ -299,7 +299,7 @@ export class SnappingMain {
 
     await consumer.onDestroy(`tag (message: ${message || 'N/A'})`);
     await stagedConfig?.write();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return tagResults;
   }
 
@@ -597,7 +597,7 @@ export class SnappingMain {
     snapResults.laneName = currentLane.isDefault() ? null : currentLane.toString();
     await consumer.onDestroy(`snap (message: ${message || 'N/A'})`);
     await stagedConfig?.write();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return snapResults;
 
     async function getIdsToSnap(): Promise<ComponentIdList | null> {

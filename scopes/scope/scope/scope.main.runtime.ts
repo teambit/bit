@@ -323,7 +323,7 @@ export class ScopeMain implements ComponentFactory {
       component.state._consumer.dependencies.dependencies
     );
     if (resolvedEnvJsonc) {
-      // @ts-ignore
+      // @ts-expect-error
       envsData.resolvedEnvJsonc = resolvedEnvJsonc;
     }
     // Make sure we are adding the envs / deps data first because other on load events might depend on it
@@ -1364,7 +1364,6 @@ export class ScopeMain implements ComponentFactory {
       new ActionRoute(scope),
       new DeleteRoute(scope),
     ]);
-    // @ts-ignore - @ran to implement the missing functions and remove it
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(() => scopeSchema(scope));
     componentExt.registerHost(scope);

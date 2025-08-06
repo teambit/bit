@@ -64,7 +64,7 @@ module.exports._getDependencies = function (config) {
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
   precinctOptions.envDetectors = config.envDetectors;
-  // @ts-ignore
+  // @ts-expect-error
   delete precinct.ast;
 
   try {
@@ -88,7 +88,7 @@ module.exports._getDependencies = function (config) {
   const pathMapFile = { file: config.filename };
 
   dependencies.forEach((dependency) => processDependency(dependency));
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   pathMapFile.dependencies = pathMapDependencies;
   config.pathMap.push(pathMapFile);
   return resolvedDependencies;
@@ -102,7 +102,7 @@ module.exports._getDependencies = function (config) {
       dependency,
       filename: config.filename,
       directory: config.directory,
-      // @ts-ignore
+      // @ts-expect-error
       ast: precinct.ast,
       config: config.requireConfig,
       webpackConfig: config.webpackConfig,
@@ -111,7 +111,7 @@ module.exports._getDependencies = function (config) {
     };
     if (!isDependenciesArray && dependenciesRaw[dependency].isScript !== undefined) {
       // used for vue
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       cabinetParams.isScript = dependenciesRaw[dependency].isScript;
     }
     let result;
@@ -139,14 +139,14 @@ module.exports._getDependencies = function (config) {
     }
     const pathMap = { importSource: dependency, resolvedDep: result };
     if (!isDependenciesArray && dependenciesRaw[dependency].importSpecifiers) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       pathMap.importSpecifiers = dependenciesRaw[dependency].importSpecifiers;
     }
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     pathMapDependencies.push(pathMap);
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     resolvedDependencies.push(result);
   }
   function addToNonExistent(dependency) {
@@ -193,7 +193,7 @@ function traverse(config) {
       debug(`number of dependencies after filtering: ${dependencies.length}`);
     }
     debug('cabinet-resolved all dependencies: ', dependencies);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     tree[dependency] = dependencies;
     const filePathMap = config.pathMap.find((pathMapEntry) => pathMapEntry.file === dependency);
     if (!filePathMap) throw new Error(`file ${dependency} is missing from PathMap`);
@@ -221,7 +221,7 @@ function traverse(config) {
     }
     debug(`found ${dependency} in the cache`);
     const dependencies = config.visited[dependency].pathMap.dependencies.map((d) => d.resolvedDep);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     tree[dependency] = dependencies;
     config.pathMap.push(config.visited[dependency].pathMap);
     if (config.visited[dependency].missing) {

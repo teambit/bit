@@ -3,7 +3,6 @@ import { CLIAspect, MainRuntime } from '@teambit/cli';
 import path from 'path';
 import fs from 'fs-extra';
 import os from 'os';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import type Stream from 'stream';
 import tar from 'tar-stream';
 import tarFS from 'tar-fs';
@@ -260,7 +259,7 @@ export class DoctorMain {
       userDetails: this._getUserDetails(),
     };
 
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return env;
   }
 

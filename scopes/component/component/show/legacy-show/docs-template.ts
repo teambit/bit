@@ -71,6 +71,5 @@ export default (docs: Doclet[] | null | undefined) => {
   if (isEmpty(docs) || isNil(docs)) {
     return '\nNo documentation found';
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return `\n${paintHeader('Documentation')}${docs.map(paintDoc).join('')}`;
 };

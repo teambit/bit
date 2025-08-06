@@ -240,7 +240,7 @@ function silenceConsoleAndStdout(): () => void {
   // Return a function to restore original behavior
   return () => {
     for (const method of Object.keys(originalConsole) as (keyof Console)[]) {
-      // @ts-ignore
+      // @ts-expect-error
       // eslint-disable-next-line no-console
       console[method] = originalConsole[method];
     }

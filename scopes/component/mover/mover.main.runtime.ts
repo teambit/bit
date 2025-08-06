@@ -64,7 +64,6 @@ to change the main-file, use "bit add <component-dir> --main <new-main-file>"`);
     componentMap.updateDirLocation(oldPathRelative, newPathRelative);
     consumer.bitMap.markAsChanged();
     component.dataToPersist.files.forEach((file) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const newRelative = file.relative.replace(oldPathRelative, newPathRelative);
       file.updatePaths({ newRelative, newBase: newPathRelative });
     });

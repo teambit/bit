@@ -11,7 +11,6 @@ export default class OverridesDependencies {
   missingPackageDependencies: string[];
   constructor(component: Component) {
     this.component = component;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
     this.manuallyRemovedDependencies = {};
     this.manuallyAddedDependencies = {};

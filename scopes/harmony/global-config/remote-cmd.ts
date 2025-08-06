@@ -64,7 +64,6 @@ export class RemoteCmd implements Command {
   alias = '';
   loadAspects = false;
   options = [['g', 'global', 'see globally configured remotes']] as CommandOptions;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   commands = [new RemoteAdd(), new RemoteRm(), new RemoteList()];
 
   async report(args: string[], { global }: { global: boolean }) {

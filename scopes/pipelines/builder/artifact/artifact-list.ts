@@ -121,7 +121,7 @@ export class ArtifactList<T extends Artifact> extends Array<T> {
       const defaultResolver = new DefaultResolver();
       await defaultResolver.store(component, artifact as FsArtifact);
     }
-    // @ts-ignore
+    // @ts-expect-error
     if (storageResolver.store && typeof storageResolver.store === 'function') {
       return this.storeWholeArtifactByResolver(storageResolver as WholeArtifactStorageResolver, artifact, component);
     }

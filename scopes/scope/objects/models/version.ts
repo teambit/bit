@@ -70,11 +70,8 @@ export type VersionProps = {
   flattenedEdges?: DepEdge[];
   flattenedEdgesRef?: Ref;
   dependenciesGraphRef?: Ref;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies?: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devPackageDependencies?: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   peerPackageDependencies?: { [key: string]: string };
   bindingPrefix: string;
   schema?: string;
@@ -123,7 +120,6 @@ export default class Version extends BitObject {
    * (around August 2023 should be safe)
    */
   private flattenedEdges: DepEdge[];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies: { [key: string]: string };
   devPackageDependencies: { [key: string]: string };
   peerPackageDependencies: { [key: string]: string };
@@ -163,7 +159,7 @@ export default class Version extends BitObject {
     this.schema = props.schema;
     this.overrides = props.overrides || {};
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
-    // @ts-ignore yes, props.hash can be undefined here, but it gets populated as soon as Version is created
+    // @ts-expect-error yes, props.hash can be undefined here, but it gets populated as soon as Version is created
     this._hash = props.hash;
     this.parents = props.parents || [];
     this.squashed = props.squashed;
@@ -238,7 +234,7 @@ export default class Version extends BitObject {
     // @todo: remove the entire dependencies.relativePaths from the ID (it's going to be a breaking change)
     const getDependencies = (deps: Dependencies) => {
       const clonedDependencies = deps.cloneAsString();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return clonedDependencies.map((dependency: Dependency) => {
         return {
           id: dependency.id,
@@ -700,7 +696,6 @@ export default class Version extends BitObject {
       files: files.map(parseFile),
       bindingPrefix: component.bindingPrefix,
       log: component.log as Log,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       docs: component.docs,
       dependencies: component.dependencies.get(),
       devDependencies: component.devDependencies.get(),
@@ -714,7 +709,6 @@ export default class Version extends BitObject {
       flattenedEdgesRef: flattenedEdges?.hash(),
       schema: component.schema,
       overrides: component.overrides.componentOverridesData,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageJsonChangedProps: component.packageJsonChangedProps,
       extensions: component.extensions,
       buildStatus: component.buildStatus,
@@ -752,7 +746,7 @@ export default class Version extends BitObject {
   }
 
   setDist(dist: Source | undefined) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.dist = dist
       ? {
           file: dist.hash(),

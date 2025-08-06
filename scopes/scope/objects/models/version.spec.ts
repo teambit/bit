@@ -17,7 +17,7 @@ describe('Version', () => {
       let idRaw;
       let idParsed;
       before(() => {
-        // @ts-ignore
+        // @ts-expect-error
         version = new Version(versionFixture);
         idRaw = version.id();
         idParsed = JSON.parse(idRaw);
@@ -89,7 +89,7 @@ describe('Version', () => {
     let hash;
     const versionFixtureHash = '4f67925a80b5e1f52dd1177196bf4c003d2f8798';
     before(() => {
-      // @ts-ignore
+      // @ts-expect-error
       version = new Version(versionFixture);
       hash = version.calculateHash();
     });

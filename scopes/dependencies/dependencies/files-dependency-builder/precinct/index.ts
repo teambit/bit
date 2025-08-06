@@ -4,7 +4,6 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-// @ts-ignore we currently have @types/node as v12, and this is available > 16. once updated, remove the ts-ignore
 import { isBuiltin } from 'module';
 
 import getModuleType from 'module-definition';

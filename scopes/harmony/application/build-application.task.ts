@@ -129,7 +129,7 @@ export class AppsBuildTask implements BuildTask {
          * TODO: we need to think how to pass private metadata between build pipes, maybe create shared context
          * or create new deploy context on builder
          */
-        // @ts-ignore
+        // @ts-expect-error
         _metadata: { deployContext, name: app.name, appType: app.applicationType },
       },
     };

@@ -142,7 +142,7 @@ https://facebook.github.io/watchman/docs/troubleshooting#fseventstreamstart-regi
 
     return new Promise((resolve, reject) => {
       if (this.verbose) {
-        // @ts-ignore
+        // @ts-expect-error
         if (msgs?.onAll) watcher.on('all', msgs.onAll);
       }
       watcher.on('ready', () => {

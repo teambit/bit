@@ -211,7 +211,7 @@ describe('filing-cabinet', () => {
         });
 
         assert.ok(
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           require.main.paths.some(function (p) {
             return p.indexOf(path.normalize(directory)) !== -1;
           })

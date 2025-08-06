@@ -10,10 +10,8 @@ export function createWebpackConfig(outputDir: string, entryFile: string): Confi
   const baseConfig = configBaseFactory(true);
   const preBundleConfig = createPreBundleConfig(outputDir, entryFile);
 
-  // @ts-ignore that's an issue because of different types/webpack version
   const combined = merge(baseConfig, preBundleConfig);
 
-  // @ts-ignore that's an issue because of different types/webpack version
   return combined;
 }
 
@@ -74,7 +72,7 @@ function createPreBundleConfig(outputDir: string, entryFile: string) {
           }, seed);
           const entrypointFiles = entrypoints.main.filter((fileName) => !fileName.endsWith('.map'));
 
-          // @ts-ignore - https://github.com/shellscape/webpack-manifest-plugin/issues/276
+          // @ts-expect-error - https://github.com/shellscape/webpack-manifest-plugin/issues/276
           return {
             files: manifestFiles,
             entrypoints: entrypointFiles,

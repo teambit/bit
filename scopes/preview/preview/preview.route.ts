@@ -23,7 +23,7 @@ export class PreviewRoute implements Route {
   middlewares = [
     async (req: Request<PreviewUrlParams>, res: Response, next: NextFunction) => {
       try {
-        // @ts-ignore TODO: @guy please fix.
+        // @ts-expect-error TODO: @guy please fix.
         const component = req.component as Component | undefined;
         if (!component) return res.status(404).send(noPreview());
         const isLegacyPath = await this.preview.isBundledWithEnv(component);
@@ -43,9 +43,9 @@ export class PreviewRoute implements Route {
           this.logger.error(`getEnvTemplateFromComponentEnv or getPreview has failed`, e);
           return res.status(404).send(noPreview());
         }
-        // @ts-ignore
+        // @ts-expect-error
         req.artifact = artifact;
-        // @ts-ignore
+        // @ts-expect-error
         req.isLegacyPath = isLegacyPath;
         return next();
       } catch (e: any) {

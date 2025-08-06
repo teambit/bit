@@ -110,7 +110,7 @@ export default function (dev?: boolean): Configuration {
       //       return manifest;
       //     }, seed);
       //     const entrypointFiles = entrypoints.main.filter((fileName) => !fileName.endsWith('.map'));
-      //     // @ts-ignore - https://github.com/shellscape/webpack-manifest-plugin/issues/276
+      //     // @ts-expect-error - https://github.com/shellscape/webpack-manifest-plugin/issues/276
       //     return {
       //       files: manifestFiles,
       //       entrypoints: entrypointFiles,

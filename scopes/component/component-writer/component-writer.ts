@@ -153,7 +153,7 @@ export default class ComponentWriter {
   }
 
   _updateComponentRootPathAccordingToBitMap() {
-    // @ts-ignore this.component.componentMap is set
+    // @ts-expect-error this.component.componentMap is set
     this.writeToPath = this.component.componentMap.getRootDir();
     this.component.writtenPath = this.writeToPath;
     this._updateFilesBasePaths();

@@ -67,7 +67,7 @@ export class ApplyOverrides {
     private workspace?: Workspace
   ) {
     this.componentId = component.componentId;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
     this.allDependencies = {
       dependencies: [],
@@ -420,7 +420,6 @@ export class ApplyOverrides {
       getNotRegularPackages(this.allPackagesDependencies.devPackageDependencies)
     );
     // remove dev dependencies that are also regular dependencies
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentDepsIds = new ComponentIdList(...this.allDependencies.dependencies.map((c) => c.id));
     this.allDependencies.devDependencies = this.allDependencies.devDependencies.filter(
       (d) => !componentDepsIds.has(d.id)

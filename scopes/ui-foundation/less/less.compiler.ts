@@ -56,7 +56,7 @@ export class LessCompiler implements Compiler {
     );
 
     return {
-      // @ts-ignore TODO: fix this.
+      // @ts-expect-error TODO: fix this.
       componentsResults: results,
     };
   }

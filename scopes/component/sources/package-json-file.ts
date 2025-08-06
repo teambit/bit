@@ -1,5 +1,4 @@
 import detectIndent from 'detect-indent';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detectNewline from 'detect-newline';
 import fs from 'fs-extra';
 import * as path from 'path';
@@ -163,7 +162,7 @@ export class PackageJsonFile {
       },
       license: `SEE LICENSE IN ${!isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`,
     };
-    // @ts-ignore
+    // @ts-expect-error
     if (addExportProperty) packageJsonObject.exported = component.id.hasScope();
     if (!packageJsonObject.homepage) delete packageJsonObject.homepage;
     return new PackageJsonFile({ filePath, packageJsonObject, fileExist: false });
@@ -180,12 +179,10 @@ export class PackageJsonFile {
   }
 
   addDependencies(dependencies: Record<string, any>) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.packageJsonObject.dependencies = Object.assign({}, this.packageJsonObject.dependencies, dependencies);
   }
 
   addDevDependencies(dependencies: Record<string, any>) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.packageJsonObject.devDependencies = Object.assign({}, this.packageJsonObject.devDependencies, dependencies);
   }
 
@@ -252,7 +249,7 @@ export class PackageJsonFile {
   }
 
   clone(): PackageJsonFile {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const clone = new PackageJsonFile(this);
     clone.packageJsonObject = cloneDeep(this.packageJsonObject);
     return clone;

@@ -8,7 +8,6 @@ type ScopeMetaProps = {
 };
 
 // TODO: fix parse
-// @ts-ignore
 export default class ScopeMeta extends BitObject {
   license: string | null | undefined;
   name: string;
@@ -26,7 +25,6 @@ export default class ScopeMeta extends BitObject {
     };
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   toString(pretty: boolean): string {
     const args = getStringifyArgs(pretty);
     return JSON.stringify(this.toObject(), ...args);
@@ -41,12 +39,12 @@ export default class ScopeMeta extends BitObject {
   }
 
   static fromScopeName(name: string): Ref {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return ScopeMeta.fromObject({ name }).hash();
   }
 
   static parse(propsStr: string | Buffer): ScopeMeta {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.fromObject(JSON.parse(propsStr));
   }
 

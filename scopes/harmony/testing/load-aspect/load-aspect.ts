@@ -156,9 +156,9 @@ function clearGlobalsIfNeeded() {
   ComponentOverrides.componentOverridesLoadingRegistry = {};
   ComponentConfig.componentConfigLoadingRegistry = {};
   PackageJsonTransformer.packageJsonTransformersRegistry = [];
-  // @ts-ignore
+  // @ts-expect-error
   ComponentLoader.loadDeps = undefined;
   ExtensionDataList.coreExtensionsNames = new Map();
-  // @ts-ignore
+  // @ts-expect-error
   LegacyWorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
 }

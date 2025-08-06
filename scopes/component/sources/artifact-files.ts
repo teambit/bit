@@ -327,7 +327,7 @@ export function getArtifactFilesExcludeExtension(
 export function convertBuildArtifactsToModelObject(extensions: ExtensionDataList) {
   const buildArtifacts = getBuildArtifacts(extensions);
   buildArtifacts.forEach((artifact) => {
-    // @ts-ignore
+    // @ts-expect-error
     artifact.files = refsToModelObjects(artifact.files.refs);
   });
 }
@@ -335,7 +335,7 @@ export function convertBuildArtifactsToModelObject(extensions: ExtensionDataList
 export function convertBuildArtifactsFromModelObject(extensions: ExtensionDataList) {
   const artifactObjects = getBuildArtifacts(extensions);
   artifactObjects.forEach((artifactObject) => {
-    // @ts-ignore
+    // @ts-expect-error
     artifactObject.files = ArtifactFiles.fromModel(artifactObject.files);
   });
 }

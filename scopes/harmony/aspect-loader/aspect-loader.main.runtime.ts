@@ -486,7 +486,7 @@ export class AspectLoaderMain {
     const errorMsg = error.message.split('\n')[0]; // show only the first line if the error is long (e.g. happens with MODULE_NOT_FOUND errors)
     const msg = UNABLE_TO_LOAD_EXTENSION(idStr, errorMsg);
     if (throwOnError) {
-      // @ts-ignore
+      // @ts-expect-error
       this.logger.console(error);
       throw new CannotLoadExtension(idStr, error);
     }
@@ -739,7 +739,7 @@ export class AspectLoaderMain {
         return nodesUniq.map((n) => n.attr);
       };
       const relevantManifests = getOnlyDeclaredDependenciesManifests();
-      // @ts-ignore TODO: fix this
+      // @ts-expect-error TODO: fix this
       await this.harmony.load(relevantManifests);
     } catch (e: any) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');

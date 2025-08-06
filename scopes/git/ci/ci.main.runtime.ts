@@ -657,5 +657,4 @@ export class CiMain {
   }
 }
 
-// @ts-ignore
 CiAspect.addRuntime(CiMain);

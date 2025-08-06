@@ -118,7 +118,7 @@ export class StatusMain {
     const importPendingComponents = allInvalidComponents
       .filter((c) => c.err instanceof ComponentsPendingImport)
       .map((i) => i.id);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const invalidComponents = allInvalidComponents.filter((c) => !(c.error instanceof ComponentsPendingImport));
     const divergeInvalid = await this.divergeDataErrorsToInvalidComp(allComps);
     invalidComponents.push(...divergeInvalid);

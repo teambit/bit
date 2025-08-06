@@ -73,16 +73,15 @@ export class WebpackDevServer implements DevServer {
 
     // Compatibility check for Webpack dev server v3 (e.g. for Angular v8)
     if (typeof (this.WsDevServer as any).addDevServerEntrypoints !== 'undefined') {
-      // @ts-ignore in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
       const webpackDs = new (this.WsDevServer as any)(this.getCompiler(), this.config.devServer);
       return webpackDs.listen(port);
     }
 
-    // @ts-ignore in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
+    // @ts-expect-error in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
     const webpackDs: WDS = new this.WsDevServer(this.config.devServer, this.getCompiler());
     await webpackDs.start();
 
-    // @ts-ignore
+    // @ts-expect-error
     return webpackDs.server;
   }
 

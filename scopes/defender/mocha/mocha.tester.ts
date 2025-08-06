@@ -112,7 +112,7 @@ export class MochaTester implements Tester {
   }
 
   version(): string {
-    // @ts-ignore
+    // @ts-expect-error
     return Mocha.prototype.version || 'N/A';
   }
 }

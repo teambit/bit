@@ -26,7 +26,7 @@ export async function getAutoTagInfo(consumer: Consumer, changedComponents: Comp
     if (!graph.hasNode(idStr)) return;
     // preorder gets all dependencies and dependencies of dependencies and so on.
     // we loop over the dependencies of a component
-    // @ts-ignore
+    // @ts-expect-error
     const dependenciesStr = graphlib.alg.preorder(graph, idStr);
     const dependenciesBitIds = dependenciesStr.map((depStr) => graph.node(depStr));
     const triggeredDependencies = dependenciesBitIds.filter((dependencyId) => {

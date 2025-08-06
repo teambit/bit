@@ -11,15 +11,15 @@ describe('ComponentsIndex', () => {
       scopeIndex = new ScopeIndex('scope-path');
     });
     it('should add to the index array', () => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const modelComponent = new ModelComponent({ scope: 'my-scope', name: 'is-string' });
       scopeIndex.addOne(modelComponent);
       const allItems = scopeIndex.getAll();
-      // @ts-ignore
+      // @ts-expect-error
       expect(allItems[0].id).to.deep.equal({ scope: 'my-scope', name: 'is-string' });
     });
     it('should not add the same component multiple times', () => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const modelComponent = new ModelComponent({ scope: 'my-scope', name: 'is-string' });
       scopeIndex.addOne(modelComponent);
       scopeIndex.addOne(modelComponent);
@@ -27,7 +27,7 @@ describe('ComponentsIndex', () => {
       expect(scopeIndex.getAll()).to.have.lengthOf(1);
     });
     it('should not add BitObjects that are not Symlink nor ModelComponent', () => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const bitObject = new BitObject({ scope: 'my-scope', name: 'is-string' });
       const result = scopeIndex.addOne(bitObject);
       expect(scopeIndex.getAll()).to.have.lengthOf(0);
@@ -40,7 +40,7 @@ describe('ComponentsIndex', () => {
       scopeIndex = new ScopeIndex('scope-path');
     });
     it('should remove from the index array', () => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const modelComponent = new ModelComponent({ scope: 'my-scope', name: 'is-string' });
       scopeIndex.addOne(modelComponent);
       expect(scopeIndex.getAll()).to.have.lengthOf(1);
@@ -48,9 +48,9 @@ describe('ComponentsIndex', () => {
       expect(scopeIndex.getAll()).to.have.lengthOf(0);
     });
     it('should remove the correct one when there are multiple', () => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const isStringComponent = new ModelComponent({ scope: 'my-scope', name: 'is-string' });
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const isTypeComponent = new ModelComponent({ scope: 'my-scope', name: 'is-type' });
       scopeIndex.addOne(isStringComponent);
       scopeIndex.addOne(isTypeComponent);
@@ -58,7 +58,7 @@ describe('ComponentsIndex', () => {
       scopeIndex.removeOne(isStringComponent.hash().toString());
       const allIds = scopeIndex.getAll();
       expect(allIds).to.have.lengthOf(1);
-      // @ts-ignore
+      // @ts-expect-error
       expect(allIds[0].id).to.deep.equal({ scope: 'my-scope', name: 'is-type' });
     });
   });
@@ -68,9 +68,9 @@ describe('ComponentsIndex', () => {
     let isTypeComponent;
     beforeEach(() => {
       scopeIndex = new ScopeIndex('scope-path');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       isStringComponent = new ModelComponent({ scope: 'my-scope', name: 'is-string' });
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       isTypeComponent = new ModelComponent({ scope: 'my-scope', name: 'is-type' });
       scopeIndex.addMany([isStringComponent, isTypeComponent]);
       expect(scopeIndex.getAll()).to.have.lengthOf(2);
