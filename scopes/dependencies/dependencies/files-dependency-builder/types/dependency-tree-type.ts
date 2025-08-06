@@ -17,7 +17,7 @@ export class DependenciesTreeItem {
   unidentifiedPackages: string[] = [];
   components: ResolvedPackageData[] = [];
   error?: Error; // error.code is either PARSING_ERROR or RESOLVE_ERROR
-  missing?: { [key in MissingType]: string[] };
+  missing?: Record<MissingType, string[]>;
 
   isEmpty() {
     return (
