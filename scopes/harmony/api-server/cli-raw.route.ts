@@ -44,12 +44,12 @@ export class CLIRawRoute implements Route {
 
       if (ttyPath) {
         const fileHandle = await fs.open(ttyPath, 'w');
-        // @ts-ignore monkey patch the process stdout write method
+        // @ts-expect-error monkey patch the process stdout write method
         process.stdout.write = (chunk, encoding, callback) => {
           fs.writeSync(fileHandle, chunk.toString());
           return originalStdoutWrite.call(process.stdout, chunk, encoding, callback);
         };
-        // @ts-ignore monkey patch the process stderr write method
+        // @ts-expect-error monkey patch the process stderr write method
         process.stderr.write = (chunk, encoding, callback) => {
           fs.writeSync(fileHandle, chunk.toString());
           return originalStderrWrite.call(process.stdout, chunk, encoding, callback);

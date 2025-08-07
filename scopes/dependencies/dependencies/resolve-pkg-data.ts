@@ -98,7 +98,6 @@ function enrichDataFromDependency(packageData: ResolvedPackageData) {
   if (packageInfo.componentId) {
     const scope = packageInfo.componentId.scope as string;
     if (packageInfo.exported === false) {
-      // @ts-ignore
       delete packageInfo.componentId.scope;
     }
     const componentId = ComponentID.fromObject(packageInfo.componentId, scope);

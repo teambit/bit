@@ -68,7 +68,7 @@ export class RemoveCmd implements Command {
     }: {
       localResult: RemovedLocalObjects;
     } = await this.remove.remove({ componentsPattern, force, track, deleteFiles: !keepFiles });
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const localMessage = removeTemplate(localResult, false);
     // if (localMessage !== '')
     //   localMessage +=

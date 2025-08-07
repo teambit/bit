@@ -74,7 +74,6 @@ async function codemodComponent(
         pathNormalizeToLinux(file.relative)
       ];
       if (!relativeInstances) return;
-      // @ts-ignore
       const fileBefore = file.contents.toString() as string;
       let newFileString = fileBefore;
       await Promise.all(
@@ -93,7 +92,6 @@ async function codemodComponent(
         })
       );
       if (fileBefore !== newFileString) {
-        // @ts-ignore
         file.contents = Buffer.from(newFileString);
         files.push(file);
       }

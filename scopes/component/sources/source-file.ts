@@ -14,7 +14,6 @@ export default class SourceFile extends AbstractVinyl {
     extendedProps: Record<string, any> = {}
   ): SourceFile {
     try {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const file = new SourceFile(vinylFile.readSync(filePath, { base, cwd: consumerPath }));
       const addToFile = (value, key) => (file[key] = value); /* eslint-disable-line no-return-assign */
       forEach(extendedProps, addToFile);
@@ -41,18 +40,18 @@ export default class SourceFile extends AbstractVinyl {
 
   static loadFromParsedStringArray(arr: Record<string, any>[]): SourceFile[] | null | undefined {
     if (!arr) return null;
-    // @ts-ignore
+    // @ts-expect-error
     return arr.map(this.loadFromParsedString);
   }
 
   static async loadFromSourceFileModel(file: SourceFileModel, repository: Repository): Promise<SourceFile> {
     const content = await file.file.load(repository);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
   }
 
   clone(): this {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new SourceFile(this);
   }
 }

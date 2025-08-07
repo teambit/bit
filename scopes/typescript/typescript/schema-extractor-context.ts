@@ -3,7 +3,7 @@ import { getTokenAtPosition, canHaveJsDoc, getJsDoc } from 'tsutils';
 import type { ExportAssignment, ExportDeclaration, Node, TypeNode } from 'typescript';
 import ts, { getTextOfJSDocComment, SyntaxKind } from 'typescript';
 import { head, uniqBy } from 'lodash';
-// @ts-ignore david we should figure fix this.
+// @ts-expect-error david we should figure fix this.
 // eslint-disable-next-line import/no-unresolved
 import type protocol from 'typescript/lib/protocol';
 import { pathNormalizeToLinux, isRelativeImport } from '@teambit/legacy.utils';

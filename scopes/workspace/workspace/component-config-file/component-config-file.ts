@@ -116,7 +116,7 @@ export class ComponentConfigFile {
         if (!shouldMergeConfig) return config;
         if (!config || config === '-') return config;
         if (!existing.config) return config;
-        // @ts-ignore
+        // @ts-expect-error
         if (existing.config === '-') return config;
         return merge(existing.config, config);
       };

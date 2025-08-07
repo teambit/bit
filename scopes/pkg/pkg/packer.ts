@@ -14,7 +14,6 @@ import type { Logger } from '@teambit/logger';
 import pMap from 'p-map';
 import isRelative from 'is-relative-path';
 
-// @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
 
 export type PackResult = Omit<ComponentResult, 'component'>;

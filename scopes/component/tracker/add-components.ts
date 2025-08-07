@@ -36,8 +36,7 @@ export type Warnings = {
 };
 export type AddActionResults = { addedComponents: AddResult[]; warnings: Warnings };
 export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: tests/{PARENT}/{FILE_NAME}
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+// @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 type PathsStats = { [PathOsBased]: { isDir: boolean } };
 export type AddedComponent = {
   componentId: ComponentID;
@@ -83,7 +82,6 @@ export default class AddComponents {
   override: boolean; // (default = false) replace the files array or only add files.
   trackDirFeature: boolean | null | undefined;
   warnings: Warnings;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   ignoreList: string[];
   gitIgnore: any;
   addedComponents: AddResult[];
@@ -245,12 +243,12 @@ export default class AddComponents {
       const idOfFileIsDifferent = existingIdOfFile && !existingIdOfFile.isEqual(parsedBitId);
       if (idOfFileIsDifferent) {
         // not imported component file but exists in bitmap
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (this.warnings.alreadyUsed[existingIdOfFile]) {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           this.warnings.alreadyUsed[existingIdOfFile].push(file.relativePath);
         } else {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           this.warnings.alreadyUsed[existingIdOfFile] = [file.relativePath];
         }
         return null;
@@ -267,16 +265,15 @@ export default class AddComponents {
       }
       return file;
     });
-    // @ts-ignore it can't be null due to the filter function
+    // @ts-expect-error it can't be null due to the filter function
     const componentFiles: ComponentMapFile[] = (await Promise.all(componentFilesP)).filter((file) => file);
     if (!componentFiles.length) return { id: component.componentId, files: [] };
     if (foundComponentFromBitMap) {
       this._updateFilesAccordingToExistingRootDir(foundComponentFromBitMap, componentFiles, component);
     }
     if (this.trackDirFeature) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this.bitMap._areFilesArraysEqual(foundComponentFromBitMap.files, componentFiles)) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return foundComponentFromBitMap;
       }
     }
@@ -319,7 +316,7 @@ export default class AddComponents {
         defaultScope,
         config: this.config,
         mainFile,
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         override: this.override,
       });
       componentMap.changeRootDirAndUpdateFilesAccordingly(rootDir);
@@ -598,14 +595,14 @@ you can add the directory these files are located at and it'll change the root d
             if (addedComponent && addedComponent.files.length) this.addedComponents.push(addedComponent);
           } catch (err: any) {
             if (!(err instanceof MissingMainFile)) throw err;
-            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             missingMainFiles.push(err);
           }
         }
       })
     );
     if (missingMainFiles.length) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       throw new MissingMainFileMultipleComponents(missingMainFiles.map((err) => err.componentId).sort());
     }
   }

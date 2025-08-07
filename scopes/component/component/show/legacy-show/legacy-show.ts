@@ -15,7 +15,7 @@ export async function show({
   remote: boolean;
   compare: boolean;
 }) {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return getComponent().then(({ component, componentModel, dependentsInfo, dependenciesInfo }) => ({
     component,
     componentModel,

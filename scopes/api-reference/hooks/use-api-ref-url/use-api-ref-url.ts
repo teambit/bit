@@ -14,7 +14,6 @@ export function useAPIRefParam(key: keyof APIRefQueryParams): string | undefined
 export function useUpdatedUrlFromQuery(queryParams: APIRefQueryParams): string {
   const query = useQuery();
   const location = useLocation() || { pathname: '/' };
-  // @ts-ignore
   const queryObj = Object.fromEntries(query.entries());
 
   const updatedObj = { ...queryObj, ...queryParams };

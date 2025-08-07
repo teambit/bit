@@ -172,7 +172,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
     const entry = await getEntry(context, this.runtimeSlot);
     const componentDirectoryMap = {};
     context.components.forEach((component) => {
-      // @ts-ignore this is usually a workspace component here so it has a workspace
+      // @ts-expect-error this is usually a workspace component here so it has a workspace
       const workspace = component.workspace;
       if (!workspace) return;
       componentDirectoryMap[component.id.toString()] = workspace.componentDir(component.id);

@@ -103,10 +103,10 @@ export class AddCmd implements Command {
     const normalizedPaths: PathOsBased[] = paths.map((p) => path.normalize(p));
     const { addedComponents, warnings }: AddActionResults = await this.tracker.addForCLI({
       componentPaths: normalizedPaths,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       id,
       main: main ? path.normalize(main) : undefined,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       namespace,
       defaultScope: scope,
       override,

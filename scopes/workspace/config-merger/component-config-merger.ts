@@ -450,7 +450,6 @@ export class ComponentConfigMerger {
       if (dep.__type !== 'component') {
         return dep.id;
       }
-      // @ts-ignore
       return dep.packageName;
     };
 

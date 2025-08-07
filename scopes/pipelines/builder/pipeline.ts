@@ -28,7 +28,7 @@ export class Pipeline {
     });
 
     const buildTasks: BuildTask[] = _tasks.map((task) => {
-      // @ts-ignore
+      // @ts-expect-error
       const aspectId = task.aspectId || envId;
       const buildTask: BuildTask = Object.assign(clone(task), { aspectId });
       return buildTask;

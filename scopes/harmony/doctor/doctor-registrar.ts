@@ -11,7 +11,6 @@ const _checkName = (name) => (diagnosis: Diagnosis) => {
 };
 
 export default class DoctorRegistrar {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   diagnoses: Diagnosis[];
 
   constructor() {

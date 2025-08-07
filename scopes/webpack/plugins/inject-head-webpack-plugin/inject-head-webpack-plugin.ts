@@ -35,10 +35,10 @@ export default class InjectHeadPlugin {
     compiler.hooks.compilation.tap('InjectHeadPluginOptions', (compilation) => {
       HtmlWebpackPlugin.getHooks(compilation).beforeEmit.tap('InjectHeadPluginOptions', (data) => {
         if (this.options.position === 'end') {
-          // @ts-ignore
+          // @ts-expect-error
           data.html = insertStringBefore(data.html, '</head>', this.options.content);
         } else {
-          // @ts-ignore
+          // @ts-expect-error
           data.html = insertStringAfter(data.html, '<head>', this.options.content);
         }
         return data;

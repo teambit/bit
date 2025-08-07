@@ -665,13 +665,8 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
     const existingBitMapBitId = this.consumer.bitMap.getComponentId(component.id, { ignoreVersion: true });
     const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
     const currentlyUsedVersion = existingBitMapBitId.version;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);
-    const otherComponent: Version = await componentModel.loadVersion(
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      component.id.version,
-      this.consumer.scope.objects
-    );
+    const otherComponent: Version = await componentModel.loadVersion(component.id.version, this.consumer.scope.objects);
     const mergeResults = await threeWayMerge({
       scope: this.consumer.scope,
       otherComponent,
@@ -704,7 +699,6 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
       const filesStatus = {};
       // don't write the files to the filesystem, only bump the bitmap version.
       files.forEach((file) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
       });
       this.consumer.bitMap.updateComponentId(component.id);
@@ -715,7 +709,6 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
       const filesStatus = {};
       // the local changes will be overridden (as if the user entered --override flag for this component)
       files.forEach((file) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
       });
       return filesStatus;

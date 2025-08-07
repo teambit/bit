@@ -66,7 +66,7 @@ export class ESLintMain {
     const transformerContext: EslintConfigTransformContext = { fix: !!context.fix };
     const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
 
-    // @ts-ignore
+    // @ts-expect-error
     return new ESLintLinter(this.logger, afterMutation.raw, ESLintModule);
   }
 
@@ -87,7 +87,7 @@ ESLintAspect.addRuntime(ESLintMain);
  */
 function getOptions(options: ESLintOptions, context: LinterContext): ESLintOptions {
   const mergedConfig: ESLintLib.Options = {
-    // @ts-ignore - this is a bug in the @types/eslint types
+    // @ts-expect-error - this is a bug in the @types/eslint types
     overrideConfig: options.config,
     extensions: context.extensionFormats,
     useEslintrc: false,

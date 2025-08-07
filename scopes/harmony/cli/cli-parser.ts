@@ -130,7 +130,7 @@ export class CLIParser {
       'dependents',
       'dependencies',
     ];
-    // @ts-ignore
+    // @ts-expect-error
     yargs.completion('completion', async function (current, argv, completionFilter, done) {
       if (!current.startsWith('-') && commandsToShowComponentIdsForCompletion.includes(argv._[1])) {
         const consumer = await loadConsumerIfExist();

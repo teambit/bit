@@ -29,7 +29,6 @@ export default class ExportMetadata extends BitObject {
     };
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   toString(pretty: boolean): string {
     const args = getStringifyArgs(pretty);
     return JSON.stringify(this.toObject(), ...args);

@@ -110,7 +110,6 @@ export async function threeWayMerge({
   };
   const getFileResult = async (fsFile: SourceFile, baseFile?: SourceFileModel, otherFile?: SourceFileModel) => {
     const filePath: PathLinux = pathNormalizeToLinux(fsFile.relative);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fsFileHash = sha1(fsFile.contents);
     if (!otherFile) {
       // if !otherFile && !baseFile, the file was created after the last tag, no need to do any
@@ -143,7 +142,7 @@ export async function threeWayMerge({
     }
     // it was changed in both, there is a chance for conflict. (regardless the base)
     fsFile.label = currentLabel;
-    // @ts-ignore it's a hack to pass the data, version is not a valid attribute.
+    // @ts-expect-error it's a hack to pass the data, version is not a valid attribute.
     otherFile.label = otherLabel;
     results.modifiedFiles.push({ filePath, fsFile, baseFile, otherFile, output: null, conflict: null });
   };
@@ -214,11 +213,11 @@ async function getMergeResults(
 ): Promise<MergeFileResult[]> {
   const tmp = new Tmp(scope);
   const conflictResultsP = modifiedFiles.map(async (modifiedFile) => {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fsFilePathP = tmp.save(modifiedFile.fsFile.contents);
     const writeFile = async (file: SourceFileModel): Promise<PathOsBased> => {
       const content = await file.file.load(scope.objects);
-      // @ts-ignore
+      // @ts-expect-error
       return tmp.save(content.contents.toString());
     };
     const baseFilePathP = modifiedFile.baseFile ? writeFile(modifiedFile.baseFile) : tmp.save('');
@@ -234,7 +233,7 @@ async function getMergeResults(
         path: baseFilePath,
       },
       otherFile: {
-        // @ts-ignore
+        // @ts-expect-error
         label: modifiedFile.otherFile.label,
         path: otherFilePath,
       },

@@ -112,7 +112,7 @@ export class AspectEnv implements DependenciesEnv, PackageEnv, PreviewEnv {
         .setShouldCopyNonSupportedFiles(false);
       return tsConfigMutator;
     };
-    // @ts-ignore
+    // @ts-expect-error
     const externalTransformer: TsConfigTransformer[] = modifiers?.tsModifier?.transformers || [];
     const tsCompilerTask = this.reactEnv.getCjsCompilerTask([transformer, ...externalTransformer]);
     const babelCompiler = this.getBabelCompiler();

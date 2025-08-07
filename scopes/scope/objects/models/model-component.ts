@@ -52,7 +52,6 @@ import { DetachedHeads } from './detach-heads';
 
 type State = {
   versions?: {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     [version: string]: {
       local?: boolean; // whether a component was changed locally
     };
@@ -101,7 +100,6 @@ export const VERSION_ZERO = '0.0.0';
  * with 'Component' in their headers. see object-registrar.types()
  */
 // TODO: FIX me .parser
-// @ts-ignore
 export default class Component extends BitObject {
   scope: string;
   name: string;
@@ -527,9 +525,9 @@ export default class Component extends BitObject {
     let version = null;
     let versionStr = null;
     while (!version && versions && versions.length) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       versionStr = versions.pop();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version = this.loadVersionSync(versionStr, repository, false);
     }
     return versionStr || VERSION_ZERO;
@@ -579,9 +577,9 @@ export default class Component extends BitObject {
     const results = versionsInfo.map((versionInfo) => {
       const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };
       return {
-        ...log, // @ts-ignore
+        ...log, // @ts-expect-error
         username: log?.username || 'unknown',
-        // @ts-ignore
+        // @ts-expect-error
         email: log?.email || 'unknown',
         tag: versionInfo.tag,
         hash: getRef(versionInfo.ref),
@@ -596,7 +594,7 @@ export default class Component extends BitObject {
     });
     // sort from earliest to latest
     const sorted = results.sort((a: ComponentLog, b: ComponentLog) => {
-      // @ts-ignore
+      // @ts-expect-error
       if (a.date && b.date) return a.date - b.date;
       return 0;
     });
@@ -606,7 +604,6 @@ export default class Component extends BitObject {
   collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
     return Promise.all(
       this.listVersions().map((versionNum) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return this.toConsumerComponent(versionNum, this.scope, repo);
       })
     );
@@ -839,14 +836,14 @@ Error from "semver": ${err.message}`);
       schema: this.schema,
       detachedHeads: this.detachedHeads.toObject(),
     };
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.local) componentObject.local = this.local;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!isEmpty(this.state)) componentObject.state = this.state;
-    // @ts-ignore
+    // @ts-expect-error
     if (!isEmpty(this.orphanedVersions)) componentObject.orphanedVersions = versions(this.orphanedVersions);
     const headStr = this.getHeadStr();
-    // @ts-ignore
+    // @ts-expect-error
     if (headStr) componentObject.head = headStr;
 
     return componentObject;
@@ -863,7 +860,7 @@ Error from "semver": ${err.message}`);
   loadVersionSync(version: string, repository: Repository, throws = true): Version {
     const versionRef = this.getRef(version);
     if (!versionRef) throw new VersionNotFound(version, this.id());
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return versionRef.loadSync(repository, throws);
   }
 
@@ -1089,7 +1086,6 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     // @todo: this is weird. why the scopeMeta would be taken from the current scope and not he component scope?
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
-    // @ts-ignore
     const [files, scopeMeta] = await Promise.all([filesP, scopeMetaP]);
 
     const extensions = version.extensions.clone();
@@ -1112,10 +1108,10 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
-      // @ts-ignore
+      // @ts-expect-error
       files,
       docs: version.docs,
-      // @ts-ignore
+      // @ts-expect-error
       license: scopeMeta ? License.deserialize(scopeMeta.license) : undefined, // todo: make sure we have license in case of local scope
       log,
       overrides: ComponentOverrides.loadFromScope(version.overrides),
@@ -1178,9 +1174,9 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
 
   markVersionAsLocal(version: string) {
     if (!this.state.versions) this.state = { versions: {} };
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!this.state.versions[version]) this.state.versions[version] = {};
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.state.versions[version].local = true;
   }
 
@@ -1190,7 +1186,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
    */
   getLocalVersions(): string[] {
     if (isEmpty(this.state) || isEmpty(this.state.versions)) return [];
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return Object.keys(this.state.versions).filter((version) => this.state.versions[version].local);
   }
 
@@ -1349,7 +1345,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   }
 
   static fromBitId(bitId: ComponentID): Component {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Component({
       name: bitId.fullName,
       scope: bitId.scope,

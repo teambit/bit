@@ -106,7 +106,6 @@ export class WebpackMain {
       [...internalTransformers, ...transformers],
       transformerContext
     );
-    // @ts-ignore - fix this
     return new WebpackDevServer(afterMutation.raw, this.getWebpackInstance(webpackModulePath, webpack), wdsPath);
   }
 

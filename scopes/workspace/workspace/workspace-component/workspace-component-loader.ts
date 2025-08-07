@@ -313,7 +313,7 @@ export class WorkspaceComponentLoader {
     layeredEnvsGroups.forEach((group) => {
       const filteredIds = group.ids.filter((id) => envsOfCoreAspectEnv.includes(id.toStringWithoutVersion()));
       if (filteredIds.length) {
-        // @ts-ignore
+        // @ts-expect-error
         coreAspectEnvGroup.ids.push(...filteredIds);
       }
     });
@@ -931,7 +931,7 @@ export class WorkspaceComponentLoader {
       envExtendsDeps
     );
     if (resolvedEnvJsonc) {
-      // @ts-ignore
+      // @ts-expect-error
       envsData.resolvedEnvJsonc = resolvedEnvJsonc;
     }
 

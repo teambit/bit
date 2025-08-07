@@ -9,7 +9,6 @@ export function runTransformersWithContext(
 ): WebpackConfigMutator {
   if (!Array.isArray(transformers)) return config;
   const newConfig = transformers.reduce((acc, transformer) => {
-    // @ts-ignore
     return transformer(acc, context);
   }, config);
   return newConfig;

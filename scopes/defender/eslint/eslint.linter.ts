@@ -162,7 +162,6 @@ export class ESLintLinter implements Linter {
     let totalWarningCount = 0;
     const componentsResults = results.map((result) => {
       totalErrorCount += result.errorCount ?? 0;
-      // @ts-ignore - missing from the @types/eslint lib
       totalFatalErrorCount += result.fatalErrorCount ?? 0;
       totalFixableErrorCount += result.fixableErrorCount ?? 0;
       totalFixableWarningCount += result.fixableWarningCount ?? 0;
@@ -170,7 +169,6 @@ export class ESLintLinter implements Linter {
       return {
         filePath: result.filePath,
         errorCount: result.errorCount,
-        // @ts-ignore - missing from the @types/eslint lib
         fatalErrorCount: result.fatalErrorCount,
         fixableErrorCount: result.fixableErrorCount,
         fixableWarningCount: result.fixableWarningCount,
@@ -211,7 +209,6 @@ export class ESLintLinter implements Linter {
         totalComponentsWithErrorCount += 1;
         isClean = false;
       }
-      // @ts-ignore - missing from the @types/eslint lib
       if (result.totalFatalErrorCount) {
         totalFatalErrorCount += result.totalFatalErrorCount;
         totalComponentsWithFatalErrorCount += 1;

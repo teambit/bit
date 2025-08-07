@@ -1809,7 +1809,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     if (resolveEnvsFromRoots === undefined) {
       const resolveEnvsFromRootsConfig = this.configStore.getConfig(CFG_DEFAULT_RESOLVE_ENVS_FROM_ROOTS);
       const defaultResolveEnvsFromRoots: boolean =
-        // @ts-ignore
+        // @ts-expect-error
         resolveEnvsFromRootsConfig === 'true' || resolveEnvsFromRootsConfig === true;
       resolveEnvsFromRoots = defaultResolveEnvsFromRoots;
     }

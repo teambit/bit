@@ -12,7 +12,6 @@ export function listTemplate(listScopeResults: ListScopeResult[], json: boolean,
     if (!json && showRemoteVersion) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const color = listScopeResult.remoteVersion && semver.gt(listScopeResult.remoteVersion, version!) ? 'red' : null;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version = color ? c[color](version) : version;
     }
     const getFormattedId = () => {

@@ -326,7 +326,6 @@ export default function (isEnvProduction = false): Configuration {
         },
       ],
     },
-    // @ts-ignore
     plugins: [
       isEnvProduction &&
         new MiniCssExtractPlugin({

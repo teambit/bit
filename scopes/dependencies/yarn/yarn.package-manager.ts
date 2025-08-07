@@ -78,7 +78,7 @@ export class YarnPackageManager implements PackageManager {
 
     const project = new Project(rootDirPath, { configuration: config });
 
-    // @ts-ignore
+    // @ts-expect-error
     project.setupResolutions();
     if (installOptions.rootComponentsForCapsules && !installOptions.useNesting) {
       installOptions.overrides = {
@@ -454,7 +454,7 @@ export class YarnPackageManager implements PackageManager {
     }
     const descriptor = structUtils.makeDescriptor(ident, range);
 
-    // @ts-ignore
+    // @ts-expect-error
     project.setupResolutions();
     const resolveOptions: ResolveOptions = {
       project,

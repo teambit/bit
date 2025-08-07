@@ -238,7 +238,7 @@ export class DependencyResolverMain {
 
   isolatedCapsules(): boolean {
     const globalConfig = this.configStore.getConfig(CFG_ISOLATED_SCOPE_CAPSULES);
-    // @ts-ignore
+    // @ts-expect-error
     const defaultVal = globalConfig !== undefined ? globalConfig === true || globalConfig === 'true' : true;
     const res = this.config.isolatedCapsules ?? defaultVal;
     return res;
@@ -1350,9 +1350,9 @@ export class DependencyResolverMain {
       manifest.dependencies = manifest.dependencies.map((dep) => this.aspectLoader.cloneManifest(dep));
       await updateDirectDepsVersions(manifest.dependencies);
     }
-    // @ts-ignore
+    // @ts-expect-error
     if (manifest?._runtimes) {
-      // @ts-ignore
+      // @ts-expect-error
       await mapSeries(manifest?._runtimes, async (runtime: RuntimeManifest) => {
         if (runtime.dependencies) {
           runtime.dependencies = runtime.dependencies.map((dep) => this.aspectLoader.cloneManifest(dep));
@@ -1720,7 +1720,7 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     ]);
     componentAspect.dependencyResolver = dependencyResolver;
     // TODO: solve this generics issue and remove the ts-ignore
-    // @ts-ignore
+    // @ts-expect-error
     dependencyResolver.registerDependencyFactories([new ComponentDependencyFactory(componentAspect)]);
 
     LegacyComponent.registerOnComponentOverridesLoading(

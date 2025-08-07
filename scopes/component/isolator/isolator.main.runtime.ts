@@ -1134,7 +1134,7 @@ export class IsolatorMain {
   private wereDependenciesInPackageJsonChanged(capsuleWithPackageData: CapsulePackageJsonData): boolean {
     const { previousPackageJson, currentPackageJson } = capsuleWithPackageData;
     if (!previousPackageJson) return true;
-    // @ts-ignore at this point, currentPackageJson is set
+    // @ts-expect-error at this point, currentPackageJson is set
     return DEPENDENCIES_FIELDS.some((field) => !isEqual(previousPackageJson[field], currentPackageJson[field]));
   }
 
@@ -1402,7 +1402,7 @@ export class IsolatorMain {
     this.logger.debug(`filterUnmodifiedExportedDependencies: filtering ${components.length} components`);
 
     const scope = this.componentAspect.getHost('teambit.scope/scope');
-    // @ts-ignore it's there, but we can't have the type of ScopeMain here to not create a circular dependency
+    // @ts-expect-error it's there, but we can't have the type of ScopeMain here to not create a circular dependency
     const remotes = await scope.getRemoteScopes();
 
     const filtered: Component[] = [];

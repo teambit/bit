@@ -31,7 +31,7 @@ function _createSummeryRow(examineResult: ExamineResult): SummeryRow {
 function _createSummeryTable(examineResult: ExamineResult[]): string {
   const header = [chalk.bold('category'), chalk.bold('name'), chalk.bold('description'), chalk.bold('status')];
   const rows = examineResult.map(_createSummeryRow);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   rows.unshift(header);
   const output = table(rows, summeryTableColumnConfig);
   return output;

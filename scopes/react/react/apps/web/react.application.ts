@@ -126,7 +126,6 @@ export class ReactApp implements Application {
         },
       ],
 
-      // @ts-ignore
       capsuleNetwork: undefined,
       previousTasksResults: [],
     });
@@ -155,7 +154,6 @@ export class ReactApp implements Application {
         },
       ],
 
-      // @ts-ignore
       capsuleNetwork: undefined,
       previousTasksResults: [],
     });

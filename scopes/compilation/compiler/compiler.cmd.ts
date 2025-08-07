@@ -61,7 +61,6 @@ export class CompileCmd implements Command {
 
   async json([components]: [string[]], compilerOptions: CompileOptions) {
     compilerOptions.deleteDistDir = true;
-    // @ts-ignore
     const compileResults = await this.compile.compileComponents(components, {
       ...compilerOptions,
       initiator: CompilationInitiator.CmdJson,

@@ -27,7 +27,7 @@ export class ComponentRoute implements Route {
           const host = this.componentExtension.getHost();
           const compId = await host.resolveComponentId(componentId);
           const component = await host.get(compId);
-          // @ts-ignore
+          // @ts-expect-error
           req.component = component;
         }
         next();
@@ -36,6 +36,6 @@ export class ComponentRoute implements Route {
   }
 
   method = this.registerRoute.method;
-  // @ts-ignore
+  // @ts-expect-error
   middlewares = this.componentMiddlewares.concat(this.registerRoute.middlewares);
 }

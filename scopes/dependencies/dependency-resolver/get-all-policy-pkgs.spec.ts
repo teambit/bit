@@ -60,7 +60,6 @@ describe('getAllPolicyPkgs()', () => {
         },
       ],
     });
-    // @ts-ignore
     expect(outdatedPkgs).to.deep.equal([
       {
         currentRange: '1',

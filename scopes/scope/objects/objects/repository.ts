@@ -32,7 +32,6 @@ const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
 
 export default class Repository {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   objects: { [key: string]: BitObject } = {};
   objectsToRemove: Ref[] = [];
   scopeJson: ScopeJson;
@@ -137,7 +136,7 @@ export default class Repository {
   }
 
   getLicense(): Promise<string> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.scopeJson.getPopulatedLicense();
   }
 
@@ -198,7 +197,7 @@ export default class Repository {
         const msg = `fatal: failed finding an object file ${objectPath} in the filesystem at ${err.path}`;
         throw Object.assign(err, { stack: new Error(msg).stack });
       }
-      // @ts-ignore @todo: fix! it should return BitObject | null.
+      // @ts-expect-error @todo: fix! it should return BitObject | null.
       return null;
     }
     const size = fileContentsRaw.byteLength;
@@ -435,7 +434,7 @@ export default class Repository {
       if (throws) {
         throw new HashNotFound(ref.toString());
       }
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return null;
     }
   }
@@ -559,9 +558,9 @@ export default class Repository {
    */
   validateObjects(validate: boolean, objects: BitObject[]) {
     objects.forEach((bitObject) => {
-      // @ts-ignore some BitObject classes have validate() method
+      // @ts-expect-error some BitObject classes have validate() method
       if (validate && bitObject.validate) {
-        // @ts-ignore
+        // @ts-expect-error
         bitObject.validate();
       }
       if (!validate) {
@@ -687,7 +686,7 @@ export default class Repository {
     logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting
     const transformedContent = this.onPersist(contents);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return writeFile(objectPath, transformedContent, options);
   }
 

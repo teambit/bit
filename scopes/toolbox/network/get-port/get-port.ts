@@ -73,7 +73,7 @@ export class Port {
       server.listen(options, () => {
         const serverInfo = server.address();
         server.close(() => {
-          // @ts-ignore
+          // @ts-expect-error
           resolve(serverInfo?.port);
         });
       });

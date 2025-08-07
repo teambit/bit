@@ -119,7 +119,7 @@ this dependency was not included in the tag command.`);
  */
 function getEdges(graph: GraphLib, id: BitIdStr): BitIdStr[] | null {
   if (!graph.hasNode(id)) return null;
-  // @ts-ignore
+  // @ts-expect-error
   const edges = graphlib.alg.preorder(graph, id);
   return tail(edges); // the first item is the component itself
 }

@@ -39,11 +39,10 @@ export class EnvTemplateRoute implements RegisteredComponentRoute {
   // Then in the component route when we do host.get(id) it will fail, as we don't have the core envs in the scope/workspace
   resolveComponent = false;
 
-  // @ts-ignore
+  // @ts-expect-error
   middlewares = [
     async (req: Request<UrlParams>, res: Response, next: NextFunction) => {
       try {
-        // @ts-ignore TODO: @guy please fix.
         // const component = req.component as Component | undefined;
         // if (!component) return res.status(404).send(noPreview());
 
@@ -57,9 +56,9 @@ export class EnvTemplateRoute implements RegisteredComponentRoute {
           return res.status(404).send(noPreview());
         }
 
-        // @ts-ignore
+        // @ts-expect-error
         req.artifact = artifact;
-        // @ts-ignore
+        // @ts-expect-error
         req.isLegacyPath = false;
 
         return next();

@@ -670,7 +670,6 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
     ids: ComponentIdList,
     shouldFork = false // not in used currently, but might be needed soon
   ): Promise<boolean> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const shouldChangeScope = shouldFork
       ? remoteScope !== componentsObjects.component.scope
       : !componentsObjects.component.scope;

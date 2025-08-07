@@ -129,7 +129,6 @@ export class ApiServerMain {
     const app = this.express.createApp();
 
     app.use(
-      // @ts-ignore todo: it's not clear what's the issue.
       cors({
         origin(origin, callback) {
           callback(null, true);
@@ -153,7 +152,7 @@ export class ApiServerMain {
         on: {
           error: (err, req, res) => {
             this.logger.error('graphql cloud proxy error', err);
-            // @ts-ignore
+            // @ts-expect-error
             res.writeHead(500, {
               'Content-Type': 'text/plain',
             });
@@ -177,7 +176,7 @@ export class ApiServerMain {
           },
           error: (err, req, res) => {
             this.logger.error('rest cloud proxy error', err);
-            // @ts-ignore
+            // @ts-expect-error
             res.writeHead(500, {
               'Content-Type': 'text/plain',
             });

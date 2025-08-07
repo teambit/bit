@@ -35,9 +35,9 @@ export class CatScopeCmd implements Command {
     const payload = await catScope(scopePath || process.cwd(), full);
     if (jsonExtra) {
       payload.forEach((obj) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         obj.hash = obj.hash().toString();
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         obj.type = obj.constructor.name;
       });
     }
