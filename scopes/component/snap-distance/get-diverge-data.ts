@@ -111,8 +111,6 @@ export function getDivergeDataBetweenTwoSnaps(
 ): SnapsDistance {
   const getVersionData = (ref: Ref): VersionParents | undefined => versionParents.find((v) => v.hash.isEqual(ref));
 
-  let error: Error | undefined;
-
   const graph = versionParentsToGraph(versionParents);
   let sourceSubgraph = graph.successorsSubgraph(localHead.toString(), { edgeFilter: (e) => e.attr === 'parent' });
   let targetSubgraph = graph.successorsSubgraph(targetHead.toString(), { edgeFilter: (e) => e.attr === 'parent' });
@@ -192,7 +190,7 @@ bit import ${id} --objects`);
     return new SnapsDistance(snapsOnSourceOnly, snapsOnTargetOnly, undefined, err);
   }
 
-  return new SnapsDistance(snapsOnSourceOnly, snapsOnTargetOnly, commonSnapBeforeDiverge, error);
+  return new SnapsDistance(snapsOnSourceOnly, snapsOnTargetOnly, commonSnapBeforeDiverge);
 }
 
 /**
