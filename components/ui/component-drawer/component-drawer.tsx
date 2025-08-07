@@ -97,6 +97,7 @@ export class ComponentsDrawer implements DrawerType {
   };
 
   render = () => {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const { useComponents, useLanes: useLanesFromInstance, emptyMessage, plugins, transformTree, useHost, id } = this;
     return (
       <ComponentsDrawerContent
