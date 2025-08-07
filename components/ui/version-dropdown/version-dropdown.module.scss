@@ -8,6 +8,7 @@
     display: flex;
     align-items: center;
   }
+
   .menu {
     padding: 0;
     right: 0;
@@ -15,6 +16,7 @@
     font-size: var(--bit-p-xs);
     border-radius: 6px;
     z-index: $modal-z-index;
+    border: 1px solid var(--border-medium-color, #ededed);
   }
 }
 
@@ -49,15 +51,19 @@
   &.localVersion {
     border-bottom: 1px solid var(--bit-border-color-lightest, #ededed);
   }
+
   .versionTimestamp {
     margin-right: 2px;
   }
+
   .versionUserAvatar {
     padding: 0px 8px;
   }
+
   .laneIcon {
     padding: 0px 4px;
   }
+
   .version {
     width: 60%;
     display: flex;
@@ -65,6 +71,7 @@
     align-content: space-between;
     align-items: center;
   }
+
   .versionName {
     padding: 0px 8px;
     min-width: fit-content;
@@ -73,21 +80,26 @@
 
 .withVersions {
   cursor: pointer;
+
   > div {
     margin-right: 5px;
   }
+
   > span {
     display: unset;
   }
+
   &:hover {
     background-color: var(--bit-bg-heavy);
   }
+
   [data-open='true'] & {
     transition:
       color 300ms,
       background-color 300ms ease-in-out;
     background-color: var(--bit-bg-color, #ffffff);
     color: var(--bit-accent-color, #6c5ce7);
+
     &:hover {
       background-color: var(--bit-bg-color, #ffffff);
     }
@@ -115,6 +127,7 @@
 
 .loader {
   color: var(--bit-bg-dent, #f6f6f6);
+
   > div {
     padding: 8px 0px;
   }
@@ -122,6 +135,7 @@
 
 .versionMenuContainer {
   display: initial;
+
   &.hide {
     display: none;
   }

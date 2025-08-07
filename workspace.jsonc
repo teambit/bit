@@ -646,8 +646,6 @@
     },
     "nodeVersion": "22.14.0",
     "engineStrict": true,
-    // This is a temporary workaround to fix "bit compile" on macOS and Windows.
-    // "bit compile" breaks node_modules when hard links are used.
     "packageImportMethod": "copy",
     "packageManagerArgs": [],
     "devFilePatterns": [

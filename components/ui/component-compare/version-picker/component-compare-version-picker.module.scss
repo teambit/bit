@@ -25,6 +25,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border: 1px solid var(--border-medium-color, #ededed);
 }
 
 .componentCompareVersionContainer {
