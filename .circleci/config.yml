@@ -1143,13 +1143,13 @@ workflows:
 
   # Windows nightly workflow
   windows-nightly:
-    triggers:
-      - schedule: # every day at 5AM UTC (= 1AM EST = 8AM IST)
-          cron: '0 5 * * *'
-          filters:
-            branches:
-              only:
-                - master
+    # triggers:
+    #   - schedule: # every day at 5AM UTC (= 1AM EST = 8AM IST)
+    #       cron: '0 5 * * *'
+    #       filters:
+    #         branches:
+    #           only:
+    #             - master
     jobs:
       - windows_checkout_code
       - windows_set_ssh_key
