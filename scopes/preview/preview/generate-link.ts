@@ -24,6 +24,9 @@ type ModuleLink = {
 };
 
 type ComponentLink = {
+  componentIdString: string;
+  componentIdVersion: string;
+  componentIdScope: string;
   componentIdentifier: string;
   modules: {
     varName: string;
@@ -40,6 +43,9 @@ export function generateLink(
   tempPackageDir?: string
 ): string {
   const componentLinks: ComponentLink[] = componentMap.toArray().map(([component, modulePath], compIdx) => ({
+    componentIdString: component.id.toStringWithoutVersion(),
+    componentIdVersion: component.id.version,
+    componentIdScope: component.id.scope,
     componentIdentifier: component.id.fullName,
     modules: modulePath.map((path, pathIdx) => ({
       varName: moduleVarName(compIdx, pathIdx),
@@ -56,27 +62,58 @@ export function generateLink(
   const contents = `
 import { linkModules } from '${normalizePath(join(previewDistDir, 'preview-modules.js'))}';
 
+function __bitActiveComponentId() {
+  try {
+    const { hash } = window.location;
+    if (!hash) return null;
+    const [idPart] = hash.slice(1).split("?");
+    const id = (idPart || "").trim().replace(/^\\/+|\\/+$/g, "");
+    return id || null;
+  } catch {
+    return null;
+  }
+}
+const __bitActiveId = __bitActiveComponentId();
+
+function __bitNormalizeId(id) {
+  if (!id) return "";
+  return String(id).trim().replace(/^\\/+|\\/+$/g, "");
+}
+
+function __bitShouldSurfaceFor(componentId) {
+  if (!__bitActiveId) return false;
+  const act = __bitNormalizeId(__bitActiveId);
+  const cmp = __bitNormalizeId(componentId);
+  if (!act || !cmp) return false;
+  if (act === cmp) return true;
+  return false;
+}
+
+// Surface caught errors to the overlay without breaking fallback.
+// Only for the active component in this iframe.
+function __bitSurfaceToOverlay(err, componentId) {
+  if (process.env.NODE_ENV === "production") return;
+  if (!__bitShouldSurfaceFor(componentId)) return;
+  const e = err instanceof Error ? err : new Error(String(err));
+  const msg = (err && err.message) ? err.message : String(err);
+  console.error('[preview][load:fail]', componentId, msg);
+  setTimeout(() => {
+    void Promise.reject(e);
+  }, 0);
+}
+
 ${getModuleImports(moduleLinks, tempPackageDir)}
 (async function initializeModules() {
 ${getComponentImports(componentLinks)}
 
 linkModules('${prefix}', {
   modulesMap: {
-    ${moduleLinks
-      // must include all components, including empty
-      .map((moduleLink) => `"${moduleLink.envId}": ${moduleLink.varName}`)
-      .join(',\n    ')}
+    ${moduleLinks.map((m) => `"${m.envId}": ${m.varName}`).join(',\n    ')}
   },
   isSplitComponentBundle: ${isSplitComponentBundle},
   componentMap: {
 ${componentLinks
-  // must include all components, including empty
-  .map(
-    (componentLink) =>
-      `    "${componentLink.componentIdentifier}": [${componentLink.modules
-        .map((module) => module.varName)
-        .join(', ')}]`
-  )
+  .map((cl) => `    "${cl.componentIdentifier}": [${cl.modules.map((m) => m.varName).join(', ')}]`)
   .join(',\n')}
   }
 });
@@ -110,21 +147,28 @@ function getModuleImports(moduleLinks: ModuleLink[] = [], tempPackageDir?: strin
 
 function getComponentImports(componentLinks: ComponentLink[] = []): string {
   return componentLinks
-    .flatMap((link) =>
-      link.modules.map((module) => {
+    .flatMap((link) => {
+      return link.modules.map((module) => {
         return `
-let ${module.varName};
-try {
-  ${module.varName} = await import("${module.resolveFrom}");
-} catch (err) {
-  const msg = (err && err.message) ? err.message : String(err);
-  console.error('[preview][load:fail]', "${link.componentIdentifier}", msg);
-  ${module.varName} = { 
-    default: function ErrorFallback() { return null; },
-    __loadError: err 
-  };
-}`;
-      })
-    )
+          let ${module.varName};
+          if (__bitShouldSurfaceFor("${link.componentIdString}")) {
+            try {
+              ${module.varName} = await import("${module.resolveFrom}");
+            } 
+            catch (err) {
+              const msg = (err && err.message) ? err.message : String(err);
+              __bitSurfaceToOverlay(err, "${link.componentIdString}");
+              ${module.varName} = { 
+                default: function ErrorFallback() { return null; },
+                __loadError: err 
+              };
+            }
+          }   
+          else {
+            // Don't import non-active modules at all
+            ${module.varName} = { default: function Placeholder() { return null; } };
+        }`;
+      });
+    })
     .join('\n');
 }
