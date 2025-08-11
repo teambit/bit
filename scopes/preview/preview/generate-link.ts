@@ -68,7 +68,8 @@ function __bitActiveComponentId() {
     if (!hash) return null;
     const [idPart] = hash.slice(1).split("?");
     const id = (idPart || "").trim().replace(/^\\/+|\\/+$/g, "");
-    return id || null;
+    const idWithoutVersion = id.split('@')[0];
+    return idWithoutVersion || null;
   } catch {
     return null;
   }
