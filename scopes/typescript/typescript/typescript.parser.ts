@@ -24,7 +24,9 @@ export class TypeScriptParser implements Parser {
           if (ts.isNamedExports(statement.exportClause)) {
             statement.exportClause.elements.forEach((element) => {
               // Handle both Identifier and StringLiteral export names (TypeScript 5.6+ arbitrary module namespace identifiers)
-              const name = ts.isIdentifier(element.name) ? element.name.escapedText.toString() : element.name.text;
+              const name = ts.isIdentifier(element.name)
+                ? element.name.escapedText.toString()
+                : (element.name as ts.StringLiteral).text;
               if (name !== 'default') {
                 exportModels.push(new Export(name, staticProperties.get(name)));
               }
@@ -34,7 +36,7 @@ export class TypeScriptParser implements Parser {
             // Handle both Identifier and StringLiteral export names (TypeScript 5.6+ arbitrary module namespace identifiers)
             const name = ts.isIdentifier(statement.exportClause.name)
               ? statement.exportClause.name.escapedText.toString()
-              : statement.exportClause.name.text;
+              : (statement.exportClause.name as ts.StringLiteral).text;
             exportModels.push(new Export(name, staticProperties.get(name)));
           }
         }
