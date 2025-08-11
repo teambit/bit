@@ -368,16 +368,6 @@ export class ApplyOverrides {
         // remove the dependency from the other fields to prevent duplications
         otherFields.forEach((otherField) => {
           Object.keys(packages[depField]).forEach((pkgName) => {
-            if (this.component.id.toString().includes('screen-title')) {
-              if (this.allPackagesDependencies[this._pkgFieldMapping(otherField)][pkgName]) {
-                console.log(
-                  'deleting',
-                  otherField,
-                  pkgName,
-                  this.allPackagesDependencies[this._pkgFieldMapping(otherField)][pkgName]
-                );
-              }
-            }
             delete this.allPackagesDependencies[this._pkgFieldMapping(otherField)][pkgName];
           });
         });
