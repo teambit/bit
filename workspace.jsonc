@@ -762,7 +762,7 @@
             "buffer": "6.0.3",
             "process": "0.11.10",
             "react-router-dom": "6.3.0",
-            "typescript": "5.5.3",
+            "typescript": "5.9.2",
             // @parcel/css, lightningcss, @swc/css are used by css-minimizer-webpack-plugin
             // see this issue https://github.com/webpack-contrib/css-minimizer-webpack-plugin/issues/244
             "@parcel/css": "^1.8.3",
