@@ -348,15 +348,39 @@ export class ApplyOverrides {
     if (!dependencies) return;
     const { components, packages } = dependencies;
     DEPENDENCIES_FIELDS.forEach((depField) => {
+      const otherFields = DEPENDENCIES_FIELDS.filter((f) => f !== depField);
       if (components[depField] && components[depField].length) {
+        const depsSet = new Set();
         components[depField].forEach((depData) => {
+          depsSet.add(depData.packageName);
           this.allDependencies[depField].push(
             new Dependency(depData.componentId, [], depData.packageName, depData.versionRange)
+          );
+        });
+        otherFields.forEach((otherField) => {
+          this.allDependencies[otherField] = this.allDependencies[otherField].filter(
+            (dep) => !depsSet.has(dep.packageName)
           );
         });
       }
       if (packages[depField] && !isEmpty(packages[depField])) {
         Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], packages[depField]);
+        // remove the dependency from the other fields to prevent duplications
+        otherFields.forEach((otherField) => {
+          Object.keys(packages[depField]).forEach((pkgName) => {
+            if (this.component.id.toString().includes('screen-title')) {
+              if (this.allPackagesDependencies[this._pkgFieldMapping(otherField)][pkgName]) {
+                console.log(
+                  'deleting',
+                  otherField,
+                  pkgName,
+                  this.allPackagesDependencies[this._pkgFieldMapping(otherField)][pkgName]
+                );
+              }
+            }
+            delete this.allPackagesDependencies[this._pkgFieldMapping(otherField)][pkgName];
+          });
+        });
       }
     });
     // The automatic dependency detector considers all found dependencies to be runtime dependencies.
