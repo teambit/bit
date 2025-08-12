@@ -62,24 +62,26 @@ export function generateLink(
   const contents = `
 import { linkModules } from '${normalizePath(join(previewDistDir, 'preview-modules.js'))}';
 
+// strip leading/trailing slashes from any id we compare
+function __bitNormalizeId(id) {
+  if (!id) return "";
+  return String(id).trim().replace(/^\\/+|\\/+$/g, "");
+}
+
 function __bitActiveComponentId() {
   try {
     const { hash } = window.location;
     if (!hash) return null;
     const [idPart] = hash.slice(1).split("?");
-    const id = (idPart || "").trim().replace(/^\\/+|\\/+$/g, "");
+    const id = __bitNormalizeId(idPart);
     const idWithoutVersion = id.split('@')[0];
     return idWithoutVersion || null;
   } catch {
     return null;
   }
 }
-const __bitActiveId = __bitActiveComponentId();
 
-function __bitNormalizeId(id) {
-  if (!id) return "";
-  return String(id).trim().replace(/^\\/+|\\/+$/g, "");
-}
+const __bitActiveId = __bitActiveComponentId();
 
 function __bitShouldSurfaceFor(componentId) {
   if (!__bitActiveId) return false;
