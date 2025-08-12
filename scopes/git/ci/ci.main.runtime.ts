@@ -11,6 +11,7 @@ import type { SnapResults, SnappingMain } from '@teambit/snapping';
 import { ExportAspect, type ExportMain } from '@teambit/export';
 import { ImporterAspect, type ImporterMain } from '@teambit/importer';
 import { CheckoutAspect, checkoutOutput, type CheckoutMain } from '@teambit/checkout';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import execa from 'execa';
 import chalk from 'chalk';
 import type { ReleaseType } from 'semver';
@@ -459,6 +460,8 @@ export class CiMain {
     explicitVersionBump,
     verbose,
     versionsFile,
+    autoMergeResolve,
+    forceTheirs,
   }: {
     message?: string;
     build?: boolean;
@@ -469,6 +472,8 @@ export class CiMain {
     explicitVersionBump?: boolean;
     verbose?: boolean;
     versionsFile?: string;
+    autoMergeResolve?: MergeStrategy;
+    forceTheirs?: boolean;
   }) {
     const message = argMessage || (await this.getGitCommitMessage());
     if (!message) {
@@ -523,13 +528,38 @@ export class CiMain {
     await this.importer.importCurrentObjects();
 
     const checkoutProps = {
-      forceOurs: true,
+      forceOurs: !forceTheirs && !autoMergeResolve, // only force ours if neither forceTheirs nor autoMergeResolve is specified
       head: true,
       skipNpmInstall: true,
+      ...(forceTheirs && { forceTheirs }),
+      ...(autoMergeResolve && { mergeStrategy: autoMergeResolve }),
     };
     const checkoutResults = await this.checkout.checkout(checkoutProps);
     await this.workspace.bitMap.write('checkout head');
     this.logger.console(checkoutOutput(checkoutResults, checkoutProps));
+
+    // Check for conflicts when using manual merge strategy
+    if (autoMergeResolve === 'manual' && checkoutResults.leftUnresolvedConflicts) {
+      const componentsWithConflicts =
+        checkoutResults.components?.filter(
+          (c) => c.filesStatus && Object.values(c.filesStatus).some((status) => status === 'manual')
+        ) || [];
+
+      const conflictedComponentIds = componentsWithConflicts.map((c) => c.id.toString());
+
+      this.logger.console(chalk.red('❌ Merge conflicts detected during checkout'));
+      this.logger.console(chalk.yellow('The following components have conflicts:'));
+      conflictedComponentIds.forEach((id) => {
+        this.logger.console(chalk.yellow(`  - ${id}`));
+      });
+      this.logger.console(chalk.blue('\nTo resolve these conflicts, please run:'));
+      this.logger.console(chalk.bold('  bit checkout head'));
+      this.logger.console(chalk.gray('\nThis will allow you to manually resolve the conflicts.'));
+
+      throw new Error(
+        'Cannot complete CI merge due to unresolved conflicts. Please resolve conflicts manually and try again.'
+      );
+    }
 
     const { status } = await this.verifyWorkspaceStatusInternal(strict);
 
