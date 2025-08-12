@@ -152,7 +152,7 @@ export class ApiServerMain {
         on: {
           error: (err, req, res) => {
             this.logger.error('graphql cloud proxy error', err);
-            // @ts-expect-error
+            // @ts-ignore
             res.writeHead(500, {
               'Content-Type': 'text/plain',
             });
@@ -176,7 +176,7 @@ export class ApiServerMain {
           },
           error: (err, req, res) => {
             this.logger.error('rest cloud proxy error', err);
-            // @ts-expect-error
+            // @ts-ignore
             res.writeHead(500, {
               'Content-Type': 'text/plain',
             });

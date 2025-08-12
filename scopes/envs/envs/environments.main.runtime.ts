@@ -302,7 +302,7 @@ export class EnvsMain {
    */
   hasEnvManifest(envComponent?: Component, legacyFiles?: SourceFile[]): boolean | undefined {
     if (!envComponent && !legacyFiles) return undefined;
-    // @ts-expect-error
+    // @ts-ignore
     const files = legacyFiles || envComponent.filesystem.files;
     const envJson = files.find((file) => {
       return file.relative === 'env.jsonc' || file.relative === 'env.json';
@@ -339,7 +339,7 @@ export class EnvsMain {
   ): Promise<EnvJsonc | undefined> {
     // TODO: maybe throw an error here?
     if (!envComponent && !legacyFiles) return undefined;
-    // @ts-expect-error
+    // @ts-ignore
     const files = legacyFiles || envComponent.filesystem.files;
     const envJson = files.find((file) => {
       return file.relative === 'env.jsonc' || file.relative === 'env.json';
@@ -525,11 +525,11 @@ export class EnvsMain {
     // const resolvedEnvJsonc = await this.calculateEnvManifest(component);
     const result = componentDescriptor;
     if (envComponentSelfDescriptor) {
-      // @ts-expect-error
+      // @ts-ignore
       result.self = envComponentSelfDescriptor;
     }
     // if (resolvedEnvJsonc) {
-    //   // @ts-expect-error
+    //   // @ts-ignore
     //   result.resolvedEnvJsonc = resolvedEnvJsonc;
     // }
     return result;

@@ -587,7 +587,7 @@ export class VersionMaker {
   ) {
     let { message } = this.params;
     const { persist, copyLogFromPreviousSnap } = this.params;
-    // @ts-expect-error this happens when running `bit tag -m ""`.
+    // @ts-ignore this happens when running `bit tag -m ""`.
     if (message === true) {
       message = '';
     }

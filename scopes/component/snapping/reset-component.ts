@@ -109,7 +109,7 @@ export async function removeLocalVersionsForMultipleComponents(
     const candidateComponentsIdsStr = candidateComponentsIds.map((id) => id.toString());
     candidateComponentsIds.forEach((bitId: ComponentID) => {
       const dependents = dependencyGraph.getImmediateDependentsPerId(bitId);
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const dependentsNotCandidates = dependents.filter((dependent) => !candidateComponentsIdsStr.includes(dependent));
       if (dependentsNotCandidates.length) {
         throw new BitError( // $FlowFixMe

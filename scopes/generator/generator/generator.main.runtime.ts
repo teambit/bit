@@ -215,7 +215,7 @@ export class GeneratorMain {
     name: string,
     templates: Array<T>
   ): T | undefined {
-    // @ts-expect-error (should set T to be extends ComponentTemplateWithId or WorkspaceTemplateWithId)
+    // @ts-ignore (should set T to be extends ComponentTemplateWithId or WorkspaceTemplateWithId)
     const found = templates.find(({ id, template }) => {
       // When doing something like:
       // bit create react-env my-env --aspect teambit.react/react-env

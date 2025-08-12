@@ -77,11 +77,11 @@ export class WebpackDevServer implements DevServer {
       return webpackDs.listen(port);
     }
 
-    // @ts-expect-error in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
+    // @ts-ignore in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
     const webpackDs: WDS = new this.WsDevServer(this.config.devServer, this.getCompiler());
     await webpackDs.start();
 
-    // @ts-expect-error
+    // @ts-ignore
     return webpackDs.server;
   }
 

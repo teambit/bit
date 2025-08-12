@@ -73,9 +73,9 @@ export function dependencyResolverSchema(dependencyResolver: DependencyResolverM
           return serialized
             .map((serialize) => {
               const type = DependencyTypes[serialize.__type];
-              // @ts-expect-error
+              // @ts-ignore
               serialize.type = serialize.__type;
-              // @ts-expect-error
+              // @ts-ignore
               delete serialize.__type;
               return {
                 __typename: type,

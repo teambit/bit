@@ -19,7 +19,7 @@ async function getRemoteSchema({ uri, subscriptionsUri }) {
       return response;
     });
   });
-  // @ts-expect-error
+  // @ts-ignore
   const http = new HttpLink({ uri, fetch });
   const httpLink = setContext((request, previousContext) => {
     return {

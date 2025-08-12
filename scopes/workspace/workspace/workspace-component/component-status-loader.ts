@@ -64,7 +64,7 @@ export class ComponentStatusLoader {
   }
 
   private async getStatus(id: ComponentID) {
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const status: ComponentStatusLegacy = {};
     const componentFromModel: ModelComponent | undefined = await this.consumer.scope.getModelComponentIfExist(id);
     let componentFromFileSystem: ConsumerComponent | undefined;
@@ -124,7 +124,7 @@ export class ComponentStatusLoader {
     if (!versionFromModel) {
       throw new BitError(`failed loading version ${versionFromFs} of ${idStr} from the scope`);
     }
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     status.modified = await this.consumer.isComponentModified(versionFromModel, componentFromFileSystem);
     return status;
   }

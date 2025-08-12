@@ -63,7 +63,7 @@ path: ${err.path}`);
         throw err;
       }
 
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       refsCollection.push(...refs);
       await Promise.all(objs.map((obj) => addRefs(obj)));
     }

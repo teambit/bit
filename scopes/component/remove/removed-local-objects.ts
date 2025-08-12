@@ -11,7 +11,7 @@ export class RemovedLocalObjects extends RemovedObjects {
     removedFromLane?: ComponentIdList
   ) {
     super({ removedComponentIds, missingComponents, dependentBits, removedFromLane });
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.modifiedComponents = modifiedComponents;
   }
 }

@@ -66,7 +66,7 @@ export class ComponentMap<T> {
 
     const tuples = await Promise.all(tuplesP);
 
-    // @ts-expect-error TODO: fix this type
+    // @ts-ignore TODO: fix this type
     return new ComponentMap(new Map(tuples));
   }
 

@@ -24,7 +24,7 @@ export class BuilderRoute implements Route {
 
   middlewares = [
     async (req: Request<BuilderUrlParams>, res: Response) => {
-      // @ts-expect-error TODO: @guy please fix.
+      // @ts-ignore TODO: @guy please fix.
       const component = req.component as Component;
       const { params } = req;
       const [aspectIdStr, filePath] = params[1].split('~');

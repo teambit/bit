@@ -266,7 +266,7 @@ export class CloudMain {
           });
         })
         .on('error', (err) => {
-          // @ts-expect-error
+          // @ts-ignore
           const { code } = err;
           if (code === 'EADDRINUSE') {
             // set up a new auth listener with new port

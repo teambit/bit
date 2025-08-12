@@ -20,7 +20,7 @@ export class PreviewAssetsRoute implements Route {
   middlewares = [
     async (req: Request, res: Response) => {
       try {
-        // @ts-expect-error TODO: @guy please fix.
+        // @ts-ignore TODO: @guy please fix.
         const component = req.component as Component | undefined;
         // if (!component) return res.status(404).send(noPreview());
         if (!component) return res.status(404).jsonp({ error: 'not found' });

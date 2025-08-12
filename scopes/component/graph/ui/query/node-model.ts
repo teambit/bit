@@ -10,7 +10,7 @@ export class NodeModel {
     const node = new NodeModel();
     node.id = rawNode.id;
     // @TODO - component model should not expect all fields to have values
-    // @ts-expect-error
+    // @ts-ignore
     node.component = rawNode.component ? ComponentModel.from(rawNode.component) : undefined;
     node.componentId = node.component ? node.component.id : ComponentID.fromString(rawNode.id);
     return node;

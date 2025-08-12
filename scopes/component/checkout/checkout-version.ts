@@ -102,7 +102,7 @@ export function updateFileStatus(files: SourceFile[], filesStatus: FilesStatus, 
   files.forEach((file) => {
     const fileFromFs = componentFromFS?.files.find((f) => f.relative === file.relative);
     const areFilesEqual = fileFromFs && Buffer.compare(fileFromFs.contents, file.contents) === 0;
-    // @ts-expect-error
+    // @ts-ignore
     filesStatus[pathNormalizeToLinux(file.relative)] = areFilesEqual ? FileStatus.unchanged : FileStatus.updated;
   });
 }
@@ -128,7 +128,7 @@ export async function removeFilesIfNeeded(
   filePathsFromFS.forEach((file) => {
     const filename = pathNormalizeToLinux(file.relative);
     if (!filesStatus[filename]) {
-      // @ts-expect-error todo: typescript has a good point here. it should be the string "removed", not chalk.green(removed).
+      // @ts-ignore todo: typescript has a good point here. it should be the string "removed", not chalk.green(removed).
       filesStatus[filename] = FileStatus.removed;
     }
     if (filesStatus[filename] === FileStatus.removed) {

@@ -259,7 +259,7 @@ export class DoctorMain {
       userDetails: this._getUserDetails(),
     };
 
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return env;
   }
 

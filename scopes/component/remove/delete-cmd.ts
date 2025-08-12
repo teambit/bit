@@ -88,7 +88,7 @@ unless the '--hard' flag is used (not recommended!), in which case, the componen
     if (hard) {
       if (range) throw new BitError(`--range is not supported with --hard flag`);
       const { localResult, remoteResult = [] } = await this.remove.remove({ componentsPattern, remote: true, force });
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       let localMessage = removeTemplate(localResult, false);
       if (localMessage !== '') localMessage += '\n';
       return `${localMessage}${this.paintArray(remoteResult)}`;

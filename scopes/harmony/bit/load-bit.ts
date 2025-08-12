@@ -143,7 +143,7 @@ function attachVersionsFromBitmap(rawConfig: Record<string, any>, consumerInfo: 
   try {
     parsedBitMap = rawBitmap ? (json.parse(rawBitmap?.toString('utf8'), undefined, true) as Record<string, any>) : {};
     // @todo: remove this if statement once we don't need the migration of the bitmap file for lanes
-    // @ts-expect-error
+    // @ts-ignore
     if (parsedBitMap?._bit_lane?.name) {
       // backward compatibility. if "_bit_land" has the old format, then, later, when the bitmap is loaded again,
       // it'll take care of the migration.

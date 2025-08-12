@@ -302,7 +302,7 @@ describe('Workspace Config files - dedupe paths', function () {
     describe('ts example', () => {
       let result: DedupedPaths;
       before(async () => {
-        // @ts-expect-error (we don't really care about the env itself here)
+        // @ts-ignore (we don't really care about the env itself here)
         result = dedupePaths(tsExtendingConfigFilesMap, envCompsDirsMap);
       });
 
@@ -318,7 +318,7 @@ describe('Workspace Config files - dedupe paths', function () {
     describe('eslint example', () => {
       let result: DedupedPaths;
       before(async () => {
-        // @ts-expect-error (we don't really care about the env itself here)
+        // @ts-ignore (we don't really care about the env itself here)
         result = dedupePaths(eslintExtendingConfigFilesMap, envCompsDirsMap);
       });
 
@@ -334,7 +334,7 @@ describe('Workspace Config files - dedupe paths', function () {
     describe('prettier example', () => {
       let result: DedupedPaths;
       before(async () => {
-        // @ts-expect-error (we don't really care about the env itself here)
+        // @ts-ignore (we don't really care about the env itself here)
         result = dedupePaths(prettierExtendingConfigFilesMap, envCompsDirsMap);
       });
 

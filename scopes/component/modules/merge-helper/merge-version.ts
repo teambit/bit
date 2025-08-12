@@ -21,7 +21,7 @@ export const FileStatus = {
 export async function getMergeStrategyInteractive(): Promise<MergeStrategy> {
   try {
     const result = await resolveConflictPrompt();
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return mergeOptionsCli[result.mergeStrategy];
   } catch {
     // probably user clicked ^C

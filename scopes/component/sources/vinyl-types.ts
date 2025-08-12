@@ -331,7 +331,7 @@ interface File {
 }
 
 // See https://github.com/Microsoft/TypeScript/issues/11796
-// @ts-expect-error
+// @ts-ignore
 interface BufferFile extends File {
   contents: Buffer;
   isStream(): this is never;
@@ -340,7 +340,7 @@ interface BufferFile extends File {
   isDirectory(): this is never;
   isSymbolic(): this is never;
 }
-// @ts-expect-error
+// @ts-ignore
 interface StreamFile extends File {
   contents: NodeJS.ReadableStream;
   isStream(): true;
@@ -349,7 +349,7 @@ interface StreamFile extends File {
   isDirectory(): this is never;
   isSymbolic(): this is never;
 }
-// @ts-expect-error
+// @ts-ignore
 interface NullFile extends File {
   contents: null;
   isStream(): this is never;
@@ -358,12 +358,12 @@ interface NullFile extends File {
   isDirectory(): this is DirectoryFile;
   isSymbolic(): this is SymbolicFile;
 }
-// @ts-expect-error
+// @ts-ignore
 interface DirectoryFile extends NullFile {
   isDirectory(): true;
   isSymbolic(): this is never;
 }
-// @ts-expect-error
+// @ts-ignore
 interface SymbolicFile extends NullFile {
   isDirectory(): this is never;
   isSymbolic(): true;

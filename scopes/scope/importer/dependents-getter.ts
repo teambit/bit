@@ -1,5 +1,5 @@
 import yesno from 'yesno';
-// @ts-expect-error AutoComplete is actually there, the d.ts is probably outdated
+// @ts-ignore AutoComplete is actually there, the d.ts is probably outdated
 import { prompt, AutoComplete } from 'enquirer';
 import { compact, uniq } from 'lodash';
 import chalk from 'chalk';

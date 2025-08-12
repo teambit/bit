@@ -860,7 +860,7 @@ export class PreviewMain {
       const defaultTemplatePath = await previewDef.renderTemplatePathByEnv?.(context.env);
       const visitedEnvs = new Set();
       const mainModulesMap: MainModulesMap = {
-        // @ts-expect-error
+        // @ts-ignore
         default: defaultTemplatePath,
         [context.envDefinition.id]: defaultTemplatePath,
       };
@@ -1138,7 +1138,7 @@ export class PreviewMain {
     componentExtension.registerRoute([
       new PreviewRoute(preview, logger),
       new ComponentPreviewRoute(preview, logger),
-      // @ts-expect-error
+      // @ts-ignore
       new EnvTemplateRoute(preview, logger),
       new PreviewAssetsRoute(preview, logger),
     ]);

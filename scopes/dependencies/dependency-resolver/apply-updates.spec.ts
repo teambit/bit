@@ -41,7 +41,7 @@ describe('applyUpdates()', function () {
           lifecycleType: 'peer',
         },
       ],
-      // @ts-expect-error
+      // @ts-ignore
       { updateExisting: true }
     );
   });

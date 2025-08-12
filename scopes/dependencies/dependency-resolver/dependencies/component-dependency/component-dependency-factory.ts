@@ -23,7 +23,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
   }
 
   // TODO: solve this generics issue and remove the ts-ignore
-  // @ts-expect-error
+  // @ts-ignore
   parse<ComponentDependency, S extends SerializedComponentDependency>(serialized: S): ComponentDependency {
     let id;
 

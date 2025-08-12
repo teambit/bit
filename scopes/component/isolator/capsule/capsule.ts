@@ -80,7 +80,7 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
 
   // TODO: refactor this crap and simplify capsule API
   async execute(cmd: string, options?: Record<string, any> | null | undefined) {
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const execResults = await this.exec({ command: cmd.split(' '), options });
     let stdout = '';
     let stderr = '';

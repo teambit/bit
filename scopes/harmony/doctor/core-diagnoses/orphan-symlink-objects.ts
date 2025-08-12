@@ -27,13 +27,13 @@ export default class OrphanSymlinkObjects extends Diagnosis {
     const objectsToDelete = [];
     await Promise.all(
       symlinks.map(async (symlink) => {
-        // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         const realComponentId: ComponentID = symlink.getRealComponentId();
         const realModelComponent = ModelComponent.fromBitId(realComponentId);
         const foundComponent = await consumer.scope.objects.load(realModelComponent.hash());
         if (!foundComponent) {
           orphanSymlinks.push(realComponentId);
-          // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           objectsToDelete.push(consumer.scope.objects.objectPath(symlink.hash()));
         }
       })

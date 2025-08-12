@@ -78,7 +78,7 @@ export class YarnPackageManager implements PackageManager {
 
     const project = new Project(rootDirPath, { configuration: config });
 
-    // @ts-expect-error
+    // @ts-ignore
     project.setupResolutions();
     if (installOptions.rootComponentsForCapsules && !installOptions.useNesting) {
       installOptions.overrides = {
@@ -263,13 +263,13 @@ export class YarnPackageManager implements PackageManager {
 
     ws.manifest.name = ident;
 
-    // @ts-expect-error: It's ok to initialize it now, even if it's readonly (setup is called right after construction)
+    // @ts-ignore: It's ok to initialize it now, even if it's readonly (setup is called right after construction)
     ws.locator = structUtils.makeLocator(ident, ws.reference);
 
-    // @ts-expect-error: It's ok to initialize it now, even if it's readonly (setup is called right after construction)
+    // @ts-ignore: It's ok to initialize it now, even if it's readonly (setup is called right after construction)
     ws.anchoredDescriptor = structUtils.makeDescriptor(ws.locator, `${WorkspaceResolver.protocol}${ws.relativeCwd}`);
 
-    // @ts-expect-error: It's ok to initialize it now, even if it's readonly (setup is called right after construction)
+    // @ts-ignore: It's ok to initialize it now, even if it's readonly (setup is called right after construction)
     ws.anchoredLocator = structUtils.makeLocator(ws.locator, `${WorkspaceResolver.protocol}${ws.relativeCwd}`);
   }
 
@@ -454,7 +454,7 @@ export class YarnPackageManager implements PackageManager {
     }
     const descriptor = structUtils.makeDescriptor(ident, range);
 
-    // @ts-expect-error
+    // @ts-ignore
     project.setupResolutions();
     const resolveOptions: ResolveOptions = {
       project,

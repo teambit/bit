@@ -195,7 +195,7 @@ Component pattern format: ${COMPONENT_PATTERN_HELP}`,
     }
     const { mergeResults, deleteResults, configMergeResults } = await this.mergeLanes.mergeLaneByCLI(name, {
       build,
-      // @ts-expect-error
+      // @ts-ignore
       mergeStrategy,
       ours,
       theirs,

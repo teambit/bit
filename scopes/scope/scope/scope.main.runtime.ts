@@ -323,7 +323,7 @@ export class ScopeMain implements ComponentFactory {
       component.state._consumer.dependencies.dependencies
     );
     if (resolvedEnvJsonc) {
-      // @ts-expect-error
+      // @ts-ignore
       envsData.resolvedEnvJsonc = resolvedEnvJsonc;
     }
     // Make sure we are adding the envs / deps data first because other on load events might depend on it

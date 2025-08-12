@@ -89,7 +89,7 @@ export class CapsuleCreateCmd implements Command {
   }
 
   async report([componentIds]: [string[]], opts: CreateOpts) {
-    // @ts-expect-error
+    // @ts-ignore
     const capsules = await this.create(componentIds, opts);
     const capsuleOutput = capsules
       .map((capsule) => `${chalk.bold(capsule.component.id.toString())} - ${capsule.path}`)
@@ -99,7 +99,7 @@ export class CapsuleCreateCmd implements Command {
   }
 
   async json([componentIds]: [string[]], opts: CreateOpts) {
-    // @ts-expect-error
+    // @ts-ignore
     const capsules = await this.create(componentIds, opts);
     return capsules.map((c) => ({
       id: c.component.id.toString(),

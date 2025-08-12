@@ -28,9 +28,9 @@ export default class BitRawObject {
     this.content = content || contentFromBuffer;
     this.headers = headers ? headers.split(SPACE_DELIMITER) : undefined;
     const typeFromHeader = this.headers ? this.headers[0] : undefined;
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.type = type || typeFromHeader;
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this._ref = ref;
     this.parsedContent = parsedContent || this.getParsedContent();
   }
@@ -110,7 +110,7 @@ export default class BitRawObject {
   }
 
   static async fromDeflatedBuffer(fileContents: Buffer, ref: string | null | undefined): Promise<BitObject> {
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return inflate(fileContents).then((buffer) => new BitRawObject(buffer, ref));
   }
 
@@ -126,7 +126,7 @@ export default class BitRawObject {
   clone() {
     const parsedContent = this.parsedContent ? clone(this.parsedContent) : undefined;
     // TODO: Should also clone the buffers (content)
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new BitRawObject(undefined, this._ref, this.type, this.content, parsedContent);
   }
 }

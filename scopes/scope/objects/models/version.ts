@@ -159,7 +159,7 @@ export default class Version extends BitObject {
     this.schema = props.schema;
     this.overrides = props.overrides || {};
     this.packageJsonChangedProps = props.packageJsonChangedProps || {};
-    // @ts-expect-error yes, props.hash can be undefined here, but it gets populated as soon as Version is created
+    // @ts-ignore yes, props.hash can be undefined here, but it gets populated as soon as Version is created
     this._hash = props.hash;
     this.parents = props.parents || [];
     this.squashed = props.squashed;
@@ -234,7 +234,7 @@ export default class Version extends BitObject {
     // @todo: remove the entire dependencies.relativePaths from the ID (it's going to be a breaking change)
     const getDependencies = (deps: Dependencies) => {
       const clonedDependencies = deps.cloneAsString();
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return clonedDependencies.map((dependency: Dependency) => {
         return {
           id: dependency.id,
@@ -746,7 +746,7 @@ export default class Version extends BitObject {
   }
 
   setDist(dist: Source | undefined) {
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.dist = dist
       ? {
           file: dist.hash(),

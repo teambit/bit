@@ -37,18 +37,18 @@ export async function getScopeComponent({
   let dependenciesInfo: DependenciesInfo[] = [];
   let dependentsInfo: DependenciesInfo[] = [];
   if (showDependents || showDependencies) {
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentDepGraph = await remote.graph(component.id);
     if (showDependents) {
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependentsInfo = componentDepGraph.getDependentsInfo(component.id);
     }
     if (showDependencies) {
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       dependenciesInfo = componentDepGraph.getDependenciesInfo(component.id);
     }
   }
-  // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return { component, dependentsInfo, dependenciesInfo };
 
   async function showComponentUsingScope(scope: Scope) {

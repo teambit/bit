@@ -72,7 +72,7 @@ function createPreBundleConfig(outputDir: string, entryFile: string) {
           }, seed);
           const entrypointFiles = entrypoints.main.filter((fileName) => !fileName.endsWith('.map'));
 
-          // @ts-expect-error - https://github.com/shellscape/webpack-manifest-plugin/issues/276
+          // @ts-ignore - https://github.com/shellscape/webpack-manifest-plugin/issues/276
           return {
             files: manifestFiles,
             entrypoints: entrypointFiles,

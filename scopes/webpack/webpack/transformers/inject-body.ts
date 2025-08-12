@@ -16,7 +16,7 @@ export type BodyInjectionOptions = {
  */
 export function GenerateBodyInjectionTransformer(options: BodyInjectionOptions): WebpackConfigTransformer {
   return (config) => {
-    // @ts-expect-error - https://github.com/Jaid/inject-body-webpack-plugin/issues/12
+    // @ts-ignore - https://github.com/Jaid/inject-body-webpack-plugin/issues/12
     const plugin = new InjectBodyPlugin(options);
 
     return config.addPlugin(plugin);

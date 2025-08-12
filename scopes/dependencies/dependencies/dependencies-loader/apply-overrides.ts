@@ -67,7 +67,7 @@ export class ApplyOverrides {
     private workspace?: Workspace
   ) {
     this.componentId = component.componentId;
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
     this.allDependencies = {
       dependencies: [],

@@ -338,7 +338,7 @@ function formatPlainComponentItemWithVersions(bitId: ComponentID, importDetails:
   const getConflictMessage = () => {
     if (!importDetails.filesStatus) return '';
     const conflictedFiles = Object.keys(importDetails.filesStatus)
-      // @ts-expect-error file is set
+      // @ts-ignore file is set
       .filter((file) => importDetails.filesStatus[file] === FileStatus.manual);
     if (!conflictedFiles.length) return '';
     return `(the following files were saved with conflicts ${conflictedFiles

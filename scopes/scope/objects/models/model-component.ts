@@ -525,9 +525,9 @@ export default class Component extends BitObject {
     let version = null;
     let versionStr = null;
     while (!version && versions && versions.length) {
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       versionStr = versions.pop();
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version = this.loadVersionSync(versionStr, repository, false);
     }
     return versionStr || VERSION_ZERO;
@@ -577,9 +577,9 @@ export default class Component extends BitObject {
     const results = versionsInfo.map((versionInfo) => {
       const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };
       return {
-        ...log, // @ts-expect-error
+        ...log, // @ts-ignore
         username: log?.username || 'unknown',
-        // @ts-expect-error
+        // @ts-ignore
         email: log?.email || 'unknown',
         tag: versionInfo.tag,
         hash: getRef(versionInfo.ref),
@@ -594,7 +594,7 @@ export default class Component extends BitObject {
     });
     // sort from earliest to latest
     const sorted = results.sort((a: ComponentLog, b: ComponentLog) => {
-      // @ts-expect-error
+      // @ts-ignore
       if (a.date && b.date) return a.date - b.date;
       return 0;
     });
@@ -836,14 +836,14 @@ Error from "semver": ${err.message}`);
       schema: this.schema,
       detachedHeads: this.detachedHeads.toObject(),
     };
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.local) componentObject.local = this.local;
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!isEmpty(this.state)) componentObject.state = this.state;
-    // @ts-expect-error
+    // @ts-ignore
     if (!isEmpty(this.orphanedVersions)) componentObject.orphanedVersions = versions(this.orphanedVersions);
     const headStr = this.getHeadStr();
-    // @ts-expect-error
+    // @ts-ignore
     if (headStr) componentObject.head = headStr;
 
     return componentObject;
@@ -860,7 +860,7 @@ Error from "semver": ${err.message}`);
   loadVersionSync(version: string, repository: Repository, throws = true): Version {
     const versionRef = this.getRef(version);
     if (!versionRef) throw new VersionNotFound(version, this.id());
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return versionRef.loadSync(repository, throws);
   }
 
@@ -1108,10 +1108,10 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
-      // @ts-expect-error
+      // @ts-ignore
       files,
       docs: version.docs,
-      // @ts-expect-error
+      // @ts-ignore
       license: scopeMeta ? License.deserialize(scopeMeta.license) : undefined, // todo: make sure we have license in case of local scope
       log,
       overrides: ComponentOverrides.loadFromScope(version.overrides),
@@ -1174,9 +1174,9 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
 
   markVersionAsLocal(version: string) {
     if (!this.state.versions) this.state = { versions: {} };
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!this.state.versions[version]) this.state.versions[version] = {};
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.state.versions[version].local = true;
   }
 
@@ -1186,7 +1186,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
    */
   getLocalVersions(): string[] {
     if (isEmpty(this.state) || isEmpty(this.state.versions)) return [];
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return Object.keys(this.state.versions).filter((version) => this.state.versions[version].local);
   }
 
@@ -1345,7 +1345,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
   }
 
   static fromBitId(bitId: ComponentID): Component {
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Component({
       name: bitId.fullName,
       scope: bitId.scope,

@@ -19,7 +19,7 @@ export class LintTask implements BuildTask {
     const rootDir = context.capsuleNetwork.capsulesRootDir;
     const componentsDirMap = this.getComponentsDirectory(rootDir, context.capsuleNetwork.originalSeedersCapsules);
 
-    // @ts-expect-error TODO: fix this
+    // @ts-ignore TODO: fix this
     const linterContext: LinterContext = {
       rootDir,
       componentsDirMap,

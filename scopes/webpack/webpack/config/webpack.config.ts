@@ -30,7 +30,7 @@ export function configFactory(target: Target, context: BundlerContext): Configur
     bail: true,
     // These are the "entry points" to our application.
     // This means they will be the "root" imports that are included in JS bundle.
-    // @ts-expect-error
+    // @ts-ignore
     entry: truthyEntries,
 
     infrastructureLogging: {

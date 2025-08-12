@@ -150,7 +150,7 @@ export class WebpackBundler implements Bundler {
       entryVal.assets?.forEach((asset) => {
         const compressedSize = assetsMap[asset.name]?.compressedSize;
         if (compressedSize) {
-          // @ts-expect-error
+          // @ts-ignore
           asset.compressedSize = compressedSize;
           compressedAssetsSize += compressedSize;
         }
@@ -158,7 +158,7 @@ export class WebpackBundler implements Bundler {
       entryVal.auxiliaryAssets?.forEach((asset) => {
         const compressedSize = assetsMap[asset.name]?.compressedSize;
         if (compressedSize) {
-          // @ts-expect-error
+          // @ts-ignore
           asset.compressedSize = compressedSize;
           compressedAuxiliaryAssetsSize += compressedSize;
         }

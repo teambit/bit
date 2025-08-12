@@ -39,12 +39,12 @@ export default class ScopeMeta extends BitObject {
   }
 
   static fromScopeName(name: string): Ref {
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return ScopeMeta.fromObject({ name }).hash();
   }
 
   static parse(propsStr: string | Buffer): ScopeMeta {
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.fromObject(JSON.parse(propsStr));
   }
 

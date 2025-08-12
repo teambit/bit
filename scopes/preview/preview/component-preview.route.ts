@@ -24,7 +24,7 @@ export class ComponentPreviewRoute implements Route {
     async (req: Request<PreviewUrlParams>, res: Response, next: NextFunction) => {
       try {
         let isLegacyPath = false;
-        // @ts-expect-error TODO: @guy please fix.
+        // @ts-ignore TODO: @guy please fix.
         const component = req.component as Component | undefined;
         if (!component) return res.status(404).send(noPreview());
 
@@ -37,9 +37,9 @@ export class ComponentPreviewRoute implements Route {
           this.logger.error(`preview.getPreview has failed`, e);
           return res.status(404).send(noPreview());
         }
-        // @ts-expect-error
+        // @ts-ignore
         req.artifact = artifact;
-        // @ts-expect-error
+        // @ts-ignore
         req.isLegacyPath = isLegacyPath;
         return next();
       } catch (e: any) {

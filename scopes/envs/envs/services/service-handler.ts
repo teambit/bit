@@ -29,7 +29,7 @@ export function reduceServiceHandlersFactories<T>(
 ): ServiceHandlerFactory<T> {
   if (!factories.length) throw new Error('no factories were provided');
   const result: ServiceHandlerFactory<T> = (context: ServiceHandlerContext) => {
-    // @ts-expect-error
+    // @ts-ignore
     const initialVal = factories.shift()(context);
     const reduced: ServiceHandler & T = factories.reduce((acc, currFactory) => {
       const curr = currFactory(context);

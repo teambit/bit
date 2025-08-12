@@ -157,7 +157,7 @@ needed-for: ${neededFor || '<unknown>'}`);
     const depsToLoad: Array<ExtensionManifest | Aspect> = [];
     await mapSeries(manifests, async (manifest) => {
       depsToLoad.push(...(manifest.dependencies || []));
-      // @ts-expect-error
+      // @ts-ignore
       (manifest._runtimes || []).forEach((runtime) => {
         depsToLoad.push(...(runtime.dependencies || []));
       });
@@ -351,13 +351,13 @@ needed-for: ${neededFor || '<unknown>'}`);
 
   shouldUseDatedCapsules(): boolean {
     const globalConfig = this.configStore.getConfig(CFG_USE_DATED_CAPSULES);
-    // @ts-expect-error
+    // @ts-ignore
     return globalConfig === true || globalConfig === 'true';
   }
 
   shouldCacheLockFileOnly(): boolean {
     const globalConfig = this.configStore.getConfig(CFG_CACHE_LOCK_ONLY_CAPSULES);
-    // @ts-expect-error
+    // @ts-ignore
     return globalConfig === true || globalConfig === 'true';
   }
 

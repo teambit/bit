@@ -281,7 +281,7 @@ export class Http implements Network {
           `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${_response.status} statusText ${_response.statusText}`
         );
 
-        // @ts-expect-error TODO: need to fix this
+        // @ts-ignore TODO: need to fix this
         const _results = await this.readPutCentralStream(_response.body);
         return { results: _results, response: _response };
       },
@@ -332,7 +332,7 @@ export class Http implements Network {
       `Http.deleteViaCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
     );
 
-    // @ts-expect-error TODO: need to fix this
+    // @ts-ignore TODO: need to fix this
     const results = await this.readPutCentralStream(res.body);
     if (!results.data) throw new Error(`HTTP results are missing "data" property`);
     if (results.data.isError) {

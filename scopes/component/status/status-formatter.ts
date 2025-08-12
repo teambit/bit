@@ -340,7 +340,7 @@ function getInvalidComponentLabel(error: Error) {
     case 'ComponentNotFoundInPath':
       return 'component files were deleted (use "bit remove [component_id]") or moved (use "bit move <old-dir> <new-dir>"). to restore use "bit checkout reset [component_id]"';
     case 'ExtensionFileNotFound':
-      // @ts-expect-error error.path is set for ExtensionFileNotFound
+      // @ts-ignore error.path is set for ExtensionFileNotFound
       return `extension file is missing at ${chalk.bold(error.path)}`;
     case 'ComponentsPendingImport':
       return 'component objects are missing from the scope (use "bit import [component_id] --objects" to get them back)';

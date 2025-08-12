@@ -15,7 +15,7 @@ type AbstractVinylProps = {
   contents: Buffer;
 };
 
-// @ts-expect-error
+// @ts-ignore
 export default class AbstractVinyl extends (Vinyl as FileConstructor) {
   override = true;
   verbose = false;
@@ -40,7 +40,7 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
 
   async write(
     writePath?: string,
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     override?: boolean = this.override,
     verbose?: boolean = this.verbose
   ): Promise<string | null | undefined> {
@@ -79,7 +79,7 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
    * then when working on the same components in Windows and Linux they won't appear as modified
    */
   toSourceAsLinuxEOL(): Source {
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return Source.from(eol.lf(this.contents));
   }
 

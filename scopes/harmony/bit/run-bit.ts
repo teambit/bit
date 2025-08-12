@@ -62,18 +62,18 @@ function consoleFileReadUsages() {
   };
   const originalReadFile = fs.readFile;
   const originalReadFileSync = fs.readFileSync;
-  // @ts-expect-error
+  // @ts-ignore
   fs.readFile = (...args) => {
     numR++;
     print(args[0]);
-    // @ts-expect-error
+    // @ts-ignore
     return originalReadFile(...args);
   };
 
   fs.readFileSync = (...args) => {
     numR++;
     print(args[0]);
-    // @ts-expect-error
+    // @ts-ignore
     return originalReadFileSync(...args);
   };
 }

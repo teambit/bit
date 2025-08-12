@@ -18,9 +18,9 @@ export type GetCacheControlFunc = (filePath: string, contents: string, mimeType?
 export function getArtifactFileMiddleware(logger: Logger, getCacheControlFunc?: GetCacheControlFunc): Middleware {
   return async (req: Request<PreviewUrlParams>, res: Response) => {
     try {
-      // @ts-expect-error
+      // @ts-ignore
       const artifact: PreviewArtifact = req.artifact;
-      // @ts-expect-error
+      // @ts-ignore
       const isLegacyPath = req.isLegacyPath;
       let file;
       if (!isLegacyPath) {

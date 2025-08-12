@@ -36,7 +36,7 @@ export type Warnings = {
 };
 export type AddActionResults = { addedComponents: AddResult[]; warnings: Warnings };
 export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: tests/{PARENT}/{FILE_NAME}
-// @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 type PathsStats = { [PathOsBased]: { isDir: boolean } };
 export type AddedComponent = {
   componentId: ComponentID;
@@ -243,12 +243,12 @@ export default class AddComponents {
       const idOfFileIsDifferent = existingIdOfFile && !existingIdOfFile.isEqual(parsedBitId);
       if (idOfFileIsDifferent) {
         // not imported component file but exists in bitmap
-        // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         if (this.warnings.alreadyUsed[existingIdOfFile]) {
-          // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           this.warnings.alreadyUsed[existingIdOfFile].push(file.relativePath);
         } else {
-          // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           this.warnings.alreadyUsed[existingIdOfFile] = [file.relativePath];
         }
         return null;
@@ -265,14 +265,14 @@ export default class AddComponents {
       }
       return file;
     });
-    // @ts-expect-error it can't be null due to the filter function
+    // @ts-ignore it can't be null due to the filter function
     const componentFiles: ComponentMapFile[] = (await Promise.all(componentFilesP)).filter((file) => file);
     if (!componentFiles.length) return { id: component.componentId, files: [] };
     if (foundComponentFromBitMap) {
       this._updateFilesAccordingToExistingRootDir(foundComponentFromBitMap, componentFiles, component);
     }
     if (this.trackDirFeature) {
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this.bitMap._areFilesArraysEqual(foundComponentFromBitMap.files, componentFiles)) {
         return foundComponentFromBitMap;
       }
@@ -316,7 +316,7 @@ export default class AddComponents {
         defaultScope,
         config: this.config,
         mainFile,
-        // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         override: this.override,
       });
       componentMap.changeRootDirAndUpdateFilesAccordingly(rootDir);
@@ -595,14 +595,14 @@ you can add the directory these files are located at and it'll change the root d
             if (addedComponent && addedComponent.files.length) this.addedComponents.push(addedComponent);
           } catch (err: any) {
             if (!(err instanceof MissingMainFile)) throw err;
-            // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             missingMainFiles.push(err);
           }
         }
       })
     );
     if (missingMainFiles.length) {
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       throw new MissingMainFileMultipleComponents(missingMainFiles.map((err) => err.componentId).sort());
     }
   }

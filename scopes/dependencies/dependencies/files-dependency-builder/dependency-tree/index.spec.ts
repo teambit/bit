@@ -18,7 +18,7 @@ const fixtures = path.resolve(`${__dirname}/../fixtures/dependency-tree`);
 function mockfs(obj: any) {
   Object.entries(obj).forEach(([key, value]) => {
     fs.mkdirSync(key, { recursive: true });
-    // @ts-expect-error
+    // @ts-ignore
     Object.entries(value).forEach(([file, content]) => {
       const filePath = path.join(key, file);
       fs.writeFileSync(filePath, content as string);
@@ -356,14 +356,14 @@ describe('dependencyTree', function () {
 
   describe('throws', () => {
     beforeEach(() => {
-      // @ts-expect-error
+      // @ts-ignore
       this._directory = `${UNIT_TEST_DIR}/commonjs`;
-      // @ts-expect-error
+      // @ts-ignore
       this._revert = dependencyTreeRewired.__set__('traverse', () => []);
     });
 
     afterEach(() => {
-      // @ts-expect-error
+      // @ts-ignore
       this._revert();
     });
 
@@ -371,7 +371,7 @@ describe('dependencyTree', function () {
       assert.throws(() => {
         dependencyTree({
           filename: undefined,
-          // @ts-expect-error
+          // @ts-ignore
           directory: this._directory,
         });
       });
@@ -411,7 +411,7 @@ describe('dependencyTree', function () {
 
   describe('on file error', () => {
     beforeEach(() => {
-      // @ts-expect-error
+      // @ts-ignore
       this._directory = `${UNIT_TEST_DIR}/commonjs`;
     });
 
@@ -419,14 +419,14 @@ describe('dependencyTree', function () {
       assert.doesNotThrow(() => {
         dependencyTree({
           filename: 'foo',
-          // @ts-expect-error
+          // @ts-ignore
           directory: this._directory,
         });
       });
     });
 
     it('returns no dependencies', () => {
-      // @ts-expect-error
+      // @ts-ignore
       const tree = dependencyTree({ filename: 'foo', directory: this._directory });
       assert(!tree.length);
     });
@@ -434,7 +434,7 @@ describe('dependencyTree', function () {
 
   describe('memoization (#2)', () => {
     beforeEach(() => {
-      // @ts-expect-error
+      // @ts-ignore
       this._spy = sinon.spy(dependencyTreeRewired, '_getDependencies');
     });
 
@@ -464,7 +464,7 @@ describe('dependencyTree', function () {
   describe('module formats', () => {
     describe('commonjs', () => {
       beforeEach(() => {
-        // @ts-expect-error
+        // @ts-ignore
         this._directory = path.normalize(`${UNIT_TEST_DIR}/es6`);
         mockcommonjs();
       });
@@ -474,7 +474,7 @@ describe('dependencyTree', function () {
 
     describe('es6', () => {
       beforeEach(() => {
-        // @ts-expect-error
+        // @ts-ignore
         this._directory = path.normalize(`${UNIT_TEST_DIR}/es6`);
         mockes6();
       });
@@ -482,38 +482,38 @@ describe('dependencyTree', function () {
       testTreesForFormat('es6');
 
       it('resolves files that have jsx', () => {
-        // @ts-expect-error
+        // @ts-ignore
         const filename = path.normalize(`${this._directory}/jsx.js`);
         const tree = dependencyTree({
           filename,
-          // @ts-expect-error
+          // @ts-ignore
           directory: this._directory,
         });
-        // @ts-expect-error
+        // @ts-ignore
         assert.ok(tree[filename].includes(path.normalize(`${this._directory}/c.js`)));
       });
 
       it('resolves files with a jsx extension', () => {
-        // @ts-expect-error
+        // @ts-ignore
         const filename = path.normalize(`${this._directory}/foo.jsx`);
         const tree = dependencyTree({
           filename,
-          // @ts-expect-error
+          // @ts-ignore
           directory: this._directory,
         });
-        // @ts-expect-error
+        // @ts-ignore
         assert.ok(tree[filename].includes(path.normalize(`${this._directory}/b.js`)));
       });
 
       it('resolves files that have es7', () => {
-        // @ts-expect-error
+        // @ts-ignore
         const filename = path.normalize(`${this._directory}/es7.js`);
         const tree = dependencyTree({
           filename,
-          // @ts-expect-error
+          // @ts-ignore
           directory: this._directory,
         });
-        // @ts-expect-error
+        // @ts-ignore
         assert.ok(tree[filename].includes(path.normalize(`${this._directory}/c.js`)));
       });
     });
@@ -559,17 +559,17 @@ describe('dependencyTree', function () {
     beforeEach(() => {
       // Note: not mocking because webpack's resolver needs a real project with dependencies;
       // otherwise, we'd have to mock a ton of files.
-      // @ts-expect-error
+      // @ts-ignore
       this._root = path.join(UNIT_TEST_DIR, '../');
-      // @ts-expect-error
+      // @ts-ignore
       this._webpackConfig = `${this._root}/webpack.config.js`;
-      // @ts-expect-error
+      // @ts-ignore
       this._testResolution = (name) => {
         const results = dependencyTree.toList({
           filename: `${UNIT_TEST_DIR}/webpack/${name}.js`,
-          // @ts-expect-error
+          // @ts-ignore
           directory: this._root,
-          // @ts-expect-error
+          // @ts-ignore
           webpackConfig: this._webpackConfig,
           filter: (filename) => filename.indexOf('filing-cabinet') !== -1,
         });
@@ -579,7 +579,7 @@ describe('dependencyTree', function () {
 
     it('resolves unaliased modules', () => {
       this.timeout(5000);
-      // @ts-expect-error
+      // @ts-ignore
       this._testResolution('unaliased');
     });
   });
@@ -789,18 +789,18 @@ describe('dependencyTree', function () {
         visited: {},
       };
 
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config.filename = fooFile;
       dependencyTree(config);
       expect(nonExistent[fooFile]).to.deep.equal(['non-exist-foo-pkg']);
 
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config.filename = barFile;
       dependencyTree(config);
       expect(nonExistent[fooFile]).to.deep.equal(['non-exist-foo-pkg']);
       expect(nonExistent[barFile]).to.deep.equal(['non-exist-bar-pkg']);
 
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config.filename = bazFile;
       dependencyTree(config);
       expect(nonExistent[fooFile]).to.deep.equal(['non-exist-foo-pkg']);
@@ -825,11 +825,11 @@ describe('dependencyTree', function () {
         directory,
       };
 
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config.filename = baseFile;
       dependencyTree(config);
 
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config.filename = indexFile;
       const dependencies = dependencyTree(config);
       expect(dependencies).to.be.ok;

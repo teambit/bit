@@ -275,7 +275,7 @@ export class ReactEnv
 
   private getEslintOptions(options: ESLintLib.Options, pluginPath: string, context: LinterContext): ESLintOptions {
     const mergedConfig: ESLintLib.Options = {
-      // @ts-expect-error - this is a bug in the @types/eslint types
+      // @ts-ignore - this is a bug in the @types/eslint types
       overrideConfig: options,
       extensions: context.extensionFormats,
       useEslintrc: false,

@@ -136,7 +136,7 @@ export default class Repository {
   }
 
   getLicense(): Promise<string> {
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return this.scopeJson.getPopulatedLicense();
   }
 
@@ -197,7 +197,7 @@ export default class Repository {
         const msg = `fatal: failed finding an object file ${objectPath} in the filesystem at ${err.path}`;
         throw Object.assign(err, { stack: new Error(msg).stack });
       }
-      // @ts-expect-error @todo: fix! it should return BitObject | null.
+      // @ts-ignore @todo: fix! it should return BitObject | null.
       return null;
     }
     const size = fileContentsRaw.byteLength;
@@ -434,7 +434,7 @@ export default class Repository {
       if (throws) {
         throw new HashNotFound(ref.toString());
       }
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return null;
     }
   }
@@ -558,9 +558,9 @@ export default class Repository {
    */
   validateObjects(validate: boolean, objects: BitObject[]) {
     objects.forEach((bitObject) => {
-      // @ts-expect-error some BitObject classes have validate() method
+      // @ts-ignore some BitObject classes have validate() method
       if (validate && bitObject.validate) {
-        // @ts-expect-error
+        // @ts-ignore
         bitObject.validate();
       }
       if (!validate) {
@@ -686,7 +686,7 @@ export default class Repository {
     logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting
     const transformedContent = this.onPersist(contents);
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return writeFile(objectPath, transformedContent, options);
   }
 

@@ -48,7 +48,7 @@ export class TesterTask implements BuildTask {
       if (!compiler) {
         throw new Error(`compiler not found for ${component.id.toString()}`);
       }
-      // @ts-expect-error. not sure why ts complain that compiler might be undefined, when we check it above.
+      // @ts-ignore. not sure why ts complain that compiler might be undefined, when we check it above.
       const distFolder = compiler.getDistDir() || compiler.distDir;
       return {
         componentDir: join(capsule.path, distFolder),
@@ -62,7 +62,7 @@ export class TesterTask implements BuildTask {
 
     const specFilesWithCapsule = ComponentMap.as(components, (component) => {
       const patternEntry = patternsWithCapsule.get(component);
-      // @ts-expect-error
+      // @ts-ignore
       const [, val] = patternEntry;
       return val.paths;
     });
@@ -75,7 +75,7 @@ export class TesterTask implements BuildTask {
     });
 
     // TODO: remove after fix AbstractVinyl on capsule
-    // @ts-expect-error
+    // @ts-ignore
     const testsResults = await tester.test(testerContext);
 
     // write junit files

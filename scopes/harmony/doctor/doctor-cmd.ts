@@ -79,7 +79,7 @@ export class DoctorCmd implements Command {
     }
     let filePath = save;
     // Happen when used --save without specify the location
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (save === true || archive === true) {
       filePath = '.';
     }

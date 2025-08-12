@@ -162,7 +162,7 @@ export class PackageJsonFile {
       },
       license: `SEE LICENSE IN ${!isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`,
     };
-    // @ts-expect-error
+    // @ts-ignore
     if (addExportProperty) packageJsonObject.exported = component.id.hasScope();
     if (!packageJsonObject.homepage) delete packageJsonObject.homepage;
     return new PackageJsonFile({ filePath, packageJsonObject, fileExist: false });
@@ -249,7 +249,7 @@ export class PackageJsonFile {
   }
 
   clone(): PackageJsonFile {
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const clone = new PackageJsonFile(this);
     clone.packageJsonObject = cloneDeep(this.packageJsonObject);
     return clone;

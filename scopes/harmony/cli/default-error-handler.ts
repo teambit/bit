@@ -13,7 +13,7 @@ import { hashErrorIfNeeded } from '@teambit/legacy.cli.error';
  */
 export function sendToAnalyticsAndSentry(err: Error) {
   const possiblyHashedError = hashErrorIfNeeded(err);
-  // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const shouldNotReportToSentry = Boolean(err.isUserError || err.code === 'EACCES');
   // only level FATAL are reported to Sentry.
   const level = shouldNotReportToSentry ? LEVEL.INFO : LEVEL.FATAL;
@@ -21,11 +21,11 @@ export function sendToAnalyticsAndSentry(err: Error) {
 }
 
 function handleNonBitCustomErrors(err: Error): string {
-  // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   if (err.code === 'EACCES' && err.path) {
     // see #1774
     return chalk.red(
-      // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       `error: you do not have permissions to access '${err.path}', were you running bit, npm or git as root?`
     );
   }

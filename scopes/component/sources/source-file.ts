@@ -40,18 +40,18 @@ export default class SourceFile extends AbstractVinyl {
 
   static loadFromParsedStringArray(arr: Record<string, any>[]): SourceFile[] | null | undefined {
     if (!arr) return null;
-    // @ts-expect-error
+    // @ts-ignore
     return arr.map(this.loadFromParsedString);
   }
 
   static async loadFromSourceFileModel(file: SourceFileModel, repository: Repository): Promise<SourceFile> {
     const content = await file.file.load(repository);
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
   }
 
   clone(): this {
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new SourceFile(this);
   }
 }

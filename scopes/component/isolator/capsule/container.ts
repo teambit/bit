@@ -102,7 +102,7 @@ export default class FsContainer implements Container<Exec, AnyFS> {
   start(): Promise<void> {
     return fs.ensureDir(this.wrkDir);
   }
-  // @ts-expect-error
+  // @ts-ignore
   async inspect(): Promise<ContainerStatus> {
     // todo: probably not needed for this container
   }

@@ -77,7 +77,7 @@ export class Runtime {
     const errors: Error[] = [];
     const contexts: EnvResult<T>[] = await mapSeries(runtimes || this.runtimeEnvs, async (env) => {
       try {
-        // @ts-expect-error
+        // @ts-ignore
         const serviceResult = await service.run(new ExecutionContext(this, env), options);
 
         return {

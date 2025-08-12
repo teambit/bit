@@ -564,7 +564,7 @@ export class LaneRemoveCmd implements Command {
   ): Promise<string> {
     if (!silent) {
       const removePromptResult = await approveOperation();
-      // @ts-expect-error
+      // @ts-ignore
       if (!yn(removePromptResult.shouldProceed)) {
         throw new BitError('the operation has been cancelled');
       }

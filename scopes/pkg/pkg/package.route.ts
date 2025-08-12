@@ -17,7 +17,7 @@ export class PackageRoute implements Route {
 
   middlewares = [
     async (req: Request, res: Response) => {
-      // @ts-expect-error TODO: @guy please fix.
+      // @ts-ignore TODO: @guy please fix.
       const component: any = req.component as any;
       const file = await this.pkg.getPackageTarFile(component);
       // TODO: 404 again how to handle.

@@ -22,7 +22,7 @@ export function actionLegacy(
 ): Promise<any> {
   return show({
     id,
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     json,
     remote,
     compare,
@@ -126,30 +126,30 @@ function paintComponent(component: ConsumerComponent, componentModel: ConsumerCo
         const arr = [];
         if (!printableOriginalComponent[field] && !printableComponentToCompare[field]) return null;
         const title = `${field[0].toUpperCase()}${field.slice(1)}`.replace(/([A-Z])/g, ' $1').trim();
-        // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         arr.push(field in componentsDiffs && field !== 'id' ? c.red(title) : c.cyan(title));
         if (printableComponentToCompare[field] instanceof Array) {
           arr.push(
-            // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             printableComponentToCompare[field]
               .map((str) => calculatePadRightLength(str, COLUMN_WIDTH))
               .join(' ')
               .trim()
           );
         } else {
-          // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           arr.push(printableComponentToCompare[field]);
         }
         if (printableOriginalComponent[field] instanceof Array) {
           arr.push(
-            // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+            // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             printableOriginalComponent[field]
               .map((str) => calculatePadRightLength(str, COLUMN_WIDTH))
               .join(' ')
               .trim()
           );
         } else {
-          // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           arr.push(printableOriginalComponent[field]);
         }
         return arr;
@@ -187,7 +187,7 @@ function paintComponent(component: ConsumerComponent, componentModel: ConsumerCo
     }
 
     const dependencyHeader = [];
-    // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     dependencyHeader.push(['Dependencies']);
     const getDependenciesRows = (dependencies, title?: string) => {
       const dependencyRows = [];
@@ -195,7 +195,7 @@ function paintComponent(component: ConsumerComponent, componentModel: ConsumerCo
         let dependencyId = dependency.id.toString();
         dependencyId = title ? `${dependencyId} (${title})` : dependencyId;
         const row = [dependencyId];
-        // @ts-expect-error AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         dependencyRows.push(row);
       });
       return dependencyRows;

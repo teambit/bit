@@ -22,7 +22,7 @@ export class EnvServiceList {
           id,
           name: service.name,
           description: service.description,
-          // @ts-expect-error
+          // @ts-ignore
           data: service.getDescriptor(this.env),
         };
       }),

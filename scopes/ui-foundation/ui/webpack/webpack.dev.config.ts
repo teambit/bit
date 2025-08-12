@@ -143,7 +143,7 @@ export function devConfig(workspaceDir, entryFiles, title): WebpackConfigWithDev
         // middlewares before `redirectServedPath` otherwise will not have any effect
         // This lets us fetch source contents from webpack for the error overlay
         middlewares.push(
-          // @ts-expect-error @types/wds mismatch
+          // @ts-ignore @types/wds mismatch
           evalSourceMapMiddleware(devServer),
           // This lets us open files from the runtime error overlay.
           errorOverlayMiddleware(),
