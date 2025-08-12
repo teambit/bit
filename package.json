@@ -91,7 +91,7 @@
     "lint-staged": "lint-staged"
   },
   "dependencies": {
-    "oxlint": "1.10.0",
+    "oxlint": "1.11.2",
     "husky": "9.1.7"
   },
   "devDependencies": {},

@@ -45,8 +45,8 @@ export class CiPrCmd implements Command {
       if (!currentBranch) {
         throw new Error('Failed to get branch name');
       }
-      // Sanitize branch name to make it valid for Bit lane IDs by replacing slashes with dashes
-      const sanitizedBranch = currentBranch.replace(/\//g, '-');
+      // Sanitize branch name to make it valid for Bit lane IDs by replacing slashes and dots with dashes
+      const sanitizedBranch = currentBranch.replace(/[/.]/g, '-');
       laneIdStr = `${this.workspace.defaultScope}/${sanitizedBranch}`;
     }
 
