@@ -3,6 +3,7 @@ import { Verb } from '@teambit/express';
 import { fetch } from '@teambit/legacy.scope-api';
 import { ObjectList } from '@teambit/objects';
 import type { Logger } from '@teambit/logger';
+// @ts-ignore
 import { pipeline } from 'stream/promises';
 import type { ScopeMain } from '../scope.main.runtime';
 
