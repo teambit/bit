@@ -23,14 +23,20 @@ export class TypeScriptParser implements Parser {
         if (statement.exportClause) {
           if (ts.isNamedExports(statement.exportClause)) {
             statement.exportClause.elements.forEach((element) => {
-              const name = element.name.escapedText.toString();
+              // Handle both Identifier and StringLiteral export names (TypeScript 5.6+ arbitrary module namespace identifiers)
+              const name = ts.isIdentifier(element.name)
+                ? element.name.escapedText.toString()
+                : (element.name as ts.StringLiteral).text;
               if (name !== 'default') {
                 exportModels.push(new Export(name, staticProperties.get(name)));
               }
             });
           }
           if (ts.isNamespaceExport(statement.exportClause)) {
-            const name = statement.exportClause.name.escapedText.toString();
+            // Handle both Identifier and StringLiteral export names (TypeScript 5.6+ arbitrary module namespace identifiers)
+            const name = ts.isIdentifier(statement.exportClause.name)
+              ? statement.exportClause.name.escapedText.toString()
+              : (statement.exportClause.name as ts.StringLiteral).text;
             exportModels.push(new Export(name, staticProperties.get(name)));
           }
         }

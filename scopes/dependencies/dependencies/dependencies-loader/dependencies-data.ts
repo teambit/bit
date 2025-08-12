@@ -18,6 +18,7 @@ export class DependenciesData {
   ) {}
 
   serialize(): string {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const { issues, allDependencies, ...rest } = this;
     return JSON.stringify({
       ...rest,

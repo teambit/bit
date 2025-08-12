@@ -210,7 +210,9 @@ export default class CommandHelper {
     return JSON.parse(result);
   }
 
-  catComponent(id: string, cwd?: string, parse = true): Record<string, any> {
+  catComponent(id: string, cwd?: string): Record<string, any>;
+  catComponent(id: string, cwd: string | undefined, parse: false): string;
+  catComponent(id: string, cwd?: string, parse = true): Record<string, any> | string {
     const result = this.runCmd(`bit cat-component ${id} --json`, cwd);
     return parse ? JSON.parse(result) : result;
   }

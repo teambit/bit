@@ -226,7 +226,6 @@ export class AutoDetectDeps {
     destination: string | null | undefined;
   } {
     let depFileRelative: PathLinux = depFile; // dependency file path relative to consumer root
-    let destination: string | null | undefined;
     const rootDir = this.componentMap.rootDir;
     // The depFileRelative is relative to rootDir, change it to be relative to current consumer.
     // We can't use path.resolve(rootDir, fileDep) because this might not work when running
@@ -237,7 +236,7 @@ export class AutoDetectDeps {
 
     const componentId = this.consumer.bitMap.getComponentIdByPath(depFileRelative);
 
-    return { componentId, depFileRelative, destination };
+    return { componentId, depFileRelative, destination: undefined };
   }
 
   private processDepFiles(originFile: PathLinuxRelative, fileType: FileType, nested = false) {
