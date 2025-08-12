@@ -293,22 +293,21 @@ export class CiMain {
 
   private async switchToLane(laneName: string, options: SwitchLaneOptions = {}) {
     this.logger.console(chalk.blue(`Switching to ${laneName}`));
-    await this.lanes
-      .switchLanes(laneName, {
+    try {
+      await this.lanes.switchLanes(laneName, {
         forceOurs: true,
         head: true,
         workspaceOnly: true,
         skipDependencyInstallation: true,
         ...options,
-      })
-      .catch((e) => {
-        if (e.toString().includes('already checked out')) {
-          this.logger.console(chalk.yellow(`Lane ${laneName} already checked out, skipping checkout`));
-          return true;
-        }
-        this.logger.console(chalk.red(`Failed to checkout lane ${laneName}: ${e.toString()}`));
-        return null;
       });
+    } catch (e: any) {
+      if (e.toString().includes('already checked out')) {
+        this.logger.console(chalk.yellow(`Lane ${laneName} already checked out, skipping checkout`));
+        return true;
+      }
+      this.logger.console(chalk.red(`Failed switching to ${laneName}: ${e.toString()}`));
+    }
   }
 
   async verifyWorkspaceStatus() {
