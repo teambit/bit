@@ -4260,6 +4260,16 @@
             "",
             "verbose",
             "show verbose output"
+          ],
+          [
+            "r",
+            "auto-merge-resolve <merge-strategy>",
+            "in case of merge conflict during checkout, resolve according to the provided strategy: [ours, theirs, manual]"
+          ],
+          [
+            "",
+            "force-theirs",
+            "do not merge during checkout, just overwrite with incoming files"
           ]
         ],
         "description": "Merges a PR",
