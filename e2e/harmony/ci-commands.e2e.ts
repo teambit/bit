@@ -342,4 +342,44 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
       expect(comp1?.currentVersion).to.equal('0.0.1');
     });
   });
+
+  describe('bit ci merge with soft tag', () => {
+    let mergeOutput: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      setupGitRemote();
+      const defaultBranch = setupComponentsAndInitialCommit();
+
+      helper.command.runCmd('git checkout -b feature/soft-tag');
+      helper.fs.outputFile('comp1/comp1.js', 'console.log("test");');
+      helper.command.softTag('--major');
+      helper.command.runCmd('git commit -am "test: component update for soft tag"');
+      helper.command.runCmd('git push -u origin feature/soft-tag');
+
+      helper.command.runCmd('bit ci pr');
+
+      // the soft-tag should still be there although "bit ci pr" command
+      // created a new lane and snapped. because once done it reverts the local git changes.
+
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.runCmd('git merge feature/soft-tag');
+      helper.command.runCmd('git push');
+
+      mergeOutput = helper.command.runCmd('bit ci merge');
+    });
+    it('should complete successfully', () => {
+      expect(mergeOutput).to.include('Merged PR');
+    });
+    it('should tag the changed component as major according to the soft-tag', () => {
+      const list = helper.command.listParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      expect(comp1).to.exist;
+      expect(comp1?.currentVersion).to.equal('1.0.0');
+    });
+    it('status should be clean', () => {
+      const status = helper.command.statusJson();
+      expect(status.modifiedComponents).to.have.lengthOf(0);
+      helper.command.expectStatusToBeClean();
+    });
+  });
 });
