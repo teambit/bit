@@ -611,6 +611,9 @@ jobs:
     environment:
       BIT_FEATURES: cloud-importer-v2
       NODE_OPTIONS: --max-old-space-size=30000
+      # NPM 409 conflict retry settings
+      BIT_PUBLISH_RETRY_ATTEMPTS: "5"       # 5 retry attempts for 409 npm registry conflicts
+      BIT_PUBLISH_RETRY_DELAY: "8000"       # 8 seconds initial retry delay with exponential backoff
     steps:
       - attach_workspace:
           at: ./
@@ -627,7 +630,8 @@ jobs:
       - run: cd bit && npm run generate-core-aspects-ids
       - run:
           name: 'bit ci merge'
-          command: 'cd bit && bit ci merge --build --auto-merge-resolve manual ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 3 ${BIT_CI_MERGE_EXTRA_FLAGS}'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=32000
