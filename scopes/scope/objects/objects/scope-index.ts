@@ -111,7 +111,6 @@ export class ScopeIndex {
   }
 
   getHashes(indexType: IndexType): string[] {
-    // @ts-ignore how to tell TS that all this.index.prop are array?
     return this.index[indexType].map((indexItem: IndexItem) => indexItem.hash);
   }
   getHashesByQuery(indexType: IndexType, filter: Function): string[] {

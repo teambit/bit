@@ -129,7 +129,6 @@ export class ApiServerMain {
     const app = this.express.createApp();
 
     app.use(
-      // @ts-ignore todo: it's not clear what's the issue.
       cors({
         origin(origin, callback) {
           callback(null, true);

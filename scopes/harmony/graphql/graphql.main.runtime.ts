@@ -132,7 +132,6 @@ export class GraphqlMain {
     const app = options.app || express();
     if (!this.config.disableCors) {
       app.use(
-        // @ts-ignore todo: it's not clear what's the issue.
         cors({
           origin(origin, callback) {
             callback(null, true);
@@ -309,7 +308,6 @@ export class GraphqlMain {
     const deps = this.context.getDependencies(extension);
     const ids = deps.map((dep) => dep.id);
 
-    // @ts-ignore check :TODO why types are breaking here.
     return Array.from(this.modules.entries())
       .map(([depId, module]) => {
         const dep = ids.includes(depId);

@@ -434,7 +434,6 @@ export class ApplyOverrides {
       getNotRegularPackages(this.allPackagesDependencies.devPackageDependencies)
     );
     // remove dev dependencies that are also regular dependencies
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentDepsIds = new ComponentIdList(...this.allDependencies.dependencies.map((c) => c.id));
     this.allDependencies.devDependencies = this.allDependencies.devDependencies.filter(
       (d) => !componentDepsIds.has(d.id)

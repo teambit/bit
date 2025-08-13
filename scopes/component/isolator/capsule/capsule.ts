@@ -91,7 +91,6 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
       execResults.stdout.on('error', (error: string) => {
         return reject(error);
       });
-      // @ts-ignore
       execResults.on('close', () => {
         return resolve({ stdout, stderr });
       });

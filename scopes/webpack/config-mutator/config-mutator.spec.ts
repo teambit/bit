@@ -38,7 +38,6 @@ describe('add aliases', () => {
   it('add simple alias', () => {
     const config = new WebpackConfigMutator({});
     config.addAliases({ react: 'custom-react-path' });
-    // @ts-ignore - error since there is mix between mocha and jest types
     expect(config.raw.resolve?.alias).toHaveProperty('react', 'custom-react-path');
   });
 });
@@ -47,9 +46,7 @@ describe('add top level', () => {
   it('add simple alias', () => {
     const config = new WebpackConfigMutator({});
     config.addTopLevel('output', { publicPath: 'my-public-path' });
-    // @ts-ignore - error since there is mix between mocha and jest types
     expect(config.raw).toHaveProperty('output');
-    // @ts-ignore - error since there is mix between mocha and jest types
     expect(config.raw.output).toHaveProperty('publicPath', 'my-public-path');
   });
 });
@@ -59,11 +56,8 @@ describe('add module rule', () => {
     const config = new WebpackConfigMutator({});
     config.addModuleRule(cssRule);
     expect(config.raw.module?.rules?.length).toEqual(1);
-    // @ts-ignore - error since there is mix between mocha and jest types
     expect(config.raw.module?.rules?.[0]).toHaveProperty('test', /\.css$/);
-    // @ts-ignore - error since there is mix between mocha and jest types
     expect(config.raw.module?.rules?.[0]).toHaveProperty('exclude', /\.module\.css$/);
-    // @ts-ignore - error since there is mix between mocha and jest types
     expect(config.raw.module?.rules?.[0]).toHaveProperty('use', ['style-loader', 'css-loader']);
   });
 });

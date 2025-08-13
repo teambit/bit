@@ -91,7 +91,7 @@ export class TesterTask implements BuildTask {
     );
 
     return {
-      artifacts: getArtifactDef(), // @ts-ignore
+      artifacts: getArtifactDef(),
       componentsResults: testsResults.components.map((componentTests) => {
         const componentErrors = componentTests.errors;
         const component = context.capsuleNetwork.graphCapsules.getCapsule(componentTests.componentId)?.component;

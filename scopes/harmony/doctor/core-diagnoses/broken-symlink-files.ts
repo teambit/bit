@@ -17,7 +17,6 @@ export default class BrokenSymlinkFiles extends Diagnosis {
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
     if (!bareResult.data) throw new Error('BrokenSymlinkFiles, bareResult.data is missing');
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const toString = bareResult.data.brokenSymlinks
       .map(
         (brokenSymlink) => `symlink path: "${brokenSymlink.symlinkPath}", broken link: "${brokenSymlink.brokenPath}"`
