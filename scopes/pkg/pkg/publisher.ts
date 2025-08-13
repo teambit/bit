@@ -62,55 +62,41 @@ export class Publisher {
     let lastError: ComponentResult | null = null;
 
     for (let attempt = 1; attempt <= PUBLISH_RETRY_ATTEMPTS; attempt++) {
-      try {
-        const result = await this.publishOneCapsule(capsule);
+      const result = await this.publishOneCapsule(capsule);
 
-        // If publish succeeded (no errors), return the result
-        if (!result.errors || result.errors.length === 0) {
-          if (attempt > 1) {
-            this.logger.info(`Successfully published ${capsule.component.id.toString()} on attempt ${attempt}`);
-          }
-          return result;
+      // If publish succeeded (no errors), return the result
+      if (!result.errors || result.errors.length === 0) {
+        if (attempt > 1) {
+          this.logger.info(`Successfully published ${capsule.component.id.toString()} on attempt ${attempt}`);
         }
+        return result;
+      }
 
-        // Check if error is specifically related to npm registry conflicts (409, packument)
-        const errorMessage = result.errors ? result.errors.join(', ') : 'Unknown error';
-        const is409Error =
-          errorMessage.includes('409') ||
-          errorMessage.includes('packument') ||
-          errorMessage.includes('Failed to save packument');
+      // Check if error is specifically related to npm registry conflicts (409, packument)
+      const errorMessage = result.errors ? result.errors.join(', ') : 'Unknown error';
+      const is409Error =
+        errorMessage.includes('409') ||
+        errorMessage.includes('packument') ||
+        errorMessage.includes('Failed to save packument');
 
-        if (!is409Error) {
-          // Not a 409 error, return immediately without retry
-          return result;
-        }
+      if (!is409Error) {
+        // Not a 409 error, return immediately without retry
+        return result;
+      }
 
-        // Store the error result for potential return
-        lastError = result;
+      // Store the error result for potential return
+      lastError = result;
 
-        if (attempt < PUBLISH_RETRY_ATTEMPTS) {
-          const delay = PUBLISH_RETRY_DELAY * Math.pow(2, attempt - 1); // Exponential backoff
-          this.logger.warn(
-            `npm 409 conflict for ${capsule.component.id.toString()}, retrying in ${delay}ms (attempt ${attempt}/${PUBLISH_RETRY_ATTEMPTS}). Error: ${errorMessage}`
-          );
-          await this.sleep(delay);
-        } else {
-          this.logger.error(
-            `Failed to publish ${capsule.component.id.toString()} after ${PUBLISH_RETRY_ATTEMPTS} attempts due to npm registry conflicts`
-          );
-        }
-      } catch (error) {
-        this.logger.error(
-          `Unexpected error during publish attempt ${attempt} for ${capsule.component.id.toString()}: ${error}`
+      if (attempt < PUBLISH_RETRY_ATTEMPTS) {
+        const delay = PUBLISH_RETRY_DELAY * Math.pow(2, attempt - 1); // Exponential backoff
+        this.logger.warn(
+          `npm 409 conflict for ${capsule.component.id.toString()}, retrying in ${delay}ms (attempt ${attempt}/${PUBLISH_RETRY_ATTEMPTS}). Error: ${errorMessage}`
         );
-        // For unexpected errors, don't retry
-        return {
-          component: capsule.component,
-          metadata: {},
-          errors: [`Unexpected error: ${error}`],
-          startTime: Date.now(),
-          endTime: Date.now(),
-        };
+        await this.sleep(delay);
+      } else {
+        this.logger.error(
+          `Failed to publish ${capsule.component.id.toString()} after ${PUBLISH_RETRY_ATTEMPTS} attempts due to npm registry conflicts`
+        );
       }
     }
 

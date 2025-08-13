@@ -611,9 +611,6 @@ jobs:
     environment:
       BIT_FEATURES: cloud-importer-v2
       NODE_OPTIONS: --max-old-space-size=30000
-      # NPM 409 conflict retry settings
-      BIT_PUBLISH_RETRY_ATTEMPTS: "5"       # 5 retry attempts for 409 npm registry conflicts
-      BIT_PUBLISH_RETRY_DELAY: "8000"       # 8 seconds initial retry delay with exponential backoff
     steps:
       - attach_workspace:
           at: ./
