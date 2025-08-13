@@ -630,7 +630,13 @@
         "scope": "teambit.react",
         "version": "1.0.243",
         "mainFile": "index.js",
-        "rootDir": "scopes/react/eslint-config-bit-react"
+        "rootDir": "scopes/react/eslint-config-bit-react",
+        "nextVersion": {
+            "version": "major",
+            "message": "",
+            "username": "david2",
+            "email": "davidnet@gmail.com"
+        }
     },
     "eslint/config-mutator": {
         "name": "eslint/config-mutator",
