@@ -1,5 +1,4 @@
 import detectIndent from 'detect-indent';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detectNewline from 'detect-newline';
 import fs from 'fs-extra';
 import * as path from 'path';
@@ -180,12 +179,10 @@ export class PackageJsonFile {
   }
 
   addDependencies(dependencies: Record<string, any>) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.packageJsonObject.dependencies = Object.assign({}, this.packageJsonObject.dependencies, dependencies);
   }
 
   addDevDependencies(dependencies: Record<string, any>) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.packageJsonObject.devDependencies = Object.assign({}, this.packageJsonObject.devDependencies, dependencies);
   }
 

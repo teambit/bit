@@ -21,7 +21,7 @@ require('regenerator-runtime/runtime');
 process.on('unhandledRejection', async (err: any) => handleUnhandledRejection(err));
 
 const originalEmit = process.emit;
-// @ts-expect-error - TS complains about the return type of originalEmit.apply
+// @ts-ignore - TS complains about the return type of originalEmit.apply
 process.emit = function (name, data) {
   // --------------------------------------------
 

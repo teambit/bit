@@ -147,7 +147,6 @@ path: ${err.path}`);
   }
 
   static makeHash(str: string | Buffer): string {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return sha1(str);
   }
 }

@@ -14,7 +14,6 @@ export default class SourceFile extends AbstractVinyl {
     extendedProps: Record<string, any> = {}
   ): SourceFile {
     try {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const file = new SourceFile(vinylFile.readSync(filePath, { base, cwd: consumerPath }));
       const addToFile = (value, key) => (file[key] = value); /* eslint-disable-line no-return-assign */
       forEach(extendedProps, addToFile);

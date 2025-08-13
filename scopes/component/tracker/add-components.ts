@@ -37,7 +37,6 @@ export type Warnings = {
 export type AddActionResults = { addedComponents: AddResult[]; warnings: Warnings };
 export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: tests/{PARENT}/{FILE_NAME}
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 type PathsStats = { [PathOsBased]: { isDir: boolean } };
 export type AddedComponent = {
   componentId: ComponentID;
@@ -83,7 +82,6 @@ export default class AddComponents {
   override: boolean; // (default = false) replace the files array or only add files.
   trackDirFeature: boolean | null | undefined;
   warnings: Warnings;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   ignoreList: string[];
   gitIgnore: any;
   addedComponents: AddResult[];
@@ -276,7 +274,6 @@ export default class AddComponents {
     if (this.trackDirFeature) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this.bitMap._areFilesArraysEqual(foundComponentFromBitMap.files, componentFiles)) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return foundComponentFromBitMap;
       }
     }

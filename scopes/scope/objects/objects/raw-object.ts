@@ -8,7 +8,6 @@ export default class BitRawObject {
   headers: string[];
   type: string;
   content: Buffer;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   parsedContent: any;
   _ref: string;
 
@@ -17,7 +16,6 @@ export default class BitRawObject {
     ref: string | null | undefined,
     type: string | null | undefined,
     content: Buffer | null | undefined,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     parsedContent: any | null | undefined
   ) {
     let headers;
@@ -72,17 +70,14 @@ export default class BitRawObject {
     }
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   set ref(ref: string) {
     this._ref = ref;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get ref(): string {
     return this._ref;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get id(): string {
     switch (this.type) {
       case 'Version':
@@ -114,11 +109,7 @@ export default class BitRawObject {
     return [];
   }
 
-  static async fromDeflatedBuffer(
-    fileContents: Buffer,
-    ref: string | null | undefined
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  ): Promise<BitObject> {
+  static async fromDeflatedBuffer(fileContents: Buffer, ref: string | null | undefined): Promise<BitObject> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return inflate(fileContents).then((buffer) => new BitRawObject(buffer, ref));
   }
@@ -129,7 +120,6 @@ export default class BitRawObject {
    * @param {Any} parsedContent
    */
   toRealObject() {
-    // @ts-ignore
     return types[this.type].from(this.parsedContent || this.getParsedContent(), this.headers[1]);
   }
 

@@ -43,7 +43,6 @@ export class EnvTemplateRoute implements RegisteredComponentRoute {
   middlewares = [
     async (req: Request<UrlParams>, res: Response, next: NextFunction) => {
       try {
-        // @ts-ignore TODO: @guy please fix.
         // const component = req.component as Component | undefined;
         // if (!component) return res.status(404).send(noPreview());
 

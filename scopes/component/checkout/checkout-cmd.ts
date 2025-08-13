@@ -213,7 +213,6 @@ once ready, snap/tag the components to persist the changes`;
       const title =
         alternativeTitle ||
         `successfully ${switchedOrReverted} ${chalk.bold(componentName)} to version ${chalk.bold(
-          // @ts-ignore version is defined when !reset
           head || latest ? component.id.version : version
         )}`;
       return chalk.bold(title) + newLine + applyVersionReport(components, false);
@@ -227,7 +226,6 @@ once ready, snap/tag the components to persist the changes`;
       if (head) return 'their head version';
       if (latest) return 'their latest version';
       if (main) return 'their main version';
-      // @ts-ignore version is defined when !reset
       return `version ${chalk.bold(version)}`;
     };
     const versionOutput = getVerOutput();

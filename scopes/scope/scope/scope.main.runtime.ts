@@ -1364,7 +1364,6 @@ export class ScopeMain implements ComponentFactory {
       new ActionRoute(scope),
       new DeleteRoute(scope),
     ]);
-    // @ts-ignore - @ran to implement the missing functions and remove it
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(() => scopeSchema(scope));
     componentExt.registerHost(scope);
