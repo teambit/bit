@@ -1,7 +1,7 @@
 const configs = require('eslint-plugin-mdx/lib/configs');
 
 module.exports = {
-  extends: ['plugin:jest/recommended', 'plugin:import/recommended', 'plugin:react-hooks/recommended'],
+  extends: ['plugin:jest/recommended', 'plugin:react-hooks/recommended'],
   plugins: ['jest', 'import'],
   settings: {
     'mdx/code-blocks': false,
@@ -47,12 +47,9 @@ module.exports = {
         '@typescript-eslint/no-unused-vars': 'warn',
         'no-nested-ternary': 'warn',
         'react/self-closing-comp': 'warn',
-        'import/order': 'warn',
         'object-shorthand': 'warn',
         'react/jsx-boolean-value': 'warn',
         'react/button-has-type': 'off',
-        'import/no-extraneous-dependencies': 'off',
-        'import/prefer-default-export': 'off',
         'react/jsx-props-no-spreading': 'off',
         'react/no-array-index-key': 'off',
         'react/prop-types': 'off',
