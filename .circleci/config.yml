@@ -620,6 +620,13 @@ jobs:
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      - run:
+          name: If no component has changed, exit the job
+          command: |
+            if cd bit && bit diff | grep -q "there are no modified components to diff"; then
+              echo "No changes detected, halting job to prevent further workflow execution."
+              circleci-agent step halt
+            fi
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
