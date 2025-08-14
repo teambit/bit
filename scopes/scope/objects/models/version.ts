@@ -70,11 +70,8 @@ export type VersionProps = {
   flattenedEdges?: DepEdge[];
   flattenedEdgesRef?: Ref;
   dependenciesGraphRef?: Ref;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies?: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devPackageDependencies?: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   peerPackageDependencies?: { [key: string]: string };
   bindingPrefix: string;
   schema?: string;
@@ -123,7 +120,6 @@ export default class Version extends BitObject {
    * (around August 2023 should be safe)
    */
   private flattenedEdges: DepEdge[];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies: { [key: string]: string };
   devPackageDependencies: { [key: string]: string };
   peerPackageDependencies: { [key: string]: string };
@@ -700,7 +696,6 @@ export default class Version extends BitObject {
       files: files.map(parseFile),
       bindingPrefix: component.bindingPrefix,
       log: component.log as Log,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       docs: component.docs,
       dependencies: component.dependencies.get(),
       devDependencies: component.devDependencies.get(),
@@ -714,7 +709,6 @@ export default class Version extends BitObject {
       flattenedEdgesRef: flattenedEdges?.hash(),
       schema: component.schema,
       overrides: component.overrides.componentOverridesData,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageJsonChangedProps: component.packageJsonChangedProps,
       extensions: component.extensions,
       buildStatus: component.buildStatus,

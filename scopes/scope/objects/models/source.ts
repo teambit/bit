@@ -1,7 +1,6 @@
 import { BitObject } from '../objects';
 
 // TODO: fix .parse
-// @ts-ignore
 export default class Source extends BitObject {
   contents: Buffer;
 

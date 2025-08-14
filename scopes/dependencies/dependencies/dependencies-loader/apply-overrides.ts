@@ -348,15 +348,29 @@ export class ApplyOverrides {
     if (!dependencies) return;
     const { components, packages } = dependencies;
     DEPENDENCIES_FIELDS.forEach((depField) => {
+      const otherFields = DEPENDENCIES_FIELDS.filter((f) => f !== depField);
       if (components[depField] && components[depField].length) {
+        const depsSet = new Set();
         components[depField].forEach((depData) => {
+          depsSet.add(depData.packageName);
           this.allDependencies[depField].push(
             new Dependency(depData.componentId, [], depData.packageName, depData.versionRange)
+          );
+        });
+        otherFields.forEach((otherField) => {
+          this.allDependencies[otherField] = this.allDependencies[otherField].filter(
+            (dep) => !depsSet.has(dep.packageName)
           );
         });
       }
       if (packages[depField] && !isEmpty(packages[depField])) {
         Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], packages[depField]);
+        // remove the dependency from the other fields to prevent duplications
+        otherFields.forEach((otherField) => {
+          Object.keys(packages[depField]).forEach((pkgName) => {
+            delete this.allPackagesDependencies[this._pkgFieldMapping(otherField)][pkgName];
+          });
+        });
       }
     });
     // The automatic dependency detector considers all found dependencies to be runtime dependencies.
@@ -420,7 +434,6 @@ export class ApplyOverrides {
       getNotRegularPackages(this.allPackagesDependencies.devPackageDependencies)
     );
     // remove dev dependencies that are also regular dependencies
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentDepsIds = new ComponentIdList(...this.allDependencies.dependencies.map((c) => c.id));
     this.allDependencies.devDependencies = this.allDependencies.devDependencies.filter(
       (d) => !componentDepsIds.has(d.id)

@@ -110,7 +110,6 @@ export async function threeWayMerge({
   };
   const getFileResult = async (fsFile: SourceFile, baseFile?: SourceFileModel, otherFile?: SourceFileModel) => {
     const filePath: PathLinux = pathNormalizeToLinux(fsFile.relative);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fsFileHash = sha1(fsFile.contents);
     if (!otherFile) {
       // if !otherFile && !baseFile, the file was created after the last tag, no need to do any

@@ -42,7 +42,6 @@ export class ComponentsEjector {
   consumer: Consumer;
   idsToEject: ComponentIdList;
   componentsToEject: Component[] = [];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   notEjectedDependents: Array<{ dependent: Component; ejectedDependencies: Component[] }>;
   failedComponents: FailedComponents;
   constructor(

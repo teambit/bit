@@ -403,7 +403,6 @@ export class WorkspaceConfig implements HostConfig {
       componentsDefaultDirectory,
       _manageWorkspaces: this.extension('teambit.dependencies/dependency-resolver', true)?.manageWorkspaces,
       extensions: this.extensions.toConfigObject(),
-      // @ts-ignore
       path: this.path,
       isLegacy: false,
       write: ({ workspaceDir }) => this.write.call(this, { dir: workspaceDir }),

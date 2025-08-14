@@ -79,7 +79,7 @@ export class CheckoutMain {
     await this.syncNewComponents(checkoutProps);
     const addedComponents = await this.restoreMissingComponents(checkoutProps);
     const newComponents = await this.addNewComponents(checkoutProps);
-    const bitIds = ComponentIdList.fromArray(ids?.map((id) => id) || []);
+    const bitIds = ComponentIdList.fromArray(ids || []);
     // don't use Promise.all, it loads the components and this operation must be in sequence.
     const allComponentStatusBeforeMerge = await mapSeries(bitIds, (id) =>
       this.getComponentStatusBeforeMergeAttempt(id, checkoutProps)

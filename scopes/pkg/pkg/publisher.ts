@@ -9,13 +9,17 @@ import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import type { Scope } from '@teambit/legacy.scope';
 import fsx from 'fs-extra';
-import mapSeries from 'p-map-series';
+import { chunk } from 'lodash';
 import { join } from 'path';
 import ssri from 'ssri';
 import execa from 'execa';
 import { PkgAspect } from './pkg.aspect';
 import type { PkgExtensionConfig } from './pkg.main.runtime';
 import { DEFAULT_TAR_DIR_IN_CAPSULE } from './packer';
+
+const PUBLISH_CONCURRENCY = 10;
+const PUBLISH_RETRY_ATTEMPTS = parseInt(process.env.BIT_PUBLISH_RETRY_ATTEMPTS || '3', 10); // Number of retry attempts for 409 errors
+const PUBLISH_RETRY_DELAY = parseInt(process.env.BIT_PUBLISH_RETRY_DELAY || '5000', 10); // Initial delay between retries (5 seconds)
 
 export type PublisherOptions = {
   dryRun?: boolean;
@@ -42,15 +46,75 @@ export class Publisher {
 
   public async publishMultipleCapsules(capsules: Capsule[]): Promise<ComponentResult[]> {
     const description = `publish components${this.options.dryRun ? ' (dry-run)' : ''}`;
-    const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
-    const results = mapSeries(capsules, (capsule) => {
-      longProcessLogger.logProgress(capsule.component.id.toString());
-      return this.publishOneCapsule(capsule);
-    });
+    const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length / PUBLISH_CONCURRENCY);
+    const chunks = chunk(capsules, PUBLISH_CONCURRENCY);
+    const results: ComponentResult[] = [];
+    for (const aChunk of chunks) {
+      longProcessLogger.logProgress(aChunk.map((c) => c.component.id.toString()).join(', '));
+      const chunkResults = await Promise.all(aChunk.map((capsule) => this.publishOneCapsuleWithRetry(capsule)));
+      results.push(...chunkResults);
+    }
     longProcessLogger.end();
     return results;
   }
 
+  private async publishOneCapsuleWithRetry(capsule: Capsule): Promise<ComponentResult> {
+    let lastError: ComponentResult | null = null;
+
+    for (let attempt = 1; attempt <= PUBLISH_RETRY_ATTEMPTS; attempt++) {
+      const result = await this.publishOneCapsule(capsule);
+
+      // If publish succeeded (no errors), return the result
+      if (!result.errors || result.errors.length === 0) {
+        if (attempt > 1) {
+          this.logger.info(`Successfully published ${capsule.component.id.toString()} on attempt ${attempt}`);
+        }
+        return result;
+      }
+
+      // Check if error is specifically related to npm registry conflicts (409, packument)
+      const errorMessage = result.errors ? result.errors.join(', ') : 'Unknown error';
+      const is409Error =
+        errorMessage.includes('409') ||
+        errorMessage.includes('packument') ||
+        errorMessage.includes('Failed to save packument');
+
+      if (!is409Error) {
+        // Not a 409 error, return immediately without retry
+        return result;
+      }
+
+      // Store the error result for potential return
+      lastError = result;
+
+      if (attempt < PUBLISH_RETRY_ATTEMPTS) {
+        const delay = PUBLISH_RETRY_DELAY * Math.pow(2, attempt - 1); // Exponential backoff
+        this.logger.warn(
+          `npm 409 conflict for ${capsule.component.id.toString()}, retrying in ${delay}ms (attempt ${attempt}/${PUBLISH_RETRY_ATTEMPTS}). Error: ${errorMessage}`
+        );
+        await this.sleep(delay);
+      } else {
+        this.logger.error(
+          `Failed to publish ${capsule.component.id.toString()} after ${PUBLISH_RETRY_ATTEMPTS} attempts due to npm registry conflicts`
+        );
+      }
+    }
+
+    // Return the last 409 error result if all attempts failed
+    return (
+      lastError || {
+        component: capsule.component,
+        metadata: {},
+        errors: [`Failed to publish after ${PUBLISH_RETRY_ATTEMPTS} attempts due to npm registry conflicts`],
+        startTime: Date.now(),
+        endTime: Date.now(),
+      }
+    );
+  }
+
+  private async sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
   private async publishOneCapsule(capsule: Capsule): Promise<ComponentResult> {
     const startTime = Date.now();
     const publishParams = ['publish'];
@@ -62,6 +126,7 @@ export class Publisher {
       cwd = tarFolderPath;
       publishParams.push(tarPath);
     }
+    publishParams.push('--quiet');
     if (this.options.dryRun) publishParams.push('--dry-run');
     publishParams.push(...this.getTagFlagForPreRelease(capsule.component.id));
     publishParams.push(...this.getTagFlagForSnap(capsule.component.id));
@@ -73,6 +138,8 @@ export class Publisher {
     const publishParamsStr = publishParams.join(' ');
     const getPkgJson = async () => fsx.readJSON(`${capsule.path}/package.json`);
     const componentIdStr = capsule.id.toString();
+    const pkgJson = await getPkgJson();
+    this.logger.console(`publishing ${pkgJson.name}@${pkgJson.version}`);
     const errors: string[] = [];
     try {
       this.logger.off();
@@ -87,7 +154,6 @@ export class Publisher {
       this.logger.error(`${componentIdStr}, ${errorMsg}`);
       let isPublished = false;
       if (typeof errorDetails === 'string' && errorDetails.includes('EPERM') && tarPath) {
-        const pkgJson = await getPkgJson();
         // sleep 5 seconds
         await new Promise((resolve) => setTimeout(resolve, Number(process.env.NPM_WAKE_UP || 5000)));
         const integrityOnNpm = await this.getIntegrityOnNpm(pkgJson.name, pkgJson.version);

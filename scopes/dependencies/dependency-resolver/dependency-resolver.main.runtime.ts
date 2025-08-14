@@ -36,6 +36,7 @@ import { Http } from '@teambit/scope.network';
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import { ConsumerComponent as LegacyComponent } from '@teambit/legacy.consumer-component';
 import fs from 'fs-extra';
+import { assign } from 'comment-json';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
 import type { SourceFile } from '@teambit/component.sources';
@@ -1008,9 +1009,10 @@ export class DependencyResolverMain {
 
   private updateConfigPolicy(workspacePolicy: WorkspacePolicy) {
     const workspacePolicyObject = workspacePolicy.toConfigObject();
-    this.config.policy = workspacePolicyObject;
+    // Use assign from comment-json to preserve comments when merging policy
+    assign(this.config.policy, workspacePolicyObject);
     this.configAspect.setExtension(DependencyResolverAspect.id, this.config, {
-      overrideExisting: true,
+      mergeIntoExisting: true,
       ignoreVersion: true,
     });
   }

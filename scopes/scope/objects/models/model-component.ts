@@ -52,7 +52,6 @@ import { DetachedHeads } from './detach-heads';
 
 type State = {
   versions?: {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     [version: string]: {
       local?: boolean; // whether a component was changed locally
     };
@@ -101,7 +100,6 @@ export const VERSION_ZERO = '0.0.0';
  * with 'Component' in their headers. see object-registrar.types()
  */
 // TODO: FIX me .parser
-// @ts-ignore
 export default class Component extends BitObject {
   scope: string;
   name: string;
@@ -606,7 +604,6 @@ export default class Component extends BitObject {
   collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
     return Promise.all(
       this.listVersions().map((versionNum) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return this.toConsumerComponent(versionNum, this.scope, repo);
       })
     );
@@ -1089,7 +1086,6 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     // @todo: this is weird. why the scopeMeta would be taken from the current scope and not he component scope?
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
-    // @ts-ignore
     const [files, scopeMeta] = await Promise.all([filesP, scopeMetaP]);
 
     const extensions = version.extensions.clone();

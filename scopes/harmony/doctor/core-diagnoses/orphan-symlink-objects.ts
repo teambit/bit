@@ -12,13 +12,11 @@ export default class OrphanSymlinkObjects extends Diagnosis {
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
     if (!bareResult.data) throw new Error('OrphanSymlinkObjects, bareResult.data is missing');
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return `the following refs points to non-existing components "${bareResult.data.orphanSymlinks.toString()}"`;
   }
 
   _formatManualTreat(bareResult: ExamineBareResult) {
     if (!bareResult.data) throw new Error('OrphanSymlinkObjects, bareResult.data is missing');
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return `please delete the following paths:\n${bareResult.data.objectsToDelete.join('\n')}`;
   }
 

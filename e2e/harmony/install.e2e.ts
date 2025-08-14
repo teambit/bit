@@ -312,3 +312,102 @@ describe('install with --lockfile-only', function () {
     expect(fs.existsSync(path.join(helper.fixtures.scopes.localPath, 'node_modules/is-positive'))).to.equal(false);
   });
 });
+
+describe('comment preservation during install', function () {
+  this.timeout(0);
+  let helper: Helper;
+  let workspaceConfigAfter: string;
+  before(() => {
+    helper = new Helper();
+    helper.scopeHelper.reInitWorkspace();
+
+    // Create workspace.jsonc with comments
+    const workspaceJsoncWithComments = `/**
+ * this is the main configuration file of your bit workspace.
+ * for full documentation, please see: https://bit.dev/reference/workspace/workspace-json
+ **/
+{
+  "$schema": "https://static.bit.dev/teambit/schemas/schema.json",
+  /**
+   * main configuration of the Bit workspace.
+   **/
+  "teambit.workspace/workspace": {
+    /**
+     * the name of the component workspace. used for development purposes.
+     **/
+    "name": "68621823",
+    /**
+     * set the icon to be shown on the Bit server.
+     **/
+    "icon": "https://static.bit.dev/brands/bit-logo-min.png",
+    /**
+     * default directory to place a component during \`bit import\` and \`bit create\`.
+     * the following placeholders are available:
+     * name - component name includes namespace, e.g. 'ui/button'.
+     * scopeId - full scope-id includes the owner, e.g. 'teambit.compilation'.
+     * scope - scope name only, e.g. 'compilation'.
+     * owner - owner name in bit.dev, e.g. 'teambit'.
+     **/
+    "defaultDirectory": "{scope}/{name}",
+    /**
+     * default scope for all components in workspace.
+     **/
+    "defaultScope": "my-scope",
+    "resolveAspectsFromNodeModules": true,
+    "resolveEnvsFromRoots": true
+  },
+  /**
+  * Enable generator templates by uncommenting the desired environments below.
+  * These generators scaffold components for Node, React, Vue, and Angular.
+  * After uncommenting, run \`bit install\` to make them available in your workspace.
+  * Explore more dev environments at: https://bit.dev/docs/getting-started/composing/dev-environments
+  **/
+  "teambit.generator/generator": {
+    "envs": [
+      // "bitdev.node/node-env",
+      // "bitdev.react/react-env",
+      // "bitdev.vue/vue-env",
+      // "bitdev.angular/angular-env"
+      // "bitdev.symphony/envs/symphony-env"
+    ]
+  },
+  /**
+   * main configuration for component dependency resolution.
+   **/
+  "teambit.dependencies/dependency-resolver": {
+    "policy": {
+      "dependencies": {},
+      "peerDependencies": {}
+    },
+    "linkCoreAspects": true,
+    "packageManager": "teambit.dependencies/pnpm",
+    "rootComponents": true,
+    "engineStrict": true,
+    // Some comments.
+    "packageImportMethod": "copy"
+  },
+  "teambit.workspace/workspace-config-files": {
+    "enableWorkspaceConfigWrite": true
+  }
+}`;
+    helper.fs.outputFile('workspace.jsonc', workspaceJsoncWithComments);
+
+    // Install a dependency which should preserve comments
+    helper.command.install('lodash');
+    workspaceConfigAfter = helper.fs.readFile('workspace.jsonc');
+  });
+  after(() => {
+    helper.scopeHelper.destroy();
+  });
+  it('should preserve comments in workspace.jsonc when installing a new dependency', () => {
+    expect(workspaceConfigAfter).to.include('// Some comments.');
+  });
+  it('should preserve block comments in workspace.jsonc', () => {
+    expect(workspaceConfigAfter).to.include('/**');
+    expect(workspaceConfigAfter).to.include('main configuration for component dependency resolution');
+  });
+  it('should have added the lodash dependency to policy', () => {
+    // Simply check if the lodash dependency is present in the text
+    expect(workspaceConfigAfter).to.include('"lodash":');
+  });
+});

@@ -43,7 +43,6 @@ export class CompositionsPreview {
 
     if (typeof defaultExports === 'function') {
       try {
-        // @ts-ignore Gilad - to fix.
         defaultExports(active, context);
       } catch (err) {
         // last-resort log – loaders already logged their own failures

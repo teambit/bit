@@ -165,5 +165,11 @@ to be up to date with the remote lane, please run "bit checkout head"`);
       ComponentIdList.fromArray(this.switchProps.ids || []),
       ComponentIdList.fromArray(this.switchProps.laneBitIds || [])
     );
+
+    // If this cache isn't cleared, here's what can happen:
+    // Switching from "lane-dev" to "main": while on "lane-dev", ModelComponent keeps in-memory props
+    // `laneHeadLocal` and `laneHeadRemote`. Methods like `headIncludeRemote()` use them and may return
+    // the lane-dev head instead of the head on main.
+    this.consumer.scope.objects.clearObjectsFromCache();
   }
 }
