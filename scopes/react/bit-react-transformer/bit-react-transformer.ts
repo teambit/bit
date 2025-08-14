@@ -54,7 +54,8 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
 
     // always append *after the nearest statement*, never inside an expression
     const parentStatement = path.getStatementParent() ?? path;
-    parentStatement.insertAfter(componentIdStaticProp);
+    // Note: Type assertion needed due to @babel/types version incompatibility
+    parentStatement.insertAfter(componentIdStaticProp as any);
   }
 
   const visitor: Visitor<PluginPass> = {
@@ -70,7 +71,8 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
       const deceleration = metaToDeclaration(meta, types);
 
       // inserts to the top of file
-      path.unshiftContainer('body', deceleration);
+      // Note: Type assertion needed due to @babel/types version incompatibility
+      path.unshiftContainer('body', deceleration as any);
     },
 
     FunctionDeclaration(path, state) {
@@ -93,7 +95,7 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
       const id = node.id;
       switch (node.init.type) {
         case 'FunctionExpression':
-          if (isFunctionComponent(node.init.body)) {
+          if (isFunctionComponent(node.init.body as Types.BlockStatement)) {
             addComponentId(path.parentPath, filename, id.name);
           }
           break;
@@ -127,9 +129,10 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     ClassDeclaration(path, state) {
       const filename = state.file.opts.filename;
       if (!filename || !extractMeta(filename)) return;
-      if (!isClassComponent(path.node)) return;
+      if (!isClassComponent(path.node as Types.ClassDeclaration)) return;
 
-      const name = path.node.id.name;
+      const name = path.node.id?.name;
+      if (!name) return;
       addComponentId(path, filename, name);
     },
   };
