@@ -6,7 +6,7 @@
  */
 const fs = require('fs-extra');
 const path = require('path');
-const camelcase = require('camelcase');
+const camelcase = require('camelcase').default;
 const { execSync } = require('child_process');
 
 const extDir = path.resolve(__dirname, '..', 'src/extensions');
