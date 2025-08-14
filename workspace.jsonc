@@ -103,7 +103,7 @@
         "@teambit/bvm.path": "^0.1.2",
         "@teambit/capsule": "0.0.12",
         "@teambit/code.ui.code-compare-section": "0.0.7",
-        "@teambit/code.ui.code-tab-tree": "^0.0.618",
+        "@teambit/code.ui.code-tab-tree": "^0.0.619",
         "@teambit/code.ui.hooks.use-code-params": "0.0.497",
         "@teambit/code.ui.object-formatter": "0.0.1",
         "@teambit/code.ui.queries.get-component-code": "^0.0.503",
