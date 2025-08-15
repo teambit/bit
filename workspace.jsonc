@@ -299,11 +299,7 @@
         "@teambit/ui-foundation.ui.tree.folder-tree-node": "0.0.510",
         "@teambit/ui-foundation.ui.tree.tree-node": "0.0.517",
         "@teambit/ui-foundation.ui.use-box.bottom-link": "^0.0.119",
-<<<<<<< ours
-        "@teambit/ui-foundation.ui.use-box.dropdown": "^0.0.143",
-=======
-        "@teambit/ui-foundation.ui.use-box.dropdown": "0.0.148",
->>>>>>> theirs
+        "@teambit/ui-foundation.ui.use-box.dropdown": "^0.0.148",
         "@teambit/ui-foundation.ui.use-box.menu": "^1.0.16",
         "@teambit/ui-foundation.ui.use-box.scope-menu": "^0.0.147",
         "@teambit/ui-foundation.ui.use-box.tab": "^0.0.122",
@@ -400,11 +396,7 @@
         "chalk": "4.1.2",
         "checksum": "0.1.1",
         "chokidar": "3.6.0",
-<<<<<<< ours
         "classnames": "2.2.6",
-=======
-        "classnames": "2.3.1",
->>>>>>> theirs
         "cli-highlight": "2.1.9",
         "cli-spinners": "1.3.1",
         "cli-table": "0.3.6",
