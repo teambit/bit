@@ -8,7 +8,7 @@ import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { UserAvatar } from '@teambit/design.ui.avatar';
 import { TimeAgo } from '@teambit/design.ui.time-ago';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
-
+import { Icon } from '@teambit/design.elements.icon'
 import styles from './lane-menu-item.module.scss';
 
 export type LaneMenuItemProps = {
@@ -38,12 +38,8 @@ export const LaneMenuItem = forwardRef<HTMLDivElement, LaneMenuItemProps>(
   ) => {
     const isCurrent = selected?.toString() === current.id.toString();
     const isDefaultLane = current.id.isDefault();
-    const iconWithDefault: React.ReactNode =
-      icon ||
-      (isDefaultLane ? (
-        <img alt="main components" src="https://static.bit.cloud/bit-icons/changed-components.svg" />
-      ) : undefined);
-
+    const defaultIcon = <Icon of="changed-components" />;
+    const iconWithDefault = icon || (isDefaultLane ? defaultIcon : undefined);
     const href = getHref(current.id);
 
     const onClick = () => {

@@ -1,4 +1,5 @@
 import React from 'react';
+import cx from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
@@ -24,16 +25,18 @@ export function UseLaneMenu({
   currentLaneId,
   actionName,
   actionIcon,
+  menuClassName,
 }: {
   host: LanesHost;
   viewedLaneId: LaneId;
   currentLaneId?: LaneId;
   actionName?: string;
   actionIcon?: string;
+  menuClassName?: string
 }) {
   const switchedOutToCurrentLane = !!currentLaneId?.isEqual(currentLaneId);
   const Menu = (
-    <div className={styles.lanesMenu}>
+    <div className={cx(styles.lanesMenu, menuClassName)}>
       <div className={styles.top}>
         <div className={styles.title}>
           <Icon className={styles.titleIcon} of="terminal" />
