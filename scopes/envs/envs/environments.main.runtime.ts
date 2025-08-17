@@ -549,7 +549,7 @@ export class EnvsMain {
     if (!envDef) return undefined;
 
     const rawServices = await this.getServices(envDef);
-    const services = rawServices.toObject();
+    const services = await rawServices.toObject();
     // const selfDescriptor = (await this.getEnvDescriptorFromEnvDef(envDef)) || {};
     const selfDescriptor = await this.getEnvDescriptorFromEnvDef(envDef);
 
