@@ -7,7 +7,7 @@ version: 2.1
 # Base configurations
 default_image: &default_image
   docker:
-    - image: cimg/node:22.14.0
+    - image: cimg/node:24.6.0
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -172,13 +172,13 @@ commands:
   windows_set_node_version:
     parameters:
       version:
-        default: 22.14.0
+        default: 24.6.0
         type: string
     steps:
       - run: choco upgrade nvm -y
       - run: nvm -v
-      - run: nvm install 22.14.0
-      - run: nvm use 22.14.0
+      - run: nvm install 24.6.0
+      - run: nvm use 24.6.0
       - run: node -v
 
   windows_add_bvm_to_path:
@@ -218,7 +218,7 @@ commands:
         default: 'BASE_IMAGE'
         type: string
       docker_build_base_image_arg_value:
-        default: 'node:22.14.0'
+        default: 'node:24.6.0'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -251,7 +251,7 @@ commands:
         default: 'BASE_IMAGE'
         type: string
       docker_build_base_image_arg_value:
-        default: 'node:22.14.0'
+        default: 'node:24.6.0'
         type: string
       image_name:
         default: 'bitcli/bit'
@@ -857,27 +857,27 @@ jobs:
           path: bit/index.json
 
   # ========== Docker Jobs ==========
-  docker_build_node_22:
+  docker_build_node_24:
     machine:
       image: ubuntu-2004:202111-02
     steps:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "node:22.14.0"
-          docker_tag_suffix: "-node-22.14.0"
+          docker_build_base_image_arg_value: "node:24.6.0"
+          docker_tag_suffix: "-node-24.6.0"
 
-  docker_non_root_build_node_22:
+  docker_non_root_build_node_24:
     machine:
       image: ubuntu-2004:202111-02
     steps:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "node:22.14.0"
+          docker_build_base_image_arg_value: "node:24.6.0"
           image_name: "bitcli/bit-non-root"
           docker_file_name: "Dockerfile-bit-non-root"
-          docker_tag_suffix: "-node-22.14.0"
+          docker_tag_suffix: "-node-24.6.0"
 
   docker_build_alpine:
     machine:
@@ -886,22 +886,22 @@ jobs:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "node:22.14.0-alpine"
+          docker_build_base_image_arg_value: "node:24.6.0-alpine"
           # image_name: "bitcli/bit-alpine"
           docker_file_name: "Dockerfile-bit-alpine"
-          docker_tag_suffix: "-alpine-node-22.14.0"
+          docker_tag_suffix: "-alpine-node-24.6.0"
 
-  server_docker_build_node_22:
+  server_docker_build_node_24:
     machine:
       image: ubuntu-2004:202111-02
     steps:
       - attach_workspace:
           at: ./
       - docker_build_and_push:
-          docker_build_base_image_arg_value: "`npm show @teambit/bit version`-node-22.14.0"
+          docker_build_base_image_arg_value: "`npm show @teambit/bit version`-node-24.6.0"
           image_name: "bitcli/bit-server"
           docker_file_name: "Dockerfile-bit-server"
-          docker_tag_suffix: "-node-22.14.0"
+          docker_tag_suffix: "-node-24.6.0"
 
   # ========== Windows Jobs ==========
   windows_checkout_code:
@@ -1048,9 +1048,9 @@ jobs:
       # - run: node -v
       # - run: npm -v
       # - run: yarn -v
-      # # - run: choco install nodejs --version 22.14.0
+      # # - run: choco install nodejs --version 24.6.0
       # # - run: node -v
-      # - run: cinst nodejs --version 22.14.0
+      # - run: cinst nodejs --version 24.6.0
       # - run: node -v
 
 # ========================================
@@ -1132,18 +1132,18 @@ workflows:
             - bundle_version_macos
             - bundle_version_windows
             - checkout_code # This is needed to generate index.json
-      - docker_build_node_22:
+      - docker_build_node_24:
           requires:
             - harmony_publish_to_gcloud
       - docker_build_alpine:
           requires:
             - harmony_publish_to_gcloud
-      - docker_non_root_build_node_22:
+      - docker_non_root_build_node_24:
           requires:
             - harmony_publish_to_gcloud
-      - server_docker_build_node_22:
+      - server_docker_build_node_24:
           requires:
-            - docker_build_node_22
+            - docker_build_node_24
       - e2e_test_bbit:
           requires:
             - setup_harmony
@@ -1210,7 +1210,7 @@ workflows:
             - bundle_version_macos
             - bundle_version_windows
             - checkout_code # This is needed to generate index.json
-      - docker_build_node_22:
+      - docker_build_node_24:
           requires:
             - harmony_deploy_approval_job
             - harmony_publish_to_gcloud
@@ -1218,14 +1218,14 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - harmony_publish_to_gcloud
-      - docker_non_root_build_node_22:
+      - docker_non_root_build_node_24:
           requires:
             - harmony_deploy_approval_job
             - harmony_publish_to_gcloud
-      - server_docker_build_node_22:
+      - server_docker_build_node_24:
           requires:
             - harmony_deploy_approval_job
-            - docker_build_node_22
+            - docker_build_node_24
 
   # ========================================
   # DEBUG & TESTING WORKFLOWS (COMMENTED)
