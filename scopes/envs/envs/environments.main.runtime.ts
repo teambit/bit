@@ -548,7 +548,7 @@ export class EnvsMain {
     const envDef = this.getEnvFromComponent(envComponent);
     if (!envDef) return undefined;
 
-    const rawServices = this.getServices(envDef);
+    const rawServices = await this.getServices(envDef);
     const services = rawServices.toObject();
     // const selfDescriptor = (await this.getEnvDescriptorFromEnvDef(envDef)) || {};
     const selfDescriptor = await this.getEnvDescriptorFromEnvDef(envDef);
@@ -1050,27 +1050,31 @@ if needed, use "bit env set" command to align the env id`;
   /**
    * get list of services enabled on an env.
    */
-  getServices(env: EnvDefinition): EnvServiceList {
+  async getServices(env: EnvDefinition): Promise<EnvServiceList> {
     const allServices = this.servicesRegistry.toArray();
     const services: [string, EnvService<any>][] = [];
-    allServices.forEach(([id, currentServices]) => {
-      currentServices.forEach((service) => {
-        try {
-          if (this.implements(env, service)) {
-            services.push([id, service]);
-          }
-        } catch {
-          this.logger.warn(`failed loading service ${id} for env ${env.id}`);
-        }
-      });
-    });
+    await Promise.all(
+      allServices.map(async ([id, currentServices]) => {
+        await Promise.all(
+          currentServices.map(async (service) => {
+            try {
+              if (await this.implements(env, service)) {
+                services.push([id, service]);
+              }
+            } catch {
+              this.logger.warn(`failed loading service ${id} for env ${env.id}`);
+            }
+          })
+        );
+      })
+    );
     return new EnvServiceList(env, services);
   }
 
-  implements(env: EnvDefinition, service: EnvService<any>) {
+  async implements(env: EnvDefinition, service: EnvService<any>) {
     // TODO: remove this after refactoring everything and remove getDescriptor from being optional.
     if (!service.getDescriptor) return false;
-    return !!service.getDescriptor(env);
+    return !!(await service.getDescriptor(env));
   }
 
   /**
