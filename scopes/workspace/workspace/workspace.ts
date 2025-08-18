@@ -673,13 +673,14 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   async getDependentsIds(ids: ComponentID[], filterOutNowWorkspaceIds = true): Promise<ComponentID[]> {
     const graph = await this.getGraphIds();
     const dependents = ids
-      .map((id) => graph.predecessors(id.toString()))
+      .map((id) =>
+        graph.predecessors(id.toString(), {
+          nodeFilter: (node) => (filterOutNowWorkspaceIds ? this.hasId(node.attr) : true),
+        })
+      )
       .flat()
       .map((node) => node.attr);
-    const uniqIds = ComponentIdList.uniqFromArray(dependents);
-    if (!filterOutNowWorkspaceIds) return uniqIds;
-    const workspaceIds = this.listIds();
-    return uniqIds.filter((id) => workspaceIds.has(id));
+    return ComponentIdList.uniqFromArray(dependents);
   }
 
   public async createAspectList(extensionDataList: ExtensionDataList) {
