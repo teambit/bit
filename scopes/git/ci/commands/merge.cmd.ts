@@ -26,7 +26,8 @@ type Options = {
 
 export class CiMergeCmd implements Command {
   name = 'merge';
-  description = 'Merges a PR';
+  description = 'Tags and exports new semantic versions after merging a PR to main.';
+  extendedDescription = `Automatically bumps versions based on commit messages or explicit flags. Runs install, tag, build, and export, then archives the remote lane and syncs lockfiles. Use in merge-to-main CI pipelines to publish releases.`;
   group = 'collaborate';
 
   options: CommandOptions = [
