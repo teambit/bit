@@ -46,9 +46,29 @@ export default class Repository {
   constructor(scopePath: string, scopeJson: ScopeJson) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
-    this.onRead = onRead(scopePath, scopeJson);
-    this.onPersist = onPersist(scopePath, scopeJson);
+    this.onRead = this.onReadFunc();
+    this.onPersist = this.onPersistFunc();
     this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects() });
+  }
+
+  onReadFunc(): ContentTransformer {
+    return (content: Buffer) => {
+      if (Repository.onPostObjectRead) {
+        return Repository.onPostObjectRead(content);
+      }
+      // for backward compatibility
+      return onRead(this.scopePath, this.scopeJson)(content);
+    };
+  }
+
+  onPersistFunc(): ContentTransformer {
+    return (content: Buffer) => {
+      if (Repository.onPreObjectPersist) {
+        return Repository.onPreObjectPersist(content);
+      }
+      // for backward compatibility
+      return onPersist(this.scopePath, this.scopeJson)(content);
+    };
   }
 
   get persistMutex() {
@@ -89,6 +109,20 @@ export default class Repository {
   }
 
   static onPostObjectsPersist: () => Promise<void>;
+
+  /**
+   * Hook for transforming content before objects are persisted to the filesystem.
+   * Note: This function cannot be async because it's used by the synchronous `loadSync` method
+   * which needs to maintain sync behavior for compatibility with existing code.
+   */
+  static onPreObjectPersist: (content: Buffer) => Buffer;
+
+  /**
+   * Hook for transforming content after objects are read from the filesystem.
+   * Note: This function cannot be async because it's used by the synchronous `loadSync` method
+   * which needs to maintain sync behavior for compatibility with existing code.
+   */
+  static onPostObjectRead: (content: Buffer) => Buffer;
 
   async reLoadScopeIndex() {
     this.scopeIndex = await this.loadOptionallyCreateScopeIndex();
