@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
+import openBrowser from 'react-dev-utils/openBrowser';
 import type { ApplicationMain } from './application.main.runtime';
 
 type RunOptions = {
@@ -11,6 +12,7 @@ type RunOptions = {
   ssr: boolean;
   port: string;
   args: string;
+  noBrowser: boolean;
 };
 
 export class RunCmd implements Command {
@@ -32,6 +34,7 @@ export class RunCmd implements Command {
     ['v', 'verbose', 'show verbose output for inspection and print stack trace'],
     // ['', 'skip-watch', 'avoid running the watch process that compiles components in the background'],
     ['w', 'watch', 'watch and compile your components upon changes'],
+    ['n', 'no-browser', 'do not automatically open browser when ready'],
     [
       'a',
       'args <argv>',
@@ -48,7 +51,7 @@ export class RunCmd implements Command {
     private logger: Logger
   ) {}
 
-  async wait([appName]: [string], { dev, watch, ssr, port: exactPort, args }: RunOptions) {
+  async wait([appName]: [string], { dev, watch, ssr, port: exactPort, args, noBrowser }: RunOptions) {
     const ids = await this.application.loadAllAppsAsAspects();
     if (!ids.length) {
       this.logger.console('no apps found');
@@ -78,7 +81,20 @@ export class RunCmd implements Command {
     }
 
     if (isOldApi) {
-      this.logger.console(`${appName} app is running on http://localhost:${port}`);
+      const url = `http://localhost:${port}`;
+      this.logger.console(`${appName} app is running on ${url}`);
+
+      if (!noBrowser && port) {
+        openBrowser(url);
+      }
+    } else if (port) {
+      // New API - also open browser when port is available
+      const url = `http://localhost:${port}`;
+      // this.logger.console(`${appName} app is running on ${url}`);
+
+      if (!noBrowser) {
+        openBrowser(url);
+      }
     }
 
     /**
