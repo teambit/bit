@@ -1641,7 +1641,7 @@
     ]
   },
   {
-    "name": "run <app-name>",
+    "name": "run [app-name]",
     "alias": "c",
     "options": [
       [
@@ -1706,7 +1706,7 @@
         "private": false
       },
       {
-        "name": "run <app-name>",
+        "name": "run [app-name]",
         "alias": "c",
         "options": [
           [
