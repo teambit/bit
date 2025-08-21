@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)('never built dependencies', function () {
   this.timeout(0);

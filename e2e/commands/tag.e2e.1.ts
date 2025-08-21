@@ -1,8 +1,7 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { VersionAlreadyExists } from '@teambit/legacy.scope';
-
-const assertArrays = require('chai-arrays');
+import assertArrays from 'chai-arrays';
 
 chai.use(assertArrays);
 

@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import { LANE_KEY } from '@teambit/legacy.bit-map';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit lane export operations', function () {
   this.timeout(0);

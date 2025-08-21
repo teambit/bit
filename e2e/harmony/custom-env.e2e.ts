@@ -5,9 +5,10 @@ import { resolveFrom } from '@teambit/toolbox.modules.module-resolver';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Extensions, IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('custom env', function () {
   this.timeout(0);

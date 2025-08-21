@@ -1,9 +1,10 @@
 import chai, { expect } from 'chai';
 import path from 'path';
+import chaiFs from 'chai-fs';
 
 import { Helper } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('repository-hooks', function () {
   let exportOutput;

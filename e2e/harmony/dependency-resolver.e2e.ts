@@ -6,10 +6,9 @@ import { generateRandomStr } from '@teambit/toolbox.string.random';
 import rimraf from 'rimraf';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper, fixtures, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
-
-const assertArrays = require('chai-arrays');
+import chaiFs from 'chai-fs';
+import assertArrays from 'chai-arrays';
+chai.use(chaiFs);
 
 chai.use(assertArrays);
 

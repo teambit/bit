@@ -3,8 +3,8 @@ import path from 'path';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import { statusWorkspaceIsCleanMsg } from '@teambit/legacy.constants';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('merge lanes - remote lane operations', function () {
   this.timeout(0);

@@ -1,9 +1,10 @@
 import { IssuesClasses } from '@teambit/component-issues';
 import chai, { expect } from 'chai';
+import chaiFs from 'chai-fs';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { Extensions } from '@teambit/legacy.constants';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('bit recover command', function () {
   this.timeout(0);

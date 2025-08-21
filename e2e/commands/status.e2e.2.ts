@@ -5,8 +5,7 @@ import { IssuesClasses, MISSING_DEPS_SPACE } from '@teambit/component-issues';
 import { IMPORT_PENDING_MSG, statusFailureMsg, statusInvalidComponentsMsg } from '@teambit/legacy.constants';
 import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
-
-const assertArrays = require('chai-arrays');
+import assertArrays from 'chai-arrays';
 
 chai.use(assertArrays);
 

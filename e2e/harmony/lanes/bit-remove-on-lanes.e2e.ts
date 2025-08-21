@@ -2,8 +2,8 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { Extensions } from '@teambit/legacy.constants';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit lane command', function () {
   this.timeout(0);

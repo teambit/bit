@@ -3,8 +3,8 @@ import { LANE_KEY } from '@teambit/legacy.bit-map';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { LANE_REMOTE_DELIMITER } from '@teambit/lane-id';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit lane basic operations', function () {
   this.timeout(0);

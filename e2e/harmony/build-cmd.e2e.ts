@@ -1,6 +1,8 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
 import { loadBit } from '@teambit/bit';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
@@ -9,8 +11,8 @@ import { BuilderAspect } from '@teambit/builder';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import { specFileFailingFixture } from './jest-fixtures';
 
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('build command', function () {
   this.timeout(0);

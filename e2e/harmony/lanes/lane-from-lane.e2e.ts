@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit lane command', function () {
   this.timeout(0);
