@@ -649,7 +649,7 @@ export class IsolatorMain {
     }
 
     const config = { installPackages: true, ...opts };
-    if (!(await fs.pathExists(capsulesDir)) && opts.getExistingAsIs) {
+    if (opts.getExistingAsIs && !(await fs.pathExists(capsulesDir))) {
       this.logger.console(
         `💡 Capsules directory not found: ${capsulesDir}. Automatically setting getExistingAsIs to false.`
       );
