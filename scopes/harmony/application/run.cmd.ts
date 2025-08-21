@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
-import openBrowser from 'react-dev-utils/openBrowser';
+import open from 'open';
 import type { ApplicationMain } from './application.main.runtime';
 
 type RunOptions = {
@@ -85,7 +85,7 @@ export class RunCmd implements Command {
       this.logger.console(`${appName} app is running on ${url}`);
 
       if (!noBrowser && port) {
-        openBrowser(url);
+        await open(url);
       }
     } else if (port) {
       // New API - also open browser when port is available
@@ -93,7 +93,7 @@ export class RunCmd implements Command {
       // this.logger.console(`${appName} app is running on ${url}`);
 
       if (!noBrowser) {
-        openBrowser(url);
+        await open(url);
       }
     }
 
