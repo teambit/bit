@@ -22,12 +22,11 @@ import type { ObjectItem } from './object-list';
 import { ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
-import type { ContentTransformer } from './repository-hooks';
-import { onPersist, onRead } from './repository-hooks';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForObjects, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { ScopeMeta, Lane, ModelComponent } from '../models';
 
+type ContentTransformer = (content: Buffer) => Buffer;
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
 
@@ -46,29 +45,9 @@ export default class Repository {
   constructor(scopePath: string, scopeJson: ScopeJson) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
-    this.onRead = this.onReadFunc();
-    this.onPersist = this.onPersistFunc();
+    this.onRead = (content: Buffer) => Repository.onPostObjectRead?.(content) || content;
+    this.onPersist = (content: Buffer) => Repository.onPreObjectPersist?.(content) || content;
     this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects() });
-  }
-
-  onReadFunc(): ContentTransformer {
-    return (content: Buffer) => {
-      if (Repository.onPostObjectRead) {
-        return Repository.onPostObjectRead(content);
-      }
-      // for backward compatibility
-      return onRead(this.scopePath, this.scopeJson)(content);
-    };
-  }
-
-  onPersistFunc(): ContentTransformer {
-    return (content: Buffer) => {
-      if (Repository.onPreObjectPersist) {
-        return Repository.onPreObjectPersist(content);
-      }
-      // for backward compatibility
-      return onPersist(this.scopePath, this.scopeJson)(content);
-    };
   }
 
   get persistMutex() {
