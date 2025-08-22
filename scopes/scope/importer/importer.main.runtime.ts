@@ -22,8 +22,7 @@ import { ScopeComponentsImporter } from '@teambit/legacy.scope';
 import { importAllArtifactsFromLane } from '@teambit/component.sources';
 import type { InstallMain } from '@teambit/install';
 import { InstallAspect } from '@teambit/install';
-import type { ComponentID } from '@teambit/component-id';
-import { ComponentIdList } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import type { Lane } from '@teambit/objects';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import type { GraphMain } from '@teambit/graph';
@@ -163,7 +162,10 @@ export class ImporterMain {
       );
     }
     this.logger.setStatusLine('fetching objects...');
-    if (!this.workspace) throw new OutsideWorkspaceError();
+    if (!this.workspace) {
+      const importedIds = await this.fetchUsingScope(ids, lanes, components, fromOriginalScope, allHistory);
+      return { importedIds };
+    }
     const consumer = this.workspace.consumer;
 
     if (lanes) {
@@ -223,6 +225,89 @@ export class ImporterMain {
 
       return [];
     }
+  }
+
+  /**
+   * fetch objects similar to the fetch method but without workspace dependency.
+   * can be used outside of workspace context.
+   */
+  async fetchUsingScope(
+    ids: string[],
+    lanes: boolean,
+    components: boolean,
+    fromOriginalScope: boolean,
+    allHistory = false
+  ): Promise<ComponentID[]> {
+    this.logger.setStatusLine('fetching objects...');
+    if (!ids.length) {
+      throw new BitError('please specify the IDs of the objects you want to fetch');
+    }
+    if (lanes) {
+      const remoteLaneIds = ids.map((id) => LaneId.parse(id));
+      const scopeComponentImporter = this.scope.legacyScope.scopeImporter;
+      const lanesToFetch = await scopeComponentImporter.importLanes(remoteLaneIds);
+      return this.fetchLanesUsingScope(lanesToFetch);
+    }
+    if (components) {
+      return this.fetchComponentsUsingScope(ids, fromOriginalScope, allHistory);
+    }
+    throw new BitError(
+      `please provide the type of objects you would like to pull, the options are --components and --lanes`
+    );
+  }
+
+  private async fetchLanesUsingScope(lanes: Lane[]): Promise<ComponentID[]> {
+    const resultsPerLane = await pMapSeries(lanes, async (lane) => {
+      this.logger.setStatusLine(`fetching lane ${lane.name}`);
+      const importResults = await this.scope.legacyScope.scopeImporter.importMany({
+        ids: lane.toComponentIds(),
+        lane,
+        reason: `for fetching lane ${lane.id()}`,
+      });
+      const { mergeLane } = await this.scope.legacyScope.sources.mergeLane(lane, true);
+      const isRemoteLaneEqualsToMergedLane = lane.isEqual(mergeLane);
+      await this.scope.legacyScope.lanes.saveLane(mergeLane, {
+        saveLaneHistory: !isRemoteLaneEqualsToMergedLane,
+        laneHistoryMsg: 'fetch (merge from remote)',
+      });
+      const results = importResults.map((result) => result.component.id);
+      this.logger.consoleSuccess();
+      return results;
+    });
+
+    return resultsPerLane.flat();
+  }
+
+  private async fetchComponentsUsingScope(
+    ids: string[],
+    fromOriginalScope: boolean,
+    allHistory: boolean
+  ): Promise<ComponentID[]> {
+    const componentIds = await this.scope.resolveMultipleComponentIds(ids);
+    const componentIdsList = ComponentIdList.fromArray(componentIds);
+    const scopeImporter = this.scope.legacyScope.scopeImporter;
+
+    await scopeImporter.importWithoutDeps(componentIdsList.toVersionLatest(), {
+      cache: false,
+      includeVersionHistory: true,
+      fetchHeadIfLocalIsBehind: !allHistory,
+      collectParents: allHistory,
+      ignoreMissingHead: true,
+      reason: `for fetching components`,
+    });
+
+    const results = fromOriginalScope
+      ? await scopeImporter.importManyFromOriginalScopes(componentIdsList)
+      : await scopeImporter.importMany({
+          ids: componentIdsList,
+          ignoreMissingHead: true,
+          preferDependencyGraph: true,
+          reFetchUnBuiltVersion: true,
+          throwForSeederNotFound: false,
+          reason: 'for fetching components dependencies',
+        });
+
+    return results.map((c) => c.component.id);
   }
 
   private createImportComponents(importOptions: ImportOptions) {
