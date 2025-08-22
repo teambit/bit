@@ -93,6 +93,8 @@ type OnPostDelete = RemoteEvent<OnPostDeleteData>;
 type OnPostObjectsPersist = RemoteEvent<undefined>;
 type OnPreFetchObjects = RemoteEvent<OnPreFetchObjectData>;
 type OnCompAspectReCalc = (component: Component) => Promise<AspectData | undefined>;
+type OnPreObjectPersist = (content: Buffer) => Buffer;
+type OnPostObjectRead = (content: Buffer) => Buffer;
 
 export type OnPostPutSlot = SlotRegistry<OnPostPut>;
 export type OnPostDeleteSlot = SlotRegistry<OnPostDelete>;
@@ -100,6 +102,8 @@ export type OnPostExportSlot = SlotRegistry<OnPostExport>;
 export type OnPostObjectsPersistSlot = SlotRegistry<OnPostObjectsPersist>;
 export type OnPreFetchObjectsSlot = SlotRegistry<OnPreFetchObjects>;
 export type OnCompAspectReCalcSlot = SlotRegistry<OnCompAspectReCalc>;
+export type OnPreObjectPersistSlot = SlotRegistry<OnPreObjectPersist>;
+export type OnPostObjectReadSlot = SlotRegistry<OnPostObjectRead>;
 export type LoadOptions = {
   /**
    * In case the component we are loading is app, whether to load it as app (in a scope aspects capsule)
@@ -173,6 +177,10 @@ export class ScopeMain implements ComponentFactory {
     public preFetchObjects: OnPreFetchObjectsSlot,
 
     private OnCompAspectReCalcSlot: OnCompAspectReCalcSlot,
+
+    private preObjectPersistSlot: OnPreObjectPersistSlot,
+
+    private postObjectReadSlot: OnPostObjectReadSlot,
 
     private isolator: IsolatorMain,
 
@@ -450,6 +458,60 @@ export class ScopeMain implements ComponentFactory {
 
   registerOnPostObjectsPersist(postObjectsPersistFn: OnPostObjectsPersist) {
     this.postObjectsPersist.register(postObjectsPersistFn);
+    return this;
+  }
+
+  /**
+   * register to the pre-object persist slot.
+   */
+  registerOnPreObjectPersist(preObjectPersistFn: OnPreObjectPersist) {
+    /**
+     * Register a synchronous hook to transform object content before it is persisted to the filesystem.
+     *
+     * This is typically used for tasks such as encryption, compression, or other pre-save transformations.
+     *
+     * To ensure data integrity, you should also register a corresponding hook with `registerOnPostObjectRead`
+     * to reverse the transformation (e.g., decrypt or decompress) when reading objects back.
+     *
+     * Example:
+     * ```ts
+     * // Encrypt before persisting
+     * scope.registerOnPreObjectPersist((content) => encrypt(content));
+     * // Decrypt after reading
+     * scope.registerOnPostObjectRead((content) => decrypt(content));
+     * ```
+     *
+     * @param preObjectPersistFn - Function to transform content before persisting
+     * @returns this
+     */
+    this.preObjectPersistSlot.register(preObjectPersistFn);
+    return this;
+  }
+
+  /**
+   * register to the post-object read slot.
+   */
+  registerOnPostObjectRead(postObjectReadFn: OnPostObjectRead) {
+    /**
+     * Register a synchronous hook to transform object content after it is read from the filesystem.
+     *
+     * This is typically used for tasks such as decryption, decompression, or other post-read transformations.
+     *
+     * To maintain consistency, you should also register a corresponding hook with `registerOnPreObjectPersist`
+     * to apply the transformation before persisting (e.g., encrypt or compress).
+     *
+     * Example:
+     * ```ts
+     * // Encrypt before persisting
+     * scope.registerOnPreObjectPersist((content) => encrypt(content));
+     * // Decrypt after reading
+     * scope.registerOnPostObjectRead((content) => decrypt(content));
+     * ```
+     *
+     * @param postObjectReadFn - Function to transform content after reading
+     * @returns this
+     */
+    this.postObjectReadSlot.register(postObjectReadFn);
     return this;
   }
 
@@ -1225,6 +1287,8 @@ export class ScopeMain implements ComponentFactory {
     Slot.withType<OnPostObjectsPersist>(),
     Slot.withType<OnPreFetchObjects>(),
     Slot.withType<OnCompAspectReCalc>(),
+    Slot.withType<OnPreObjectPersist>(),
+    Slot.withType<OnPostObjectRead>(),
   ];
   static runtime = MainRuntime;
 
@@ -1268,6 +1332,8 @@ export class ScopeMain implements ComponentFactory {
       postObjectsPersistSlot,
       preFetchObjectsSlot,
       OnCompAspectReCalcSlot,
+      preObjectPersistSlot,
+      postObjectReadSlot,
     ]: [
       OnPostPutSlot,
       OnPostDeleteSlot,
@@ -1275,6 +1341,8 @@ export class ScopeMain implements ComponentFactory {
       OnPostObjectsPersistSlot,
       OnPreFetchObjectsSlot,
       OnCompAspectReCalcSlot,
+      OnPreObjectPersistSlot,
+      OnPostObjectReadSlot,
     ],
     harmony: Harmony
   ) {
@@ -1299,6 +1367,8 @@ export class ScopeMain implements ComponentFactory {
       postObjectsPersistSlot,
       preFetchObjectsSlot,
       OnCompAspectReCalcSlot,
+      preObjectPersistSlot,
+      postObjectReadSlot,
       isolator,
       aspectLoader,
       logger,
@@ -1352,10 +1422,30 @@ export class ScopeMain implements ComponentFactory {
       logger.debug(`onPostObjectsPersistHook, completed`);
     };
 
+    /**
+     * Hook for transforming content before objects are persisted to the filesystem.
+     * Note: This function cannot be async because it is used by synchronous code paths (e.g., Repository.loadSync)
+     */
+    const onPreObjectPersistHook = (content: Buffer): Buffer => {
+      const fns = preObjectPersistSlot.values();
+      return fns.reduce((acc, fn) => fn(acc), content);
+    };
+
+    /**
+     * Hook for transforming content after objects are read from the filesystem.
+     * Note: This function cannot be async because it is used by synchronous code paths (e.g., Repository.loadSync)
+     */
+    const onPostObjectReadHook = (content: Buffer): Buffer => {
+      const fns = postObjectReadSlot.values();
+      return fns.reduce((acc, fn) => fn(acc), content);
+    };
+
     ExportPersist.onPutHook = onPutHook;
     PostSign.onPutHook = onPutHook;
     Scope.onPostExport = onPostExportHook;
     Repository.onPostObjectsPersist = onPostObjectsPersistHook;
+    Repository.onPreObjectPersist = onPreObjectPersistHook;
+    Repository.onPostObjectRead = onPostObjectReadHook;
     ExternalActions.externalActions.push(new ClearCacheAction(scope));
 
     express.register([
