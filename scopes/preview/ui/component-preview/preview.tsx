@@ -211,7 +211,7 @@ export function ComponentPreview({
           height: forceHeight || (isScaling ? finalHeight + innerBottomPadding : legacyIframeHeight),
           width: isScaling ? targetWidth : legacyCurrentWidth,
           visibility: width === 0 && isScaling && !fullContentHeight && !forceVisible ? 'hidden' : undefined,
-          transform: fullContentHeight ? '' : computePreviewScale((forceVisible && width) || 1280, containerWidth),
+          transform: fullContentHeight ? '' : computePreviewScale(width || 1280, containerWidth),
           border: 0,
           transformOrigin: 'top left',
         }}
