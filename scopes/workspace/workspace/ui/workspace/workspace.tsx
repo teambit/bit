@@ -1,6 +1,6 @@
 import 'reset-css';
 import pluralize from 'pluralize';
-import React, { useState, useMemo, useEffect, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useLayoutEffect, useRef } from 'react';
 import { Route } from 'react-router-dom';
 import type { ComponentModel } from '@teambit/component';
 import type { ComponentID } from '@teambit/component-id';
@@ -36,7 +36,23 @@ export type WorkspaceProps = {
  */
 export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebarTogglerChange }: WorkspaceProps) {
   const { isMinimal } = useWorkspaceMode();
-  const reactions = useComponentNotifications();
+
+  const reactionsRef = useRef<{
+    onComponentAdded: (comps: ComponentModel[]) => void;
+    onComponentRemoved: (ids: ComponentID[]) => void;
+  }>({
+    onComponentAdded: () => {},
+    onComponentRemoved: () => {},
+  });
+
+  const reactions = useMemo(
+    () => ({
+      onComponentAdded: (comps: ComponentModel[]) => reactionsRef.current.onComponentAdded(comps),
+      onComponentRemoved: (ids: ComponentID[]) => reactionsRef.current.onComponentRemoved(ids),
+    }),
+    []
+  );
+
   const { workspace } = useWorkspace(reactions);
   const theme = useThemePicker();
   const currentTheme = theme?.current;
@@ -67,6 +83,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
 
   return (
     <WorkspaceProvider workspace={workspace}>
+      {!isMinimal && <NotificationsBinder reactionsRef={reactionsRef} />}
       <PreserveWorkspaceMode>
         <div className={styles.workspaceWrapper}>
           {
@@ -107,12 +124,18 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
   );
 }
 
-function useComponentNotifications() {
+function NotificationsBinder({
+  reactionsRef,
+}: {
+  reactionsRef: React.MutableRefObject<{
+    onComponentAdded: (comps: ComponentModel[]) => void;
+    onComponentRemoved: (ids: ComponentID[]) => void;
+  }>;
+}) {
   const notifications = useNotifications();
 
-  // memo not really needed, but for peace of mind
-  return useMemo(
-    () => ({
+  const notificationsMapped = useMemo(() => {
+    return {
       onComponentAdded: (comps: ComponentModel[]) => {
         const notificationId = notifications.log(
           `added ${pluralize('component', comps.length)}: ${comps.map((comp) => comp.id.toString()).join(', ')}`
@@ -125,7 +148,15 @@ function useComponentNotifications() {
         );
         setTimeout(() => notifications.dismiss(notificationId), 12 * 1000);
       },
-    }),
-    [notifications]
-  );
+    };
+  }, [notifications]);
+
+  useEffect(() => {
+    reactionsRef.current = notificationsMapped;
+    return () => {
+      reactionsRef.current = { onComponentAdded: () => {}, onComponentRemoved: () => {} };
+    };
+  }, [notificationsMapped, reactionsRef]);
+
+  return null;
 }
