@@ -1384,7 +1384,7 @@ export class CliMcpServerMain {
   }
 
   async getRulesContent(consumerProject: boolean = false): Promise<string> {
-    return McpConfigWriter.getDefaultRulesContent(consumerProject);
+    return McpConfigWriter.getDefaultRulesContent(consumerProject, process.cwd());
   }
 
   static slots = [];
