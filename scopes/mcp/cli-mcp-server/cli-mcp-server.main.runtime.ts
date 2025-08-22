@@ -617,12 +617,12 @@ export class CliMcpServerMain {
 
   private registerRemoteSearchTool(server: McpServer) {
     const toolName = 'bit_remote_search';
-    const description = `Search for components in remote scopes. Use this tool to find existing components before creating new ones. Essential for component reuse and discovery`;
+    const description = `Search for components in remote scopes using parallel queries for efficient discovery. Always provide multiple search terms (variations, synonyms, related terms) to find all relevant components at once. Example: ["button", "btn", "click", "action"].`;
     const schema: Record<string, any> = {
-      queryStr: z
-        .string()
+      queries: z
+        .array(z.string())
         .describe(
-          `Search query string - Don't try to search with too many keywords. It will try to find components that match all keywords, which is often too restrictive. Instead, search with a single keyword or a few broad keywords`
+          `Array of search query strings for parallel searching. Each query should be a single keyword or a few broad keywords. Think about different variations, synonyms, and related terms.`
         ),
       cwd: z.string().optional().describe('Path to workspace directory'),
       owners: z
@@ -640,6 +640,20 @@ export class CliMcpServerMain {
     };
     server.tool(toolName, description, schema, async (params: any) => {
       const http = await this.getHttp();
+
+      // Validate that queries parameter is provided and valid
+      if (!params.queries || !Array.isArray(params.queries) || params.queries.length === 0) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'Error: queries parameter must be provided as a non-empty array of search terms. Example: ["button", "btn", "click"]',
+            },
+          ],
+        };
+      }
+
+      const searchQueries = params.queries;
 
       // Determine the owners to use for the search
       let ownersToUse = params.owners && params.owners.length > 0 ? params.owners : undefined;
@@ -668,16 +682,96 @@ export class CliMcpServerMain {
         );
       }
 
-      const results = await http.search(params.queryStr, ownersToUse);
-      this.logger.debug(`[MCP-DEBUG] Search results: ${JSON.stringify(results)}`);
-      if (!results?.components || results.components.length === 0) {
-        return { content: [{ type: 'text', text: 'No results found' }] };
+      // Execute searches in parallel
+      this.logger.debug(
+        `[MCP-DEBUG] Executing ${searchQueries.length} search(es) in parallel: ${searchQueries.join(', ')}`
+      );
+
+      try {
+        const searchPromises = searchQueries.map(async (query: string) => {
+          try {
+            const result = await http.search(query, ownersToUse);
+            return {
+              query,
+              success: true,
+              components: result?.components || [],
+              totalCount: result?.components?.length || 0,
+            };
+          } catch (error) {
+            this.logger.warn(`[MCP-DEBUG] Search failed for query "${query}": ${(error as Error).message}`);
+            return {
+              query,
+              success: false,
+              error: (error as Error).message,
+              components: [],
+              totalCount: 0,
+            };
+          }
+        });
+
+        const searchResults = await Promise.all(searchPromises);
+
+        // Process and consolidate results
+        const allComponents = new Set<string>();
+        const resultsByQuery: any[] = [];
+        let totalComponentsFound = 0;
+
+        searchResults.forEach((result) => {
+          resultsByQuery.push({
+            query: result.query,
+            success: result.success,
+            count: result.totalCount,
+            error: result.error || undefined,
+          });
+
+          if (result.success && result.components.length > 0) {
+            result.components.forEach((component: string) => allComponents.add(component));
+            totalComponentsFound += result.totalCount;
+          }
+        });
+
+        // Format the consolidated results
+        if (allComponents.size === 0) {
+          const failedQueries = searchResults.filter((r) => !r.success);
+          let message = 'No results found';
+          if (failedQueries.length > 0) {
+            message += `\n\nSome searches failed:`;
+            failedQueries.forEach((r) => {
+              message += `\n- "${r.query}": ${r.error}`;
+            });
+          }
+          return { content: [{ type: 'text', text: message }] };
+        }
+
+        // Build the response text
+        let responseText = `Found ${allComponents.size} unique components from ${searchQueries.length} parallel search${searchQueries.length > 1 ? 'es' : ''}:\n\n`;
+
+        // Show per-query results summary
+        responseText += 'Search Summary:\n';
+        resultsByQuery.forEach((result) => {
+          if (result.success) {
+            responseText += `- "${result.query}": ${result.count} components\n`;
+          } else {
+            responseText += `- "${result.query}": FAILED (${result.error})\n`;
+          }
+        });
+        responseText += '\nConsolidated Results:\n';
+
+        responseText += Array.from(allComponents).join('\n');
+
+        const formattedResults = {
+          type: 'text',
+          text: responseText,
+        };
+
+        this.logger.debug(
+          `[MCP-DEBUG] Consolidated search results: ${allComponents.size} unique components from ${totalComponentsFound} total results`
+        );
+        return { content: [formattedResults] } as CallToolResult;
+      } catch (error) {
+        this.logger.error(`[MCP-DEBUG] Error during parallel search execution: ${(error as Error).message}`);
+        return { content: [{ type: 'text', text: `Error executing searches: ${(error as Error).message}` }] };
       }
-      const formattedResults = {
-        type: 'text',
-        text: results.components.join('\n'),
-      };
-      return { content: [formattedResults] } as CallToolResult;
     });
   }
 
