@@ -1,0 +1,125 @@
+diff --git a/.bitmap b/.bitmap
+index 6a0db09d0..a4082347f 100644
+--- a/.bitmap
++++ b/.bitmap
+@@ -581,7 +581,13 @@
+         "scope": "teambit.legacy",
+         "version": "0.0.89",
+         "mainFile": "index.ts",
+-        "rootDir": "components/legacy/e2e-helper"
++        "rootDir": "components/legacy/e2e-helper",
++        "config": {
++            "teambit.node/envs/node-typescript-mocha@0.0.4": {},
++            "teambit.envs/envs": {
++                "env": "teambit.node/envs/node-typescript-mocha"
++            }
++        }
+     },
+     "eject": {
+         "name": "eject",
+diff --git a/e2e/commands/export.e2e.1.ts b/e2e/commands/export.e2e.1.ts
+index 22654bcf1..6a28cbccf 100644
+--- a/e2e/commands/export.e2e.1.ts
++++ b/e2e/commands/export.e2e.1.ts
+@@ -2,8 +2,9 @@ import chai, { expect } from 'chai';
+ import fs from 'fs-extra';
+ import * as path from 'path';
+ import { Helper } from '@teambit/legacy.e2e-helper';
++import chaiFs from 'chai-fs';
+ 
+-chai.use(require('chai-fs'));
++chai.use(chaiFs);
+ 
+ describe('bit export command', function () {
+   this.timeout(0);
+diff --git a/e2e/functionalities/repository-hooks.e2e.ts b/e2e/functionalities/repository-hooks.e2e.ts
+index f120979b7..eb6a3b987 100644
+--- a/e2e/functionalities/repository-hooks.e2e.ts
++++ b/e2e/functionalities/repository-hooks.e2e.ts
+@@ -1,9 +1,10 @@
+ import chai, { expect } from 'chai';
+ import path from 'path';
++import chaiFs from 'chai-fs';
+ 
+ import { Helper } from '@teambit/legacy.e2e-helper';
+ 
+-chai.use(require('chai-fs'));
++chai.use(chaiFs);
+ 
+ describe('repository-hooks', function () {
+   let exportOutput;
+diff --git a/e2e/harmony/build-cmd.e2e.ts b/e2e/harmony/build-cmd.e2e.ts
+index 383cc73e8..295967eb4 100644
+--- a/e2e/harmony/build-cmd.e2e.ts
++++ b/e2e/harmony/build-cmd.e2e.ts
+@@ -1,6 +1,7 @@
+ import chai, { expect } from 'chai';
+ import path from 'path';
+ import fs from 'fs-extra';
++import chaiFs from 'chai-fs';
+ import { loadBit } from '@teambit/bit';
+ import type { Workspace } from '@teambit/workspace';
+ import { WorkspaceAspect } from '@teambit/workspace';
+@@ -9,7 +10,7 @@ import { BuilderAspect } from '@teambit/builder';
+ import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+ import { specFileFailingFixture } from './jest-fixtures';
+ 
+-chai.use(require('chai-fs'));
++chai.use(chaiFs);
+ chai.use(require('chai-string'));
+ 
+ describe('build command', function () {
+diff --git a/e2e/harmony/use.e2e.ts b/e2e/harmony/use.e2e.ts
+index 05dd2dcc0..17cb6d0d8 100644
+--- a/e2e/harmony/use.e2e.ts
++++ b/e2e/harmony/use.e2e.ts
+@@ -1,7 +1,8 @@
+ import chai, { expect } from 'chai';
++import chaiFs from 'chai-fs';
+ import { Helper } from '@teambit/legacy.e2e-helper';
+ 
+-chai.use(require('chai-fs'));
++chai.use(chaiFs);
+ chai.use(require('chai-string'));
+ 
+ describe('bit use command', function () {
+diff --git a/e2e/typescript/typescript.e2e.3.ts b/e2e/typescript/typescript.e2e.3.ts
+index a2be65d48..20387eee5 100644
+--- a/e2e/typescript/typescript.e2e.3.ts
++++ b/e2e/typescript/typescript.e2e.3.ts
+@@ -2,8 +2,9 @@ import chai, { expect } from 'chai';
+ import * as path from 'path';
+ import { IS_WINDOWS } from '@teambit/legacy.constants';
+ import { Helper } from '@teambit/legacy.e2e-helper';
++import chaiFs from 'chai-fs';
+ 
+-chai.use(require('chai-fs'));
++chai.use(chaiFs);
+ 
+ describe('typescript', function () {
+   this.timeout(0);
+diff --git a/scopes/component/tracker/esm.mjs b/scopes/component/tracker/esm.mjs
+index f63c9c55a..2f46818b7 100644
+--- a/scopes/component/tracker/esm.mjs
++++ b/scopes/component/tracker/esm.mjs
+@@ -2,6 +2,7 @@
+ import cjsModule from './index.js';
+ 
+ export const TrackerAspect = cjsModule.TrackerAspect;
++export const MainFileIsDir = cjsModule.MainFileIsDir;
+ 
+ export default cjsModule;
+ 
+diff --git a/scopes/harmony/bit/bootstrap.ts b/scopes/harmony/bit/bootstrap.ts
+index ba20cb31f..1cd87c551 100644
+--- a/scopes/harmony/bit/bootstrap.ts
++++ b/scopes/harmony/bit/bootstrap.ts
+@@ -9,7 +9,7 @@ import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambi
+ import { loader } from '@teambit/legacy.loader';
+ 
+ const RECOMMENDED_NODE_VERSIONS = '>=20.0.0 <24.0.0';
+-const SUPPORTED_NODE_VERSIONS = '>=16.0.0 <24.0.0';
++const SUPPORTED_NODE_VERSIONS = '>=16.0.0 <25.0.0';
+ 
+ process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
+ 
