@@ -617,12 +617,12 @@ export class CliMcpServerMain {
 
   private registerRemoteSearchTool(server: McpServer) {
     const toolName = 'bit_remote_search';
-    const description = `Search for components in remote scopes using parallel queries for efficient discovery. Always provide multiple search terms (variations, synonyms, related terms) to find all relevant components at once. Example: ["button", "btn", "click", "action"].`;
+    const description = `Search for components in remote scopes using parallel queries for efficient discovery. Always provide multiple search terms - either variations/synonyms of one component type, or different components needed for a task. Examples: ["button", "btn", "click"] for variations, or ["input", "button", "validation"] for form components.`;
     const schema: Record<string, any> = {
       queries: z
         .array(z.string())
         .describe(
-          `Array of search query strings for parallel searching. Each query should be a single keyword or a few broad keywords. Think about different variations, synonyms, and related terms.`
+          `Array of search query strings for parallel searching. Each query should be a single keyword or a few broad keywords. Search for variations/synonyms of one component type, or different components needed for a task. Examples: ["btn", "button"] for variations, or ["table", "pagination", "filter"] for data display features.`
         ),
       cwd: z.string().optional().describe('Path to workspace directory'),
       owners: z
