@@ -8,7 +8,7 @@ import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import type { Express } from 'express';
 import express from 'express';
-import { graphqlHTTP } from 'express-graphql';
+import { graphqlHTTP, RequestInfo } from 'express-graphql';
 import { Port } from '@teambit/toolbox.network.get-port';
 import { execute, subscribe } from 'graphql';
 import type { PubSubEngine } from 'graphql-subscriptions';
@@ -50,6 +50,8 @@ export type GraphQLServerOptions = {
   subscriptionsPortRange?: number[];
   onWsConnect?: Function;
   customExecuteFn?: (args: any) => Promise<any>;
+  customFormatErrorFn?: (args: any) => any;
+  extensions?: (info: RequestInfo) => Promise<any>;
 };
 
 export class GraphqlMain {
@@ -146,17 +148,20 @@ export class GraphqlMain {
       '/graphql',
       // eslint-disable-next-line @typescript-eslint/no-misused-promises
       graphqlHTTP((request, res, params) => ({
+        extensions: options?.extensions,
         customExecuteFn: options.customExecuteFn,
-        customFormatErrorFn: (err) => {
-          this.logger.error('graphql got an error during running the following query:', params);
-          this.logger.error('graphql error ', err);
-          return Object.assign(err, {
-            // @ts-ignore
-            ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
-            // @ts-ignore
-            HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code,
-          });
-        },
+        customFormatErrorFn: options.customFormatErrorFn
+          ? options.customFormatErrorFn
+          : (err) => {
+              this.logger.error('graphql got an error during running the following query:', params);
+              this.logger.error('graphql error ', err);
+              return Object.assign(err, {
+                // @ts-ignore
+                ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
+                // @ts-ignore
+                HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code,
+              });
+            },
         schema,
         rootValue: request,
         graphiql,
