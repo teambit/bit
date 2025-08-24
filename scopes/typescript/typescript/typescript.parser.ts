@@ -75,7 +75,6 @@ export class TypeScriptParser implements Parser {
     });
 
     const withoutEmpty = exportModels.filter((exportModel) => exportModel !== undefined);
-    // @ts-ignore
     return withoutEmpty;
   }
 

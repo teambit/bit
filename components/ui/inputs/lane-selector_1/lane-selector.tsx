@@ -226,26 +226,27 @@ export function LaneSelector(props: LaneSelectorProps) {
   function LaneSearch() {
     const isClear = searchIconRef.current === CLEAR_SEARCH_ICON;
 
-    return (
-      (multipleLanes && (
-        <div className={styles.search}>
-          <SearchInput
-            activeLabel={false}
-            inputSize={'s'}
-            // ref={inputRef}
-            className={classnames(styles.searchInputContainer, isClear && styles.pointer)}
-            inputClass={styles.searchInput}
-            placeholder={'Search'}
-            value={search}
-            onChange={handleSearchOnChange}
-            onClick={handleSearchOnClick}
-            autoFocus={true}
-            icon={<Icon of={searchIconRef.current} className={styles.searchIcon} onClick={handleSearchIconClicked} />}
-          />
-        </div>
-      )) ||
-      null
-    );
+    return multipleLanes ? (
+      <div className={styles.search}>
+        <SearchInput
+          activeLabel={false}
+          inputSize="s"
+          className={styles.searchInputContainer}
+          inputClass={classnames(styles.searchInput, isClear && styles.clear)}
+          placeholder="Search"
+          value={search}
+          onChange={handleSearchOnChange}
+          onClick={handleSearchOnClick}
+          autoFocus
+          icon={
+            <Icon
+              of={searchIconRef.current}
+              onClick={handleSearchIconClicked}
+            />
+          }
+        />
+      </div>
+    ) : null;
   }
   // TBD: needs redesign
 
@@ -286,7 +287,7 @@ export function LaneSelector(props: LaneSelectorProps) {
     if (!multipleLanes && !dropdownOpen) return null;
 
     return (
-      <React.Fragment key={'lane-selector-dropdown-root'}>
+      <React.Fragment key='lane-selector-dropdown-root'>
         <div className={styles.toolbar}>
           {/* {multipleLanes && groupByScope && (
               <div className={styles.groupBy}>

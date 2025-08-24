@@ -22,17 +22,15 @@ import type { ObjectItem } from './object-list';
 import { ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
-import type { ContentTransformer } from './repository-hooks';
-import { onPersist, onRead } from './repository-hooks';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForObjects, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { ScopeMeta, Lane, ModelComponent } from '../models';
 
+type ContentTransformer = (content: Buffer) => Buffer;
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
 
 export default class Repository {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   objects: { [key: string]: BitObject } = {};
   objectsToRemove: Ref[] = [];
   scopeJson: ScopeJson;
@@ -47,8 +45,8 @@ export default class Repository {
   constructor(scopePath: string, scopeJson: ScopeJson) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
-    this.onRead = onRead(scopePath, scopeJson);
-    this.onPersist = onPersist(scopePath, scopeJson);
+    this.onRead = (content: Buffer) => Repository.onPostObjectRead?.(content) || content;
+    this.onPersist = (content: Buffer) => Repository.onPreObjectPersist?.(content) || content;
     this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects() });
   }
 
@@ -90,6 +88,20 @@ export default class Repository {
   }
 
   static onPostObjectsPersist: () => Promise<void>;
+
+  /**
+   * Hook for transforming content before objects are persisted to the filesystem.
+   * Note: This function cannot be async because it's used by the synchronous `loadSync` method
+   * which needs to maintain sync behavior for compatibility with existing code.
+   */
+  static onPreObjectPersist: (content: Buffer) => Buffer;
+
+  /**
+   * Hook for transforming content after objects are read from the filesystem.
+   * Note: This function cannot be async because it's used by the synchronous `loadSync` method
+   * which needs to maintain sync behavior for compatibility with existing code.
+   */
+  static onPostObjectRead: (content: Buffer) => Buffer;
 
   async reLoadScopeIndex() {
     this.scopeIndex = await this.loadOptionallyCreateScopeIndex();

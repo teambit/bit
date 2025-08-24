@@ -57,7 +57,7 @@ Learn the recommended workflow for tracking directories as components, in the li
 
 ### app run
 
-**Usage**: `app run <app-name>`
+**Usage**: `app run [app-name]`
 
 **Description**: locally run an app component (independent of bit's dev server)
 
@@ -71,6 +71,7 @@ Learn the recommended workflow for tracking directories as components, in the li
 | `--port [port-number]` |       `-p`       | port to run the app on                                                                                                                        |
 | `--verbose`            |       `-v`       | show verbose output for inspection and print stack trace                                                                                      |
 | `--watch`              |       `-w`       | watch and compile your components upon changes                                                                                                |
+| `--no-browser`         |       `-n`       | do not automatically open browser when ready                                                                                                  |
 | `--args <argv>`        |       `-a`       | the arguments passing to the app. for example, --args="--a=1 --b". don't forget to use quotes to wrap the value to escape special characters. |
 
 ---
@@ -375,20 +376,22 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
 
 **Description**: Merges a PR
 
-| **Option**                   | **Option alias** | **Description**                                                                                            |
-| ---------------------------- | :--------------: | ---------------------------------------------------------------------------------------------------------- |
-| `--message <message>`        |       `-m`       | If set, use it as the tag message, if not, try and grab from git-commit-message                            |
-| `--build`                    |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI                              |
-| `--strict`                   |       `-s`       | Set to true to fail on warnings as well as errors, false (default) only fails on errors                    |
-| `--increment <level>`        |       `-l`       | options are: [major, premajor, minor, preminor, patch, prepatch, prerelease], default to patch             |
-| `--prerelease-id <id>`       |                  | prerelease identifier (e.g. "dev" to get "1.0.0-dev.1")                                                    |
-| `--patch`                    |       `-p`       | syntactic sugar for "--increment patch"                                                                    |
-| `--minor`                    |                  | syntactic sugar for "--increment minor"                                                                    |
-| `--major`                    |                  | syntactic sugar for "--increment major"                                                                    |
-| `--pre-release [identifier]` |                  | syntactic sugar for "--increment prerelease" and `--prerelease-id <identifier>`                            |
-| `--increment-by <number>`    |                  | (default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3. |
-| `--versions-file <path>`     |                  | path to a file containing component versions. format: "component-id: version"                              |
-| `--verbose`                  |                  | show verbose output                                                                                        |
+| **Option**                              | **Option alias** | **Description**                                                                                               |
+| --------------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------- |
+| `--message <message>`                   |       `-m`       | If set, use it as the tag message, if not, try and grab from git-commit-message                               |
+| `--build`                               |       `-b`       | Set to true to build the app locally, false (default) will build on Ripple CI                                 |
+| `--strict`                              |       `-s`       | Set to true to fail on warnings as well as errors, false (default) only fails on errors                       |
+| `--increment <level>`                   |       `-l`       | options are: [major, premajor, minor, preminor, patch, prepatch, prerelease], default to patch                |
+| `--prerelease-id <id>`                  |                  | prerelease identifier (e.g. "dev" to get "1.0.0-dev.1")                                                       |
+| `--patch`                               |       `-p`       | syntactic sugar for "--increment patch"                                                                       |
+| `--minor`                               |                  | syntactic sugar for "--increment minor"                                                                       |
+| `--major`                               |                  | syntactic sugar for "--increment major"                                                                       |
+| `--pre-release [identifier]`            |                  | syntactic sugar for "--increment prerelease" and `--prerelease-id <identifier>`                               |
+| `--increment-by <number>`               |                  | (default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3.    |
+| `--versions-file <path>`                |                  | path to a file containing component versions. format: "component-id: version"                                 |
+| `--verbose`                             |                  | show verbose output                                                                                           |
+| `--auto-merge-resolve <merge-strategy>` |       `-r`       | in case of merge conflict during checkout, resolve according to the provided strategy: [ours, theirs, manual] |
+| `--force-theirs`                        |                  | do not merge during checkout, just overwrite with incoming files                                              |
 
 ---
 
@@ -1967,7 +1970,7 @@ https://bit.dev/components/tags#undoing-a-tag
 **Alias**: `c`  
 **Description**: locally run an app component (independent of bit's dev server)
 
-`bit run <app-name>`
+`bit run [app-name]`
 
 | **Arg**    |                                           **Description**                                            |
 | ---------- | :--------------------------------------------------------------------------------------------------: |
@@ -1979,6 +1982,7 @@ https://bit.dev/components/tags#undoing-a-tag
 | `--port [port-number]` |       `-p`       | port to run the app on                                                                                                                        |
 | `--verbose`            |       `-v`       | show verbose output for inspection and print stack trace                                                                                      |
 | `--watch`              |       `-w`       | watch and compile your components upon changes                                                                                                |
+| `--no-browser`         |       `-n`       | do not automatically open browser when ready                                                                                                  |
 | `--args <argv>`        |       `-a`       | the arguments passing to the app. for example, --args="--a=1 --b". don't forget to use quotes to wrap the value to escape special characters. |
 
 ---

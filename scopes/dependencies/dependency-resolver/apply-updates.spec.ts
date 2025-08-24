@@ -24,7 +24,6 @@ describe('applyUpdates()', function () {
         variantPoliciesByPatterns: {},
       }
     );
-    // @ts-ignore
     expect(updatedWorkspacePolicyEntries).to.deep.equal(
       [
         {
@@ -119,7 +118,6 @@ describe('applyUpdates()', function () {
         variantPoliciesByPatterns,
       }
     );
-    // @ts-ignore
     expect(variantPoliciesByPatterns.variant1).to.deep.equal({
       dependencies: {
         'variant1-runtime-dep1': { version: '2.0.0', resolveFromEnv: true },
@@ -134,7 +132,6 @@ describe('applyUpdates()', function () {
         'variant1-peer-dep2': '1.0.0',
       },
     });
-    // @ts-ignore
     expect(variantPoliciesByPatterns.variant2).to.deep.equal({
       dependencies: {
         'variant2-runtime-dep1': '1.0.0',
@@ -149,7 +146,6 @@ describe('applyUpdates()', function () {
         'variant2-peer-dep2': '1.0.0',
       },
     });
-    // @ts-ignore
     expect(variantPoliciesByPatterns.variant3).to.deep.equal({
       dependencies: {
         'variant3-runtime-dep1': '1.0.0',
@@ -194,7 +190,6 @@ describe('applyUpdates()', function () {
         variantPoliciesByPatterns: {},
       }
     );
-    // @ts-ignore
     expect(updatedComponents).to.deep.equal([
       {
         componentId: ComponentID.fromString('scope/component1'),

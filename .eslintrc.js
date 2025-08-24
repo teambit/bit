@@ -45,7 +45,7 @@ module.exports = {
     ],
     'max-lines': ['error', 2000],
 
-    // ERRORS OF plugin:@typescript-eslint/recommended
+    // Rules of plugin:@typescript-eslint/recommended
     '@typescript-eslint/ban-ts-comment': 'off',
     '@typescript-eslint/ban-types': 'off',
     '@typescript-eslint/no-var-requires': 'off',
@@ -56,8 +56,6 @@ module.exports = {
       'error',
       { functions: false, classes: true, variables: true, typedefs: true },
     ],
-    '@typescript-eslint/no-misused-promises': 'error',
-    '@typescript-eslint/no-floating-promises': 'error',
     '@typescript-eslint/consistent-type-imports': [
       'warn',
       {
@@ -66,6 +64,7 @@ module.exports = {
       },
     ],
     '@typescript-eslint/no-shadow': ['error'],
+    '@typescript-eslint/dot-notation': ['error'], // was error in airbnb
 
     // ERRORS OF 'plugin:promise/recommended'
     'promise/always-return': 'off',

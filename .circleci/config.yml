@@ -296,7 +296,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.72-v1
+          key: core-aspect-env-v0.0.78-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -379,7 +379,7 @@ commands:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.72-v1
+          key: core-aspect-env-v0.0.78-v1
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
           key: v3-linux-bvm-folder-{{ checksum "version.txt" }}
@@ -485,7 +485,7 @@ jobs:
           name: bbit install
           command: cd bit && bbit install
       - save_cache:
-          key: core-aspect-env-v0.0.72-v1
+          key: core-aspect-env-v0.0.78-v1
           paths:
             - /home/circleci/Library/Caches/Bit/capsules/caec9a107
       # - run: cd bit && bbit compile
@@ -540,7 +540,7 @@ jobs:
       - restore_cache:
           key: bitsrc-registry10
       - restore_cache:
-          key: core-aspect-env-v0.0.72-v1
+          key: core-aspect-env-v0.0.78-v1
       - run:
           name: 'check circular dependencies'
           command: 'cd bit && ./scripts/circular-deps-check/ci-check.sh'
@@ -620,6 +620,13 @@ jobs:
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      - run:
+          name: If no component has changed, exit the job
+          command: |
+            if cd bit && bit diff | grep -q "there are no modified components to diff"; then
+              echo "No changes detected, halting job to prevent further workflow execution."
+              circleci-agent step halt
+            fi
       - run: cd bit && npm run generate-cli-reference
       - run: cd bit && npm run generate-cli-reference-json
       - run: cd bit && npm run generate-cli-reference-docs
@@ -627,7 +634,8 @@ jobs:
       - run: cd bit && npm run generate-core-aspects-ids
       - run:
           name: 'bit ci merge'
-          command: 'cd bit && bit ci merge --build ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          command: 'cd bit && bit ci merge --build --auto-merge-resolve manual ${BIT_CI_MERGE_EXTRA_FLAGS}'
+          # command: 'cd bit && bit ci merge --build --auto-merge-resolve manual --increment-by 3 ${BIT_CI_MERGE_EXTRA_FLAGS}'
           no_output_timeout: '50m'
           environment:
             NODE_OPTIONS: --max-old-space-size=32000
@@ -1142,7 +1150,7 @@ workflows:
             - harmony_publish_to_gcloud
 
   # Windows nightly workflow
-  windows-nightly:
+  # windows-nightly:
     # triggers:
     #   - schedule: # every day at 5AM UTC (= 1AM EST = 8AM IST)
     #       cron: '0 5 * * *'
@@ -1150,24 +1158,24 @@ workflows:
     #         branches:
     #           only:
     #             - master
-    jobs:
-      - windows_checkout_code
-      - windows_set_ssh_key
-      - windows_bvm_install:
-          <<: *master_only_filter
-          requires:
-            - windows_checkout_code
-      - windows_build_bvm:
-          <<: *master_only_filter
-          requires:
-            - windows_bvm_install
-      - windows_e2e_test_bvm:
-          <<: *master_only_filter
-          requires:
-            - windows_checkout_code
-            - windows_set_ssh_key
-            - windows_bvm_install
-            - windows_build_bvm
+    # jobs:
+    #   - windows_checkout_code
+    #   - windows_set_ssh_key
+    #   - windows_bvm_install:
+    #       <<: *master_only_filter
+    #       requires:
+    #         - windows_checkout_code
+    #   - windows_build_bvm:
+    #       <<: *master_only_filter
+    #       requires:
+    #         - windows_bvm_install
+    #   - windows_e2e_test_bvm:
+    #       <<: *master_only_filter
+    #       requires:
+    #         - windows_checkout_code
+    #         - windows_set_ssh_key
+    #         - windows_bvm_install
+    #         - windows_build_bvm
 
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:

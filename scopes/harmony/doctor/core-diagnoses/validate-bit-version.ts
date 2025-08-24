@@ -11,7 +11,6 @@ export default class ValidateBitVersion extends Diagnosis {
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
     if (!bareResult.data) throw new Error('ValidateBitVersion, bareResult.data is missing');
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!bareResult.data.latestVersion) {
       return 'could not fetch bit latest version';
     }
@@ -22,7 +21,6 @@ export default class ValidateBitVersion extends Diagnosis {
 
   _formatManualTreat(bareResult: ExamineBareResult) {
     if (!bareResult.data) throw new Error('ValidateBitVersion, bareResult.data is missing');
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!bareResult.data.latestVersion) {
       return 'please make sure you have an internet connection';
     }

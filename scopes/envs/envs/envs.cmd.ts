@@ -59,7 +59,7 @@ export class GetEnvCmd implements Command {
     const env = this.envs.getEnv(component);
     const envRuntime = await this.envs.createEnvironment([component]);
     const envExecutionContext = envRuntime.getEnvExecutionContext();
-    const services = this.envs.getServices(env);
+    const services = await this.envs.getServices(env);
     const allP = services.services.map(async ([serviceId, service]) => {
       if (servicesArr && !servicesArr.includes(serviceId)) return null;
       const serviceTitle = chalk.cyan.bold.underline(serviceId);

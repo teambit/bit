@@ -32,7 +32,6 @@ function mergeRootDepToDedupedDependencies(
     if (isDepExistInAnyOfTheRootDedupedDependencies(depId, dedupedDependencies)) return;
     const existingRootDeps = dedupedDependencies.rootDependencies;
     if (existingRootDeps[depKeyName]) {
-      // @ts-ignore - for some reason ts thinks it might be undefined
       existingRootDeps[depKeyName][depId] = range.toString();
     } else {
       existingRootDeps[depKeyName] = {

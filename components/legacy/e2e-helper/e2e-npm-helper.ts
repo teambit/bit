@@ -33,9 +33,18 @@ export default class NpmHelper {
    * Add a fake package, don't really install it. if you need the real package
    * use installNpmPackage below
    */
-  addFakeNpmPackage(name = 'lodash.get', version = '4.4.2') {
-    const packageJsonFixture = JSON.stringify({ name, version });
-    this.fs.createFile(`node_modules/${name}`, 'index.js');
-    this.fs.createFile(`node_modules/${name}`, 'package.json', packageJsonFixture);
+  addFakeNpmPackage(name = 'lodash.get', version = '4.4.2', isComp = false) {
+    const obj: any = { name, version };
+    if (isComp) {
+      const [, ...rest] = name.split('/');
+      obj.componentId = {
+        scope: this.scopes.remote,
+        name: rest.join('/'),
+        version,
+      };
+    }
+    const packageJsonFixture = JSON.stringify(obj, null, 2);
+    this.fs.outputFile(`node_modules/${name}/index.js`, '');
+    this.fs.outputFile(`node_modules/${name}/package.json`, packageJsonFixture);
   }
 }
