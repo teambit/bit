@@ -1,8 +1,9 @@
 import humanizeDuration from 'humanize-duration';
 
-export function timeFormat(time: number) {
-  if (time < 1000) {
-    return humanizeDuration(time, { units: ['ms'] });
-  }
-  return humanizeDuration(time);
+export function timeFormat(time: number): string {
+  const duration = humanizeDuration(Number(time), {
+    round: true,
+    units: ['y', 'mo', 'w', 'd', 'h', 'm', 's', 'ms'],
+  });
+  return duration.replace(/millisecond(s)?/, 'ms');
 }

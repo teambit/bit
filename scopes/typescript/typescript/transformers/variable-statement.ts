@@ -1,9 +1,11 @@
-import { SchemaNode, ModuleSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { ModuleSchema } from '@teambit/semantics.entities.semantic-schema';
 import { compact } from 'lodash';
 import pMapSeries from 'p-map-series';
-import ts, { Node, VariableStatement } from 'typescript';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
+import type { Node, VariableStatement } from 'typescript';
+import ts from 'typescript';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
 import { Identifier } from '../identifier';
 
 /**

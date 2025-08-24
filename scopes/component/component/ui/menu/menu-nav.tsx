@@ -5,7 +5,7 @@ import type { TabProps } from '@teambit/design.navigation.responsive-navbar';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 import { TopBarNav } from '../top-bar-nav';
 import styles from './menu.module.scss';
-import { NavPlugin, OrderedNavigationSlot } from './nav-plugin';
+import type { NavPlugin, OrderedNavigationSlot } from './nav-plugin';
 
 export type MenuNavProps = {
   /**

@@ -1,8 +1,10 @@
-import React, { HTMLAttributes } from 'react';
-import { IndexSignatureSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import type { HTMLAttributes } from 'react';
+import React from 'react';
+import type { IndexSignatureSchema, SchemaNode } from '@teambit/semantics.entities.semantic-schema';
 import { TableRow } from '@teambit/documenter.ui.table-row';
 import classnames from 'classnames';
-import { APINodeRenderProps, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
+import { nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { trackedElementClassName } from './index';
 
 import styles from './variable-node-summary.module.scss';

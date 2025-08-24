@@ -1,5 +1,7 @@
-import { ComponentID, IComponent } from '@teambit/component';
-import { AspectListProps, AspectList } from './aspect-list';
+import type { IComponent } from '@teambit/component';
+import { ComponentID } from '@teambit/component';
+import type { AspectListProps } from './aspect-list';
+import { AspectList } from './aspect-list';
 
 export type ComponentDescriptorProps = {
   /**

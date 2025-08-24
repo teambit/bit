@@ -1,9 +1,10 @@
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { compact, sortBy, uniqWith } from 'lodash';
 import { snapToSemver } from '@teambit/component-package-version';
-import { DependenciesOverridesData } from '@teambit/legacy.consumer-config';
-import { Policy, PolicyConfigKeys, PolicyConfigKeysNames, PolicyEntry, SemverVersion } from '../policy';
-import { DependencyLifecycleType, KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME } from '../../dependencies';
+import type { DependenciesOverridesData } from '@teambit/legacy.consumer-config';
+import type { Policy, PolicyConfigKeys, PolicyConfigKeysNames, PolicyEntry, SemverVersion } from '../policy';
+import type { DependencyLifecycleType } from '../../dependencies';
+import { KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME } from '../../dependencies';
 
 export type VariantPolicyConfigObject = Partial<Record<keyof PolicyConfigKeys, VariantPolicyLifecycleConfigObject>>;
 

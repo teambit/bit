@@ -1,14 +1,13 @@
 import detectIndent from 'detect-indent';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import detectNewline from 'detect-newline';
 import fs from 'fs-extra';
 import * as path from 'path';
 import stringifyPackage from 'stringify-package';
 import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '@teambit/toolbox.path.path';
+import type { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { JsonVinyl } from './json-vinyl';
 import { cloneDeep, isEmpty } from 'lodash';
 
@@ -180,12 +179,10 @@ export class PackageJsonFile {
   }
 
   addDependencies(dependencies: Record<string, any>) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.packageJsonObject.dependencies = Object.assign({}, this.packageJsonObject.dependencies, dependencies);
   }
 
   addDevDependencies(dependencies: Record<string, any>) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.packageJsonObject.devDependencies = Object.assign({}, this.packageJsonObject.devDependencies, dependencies);
   }
 

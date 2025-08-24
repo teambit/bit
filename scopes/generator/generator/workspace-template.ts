@@ -1,5 +1,5 @@
 import type { Component } from '@teambit/component';
-import { ComponentConfig } from './component-template';
+import type { ComponentConfig } from './component-template';
 
 /**
  * BaseWorkspaceOptions describes the foundational properties for workspaces.

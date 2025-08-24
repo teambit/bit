@@ -1,7 +1,8 @@
 /* eslint-disable import/extensions */
 /* eslint-disable import/no-unresolved */
 
-import { CLIAspect, CLIMain, Command, getArgsData, getCommandName, getFlagsData, MainRuntime } from '@teambit/cli';
+import type { CLIMain, Command } from '@teambit/cli';
+import { CLIAspect, getArgsData, getCommandName, getFlagsData, MainRuntime } from '@teambit/cli';
 import childProcess from 'child_process';
 import stripAnsi from 'strip-ansi';
 import fs from 'fs-extra';
@@ -11,15 +12,17 @@ import { CliMcpServerAspect } from './cli-mcp-server.aspect';
 import { McpServerCmd, McpStartCmd } from './mcp-server.cmd';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import { Http } from '@teambit/scope.network';
 import { CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 import fetch from 'node-fetch';
 import { McpSetupCmd } from './setup-cmd';
 import { McpRulesCmd } from './rules-cmd';
-import { McpSetupUtils, SetupOptions, RulesOptions } from './setup-utils';
+import type { SetupOptions, RulesOptions } from '@teambit/mcp.mcp-config-writer';
+import { McpConfigWriter } from '@teambit/mcp.mcp-config-writer';
 
 interface CommandFilterOptions {
   additionalCommandsSet?: Set<string>;
@@ -614,12 +617,12 @@ export class CliMcpServerMain {
 
   private registerRemoteSearchTool(server: McpServer) {
     const toolName = 'bit_remote_search';
-    const description = `Search for components in remote scopes. Use this tool to find existing components before creating new ones. Essential for component reuse and discovery`;
+    const description = `Search for components in remote scopes using parallel queries for efficient discovery. Always provide multiple search terms - either variations/synonyms of one component type, or different components needed for a task. Examples: ["button", "btn", "click"] for variations, or ["input", "button", "validation"] for form components.`;
     const schema: Record<string, any> = {
-      queryStr: z
-        .string()
+      queries: z
+        .array(z.string())
         .describe(
-          `Search query string - Don't try to search with too many keywords. It will try to find components that match all keywords, which is often too restrictive. Instead, search with a single keyword or a few broad keywords`
+          `Array of search query strings for parallel searching. Each query should be a single keyword or a few broad keywords. Search for variations/synonyms of one component type, or different components needed for a task. Examples: ["btn", "button"] for variations, or ["table", "pagination", "filter"] for data display features.`
         ),
       cwd: z.string().optional().describe('Path to workspace directory'),
       owners: z
@@ -637,6 +640,20 @@ export class CliMcpServerMain {
     };
     server.tool(toolName, description, schema, async (params: any) => {
       const http = await this.getHttp();
+
+      // Validate that queries parameter is provided and valid
+      if (!params.queries || !Array.isArray(params.queries) || params.queries.length === 0) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'Error: queries parameter must be provided as a non-empty array of search terms. Example: ["button", "btn", "click"]',
+            },
+          ],
+        };
+      }
+
+      const searchQueries = params.queries;
 
       // Determine the owners to use for the search
       let ownersToUse = params.owners && params.owners.length > 0 ? params.owners : undefined;
@@ -665,16 +682,96 @@ export class CliMcpServerMain {
         );
       }
 
-      const results = await http.search(params.queryStr, ownersToUse);
-      this.logger.debug(`[MCP-DEBUG] Search results: ${JSON.stringify(results)}`);
-      if (!results?.components || results.components.length === 0) {
-        return { content: [{ type: 'text', text: 'No results found' }] };
+      // Execute searches in parallel
+      this.logger.debug(
+        `[MCP-DEBUG] Executing ${searchQueries.length} search(es) in parallel: ${searchQueries.join(', ')}`
+      );
+
+      try {
+        const searchPromises = searchQueries.map(async (query: string) => {
+          try {
+            const result = await http.search(query, ownersToUse);
+            return {
+              query,
+              success: true,
+              components: result?.components || [],
+              totalCount: result?.components?.length || 0,
+            };
+          } catch (error) {
+            this.logger.warn(`[MCP-DEBUG] Search failed for query "${query}": ${(error as Error).message}`);
+            return {
+              query,
+              success: false,
+              error: (error as Error).message,
+              components: [],
+              totalCount: 0,
+            };
+          }
+        });
+
+        const searchResults = await Promise.all(searchPromises);
+
+        // Process and consolidate results
+        const allComponents = new Set<string>();
+        const resultsByQuery: any[] = [];
+        let totalComponentsFound = 0;
+
+        searchResults.forEach((result) => {
+          resultsByQuery.push({
+            query: result.query,
+            success: result.success,
+            count: result.totalCount,
+            error: result.error || undefined,
+          });
+
+          if (result.success && result.components.length > 0) {
+            result.components.forEach((component: string) => allComponents.add(component));
+            totalComponentsFound += result.totalCount;
+          }
+        });
+
+        // Format the consolidated results
+        if (allComponents.size === 0) {
+          const failedQueries = searchResults.filter((r) => !r.success);
+          let message = 'No results found';
+          if (failedQueries.length > 0) {
+            message += `\n\nSome searches failed:`;
+            failedQueries.forEach((r) => {
+              message += `\n- "${r.query}": ${r.error}`;
+            });
+          }
+          return { content: [{ type: 'text', text: message }] };
+        }
+
+        // Build the response text
+        let responseText = `Found ${allComponents.size} unique components from ${searchQueries.length} parallel search${searchQueries.length > 1 ? 'es' : ''}:\n\n`;
+
+        // Show per-query results summary
+        responseText += 'Search Summary:\n';
+        resultsByQuery.forEach((result) => {
+          if (result.success) {
+            responseText += `- "${result.query}": ${result.count} components\n`;
+          } else {
+            responseText += `- "${result.query}": FAILED (${result.error})\n`;
+          }
+        });
+        responseText += '\nConsolidated Results:\n';
+
+        responseText += Array.from(allComponents).join('\n');
+
+        const formattedResults = {
+          type: 'text',
+          text: responseText,
+        };
+
+        this.logger.debug(
+          `[MCP-DEBUG] Consolidated search results: ${allComponents.size} unique components from ${totalComponentsFound} total results`
+        );
+        return { content: [formattedResults] } as CallToolResult;
+      } catch (error) {
+        this.logger.error(`[MCP-DEBUG] Error during parallel search execution: ${(error as Error).message}`);
+        return { content: [{ type: 'text', text: `Error executing searches: ${(error as Error).message}` }] };
       }
-      const formattedResults = {
-        type: 'text',
-        text: results.components.join('\n'),
-      };
-      return { content: [formattedResults] } as CallToolResult;
     });
   }
 
@@ -1256,95 +1353,38 @@ export class CliMcpServerMain {
 
   // Setup command business logic methods
   getEditorDisplayName(editor: string): string {
-    return McpSetupUtils.getEditorDisplayName(editor);
+    return McpConfigWriter.getEditorDisplayName(editor);
   }
 
   /**
    * Get the path to the editor config file based on editor type and scope
    */
   getEditorConfigPath(editor: string, isGlobal: boolean, workspaceDir?: string): string {
-    const editorLower = editor.toLowerCase();
-
-    if (editorLower === 'vscode') {
-      // For VS Code, return appropriate config path based on global vs workspace scope
-      return isGlobal
-        ? McpSetupUtils.getVSCodeSettingsPath(isGlobal, workspaceDir)
-        : McpSetupUtils.getVSCodeMcpConfigPath(workspaceDir);
-    } else if (editorLower === 'cursor') {
-      return McpSetupUtils.getCursorSettingsPath(isGlobal, workspaceDir);
-    } else if (editorLower === 'windsurf') {
-      return McpSetupUtils.getWindsurfSettingsPath(isGlobal, workspaceDir);
-    } else if (editorLower === 'roo') {
-      return McpSetupUtils.getRooCodeSettingsPath(isGlobal, workspaceDir);
-    } else if (editorLower === 'cline') {
-      return McpSetupUtils.getClinePromptsPath(isGlobal, workspaceDir);
-    } else if (editorLower === 'claude-code') {
-      return McpSetupUtils.getClaudeCodeSettingsPath(isGlobal, workspaceDir);
-    }
-
-    throw new Error(`Editor "${editor}" is not supported yet.`);
+    return McpConfigWriter.getEditorConfigPath(editor, isGlobal, workspaceDir);
   }
 
   async setupEditor(editor: string, options: SetupOptions, workspaceDir?: string): Promise<void> {
-    const supportedEditors = ['vscode', 'cursor', 'windsurf', 'roo', 'cline', 'claude-code'];
-    const editorLower = editor.toLowerCase();
-
-    if (!supportedEditors.includes(editorLower)) {
-      throw new Error(`Editor "${editor}" is not supported yet. Currently supported: ${supportedEditors.join(', ')}`);
-    }
-
     // Add workspaceDir to options if provided
     const setupOptions: SetupOptions = { ...options };
     if (workspaceDir) {
       setupOptions.workspaceDir = workspaceDir;
     }
 
-    if (editorLower === 'vscode') {
-      await McpSetupUtils.setupVSCode(setupOptions);
-    } else if (editorLower === 'cursor') {
-      await McpSetupUtils.setupCursor(setupOptions);
-    } else if (editorLower === 'windsurf') {
-      await McpSetupUtils.setupWindsurf(setupOptions);
-    } else if (editorLower === 'roo') {
-      await McpSetupUtils.setupRooCode(setupOptions);
-    } else if (editorLower === 'cline') {
-      // Cline doesn't need MCP server setup, only rules files
-      // This is a no-op but we include it for consistency
-      // Users should use the 'rules' command to set up Cline instructions
-    } else if (editorLower === 'claude-code') {
-      await McpSetupUtils.setupClaudeCode(setupOptions);
-    }
+    await McpConfigWriter.setupEditor(editor, setupOptions);
   }
 
   async writeRulesFile(editor: string, options: RulesOptions, workspaceDir?: string): Promise<void> {
-    const supportedEditors = ['vscode', 'cursor', 'roo', 'cline', 'claude-code'];
-    const editorLower = editor.toLowerCase();
-
-    if (!supportedEditors.includes(editorLower)) {
-      throw new Error(`Editor "${editor}" is not supported yet. Currently supported: ${supportedEditors.join(', ')}`);
-    }
-
     // Add workspaceDir to options if provided
     const rulesOptions: RulesOptions = { ...options };
     if (workspaceDir) {
       rulesOptions.workspaceDir = workspaceDir;
     }
 
-    if (editorLower === 'vscode') {
-      await McpSetupUtils.writeVSCodeRules(rulesOptions);
-    } else if (editorLower === 'cursor') {
-      await McpSetupUtils.writeCursorRules(rulesOptions);
-    } else if (editorLower === 'roo') {
-      await McpSetupUtils.writeRooCodeRules(rulesOptions);
-    } else if (editorLower === 'cline') {
-      await McpSetupUtils.writeClineRules(rulesOptions);
-    } else if (editorLower === 'claude-code') {
-      await McpSetupUtils.writeClaudeCodeRules(rulesOptions);
-    }
+    await McpConfigWriter.writeRulesFile(editor, rulesOptions);
   }
 
   async getRulesContent(consumerProject: boolean = false): Promise<string> {
-    return McpSetupUtils.getDefaultRulesContent(consumerProject);
+    return McpConfigWriter.getDefaultRulesContent(consumerProject);
   }
 
   static slots = [];

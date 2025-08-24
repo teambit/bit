@@ -1,5 +1,5 @@
-import { EnvContext, EnvHandler } from '@teambit/envs';
-import { ApplicationType } from './application-type';
+import type { EnvContext, EnvHandler } from '@teambit/envs';
+import type { ApplicationType } from './application-type';
 
 export type AppTypeListOptions = {
   name?: string;

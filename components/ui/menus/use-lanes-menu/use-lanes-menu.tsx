@@ -1,12 +1,13 @@
 import React from 'react';
+import cx from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
-import { LanesHost } from '@teambit/lanes.ui.models.lanes-model';
+import type { LanesHost } from '@teambit/lanes.ui.models.lanes-model';
 import { UseBoxDropdown } from '@teambit/ui-foundation.ui.use-box.dropdown';
 import { Link as BaseLink } from '@teambit/base-react.navigation.link';
-import { LaneId } from '@teambit/lane-id';
+import type { LaneId } from '@teambit/lane-id';
 import styles from './use-lanes-menu.module.scss';
 
 // @todo - this will be fixed as part of the @teambit/base-react.navigation.link upgrade to latest
@@ -24,16 +25,18 @@ export function UseLaneMenu({
   currentLaneId,
   actionName,
   actionIcon,
+  menuClassName,
 }: {
   host: LanesHost;
   viewedLaneId: LaneId;
   currentLaneId?: LaneId;
   actionName?: string;
   actionIcon?: string;
+  menuClassName?: string
 }) {
   const switchedOutToCurrentLane = !!currentLaneId?.isEqual(currentLaneId);
   const Menu = (
-    <div className={styles.lanesMenu}>
+    <div className={cx(styles.lanesMenu, menuClassName)}>
       <div className={styles.top}>
         <div className={styles.title}>
           <Icon className={styles.titleIcon} of="terminal" />

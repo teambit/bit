@@ -1,4 +1,5 @@
-import React, { useRef, useState, useEffect } from 'react';
+import type React from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 export function useIframeContentHeight({
   interval = 250,
@@ -17,6 +18,7 @@ export function useIframeContentHeight({
   useInterval(() => {
     try {
       const iframe = iframeRef.current;
+      if (!iframe || !iframe.contentWindow || !iframe.contentWindow.document) return;
       // eslint-disable-next-line
       if (viewport !== null) iframe!.contentWindow!.document.body.style.width = 'fit-content';
       if (!first && iframe?.style.height === '5000px') {

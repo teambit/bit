@@ -1,7 +1,7 @@
 import { ComponentIdList } from '@teambit/component-id';
-import { Scope } from '@teambit/legacy.scope';
+import type { Scope } from '@teambit/legacy.scope';
 import { logger } from '@teambit/legacy.logger';
-import { Action } from './action';
+import type { Action } from './action';
 
 type Options = { ids: string[]; fetchFromOriginalScopes: boolean };
 

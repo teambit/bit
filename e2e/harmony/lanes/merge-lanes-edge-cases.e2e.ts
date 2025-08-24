@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import { specFileFailingFixture } from '../jest.e2e';
+import { specFileFailingFixture } from '../jest-fixtures';
 
 chai.use(require('chai-fs'));
 

@@ -17,7 +17,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `bit compile` - Compile all components
 - `bit watch` - Watch for changes and compile automatically
-- `npm run check-types` - Run TypeScript type checking without emitting files
 
 ### Testing
 
@@ -26,6 +25,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run e2e-test` - Run end-to-end tests (can take hours, usually run on CI)
 - `npm run e2e-test:debug` - Run e2e tests in debug mode (keeps workspaces, prints output)
 - `npm run mocha-circleci` - Run mocha tests with CircleCI configuration
+
+**Running specific e2e tests:** To run a specific test during development, add `.only` to the describe or it block (e.g., `describe.only(...)` or `it.only(...)`), then run `npm run e2e-test`.
+
+**Bug reproduction testing:** When asked to reproduce a bug, create an e2e test instead of creating test directories in the current workspace. You cannot create nested Bit workspaces. E2E test helpers provide workspace creation methods that use temporary directories and automatically clean up after tests.
 
 ### Linting and Formatting
 
@@ -71,10 +74,6 @@ Bit is built using a component-based architecture where the entire codebase is c
 - `scopes/dependencies/` - Dependency management
 - `scopes/workspace/` - Workspace management
 - `scopes/scope/` - Remote scope operations
-
-**Legacy Code:**
-
-- `components/legacy/` - Legacy Bit implementation for backward compatibility
 
 ### Aspect System
 
@@ -177,3 +176,9 @@ This repository is built using Bit itself, demonstrating the "dogfooding" approa
 - Use `bit watch` for faster development cycles
 - E2E tests run in parallel on CI
 - Component compilation can be parallelized
+
+### Aspect Configuration
+
+- Aspects accept config as 2nd parameter in `provider` method: `provider(deps, config)`
+- Define TypeScript interface for config and inject into main class constructor
+- Configure in `workspace.jsonc` under aspect ID key

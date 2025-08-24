@@ -1,5 +1,5 @@
-import { ShowFragment, Component } from '@teambit/component';
-import { DependencyResolverMain } from '../dependency-resolver.main.runtime';
+import type { ShowFragment, Component } from '@teambit/component';
+import type { DependencyResolverMain } from '../dependency-resolver.main.runtime';
 import { serializeByLifecycle } from './serialize-by-lifecycle';
 
 export class DevDependenciesFragment implements ShowFragment {

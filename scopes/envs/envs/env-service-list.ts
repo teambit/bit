@@ -1,5 +1,5 @@
-import { EnvDefinition } from './env-definition';
-import { EnvService } from './services';
+import type { EnvDefinition } from './env-definition';
+import type { EnvService } from './services';
 
 export class EnvServiceList {
   constructor(
@@ -14,18 +14,20 @@ export class EnvServiceList {
     readonly services: [string, EnvService<any>][]
   ) {}
 
-  toObject() {
+  async toObject() {
     return {
       env: this.env.toObject(),
-      services: this.services.map(([id, service]) => {
-        return {
-          id,
-          name: service.name,
-          description: service.description,
-          // @ts-ignore
-          data: service.getDescriptor(this.env),
-        };
-      }),
+      services: await Promise.all(
+        this.services.map(async ([id, service]) => {
+          return {
+            id,
+            name: service.name,
+            description: service.description,
+            // @ts-ignore
+            data: await service.getDescriptor(this.env),
+          };
+        })
+      ),
     };
   }
 }

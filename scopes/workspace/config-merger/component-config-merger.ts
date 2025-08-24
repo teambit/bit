@@ -1,18 +1,14 @@
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import semver from 'semver';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { BuilderAspect } from '@teambit/builder';
 import { isHash } from '@teambit/component-version';
-import {
-  DependencyResolverAspect,
-  SerializedDependency,
-  VariantPolicy,
-  VariantPolicyEntry,
-} from '@teambit/dependency-resolver';
-import { Lane } from '@teambit/objects';
+import type { SerializedDependency, VariantPolicyEntry } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
+import type { Lane } from '@teambit/objects';
 import { EnvsAspect } from '@teambit/envs';
-import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
-import { MergeStrategy } from '@teambit/merging';
+import type { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { compact, omit, uniqBy } from 'lodash';
 import { ConfigMergeResult } from './config-merge-result';
 
@@ -454,7 +450,6 @@ export class ComponentConfigMerger {
       if (dep.__type !== 'component') {
         return dep.id;
       }
-      // @ts-ignore
       return dep.packageName;
     };
 

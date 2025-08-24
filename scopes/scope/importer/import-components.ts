@@ -1,37 +1,37 @@
 import { BitError } from '@teambit/bit-error';
-import { LaneId } from '@teambit/lane-id';
+import type { LaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { ComponentsPendingMerge, Consumer } from '@teambit/legacy.consumer';
-import { Lane, ModelComponent, Version } from '@teambit/objects';
+import type { Consumer } from '@teambit/legacy.consumer';
+import { ComponentsPendingMerge } from '@teambit/legacy.consumer';
+import type { Lane, ModelComponent, Version } from '@teambit/objects';
 import { getLatestVersionNumber, pathNormalizeToLinux, hasWildcard } from '@teambit/legacy.utils';
-import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
-import { applyModifiedVersion } from '@teambit/checkout';
+import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { MergeStrategy, MergeResultsThreeWay, FilesStatus } from '@teambit/component.modules.merge-helper';
 import {
+  applyModifiedVersion,
   FileStatus,
   getMergeStrategyInteractive,
   MergeOptions,
   threeWayMerge,
-  MergeStrategy,
-  MergeResultsThreeWay,
-  FilesStatus,
-} from '@teambit/merging';
-import {
-  multipleVersionDependenciesToConsumer,
-  VersionDependencies,
-  ScopeComponentsImporter,
-  Scope,
-} from '@teambit/legacy.scope';
-import { GraphMain } from '@teambit/graph';
-import { Workspace } from '@teambit/workspace';
-import { ComponentWriterMain, ComponentWriterResults, ManyComponentsWriterParams } from '@teambit/component-writer';
+} from '@teambit/component.modules.merge-helper';
+import type { VersionDependencies, Scope } from '@teambit/legacy.scope';
+import { multipleVersionDependenciesToConsumer, ScopeComponentsImporter } from '@teambit/legacy.scope';
+import type { GraphMain } from '@teambit/graph';
+import type { Workspace } from '@teambit/workspace';
+import type {
+  ComponentWriterMain,
+  ComponentWriterResults,
+  ManyComponentsWriterParams,
+} from '@teambit/component-writer';
 import { LATEST_VERSION } from '@teambit/component-version';
-import { EnvsMain } from '@teambit/envs';
+import type { EnvsMain } from '@teambit/envs';
 import { compact, difference, fromPairs } from 'lodash';
-import { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
-import { Logger } from '@teambit/logger';
+import type { WorkspaceConfigUpdateResult } from '@teambit/config-merger';
+import type { Logger } from '@teambit/logger';
 import { DependentsGetter } from './dependents-getter';
-import { ListerMain, NoIdMatchWildcard } from '@teambit/lister';
+import type { ListerMain } from '@teambit/lister';
+import { NoIdMatchWildcard } from '@teambit/lister';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 
 const BEFORE_IMPORT_ACTION = 'importing components';
@@ -665,13 +665,8 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
     const existingBitMapBitId = this.consumer.bitMap.getComponentId(component.id, { ignoreVersion: true });
     const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
     const currentlyUsedVersion = existingBitMapBitId.version;
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);
-    const otherComponent: Version = await componentModel.loadVersion(
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      component.id.version,
-      this.consumer.scope.objects
-    );
+    const otherComponent: Version = await componentModel.loadVersion(component.id.version, this.consumer.scope.objects);
     const mergeResults = await threeWayMerge({
       scope: this.consumer.scope,
       otherComponent,
@@ -704,7 +699,6 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
       const filesStatus = {};
       // don't write the files to the filesystem, only bump the bitmap version.
       files.forEach((file) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
       });
       this.consumer.bitMap.updateComponentId(component.id);
@@ -715,7 +709,6 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
       const filesStatus = {};
       // the local changes will be overridden (as if the user entered --override flag for this component)
       files.forEach((file) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
       });
       return filesStatus;

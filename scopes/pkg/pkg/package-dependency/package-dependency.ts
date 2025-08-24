@@ -1,9 +1,5 @@
-import {
-  BaseDependency,
-  SerializedDependency,
-  DependencyLifecycleType,
-  DependencySource,
-} from '@teambit/dependency-resolver';
+import type { SerializedDependency, DependencyLifecycleType, DependencySource } from '@teambit/dependency-resolver';
+import { BaseDependency } from '@teambit/dependency-resolver';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface SerializedPackageDependency extends SerializedDependency {}

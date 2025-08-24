@@ -33,11 +33,11 @@ export class CiPrCmd implements Command {
     this.logger.console('🚀 Initializing PR command');
     if (!this.workspace) throw new OutsideWorkspaceError();
 
-    let branch: string;
+    let laneIdStr: string;
     let message: string;
 
     if (options.lane) {
-      branch = options.lane;
+      laneIdStr = options.lane;
     } else {
       const currentBranch = await this.ci.getBranchName().catch((e) => {
         throw new Error(`Failed to get branch name from Git: ${e.toString()}`);
@@ -45,9 +45,9 @@ export class CiPrCmd implements Command {
       if (!currentBranch) {
         throw new Error('Failed to get branch name');
       }
-      // Sanitize branch name to make it valid for Bit lane IDs by replacing slashes with dashes
-      const sanitizedBranch = currentBranch.replace(/\//g, '-');
-      branch = `${this.workspace.defaultScope}/${sanitizedBranch}`;
+      // Sanitize branch name to make it valid for Bit lane IDs by replacing slashes and dots with dashes
+      const sanitizedBranch = currentBranch.replace(/[/.]/g, '-');
+      laneIdStr = `${this.workspace.defaultScope}/${sanitizedBranch}`;
     }
 
     if (options.message) {
@@ -60,11 +60,17 @@ export class CiPrCmd implements Command {
       message = commitMessage;
     }
 
-    return this.ci.snapPrCommit({
-      branch,
+    const results = await this.ci.snapPrCommit({
+      laneIdStr: laneIdStr,
       message,
       build: options.build,
       strict: options.strict,
     });
+
+    if (results) {
+      return results;
+    }
+
+    return `PR command executed successfully`;
   }
 }

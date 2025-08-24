@@ -3,19 +3,22 @@ import { isNil } from 'lodash';
 import nodeFetch from '@pnpm/node-fetch';
 import retry from 'async-retry';
 import readLine from 'readline';
-import HttpAgent from 'agentkeepalive';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type HttpAgent from 'agentkeepalive';
+import type { ComponentIdList } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 import { HttpsProxyAgent } from 'https-proxy-agent';
-import { SocksProxyAgent } from 'socks-proxy-agent';
-import { HttpProxyAgent } from 'http-proxy-agent';
+import type { SocksProxyAgent } from 'socks-proxy-agent';
+import type { HttpProxyAgent } from 'http-proxy-agent';
 import { CLOUD_IMPORTER, CLOUD_IMPORTER_V2, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { LaneId } from '@teambit/lane-id';
-import { getAgent, AgentOptions } from '@teambit/toolbox.network.agent';
-import { ListScopeResult } from '@teambit/legacy.component-list';
-import { Network } from '../network';
+import type { AgentOptions } from '@teambit/toolbox.network.agent';
+import { getAgent } from '@teambit/toolbox.network.agent';
+import type { ListScopeResult } from '@teambit/legacy.component-list';
+import type { Network } from '../network';
 import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import { LaneData, ScopeDescriptor, RemovedObjects } from '@teambit/legacy.scope';
+import type { LaneData, ScopeDescriptor } from '@teambit/legacy.scope';
+import { RemovedObjects } from '@teambit/legacy.scope';
 import { globalFlags } from '@teambit/cli';
 import { getConfig, listConfig } from '@teambit/config-store';
 import {
@@ -45,8 +48,9 @@ import {
   CENTRAL_BIT_HUB_URL_IMPORTER_V2,
 } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { ObjectItemsStream, ObjectList, ComponentLog } from '@teambit/objects';
-import { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
+import type { ObjectItemsStream, ComponentLog } from '@teambit/objects';
+import { ObjectList } from '@teambit/objects';
+import type { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
 import { remoteErrorHandler } from '../remote-error-handler';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
@@ -404,7 +408,6 @@ export class Http implements Network {
     // const res = await fetch(urlToFetch, opts);
     logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
-    // @ts-ignore TODO: need to fix this
     const objectListReadable = ObjectList.fromTarToObjectStream(res.body);
 
     return objectListReadable;
@@ -821,6 +824,7 @@ export class Http implements Network {
   private getHeaders(headers: { [key: string]: string } = {}) {
     const authHeader = this.token ? getAuthHeader(this.token) : {};
     const localScope = this.localScopeName ? { 'x-request-scope': this.localScopeName } : {};
+    const customOrigin = process.env.__CUSTOM_ORIGIN ? { 'x-custom-origin': process.env.__CUSTOM_ORIGIN } : {};
     const clientVersion = this.getClientVersion() || 'unknown';
     if (clientVersion === 'unknown') {
       // Ignore the error, we don't want to fail the request if we can't get the client version
@@ -830,6 +834,7 @@ export class Http implements Network {
       headers,
       authHeader,
       localScope,
+      customOrigin,
       { connection: 'keep-alive' },
       { 'x-client-version': clientVersion }
     );

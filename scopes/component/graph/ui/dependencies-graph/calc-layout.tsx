@@ -1,5 +1,5 @@
 import dagre, { graphlib } from '@dagrejs/dagre';
-import { EdgeModel, GraphModel, NodeModel } from '../query';
+import type { EdgeModel, GraphModel, NodeModel } from '../query';
 
 const NODE_WIDTH = 260;
 const NODE_HEIGHT = 90;

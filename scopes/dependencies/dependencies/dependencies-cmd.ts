@@ -1,13 +1,13 @@
 // eslint-disable-next-line max-classes-per-file
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import Table from 'cli-table';
 import chalk from 'chalk';
 import archy from 'archy';
-import { ComponentIdGraph } from '@teambit/graph';
+import type { ComponentIdGraph } from '@teambit/graph';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
 import { generateDependenciesInfoTable } from './template';
-import { DependenciesMain } from './dependencies.main.runtime';
-import { Workspace } from '@teambit/workspace';
+import type { DependenciesMain } from './dependencies.main.runtime';
+import type { Workspace } from '@teambit/workspace';
 
 type GetDependenciesFlags = {
   tree: boolean;

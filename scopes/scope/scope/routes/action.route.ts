@@ -1,7 +1,8 @@
-import { Route, Verb, Request, Response } from '@teambit/express';
+import type { Route, Request, Response } from '@teambit/express';
+import { Verb } from '@teambit/express';
 import { action } from '@teambit/legacy.scope-api';
 import { getAuthDataFromHeader } from '@teambit/scope.network';
-import { ScopeMain } from '../scope.main.runtime';
+import type { ScopeMain } from '../scope.main.runtime';
 
 export class ActionRoute implements Route {
   constructor(private scope: ScopeMain) {}

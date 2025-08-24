@@ -1,8 +1,10 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { ComponentID, ComponentIdObj } from '@teambit/component-id';
-import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
-import { Logger } from '@teambit/logger';
+import type { ComponentIdObj } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
+import type { LaneId } from '@teambit/lane-id';
+import { DEFAULT_LANE } from '@teambit/lane-id';
+import type { Logger } from '@teambit/logger';
 
 const STAGED_CONFIG_DIR = 'staged-config';
 

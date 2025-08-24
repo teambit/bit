@@ -2,35 +2,38 @@ import semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import { initDefaultReporter } from '@pnpm/default-reporter';
 import { streamParser } from '@pnpm/logger';
-import { StoreController, WantedDependency } from '@pnpm/package-store';
+import type { StoreController, WantedDependency } from '@pnpm/package-store';
 import { rebuild } from '@pnpm/plugin-commands-rebuild';
-import { createOrConnectStoreController, CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
+import type { CreateStoreControllerOptions } from '@pnpm/store-connection-manager';
+import { createOrConnectStoreController } from '@pnpm/store-connection-manager';
 import { sortPackages } from '@pnpm/sort-packages';
-import { type PeerDependencyRules, type ProjectRootDir, type DepPath } from '@pnpm/types';
-import { Registries } from '@teambit/pkg.entities.registry';
+import type {
+  PackageManifest,
+  ProjectManifest,
+  ReadPackageHook,
+  PeerDependencyRules,
+  ProjectRootDir,
+  DepPath,
+} from '@pnpm/types';
+import type { Registries } from '@teambit/pkg.entities.registry';
 import { getAuthConfig } from '@teambit/pkg.config.auth';
-import {
+import type {
   ResolvedPackageVersion,
   PackageManagerProxyConfig,
   PackageManagerNetworkConfig,
 } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import { BIT_ROOTS_DIR } from '@teambit/legacy.constants';
-import {
-  MutatedProject,
-  mutateModules,
-  InstallOptions,
-  PeerDependencyIssuesByProjects,
-  ProjectOptions,
-} from '@pnpm/core';
+import type { MutatedProject, InstallOptions, PeerDependencyIssuesByProjects, ProjectOptions } from '@pnpm/core';
+import { mutateModules } from '@pnpm/core';
 import * as pnpm from '@pnpm/core';
-import { createClient, ClientOptions } from '@pnpm/client';
+import type { ClientOptions } from '@pnpm/client';
+import { createClient } from '@pnpm/client';
 import { restartWorkerPool, finishWorkers } from '@pnpm/worker';
 import { createPkgGraph } from '@pnpm/workspace.pkgs-graph';
-import { PackageManifest, ProjectManifest, ReadPackageHook } from '@pnpm/types';
 import { readWantedLockfile, writeWantedLockfile } from '@pnpm/lockfile.fs';
-import { type LockfileFile, type LockfileObject } from '@pnpm/lockfile.types'
-import { Logger } from '@teambit/logger';
+import { type LockfileFile, type LockfileObject } from '@pnpm/lockfile.types';
+import type { Logger } from '@teambit/logger';
 import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-path';
 import { isEqual } from 'lodash';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
@@ -292,6 +295,7 @@ export async function install(
     },
     userAgent: networkConfig.userAgent,
     ...options,
+    injectWorkspacePackages: true,
     neverBuiltDependencies: options.neverBuiltDependencies ?? [],
     returnListOfDepsRequiringBuild: true,
     excludeLinksFromLockfile: options.excludeLinksFromLockfile ?? true,
@@ -415,21 +419,19 @@ export function createReadPackageHooks(options: {
  * This hook is used when installation is executed inside a capsule.
  * The components in the capsules should get their peer dependencies installed,
  * so this hook converts any peer dependencies into runtime dependencies.
- * Also, any local dependencies are extended with the "injected" option,
- * this tells pnpm to hard link the packages instead of symlinking them.
  */
 function readPackageHookForCapsules(pkg: PackageManifest, workspaceDir?: string): PackageManifest {
   // workspaceDir is set only for workspace packages
   if (workspaceDir) {
-    return readDependencyPackageHook({
+    return {
       ...pkg,
       dependencies: {
         ...pkg.peerDependencies,
         ...pkg.dependencies,
       },
-    });
+    };
   }
-  return readDependencyPackageHook(pkg);
+  return pkg;
 }
 
 /**
@@ -478,25 +480,7 @@ function readPackageHook(pkg: PackageManifest, workspaceDir?: string): PackageMa
   if (workspaceDir && !workspaceDir.includes(BIT_ROOTS_DIR)) {
     return readWorkspacePackageHook(pkg);
   }
-  return readDependencyPackageHook(pkg);
-}
-
-/**
- * This hook adds the "injected" option to any workspace dependency.
- * The injected option tell pnpm to hard link the packages instead of symlinking them.
- */
-function readDependencyPackageHook(pkg: PackageManifest): PackageManifest {
-  const dependenciesMeta = pkg.dependenciesMeta ?? {};
-  for (const [name, version] of Object.entries(pkg.dependencies ?? {})) {
-    if (version.startsWith('workspace:')) {
-      // This instructs pnpm to hard link the component from the workspace, not symlink it.
-      dependenciesMeta[name] = { injected: true };
-    }
-  }
-  return {
-    ...pkg,
-    dependenciesMeta,
-  };
+  return pkg;
 }
 
 /**

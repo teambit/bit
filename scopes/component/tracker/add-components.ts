@@ -7,30 +7,26 @@ import { compact, groupBy, isEmpty, unionBy, uniq } from 'lodash';
 import format from 'string-format';
 import { Analytics } from '@teambit/legacy.analytics';
 import { ComponentID } from '@teambit/component-id';
-import { BitIdStr, BitId } from '@teambit/legacy-bit-id';
+import type { BitIdStr } from '@teambit/legacy-bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { PACKAGE_JSON, VERSION_DELIMITER, AUTO_GENERATED_STAMP } from '@teambit/legacy.constants';
-import {
-  BitMap,
-  ComponentMap,
-  ComponentMapFile,
-  Config,
-  getIgnoreListHarmony,
-  MissingMainFile,
-} from '@teambit/legacy.bit-map';
+import type { BitMap, ComponentMapFile, Config } from '@teambit/legacy.bit-map';
+import { ComponentMap, getIgnoreListHarmony, MissingMainFile } from '@teambit/legacy.bit-map';
 import { DuplicateIds, EmptyDirectory, ExcludedMainFile, MainFileIsDir, NoFiles, PathsNotExist } from './exceptions';
 import { AddingIndividualFiles } from './exceptions/adding-individual-files';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
 import { ParentDirTracked } from './exceptions/parent-dir-tracked';
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
-import { Consumer } from '@teambit/legacy.consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { BitError } from '@teambit/bit-error';
 import { logger } from '@teambit/legacy.logger';
-import { glob, isDir, pathNormalizeToLinux, PathLinux, PathLinuxRelative, PathOsBased } from '@teambit/legacy.utils';
+import type { PathLinux, PathLinuxRelative, PathOsBased } from '@teambit/legacy.utils';
+import { glob, isDir, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
-import { Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
 import determineMainFile from './determine-main-file';
-import { ResolvedTrackData } from './tracker.main.runtime';
+import type { ResolvedTrackData } from './tracker.main.runtime';
 
 export type AddResult = { id: ComponentID; files: ComponentMapFile[] };
 export type Warnings = {
@@ -40,7 +36,6 @@ export type Warnings = {
 };
 export type AddActionResults = { addedComponents: AddResult[]; warnings: Warnings };
 export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: tests/{PARENT}/{FILE_NAME}
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 type PathsStats = { [PathOsBased]: { isDir: boolean } };
 export type AddedComponent = {
@@ -87,7 +82,6 @@ export default class AddComponents {
   override: boolean; // (default = false) replace the files array or only add files.
   trackDirFeature: boolean | null | undefined;
   warnings: Warnings;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   ignoreList: string[];
   gitIgnore: any;
   addedComponents: AddResult[];
@@ -280,7 +274,6 @@ export default class AddComponents {
     if (this.trackDirFeature) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this.bitMap._areFilesArraysEqual(foundComponentFromBitMap.files, componentFiles)) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         return foundComponentFromBitMap;
       }
     }

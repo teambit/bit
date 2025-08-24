@@ -1,10 +1,11 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import packageNameValidate from 'validate-npm-package-name';
-import { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
-import { Logger } from '@teambit/logger';
+import type { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
+import type { Logger } from '@teambit/logger';
 import chalk from 'chalk';
-import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { InstallMain, WorkspaceInstallOptions } from './install.main.runtime';
+import type { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError } from '@teambit/workspace';
+import type { InstallMain, WorkspaceInstallOptions } from './install.main.runtime';
 
 type InstallCmdOptions = {
   type: WorkspaceDependencyLifecycleType;

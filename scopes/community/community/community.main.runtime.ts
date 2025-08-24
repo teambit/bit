@@ -6,7 +6,6 @@ import { BASE_COMMUNITY_DOMAIN, BASE_DOCS_DOMAIN } from '@teambit/legacy.constan
 // import {} from '@teambit/community.starters.wiki';
 // import {} from '@teambit/community.starters.data-fetching';
 // import {} from '@teambit/community.starters.analytics';
-import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 
 import { CommunityAspect } from './community.aspect';
 
@@ -29,14 +28,14 @@ export class CommunityMain {
   }
 
   static slots = [];
-  static dependencies = [GeneratorAspect];
+  static dependencies = [];
   static runtime = MainRuntime;
   static defaultConfig: CommunityWorkspaceConfig = {
     communityDomain: BASE_COMMUNITY_DOMAIN,
     docsDomain: BASE_DOCS_DOMAIN,
   };
 
-  static async provider(_deps: [GeneratorMain], config: CommunityWorkspaceConfig) {
+  static async provider(_deps: [], config: CommunityWorkspaceConfig) {
     // const [generator] = _deps;
     const community = new CommunityMain(config);
 

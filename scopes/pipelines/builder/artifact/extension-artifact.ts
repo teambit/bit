@@ -1,5 +1,5 @@
 import type { AspectDescriptor } from '@teambit/aspect-loader';
-import { AbstractVinyl } from '@teambit/component.sources';
+import type { AbstractVinyl } from '@teambit/component.sources';
 
 export class ExtensionArtifact {
   constructor(

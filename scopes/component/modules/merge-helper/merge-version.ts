@@ -4,7 +4,6 @@ import { resolveConflictPrompt } from '@teambit/legacy.cli.prompts';
 
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 export type MergeStrategy = keyof typeof MergeOptions;
 export const FileStatus = {
   merged: chalk.green('auto-merged'),

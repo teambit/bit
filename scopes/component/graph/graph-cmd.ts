@@ -1,12 +1,12 @@
 import chalk from 'chalk';
 import GraphLib from 'graphlib';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component-id';
-import { GraphConfig, VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
+import type { GraphConfig } from '@teambit/legacy.dependency-graph';
+import { VisualDependencyGraph } from '@teambit/legacy.dependency-graph';
 import { getRemoteByName } from '@teambit/scope.remotes';
-import { ComponentMain } from '@teambit/component';
-import type { Workspace } from '@teambit/workspace';
-import { GraphMain } from './graph.main.runtime';
+import type { ComponentMain } from '@teambit/component';
+import type { GraphMain } from './graph.main.runtime';
 
 export type GraphOpt = {
   remote?: string;
@@ -113,9 +113,14 @@ export class GraphCmd implements Command {
     return GraphLib.json.write(graph);
   }
 
-  private getWorkspaceIfExist(): Workspace | undefined {
+  /**
+   *
+   * @returns Workspace if it exists, otherwise undefined.
+   * the reason to not add it here as a type is to avoid circular dependency issues.
+   */
+  private getWorkspaceIfExist(): any {
     try {
-      return this.componentAspect.getHost('teambit.workspace/workspace') as Workspace | undefined;
+      return this.componentAspect.getHost('teambit.workspace/workspace');
     } catch {
       return undefined;
     }

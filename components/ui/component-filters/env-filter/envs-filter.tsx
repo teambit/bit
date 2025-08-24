@@ -1,14 +1,18 @@
 import React, { useMemo, useEffect } from 'react';
-import { MultiSelect, ItemType } from '@teambit/design.inputs.selectors.multi-select';
-import { ComponentID, ComponentModel } from '@teambit/component';
+import type { ItemType } from '@teambit/design.inputs.selectors.multi-select';
+import { MultiSelect } from '@teambit/design.inputs.selectors.multi-select';
+import type { ComponentModel } from '@teambit/component';
+import { ComponentID } from '@teambit/component';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import classNames from 'classnames';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Tooltip } from '@teambit/design.ui.tooltip';
 import { Link as BaseLink } from '@teambit/base-react.navigation.link';
-import {
+import type {
   ComponentFilterCriteria,
   ComponentFilterRenderProps,
+} from '@teambit/component.ui.component-filters.component-filter-context';
+import {
   useComponentFilter,
   useComponentFilters,
   runAllFilters,

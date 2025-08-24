@@ -1,8 +1,9 @@
-import React, { HTMLAttributes } from 'react';
-import { EnumMemberSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { HTMLAttributes } from 'react';
+import React from 'react';
+import type { EnumMemberSchema } from '@teambit/semantics.entities.semantic-schema';
 import { TableRow } from '@teambit/documenter.ui.table-row';
 import classnames from 'classnames';
-import { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
 import { transformSignature } from '@teambit/api-reference.utils.schema-node-signature-transform';
 import { trackedElementClassName } from './index';
 

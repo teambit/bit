@@ -1,13 +1,13 @@
-import { PluginDefinition } from '@teambit/aspect-loader';
-import { Harmony } from '@teambit/harmony';
+import type { PluginDefinition } from '@teambit/aspect-loader';
+import type { Harmony } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component';
-import { WorkerMain } from '@teambit/worker';
+import type { WorkerMain } from '@teambit/worker';
 import { MainRuntime } from '@teambit/cli';
-import { LoggerMain } from '@teambit/logger';
+import type { LoggerMain } from '@teambit/logger';
 import { flatten } from 'lodash';
 import { ServiceHandlerContext as EnvContext } from './services/service-handler-context';
-import { Env } from './env-interface';
-import { EnvsRegistry, ServicesRegistry } from './environments.main.runtime';
+import type { Env } from './env-interface';
+import type { EnvsRegistry, ServicesRegistry } from './environments.main.runtime';
 
 export class EnvPlugin implements PluginDefinition {
   constructor(

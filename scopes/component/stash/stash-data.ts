@@ -1,4 +1,5 @@
-import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import type { ComponentIdObj } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 
 type StashCompBase = { hash: string; isNew: boolean; bitmapEntry: Record<string, any> };
 export type StashCompData = { id: ComponentID } & StashCompBase;

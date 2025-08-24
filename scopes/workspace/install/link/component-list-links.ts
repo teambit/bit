@@ -1,8 +1,8 @@
 import chalk from 'chalk';
-import { NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
+import type { NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
 import { getPackageNameFromTarget } from './get-package-name-from-target';
 import { LinkRow, VerboseLinkRow } from './link-row';
-import { LinkDetail } from '@teambit/dependency-resolver';
+import type { LinkDetail } from '@teambit/dependency-resolver';
 
 type ComponentListLinksProps = {
   componentListLinks?: NodeModulesLinksResult[];

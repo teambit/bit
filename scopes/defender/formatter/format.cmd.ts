@@ -1,14 +1,15 @@
-import { TimerResponse, Timer } from '@teambit/toolbox.time.timer';
+import type { TimerResponse } from '@teambit/toolbox.time.timer';
+import { Timer } from '@teambit/toolbox.time.timer';
 import { COMPONENT_PATTERN_HELP } from '@teambit/legacy.constants';
-import { Command, CommandOptions } from '@teambit/cli';
-import { ComponentFactory, ComponentID } from '@teambit/component';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ComponentFactory, ComponentID } from '@teambit/component';
 import chalk from 'chalk';
-import { EnvsExecutionResult } from '@teambit/envs';
-import { Workspace } from '@teambit/workspace';
+import type { EnvsExecutionResult } from '@teambit/envs';
+import type { Workspace } from '@teambit/workspace';
 import { compact, flatten } from 'lodash';
-import { FormatterMain } from './formatter.main.runtime';
-import { ComponentFormatResult, FormatResults, FileFormatResult } from './formatter';
-import { FormatterOptions } from './formatter-context';
+import type { FormatterMain } from './formatter.main.runtime';
+import type { ComponentFormatResult, FormatResults, FileFormatResult } from './formatter';
+import type { FormatterOptions } from './formatter-context';
 
 export type FormatCmdOptions = {
   changed?: boolean;

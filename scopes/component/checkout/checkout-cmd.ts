@@ -1,21 +1,20 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
+import type { ApplyVersionResults, MergeStrategy } from '@teambit/component.modules.merge-helper';
 import {
-  ApplyVersionResults,
   applyVersionReport,
   conflictSummaryReport,
   installationErrorOutput,
   compilationErrorOutput,
   getRemovedOutput,
   getAddedOutput,
-  MergeStrategy,
   getWorkspaceConfigUpdateOutput,
-} from '@teambit/merging';
+} from '@teambit/component.modules.merge-helper';
 import { COMPONENT_PATTERN_HELP, HEAD, LATEST } from '@teambit/legacy.constants';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
+import type { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
 
 export class CheckoutCmd implements Command {
   name = 'checkout <to> [component-pattern]';
@@ -214,7 +213,6 @@ once ready, snap/tag the components to persist the changes`;
       const title =
         alternativeTitle ||
         `successfully ${switchedOrReverted} ${chalk.bold(componentName)} to version ${chalk.bold(
-          // @ts-ignore version is defined when !reset
           head || latest ? component.id.version : version
         )}`;
       return chalk.bold(title) + newLine + applyVersionReport(components, false);
@@ -228,7 +226,6 @@ once ready, snap/tag the components to persist the changes`;
       if (head) return 'their head version';
       if (latest) return 'their latest version';
       if (main) return 'their main version';
-      // @ts-ignore version is defined when !reset
       return `version ${chalk.bold(version)}`;
     };
     const versionOutput = getVerOutput();

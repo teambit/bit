@@ -1,7 +1,8 @@
-import React, { HTMLAttributes } from 'react';
+import type { HTMLAttributes } from 'react';
+import React from 'react';
 import classNames from 'classnames';
-import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
-import { APINode, APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import type { APINode, APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 import { sortAPINodes } from '@teambit/api-reference.utils.sort-api-nodes';
 import { Link as BaseLink } from '@teambit/base-react.navigation.link';
 

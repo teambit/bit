@@ -1,11 +1,13 @@
-import { Logger } from '@teambit/logger';
-import { ComponentsResults, Tester, CallbackFn, TesterContext, Tests } from '@teambit/tester';
-import Mocha, { Test } from 'mocha';
+import type { Logger } from '@teambit/logger';
+import type { ComponentsResults, Tester, CallbackFn, TesterContext } from '@teambit/tester';
+import { Tests } from '@teambit/tester';
+import type { Test } from 'mocha';
+import Mocha from 'mocha';
 import babelRegister from '@babel/register';
 import type { TransformOptions } from '@babel/core';
 import { TestResult, TestsFiles, TestsResult } from '@teambit/tests-results';
 import pMapSeries from 'p-map-series';
-import { AbstractVinyl } from '@teambit/component.sources';
+import type { AbstractVinyl } from '@teambit/component.sources';
 import { compact } from 'lodash';
 
 export class MochaTester implements Tester {

@@ -1,4 +1,5 @@
-import { loadScope, Scope } from '@teambit/legacy.scope';
+import type { Scope } from '@teambit/legacy.scope';
+import { loadScope } from '@teambit/legacy.scope';
 import { getScopeRemotes } from '@teambit/scope.remotes';
 
 export async function runAction(actionName: string, remote: string, options = {}): Promise<any> {

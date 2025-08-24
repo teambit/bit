@@ -1,5 +1,5 @@
-import { Section } from '@teambit/component';
-import { APIReferenceUI } from '@teambit/api-reference';
+import type { Section } from '@teambit/component';
+import type { APIReferenceUI } from '@teambit/api-reference';
 
 export class APIRefSection implements Section {
   constructor(private apiReferenceUI: APIReferenceUI) {}

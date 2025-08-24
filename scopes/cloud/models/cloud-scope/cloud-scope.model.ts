@@ -1,4 +1,4 @@
-import { ScopeDescriptorProps } from '@teambit/scopes.scope-descriptor';
+import type { ScopeDescriptorProps } from '@teambit/scopes.scope-descriptor';
 
 export type GetScopesGQLResponse = {
   data?: {

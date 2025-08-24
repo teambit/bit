@@ -1,6 +1,7 @@
 import execa from 'execa';
 import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
-import Diagnosis, { ExamineBareResult } from '../diagnosis';
+import type { ExamineBareResult } from '../diagnosis';
+import Diagnosis from '../diagnosis';
 
 export const DIAGNOSIS_NAME_VALIDATE_GIT_EXEC = 'validate git exec';
 export default class ValidateGitExec extends Diagnosis {

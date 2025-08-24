@@ -4,9 +4,11 @@ import { BitError } from '@teambit/bit-error';
 import { getConfig } from '@teambit/config-store';
 import { initScope } from '@teambit/legacy.scope-api';
 import { CFG_INIT_DEFAULT_SCOPE, CFG_INIT_DEFAULT_DIRECTORY } from '@teambit/legacy.constants';
-import { WorkspaceExtensionProps } from '@teambit/config';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { WorkspaceExtensionProps } from '@teambit/config';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { InteractiveConfig } from './host-initializer.main.runtime';
 import { HostInitializerMain } from './host-initializer.main.runtime';
+import type { Logger } from '@teambit/logger';
 
 export class InitCmd implements Command {
   name = 'init [path]';
@@ -58,9 +60,64 @@ export class InitCmd implements Command {
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
     ['', 'external-package-manager', 'enable external package manager mode (npm/yarn/pnpm)'],
+    ['', 'skip-interactive', 'skip interactive mode for Git repositories'],
   ] as CommandOptions;
 
-  constructor(private hostInitializer: HostInitializerMain) {}
+  constructor(
+    private hostInitializer: HostInitializerMain,
+    private logger: Logger
+  ) {}
+
+  private async handleInteractiveMode(
+    projectPath: string,
+    flags: Record<string, any>
+  ): Promise<InteractiveConfig | null> {
+    const {
+      reset,
+      resetNew,
+      resetLaneNew,
+      resetHard,
+      resetScope,
+      standalone,
+      skipInteractive,
+      externalPackageManager,
+    } = flags;
+
+    // Check if we should run interactive mode
+    if (
+      reset ||
+      resetNew ||
+      resetLaneNew ||
+      resetHard ||
+      resetScope ||
+      standalone ||
+      skipInteractive ||
+      externalPackageManager ||
+      !(await HostInitializerMain.hasGitDirectory(projectPath)) ||
+      (await HostInitializerMain.hasWorkspaceInitialized(projectPath))
+    ) {
+      return null;
+    }
+
+    this.logger.off();
+    this.logger.console(chalk.cyan('🔧 Interactive setup for existing Git repository\n'));
+
+    try {
+      const interactiveConfig = await HostInitializerMain.runInteractiveMode(projectPath);
+
+      // Set up MCP server if user selected an editor
+      if (interactiveConfig.mcpEditor) {
+        this.logger.console(chalk.cyan(`\n🔧 Setting up MCP server for ${interactiveConfig.mcpEditor}...`));
+        await HostInitializerMain.setupMcpServer(interactiveConfig.mcpEditor, projectPath);
+        this.logger.console(chalk.green(`✅ MCP server configured for ${interactiveConfig.mcpEditor}`));
+      }
+
+      return interactiveConfig;
+    } catch (error: any) {
+      this.logger.consoleWarning(`Warning: Interactive setup failed: ${error.message}`);
+      return null;
+    }
+  }
 
   async report([path]: [string], flags: Record<string, any>) {
     const {
@@ -80,7 +137,9 @@ export class InitCmd implements Command {
       defaultScope,
       externalPackageManager,
     } = flags;
+
     if (path) path = pathlib.resolve(path);
+
     if (bare) {
       if (reset || resetHard) throw new BitError('--reset and --reset-hard flags are not available for bare scope');
       // Handle both cases init --bare and init --bare [scopeName]
@@ -88,15 +147,22 @@ export class InitCmd implements Command {
       await initScope(path, bareVal, shared);
       return `${chalk.green('successfully initialized an empty bare bit scope.')}`;
     }
+
     if (reset && resetHard) {
       throw new BitError('cannot use both --reset and --reset-hard, please use only one of them');
     }
 
+    const projectPath = path || process.cwd();
+    const interactiveConfig = await this.handleInteractiveMode(projectPath, flags);
+
     const workspaceExtensionProps: WorkspaceExtensionProps & { externalPackageManager?: boolean } = {
-      defaultDirectory: defaultDirectory ?? getConfig(CFG_INIT_DEFAULT_DIRECTORY),
-      defaultScope: defaultScope ?? getConfig(CFG_INIT_DEFAULT_SCOPE),
+      defaultDirectory:
+        interactiveConfig?.defaultDirectory ||
+        (externalPackageManager ? 'bit-components/{scope}/{name}' : defaultDirectory) ||
+        getConfig(CFG_INIT_DEFAULT_DIRECTORY),
+      defaultScope: defaultScope || getConfig(CFG_INIT_DEFAULT_SCOPE),
       name,
-      externalPackageManager,
+      externalPackageManager: interactiveConfig?.externalPackageManager || externalPackageManager,
     };
 
     const { created } = await HostInitializerMain.init(
@@ -110,16 +176,9 @@ export class InitCmd implements Command {
       resetScope,
       force,
       workspaceExtensionProps,
-      generator
+      interactiveConfig?.generator || generator
     );
 
-    let initMessage = `${chalk.green('successfully initialized a bit workspace.')}`;
-
-    if (!created) initMessage = `${chalk.grey('successfully re-initialized a bit workspace.')}`;
-    if (reset) initMessage = `${chalk.grey('your bit workspace has been reset successfully.')}`;
-    if (resetHard) initMessage = `${chalk.grey('your bit workspace has been hard-reset successfully.')}`;
-    if (resetScope) initMessage = `${chalk.grey('your local scope has been reset successfully.')}`;
-
-    return initMessage;
+    return HostInitializerMain.generateInitMessage(created, reset, resetHard, resetScope, interactiveConfig);
   }
 }

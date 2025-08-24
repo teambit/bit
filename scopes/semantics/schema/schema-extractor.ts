@@ -1,6 +1,6 @@
-import { Component } from '@teambit/component';
-import { APISchema } from '@teambit/semantics.entities.semantic-schema';
-import { Formatter } from '@teambit/formatter';
+import type { Component } from '@teambit/component';
+import type { APISchema } from '@teambit/semantics.entities.semantic-schema';
+import type { Formatter } from '@teambit/formatter';
 
 export interface SchemaExtractor {
   /**

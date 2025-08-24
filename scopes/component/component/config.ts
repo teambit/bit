@@ -1,5 +1,5 @@
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
-import { PathLinuxRelative, PathOsBasedRelative } from '@teambit/legacy.utils';
+import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { PathLinuxRelative, PathOsBasedRelative } from '@teambit/legacy.utils';
 
 /**
  * in-memory representation of the component configuration.

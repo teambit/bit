@@ -1,7 +1,9 @@
 import { difference } from 'lodash';
-import { Graph } from '@teambit/graph.cleargraph';
-import { UnmergedComponent, NoCommonSnap, VersionNotFoundOnFS } from '@teambit/legacy.scope';
-import { ModelComponent, Ref, Repository, VersionParents, versionParentsToGraph } from '@teambit/objects';
+import type { Graph } from '@teambit/graph.cleargraph';
+import type { UnmergedComponent } from '@teambit/legacy.scope';
+import { NoCommonSnap, VersionNotFoundOnFS } from '@teambit/legacy.scope';
+import type { ModelComponent, Repository, VersionParents } from '@teambit/objects';
+import { Ref, versionParentsToGraph } from '@teambit/objects';
 import { SnapsDistance } from './snaps-distance';
 import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
 
@@ -109,8 +111,6 @@ export function getDivergeDataBetweenTwoSnaps(
 ): SnapsDistance {
   const getVersionData = (ref: Ref): VersionParents | undefined => versionParents.find((v) => v.hash.isEqual(ref));
 
-  let error: Error | undefined;
-
   const graph = versionParentsToGraph(versionParents);
   let sourceSubgraph = graph.successorsSubgraph(localHead.toString(), { edgeFilter: (e) => e.attr === 'parent' });
   let targetSubgraph = graph.successorsSubgraph(targetHead.toString(), { edgeFilter: (e) => e.attr === 'parent' });
@@ -190,7 +190,7 @@ bit import ${id} --objects`);
     return new SnapsDistance(snapsOnSourceOnly, snapsOnTargetOnly, undefined, err);
   }
 
-  return new SnapsDistance(snapsOnSourceOnly, snapsOnTargetOnly, commonSnapBeforeDiverge, error);
+  return new SnapsDistance(snapsOnSourceOnly, snapsOnTargetOnly, commonSnapBeforeDiverge);
 }
 
 /**

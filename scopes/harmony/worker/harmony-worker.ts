@@ -1,6 +1,7 @@
 // eslint-disable-next-line import/no-unresolved
 import { Worker } from 'worker_threads';
-import { wrap, Remote } from 'comlink';
+import type { Remote } from 'comlink';
+import { wrap } from 'comlink';
 import nodeEndpoint from './node-endpoint';
 
 export type InitOptions = {

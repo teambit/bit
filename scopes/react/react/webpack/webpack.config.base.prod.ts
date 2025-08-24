@@ -1,6 +1,6 @@
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
-import { Configuration } from 'webpack';
+import type { Configuration } from 'webpack';
 // import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 
 // This is the production and development configuration.

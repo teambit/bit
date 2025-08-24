@@ -1,17 +1,14 @@
-import webpack, { Configuration } from 'webpack';
-import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
-import {
-  BundlerAspect,
-  BundlerContext,
-  BundlerMain,
-  DevServer,
-  DevServerContext,
-  BundlerMode,
-  Target,
-} from '@teambit/bundler';
+import type { Configuration } from 'webpack';
+import webpack from 'webpack';
+import type { PubsubMain } from '@teambit/pubsub';
+import { PubsubAspect } from '@teambit/pubsub';
+import type { BundlerContext, BundlerMain, DevServer, DevServerContext, BundlerMode, Target } from '@teambit/bundler';
+import { BundlerAspect } from '@teambit/bundler';
 import { MainRuntime } from '@teambit/cli';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { merge } from 'webpack-merge';
 // We want to import it to make sure bit recognizes it as a dependency
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -109,7 +106,6 @@ export class WebpackMain {
       [...internalTransformers, ...transformers],
       transformerContext
     );
-    // @ts-ignore - fix this
     return new WebpackDevServer(afterMutation.raw, this.getWebpackInstance(webpackModulePath, webpack), wdsPath);
   }
 

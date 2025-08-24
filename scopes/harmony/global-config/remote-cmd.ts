@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import Table from 'cli-table';
 import { forEach, isEmpty } from 'lodash';
 import { add, list, remove } from './remote';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 
 class RemoteAdd implements Command {
   name = 'add <url>';
@@ -64,7 +64,6 @@ export class RemoteCmd implements Command {
   alias = '';
   loadAspects = false;
   options = [['g', 'global', 'see globally configured remotes']] as CommandOptions;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   commands = [new RemoteAdd(), new RemoteRm(), new RemoteList()];
 
   async report(args: string[], { global }: { global: boolean }) {

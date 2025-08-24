@@ -1,6 +1,6 @@
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import { BitObject } from '../objects';
-import Ref from '../objects/ref';
+import type Ref from '../objects/ref';
 
 type ScopeMetaProps = {
   name: string;
@@ -8,7 +8,6 @@ type ScopeMetaProps = {
 };
 
 // TODO: fix parse
-// @ts-ignore
 export default class ScopeMeta extends BitObject {
   license: string | null | undefined;
   name: string;
@@ -26,7 +25,6 @@ export default class ScopeMeta extends BitObject {
     };
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   toString(pretty: boolean): string {
     const args = getStringifyArgs(pretty);
     return JSON.stringify(this.toObject(), ...args);

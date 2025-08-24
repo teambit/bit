@@ -1,4 +1,5 @@
-import React, { createContext, ReactNode, useState } from 'react';
+import type { ReactNode } from 'react';
+import React, { createContext, useState } from 'react';
 
 export type ComponentFilterWidgetContextType = {
   filterWidgetOpen: boolean;

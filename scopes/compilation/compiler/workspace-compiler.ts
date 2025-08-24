@@ -2,35 +2,37 @@
 import mapSeries from 'p-map-series';
 import globby from 'globby';
 import fs from 'fs-extra';
-import { Component } from '@teambit/component';
-import { EnvDefinition, EnvsMain } from '@teambit/envs';
+import type { Component } from '@teambit/component';
+import type { EnvDefinition, EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
-import { SerializableResults, Workspace, OutsideWorkspaceError } from '@teambit/workspace';
-import type { WorkspaceComponentLoadOptions } from '@teambit/workspace';
-import { WatcherMain, WatchOptions } from '@teambit/watcher';
+import { OutsideWorkspaceError } from '@teambit/workspace';
+import type { WorkspaceComponentLoadOptions, SerializableResults, Workspace } from '@teambit/workspace';
+import type { WatcherMain, WatchOptions } from '@teambit/watcher';
 import path from 'path';
 import chalk from 'chalk';
 import { ComponentID } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
-import { AbstractVinyl, Dist, DataToPersist, RemovePath } from '@teambit/component.sources';
+import type { AbstractVinyl } from '@teambit/component.sources';
+import { Dist, DataToPersist, RemovePath } from '@teambit/component.sources';
 import {
   linkToNodeModulesByComponents,
   removeLinksFromNodeModules,
 } from '@teambit/workspace.modules.node-modules-linker';
-import { AspectLoaderMain } from '@teambit/aspect-loader';
-import { DependencyList, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
+import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import { DependencyList } from '@teambit/dependency-resolver';
+import type { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { UiMain } from '@teambit/ui';
+import type { UiMain, PreStartOpts } from '@teambit/ui';
 import { readRootComponentsDir } from '@teambit/workspace.root-components';
 import { compact, groupBy, uniq } from 'lodash';
-import type { PreStartOpts } from '@teambit/ui';
-import { MultiCompiler } from '@teambit/multi-compiler';
-import { CompIdGraph } from '@teambit/graph';
+import type { MultiCompiler } from '@teambit/multi-compiler';
+import type { CompIdGraph } from '@teambit/graph';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent } from './events';
-import { Compiler, CompilationInitiator, TypeGeneratorCompParams } from './types';
+import type { Compiler, TypeGeneratorCompParams } from './types';
+import { CompilationInitiator } from './types';
 
 export type BuildResult = {
   component: string;

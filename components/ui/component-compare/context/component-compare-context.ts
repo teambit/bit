@@ -1,6 +1,6 @@
-import { ComponentCompareModel } from '@teambit/component.ui.component-compare.models.component-compare-model';
-import { ComponentCompareState } from '@teambit/component.ui.component-compare.models.component-compare-state';
-import { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
+import type { ComponentCompareModel } from '@teambit/component.ui.component-compare.models.component-compare-model';
+import type { ComponentCompareState } from '@teambit/component.ui.component-compare.models.component-compare-state';
+import type { ComponentCompareHooks } from '@teambit/component.ui.component-compare.models.component-compare-hooks';
 import { createContext, useContext } from 'react';
 
 export type StateAndHooks = {

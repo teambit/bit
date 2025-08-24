@@ -1,30 +1,32 @@
 import { MainRuntime } from '@teambit/cli';
-import { ComponentID } from '@teambit/component-id';
-import { CompilerAspect, CompilerMain } from '@teambit/compiler';
-import { InstallAspect, InstallMain } from '@teambit/install';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import type { ComponentID } from '@teambit/component-id';
+import type { CompilerMain } from '@teambit/compiler';
+import { CompilerAspect } from '@teambit/compiler';
+import type { InstallMain } from '@teambit/install';
+import { InstallAspect } from '@teambit/install';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import fs from 'fs-extra';
 import { uniq } from 'lodash';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
-import { MoverAspect, MoverMain } from '@teambit/mover';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import {
-  isDir,
-  isDirEmptySync,
-  PathLinuxRelative,
-  pathNormalizeToLinux,
-  PathOsBasedAbsolute,
-} from '@teambit/legacy.utils';
-import { ComponentMap } from '@teambit/legacy.bit-map';
+import type { MoverMain } from '@teambit/mover';
+import { MoverAspect } from '@teambit/mover';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { PathLinuxRelative, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import { isDir, isDirEmptySync, pathNormalizeToLinux } from '@teambit/legacy.utils';
+import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
 import { DataToPersist } from '@teambit/component.sources';
-import { ConfigMergerAspect, ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
-import { MergeStrategy } from '@teambit/merging';
-import { Consumer } from '@teambit/legacy.consumer';
-import ComponentWriter, { ComponentWriterProps } from './component-writer';
+import type { ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
+import { ConfigMergerAspect } from '@teambit/config-merger';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
+import type { Consumer } from '@teambit/legacy.consumer';
+import type { ComponentWriterProps } from './component-writer';
+import ComponentWriter from './component-writer';
 import { ComponentWriterAspect } from './component-writer.aspect';
 
 export interface ManyComponentsWriterParams {

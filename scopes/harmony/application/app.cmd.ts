@@ -1,9 +1,9 @@
 // eslint-disable-next-line max-classes-per-file
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 // import { Logger } from '@teambit/logger';
 import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
-import { ApplicationMain } from './application.main.runtime';
+import type { ApplicationMain } from './application.main.runtime';
 
 export class AppListCmd implements Command {
   name = 'list';

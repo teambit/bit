@@ -1,8 +1,8 @@
-import { Component } from '@teambit/component';
-import { Schema } from '@teambit/graphql';
+import type { Component } from '@teambit/component';
+import type { Schema } from '@teambit/graphql';
 import { gql } from 'graphql-tag';
 
-import { DevFilesMain } from './dev-files.main.runtime';
+import type { DevFilesMain } from './dev-files.main.runtime';
 
 export function devFilesSchema(devFilesMain: DevFilesMain): Schema {
   return {

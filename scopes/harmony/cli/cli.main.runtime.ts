@@ -1,12 +1,12 @@
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import { logger as legacyLogger } from '@teambit/legacy.logger';
-import { CLIArgs, Flags, Command } from './command';
+import type { CLIArgs, Flags, Command } from './command';
 import pMapSeries from 'p-map-series';
-import { groups, GroupsType } from './command-groups';
-import { HostInitializerMain } from '@teambit/host-initializer';
-import { loadConsumerIfExist } from '@teambit/legacy.consumer';
-import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
+import type { GroupsType } from './command-groups';
+import { groups } from './command-groups';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
 import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { getCommandId } from './get-command-id';
@@ -191,7 +191,6 @@ export class CLIMain {
   ) {
     const logger = loggerMain.createLogger(CLIAspect.id);
     const cliMain = new CLIMain(commandsSlot, onStartSlot, onCommandStartSlot, onBeforeExitSlot, logger);
-    await ensureWorkspaceAndScope();
     const cliGenerateCmd = new CliGenerateCmd(cliMain);
     const cliCmd = new CliCmd(cliMain);
     const helpCmd = new HelpCmd(cliMain);
@@ -202,25 +201,6 @@ export class CLIMain {
 }
 
 CLIAspect.addRuntime(CLIMain);
-
-/**
- * kind of a hack.
- * in the legacy, this is running at the beginning and it take care of issues when Bit files are missing,
- * such as ".bit".
- * (to make this process better, you can easily remove it and run the e2e-tests. you'll see some failing)
- */
-async function ensureWorkspaceAndScope() {
-  try {
-    await loadConsumerIfExist();
-  } catch {
-    const potentialWsPath = process.cwd();
-    const consumerInfo = await getWorkspaceInfo(potentialWsPath);
-    if (consumerInfo && !consumerInfo.hasScope && consumerInfo.hasBitMap && consumerInfo.hasWorkspaceConfig) {
-      await HostInitializerMain.init(potentialWsPath);
-    }
-    // do nothing. it could fail for example with ScopeNotFound error, which is taken care of in "bit init".
-  }
-}
 
 function isFullUrl(url: string) {
   return url.startsWith('http://') || url.startsWith('https://');

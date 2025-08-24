@@ -1,6 +1,6 @@
 import { renderSync } from 'sass';
-import { BuiltTaskResult } from '@teambit/builder';
-import { Compiler, TranspileFileOutput, TranspileFileParams } from '@teambit/compiler';
+import type { BuiltTaskResult } from '@teambit/builder';
+import type { Compiler, TranspileFileOutput, TranspileFileParams } from '@teambit/compiler';
 
 export class SassCompiler implements Compiler {
   constructor(readonly id: string) {}

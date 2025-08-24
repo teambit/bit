@@ -1,4 +1,5 @@
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React from 'react';
 // import { Theme } from '@teambit/base-ui.theme.theme-provider';
 import { ThemeSwitcher } from '@teambit/design.themes.theme-toggler';
 import { IconFont } from '@teambit/design.theme.icons-font';

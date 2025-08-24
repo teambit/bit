@@ -2,11 +2,11 @@ import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import fs from 'fs-extra';
 import * as path from 'path';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
-import { Symlink } from './symlink';
+import type { Symlink } from './symlink';
 import { logger } from '@teambit/legacy.logger';
 import { removeFilesAndEmptyDirsRecursively } from './remove-files-and-empty-dirs-recursively';
-import AbstractVinyl from './abstract-vinyl';
-import { RemovePath } from './remove-path';
+import type AbstractVinyl from './abstract-vinyl';
+import type { RemovePath } from './remove-path';
 
 export class DataToPersist {
   files: AbstractVinyl[];
@@ -19,12 +19,9 @@ export class DataToPersist {
   }
   addFile(file: AbstractVinyl) {
     if (!file) throw new Error('failed adding an empty file into DataToPersist');
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!file.path) {
       throw new Error('failed adding a file into DataToPersist as it does not have a path property');
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const existingFileIndex = this.files.findIndex((existingFile) => existingFile.path === file.path);
     if (existingFileIndex !== -1) {
       if (file.override) {
@@ -93,10 +90,7 @@ export class DataToPersist {
     }
     if (file.override === false) {
       // @todo, capsule hack. use capsule.fs once you get it as a component.
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const capsulePath = capsule.container.getPath();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const absPath = path.join(capsulePath, file.path);
       try {
         await fs.lstat(absPath); // if no errors have been thrown, the file exists
@@ -108,9 +102,6 @@ export class DataToPersist {
         }
       }
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return capsule.outputFile(file.path, file.contents);
   }
   async atomicSymlink(capsule: any, symlink: Symlink) {
@@ -128,9 +119,7 @@ export class DataToPersist {
   }
   addBasePath(basePath: string) {
     this.files.forEach((file) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this._assertRelative(file.base);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       file.updatePaths({ newBase: path.join(basePath, file.base) });
     });
     this.symlinks.forEach((symlink) => {
@@ -148,14 +137,12 @@ export class DataToPersist {
    * helps for debugging
    */
   toConsole() {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     console.log(`\nfiles: ${this.files.map((f) => f.path).join('\n')}`); // eslint-disable-line no-console
     console.log(`\nsymlinks: ${this.symlinks.map((s) => `src: ${s.src}, dest: ${s.dest}`).join('\n')}`); // eslint-disable-line no-console
     console.log(`remove: ${this.remove.map((r) => r.path).join('\n')}`); // eslint-disable-line no-console
   }
   filterByPath(filterFunc: Function): DataToPersist {
     const dataToPersist = new DataToPersist();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     dataToPersist.addManyFiles(this.files.filter((f) => filterFunc(f.path)));
     dataToPersist.removeManyPaths(this.remove.filter((r) => filterFunc(r.path)));
     dataToPersist.addManySymlinks(this.symlinks.filter((s) => filterFunc(s.dest)));
@@ -186,7 +173,6 @@ export class DataToPersist {
       }
     };
     this.files.forEach((file) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       validateAbsolutePath(file.path);
     });
     this.remove.forEach((removePath) => {
@@ -205,7 +191,6 @@ export class DataToPersist {
       }
     };
     this.files.forEach((file) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       validateRelativePath(file.path);
     });
     this.remove.forEach((removePath) => {
@@ -222,7 +207,6 @@ export class DataToPersist {
       logger.debug(`DataToPersist, paths-to-delete:\n${pathToDeleteStr}`);
     }
     if (this.files.length) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const filesToWriteStr = this.files.map((f) => f.path).join('\n');
       logger.debug(`DataToPersist, paths-to-write:\n${filesToWriteStr}`);
     }
@@ -250,15 +234,9 @@ export class DataToPersist {
    */
   _throwForDirectoryCollision(file: AbstractVinyl) {
     const directoryCollision = this.files.find(
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       (f) => f.path.startsWith(`${file.path}${path.sep}`) || `${file.path}`.startsWith(`${f.path}${path.sep}`)
     );
     if (directoryCollision) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       throw new Error(`unable to add the file "${file.path}", because another file "${directoryCollision.path}" is going to be written.
 one of them is a directory of the other one, and is not possible to have them both`);
     }

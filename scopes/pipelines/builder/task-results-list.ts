@@ -1,10 +1,10 @@
 import chalk from 'chalk';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import { BuildTaskHelper } from './build-task';
-import { TasksQueue } from './tasks-queue';
-import { TaskResults } from './build-pipe';
-import { ComponentResult } from './types';
+import type { TasksQueue } from './tasks-queue';
+import type { TaskResults } from './build-pipe';
+import type { ComponentResult } from './types';
 
 export class TaskResultsList {
   constructor(

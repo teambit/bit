@@ -1,19 +1,19 @@
 import chalk from 'chalk';
-import { ComponentID } from '@teambit/component-id';
-import { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import type { ComponentID } from '@teambit/component-id';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { IssuesClasses } from '@teambit/component-issues';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import {
   NOTHING_TO_SNAP_MSG,
   AUTO_SNAPPED_MSG,
   COMPONENT_PATTERN_HELP,
   CFG_FORCE_LOCAL_BUILD,
 } from '@teambit/legacy.constants';
-import { Logger } from '@teambit/logger';
-import { SnappingMain, SnapResults } from './snapping.main.runtime';
+import type { Logger } from '@teambit/logger';
+import type { SnappingMain, SnapResults } from './snapping.main.runtime';
 import { outputIdsIfExists } from './tag-cmd';
-import { BasicTagSnapParams } from './version-maker';
-import { ConfigStoreMain } from '@teambit/config-store';
+import type { BasicTagSnapParams } from './version-maker';
+import type { ConfigStoreMain } from '@teambit/config-store';
 
 export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
@@ -136,53 +136,55 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     });
 
     if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
-    const { snappedComponents, autoSnappedResults, warnings, newComponents, laneName, removedComponents }: SnapResults =
-      results;
-    const changedComponents = snappedComponents.filter((component) => {
-      return (
-        !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id)
-      );
-    });
-    const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
-    const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
+    return snapResultOutput(results);
+  }
+}
 
-    const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
-    const snapExplanation = `\n(use "bit export" to push these components to a remote")
+export function snapResultOutput(results: SnapResults): string {
+  const { snappedComponents, autoSnappedResults, warnings, newComponents, laneName, removedComponents }: SnapResults =
+    results;
+  const changedComponents = snappedComponents.filter((component) => {
+    return !newComponents.searchWithoutVersion(component.id) && !removedComponents?.searchWithoutVersion(component.id);
+  });
+  const addedComponents = snappedComponents.filter((component) => newComponents.searchWithoutVersion(component.id));
+  const autoTaggedCount = autoSnappedResults ? autoSnappedResults.length : 0;
+
+  const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
+  const snapExplanation = `\n(use "bit export" to push these components to a remote")
 (use "bit reset --all" to unstage all local versions, or "bit reset --head" to only unstage the latest local snap)`;
 
-    const compInBold = (id: ComponentID) => {
-      const version = id.hasVersion() ? `@${id.version}` : '';
-      return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
-    };
+  const compInBold = (id: ComponentID) => {
+    const version = id.hasVersion() ? `@${id.version}` : '';
+    return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
+  };
 
-    const outputComponents = (comps: ConsumerComponent[]) => {
-      return comps
-        .map((component) => {
-          let componentOutput = `     > ${compInBold(component.id)}`;
-          const autoTag = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
-          if (autoTag.length) {
-            const autoTagComp = autoTag.map((a) => compInBold(a.component.id));
-            componentOutput += `\n       ${AUTO_SNAPPED_MSG} (${autoTagComp.length} total):
-            ${autoTagComp.join('\n            ')}`;
-          }
-          return componentOutput;
-        })
-        .join('\n');
-    };
+  const outputComponents = (comps: ConsumerComponent[]) => {
+    return comps
+      .map((component) => {
+        let componentOutput = `     > ${compInBold(component.id)}`;
+        const autoTag = autoSnappedResults.filter((result) => result.triggeredBy.searchWithoutVersion(component.id));
+        if (autoTag.length) {
+          const autoTagComp = autoTag.map((a) => compInBold(a.component.id));
+          componentOutput += `\n       ${AUTO_SNAPPED_MSG} (${autoTagComp.length} total):
+          ${autoTagComp.join('\n            ')}`;
+        }
+        return componentOutput;
+      })
+      .join('\n');
+  };
 
-    const outputIfExists = (label, explanation, components) => {
-      if (!components.length) return '';
-      return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
-    };
-    const laneStr = laneName ? ` on "${laneName}" lane` : '';
+  const outputIfExists = (label, explanation, components) => {
+    if (!components.length) return '';
+    return `\n${chalk.underline(label)}\n(${explanation})\n${outputComponents(components)}\n`;
+  };
+  const laneStr = laneName ? ` on "${laneName}" lane` : '';
 
-    return (
-      outputIfExists('new components', 'first version for components', addedComponents) +
-      outputIfExists('changed components', 'components that got a version bump', changedComponents) +
-      outputIdsIfExists('removed components', removedComponents) +
-      warningsOutput +
-      chalk.green(`\n${snappedComponents.length + autoTaggedCount} component(s) snapped${laneStr}`) +
-      snapExplanation
-    );
-  }
+  return (
+    outputIfExists('new components', 'first version for components', addedComponents) +
+    outputIfExists('changed components', 'components that got a version bump', changedComponents) +
+    outputIdsIfExists('removed components', removedComponents) +
+    warningsOutput +
+    chalk.green(`\n${snappedComponents.length + autoTaggedCount} component(s) snapped${laneStr}`) +
+    snapExplanation
+  );
 }
