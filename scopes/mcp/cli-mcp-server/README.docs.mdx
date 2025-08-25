@@ -238,6 +238,31 @@ In this mode:
 
 All tools accept a `cwd` parameter specifying the workspace path. Additional parameters vary by command.
 
+### bit_remote_search
+
+Search for multiple components in parallel for efficient discovery:
+
+```json
+{
+  "queries": ["input", "button", "validation"],
+  "cwd": "/path/to/workspace"
+}
+```
+
+**Parameters:**
+
+- `queries` (required): Array of search terms. Use either variations/synonyms of one component type (`["btn", "button"]`) or different components needed for a task (`["table", "pagination", "filter"]`)
+- `cwd` (optional): Path to workspace directory
+- `owners` (optional): Filter by specific owners (auto-extracted from workspace.jsonc if not provided)
+- `skipAutoOwner` (optional): Disable automatic owner extraction
+
+**Examples:**
+
+- Form components: `["input", "button", "validation", "dropdown"]`
+- Layout components: `["header", "navigation", "footer"]`
+- Data display: `["table", "pagination", "filter", "sort"]`
+- Button variations: `["button", "btn", "click"]`
+
 Example tool call for `bit_status`:
 
 ```json

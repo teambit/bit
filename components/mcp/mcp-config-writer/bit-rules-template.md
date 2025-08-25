@@ -27,6 +27,7 @@ applyTo: '**'
 - **Reuse Before Creating or Modifying(MANDATORY):** Before creating _any_ new component or modify _any_ file, you MUST first search for existing components.
   - Use `bit_workspace_info` to check for local and existing components.
   - Use `bit_remote_search` to find components on the remote scope.
+  - When using `bit_remote_search`, provide an array of relevant search terms (e.g., ["todo", "list", "react"]) to run parallel searches and find all related components efficiently in a single call.
   - Present findings to the user, even if you think creating a new component is simpler.
 - **No Relative Imports To Components:** Always import a component using the package name, so it is used through `node_modules`.
 - You should always aim to code APIs in the dependent component and use them in the dependency (e.g. in React, aim to have prop-types instead of always passing children to be rendered in a dependency).

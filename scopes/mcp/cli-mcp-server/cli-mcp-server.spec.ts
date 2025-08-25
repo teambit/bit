@@ -139,7 +139,7 @@ describe('CliMcpServer Integration Tests', function () {
       const result = (await consumerProjectClient.callTool({
         name: 'bit_remote_search',
         arguments: {
-          queryStr: 'button',
+          queries: ['button'],
           cwd: workspacePath,
         },
       })) as CallToolResult;
