@@ -19,6 +19,7 @@ export interface RulesOptions {
   isGlobal: boolean;
   workspaceDir?: string;
   consumerProject?: boolean;
+  forceStandard?: boolean;
 }
 
 /**
@@ -485,13 +486,17 @@ export class McpConfigWriter {
   /**
    * Get default Bit MCP rules content from template file
    */
-  static async getDefaultRulesContent(consumerProject: boolean = false, workspaceDir?: string): Promise<string> {
+  static async getDefaultRulesContent(
+    consumerProject: boolean = false,
+    workspaceDir?: string,
+    forceStandard: boolean = false
+  ): Promise<string> {
     // Determine the directory to check for Git
     const targetDir = workspaceDir || process.cwd();
 
-    // Check if .git directory exists
+    // Check if .git directory exists (only if not forcing standard)
     const gitPath = path.join(targetDir, '.git');
-    const hasGit = await fs.pathExists(gitPath);
+    const hasGit = !forceStandard && (await fs.pathExists(gitPath));
 
     // Choose template based on consumer project status and Git presence
     let templateName: string;
@@ -511,7 +516,7 @@ export class McpConfigWriter {
    * Write Bit MCP rules file for VS Code
    */
   static async writeVSCodeRules(options: RulesOptions): Promise<void> {
-    const { isGlobal, workspaceDir, consumerProject = false } = options;
+    const { isGlobal, workspaceDir, consumerProject = false, forceStandard = false } = options;
 
     // Determine prompts file path
     const promptsPath = this.getVSCodePromptsPath(isGlobal, workspaceDir);
@@ -520,7 +525,7 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
     await fs.writeFile(promptsPath, rulesContent);
   }
 
@@ -528,7 +533,7 @@ export class McpConfigWriter {
    * Write Bit MCP rules file for Cursor
    */
   static async writeCursorRules(options: RulesOptions): Promise<void> {
-    const { isGlobal, workspaceDir, consumerProject = false } = options;
+    const { isGlobal, workspaceDir, consumerProject = false, forceStandard = false } = options;
 
     // Determine prompts file path
     const promptsPath = this.getCursorPromptsPath(isGlobal, workspaceDir);
@@ -537,7 +542,7 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
     await fs.writeFile(promptsPath, rulesContent);
   }
 
@@ -545,7 +550,7 @@ export class McpConfigWriter {
    * Write Bit MCP rules file for Roo Code
    */
   static async writeRooCodeRules(options: RulesOptions): Promise<void> {
-    const { isGlobal, workspaceDir, consumerProject = false } = options;
+    const { isGlobal, workspaceDir, consumerProject = false, forceStandard = false } = options;
 
     // Determine prompts file path
     const promptsPath = this.getRooCodePromptsPath(isGlobal, workspaceDir);
@@ -554,7 +559,7 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
     await fs.writeFile(promptsPath, rulesContent);
   }
 
@@ -562,7 +567,7 @@ export class McpConfigWriter {
    * Write Bit MCP rules file for Cline
    */
   static async writeClineRules(options: RulesOptions): Promise<void> {
-    const { isGlobal, workspaceDir, consumerProject = false } = options;
+    const { isGlobal, workspaceDir, consumerProject = false, forceStandard = false } = options;
 
     // Determine prompts file path
     const promptsPath = this.getClinePromptsPath(isGlobal, workspaceDir);
@@ -571,7 +576,7 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
     await fs.writeFile(promptsPath, rulesContent);
   }
 
@@ -579,7 +584,7 @@ export class McpConfigWriter {
    * Write Bit MCP rules file for Claude Code
    */
   static async writeClaudeCodeRules(options: RulesOptions): Promise<void> {
-    const { isGlobal, workspaceDir, consumerProject = false } = options;
+    const { isGlobal, workspaceDir, consumerProject = false, forceStandard = false } = options;
 
     // Determine prompts file path
     const promptsPath = this.getClaudeCodePromptsPath(isGlobal, workspaceDir);
@@ -588,7 +593,7 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Get base rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir, forceStandard);
 
     // Add integration instructions at the top
     const integrationInstructions = `<!--

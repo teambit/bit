@@ -1383,8 +1383,8 @@ export class CliMcpServerMain {
     await McpConfigWriter.writeRulesFile(editor, rulesOptions);
   }
 
-  async getRulesContent(consumerProject: boolean = false): Promise<string> {
-    return McpConfigWriter.getDefaultRulesContent(consumerProject, process.cwd());
+  async getRulesContent(consumerProject: boolean = false, forceStandard: boolean = false): Promise<string> {
+    return McpConfigWriter.getDefaultRulesContent(consumerProject, process.cwd(), forceStandard);
   }
 
   static slots = [];
