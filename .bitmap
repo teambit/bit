@@ -581,7 +581,13 @@
         "scope": "teambit.legacy",
         "version": "0.0.89",
         "mainFile": "index.ts",
-        "rootDir": "components/legacy/e2e-helper"
+        "rootDir": "components/legacy/e2e-helper",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@0.0.4": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-typescript-mocha"
+            }
+        }
     },
     "eject": {
         "name": "eject",

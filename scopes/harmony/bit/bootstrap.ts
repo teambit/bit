@@ -9,7 +9,7 @@ import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambi
 import { loader } from '@teambit/legacy.loader';
 
 const RECOMMENDED_NODE_VERSIONS = '>=20.0.0 <24.0.0';
-const SUPPORTED_NODE_VERSIONS = '>=16.0.0 <24.0.0';
+const SUPPORTED_NODE_VERSIONS = '>=16.0.0 <25.0.0';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 

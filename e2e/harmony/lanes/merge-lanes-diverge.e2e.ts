@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('merge lanes - diverge functionality', function () {
   this.timeout(0);

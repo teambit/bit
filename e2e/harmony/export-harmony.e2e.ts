@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { ExportMissingVersions, ServerIsBusy } from '@teambit/legacy.scope';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('export functionality on Harmony', function () {
   this.timeout(0);

@@ -1,8 +1,8 @@
 import chai, { expect } from 'chai';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('importing internal files flow (component imports from a non-index file of another component)', function () {
   this.timeout(0);

@@ -1,8 +1,9 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 // These tests are temporarily skipped because they fail in CI for some reason
 (supportNpmCiRegistryTesting ? describe.skip : describe.skip)('install --add-missing-peers', function () {

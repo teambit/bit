@@ -2,8 +2,9 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('bit export command', function () {
   this.timeout(0);

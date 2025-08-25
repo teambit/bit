@@ -1,9 +1,11 @@
 import chai, { expect } from 'chai';
+import chaiFs from 'chai-fs';
+import chaiString from 'chai-string';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 
-chai.use(require('chai-fs'));
-chai.use(require('chai-string'));
+chai.use(chaiFs);
+chai.use(chaiString);
 
 describe('component files are missing', function () {
   this.timeout(0);

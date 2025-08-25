@@ -7,8 +7,8 @@ import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import { NewerVersionFound } from '@teambit/legacy.consumer';
 import { Helper, FileStatusWithoutChalk } from '@teambit/legacy.e2e-helper';
 import { Extensions, FILE_CHANGES_CHECKOUT_MSG } from '@teambit/legacy.constants';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 const barFooV1 = "module.exports = function foo() { return 'got foo'; };";
 const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";

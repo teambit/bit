@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 const MAIN_ASPECT_PROVIDER_TEXT = 'main aspect provider';
 
@@ -228,7 +228,7 @@ function getDepAspect(remoteScope: string) {
   return `import { MainRuntime } from '@teambit/cli';
 import { DepDepAspectAspect, DepDepAspectMain } from '@ci/${remoteScope}.dep-dep-aspect';
 import { DepAspectAspect } from './dep-aspect.aspect';
-
+import chaiFs from 'chai-fs';
 export class DepAspectMain {
   static slots = [];
   static dependencies = [DepDepAspectAspect];
