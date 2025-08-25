@@ -4280,6 +4280,11 @@
             "",
             "force-theirs",
             "do not merge during checkout, just overwrite with incoming files"
+          ],
+          [
+            "",
+            "lane-name <name>",
+            "specify the lane name to delete after merge (auto-detected if not provided)"
           ]
         ],
         "description": "Merges a PR",
