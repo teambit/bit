@@ -4388,10 +4388,15 @@
             "",
             "consumer-project",
             "Generate rules for consumer projects that only use Bit components as packages"
+          ],
+          [
+            "",
+            "force-standard",
+            "Use standard Bit rules template instead of Git-integrated template (even when .git exists)"
           ]
         ],
         "description": "Write Bit MCP rules/instructions file for VS Code, Cursor, Roo Code, Cline, Claude Code, or print to screen",
-        "extendedDescription": "Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, Roo Code, Cline, and Claude Code. For Claude Code, creates .claude/bit.md to avoid overwriting existing CLAUDE.md files. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.",
+        "extendedDescription": "Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, Roo Code, Cline, and Claude Code. For Claude Code, creates .claude/bit.md to avoid overwriting existing CLAUDE.md files. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages. Use --force-standard to use standard Bit rules instead of Git-integrated template.",
         "group": "ungrouped",
         "private": false,
         "arguments": [
