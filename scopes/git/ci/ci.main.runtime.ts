@@ -690,32 +690,17 @@ export class CiMain {
       return;
     }
     try {
-      // First, try to find a matching lane using the branch name
-      const availableLanes = await this.lanes.getLanes({}).catch(() => []);
-      const matchingLane = availableLanes.find(
-        (lane) =>
-          lane.id.name === sourceBranchName ||
-          lane.id.name === `${sourceBranchName}` ||
-          lane.id.name.endsWith(`/${sourceBranchName}`)
+      // Convert branch name to lane ID using the same logic as 'bit ci pr'
+      // Sanitize branch name to make it valid for Bit lane IDs by replacing slashes and dots with dashes
+      const sanitizedBranch = sourceBranchName.replace(/[/.]/g, '-');
+      const laneIdStr = `${this.workspace.defaultScope}/${sanitizedBranch}`;
+
+      this.logger.console(
+        chalk.blue(`Attempting to delete lane based on source branch: ${sourceBranchName} -> ${laneIdStr}`)
       );
 
-      if (matchingLane) {
-        this.logger.console(
-          chalk.blue(`Found matching lane for source branch '${sourceBranchName}': ${matchingLane.id.name}`)
-        );
-        await this.archiveLane(matchingLane.id, matchingLane.id.name);
-      } else {
-        // Try direct lane name parsing in case the branch name is a valid lane ID
-        try {
-          const laneId = await this.lanes.parseLaneId(sourceBranchName);
-          this.logger.console(chalk.blue(`Attempting to delete lane based on source branch: ${sourceBranchName}`));
-          await this.archiveLane(laneId, sourceBranchName);
-        } catch (e: any) {
-          this.logger.console(
-            chalk.yellow(`No matching lane found for source branch '${sourceBranchName}': ${e.message}`)
-          );
-        }
-      }
+      const laneId = await this.lanes.parseLaneId(laneIdStr);
+      await this.archiveLane(laneId, laneIdStr);
     } catch (e: any) {
       this.logger.console(
         chalk.yellow(`Error during lane cleanup for source branch '${sourceBranchName}': ${e.message}`)
