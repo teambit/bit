@@ -165,6 +165,21 @@ export class CiMain {
     }
   }
 
+  /**
+   * Converts a branch name to a lane ID string using Bit's naming conventions.
+   * Sanitizes branch name by replacing slashes and dots with dashes, then
+   * prefixes with the workspace's default scope.
+   *
+   * @param branchName - The git branch name to convert
+   * @returns Lane ID in format: {defaultScope}/{sanitizedBranch}
+   * @example convertBranchToLaneId("feature/new-component") => "my-scope/feature-new-component"
+   */
+  convertBranchToLaneId(branchName: string): string {
+    // Sanitize branch name to make it valid for Bit lane IDs by replacing slashes and dots with dashes
+    const sanitizedBranch = branchName.replace(/[/.]/g, '-');
+    return `${this.workspace.defaultScope}/${sanitizedBranch}`;
+  }
+
   async getDefaultBranchName() {
     try {
       // Try to get the default branch from git symbolic-ref
@@ -690,10 +705,7 @@ export class CiMain {
       return;
     }
     try {
-      // Convert branch name to lane ID using the same logic as 'bit ci pr'
-      // Sanitize branch name to make it valid for Bit lane IDs by replacing slashes and dots with dashes
-      const sanitizedBranch = sourceBranchName.replace(/[/.]/g, '-');
-      const laneIdStr = `${this.workspace.defaultScope}/${sanitizedBranch}`;
+      const laneIdStr = this.convertBranchToLaneId(sourceBranchName);
 
       this.logger.console(
         chalk.blue(`Attempting to delete lane based on source branch: ${sourceBranchName} -> ${laneIdStr}`)
