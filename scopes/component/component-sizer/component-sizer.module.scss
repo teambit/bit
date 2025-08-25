@@ -9,3 +9,6 @@
 .label {
   padding: 4px 8px;
 }
+.darkWeight img[src$='weight.svg'] {
+  filter: saturate(0) invert(1) contrast(4);
+}

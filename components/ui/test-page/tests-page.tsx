@@ -381,7 +381,7 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
   if (testResults === null || testData?.testsResults === null) {
     return (
       <EmptyBox
-        title="This component doesn’t have any tests."
+        title="This component doesn't have any tests."
         linkText="Learn how to add tests to your components"
         link={`https://bit.dev/reference/dev-services-overview/tester/tester-overview`}
       />
@@ -393,7 +393,6 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
       <div>
         <H1 className={styles.title}>Tests</H1>
         <Separator isPresentational className={styles.separator} />
-        <H2 className={styles.subtitle}>Tests Results</H2>
         <TestTable testResults={testResults} className={styles.testBlock} />
         {testCoverage && testCoverage.files.length > 0 && (
           <>
