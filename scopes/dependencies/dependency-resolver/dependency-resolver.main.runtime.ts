@@ -39,6 +39,7 @@ import fs from 'fs-extra';
 import { assign } from 'comment-json';
 import { ComponentID } from '@teambit/component-id';
 import { readCAFileSync } from '@pnpm/network.ca-file';
+import { parseBareSpecifier } from '@pnpm/npm-resolver';
 import type { SourceFile } from '@teambit/component.sources';
 import type { ProjectManifest, DependencyManifest } from '@pnpm/types';
 import semver, { SemVer } from 'semver';
@@ -1388,7 +1389,7 @@ export class DependencyResolverMain {
 as an alternative, you can use "+" to keep the same version installed in the workspace`;
       }
       const isVersionValid = Boolean(
-        semver.valid(policyVersion) || semver.validRange(policyVersion) || allowedSpecialChars.includes(policyVersion)
+        this.isValidVersionSpecifier(policyVersion) || allowedSpecialChars.includes(policyVersion)
       );
       if (isVersionValid) return;
       errorMsg = `${errorPrefix} the policy version "${policyVersion}" of ${policy.dependencyId} is not a valid semver version or range`;
@@ -1397,6 +1398,24 @@ as an alternative, you can use "+" to keep the same version installed in the wor
     if (errorMsg) {
       return { errorMsg, minBitVersion: '1.9.107' };
     }
+  }
+
+  /**
+   * This function returns true for any of the following version specifiers:
+   * - exact version
+   * - version range
+   * - dist-tag
+   * - alias: npm:<pkgName>@<version>
+   * - direct URL specifiers to the public npm registry.
+   *   E.g.: https://registry.npmjs.org/is-odd/-/is-odd-0.1.0.tgz)
+   */
+  isValidVersionSpecifier (spec: string): boolean {
+    return parseBareSpecifier(
+      spec,
+      'pkgname', // This argument is the package but we don't need it
+      'latest',
+      'https://registry.npmjs.org/'
+    ) != null;
   }
 
   /**
