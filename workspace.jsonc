@@ -54,6 +54,7 @@
         "@pnpm/modules-yaml": "1000.3.4",
         "@pnpm/network.ca-file": "3.0.3",
         "@pnpm/node-fetch": "^1.0.0",
+        "@pnpm/npm-resolver": "1004.1.3",
         "@pnpm/package-store": "1002.0.9",
         "@pnpm/parse-overrides": "1001.0.2",
         "@pnpm/plugin-commands-publishing": "1000.2.8",
