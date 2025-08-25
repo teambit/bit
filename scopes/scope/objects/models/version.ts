@@ -3,24 +3,27 @@ import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
 import { v4 } from 'uuid';
-import { BuildStatus, DEFAULT_BUNDLE_FILENAME, Extensions } from '@teambit/legacy.constants';
+import type { BuildStatus } from '@teambit/legacy.constants';
+import { DEFAULT_BUNDLE_FILENAME, Extensions } from '@teambit/legacy.constants';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import {
   isSchemaSupport,
   SchemaFeature,
   SchemaName,
   Dependencies,
   Dependency,
-  ConsumerComponent,
 } from '@teambit/legacy.consumer-component';
 import { getRefsFromExtensions, SourceFile } from '@teambit/component.sources';
-import { ComponentOverridesData } from '@teambit/legacy.consumer-config';
+import type { ComponentOverridesData } from '@teambit/legacy.consumer-config';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { Doclet } from '@teambit/semantics.doc-parser';
 import { logger } from '@teambit/legacy.logger';
-import { getStringifyArgs, PathLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
+import type { PathLinux } from '@teambit/legacy.utils';
+import { getStringifyArgs, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
-import { BitObject, Ref, Repository } from '../objects';
-import { ObjectItem } from '../objects/object-list';
+import type { Repository } from '../objects';
+import { BitObject, Ref } from '../objects';
+import type { ObjectItem } from '../objects/object-list';
 import { BitIdCompIdError, VersionInvalid, validateVersionInstance } from '@teambit/legacy.scope';
 import Source from './source';
 import { DependenciesGraph } from './dependencies-graph';
@@ -67,11 +70,8 @@ export type VersionProps = {
   flattenedEdges?: DepEdge[];
   flattenedEdgesRef?: Ref;
   dependenciesGraphRef?: Ref;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies?: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devPackageDependencies?: { [key: string]: string };
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   peerPackageDependencies?: { [key: string]: string };
   bindingPrefix: string;
   schema?: string;
@@ -120,7 +120,6 @@ export default class Version extends BitObject {
    * (around August 2023 should be safe)
    */
   private flattenedEdges: DepEdge[];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies: { [key: string]: string };
   devPackageDependencies: { [key: string]: string };
   peerPackageDependencies: { [key: string]: string };
@@ -697,7 +696,6 @@ export default class Version extends BitObject {
       files: files.map(parseFile),
       bindingPrefix: component.bindingPrefix,
       log: component.log as Log,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       docs: component.docs,
       dependencies: component.dependencies.get(),
       devDependencies: component.devDependencies.get(),
@@ -711,7 +709,6 @@ export default class Version extends BitObject {
       flattenedEdgesRef: flattenedEdges?.hash(),
       schema: component.schema,
       overrides: component.overrides.componentOverridesData,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageJsonChangedProps: component.packageJsonChangedProps,
       extensions: component.extensions,
       buildStatus: component.buildStatus,

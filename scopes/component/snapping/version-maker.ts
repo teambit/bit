@@ -1,34 +1,35 @@
 import mapSeries from 'p-map-series';
 import { compact, get } from 'lodash';
-import { ReleaseType } from 'semver';
+import type { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 import { BitError } from '@teambit/bit-error';
-import { Scope } from '@teambit/legacy.scope';
+import type { Scope } from '@teambit/legacy.scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BuildStatus, Extensions } from '@teambit/legacy.constants';
-import { ConsumerComponent, CURRENT_SCHEMA } from '@teambit/legacy.consumer-component';
+import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { CURRENT_SCHEMA } from '@teambit/legacy.consumer-component';
 import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
-import { Consumer, NewerVersionFound } from '@teambit/legacy.consumer';
-import { Component } from '@teambit/component';
+import type { Consumer } from '@teambit/legacy.consumer';
+import { NewerVersionFound } from '@teambit/legacy.consumer';
+import type { Component } from '@teambit/component';
 import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
 import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { isSnap as isSnapVersion } from '@teambit/component-version';
-import { BuilderMain, OnTagOpts } from '@teambit/builder';
-import { ModelComponent, Log, DependenciesGraph, Lane } from '@teambit/objects';
-import { MessagePerComponent, MessagePerComponentFetcher } from './message-per-component';
-import {
-  DependencyResolverAspect,
-  DependencyResolverMain,
-  COMPONENT_DEP_TYPE,
-  ComponentRangePrefix,
-} from '@teambit/dependency-resolver';
-import { ScopeMain, StagedConfig } from '@teambit/scope';
-import { Workspace, AutoTagResult } from '@teambit/workspace';
+import type { BuilderMain, OnTagOpts } from '@teambit/builder';
+import type { ModelComponent, Log, Lane } from '@teambit/objects';
+import { DependenciesGraph } from '@teambit/objects';
+import type { MessagePerComponent } from './message-per-component';
+import { MessagePerComponentFetcher } from './message-per-component';
+import { VersionFileParser } from './version-file-parser';
+import type { DependencyResolverMain, ComponentRangePrefix } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, COMPONENT_DEP_TYPE } from '@teambit/dependency-resolver';
+import type { ScopeMain, StagedConfig } from '@teambit/scope';
+import type { Workspace, AutoTagResult } from '@teambit/workspace';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
-import { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
-import { LaneId } from '@teambit/lane-id';
+import type { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
+import type { LaneId } from '@teambit/lane-id';
 
 export type BasicTagSnapParams = {
   message: string;
@@ -50,6 +51,7 @@ export type BasicTagParams = BasicTagSnapParams & {
   disableTagAndSnapPipelines?: boolean;
   preReleaseId?: string;
   editor?: string;
+  versionsFile?: string;
   unmodified?: boolean;
 };
 
@@ -112,6 +114,7 @@ export class VersionMaker {
     const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
     await this.triggerOnPreSnap(autoTagIds);
     this.allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
+    await this.parseVersionsFile(idsToTag, autoTagIds);
     const messagePerId = await this.getMessagePerId(idsToTag, autoTagIds);
     await this.checkForNewerVersions();
     this.setCurrentSchema();
@@ -311,7 +314,7 @@ export class VersionMaker {
         isolateOptions,
         builderOptions
       );
-      const buildResult = this.scope.builderDataMapToLegacyOnTagResults(builderDataMap);
+      const buildResult = this.builder.builderDataMapToLegacyOnTagResults(builderDataMap);
 
       this.snapping._updateComponentsByTagResult(componentsToBuildLegacy, buildResult);
       const packageIntegritiesByPublishedPackages = this.snapping._getPublishedPackages(componentsToBuildLegacy);
@@ -343,6 +346,16 @@ export class VersionMaker {
     if (editor) return messagesFromEditorFetcher.getMessagesFromEditor(this.legacyScope.tmp, editor);
     if (tagDataPerComp) return tagDataPerComp.map((t) => ({ id: t.componentId, msg: t.message || message }));
     return [];
+  }
+
+  private async parseVersionsFile(idsToTag: ComponentIdList, autoTagIds: ComponentIdList) {
+    const { versionsFile } = this.params;
+    if (!versionsFile) return;
+
+    const allComponentsToTag = ComponentIdList.fromArray([...idsToTag, ...autoTagIds]);
+    const versionFileParser = new VersionFileParser(allComponentsToTag);
+    const tagDataFromFile = await versionFileParser.parseVersionsFile(versionsFile);
+    this.params.tagDataPerComp = tagDataFromFile;
   }
 
   private getUniqCompsToTag(): ConsumerComponent[] {

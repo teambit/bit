@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import { Logger } from '@teambit/logger';
-import { BuildResult } from './workspace-compiler';
+import type { BuildResult } from './workspace-compiler';
 
 export const formatCompileResults = (compileResults: BuildResult[], verbose: boolean) =>
   compileResults

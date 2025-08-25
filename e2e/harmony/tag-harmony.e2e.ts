@@ -487,6 +487,32 @@ describe('tag components on Harmony', function () {
       expect(tagOutput).to.have.string('comp1@0.0.1');
     });
   });
+  describe('tag with versions file', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(3);
+      const versionsFileContent = `# Default version for unspecified components
+DEFAULT: minor
+
+# Component-specific versions
+${helper.scopes.remote}/comp1: 2.0.0
+${helper.scopes.remote}/comp3: 1.5.0`;
+      helper.fs.outputFile('versions.txt', versionsFileContent);
+      helper.command.tagWithoutBuild('--versions-file versions.txt');
+    });
+    it('should tag components according to the versions file', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap.comp1.version).to.equal('2.0.0'); // specific version from file
+      expect(bitMap.comp2.version).to.equal('0.1.0'); // default version (minor) from file
+      expect(bitMap.comp3.version).to.equal('1.5.0'); // specific version from file
+    });
+    it('should show correct output with versions from file', () => {
+      const status = helper.command.status();
+      expect(status).to.have.string('comp1. versions: 2.0.0');
+      expect(status).to.have.string('comp2. versions: 0.1.0');
+      expect(status).to.have.string('comp3. versions: 1.5.0');
+    });
+  });
   describe('maintain two main branches 1.x and 2.x, tagging the older branch 1.x with a patch', () => {
     let ver2Head: string;
     before(() => {

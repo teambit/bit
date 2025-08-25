@@ -1,6 +1,6 @@
-import { Component } from '@teambit/component';
-import { ArtifactVinyl } from '@teambit/component.sources';
-import { FsArtifact } from '../artifact';
+import type { Component } from '@teambit/component';
+import type { ArtifactVinyl } from '@teambit/component.sources';
+import type { FsArtifact } from '../artifact';
 
 export type StoreResult = {
   [path: string]: string;

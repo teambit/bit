@@ -1,9 +1,9 @@
-import { Component, ComponentID } from '@teambit/component';
+import type { Component, ComponentID } from '@teambit/component';
 import { gql } from 'graphql-tag';
-import { Logger } from '@teambit/logger';
+import type { Logger } from '@teambit/logger';
 import isBinaryPath from 'is-binary-path';
-import { BuilderMain } from './builder.main.runtime';
-import { PipelineReport } from './build-pipeline-result-list';
+import type { BuilderMain } from './builder.main.runtime';
+import type { PipelineReport } from './build-pipeline-result-list';
 
 type ArtifactGQLFile = {
   /**

@@ -1,5 +1,5 @@
 import type { TransformOptions } from '@babel/core';
-import { CompilerOptions } from '@teambit/compiler';
+import type { CompilerOptions } from '@teambit/compiler';
 
 export type BabelCompilerOptions = {
   /**

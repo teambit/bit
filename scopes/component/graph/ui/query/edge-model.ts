@@ -1,5 +1,5 @@
-import { EdgeType } from '../../edge-type';
-import { RawEdge } from './get-graph.query';
+import type { EdgeType } from '../../edge-type';
+import type { RawEdge } from './get-graph.query';
 
 export class EdgeModel {
   sourceId: string;

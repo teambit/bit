@@ -1,5 +1,5 @@
 import semver from 'semver';
-import { LockfilePackageInfo } from '@pnpm/lockfile.types';
+import type { LockfilePackageInfo } from '@pnpm/lockfile.types';
 import * as dp from '@pnpm/dependency-path';
 
 export type PackagesMap = Map<string, PackageAttributes>;

@@ -1,4 +1,5 @@
-import React, { useContext, useState, HTMLAttributes, useMemo } from 'react';
+import type { HTMLAttributes } from 'react';
+import React, { useContext, useState, useMemo } from 'react';
 import flatten from 'lodash.flatten';
 import classNames from 'classnames';
 import { ComponentContext } from '@teambit/component';
@@ -12,9 +13,9 @@ import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.sp
 import { useAPI } from '@teambit/api-reference.hooks.use-api';
 import { APIReferenceExplorer } from '@teambit/api-reference.explorer.api-reference-explorer';
 import { useAPIRefParam } from '@teambit/api-reference.hooks.use-api-ref-url';
-import { APINodeRendererSlot } from '@teambit/api-reference';
+import type { APINodeRendererSlot } from '@teambit/api-reference';
 import { sortAPINodes } from '@teambit/api-reference.utils.sort-api-nodes';
-import { TreeNode } from '@teambit/design.ui.tree';
+import type { TreeNode } from '@teambit/design.ui.tree';
 import { RoundLoader } from '@teambit/design.ui.round-loader';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { ComponentUrl } from '@teambit/component.modules.component-url';

@@ -1,8 +1,9 @@
-import ts, { LiteralTypeNode, Node } from 'typescript';
+import type { LiteralTypeNode, Node } from 'typescript';
+import ts from 'typescript';
 import { LiteralTypeSchema } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { Identifier } from '../identifier';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { Identifier } from '../identifier';
 
 /**
  * e.g. string/boolean

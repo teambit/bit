@@ -1,6 +1,6 @@
 import junitReportBuilder from 'junit-report-builder';
 import stripAnsi from 'strip-ansi';
-import { ComponentsResults } from '../tester';
+import type { ComponentsResults } from '../tester';
 
 export function testsResultsToJUnitFormat(components: ComponentsResults[]): string {
   const builder = junitReportBuilder.newBuilder();

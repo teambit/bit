@@ -1,6 +1,6 @@
-import { PeerDependencyRules } from '@pnpm/types';
-import { WorkspacePolicyConfigObject } from './policy';
-import { PackageImportMethod } from './package-manager';
+import type { PeerDependencyRules } from '@pnpm/types';
+import type { WorkspacePolicyConfigObject } from './policy';
+import type { PackageImportMethod } from './package-manager';
 
 export type NodeLinker = 'hoisted' | 'isolated';
 

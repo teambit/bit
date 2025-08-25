@@ -1,13 +1,14 @@
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Scope } from '@teambit/legacy.scope';
-import { PathLinuxRelative, pathNormalizeToLinux } from '@teambit/legacy.utils';
-import { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
-import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { Scope } from '@teambit/legacy.scope';
+import type { PathLinuxRelative } from '@teambit/legacy.utils';
+import { pathNormalizeToLinux } from '@teambit/legacy.utils';
+import type { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
+import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DataToPersist, RemovePath } from '@teambit/component.sources';
-import { Consumer } from '@teambit/legacy.consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { isHash } from '@teambit/component-version';
 import { Ref } from '@teambit/objects';
-import { Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 
 export type ComponentWriterProps = {

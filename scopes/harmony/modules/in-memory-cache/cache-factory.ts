@@ -1,4 +1,4 @@
-import { InMemoryCache, CacheOptions } from './in-memory-cache';
+import type { InMemoryCache, CacheOptions } from './in-memory-cache';
 import { LRUCacheAdapter } from './lru-cache-adapter';
 
 export function createInMemoryCache<T>(

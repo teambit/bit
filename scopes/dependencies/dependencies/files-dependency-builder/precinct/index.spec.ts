@@ -1,4 +1,4 @@
-import { DependencyDetector } from '../detector-hook';
+import type { DependencyDetector } from '@teambit/dependency-resolver';
 
 const assert = require('assert');
 const path = require('path');

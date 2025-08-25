@@ -1,10 +1,11 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import packageNameValidate from 'validate-npm-package-name';
-import { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
-import { Logger } from '@teambit/logger';
+import type { WorkspaceDependencyLifecycleType } from '@teambit/dependency-resolver';
+import type { Logger } from '@teambit/logger';
 import chalk from 'chalk';
-import { OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { InstallMain, WorkspaceInstallOptions } from './install.main.runtime';
+import type { Workspace } from '@teambit/workspace';
+import { OutsideWorkspaceError } from '@teambit/workspace';
+import type { InstallMain, WorkspaceInstallOptions } from './install.main.runtime';
 
 type InstallCmdOptions = {
   type: WorkspaceDependencyLifecycleType;
@@ -89,12 +90,29 @@ export default class InstallCmd implements Command {
       );
     }
 
-    packages.forEach((pkg) => {
-      const pkgName = extractPackageName(pkg);
-      if (!packageNameValidate(pkgName).validForNewPackages) {
+    const validPackages = await Promise.all(
+      packages.map(async (pkg) => {
+        const pkgName = extractPackageName(pkg);
+        if (packageNameValidate(pkgName).validForNewPackages) {
+          return pkg;
+        }
+        // if this is a component-id, find the package name and use it instead.
+        try {
+          // Check if it's not a package name (doesn't start with @)
+          if (!pkgName.startsWith('@')) {
+            // Try to resolve it as a component ID
+            const componentId = await this.workspace.resolveComponentId(pkg);
+            // Get the package name for this component
+            const component = await this.workspace.get(componentId);
+            const componentPackageName = this.workspace.componentPackageName(component);
+            return componentPackageName;
+          }
+        } catch {
+          // If component resolution fails, fall through to original error
+        }
         throw new Error(`the package name "${pkgName}" is invalid. please provide a valid package name.`);
-      }
-    });
+      })
+    );
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     const installOpts: WorkspaceInstallOptions = {
       lifecycleType: options.addMissingPeers ? 'peer' : options.type,
@@ -113,7 +131,7 @@ export default class InstallCmd implements Command {
       lockfileOnly: options.lockfileOnly,
       showExternalPackageManagerPrompt: true,
     };
-    const components = await this.install.install(packages, installOpts);
+    const components = await this.install.install(validPackages, installOpts);
     const endTime = Date.now();
     const oldNonLoadedEnvs = this.install.getOldNonLoadedEnvs();
     return formatOutput({

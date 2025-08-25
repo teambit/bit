@@ -1,9 +1,9 @@
-import { Component } from '@teambit/component';
+import type { Component } from '@teambit/component';
 import { IssuesClasses } from '@teambit/component-issues';
-import { GraphMain } from '@teambit/graph';
+import type { GraphMain } from '@teambit/graph';
 import { uniq } from 'lodash';
-import { Insight, InsightResult, RawResult } from '../insight';
-import { RunInsightOptions } from '../insight-manager';
+import type { Insight, InsightResult, RawResult } from '../insight';
+import type { RunInsightOptions } from '../insight-manager';
 
 export const INSIGHT_CIRCULAR_DEPS_NAME = 'circular';
 
@@ -43,8 +43,8 @@ export default class FindCycles implements Insight {
     }
     const string = data.data
       .map((cycle) => {
-        return `\nCyclic dependency
------------------
+        return `\nCyclic dependency (${cycle.length - 1} components)
+---------------------------------
 - ${cycle.join('\n- ')}`;
       })
       .join('\n');

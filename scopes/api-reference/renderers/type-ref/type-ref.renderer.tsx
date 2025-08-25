@@ -1,11 +1,12 @@
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import { APINodeDetails } from '@teambit/api-reference.renderers.api-node-details';
 import { copySchemaNode } from '@teambit/api-reference.utils.copy-schema-node';
 import classnames from 'classnames';
 import { useUpdatedUrlFromQuery } from '@teambit/api-reference.hooks.use-api-ref-url';
-import { ComponentID } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { Link as BaseLink } from '@teambit/base-react.navigation.link';
 

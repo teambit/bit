@@ -1,6 +1,6 @@
-import { Component } from '@teambit/component';
-import { Environment } from '@teambit/envs';
-import { DocsMain } from '@teambit/docs';
+import type { Component } from '@teambit/component';
+import type { Environment } from '@teambit/envs';
+import type { DocsMain } from '@teambit/docs';
 
 export const ReadmeEnvType = 'readme';
 

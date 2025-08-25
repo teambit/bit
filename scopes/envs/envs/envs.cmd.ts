@@ -2,10 +2,10 @@
 import pMapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { CLITable } from '@teambit/cli-table';
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import { compact } from 'lodash';
-import { ComponentMain, ComponentFactory, Component } from '@teambit/component';
-import { EnvsMain } from './environments.main.runtime';
+import type { ComponentMain, ComponentFactory, Component } from '@teambit/component';
+import type { EnvsMain } from './environments.main.runtime';
 
 export class ListEnvsCmd implements Command {
   name = 'list';
@@ -59,7 +59,7 @@ export class GetEnvCmd implements Command {
     const env = this.envs.getEnv(component);
     const envRuntime = await this.envs.createEnvironment([component]);
     const envExecutionContext = envRuntime.getEnvExecutionContext();
-    const services = this.envs.getServices(env);
+    const services = await this.envs.getServices(env);
     const allP = services.services.map(async ([serviceId, service]) => {
       if (servicesArr && !servicesArr.includes(serviceId)) return null;
       const serviceTitle = chalk.cyan.bold.underline(serviceId);

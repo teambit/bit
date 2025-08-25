@@ -1,6 +1,6 @@
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
-import { Workspace } from './workspace';
+import type { Workspace } from './workspace';
 
 export class UseCmd implements Command {
   name = 'use <component-id>';

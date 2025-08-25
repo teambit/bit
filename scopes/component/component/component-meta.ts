@@ -1,5 +1,6 @@
 import { capitalize } from '@teambit/toolbox.string.capitalize';
-import { ComponentID, ComponentIdObj } from '@teambit/component-id';
+import type { ComponentIdObj } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 
 export class ComponentMeta {
   constructor(

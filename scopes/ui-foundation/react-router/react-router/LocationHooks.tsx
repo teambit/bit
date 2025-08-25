@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import { useLocation, useNavigate, NavigateFunction, useNavigationType } from 'react-router-dom';
-import { LocationListener } from './react-router.ui.runtime';
+import type { NavigateFunction } from 'react-router-dom';
+import { useLocation, useNavigate, useNavigationType } from 'react-router-dom';
+import type { LocationListener } from './react-router.ui.runtime';
 
 export function LocationHooks({
   onLocationChange,

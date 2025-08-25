@@ -1,7 +1,7 @@
 import chalk from 'chalk';
-import { ComponentID } from '@teambit/component-id';
-import { SnapsDistance } from '@teambit/component.snap-distance';
-import { IssuesList } from '@teambit/component-issues';
+import type { ComponentID } from '@teambit/component-id';
+import type { SnapsDistance } from '@teambit/component.snap-distance';
+import type { IssuesList } from '@teambit/component-issues';
 import {
   IMPORT_PENDING_MSG,
   statusFailureMsg,
@@ -12,7 +12,7 @@ import {
 } from '@teambit/legacy.constants';
 import { compact, groupBy, partition } from 'lodash';
 import { isHash } from '@teambit/component-version';
-import { StatusResult } from './status.main.runtime';
+import type { StatusResult } from './status.main.runtime';
 
 const TROUBLESHOOTING_MESSAGE = chalk.yellow(
   `learn more about Bit components: ${BASE_DOCS_DOMAIN}reference/components/component-anatomy`

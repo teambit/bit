@@ -1,6 +1,7 @@
-import { Parser } from '@teambit/schema';
-import { Export, StaticProperties } from '@teambit/semantics.entities.semantic-schema';
-import { Logger } from '@teambit/logger';
+import type { Parser } from '@teambit/schema';
+import type { StaticProperties } from '@teambit/semantics.entities.semantic-schema';
+import { Export } from '@teambit/semantics.entities.semantic-schema';
+import type { Logger } from '@teambit/logger';
 import { readFileSync } from 'fs-extra';
 import ts from 'typescript';
 
@@ -22,14 +23,20 @@ export class TypeScriptParser implements Parser {
         if (statement.exportClause) {
           if (ts.isNamedExports(statement.exportClause)) {
             statement.exportClause.elements.forEach((element) => {
-              const name = element.name.escapedText.toString();
+              // Handle both Identifier and StringLiteral export names (TypeScript 5.6+ arbitrary module namespace identifiers)
+              const name = ts.isIdentifier(element.name)
+                ? element.name.escapedText.toString()
+                : (element.name as ts.StringLiteral).text;
               if (name !== 'default') {
                 exportModels.push(new Export(name, staticProperties.get(name)));
               }
             });
           }
           if (ts.isNamespaceExport(statement.exportClause)) {
-            const name = statement.exportClause.name.escapedText.toString();
+            // Handle both Identifier and StringLiteral export names (TypeScript 5.6+ arbitrary module namespace identifiers)
+            const name = ts.isIdentifier(statement.exportClause.name)
+              ? statement.exportClause.name.escapedText.toString()
+              : (statement.exportClause.name as ts.StringLiteral).text;
             exportModels.push(new Export(name, staticProperties.get(name)));
           }
         }
@@ -68,7 +75,6 @@ export class TypeScriptParser implements Parser {
     });
 
     const withoutEmpty = exportModels.filter((exportModel) => exportModel !== undefined);
-    // @ts-ignore
     return withoutEmpty;
   }
 

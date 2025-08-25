@@ -1,5 +1,6 @@
 import { BitError } from '@teambit/bit-error';
-import { loadScope, Scope } from '@teambit/legacy.scope';
+import type { Scope } from '@teambit/legacy.scope';
+import { loadScope } from '@teambit/legacy.scope';
 
 export async function catLane(name: string): Promise<Record<string, any>> {
   const scope: Scope = await loadScope();

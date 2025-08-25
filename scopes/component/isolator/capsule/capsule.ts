@@ -1,13 +1,15 @@
-import { NodeFS } from '@teambit/any-fs';
-import { Capsule as CapsuleTemplate, Console, Exec, State } from '@teambit/capsule';
-import { Component } from '@teambit/component';
+import type { NodeFS } from '@teambit/any-fs';
+import type { Exec } from '@teambit/capsule';
+import { Capsule as CapsuleTemplate, Console, State } from '@teambit/capsule';
+import type { Component } from '@teambit/component';
 import filenamify from 'filenamify';
 import { realpathSync } from 'fs';
 import glob from 'glob';
 import path from 'path';
 import { v4 } from 'uuid';
 
-import FsContainer, { BitExecOption } from './container';
+import type { BitExecOption } from './container';
+import FsContainer from './container';
 import ContainerExec from './container-exec';
 
 export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
@@ -89,7 +91,6 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
       execResults.stdout.on('error', (error: string) => {
         return reject(error);
       });
-      // @ts-ignore
       execResults.on('close', () => {
         return resolve({ stdout, stderr });
       });

@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { NestedNMDepsLinksResult } from '@teambit/dependency-resolver';
+import type { NestedNMDepsLinksResult } from '@teambit/dependency-resolver';
 import { VerboseLinkRow } from './link-row';
 
 type NestedComponentLinksLinksProps = {

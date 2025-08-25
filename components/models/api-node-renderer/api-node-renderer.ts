@@ -1,13 +1,13 @@
-import { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
-import { ComponentType, HTMLAttributes } from 'react';
-import { APINode, APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import type { ComponentType, HTMLAttributes } from 'react';
+import type { APINode, APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
 
 export type APINodeRenderProps = {
   apiNode: APINode;
   apiRefModel: APIReferenceModel;
   renderers: APINodeRenderer[];
   depth?: number;
-  metadata?: { [key in string]: any };
+  metadata?: Record<string, any>;
 } & HTMLAttributes<HTMLDivElement>;
 
 export type APINodeRenderer = {

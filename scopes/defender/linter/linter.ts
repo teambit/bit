@@ -1,6 +1,6 @@
-import { BuildContext } from '@teambit/builder';
-import { Component } from '@teambit/component';
-import { LinterContext } from './linter-context';
+import type { BuildContext } from '@teambit/builder';
+import type { Component } from '@teambit/component';
+import type { LinterContext } from './linter-context';
 
 export type ComponentLintResult = {
   /**
@@ -170,7 +170,7 @@ export interface Linter {
   /**
    * returns the version of the current linter instance (e.g. '4.0.1').
    */
-  version?(): string;
+  version?(): string | Promise<string>;
 
   /**
    * returns the display name of the current linter instance (e.g. 'ESlint')

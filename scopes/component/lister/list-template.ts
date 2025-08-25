@@ -1,7 +1,7 @@
 import c from 'chalk';
 import semver from 'semver';
 import Table from 'cli-table';
-import { ListScopeResult } from './lister.main.runtime';
+import type { ListScopeResult } from './lister.main.runtime';
 
 type Row = { id: string; localVersion: string; currentVersion: string; remoteVersion?: string };
 
@@ -12,7 +12,6 @@ export function listTemplate(listScopeResults: ListScopeResult[], json: boolean,
     if (!json && showRemoteVersion) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const color = listScopeResult.remoteVersion && semver.gt(listScopeResult.remoteVersion, version!) ? 'red' : null;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       version = color ? c[color](version) : version;
     }
     const getFormattedId = () => {

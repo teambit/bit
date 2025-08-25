@@ -1,7 +1,7 @@
 import { forEach } from 'lodash';
 
 import { getCloudDomain, CFG_GIT_EXECUTABLE_PATH } from '@teambit/legacy.constants';
-import CommandHelper from './e2e-command-helper';
+import type CommandHelper from './e2e-command-helper';
 
 export default class ConfigHelper {
   command: CommandHelper;

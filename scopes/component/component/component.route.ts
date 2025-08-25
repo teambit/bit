@@ -1,6 +1,6 @@
-import { NextFunction, Request, Response, Route } from '@teambit/express';
+import type { NextFunction, Request, Response, Route } from '@teambit/express';
 
-import { ComponentMain } from './component.main.runtime';
+import type { ComponentMain } from './component.main.runtime';
 
 export type RegisteredComponentRoute = Route & {
   resolveComponent?: boolean;

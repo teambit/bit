@@ -1,17 +1,20 @@
 import path from 'path';
 import fs from 'fs-extra';
-import chai, { expect } from 'chai';
+import { expect, use } from 'chai';
 import { APISchema, UnknownSchema } from '@teambit/semantics.entities.semantic-schema';
 import chaiSubset from 'chai-subset';
-import { TrackerAspect, TrackerMain } from '@teambit/tracker';
+import type { TrackerMain } from '@teambit/tracker';
+import { TrackerAspect } from '@teambit/tracker';
 import { loadAspect, loadManyAspects } from '@teambit/harmony.testing.load-aspect';
-import { mockWorkspace, destroyWorkspace, WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
+import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { ComponentID } from '@teambit/component-id';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { SchemaMain } from './schema.main.runtime';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { SchemaMain } from './schema.main.runtime';
 import { SchemaAspect } from './schema.aspect';
 
-chai.use(chaiSubset);
+use(chaiSubset);
 
 describe('SchemaAspect', function () {
   this.timeout(0);
@@ -51,7 +54,6 @@ describe('SchemaAspect', function () {
       // uncomment the next line temporarily to sync the expected json with new schema changes
       // fs.outputFileSync(expectedJsonPath, JSON.stringify(results, undefined, 2));
       const expectedJson = fs.readJsonSync(expectedJsonPath);
-      // @ts-ignore it exists on Jest. for some reason ts assumes this is Jasmine.
       expect(results).to.to.containSubset(expectedJson);
     });
   });
@@ -62,7 +64,6 @@ describe('SchemaAspect', function () {
       const apiSchema = schema.getSchemaFromObject(json);
       expect(apiSchema instanceof APISchema).to.be.true;
       expect(apiSchema.componentId.constructor.name).to.equal(ComponentID.name);
-      // @ts-ignore it exists on Jest. for some reason ts assumes this is Jasmine.
       expect(apiSchema.toObject()).to.containSubset(json);
     });
     it('should not throw when it does not recognize the schema', () => {
@@ -71,7 +72,6 @@ describe('SchemaAspect', function () {
       const apiSchema = schema.getSchemaFromObject(json);
       expect(apiSchema instanceof APISchema).to.be.true;
       expect(apiSchema.module.exports[0] instanceof UnknownSchema).to.be.true;
-      // @ts-ignore
       expect(apiSchema.module.exports[0].location).to.deep.equal({ file: 'index.ts', line: 21, character: 14 });
     });
   });

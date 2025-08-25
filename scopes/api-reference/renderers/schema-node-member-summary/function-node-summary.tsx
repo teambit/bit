@@ -1,9 +1,12 @@
-import React, { HTMLAttributes, useMemo } from 'react';
+import type { HTMLAttributes } from 'react';
+import React, { useMemo } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { SchemaNode, SetAccessorSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { SchemaNode } from '@teambit/semantics.entities.semantic-schema';
+import { SetAccessorSchema } from '@teambit/semantics.entities.semantic-schema';
 import { transformSignature } from '@teambit/api-reference.utils.schema-node-signature-transform';
-import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
-import { APINodeRenderProps, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
+import type { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
+import type { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
+import { nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
 import { parameterRenderer as defaultParamRenderer } from '@teambit/api-reference.renderers.parameter';
 import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
 import defaultTheme from '@teambit/api-reference.utils.custom-prism-syntax-highlighter-theme';

@@ -212,6 +212,7 @@ In default mode, the server exposes a minimal set of essential tools focused on 
   - `bit_remote_search`: Search for components in remote scopes
   - `bit_workspace_info`: Get comprehensive workspace information including status, components list, apps, templates, and dependency graph
   - `bit_component_details`: Get detailed information about a specific component including basic info and optionally its public API schema
+  - `bit_create`: Create a new component (source files and config) using a template with proper argument validation and documentation
   - `bit_query`: Execute read-only Bit commands that safely inspect workspace and component state without making modifications
   - `bit_execute`: Execute any Bit command, including those that modify workspace or repository state (use with caution)
   - `bit_commands_list`: Get all available Bit commands with descriptions and groups (for command discovery)
@@ -238,15 +239,63 @@ In this mode:
 
 All tools accept a `cwd` parameter specifying the workspace path. Additional parameters vary by command.
 
-Example tool call for `bit_status`:
+### bit_remote_search
+
+Search for multiple components in parallel for efficient discovery:
 
 ```json
 {
-  "cwd": "/path/to/workspace",
-  "warnings": true,
-  "json": true
+  "queries": ["input", "button", "validation"],
+  "cwd": "/path/to/workspace"
 }
 ```
+
+**Parameters:**
+
+- `queries` (required): Array of search terms. Use either variations/synonyms of one component type (`["btn", "button"]`) or different components needed for a task (`["table", "pagination", "filter"]`)
+- `cwd` (optional): Path to workspace directory
+- `owners` (optional): Filter by specific owners (auto-extracted from workspace.jsonc if not provided)
+- `skipAutoOwner` (optional): Disable automatic owner extraction
+
+**Examples:**
+
+- Form components: `["input", "button", "validation", "dropdown"]`
+- Layout components: `["header", "navigation", "footer"]`
+- Data display: `["table", "pagination", "filter", "sort"]`
+- Button variations: `["button", "btn", "click"]`
+
+### bit_create
+
+Create a new component with template-based generation:
+
+```json
+{
+  "templateName": "react",
+  "componentNames": ["ui/button", "ui/input"],
+  "namespace": "components",
+  "scope": "my-org.my-scope",
+  "cwd": "/path/to/workspace"
+}
+```
+
+**Parameters:**
+
+- `templateName` (required): The template for generating the component (run `bit templates` for available templates)
+- `componentNames` (required): Array of component names to generate
+- `cwd` (required): Path to workspace directory
+- `namespace` (optional): Sets the component's namespace and nested dirs inside the scope
+- `scope` (optional): Sets the component's scope-name (uses default-scope if not provided)
+- `aspect` (optional): Aspect-id of the template (helpful when multiple aspects use the same template name)
+- `template` (optional): Env-id of the template (alias for --aspect)
+- `path` (optional): Relative path in the workspace (default: `<scope>/<namespace>/<name>`)
+- `env` (optional): Set the component's environment (overrides env from variants and template)
+- `force` (optional): Replace existing files at the target location
+
+**Examples:**
+
+- Single React component: `{"templateName": "react", "componentNames": ["ui/button"], "cwd": "/path/to/workspace"}`
+- Multiple components with namespace: `{"templateName": "node", "componentNames": ["utils/is-string", "utils/is-number"], "namespace": "utilities", "cwd": "/path/to/workspace"}`
+- Component with custom scope: `{"templateName": "mdx", "componentNames": ["docs/getting-started"], "scope": "my-org.docs", "cwd": "/path/to/workspace"}`
 
 ## Custom Tool Selection
 
@@ -254,7 +303,7 @@ To customize the available tools:
 
 ```
 # Add specific tools to the available tools
-bit mcp-server start --include-additional "build,lint,format,create,schema"
+bit mcp-server start --include-additional "build,lint,format,schema"
 
 # For consumer projects (non-Bit workspaces)
 bit mcp-server start --consumer-project

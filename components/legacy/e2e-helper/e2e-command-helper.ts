@@ -2,7 +2,8 @@ import { expect } from 'chai';
 import chalk from 'chalk';
 import execa from 'execa';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import childProcess, { StdioOptions } from 'child_process';
+import type { StdioOptions } from 'child_process';
+import childProcess from 'child_process';
 import rightpad from 'pad-right';
 import * as path from 'path';
 import tar from 'tar';
@@ -12,7 +13,7 @@ import type { Descriptor } from '@teambit/envs';
 import { ENV_VAR_FEATURE_TOGGLE } from '@teambit/harmony.modules.feature-toggle';
 import { Extensions, NOTHING_TO_SNAP_MSG } from '@teambit/legacy.constants';
 import { removeChalkCharacters } from '@teambit/legacy.utils';
-import ScopesData from './e2e-scopes';
+import type ScopesData from './e2e-scopes';
 
 // The default value of maxBuffer is 1024*1024, which is not enough for some of the tests.
 // If a command has a lot of output, it will throw this error:
@@ -209,7 +210,9 @@ export default class CommandHelper {
     return JSON.parse(result);
   }
 
-  catComponent(id: string, cwd?: string, parse = true): Record<string, any> {
+  catComponent(id: string, cwd?: string): Record<string, any>;
+  catComponent(id: string, cwd: string | undefined, parse: false): string;
+  catComponent(id: string, cwd?: string, parse = true): Record<string, any> | string {
     const result = this.runCmd(`bit cat-component ${id} --json`, cwd);
     return parse ? JSON.parse(result) : result;
   }
@@ -259,7 +262,7 @@ export default class CommandHelper {
   setConfig(configName: string, configVal: string, flags = '') {
     return this.runCmd(`bit config set ${configName} ${configVal} ${flags}`);
   }
-  setScope(scopeName: string, component: string) {
+  setScope(scopeName: string, component = '') {
     return this.runCmd(`bit scope set ${scopeName} ${component}`);
   }
   renameScope(oldScope: string, newScope: string, flags = '') {

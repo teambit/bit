@@ -1,4 +1,5 @@
-import { ComponentModel, ComponentModelProps } from '@teambit/component';
+import type { ComponentModelProps } from '@teambit/component';
+import { ComponentModel } from '@teambit/component';
 import { ComponentDescriptor } from '@teambit/component-descriptor';
 import { ComponentID } from '@teambit/component-id';
 

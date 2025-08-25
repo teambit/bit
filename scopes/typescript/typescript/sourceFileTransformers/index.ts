@@ -1,4 +1,4 @@
-import ts from 'typescript';
+import type ts from 'typescript';
 
 export type SourceFileTransformer = (mapping: Record<string, string>) => ts.TransformerFactory<ts.SourceFile>;
 

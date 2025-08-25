@@ -1,7 +1,7 @@
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
 import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
-import { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
 
 const GET_SCHEMA = gql`
   query Schema($componentId: String!, $skipInternals: Boolean) {
@@ -19,7 +19,6 @@ export function useAPI(
     skipInternals?: boolean;
   }
 ): { apiModel?: APIReferenceModel; loading?: boolean } {
-  // @ts-ignore - remove once graphql versions are aligned (see #8753)
   const { data, loading } = useDataQuery(GET_SCHEMA, {
     variables: {
       componentId,

@@ -1,12 +1,15 @@
 import { BitError } from '@teambit/bit-error';
-import { Source, Version, SourceFileModel } from '@teambit/objects';
+import type { Source, Version, SourceFileModel } from '@teambit/objects';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
-import { PathLinux, pathNormalizeToLinux, PathOsBased } from '@teambit/toolbox.path.path';
+import type { PathLinux, PathOsBased } from '@teambit/toolbox.path.path';
+import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import * as eol from '@teambit/toolbox.string.eol';
-import { mergeFiles, MergeFileParams, MergeFileResult } from '../merge-files';
-import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { MergeFileParams, MergeFileResult } from './merge-files';
+import { mergeFiles } from './merge-files';
+import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { SourceFile } from '@teambit/component.sources';
-import { Tmp, Scope } from '@teambit/legacy.scope';
+import type { Scope } from '@teambit/legacy.scope';
+import { Tmp } from '@teambit/legacy.scope';
 import { isEmpty } from 'lodash';
 
 export type MergeResultsThreeWay = {
@@ -107,7 +110,6 @@ export async function threeWayMerge({
   };
   const getFileResult = async (fsFile: SourceFile, baseFile?: SourceFileModel, otherFile?: SourceFileModel) => {
     const filePath: PathLinux = pathNormalizeToLinux(fsFile.relative);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fsFileHash = sha1(fsFile.contents);
     if (!otherFile) {
       // if !otherFile && !baseFile, the file was created after the last tag, no need to do any

@@ -1,7 +1,8 @@
 import { ComponentIdList } from '@teambit/component-id';
 import { loadConsumer } from '@teambit/legacy.consumer';
 import { ModelComponent, Symlink } from '@teambit/objects';
-import Diagnosis, { ExamineBareResult } from '../diagnosis';
+import type { ExamineBareResult } from '../diagnosis';
+import Diagnosis from '../diagnosis';
 
 export const DIAGNOSIS_NAME = 'check orphan refs';
 export default class OrphanSymlinkObjects extends Diagnosis {
@@ -11,13 +12,11 @@ export default class OrphanSymlinkObjects extends Diagnosis {
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
     if (!bareResult.data) throw new Error('OrphanSymlinkObjects, bareResult.data is missing');
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return `the following refs points to non-existing components "${bareResult.data.orphanSymlinks.toString()}"`;
   }
 
   _formatManualTreat(bareResult: ExamineBareResult) {
     if (!bareResult.data) throw new Error('OrphanSymlinkObjects, bareResult.data is missing');
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return `please delete the following paths:\n${bareResult.data.objectsToDelete.join('\n')}`;
   }
 

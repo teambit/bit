@@ -1,7 +1,7 @@
-import { Component, ComponentID, ComponentMap } from '@teambit/component';
-import { ExecutionContext } from '@teambit/envs';
-import { AbstractVinyl } from '@teambit/component.sources';
-import { TestsResult } from '@teambit/tests-results';
+import type { Component, ComponentID, ComponentMap } from '@teambit/component';
+import type { ExecutionContext } from '@teambit/envs';
+import type { AbstractVinyl } from '@teambit/component.sources';
+import type { TestsResult } from '@teambit/tests-results';
 
 export class Tests {
   constructor(public components: ComponentsResults[]) {}

@@ -1,6 +1,7 @@
 import { ExtensionDataList, ExtensionDataEntry, removeInternalConfigFields } from '@teambit/legacy.extension-data';
 import { ComponentID } from '@teambit/component-id';
-import { AspectEntry, SerializableMap } from './aspect-entry';
+import type { SerializableMap } from './aspect-entry';
+import { AspectEntry } from './aspect-entry';
 
 /**
  * list of aspects, each may have data and artifacts saved per component.

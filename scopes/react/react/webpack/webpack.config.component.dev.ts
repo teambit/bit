@@ -1,5 +1,5 @@
 import path from 'path';
-import { Configuration } from 'webpack';
+import type { Configuration } from 'webpack';
 import { ComponentID } from '@teambit/component-id';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json

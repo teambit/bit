@@ -23,13 +23,13 @@
 <a href="https://github.com/prettier/prettier"><img alt ="Styled with Prettier" src="https://img.shields.io/badge/styled_with-prettier-ff69b4.svg">
 <a href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-1vq1vcxxu-CEVobR1p9BurmW8QnQFh1w" ><img alt="Join Slack" src="https://img.shields.io/badge/Slack-Join%20Bit%20Slack-blueviolet"/></a>
 
-[Bit](https://bit.dev) is the AI-powered development workspace with reusable components and zero overhead for the era of AI. Bit organizes source code into composable components, empowering to build reliable, scalable and consistent applications. It supports local AI agents via MCP for creating and composing reusable components at ease.
+[Bit](https://bit.dev) is the build system to connect components and apps from development to CI in the AI era. Bit organizes source code into composable components, empowering to build reliable, scalable and consistent applications. It enables AI agents to intelligenly create and reuse components via MCP preventing duplication and accelerating development.
 
 ⚡ **Features**
 
-- **Shell applications.** Compose reusable components and features into application shells.
 - **Reusable components.** Create reusable UI components and modules to reuse across your software.
 - **Standard building blocks.** Define the blueprints templates for creating components for devs and AI as one.
+- **Shell applications.** Compose reusable components and features into application shells.
 - **Atmoic and safe deployments.** Ensure simple, safe and optimized deployments of apps and services for testing and production.
 
 Bit supports all tooling in the JS ecosystem and comes out of the box with official dev environments for [NodeJS](https://bit.dev/docs/backend-intro), [React](https://bit.dev/docs/react-intro), [Angular](https://bit.dev/docs/angular-introduction), [Vue](https://bit.dev/docs/vue-intro), [React Native](https://bit.dev/docs/react-native-intro), [NextJS](https://bit.dev/docs/quick-start/hello-world-nextjs) and [far more](https://bit.dev/docs). All are native to TypeScript and ESM and equipped with the best dev tooling.

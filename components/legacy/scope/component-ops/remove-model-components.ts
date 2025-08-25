@@ -1,12 +1,13 @@
 import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
 import { LATEST_BIT_VERSION } from '@teambit/legacy.constants';
-import { Consumer } from '@teambit/legacy.consumer';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
-import { Ref, Lane } from '@teambit/objects';
+import type { Ref, Lane } from '@teambit/objects';
 import { RemovedObjects } from '../removed-components';
-import Scope from '../scope';
+import type Scope from '../scope';
 
 /**
  * remove components from the model.
@@ -73,9 +74,21 @@ export default class RemoveModelComponents {
 
   private async getRemoveSingleData(bitId: ComponentID): Promise<{ compId: ComponentID; refsToRemove: Ref[] }> {
     logger.debug(`scope.removeSingle ${bitId.toString()}`);
-    const component = (await this.scope.getModelComponent(bitId)).toComponentVersion();
     const componentsRefs = await this.getDataForRemovingComponent(bitId);
-    const version = Object.keys(component.component.versions).length <= 1 ? LATEST_BIT_VERSION : bitId.version;
+    const getVersion = async () => {
+      try {
+        const component = (await this.scope.getModelComponent(bitId)).toComponentVersion();
+        const version = Object.keys(component.component.versions).length <= 1 ? LATEST_BIT_VERSION : bitId.version;
+        return version;
+      } catch (err: any) {
+        // this can rarely happen. e.g. switching from lane to main, and a component was created on the lane
+        // so loading this component on main result in an error. because we simply want to remove it, we don't care
+        // about the error.
+        logger.warn(`Failed to get version for ${bitId.toString()}: ${err.message}`);
+        return LATEST_BIT_VERSION;
+      }
+    };
+    const version = await getVersion();
 
     return {
       compId: bitId.changeVersion(version),

@@ -1,39 +1,49 @@
 import { BitError } from '@teambit/bit-error';
 import path from 'path';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { ImporterAspect, ImporterMain } from '@teambit/importer';
-import { LanesAspect, LanesMain } from '@teambit/lanes';
-import {
-  MergingAspect,
-  MergingMain,
-  ComponentMergeStatus,
-  ApplyVersionResults,
-  FileStatus,
-  MergeStrategy,
-} from '@teambit/merging';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
-import { ConfigStoreAspect, ConfigStoreMain } from '@teambit/config-store';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { ImporterMain } from '@teambit/importer';
+import { ImporterAspect } from '@teambit/importer';
+import type { LanesMain } from '@teambit/lanes';
+import { LanesAspect } from '@teambit/lanes';
+import type { MergingMain, ComponentMergeStatus } from '@teambit/merging';
+import type { ApplyVersionResults, MergeStrategy } from '@teambit/component.modules.merge-helper';
+import { MergingAspect } from '@teambit/merging';
+import { FileStatus } from '@teambit/component.modules.merge-helper';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
+import type { ConfigStoreMain } from '@teambit/config-store';
+import { ConfigStoreAspect } from '@teambit/config-store';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
-import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { Ref, Lane, Version, Log } from '@teambit/objects';
+import type { ComponentID } from '@teambit/component-id';
+import { ComponentIdList } from '@teambit/component-id';
+import type { Ref, Lane, Version, Log } from '@teambit/objects';
 import pMapSeries from 'p-map-series';
-import { Scope as LegacyScope } from '@teambit/legacy.scope';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
-import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
-import { ConfigMergeResult } from '@teambit/config-merger';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { CheckoutAspect, CheckoutMain, CheckoutProps, throwForFailures } from '@teambit/checkout';
-import { SnapsDistance } from '@teambit/component.snap-distance';
-import { RemoveAspect, RemoveMain } from '@teambit/remove';
+import type { Scope as LegacyScope } from '@teambit/legacy.scope';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
+import type { LaneId } from '@teambit/lane-id';
+import { DEFAULT_LANE } from '@teambit/lane-id';
+import type { ConfigMergeResult } from '@teambit/config-merger';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { CheckoutMain, CheckoutProps } from '@teambit/checkout';
+import { CheckoutAspect, throwForFailures } from '@teambit/checkout';
+import type { SnapsDistance } from '@teambit/component.snap-distance';
+import type { RemoveMain } from '@teambit/remove';
+import { RemoveAspect } from '@teambit/remove';
 import { compact, uniq } from 'lodash';
-import { ExportAspect, ExportMain } from '@teambit/export';
+import type { ExportMain } from '@teambit/export';
+import { ExportAspect } from '@teambit/export';
 import { MergeLanesAspect } from './merge-lanes.aspect';
 import { MergeLaneCmd } from './merge-lane.cmd';
 import { MissingCompsToMerge } from './exceptions/missing-comps-to-merge';
-import { MergeAbortLaneCmd, MergeAbortOpts } from './merge-abort.cmd';
+import type { MergeAbortOpts } from './merge-abort.cmd';
+import { MergeAbortLaneCmd } from './merge-abort.cmd';
 import { LastMerged } from './last-merged';
 import { MergeMoveLaneCmd } from './merge-move.cmd';
-import { ExpressAspect, ExpressMain } from '@teambit/express';
+import type { ExpressMain } from '@teambit/express';
+import { ExpressAspect } from '@teambit/express';
 import { LanesCheckConflictsRoute } from './lanes-check-conflicts.route';
 
 export type MergeLaneOptions = {

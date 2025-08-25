@@ -1,9 +1,11 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import { OutsideWorkspaceError, type Workspace } from '@teambit/workspace';
-import { ReleaseType } from 'semver';
+import type { ReleaseType } from 'semver';
 import { validateOptions } from '@teambit/snapping';
-import { CiMain } from '../ci.main.runtime';
+import { BitError } from '@teambit/bit-error';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
+import type { CiMain } from '../ci.main.runtime';
 
 type Options = {
   message?: string;
@@ -16,6 +18,10 @@ type Options = {
   preRelease?: string;
   prereleaseId?: string;
   incrementBy?: number;
+  verbose?: boolean;
+  versionsFile?: string;
+  autoMergeResolve?: MergeStrategy;
+  forceTheirs?: boolean;
 };
 
 export class CiMergeCmd implements Command {
@@ -42,6 +48,14 @@ export class CiMergeCmd implements Command {
       'increment-by <number>',
       '(default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3.',
     ],
+    ['', 'versions-file <path>', 'path to a file containing component versions. format: "component-id: version"'],
+    ['', 'verbose', 'show verbose output'],
+    [
+      'r',
+      'auto-merge-resolve <merge-strategy>',
+      'in case of merge conflict during checkout, resolve according to the provided strategy: [ours, theirs, manual]',
+    ],
+    ['', 'force-theirs', 'do not merge during checkout, just overwrite with incoming files'],
   ];
 
   constructor(
@@ -54,6 +68,16 @@ export class CiMergeCmd implements Command {
     this.logger.console('\n\n');
     this.logger.console('🚀 Initializing Merge command');
     if (!this.workspace) throw new OutsideWorkspaceError();
+
+    // Validate autoMergeResolve option
+    if (
+      options.autoMergeResolve &&
+      options.autoMergeResolve !== 'ours' &&
+      options.autoMergeResolve !== 'theirs' &&
+      options.autoMergeResolve !== 'manual'
+    ) {
+      throw new BitError('--auto-merge-resolve must be one of the following: [ours, theirs, manual]');
+    }
 
     const { releaseType, preReleaseId } = validateOptions(options);
 
@@ -70,6 +94,10 @@ export class CiMergeCmd implements Command {
       preReleaseId,
       incrementBy: options.incrementBy,
       explicitVersionBump,
+      verbose: options.verbose,
+      versionsFile: options.versionsFile,
+      autoMergeResolve: options.autoMergeResolve,
+      forceTheirs: options.forceTheirs,
     });
   }
 }

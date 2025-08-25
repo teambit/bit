@@ -4,11 +4,11 @@ import { CodeEditor, useCodeEditor } from '@teambit/code.ui.code-editor';
 import { useLocation } from '@teambit/base-react.navigation.link';
 import { defaultCodeEditorOptions } from '@teambit/api-reference.utils.code-editor-options';
 import classnames from 'classnames';
-import { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
+import type { APINodeRenderProps } from '@teambit/api-reference.models.api-node-renderer';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
-import { APIRefQueryParams } from '@teambit/api-reference.hooks.use-api-ref-url';
+import type { APIRefQueryParams } from '@teambit/api-reference.hooks.use-api-ref-url';
 import { useNavigate } from 'react-router-dom';
-import { APINode } from '@teambit/api-reference.models.api-reference-model';
+import type { APINode } from '@teambit/api-reference.models.api-reference-model';
 import { SchemaNodesIndex } from '@teambit/api-reference.renderers.schema-nodes-index';
 
 import { extractCodeBlock } from './extract-code-block';

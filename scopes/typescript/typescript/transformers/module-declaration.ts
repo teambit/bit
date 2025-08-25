@@ -1,8 +1,9 @@
-import ts, { Node, ModuleDeclaration } from 'typescript';
+import type { Node, ModuleDeclaration } from 'typescript';
+import ts from 'typescript';
 import { UnImplementedSchema } from '@teambit/semantics.entities.semantic-schema';
-import { SchemaTransformer } from '../schema-transformer';
-import { SchemaExtractorContext } from '../schema-extractor-context';
-import { Identifier } from '../identifier';
+import type { SchemaTransformer } from '../schema-transformer';
+import type { SchemaExtractorContext } from '../schema-extractor-context';
+import type { Identifier } from '../identifier';
 
 export class ModuleDeclarationTransformer implements SchemaTransformer {
   predicate(node: Node) {

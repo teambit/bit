@@ -37,7 +37,6 @@ describe('makeOutdatedPkgChoices', () => {
     ]);
     // Removing the ansi chars for better work on bit build on ci
     const stripped = stripAnsiFromChoices(choices);
-    // @ts-ignore
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     expect(stripped).to.deep.equal(orderedChoices);
   });
@@ -62,7 +61,6 @@ describe('makeOutdatedPkgChoices', () => {
     ]);
     // Removing the ansi chars for better work on bit build on ci
     const stripped = stripAnsiFromChoices(choices);
-    // @ts-ignore
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     expect(stripped).to.deep.equal(contextOrders);
   });

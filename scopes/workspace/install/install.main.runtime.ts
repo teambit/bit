@@ -2,39 +2,44 @@ import pFilter from 'p-filter';
 import fs, { pathExists } from 'fs-extra';
 import path from 'path';
 import { getRootComponentDir, linkPkgsToRootComponents } from '@teambit/workspace.root-components';
-import { CompilerMain, CompilerAspect, CompilationInitiator } from '@teambit/compiler';
-import { CLIMain, CommandList, CLIAspect, MainRuntime } from '@teambit/cli';
+import type { CompilerMain } from '@teambit/compiler';
+import { CompilerAspect, CompilationInitiator } from '@teambit/compiler';
+import type { CLIMain, CommandList } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import chalk from 'chalk';
 import yesno from 'yesno';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { compact, mapValues, omit, uniq, intersection, groupBy } from 'lodash';
-import { ProjectManifest } from '@pnpm/types';
-import { GenerateResult, GeneratorAspect, GeneratorMain } from '@teambit/generator';
+import type { ProjectManifest } from '@pnpm/types';
+import type { GenerateResult, GeneratorMain } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { ApplicationMain, ApplicationAspect } from '@teambit/application';
-import { VariantsMain, VariantsAspect } from '@teambit/variants';
-import { Component, ComponentID, ComponentMap } from '@teambit/component';
+import type { ApplicationMain } from '@teambit/application';
+import { ApplicationAspect } from '@teambit/application';
+import type { VariantsMain } from '@teambit/variants';
+import { VariantsAspect } from '@teambit/variants';
+import type { Component } from '@teambit/component';
+import { ComponentID, ComponentMap } from '@teambit/component';
 import { PackageJsonFile } from '@teambit/component.sources';
 import { createLinks } from '@teambit/dependencies.fs.linked-dependencies';
 import pMapSeries from 'p-map-series';
-import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
+import type { Harmony, SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import { type DependenciesGraph } from '@teambit/objects';
-import {
-  CodemodResult,
-  linkToNodeModulesWithCodemod,
-  NodeModulesLinksResult,
-} from '@teambit/workspace.modules.node-modules-linker';
-import { EnvsMain, EnvsAspect } from '@teambit/envs';
-import { IpcEventsAspect, IpcEventsMain } from '@teambit/ipc-events';
+import type { CodemodResult, NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
+import { linkToNodeModulesWithCodemod } from '@teambit/workspace.modules.node-modules-linker';
+import type { EnvsMain } from '@teambit/envs';
+import { EnvsAspect } from '@teambit/envs';
+import type { IpcEventsMain } from '@teambit/ipc-events';
+import { IpcEventsAspect } from '@teambit/ipc-events';
 import { IssuesClasses } from '@teambit/component-issues';
-import {
+import type {
   GetComponentManifestsOptions,
   WorkspaceDependencyLifecycleType,
   DependencyResolverMain,
   DependencyInstaller,
-  DependencyResolverAspect,
   PackageManagerInstallOptions,
-  ComponentDependency,
   WorkspacePolicyEntry,
   LinkingOptions,
   LinkResults,
@@ -43,14 +48,21 @@ import {
   WorkspacePolicy,
   UpdatedComponent,
 } from '@teambit/dependency-resolver';
-import { WorkspaceConfigFilesAspect, WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { IssuesAspect, IssuesMain } from '@teambit/issues';
+import { DependencyResolverAspect, ComponentDependency } from '@teambit/dependency-resolver';
+import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
+import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { IssuesMain } from '@teambit/issues';
+import { IssuesAspect } from '@teambit/issues';
 import { snapToSemver } from '@teambit/component-package-version';
-import { AspectDefinition, AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
+import type { AspectDefinition, AspectLoaderMain } from '@teambit/aspect-loader';
+import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import hash from 'object-hash';
-import { BundlerAspect, BundlerMain } from '@teambit/bundler';
-import { UIAspect, UiMain } from '@teambit/ui';
+import type { BundlerMain } from '@teambit/bundler';
+import { BundlerAspect } from '@teambit/bundler';
+import type { UiMain } from '@teambit/ui';
+import { UIAspect } from '@teambit/ui';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
@@ -897,12 +909,8 @@ export class InstallMain {
   ): Promise<Record<string, ProjectManifest>> {
     const nonRootManifests = Object.values(manifests).filter(({ name }) => name !== 'workspace');
     const workspaceDeps = this.dependencyResolver.getWorkspaceDepsOfBitRoots(nonRootManifests);
-    const workspaceDepsMeta = Object.keys(workspaceDeps).reduce((acc, depName) => {
-      acc[depName] = { injected: true };
-      return acc;
-    }, {});
-    const envManifests = await this._getEnvManifests(workspaceDeps, workspaceDepsMeta);
-    const appManifests = await this._getAppManifests(manifests, workspaceDeps, workspaceDepsMeta);
+    const envManifests = await this._getEnvManifests(workspaceDeps);
+    const appManifests = await this._getAppManifests(manifests, workspaceDeps);
     return {
       ...envManifests,
       ...appManifests,
@@ -910,8 +918,7 @@ export class InstallMain {
   }
 
   private async _getEnvManifests(
-    workspaceDeps: Record<string, string>,
-    workspaceDepsMeta: Record<string, { injected: true }>
+    workspaceDeps: Record<string, string>
   ): Promise<Record<string, ProjectManifest>> {
     const envs = await this._getAllUsedEnvIds();
     return Object.fromEntries(
@@ -925,7 +932,6 @@ export class InstallMain {
                 ...workspaceDeps,
                 ...(await this._getEnvPackage(envId)),
               },
-              dependenciesMeta: workspaceDepsMeta,
               installConfig: {
                 hoistingLimits: 'workspaces',
               },
@@ -966,8 +972,7 @@ export class InstallMain {
 
   private async _getAppManifests(
     manifests: Record<string, ProjectManifest>,
-    workspaceDeps: Record<string, string>,
-    workspaceDepsMeta: Record<string, { injected: true }>
+    workspaceDeps: Record<string, string>
   ): Promise<Record<string, ProjectManifest>> {
     return Object.fromEntries(
       compact(
@@ -985,10 +990,6 @@ export class InstallMain {
                   ...(await this._getEnvDependencies(envId)),
                   ...appManifest.dependencies,
                   ...workspaceDeps,
-                },
-                dependenciesMeta: {
-                  ...appManifest.dependenciesMeta,
-                  ...workspaceDepsMeta,
                 },
                 installConfig: {
                   hoistingLimits: 'workspaces',

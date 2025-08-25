@@ -1,6 +1,8 @@
 import React from 'react';
-import { APINodeRenderProps, APINodeRenderer, nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
-import { InferenceTypeSchema, ParameterSchema, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
+import type { APINodeRenderProps, APINodeRenderer } from '@teambit/api-reference.models.api-node-renderer';
+import { nodeStyles } from '@teambit/api-reference.models.api-node-renderer';
+import type { InferenceTypeSchema } from '@teambit/semantics.entities.semantic-schema';
+import { ParameterSchema, TypeRefSchema } from '@teambit/semantics.entities.semantic-schema';
 import { TableRow } from '@teambit/documenter.ui.table-row';
 import { HeadingRow } from '@teambit/documenter.ui.table-heading-row';
 

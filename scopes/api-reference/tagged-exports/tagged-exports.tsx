@@ -5,7 +5,8 @@ import { useAPI } from '@teambit/api-reference.hooks.use-api';
 import { BlockSkeleton, WordSkeleton, CircleSkeleton } from '@teambit/base-ui.loaders.skeleton';
 import { useAPIRefRenderers } from '@teambit/api-reference.hooks.use-api-renderers';
 import { APIReferenceTableOfContents } from '@teambit/api-reference.overview.api-reference-table-of-contents';
-import { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
+import type { APIReferenceModel } from '@teambit/api-reference.models.api-reference-model';
+import { useThemePicker } from '@teambit/base-react.themes.theme-switcher';
 
 import styles from './tagged-exports.module.scss';
 
@@ -18,7 +19,7 @@ export function TaggedExports({ componentId, showBanner, ...rest }: TaggedExport
   const renderers = useAPIRefRenderers();
   const api = useAPI(componentId, renderers.nodeRenderers);
   const showTableOfContents = api.apiModel?.taggedAPINodes.length === 0;
-
+  const theme = useThemePicker();
   const taggedAPIs = api.apiModel?.taggedAPINodes;
   const loading = !!api.loading;
 
@@ -44,7 +45,13 @@ export function TaggedExports({ componentId, showBanner, ...rest }: TaggedExport
     <Section {...rest} className={styles.section}>
       <LinkedHeading className={styles.heading} size={'sm'}>
         <div className={styles.title}>
-          <img style={{ width: 24 }} src="https://static.bit.dev/bit-icons/api-ref.svg" />
+          <img
+            style={{
+              width: 24,
+              filter: theme.current?.themeName === 'dark' ? 'invert(1) brightness(0.9)' : undefined,
+            }}
+            src="https://static.bit.dev/bit-icons/api-ref.svg"
+          />
           <span>API</span>
         </div>
       </LinkedHeading>

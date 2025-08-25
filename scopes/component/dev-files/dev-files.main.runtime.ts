@@ -1,17 +1,22 @@
-import { SourceFile } from '@teambit/component.sources';
+import type { SourceFile } from '@teambit/component.sources';
 import { MainRuntime } from '@teambit/cli';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import type { ScopeMain } from '@teambit/scope';
+import { ScopeAspect } from '@teambit/scope';
 import { flatten, isFunction } from 'lodash';
-import { SlotRegistry, Slot } from '@teambit/harmony';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
 import { EnvsAspect } from '@teambit/envs';
 import type { EnvJsonc, EnvsMain } from '@teambit/envs';
-import {
+import type {
   ConsumerComponent as LegacyComponent,
   Dependency as LegacyDependency,
 } from '@teambit/legacy.consumer-component';
-import { Component, ComponentMain, ComponentAspect } from '@teambit/component';
-import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import type { Component, ComponentMain } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
+import type { GraphqlMain } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
 import { DevFilesAspect } from './dev-files.aspect';
 import { DevFiles } from './dev-files';
 import { DevFilesFragment } from './dev-files.fragment';

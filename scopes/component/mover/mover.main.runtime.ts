@@ -1,13 +1,16 @@
 import fs from 'fs-extra';
 import { isAbsolute } from 'path';
 import { BitError } from '@teambit/bit-error';
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { isEmpty } from 'lodash';
-import { WorkspaceAspect, Workspace } from '@teambit/workspace';
-import { isDir, PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy.utils';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect } from '@teambit/workspace';
+import type { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy.utils';
+import { isDir } from '@teambit/legacy.utils';
 import { linkToNodeModulesByIds } from '@teambit/workspace.modules.node-modules-linker';
-import { PathChangeResult } from '@teambit/legacy.bit-map';
-import { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
+import type { PathChangeResult } from '@teambit/legacy.bit-map';
+import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { RemovePath } from '@teambit/component.sources';
 import { MoverAspect } from './mover.aspect';
 import { MoveCmd } from './move-cmd';
@@ -61,7 +64,6 @@ to change the main-file, use "bit add <component-dir> --main <new-main-file>"`);
     componentMap.updateDirLocation(oldPathRelative, newPathRelative);
     consumer.bitMap.markAsChanged();
     component.dataToPersist.files.forEach((file) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const newRelative = file.relative.replace(oldPathRelative, newPathRelative);
       file.updatePaths({ newRelative, newBase: newPathRelative });
     });

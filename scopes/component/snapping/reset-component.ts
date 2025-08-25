@@ -1,12 +1,12 @@
 import { BitError } from '@teambit/bit-error';
-import { ComponentID } from '@teambit/component-id';
-import { Consumer } from '@teambit/legacy.consumer';
+import type { ComponentID } from '@teambit/component-id';
+import type { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import { logger } from '@teambit/legacy.logger';
-import { Lane, ModelComponent } from '@teambit/objects';
-import { RemoveMain } from '@teambit/remove';
+import type { Lane, ModelComponent } from '@teambit/objects';
+import type { RemoveMain } from '@teambit/remove';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import { Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
 
 export type ResetResult = {
   id: ComponentID;

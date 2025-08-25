@@ -1,7 +1,7 @@
 import React from 'react';
-import { Section } from '@teambit/component';
+import type { Section } from '@teambit/component';
 import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
-import { ChangeLogUI } from './changelog.ui.runtime';
+import type { ChangeLogUI } from './changelog.ui.runtime';
 
 export class ChangelogSection implements Section {
   constructor(private ui: ChangeLogUI) {}

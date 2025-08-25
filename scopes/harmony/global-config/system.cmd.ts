@@ -1,5 +1,5 @@
 // eslint-disable-next-line max-classes-per-file
-import { Command, CommandOptions } from '@teambit/cli';
+import type { Command, CommandOptions } from '@teambit/cli';
 import fs from 'fs-extra';
 import chalk from 'chalk';
 import cp from 'child_process';

@@ -1,7 +1,9 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component } from '@teambit/component';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Component } from '@teambit/component';
 import { IssuesClasses, IssuesList } from '@teambit/component-issues';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import pMapSeries from 'p-map-series';
 import { ComponentIssuesCmd } from './issues-cmd';
 import { IssuesAspect } from './issues.aspect';

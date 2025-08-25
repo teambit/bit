@@ -4,21 +4,24 @@ import { LoggerAspect, type LoggerMain, type Logger } from '@teambit/logger';
 import { WorkspaceAspect, type Workspace } from '@teambit/workspace';
 import { BuilderAspect, type BuilderMain } from '@teambit/builder';
 import { StatusAspect, type StatusMain } from '@teambit/status';
-import { LanesAspect, type LanesMain } from '@teambit/lanes';
-import { SnappingAspect, SnapResults, tagResultOutput, snapResultOutput, type SnappingMain } from '@teambit/snapping';
+import { LanesAspect } from '@teambit/lanes';
+import type { SwitchLaneOptions, LanesMain } from '@teambit/lanes';
+import { SnappingAspect, tagResultOutput, snapResultOutput } from '@teambit/snapping';
+import type { SnapResults, SnappingMain } from '@teambit/snapping';
 import { ExportAspect, type ExportMain } from '@teambit/export';
 import { ImporterAspect, type ImporterMain } from '@teambit/importer';
 import { CheckoutAspect, checkoutOutput, type CheckoutMain } from '@teambit/checkout';
-import { SwitchLaneOptions } from '@teambit/lanes';
+import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import execa from 'execa';
 import chalk from 'chalk';
-import { ReleaseType } from 'semver';
+import type { ReleaseType } from 'semver';
 import { CiAspect } from './ci.aspect';
 import { CiCmd } from './ci.cmd';
 import { CiVerifyCmd } from './commands/verify.cmd';
 import { CiPrCmd } from './commands/pr.cmd';
 import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
+import { ComponentIdList } from '@teambit/component-id';
 
 export interface CiWorkspaceConfig {
   /**
@@ -290,22 +293,21 @@ export class CiMain {
 
   private async switchToLane(laneName: string, options: SwitchLaneOptions = {}) {
     this.logger.console(chalk.blue(`Switching to ${laneName}`));
-    await this.lanes
-      .switchLanes(laneName, {
+    try {
+      await this.lanes.switchLanes(laneName, {
         forceOurs: true,
         head: true,
         workspaceOnly: true,
         skipDependencyInstallation: true,
         ...options,
-      })
-      .catch((e) => {
-        if (e.toString().includes('already checked out')) {
-          this.logger.console(chalk.yellow(`Lane ${laneName} already checked out, skipping checkout`));
-          return true;
-        }
-        this.logger.console(chalk.red(`Failed to checkout lane ${laneName}: ${e.toString()}`));
-        return null;
       });
+    } catch (e: any) {
+      if (e.toString().includes('already checked out')) {
+        this.logger.console(chalk.yellow(`Lane ${laneName} already checked out, skipping checkout`));
+        return true;
+      }
+      this.logger.console(chalk.red(`Failed switching to ${laneName}: ${e.toString()}`));
+    }
   }
 
   async verifyWorkspaceStatus() {
@@ -455,6 +457,10 @@ export class CiMain {
     preReleaseId,
     incrementBy,
     explicitVersionBump,
+    verbose,
+    versionsFile,
+    autoMergeResolve,
+    forceTheirs,
   }: {
     message?: string;
     build?: boolean;
@@ -463,6 +469,10 @@ export class CiMain {
     preReleaseId?: string;
     incrementBy?: number;
     explicitVersionBump?: boolean;
+    verbose?: boolean;
+    versionsFile?: string;
+    autoMergeResolve?: MergeStrategy;
+    forceTheirs?: boolean;
   }) {
     const message = argMessage || (await this.getGitCommitMessage());
     if (!message) {
@@ -475,6 +485,18 @@ export class CiMain {
       // out to main lane.
       this.logger.console(chalk.blue(`Currently on lane ${currentLane.name}, switching to main`));
       await this.switchToLane('main');
+      // this is needed to make sure components that were created on the lane are now available on main.
+      // without this, the switch to main above, marks those components as not-available, and won't be tagged later on.
+      // don't use the high-level `consumer.resetLaneNew()`, because it deletes the entire local scope.
+      const changedIds = this.workspace.consumer.bitMap.resetLaneComponentsToNew();
+      if (changedIds.length) {
+        const changedIdsList = ComponentIdList.fromArray(changedIds);
+        await this.workspace.scope.legacyScope.removeMany(changedIdsList, true);
+
+        await this.workspace.clearCache();
+        await this.workspace.bitMap.write('reset lane new');
+      }
+
       this.logger.console(chalk.green('Switched to main lane'));
     }
 
@@ -505,15 +527,38 @@ export class CiMain {
     await this.importer.importCurrentObjects();
 
     const checkoutProps = {
-      ids: this.workspace.listIds(),
-      forceOurs: true,
+      forceOurs: !forceTheirs && !autoMergeResolve, // only force ours if neither forceTheirs nor autoMergeResolve is specified
       head: true,
       skipNpmInstall: true,
+      ...(forceTheirs && { forceTheirs }),
+      ...(autoMergeResolve && { mergeStrategy: autoMergeResolve }),
     };
     const checkoutResults = await this.checkout.checkout(checkoutProps);
     await this.workspace.bitMap.write('checkout head');
-    // all: true is to make it less verbose in the output. this workaround will be fixed later.
-    this.logger.console(checkoutOutput(checkoutResults, { ...checkoutProps, all: true }));
+    this.logger.console(checkoutOutput(checkoutResults, checkoutProps));
+
+    // Check for conflicts when using manual merge strategy
+    if (autoMergeResolve === 'manual' && checkoutResults.leftUnresolvedConflicts) {
+      const componentsWithConflicts =
+        checkoutResults.components?.filter(
+          (c) => c.filesStatus && Object.values(c.filesStatus).some((status) => status === 'manual')
+        ) || [];
+
+      const conflictedComponentIds = componentsWithConflicts.map((c) => c.id.toString());
+
+      this.logger.console(chalk.red('❌ Merge conflicts detected during checkout'));
+      this.logger.console(chalk.yellow('The following components have conflicts:'));
+      conflictedComponentIds.forEach((id) => {
+        this.logger.console(chalk.yellow(`  - ${id}`));
+      });
+      this.logger.console(chalk.blue('\nTo resolve these conflicts, please run:'));
+      this.logger.console(chalk.bold('  bit checkout head'));
+      this.logger.console(chalk.gray('\nThis will allow you to manually resolve the conflicts.'));
+
+      throw new Error(
+        'Cannot complete CI merge due to unresolved conflicts. Please resolve conflicts manually and try again.'
+      );
+    }
 
     const { status } = await this.verifyWorkspaceStatusInternal(strict);
 
@@ -531,6 +576,7 @@ export class CiMain {
       releaseType: finalReleaseType,
       preReleaseId,
       incrementBy,
+      versionsFile,
     });
 
     if (tagResults) {
@@ -564,8 +610,23 @@ export class CiMain {
         this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
       });
 
-      // Commit the .bitmap and pnpm-lock.yaml files using Git
-      await git.add(['.bitmap', 'pnpm-lock.yaml']);
+      // Show git diff if there are uncommitted changes
+      if (verbose && statusBeforeCommit.files.length > 0) {
+        try {
+          const diff = await git.diff();
+          if (diff) {
+            this.logger.console(chalk.blue('Git diff before commit:'));
+            this.logger.console(diff);
+          }
+        } catch (error) {
+          this.logger.console(chalk.yellow(`Failed to show git diff: ${error}`));
+        }
+      }
+
+      // Previously we committed only .bitmap and pnpm-lock.yaml files.
+      // However, it's possible that "bit checkout head" we did above, modified other files as well.
+      // So now we commit all files that were changed.
+      await git.add(['.']);
 
       const commitMessage = await this.getCustomCommitMessage();
       await git.commit(commitMessage);
@@ -577,22 +638,7 @@ export class CiMain {
         this.logger.console(chalk.gray(`  ${file.working_dir}${file.index} ${file.path}`));
       });
 
-      // Pull latest changes and push the commit to the remote repository
-      // Check if there are any unstaged changes before pulling
-      const hasUnstagedChanges = statusAfterCommit.files.length > 0;
-
-      if (hasUnstagedChanges) {
-        this.logger.console(chalk.yellow('Stashing uncommitted changes before final rebase'));
-        await git.stash(['push', '-u', '-m', 'CI merge post-commit stash']);
-      }
-
       await git.pull('origin', defaultBranch, { '--rebase': 'true' });
-
-      if (hasUnstagedChanges) {
-        this.logger.console(chalk.yellow('Restoring stashed changes after final rebase'));
-        await git.stash(['pop']);
-      }
-
       await git.push('origin', defaultBranch);
     } else {
       this.logger.console(chalk.yellow('No components were tagged, skipping export and git operations'));
@@ -602,10 +648,11 @@ export class CiMain {
 
     if (currentLane) {
       this.logger.console('🗑️ Lane Cleanup');
-      const laneId = currentLane.id;
-      this.logger.console(chalk.blue(`Archiving lane ${laneId.toString()}`));
-      const archiveLane = await this.lanes.removeLanes([laneId()]);
-      if (archiveLane) {
+      const laneId = currentLane.id();
+      this.logger.console(chalk.blue(`Archiving lane ${laneId}`));
+      // force means to remove the lane even if it was not merged. in this case, we don't care much because main already has the changes.
+      const archiveLane = await this.lanes.removeLanes([laneId], { remote: true, force: true });
+      if (archiveLane.length) {
         this.logger.console(chalk.green('Lane archived'));
       } else {
         this.logger.console(chalk.yellow('Failed to archive lane'));
@@ -639,5 +686,4 @@ export class CiMain {
   }
 }
 
-// @ts-ignore
 CiAspect.addRuntime(CiMain);

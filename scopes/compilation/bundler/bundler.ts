@@ -1,4 +1,4 @@
-import { Component } from '@teambit/component';
+import type { Component } from '@teambit/component';
 
 export interface DevServer {
   start(): void;

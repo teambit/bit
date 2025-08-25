@@ -1,10 +1,11 @@
 /* eslint-disable complexity */
-import React, { IframeHTMLAttributes, useState, useRef, useEffect } from 'react';
+import type { IframeHTMLAttributes } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import classNames from 'classnames';
 import { compact } from 'lodash';
 import { connectToChild } from 'penpal';
 import { usePubSubIframe } from '@teambit/pubsub';
-import { ComponentModel } from '@teambit/component';
+import type { ComponentModel } from '@teambit/component';
 import { ERROR_EVENT, LOAD_EVENT } from '@teambit/ui-foundation.ui.rendering.html';
 import { toPreviewUrl } from './urls';
 import { computePreviewScale } from './compute-preview-scale';
@@ -117,6 +118,7 @@ export function ComponentPreview({
   const containerRef = useRef<HTMLDivElement>(null);
   const isScaling = component.preview?.isScaling;
   const currentRef = isScaling ? iframeRef : heightIframeRef;
+  const [forceVisible, setForceVisible] = useState(false);
   // @ts-ignore (https://github.com/frenic/csstype/issues/156)
   // const height = iframeHeight || style?.height;
   usePubSubIframe(pubsub ? currentRef : undefined);
@@ -132,7 +134,7 @@ export function ComponentPreview({
       if (event.data && (event.data.event === ERROR_EVENT || event.data.event === 'AI_FIX_REQUEST')) {
         const errorData = event.data.payload;
         onPreviewError?.(errorData);
-
+        setForceVisible(true);
         if (propagateError && window.parent && window !== window.parent) {
           try {
             window.parent.postMessage(
@@ -208,8 +210,8 @@ export function ComponentPreview({
           ...style,
           height: forceHeight || (isScaling ? finalHeight + innerBottomPadding : legacyIframeHeight),
           width: isScaling ? targetWidth : legacyCurrentWidth,
-          visibility: width === 0 && isScaling && !fullContentHeight ? 'hidden' : undefined,
-          transform: fullContentHeight ? '' : computePreviewScale(width, containerWidth),
+          visibility: width === 0 && isScaling && !fullContentHeight && !forceVisible ? 'hidden' : undefined,
+          transform: fullContentHeight ? '' : computePreviewScale(width || 1280, containerWidth),
           border: 0,
           transformOrigin: 'top left',
         }}

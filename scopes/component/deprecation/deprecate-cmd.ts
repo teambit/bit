@@ -1,6 +1,6 @@
 import chalk from 'chalk';
-import { Command, CommandOptions } from '@teambit/cli';
-import { DeprecationMain } from './deprecation.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { DeprecationMain } from './deprecation.main.runtime';
 
 export class DeprecateCmd implements Command {
   name = 'deprecate <component-name>';

@@ -1,29 +1,32 @@
-import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { WorkspaceAspect, OutsideWorkspaceError, Workspace } from '@teambit/workspace';
+import type { CLIMain } from '@teambit/cli';
+import { CLIAspect, MainRuntime } from '@teambit/cli';
+import type { Logger, LoggerMain } from '@teambit/logger';
+import { LoggerAspect } from '@teambit/logger';
+import type { Workspace } from '@teambit/workspace';
+import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import { BitError } from '@teambit/bit-error';
 import { compact } from 'lodash';
-import { RemoveAspect, RemoveMain } from '@teambit/remove';
-import {
-  ApplyVersionResults,
-  FailedComponents,
-  threeWayMerge,
-  getMergeStrategyInteractive,
-  MergeStrategy,
-} from '@teambit/merging';
-import { ImporterAspect, ImporterMain } from '@teambit/importer';
+import type { RemoveMain } from '@teambit/remove';
+import { RemoveAspect } from '@teambit/remove';
+import type { ApplyVersionResults, FailedComponents, MergeStrategy } from '@teambit/component.modules.merge-helper';
+import { threeWayMerge, getMergeStrategyInteractive } from '@teambit/component.modules.merge-helper';
+import type { ImporterMain } from '@teambit/importer';
+import { ImporterAspect } from '@teambit/importer';
 import { HEAD, LATEST } from '@teambit/legacy.constants';
-import { ComponentWriterAspect, ComponentWriterMain } from '@teambit/component-writer';
+import type { ComponentWriterMain } from '@teambit/component-writer';
+import { ComponentWriterAspect } from '@teambit/component-writer';
 import mapSeries from 'p-map-series';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import { Version, ModelComponent, Lane } from '@teambit/objects';
+import type { Version, Lane } from '@teambit/objects';
+import { ModelComponent } from '@teambit/objects';
 import { Tmp } from '@teambit/legacy.scope';
 import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 import { CheckoutCmd } from './checkout-cmd';
 import { CheckoutAspect } from './checkout.aspect';
-import { applyVersion, ComponentStatus, ComponentStatusBase, throwForFailures } from './checkout-version';
+import type { ComponentStatus, ComponentStatusBase } from './checkout-version';
+import { applyVersion, throwForFailures } from './checkout-version';
 import { RevertCmd } from './revert-cmd';
-import { ComponentMap } from '@teambit/legacy.bit-map';
+import type { ComponentMap } from '@teambit/legacy.bit-map';
 
 export type CheckoutProps = {
   version?: string; // if reset/head/latest is true, the version is undefined
@@ -70,13 +73,13 @@ export class CheckoutMain {
   ) {}
 
   async checkout(checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
+    await this.ensureCheckoutConfiguration(checkoutProps);
     this.workspace.inInstallContext = true;
-    const consumer = this.workspace.consumer;
     const { version, ids, promptMergeOptions } = checkoutProps;
     await this.syncNewComponents(checkoutProps);
     const addedComponents = await this.restoreMissingComponents(checkoutProps);
     const newComponents = await this.addNewComponents(checkoutProps);
-    const bitIds = ComponentIdList.fromArray(ids?.map((id) => id) || []);
+    const bitIds = ComponentIdList.fromArray(ids || []);
     // don't use Promise.all, it loads the components and this operation must be in sequence.
     const allComponentStatusBeforeMerge = await mapSeries(bitIds, (id) =>
       this.getComponentStatusBeforeMergeAttempt(id, checkoutProps)
@@ -99,7 +102,7 @@ export class CheckoutMain {
       cache: true,
       lane: checkoutProps.lane,
     });
-
+    const consumer = this.workspace.consumer;
     const getComponentsStatusOfMergeNeeded = async (): Promise<ComponentStatus[]> => {
       const tmp = new Tmp(consumer.scope);
       try {
@@ -307,7 +310,37 @@ export class CheckoutMain {
     this.workspace.bitMap.makeComponentsAvailableOnMain(unavailableOnMain);
   }
 
+  private async ensureCheckoutConfiguration(checkoutProps: CheckoutProps) {
+    if (checkoutProps.reset || checkoutProps.head) {
+      checkoutProps.includeLocallyDeleted = true;
+    }
+    if (checkoutProps.ids?.length) {
+      return;
+    }
+    if (checkoutProps.head || checkoutProps.latest) {
+      checkoutProps.all = true;
+    }
+    if (!checkoutProps.all) {
+      return; // no ids and no all.
+    }
+    const idsOnWorkspace = checkoutProps.includeLocallyDeleted
+      ? this.workspace.listIdsIncludeRemoved()
+      : this.workspace.listIds();
+
+    const currentLane = await this.workspace.consumer.getCurrentLaneObject();
+    const currentLaneIds = currentLane?.toComponentIds();
+
+    // When on a lane and doing head checkout, only checkout lane components
+    const ids =
+      currentLaneIds && checkoutProps.head
+        ? idsOnWorkspace.filter((id) => currentLaneIds.hasWithoutVersion(id))
+        : idsOnWorkspace;
+
+    checkoutProps.ids = ids.map((id) => (checkoutProps.head || checkoutProps.latest ? id.changeVersion(LATEST) : id));
+  }
+
   private async parseValues(componentPattern: string, checkoutProps: CheckoutProps) {
+    // CLI-specific validations and deprecation warnings
     if (checkoutProps.head && !componentPattern) {
       if (checkoutProps.all) {
         this.logger.console(`"--all" is deprecated for "bit checkout ${HEAD}", please omit it.`);

@@ -1,6 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
-import { Command, CommandOptions } from '@teambit/cli';
-import { ApiServerMain } from './api-server.main.runtime';
+import type { Command, CommandOptions } from '@teambit/cli';
+import type { ApiServerMain } from './api-server.main.runtime';
 
 export class ServerCmd implements Command {
   name = 'server';

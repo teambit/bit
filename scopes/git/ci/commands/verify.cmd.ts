@@ -1,7 +1,7 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
 import { OutsideWorkspaceError, type Workspace } from '@teambit/workspace';
-import { CiMain } from '../ci.main.runtime';
+import type { CiMain } from '../ci.main.runtime';
 
 export class CiVerifyCmd implements Command {
   name = 'verify';

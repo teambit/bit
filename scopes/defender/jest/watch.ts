@@ -1,5 +1,5 @@
-import { Prompt, WatchPlugin, JestHookSubscriber, UsageData } from 'jest-watcher';
-import { SpecFiles } from '@teambit/tester';
+import type { Prompt, WatchPlugin, JestHookSubscriber, UsageData } from 'jest-watcher';
+import type { SpecFiles } from '@teambit/tester';
 
 export type PluginConfig = {
   onComplete: (testSuite: any) => void;

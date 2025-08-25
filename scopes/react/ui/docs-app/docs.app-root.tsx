@@ -1,4 +1,4 @@
-import { DocsRootProps } from '@teambit/docs';
+import type { DocsRootProps } from '@teambit/docs';
 import React from 'react';
 import ReactDOM from 'react-dom';
 

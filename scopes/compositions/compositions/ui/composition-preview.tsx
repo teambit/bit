@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { ComponentPreview, ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
+import type { ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
+import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
 
-import { Composition } from '../composition';
+import type { Composition } from '../composition';
 
 export type ComponentCompositionProps = {
   /**

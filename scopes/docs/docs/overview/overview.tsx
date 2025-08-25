@@ -1,22 +1,20 @@
 /* eslint-disable complexity */
-import React, { useContext, ComponentType, useState } from 'react';
+import type { ComponentType } from 'react';
+import React, { useContext, useState } from 'react';
 import classNames from 'classnames';
 import { flatten } from 'lodash';
 // import { Icon } from '@teambit/design.elements.icon';
 // import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { ComponentContext, useComponentDescriptor } from '@teambit/component';
 import type { SlotRegistry } from '@teambit/harmony';
-import {
-  ComponentPreview,
-  ComponentPreviewProps,
-  SandboxPermissionsAggregator,
-} from '@teambit/preview.ui.component-preview';
+import type { ComponentPreviewProps } from '@teambit/preview.ui.component-preview';
+import { ComponentPreview, SandboxPermissionsAggregator } from '@teambit/preview.ui.component-preview';
 // import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { ComponentOverview } from '@teambit/component.ui.component-meta';
 import { CompositionGallery, CompositionGallerySkeleton } from '@teambit/compositions.panels.composition-gallery';
 import { useThemePicker } from '@teambit/base-react.themes.theme-switcher';
 import { useWorkspaceMode } from '@teambit/workspace.ui.use-workspace-mode';
-import { UsePreviewSandboxSlot } from '@teambit/compositions';
+import type { UsePreviewSandboxSlot } from '@teambit/compositions';
 import { ReadmeSkeleton } from './readme-skeleton';
 import styles from './overview.module.scss';
 
