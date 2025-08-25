@@ -22,6 +22,7 @@ type Options = {
   versionsFile?: string;
   autoMergeResolve?: MergeStrategy;
   forceTheirs?: boolean;
+  laneName?: string;
 };
 
 export class CiMergeCmd implements Command {
@@ -57,6 +58,7 @@ export class CiMergeCmd implements Command {
       'in case of merge conflict during checkout, resolve according to the provided strategy: [ours, theirs, manual]',
     ],
     ['', 'force-theirs', 'do not merge during checkout, just overwrite with incoming files'],
+    ['', 'lane-name <name>', 'specify the lane name to delete after merge (auto-detected if not provided)'],
   ];
 
   constructor(
@@ -99,6 +101,7 @@ export class CiMergeCmd implements Command {
       versionsFile: options.versionsFile,
       autoMergeResolve: options.autoMergeResolve,
       forceTheirs: options.forceTheirs,
+      laneName: options.laneName,
     });
   }
 }

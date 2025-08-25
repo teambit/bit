@@ -159,7 +159,7 @@ export class ExportCmd implements Command {
       const prefix = shouldOpenBrowser ? 'Your browser has been opened to the following link' : 'Visit the link below';
       const msg = `\n\n${prefix} to track the progress of building the components in the cloud\n`;
       if (shouldOpenBrowser) {
-        open(rippleJobUrls[0], { url: true }).catch(() => {
+        open(rippleJobUrls[0]).catch(() => {
           /** it's ok, the user is instructed to open the browser manually */
         });
       }

@@ -57,7 +57,7 @@ Learn the recommended workflow for tracking directories as components, in the li
 
 ### app run
 
-**Usage**: `app run <app-name>`
+**Usage**: `app run [app-name]`
 
 **Description**: locally run an app component (independent of bit's dev server)
 
@@ -71,6 +71,7 @@ Learn the recommended workflow for tracking directories as components, in the li
 | `--port [port-number]` |       `-p`       | port to run the app on                                                                                                                        |
 | `--verbose`            |       `-v`       | show verbose output for inspection and print stack trace                                                                                      |
 | `--watch`              |       `-w`       | watch and compile your components upon changes                                                                                                |
+| `--no-browser`         |       `-n`       | do not automatically open browser when ready                                                                                                  |
 | `--args <argv>`        |       `-a`       | the arguments passing to the app. for example, --args="--a=1 --b". don't forget to use quotes to wrap the value to escape special characters. |
 
 ---
@@ -391,6 +392,7 @@ when on a lane, "checkout head" only checks out components on this lane. to upda
 | `--verbose`                             |                  | show verbose output                                                                                           |
 | `--auto-merge-resolve <merge-strategy>` |       `-r`       | in case of merge conflict during checkout, resolve according to the provided strategy: [ours, theirs, manual] |
 | `--force-theirs`                        |                  | do not merge during checkout, just overwrite with incoming files                                              |
+| `--lane-name <name>`                    |                  | specify the lane name to delete after merge (auto-detected if not provided)                                   |
 
 ---
 
@@ -1675,17 +1677,18 @@ Creates or updates configuration files to integrate Bit MCP server with supporte
 **Usage**: `mcp-server rules [editor]`
 
 **Description**: Write Bit MCP rules/instructions file for VS Code, Cursor, Roo Code, Cline, Claude Code, or print to screen  
-Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, Roo Code, Cline, and Claude Code. For Claude Code, creates .claude/bit.md to avoid overwriting existing CLAUDE.md files. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.
+Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, Roo Code, Cline, and Claude Code. For Claude Code, creates .claude/bit.md to avoid overwriting existing CLAUDE.md files. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages. Use --force-standard to use standard Bit rules instead of Git-integrated template.
 
 | **Arg**  |                                         **Description**                                         |
 | -------- | :---------------------------------------------------------------------------------------------: |
 | `editor` | Editor to write rules for (default: vscode). Available: vscode, cursor, roo, cline, claude-code |
 
-| **Option**           | **Option alias** | **Description**                                                               |
-| -------------------- | :--------------: | ----------------------------------------------------------------------------- |
-| `--global`           |       `-g`       | Write rules to global configuration (default: workspace-specific)             |
-| `--print`            |       `-p`       | Print rules content to screen instead of writing to file                      |
-| `--consumer-project` |                  | Generate rules for consumer projects that only use Bit components as packages |
+| **Option**           | **Option alias** | **Description**                                                                            |
+| -------------------- | :--------------: | ------------------------------------------------------------------------------------------ |
+| `--global`           |       `-g`       | Write rules to global configuration (default: workspace-specific)                          |
+| `--print`            |       `-p`       | Print rules content to screen instead of writing to file                                   |
+| `--consumer-project` |                  | Generate rules for consumer projects that only use Bit components as packages              |
+| `--force-standard`   |                  | Use standard Bit rules template instead of Git-integrated template (even when .git exists) |
 
 | **Option**                        | **Option alias** | **Description**                                                                                                           |
 | --------------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------------- |
@@ -1969,7 +1972,7 @@ https://bit.dev/components/tags#undoing-a-tag
 **Alias**: `c`  
 **Description**: locally run an app component (independent of bit's dev server)
 
-`bit run <app-name>`
+`bit run [app-name]`
 
 | **Arg**    |                                           **Description**                                            |
 | ---------- | :--------------------------------------------------------------------------------------------------: |
@@ -1981,6 +1984,7 @@ https://bit.dev/components/tags#undoing-a-tag
 | `--port [port-number]` |       `-p`       | port to run the app on                                                                                                                        |
 | `--verbose`            |       `-v`       | show verbose output for inspection and print stack trace                                                                                      |
 | `--watch`              |       `-w`       | watch and compile your components upon changes                                                                                                |
+| `--no-browser`         |       `-n`       | do not automatically open browser when ready                                                                                                  |
 | `--args <argv>`        |       `-a`       | the arguments passing to the app. for example, --args="--a=1 --b". don't forget to use quotes to wrap the value to escape special characters. |
 
 ---
