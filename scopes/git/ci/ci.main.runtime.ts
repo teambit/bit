@@ -22,6 +22,7 @@ import { CiPrCmd } from './commands/pr.cmd';
 import { CiMergeCmd } from './commands/merge.cmd';
 import { git } from './git';
 import { ComponentIdList } from '@teambit/component-id';
+import { SourceBranchDetector } from './source-branch-detector';
 
 export interface CiWorkspaceConfig {
   /**
@@ -461,6 +462,7 @@ export class CiMain {
     versionsFile,
     autoMergeResolve,
     forceTheirs,
+    laneName,
   }: {
     message?: string;
     build?: boolean;
@@ -473,6 +475,7 @@ export class CiMain {
     versionsFile?: string;
     autoMergeResolve?: MergeStrategy;
     forceTheirs?: boolean;
+    laneName?: string;
   }) {
     const message = argMessage || (await this.getGitCommitMessage());
     if (!message) {
@@ -646,20 +649,97 @@ export class CiMain {
 
     this.logger.console(chalk.green('Merged PR'));
 
+    // Enhanced lane cleanup logic
+    await this.performLaneCleanup(currentLane, laneName);
+
+    return { code: 0, data: '' };
+  }
+
+  /**
+   * Performs lane cleanup by attempting to detect and delete the source lane
+   * after a successful merge, even when running on the main branch
+   */
+  private async performLaneCleanup(currentLane: any, explicitLaneName?: string) {
+    this.logger.console('🗑️ Lane Cleanup');
+
+    // If we already have a current lane, use it
     if (currentLane) {
-      this.logger.console('🗑️ Lane Cleanup');
+      this.logger.console(chalk.blue(`Found current lane: ${currentLane.name}`));
       const laneId = currentLane.id();
-      this.logger.console(chalk.blue(`Archiving lane ${laneId}`));
-      // force means to remove the lane even if it was not merged. in this case, we don't care much because main already has the changes.
-      const archiveLane = await this.lanes.removeLanes([laneId], { remote: true, force: true });
-      if (archiveLane.length) {
-        this.logger.console(chalk.green('Lane archived'));
-      } else {
-        this.logger.console(chalk.yellow('Failed to archive lane'));
+      await this.archiveLane(laneId, currentLane.name);
+      return;
+    }
+
+    // If no current lane but explicit lane name provided, try to delete it
+    if (explicitLaneName) {
+      this.logger.console(chalk.blue(`Using explicitly provided lane name: ${explicitLaneName}`));
+      try {
+        const laneId = await this.lanes.parseLaneId(explicitLaneName);
+        await this.archiveLane(laneId, explicitLaneName);
+        return;
+      } catch (e: any) {
+        this.logger.console(chalk.yellow(`Failed to parse lane name '${explicitLaneName}': ${e.message}`));
       }
     }
 
-    return { code: 0, data: '' };
+    // Try to auto-detect source branch/lane name using the dedicated detector
+    const sourceBranchDetector = new SourceBranchDetector(this.logger);
+    const sourceBranchName = await sourceBranchDetector.getSourceBranchName();
+    if (!sourceBranchName) {
+      this.logger.console(chalk.yellow('No current lane and unable to detect source branch - skipping lane cleanup'));
+      return;
+    }
+    try {
+      // First, try to find a matching lane using the branch name
+      const availableLanes = await this.lanes.getLanes({}).catch(() => []);
+      const matchingLane = availableLanes.find(
+        (lane) =>
+          lane.id.name === sourceBranchName ||
+          lane.id.name === `${sourceBranchName}` ||
+          lane.id.name.endsWith(`/${sourceBranchName}`)
+      );
+
+      if (matchingLane) {
+        this.logger.console(
+          chalk.blue(`Found matching lane for source branch '${sourceBranchName}': ${matchingLane.id.name}`)
+        );
+        await this.archiveLane(matchingLane.id, matchingLane.id.name);
+      } else {
+        // Try direct lane name parsing in case the branch name is a valid lane ID
+        try {
+          const laneId = await this.lanes.parseLaneId(sourceBranchName);
+          this.logger.console(chalk.blue(`Attempting to delete lane based on source branch: ${sourceBranchName}`));
+          await this.archiveLane(laneId, sourceBranchName);
+        } catch (e: any) {
+          this.logger.console(
+            chalk.yellow(`No matching lane found for source branch '${sourceBranchName}': ${e.message}`)
+          );
+        }
+      }
+    } catch (e: any) {
+      this.logger.console(
+        chalk.yellow(`Error during lane cleanup for source branch '${sourceBranchName}': ${e.message}`)
+      );
+    }
+  }
+
+  /**
+   * Archives (deletes) a lane with proper error handling and logging
+   */
+  private async archiveLane(laneId: any, laneName: string) {
+    try {
+      this.logger.console(chalk.blue(`Archiving lane ${laneName}`));
+      // force means to remove the lane even if it was not merged. in this case, we don't care much because main already has the changes.
+      const archiveLane = await this.lanes.removeLanes([laneId], { remote: true, force: true });
+      if (archiveLane.length) {
+        this.logger.console(chalk.green(`Lane '${laneName}' archived successfully`));
+      } else {
+        this.logger.console(chalk.yellow(`Failed to archive lane '${laneName}' - no lanes were removed`));
+      }
+    } catch (e: any) {
+      this.logger.console(chalk.red(`Error archiving lane '${laneName}': ${e.message}`));
+      // Don't throw the error - lane cleanup is not critical to the merge process
+    }
   }
 
   /**
