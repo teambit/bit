@@ -485,8 +485,24 @@ export class McpConfigWriter {
   /**
    * Get default Bit MCP rules content from template file
    */
-  static async getDefaultRulesContent(consumerProject: boolean = false): Promise<string> {
-    const templateName = consumerProject ? 'bit-rules-consumer-template.md' : 'bit-rules-template.md';
+  static async getDefaultRulesContent(consumerProject: boolean = false, workspaceDir?: string): Promise<string> {
+    // Determine the directory to check for Git
+    const targetDir = workspaceDir || process.cwd();
+
+    // Check if .git directory exists
+    const gitPath = path.join(targetDir, '.git');
+    const hasGit = await fs.pathExists(gitPath);
+
+    // Choose template based on consumer project status and Git presence
+    let templateName: string;
+    if (consumerProject) {
+      templateName = 'bit-rules-consumer-template.md';
+    } else if (hasGit) {
+      templateName = 'bit-git-rules-template.md';
+    } else {
+      templateName = 'bit-rules-template.md';
+    }
+
     const templatePath = path.join(__dirname, templateName);
     return fs.readFile(templatePath, 'utf8');
   }
@@ -504,7 +520,7 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir);
     await fs.writeFile(promptsPath, rulesContent);
   }
 
@@ -521,7 +537,7 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir);
     await fs.writeFile(promptsPath, rulesContent);
   }
 
@@ -538,7 +554,7 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir);
     await fs.writeFile(promptsPath, rulesContent);
   }
 
@@ -555,7 +571,7 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Write rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir);
     await fs.writeFile(promptsPath, rulesContent);
   }
 
@@ -572,7 +588,7 @@ export class McpConfigWriter {
     await fs.ensureDir(path.dirname(promptsPath));
 
     // Get base rules content
-    const rulesContent = await this.getDefaultRulesContent(consumerProject);
+    const rulesContent = await this.getDefaultRulesContent(consumerProject, workspaceDir);
 
     // Add integration instructions at the top
     const integrationInstructions = `<!--
