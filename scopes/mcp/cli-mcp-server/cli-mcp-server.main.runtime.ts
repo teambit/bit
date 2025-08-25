@@ -430,6 +430,9 @@ export class CliMcpServerMain {
       // Register the bit_component_details tool
       this.registerComponentDetailsTool(server);
 
+      // Register the bit_create tool
+      this.registerCreateTool(server);
+
       // Register command discovery and help tools
       this.registerCommandsListTool(server);
       this.registerCommandHelpTool(server);
@@ -961,6 +964,62 @@ export class CliMcpServerMain {
       } catch (error) {
         this.logger.error(`[MCP-DEBUG] Error in bit_component_details tool: ${(error as Error).message}`);
         return this.formatErrorAsCallToolResult(error as Error, 'getting component details');
+      }
+    });
+  }
+
+  private registerCreateTool(server: McpServer) {
+    const toolName = 'bit_create';
+    const description = 'Create a new component (source files and config) using a template.';
+    const schema: Record<string, any> = {
+      cwd: z.string().describe('Path to workspace directory'),
+      templateName: z
+        .string()
+        .describe('The template for generating the component (run "bit templates" for a list of available templates)'),
+      componentNames: z.array(z.string()).describe('A list of component names to generate'),
+      namespace: z.string().optional().describe("Sets the component's namespace and nested dirs inside the scope"),
+      scope: z
+        .string()
+        .optional()
+        .describe("Sets the component's scope-name. If not entered, the default-scope will be used"),
+      aspect: z
+        .string()
+        .optional()
+        .describe('Aspect-id of the template. Helpful when multiple aspects use the same template name'),
+      template: z.string().optional().describe('Env-id of the template. Alias for --aspect'),
+      path: z
+        .string()
+        .optional()
+        .describe('Relative path in the workspace. By default the path is <scope>/<namespace>/<name>'),
+      env: z
+        .string()
+        .optional()
+        .describe("Set the component's environment. (overrides the env from variants and the template)"),
+      force: z.boolean().optional().describe('Replace existing files at the target location'),
+    };
+
+    server.tool(toolName, description, schema, async (params: any) => {
+      try {
+        const args = params.componentNames;
+        const flags: Record<string, string | boolean> = {};
+
+        // Add optional flags
+        if (params.namespace) flags.namespace = params.namespace;
+        if (params.scope) flags.scope = params.scope;
+        if (params.aspect) flags.aspect = params.aspect;
+        if (params.template) flags.template = params.template;
+        if (params.path) flags.path = params.path;
+        if (params.env) flags.env = params.env;
+        if (params.force) flags.force = true;
+
+        // Add template name as first argument
+        const allArgs = [params.templateName, ...args];
+
+        const execution = await this.safeBitCommandExecution('create', allArgs, flags, params.cwd, 'create component');
+        return this.formatAsCallToolResult(execution.result);
+      } catch (error) {
+        this.logger.error(`[MCP-DEBUG] Error in bit_create tool: ${(error as Error).message}`);
+        return this.formatErrorAsCallToolResult(error as Error, 'creating component');
       }
     });
   }
