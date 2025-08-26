@@ -386,39 +386,30 @@ export class CiMain {
     let foundErr: Error | undefined;
     try {
       if (laneExists) {
-        const lane = await this.lanes.importLaneObject(laneId, true);
-        this.workspace.consumer.setCurrentLane(laneId, true);
-        const laneIds = lane.toComponentIds();
-        laneIds.forEach((compId) => this.workspace.consumer.bitMap.updateComponentId(compId));
-        await this.workspace.bitMap.write();
-        await this.importer.importCurrentObjects();
-
-        this.logger.console(chalk.green(`Imported lane ${laneId.toString()}`));
-      } else {
-        this.logger.console(chalk.blue(`Creating lane ${laneId.toString()}`));
-
-        try {
-          await this.lanes.createLane(laneId.name, {
-            scope: laneId.scope,
-            forkLaneNewScope: true,
-          });
-        } catch (e: any) {
-          if (e.message.includes('already exists')) {
-            this.logger.console(chalk.yellow(`Lane ${laneId.toString()} already exists, skipping creation`));
-          } else {
-            throw new Error(`Failed to create lane ${laneId.toString()}: ${e.toString()}`);
-          }
-        }
+        // When making subsequent commits on the same PR branch, the existing lane contains outdated
+        // configurations from when it was first created. Meanwhile, main may have progressed with
+        // config changes (e.g., components changed to different envs) that are stored in .bit objects
+        // but not tracked by git. By deleting and recreating the lane, we ensure it always starts
+        // fresh from main with all the latest configurations.
+        this.logger.console(chalk.blue(`Lane ${laneId.toString()} already exists, deleting and recreating it`));
+        await this.archiveLane(laneId.toString());
       }
+
+      // Create lane (either for the first time or after deletion)
+      this.logger.console(chalk.blue(`Creating lane ${laneId.toString()}`));
+      await this.lanes.createLane(laneId.name, {
+        scope: laneId.scope,
+        forkLaneNewScope: true,
+      });
 
       const currentLane = await this.lanes.getCurrentLane();
 
       this.logger.console(chalk.blue(`Current lane: ${currentLane?.name ?? 'main'}`));
 
-      if (currentLane?.name === laneId.name) {
-        this.logger.console(chalk.yellow(`Current lane is already ${laneId.name}, skipping switch`));
-      } else {
-        await this.switchToLane(laneId.toString());
+      if (currentLane?.name !== laneId.name) {
+        throw new Error(
+          `Expected to be on lane ${laneId.name} after creation, but current lane is ${currentLane?.name ?? 'main'}`
+        );
       }
 
       this.logger.console('📦 Snapping Components');
@@ -684,7 +675,7 @@ export class CiMain {
     if (currentLane) {
       this.logger.console(chalk.blue(`Found current lane: ${currentLane.name}`));
       const laneId = currentLane.id();
-      await this.archiveLane(laneId, currentLane.name);
+      await this.archiveLane(laneId.toString());
       return;
     }
 
@@ -693,7 +684,7 @@ export class CiMain {
       this.logger.console(chalk.blue(`Using explicitly provided lane name: ${explicitLaneName}`));
       try {
         const laneId = await this.lanes.parseLaneId(explicitLaneName);
-        await this.archiveLane(laneId, explicitLaneName);
+        await this.archiveLane(laneId.toString());
         return;
       } catch (e: any) {
         this.logger.console(chalk.yellow(`Failed to parse lane name '${explicitLaneName}': ${e.message}`));
@@ -715,7 +706,7 @@ export class CiMain {
       );
 
       const laneId = await this.lanes.parseLaneId(laneIdStr);
-      await this.archiveLane(laneId, laneIdStr);
+      await this.archiveLane(laneId.toString());
     } catch (e: any) {
       this.logger.console(
         chalk.yellow(`Error during lane cleanup for source branch '${sourceBranchName}': ${e.message}`)
@@ -726,18 +717,18 @@ export class CiMain {
   /**
    * Archives (deletes) a lane with proper error handling and logging
    */
-  private async archiveLane(laneId: any, laneName: string) {
+  private async archiveLane(laneId: string) {
     try {
-      this.logger.console(chalk.blue(`Archiving lane ${laneName}`));
+      this.logger.console(chalk.blue(`Archiving lane ${laneId}`));
       // force means to remove the lane even if it was not merged. in this case, we don't care much because main already has the changes.
       const archiveLane = await this.lanes.removeLanes([laneId], { remote: true, force: true });
       if (archiveLane.length) {
-        this.logger.console(chalk.green(`Lane '${laneName}' archived successfully`));
+        this.logger.console(chalk.green(`Lane '${laneId}' archived successfully`));
       } else {
-        this.logger.console(chalk.yellow(`Failed to archive lane '${laneName}' - no lanes were removed`));
+        this.logger.console(chalk.yellow(`Failed to archive lane '${laneId}' - no lanes were removed`));
       }
     } catch (e: any) {
-      this.logger.console(chalk.red(`Error archiving lane '${laneName}': ${e.message}`));
+      this.logger.console(chalk.red(`Error archiving lane '${laneId}': ${e.message}`));
       // Don't throw the error - lane cleanup is not critical to the merge process
     }
   }
