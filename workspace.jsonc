@@ -628,6 +628,9 @@
     "packageManager": "teambit.dependencies/pnpm",
     "rootComponents": true,
     "overrides": {
+      "react-router-dom@6": "^6.30.1",
+      "subscriptions-transport-ws@0.9": "^0.9.19",
+      "@teambit/base-react.navigation.link@2": "2.0.33",
       "lodash@4": "4.17.21",
       "trim@0": "0.0.3",
       "@teambit/harmony": "0.4.7",
