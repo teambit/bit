@@ -492,6 +492,9 @@ export class CiMain {
     forceTheirs?: boolean;
     laneName?: string;
   }) {
+    // Capture the initial commit SHA before any operations modify the repository
+    const initialCommitSha = await git.revparse(['HEAD']);
+
     const message = argMessage || (await this.getGitCommitMessage());
     if (!message) {
       throw new Error('Failed to get commit message from git. Please provide a message using --message option.');
@@ -665,7 +668,7 @@ export class CiMain {
     this.logger.console(chalk.green('Merged PR'));
 
     // Enhanced lane cleanup logic
-    await this.performLaneCleanup(currentLane, laneName);
+    await this.performLaneCleanup(currentLane, laneName, initialCommitSha);
 
     return { code: 0, data: '' };
   }
@@ -674,7 +677,7 @@ export class CiMain {
    * Performs lane cleanup by attempting to detect and delete the source lane
    * after a successful merge, even when running on the main branch
    */
-  private async performLaneCleanup(currentLane: any, explicitLaneName?: string) {
+  private async performLaneCleanup(currentLane: any, explicitLaneName?: string, initialCommitSha?: string) {
     this.logger.console('🗑️ Lane Cleanup');
 
     // If we already have a current lane, use it
@@ -699,7 +702,7 @@ export class CiMain {
 
     // Try to auto-detect source branch/lane name using the dedicated detector
     const sourceBranchDetector = new SourceBranchDetector(this.logger);
-    const sourceBranchName = await sourceBranchDetector.getSourceBranchName();
+    const sourceBranchName = await sourceBranchDetector.getSourceBranchName(initialCommitSha);
     if (!sourceBranchName) {
       this.logger.console(chalk.yellow('No current lane and unable to detect source branch - skipping lane cleanup'));
       return;
