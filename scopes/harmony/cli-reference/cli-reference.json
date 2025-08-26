@@ -4172,8 +4172,8 @@
         "name": "verify",
         "alias": "",
         "options": [],
-        "description": "CI commands",
-        "extendedDescription": "",
+        "description": "Ensures the workspace passes CI checks on every commit.",
+        "extendedDescription": "Runs lint, build, and status checks to catch dependency drift or broken builds early. Typically used as a pre-push hook or early CI job. Stops at the first failing step and returns a non-zero exit code.",
         "group": "development",
         "private": false
       },
@@ -4202,8 +4202,8 @@
             "Set to true to fail on warnings as well as errors, false (default) only fails on errors"
           ]
         ],
-        "description": "This command is meant to run when a PR was open/updated and meant to export a lane to bit-cloud.",
-        "extendedDescription": "",
+        "description": "Exports a feature lane to Bit Cloud when a Pull Request is opened or updated.",
+        "extendedDescription": "Resolves the lane name from --lane or the current Git branch, validates it, and runs install, status, snap, and export. Cleans up by switching back to main. Use in pull-request CI pipelines after tests and before deploy.",
         "group": "collaborate",
         "private": false
       },
@@ -4280,10 +4280,15 @@
             "",
             "force-theirs",
             "do not merge during checkout, just overwrite with incoming files"
+          ],
+          [
+            "",
+            "lane-name <name>",
+            "specify the lane name to delete after merge (auto-detected if not provided)"
           ]
         ],
-        "description": "Merges a PR",
-        "extendedDescription": "",
+        "description": "Tags and exports new semantic versions after merging a PR to main.",
+        "extendedDescription": "By default, bumps patch versions when merging to main. If specific configuration variables are set, it can use commit messages or explicit flags to determine the version bump. Runs install, tag, build, and export, then archives the remote lane and syncs lockfiles. Use in merge-to-main CI pipelines to publish releases.",
         "group": "collaborate",
         "private": false
       }
@@ -4388,10 +4393,15 @@
             "",
             "consumer-project",
             "Generate rules for consumer projects that only use Bit components as packages"
+          ],
+          [
+            "",
+            "force-standard",
+            "Use standard Bit rules template instead of Git-integrated template (even when .git exists)"
           ]
         ],
         "description": "Write Bit MCP rules/instructions file for VS Code, Cursor, Roo Code, Cline, Claude Code, or print to screen",
-        "extendedDescription": "Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, Roo Code, Cline, and Claude Code. For Claude Code, creates .claude/bit.md to avoid overwriting existing CLAUDE.md files. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages.",
+        "extendedDescription": "Creates or updates rules/instructions markdown files to provide AI assistants with guidance on using Bit MCP server. Currently supports VS Code, Cursor, Roo Code, Cline, and Claude Code. For Claude Code, creates .claude/bit.md to avoid overwriting existing CLAUDE.md files. Use --print to display content on screen. Use --consumer-project for non-Bit workspaces that only consume components as packages. Use --force-standard to use standard Bit rules instead of Git-integrated template.",
         "group": "ungrouped",
         "private": false,
         "arguments": [
