@@ -85,7 +85,9 @@ export class ComponentWriterMain {
         opts.mergeStrategy
       );
     }
-    if (!opts.skipDependencyInstallation) {
+    if (this.workspace.externalPackageManagerIsUsed()) {
+      await this.installer.writeDependenciesToPackageJson();
+    } else if (!opts.skipDependencyInstallation) {
       installationError = await this.installPackagesGracefully(
         opts.components.map(({ id }) => id),
         opts.skipWriteConfigFiles
