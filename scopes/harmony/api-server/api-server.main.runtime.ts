@@ -194,6 +194,8 @@ export class ApiServerMain {
         pathFilter: '/',
         target: symphonyUrl,
         ws: true,
+        secure: false, // Disable SSL verification for proxy to remote server
+        changeOrigin: true,
       })
     );
 
@@ -209,7 +211,8 @@ export class ApiServerMain {
           head,
           {
             target: `${symphonyUrl}/websocket-server`,
-            // secure: false,
+            secure: false, // Disable SSL verification for proxy to remote server
+            changeOrigin: true,
           },
           (error) => {
             this.logger.error(`failed to proxy ws: ${error.message}`, error);
