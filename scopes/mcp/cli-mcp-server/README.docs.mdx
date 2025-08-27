@@ -211,7 +211,7 @@ In default mode, the server exposes a minimal set of essential tools focused on 
 
   - `bit_remote_search`: Search for components in remote scopes
   - `bit_workspace_info`: Get comprehensive workspace information including status, components list, apps, templates, and dependency graph
-  - `bit_component_details`: Get detailed information about a specific component including basic info and optionally its public API schema
+  - `bit_component_details`: Get detailed information about multiple components in parallel (up to 5 max) including basic info and optionally their public API schemas
   - `bit_create`: Create a new component (source files and config) using a template with proper argument validation and documentation
   - `bit_query`: Execute read-only Bit commands that safely inspect workspace and component state without making modifications
   - `bit_execute`: Execute any Bit command, including those that modify workspace or repository state (use with caution)
@@ -263,6 +263,44 @@ Search for multiple components in parallel for efficient discovery:
 - Layout components: `["header", "navigation", "footer"]`
 - Data display: `["table", "pagination", "filter", "sort"]`
 - Button variations: `["button", "btn", "click"]`
+
+### bit_component_details
+
+Get detailed information about multiple components in parallel (limited to 5 components max to prevent context overload):
+
+```json
+{
+  "componentIds": ["acme.design/ui/button", "acme.design/forms/input"],
+  "includeSchema": true,
+  "cwd": "/path/to/workspace"
+}
+```
+
+**Parameters:**
+
+- `componentIds` (required): Array of component IDs to get details for. Limited to 5 components max. Use full component IDs (e.g., `acme.design/ui/button`)
+- `cwd` (required): Path to workspace directory
+- `includeSchema` (optional): Include component public API schema (default: false)
+
+**Examples:**
+
+- Multiple UI components: `{"componentIds": ["acme.design/ui/button", "acme.design/ui/input", "acme.design/ui/dropdown"], "cwd": "/path/to/workspace"}`
+- With schema information: `{"componentIds": ["teambit.base-ui/navigation/link"], "includeSchema": true, "cwd": "/path/to/workspace"}`
+- Form components batch: `{"componentIds": ["acme.forms/input", "acme.forms/validation", "acme.forms/submit-button"], "cwd": "/path/to/workspace"}`
+
+**Response Format:**
+
+The tool returns a structured response with:
+
+- `summary`: Statistics about the request (requested, successful, failed counts)
+- `components`: Object containing successful component details keyed by component ID
+- `failures`: Object containing error messages for failed components (if any)
+
+**Error Handling:**
+
+- Returns error if more than 5 components are requested
+- Individual component failures don't block the entire request
+- Clear error messages indicate which specific components failed and why
 
 ### bit_create
 
