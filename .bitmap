@@ -2024,13 +2024,6 @@
             "teambit.node/envs/node-babel-mocha@0.1.20": {}
         }
     },
-    "time/time-format": {
-        "name": "time/time-format",
-        "scope": "teambit.toolbox",
-        "version": "0.0.502",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/time/time-format"
-    },
     "time/timer": {
         "name": "time/timer",
         "scope": "teambit.toolbox",
