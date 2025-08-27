@@ -103,16 +103,12 @@ export class TesterUI {
           <Tooltip
             className={styles.coverageTooltip}
             placement="top"
-            content={
-              <div className={styles.coverageTooltipContent}>
-                {total.lines.covered}/{total.lines.total} lines covered
-              </div>
-            }
+            content={<div className={styles.coverageTooltipContent}>Test coverage</div>}
           >
             <Link href={`~tests${document.location.search}`} className={styles.link}>
               <PillLabel className={styles.label}>
-                <span>{total.lines.pct}%</span>
                 <Icon of="scan-component" />
+                <span>{total.lines.pct}%</span>
               </PillLabel>
             </Link>
           </Tooltip>
