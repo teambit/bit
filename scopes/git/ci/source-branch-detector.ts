@@ -29,6 +29,7 @@ export class SourceBranchDetector {
    * 1. GitHub API - Most reliable for GitHub repos (works with/without token)
    * 2. Commit message parsing - Universal fallback for all Git platforms
    *
+   * @param commitSha - Optional commit SHA to query (if not provided, uses current HEAD)
    * @returns The source branch name that was merged, or null if undetectable
    * @example
    * ```typescript
@@ -37,18 +38,18 @@ export class SourceBranchDetector {
    * // Returns: "feature/new-component" (the branch that was just merged)
    * ```
    */
-  async getSourceBranchName(): Promise<string | null> {
+  async getSourceBranchName(commitSha?: string): Promise<string | null> {
     try {
       // Primary approach: GitHub API - query PR info from current commit SHA
       // This is the most reliable method for GitHub repositories
-      const githubBranch = await this.getSourceBranchFromGitHubAPI();
+      const githubBranch = await this.getSourceBranchFromGitHubAPI(commitSha);
       if (githubBranch) {
         return githubBranch;
       }
 
       // Fallback: parse from git commit message (works universally)
       // This handles GitLab, Azure DevOps, and other platforms
-      const commitMessage = await this.getGitCommitMessage();
+      const commitMessage = await this.getGitCommitMessage(commitSha);
       if (commitMessage) {
         // Pattern: "Merge pull request #123 from user/branch-name"
         const mergePattern = /Merge pull request #\d+ from [^/]+\/(.+)/;
@@ -100,7 +101,7 @@ export class SourceBranchDetector {
    * This works even when running on push events after PR merge.
    * Enhanced to work with CircleCI and open source repos without tokens.
    */
-  private async getSourceBranchFromGitHubAPI(): Promise<string | null> {
+  private async getSourceBranchFromGitHubAPI(commitSha?: string): Promise<string | null> {
     try {
       // Try to get GitHub repository info from environment or git remote
       const githubRepository = await this.getGitHubRepository();
@@ -109,17 +110,17 @@ export class SourceBranchDetector {
         return null;
       }
 
-      // Get current commit SHA
-      const currentCommit = await git.revparse(['HEAD']);
-      if (!currentCommit) {
-        this.logger.console('Unable to get current commit SHA');
+      // Get commit SHA - use provided one or current HEAD
+      const targetCommit = commitSha || (await git.revparse(['HEAD']));
+      if (!targetCommit) {
+        this.logger.console('Unable to get commit SHA');
         return null;
       }
 
-      this.logger.console(`Querying GitHub API for PR info using commit SHA: ${currentCommit.trim()}`);
+      this.logger.console(`Querying GitHub API for PR info using commit SHA: ${targetCommit.trim()}`);
 
       // Query GitHub API for pull requests associated with this commit
-      const apiUrl = `https://api.github.com/repos/${githubRepository}/commits/${currentCommit.trim()}/pulls`;
+      const apiUrl = `https://api.github.com/repos/${githubRepository}/commits/${targetCommit.trim()}/pulls`;
 
       // Try with token first (if available), then without token for public repos
       const githubToken = process.env.GITHUB_TOKEN;
@@ -223,13 +224,17 @@ export class SourceBranchDetector {
   }
 
   /**
-   * Gets the current git commit message
+   * Gets the git commit message for the specified commit
    */
-  private async getGitCommitMessage(): Promise<string | null> {
+  private async getGitCommitMessage(commitSha?: string): Promise<string | null> {
     try {
-      const commit = await git.log({
-        maxCount: 1,
-      });
+      const logOptions: any = { maxCount: 1 };
+      if (commitSha) {
+        logOptions.from = commitSha;
+        logOptions.to = commitSha;
+      }
+
+      const commit = await git.log(logOptions);
       if (!commit.latest) {
         return null;
       }
