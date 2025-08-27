@@ -174,4 +174,19 @@ describe('create extension', function () {
       expect(() => cmd).to.not.throw();
     });
   });
+  describe('external package manager mode', () => {
+    before(() => {
+      // create a new workspace that uses an external package manager
+      helper.scopeHelper.cleanWorkspace();
+      helper.command.init('--external-package-manager');
+      helper.command.create('module', 'simple');
+    });
+    it('should write dependencies to package.json', () => {
+      const pkgJson = helper.fs.readJsonFile('package.json');
+      expect(pkgJson.dependencies.eslint != null).to.eq(true);
+    })
+    it('should not run installation', () => {
+      expect(helper.fs.exists('node_modules/eslint')).to.eq(false);
+    })
+  });
 });
