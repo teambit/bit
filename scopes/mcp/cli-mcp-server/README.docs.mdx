@@ -14,6 +14,9 @@ bit mcp-server setup
 
 # Other supported editors
 bit mcp-server setup [vscode|cursor|windsurf|roo|cline|claude-code]
+
+# For consumer projects (non-Bit workspaces that only consume Bit components)
+bit mcp-server setup --consumer-project
 ```
 
 #### Recommended Setup Steps
@@ -36,7 +39,7 @@ After installation, consider these helpful setup steps:
 ### Configuration Options
 
 - `--global`: Apply configuration globally (user settings) instead of workspace settings
-- `--consumer-project`: Configure for consumer projects that only consume Bit components
+- `--consumer-project`: For non-Bit workspaces that only consume Bit components as packages
 - `--include-additional <commands>`: Add specific commands to the available tools (comma-separated list)
 
 ## Usage
@@ -88,16 +91,8 @@ In default mode, the server exposes a minimal set of essential tools focused on 
 
 ### Consumer Project Mode (--consumer-project)
 
-This mode is designed for applications or projects that are not Bit workspaces but need to consume or work with Bit components as packages. It provides a minimal set of tools focused on component discovery and information:
+For projects that consume Bit components as packages but aren't Bit workspaces:
 
 - `bit_remote_search`: Search for components in remote scopes
-- `bit_remote_component_details`: Get detailed information about a remote component including basic info and its public API schema (combines the functionality of show and schema commands)
-
-In this mode:
-
-1. You don't need a Bit workspace initialization
-2. Only these 2 tools are available (no workspace-specific tools)
-3. The `--remote` flag is automatically added to component detail queries
-4. The `cwd` parameter is still required but can be any directory (not necessarily a Bit workspace)
-5. You can still add additional tools with the `--include-additional` flag
+- `bit_remote_component_details`: Get detailed information about remote components
 
