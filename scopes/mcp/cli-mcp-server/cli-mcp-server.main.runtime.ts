@@ -22,6 +22,7 @@ import fetch from 'node-fetch';
 import { McpSetupCmd } from './setup-cmd';
 import { McpRulesCmd } from './rules-cmd';
 import type { SetupOptions, RulesOptions } from '@teambit/mcp.mcp-config-writer';
+import { getRemoteComponentWithDetails } from './remote-component-utils';
 import { McpConfigWriter } from '@teambit/mcp.mcp-config-writer';
 
 interface CommandFilterOptions {
@@ -93,6 +94,7 @@ export class CliMcpServerMain {
     }
     return this._http;
   }
+
 
   private async getBitServerPort(cwd: string, skipValidatePortFlag = false): Promise<number | undefined> {
     try {
@@ -781,36 +783,31 @@ export class CliMcpServerMain {
   private registerRemoteComponentDetailsTool(server: McpServer) {
     const toolName = 'bit_remote_component_details';
     const description =
-      'Get detailed information about a remote component including basic info and its public API schema. Combines the functionality of show and schema commands for remote components.';
+      'Get detailed information about a remote component including basic info, docs, usage examples, and public API schema. Uses global scope to provide comprehensive component details.';
     const schema: Record<string, any> = {
       cwd: z.string().describe('Path to workspace directory'),
       componentName: z.string().describe('Component name or component ID to get details for'),
-      includeSchema: z.boolean().optional().describe('Include component public API schema (default: true)'),
+      includeSchema: z.boolean().optional().describe('Include component public API schema (default: false)'),
     };
 
     server.tool(toolName, description, schema, async (params: any) => {
       try {
-        const { componentName, includeSchema = true, cwd } = params;
+        const { componentName, includeSchema = false, cwd } = params;
 
-        // Get basic component information using show command via direct execution
-        const showArgs = ['show', componentName, '--remote', '--legacy'];
-        const showResult = await this.runBit(showArgs, cwd);
+        // Get enhanced details using remote.show()
+        const result = await getRemoteComponentWithDetails(componentName);
 
-        const result: any = {
-          componentInfo: showResult.content[0].text,
-        };
-
-        // Get schema information if requested
+        // Add schema if requested
         if (includeSchema) {
           try {
             const schemaArgs = ['schema', componentName, '--remote'];
             const schemaResult = await this.runBit(schemaArgs, cwd);
-            result.schema = schemaResult.content[0].text;
+            result.publicAPI = schemaResult.content[0].text;
           } catch (schemaError) {
             this.logger.warn(
               `[MCP-DEBUG] Failed to get schema for ${componentName}: ${(schemaError as Error).message}`
             );
-            result.schemaError = `Failed to retrieve schema: ${(schemaError as Error).message}`;
+            result.publicAPI = `Error fetching schema: ${(schemaError as Error).message}`;
           }
         }
 

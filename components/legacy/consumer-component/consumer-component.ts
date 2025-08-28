@@ -21,7 +21,7 @@ import type { Dist, PackageJsonFile, DataToPersist } from '@teambit/component.so
 import { License, SourceFile } from '@teambit/component.sources';
 import type { ComponentConfigLoadOptions } from '@teambit/legacy.consumer-config';
 import { ComponentConfig, ComponentOverrides, getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
-import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { ComponentOutOfSync, ComponentsPendingImport } from '@teambit/legacy.consumer';
 import type { FsCache } from '@teambit/workspace.modules.fs-cache';
@@ -462,6 +462,7 @@ export class Component {
       overrides,
       deprecated,
       schema,
+      extensions,
     } = object;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return new Component({
@@ -483,6 +484,18 @@ export class Component {
       overrides: new ComponentOverrides(overrides),
       deprecated: deprecated || false,
       schema,
+      extensions: extensions ? ExtensionDataList.fromArray(
+        extensions.map((ext: any) => {
+          const { extensionId, name: extName, config = {}, data = {} } = ext;
+          return new ExtensionDataEntry(
+            undefined, // legacyId
+            extensionId, // extensionId
+            extName, // name
+            config, // rawConfig
+            data // data
+          );
+        })
+      ) : new ExtensionDataList(),
     });
   }
 
