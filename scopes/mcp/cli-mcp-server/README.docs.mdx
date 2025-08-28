@@ -36,6 +36,22 @@ After installation, consider these helpful setup steps:
 
 3. **VS Code users**: Make sure to select "agent" mode instead of "ask" mode in the chat interface. For first-time users, open the command palette and search for "MCP: List servers" to find and start the Bit server.
 
+### Manual Configuration
+
+For IDEs not supported by the automatic setup, add this MCP server configuration:
+
+```json
+{
+  "servers": {
+    "bit-cli": {
+      "type": "stdio",
+      "command": "bit",
+      "args": ["mcp-server", "start"]
+    }
+  }
+}
+```
+
 ### Configuration Options
 
 - `--global`: Apply configuration globally (user settings) instead of workspace settings
