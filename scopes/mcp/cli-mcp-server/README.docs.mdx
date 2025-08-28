@@ -94,14 +94,14 @@ The Bit CLI MCP Server operates in two modes and provides several specialized to
 
 In default mode, the server exposes a minimal set of essential tools focused on core functionality:
 
-- `bit_remote_search`: Search for components in remote scopes
-- `bit_workspace_info`: Get comprehensive workspace information including status, components list, apps, templates, and dependency graph
-- `bit_component_details`: Get detailed information about multiple components in parallel (up to 5 max) including basic info and optionally their public API schemas
-- `bit_create`: Create a new component (source files and config) using a template with proper argument validation and documentation
-- `bit_query`: Execute read-only Bit commands that safely inspect workspace and component state without making modifications
-- `bit_execute`: Execute any Bit command, including those that modify workspace or repository state (use with caution)
-- `bit_commands_list`: Get all available Bit commands with descriptions and groups (for command discovery)
-- `bit_command_help`: Get detailed help for a specific Bit command including syntax, arguments, flags, and usage examples
+- `bit_remote_search`: Search for components in remote scopes with automatic owner detection from workspace config. Executes multiple queries in parallel and deduplicates results. Use arrays of related terms or synonyms for better results.
+- `bit_workspace_info`: Get comprehensive workspace information by combining multiple data sources (status, components, apps, templates, dependency graph). Includes current lane information.
+- `bit_component_details`: Get detailed information about multiple components in parallel (up to 5 max to prevent context overload). Includes documentation from .docs.mdx files, example usage from composition files, and optionally the component's public API schema with exported functions/types. Returns partial results with detailed failure information if some components fail.
+- `bit_create`: Create components using templates with batch support. Supports multiple component names in single call and extensive configuration options (namespace, scope, environment). Validates template existence and prevents conflicts.
+- `bit_query`: Execute read-only Bit commands from a curated whitelist of safe commands (status, list, show, info, diff, log, graph, etc.). Prevents accidental workspace modifications.
+- `bit_execute`: Execute any Bit command including those that modify workspace state. Use with caution as it allows all operations including destructive ones.
+- `bit_commands_list`: Get all available Bit commands with descriptions, grouping, and subcommand discovery for comprehensive command exploration.
+- `bit_command_help`: Get detailed help for specific commands including arguments metadata, flag types, usage examples, and subcommand relationships.
 
 > **Command Discovery vs. Command Help**: Use `bit_commands_list` to discover what commands are available in Bit, then use `bit_command_help` with a specific command name to get detailed usage information including arguments, flags, and examples.
 
@@ -109,6 +109,6 @@ In default mode, the server exposes a minimal set of essential tools focused on 
 
 For projects that consume Bit components as packages but aren't Bit workspaces:
 
-- `bit_remote_search`: Search for components in remote scopes
-- `bit_remote_component_details`: Get detailed information about remote components
+- `bit_remote_search`: Search for components in remote scopes with parallel query execution and result deduplication
+- `bit_remote_component_details`: Get comprehensive remote component information by combining show and schema commands. Gracefully handles schema failures while providing basic component details.
 
