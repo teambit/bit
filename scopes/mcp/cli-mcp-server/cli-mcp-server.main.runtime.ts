@@ -22,7 +22,7 @@ import fetch from 'node-fetch';
 import { McpSetupCmd } from './setup-cmd';
 import { McpRulesCmd } from './rules-cmd';
 import type { SetupOptions, RulesOptions } from '@teambit/mcp.mcp-config-writer';
-import { RemoteComponentUtils } from './remote-component-utils';
+import { getRemoteComponentWithDetails } from './remote-component-utils';
 import { McpConfigWriter } from '@teambit/mcp.mcp-config-writer';
 
 interface CommandFilterOptions {
@@ -46,7 +46,6 @@ export class CliMcpServerMain {
   private serverPort?: number;
   private serverUrl?: string;
   private serverProcess: childProcess.ChildProcess | null = null;
-  private remoteComponentUtils: RemoteComponentUtils;
 
   // Whitelist of commands that are considered read-only/query operations
   private readonly readOnlyCommands = new Set([
@@ -87,8 +86,6 @@ export class CliMcpServerMain {
   ) {
     // Validate the default bitBin on construction
     this.bitBin = this.validateBitBin(this.bitBin);
-    // Initialize remote component utils
-    this.remoteComponentUtils = new RemoteComponentUtils(this.logger);
   }
 
   async getHttp(): Promise<Http> {
@@ -798,7 +795,7 @@ export class CliMcpServerMain {
         const { componentName, includeSchema = false, cwd } = params;
 
         // Get enhanced details using remote.show()
-        const result = await this.remoteComponentUtils.getRemoteComponentWithDetails(componentName);
+        const result = await getRemoteComponentWithDetails(componentName);
 
         // Add schema if requested
         if (includeSchema) {

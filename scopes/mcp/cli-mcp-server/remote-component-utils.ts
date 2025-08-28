@@ -3,20 +3,16 @@ import { loadConsumerIfExist } from '@teambit/legacy.consumer';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
-import type { Logger } from '@teambit/logger';
 
 /**
- * Utility class for fetching and processing remote components for MCP server.
+ * Fetches and processes remote component details for MCP server.
  * 
- * This class is specifically needed for consumer-project mode where there is no local 
+ * This function is specifically needed for consumer-project mode where there is no local 
  * workspace or scope available. It uses ConsumerComponent instances fetched from remote
  * to provide rich component information including extensions data, which enables access
  * to docs, compositions, environment details, and full dependency information.
  */
-export class RemoteComponentUtils {
-  constructor(private logger: Logger) {}
-
-  async getRemoteComponentWithDetails(componentName: string): Promise<any> {
+export async function getRemoteComponentWithDetails(componentName: string): Promise<any> {
     const componentId = ComponentID.fromString(componentName);
     const consumer = await loadConsumerIfExist();
     const remote = await getRemoteByName(componentId.scope as string, consumer);
@@ -99,8 +95,8 @@ export class RemoteComponentUtils {
       const depResolverExtension = consumerComponent.extensions.findExtension('teambit.dependencies/dependency-resolver');
       if (depResolverExtension && depResolverExtension.data && depResolverExtension.data.dependencies) {
         result.dependencies = depResolverExtension.data.dependencies.map((dep: any) => {
-          const { packageName, id, version, lifecycle, __type: type, source } = dep;
-          const pkg = packageName || id;
+          const { packageName: depPackageName, id, version, lifecycle, __type: type, source } = dep;
+          const pkg = depPackageName || id;
           const versionStr = version ? `@${version}` : '';
           const compIdStr = type === 'component' && id ? `, component-id: ${id}` : '';
           return `${pkg}${versionStr} (lifecycle: ${lifecycle || 'runtime'}, type: ${type || 'component'}, source: ${source || 'auto'}${compIdStr})`;
@@ -115,5 +111,4 @@ export class RemoteComponentUtils {
     result.componentLocation = 'a remote component';
 
     return result;
-  }
 }
