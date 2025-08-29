@@ -2,8 +2,8 @@ import chai, { expect } from 'chai';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import WatchRunner from '../watch-runner';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 // @TODO: fix for Windows
 (IS_WINDOWS ? describe.skip : describe)('bit watch command', function () {

@@ -1,11 +1,11 @@
 import chai, { expect } from 'chai';
 import path from 'path';
+import chaiFs from 'chai-fs';
+import assertArrays from 'chai-arrays';
 
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
-
-const assertArrays = require('chai-arrays');
+chai.use(chaiFs);
 
 chai.use(assertArrays);
 

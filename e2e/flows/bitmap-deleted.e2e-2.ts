@@ -3,8 +3,8 @@ import * as path from 'path';
 
 import { ObjectsWithoutConsumer } from '@teambit/host-initializer';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('user deleted only .bitmap file leaving the objects in place', function () {
   this.timeout(0);

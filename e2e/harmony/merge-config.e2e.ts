@@ -3,8 +3,8 @@ import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('merge config scenarios', function () {
   this.timeout(0);

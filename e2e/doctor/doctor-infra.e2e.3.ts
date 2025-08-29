@@ -3,8 +3,8 @@ import * as path from 'path';
 
 import { DiagnosisNotFound } from '@teambit/doctor';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 describe('bit doctor infra', function () {
   this.timeout(0);

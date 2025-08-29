@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 
-chai.use(require('chai-fs'));
+chai.use(chaiFs);
 
 describe('app root components', function () {
   let helper: Helper;
@@ -1535,7 +1535,7 @@ function getDepAspect(remoteScope: string) {
 import { DepDepAspectAspect, DepDepAspectMain } from '@ci/${remoteScope}.dep-dep-aspect';
 import React from 'react';
 import { DepAspectAspect } from './dep-aspect.aspect';
-
+import chaiFs from 'chai-fs';
 export class DepAspectMain {
   static slots = [];
   static dependencies = [DepDepAspectAspect];

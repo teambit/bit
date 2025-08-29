@@ -3,8 +3,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Helper, DEFAULT_OWNER, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import { ComponentNotFound } from '@teambit/legacy.scope';
-
-chai.use(require('chai-fs'));
+import chaiFs from 'chai-fs';
+chai.use(chaiFs);
 
 /**
  * different scenarios of when a component or a version is missing from the original scope.
