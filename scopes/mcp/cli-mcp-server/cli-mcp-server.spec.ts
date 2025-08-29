@@ -139,7 +139,7 @@ describe('CliMcpServer Integration Tests', function () {
       const result = (await consumerProjectClient.callTool({
         name: 'bit_remote_search',
         arguments: {
-          queryStr: 'button',
+          queries: ['button'],
           cwd: workspacePath,
         },
       })) as CallToolResult;
@@ -188,14 +188,14 @@ describe('CliMcpServer Integration Tests', function () {
   });
 
   describe('bit_component_details tool', () => {
-    it('should get component details for an existing component', async () => {
-      const firstComponentId = 'comp1';
+    it('should get component details for multiple components', async () => {
+      const componentIds = ['comp1', 'comp2'];
 
       const result = (await mcpClient.callTool({
         name: 'bit_component_details',
         arguments: {
           cwd: workspacePath,
-          componentName: firstComponentId,
+          componentIds,
           includeSchema: false,
         },
       })) as CallToolResult;
@@ -205,18 +205,21 @@ describe('CliMcpServer Integration Tests', function () {
       expect(result.content[0]).to.have.property('type', 'text');
 
       const content = JSON.parse((result.content[0] as any).text);
-      expect(content).to.have.property('id');
-      expect(content).to.have.property('env');
+      expect(content).to.have.property('summary');
+      expect(content).to.have.property('components');
+      expect(content.summary).to.have.property('requested', 2);
+      expect(content.summary).to.have.property('successful');
+      expect(content.components).to.be.an('object');
     });
 
     it('should get component details with schema', async () => {
-      const firstComponentId = 'comp1';
+      const componentIds = ['comp1'];
 
       const result = (await mcpClient.callTool({
         name: 'bit_component_details',
         arguments: {
           cwd: workspacePath,
-          componentName: firstComponentId,
+          componentIds,
           includeSchema: true,
         },
       })) as CallToolResult;
@@ -226,8 +229,13 @@ describe('CliMcpServer Integration Tests', function () {
       expect(result.content[0]).to.have.property('type', 'text');
 
       const content = JSON.parse((result.content[0] as any).text);
-      expect(content).to.have.property('id');
-      expect(content).to.have.property('publicAPI');
+      expect(content).to.have.property('summary');
+      expect(content).to.have.property('components');
+      expect(content.summary.includeSchema).to.be.true;
+      if (content.summary.successful > 0) {
+        const firstComponent = Object.values(content.components)[0] as any;
+        expect(firstComponent).to.have.property('publicAPI');
+      }
     });
 
     it('should handle non-existent component gracefully', async () => {
@@ -235,7 +243,7 @@ describe('CliMcpServer Integration Tests', function () {
         name: 'bit_component_details',
         arguments: {
           cwd: workspacePath,
-          componentName: 'non-existent/component',
+          componentIds: ['non-existent/component'],
         },
       })) as CallToolResult;
 
@@ -243,9 +251,56 @@ describe('CliMcpServer Integration Tests', function () {
       expect(result.content).to.be.an('array');
       expect(result.content[0]).to.have.property('type', 'text');
 
-      // Should return error information or component details
+      const responseText = (result.content[0] as any).text;
+
+      // Try to parse as JSON first
+      try {
+        const content = JSON.parse(responseText);
+        // Should have summary with failed components
+        expect(content).to.have.property('summary');
+        expect(content.summary).to.have.property('failed');
+        expect(content.summary.failed).to.be.greaterThan(0);
+      } catch {
+        // If not JSON, should be an error message string
+        expect(responseText).to.be.a('string');
+        expect(responseText).to.include('Failed to get details for any components');
+      }
+    });
+
+    it('should reject requests with more than 5 components', async () => {
+      const tooManyComponents = ['comp1', 'comp2', 'comp3', 'comp4', 'comp5', 'comp6'];
+
+      const result = (await mcpClient.callTool({
+        name: 'bit_component_details',
+        arguments: {
+          cwd: workspacePath,
+          componentIds: tooManyComponents,
+        },
+      })) as CallToolResult;
+
+      expect(result).to.have.property('content');
+      expect(result.content).to.be.an('array');
+      expect(result.content[0]).to.have.property('type', 'text');
+
       const content = (result.content[0] as any).text;
-      expect(content).to.be.a('string');
+      expect(content).to.include('Too many components requested');
+      expect(content).to.include('Maximum allowed is 5');
+    });
+
+    it('should require componentIds parameter', async () => {
+      try {
+        await mcpClient.callTool({
+          name: 'bit_component_details',
+          arguments: {
+            cwd: workspacePath,
+            // Missing componentIds parameter
+          },
+        });
+        expect.fail('Should have thrown an error');
+      } catch (error: any) {
+        expect(error.message).to.include('componentIds');
+        expect(error.message).to.include('Required');
+      }
     });
   });
 

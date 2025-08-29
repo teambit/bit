@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import classNames from 'classnames';
 import { Icon } from '@teambit/design.elements.icon';
 import { addAvatarQueryParams } from '@teambit/toolbox.url.add-avatar-query-params';
@@ -21,6 +21,7 @@ export type UserAvatarProps = {
    */
   showTooltip?: boolean;
   tooltipPlacement?: TooltipPlacement;
+  extendTooltipContent?: ReactNode;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function UserAvatar({
@@ -32,6 +33,7 @@ export function UserAvatar({
   imgClassName,
   showTooltip = false,
   tooltipPlacement = 'bottom',
+  extendTooltipContent,
   children,
   ...rest
 }: UserAvatarProps) {
@@ -40,7 +42,11 @@ export function UserAvatar({
   const profileImageWithParams =
     profileImage && profileImage.startsWith('blob:')
       ? profileImage
-      : addAvatarQueryParams(profileImage, imageSize, styles.defaultAvatarBgColor);
+      : addAvatarQueryParams(
+          profileImage,
+          imageSize,
+          styles.defaultAvatarBgColor
+        );
   const colors = firstLetter && letterBgColors[firstLetter.toLowerCase()];
   const avatar = (
     <div
@@ -51,11 +57,18 @@ export function UserAvatar({
       {profileImageWithParams && (
         <img
           src={profileImageWithParams}
-          className={classNames(styles.avatarImg, profileImage.startsWith('blob:') && styles.blob, imgClassName)}
+          className={classNames(
+            styles.avatarImg,
+            profileImage.startsWith('blob:') && styles.blob,
+            imgClassName
+          )}
         />
       )}
       {(displayName || name) && (
-        <span className={styles.letter} style={{ fontSize: `${fontSize}px`, lineHeight: `${size}px` }}>
+        <span
+          className={styles.letter}
+          style={{ fontSize: `${fontSize}px`, lineHeight: `${size}px` }}
+        >
           {getInitials(displayName || name)}
         </span>
       )}
@@ -75,13 +88,16 @@ export function UserAvatar({
       placement={tooltipPlacement}
       content={
         <div className={ellipsis}>
-          {displayName ? (
-            <>
-              {displayName} (@{name})
-            </>
-          ) : (
-            <>@{name}</>
-          )}
+          <span>
+            {displayName ? (
+              <>
+                {displayName} (@{name})
+              </>
+            ) : (
+              <>@{name}</>
+            )}
+          </span>
+          {extendTooltipContent}
         </div>
       }
     >

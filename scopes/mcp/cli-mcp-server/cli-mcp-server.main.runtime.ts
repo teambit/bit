@@ -22,6 +22,7 @@ import fetch from 'node-fetch';
 import { McpSetupCmd } from './setup-cmd';
 import { McpRulesCmd } from './rules-cmd';
 import type { SetupOptions, RulesOptions } from '@teambit/mcp.mcp-config-writer';
+import { getRemoteComponentWithDetails } from './remote-component-utils';
 import { McpConfigWriter } from '@teambit/mcp.mcp-config-writer';
 
 interface CommandFilterOptions {
@@ -93,6 +94,7 @@ export class CliMcpServerMain {
     }
     return this._http;
   }
+
 
   private async getBitServerPort(cwd: string, skipValidatePortFlag = false): Promise<number | undefined> {
     try {
@@ -430,6 +432,9 @@ export class CliMcpServerMain {
       // Register the bit_component_details tool
       this.registerComponentDetailsTool(server);
 
+      // Register the bit_create tool
+      this.registerCreateTool(server);
+
       // Register command discovery and help tools
       this.registerCommandsListTool(server);
       this.registerCommandHelpTool(server);
@@ -617,12 +622,12 @@ export class CliMcpServerMain {
 
   private registerRemoteSearchTool(server: McpServer) {
     const toolName = 'bit_remote_search';
-    const description = `Search for components in remote scopes. Use this tool to find existing components before creating new ones. Essential for component reuse and discovery`;
+    const description = `Search for components in remote scopes using parallel queries for efficient discovery. Always provide multiple search terms - either variations/synonyms of one component type, or different components needed for a task. Examples: ["button", "btn", "click"] for variations, or ["input", "button", "validation"] for form components.`;
     const schema: Record<string, any> = {
-      queryStr: z
-        .string()
+      queries: z
+        .array(z.string())
         .describe(
-          `Search query string - Don't try to search with too many keywords. It will try to find components that match all keywords, which is often too restrictive. Instead, search with a single keyword or a few broad keywords`
+          `Array of search query strings for parallel searching. Each query should be a single keyword or a few broad keywords. Search for variations/synonyms of one component type, or different components needed for a task. Examples: ["btn", "button"] for variations, or ["table", "pagination", "filter"] for data display features.`
         ),
       cwd: z.string().optional().describe('Path to workspace directory'),
       owners: z
@@ -640,6 +645,20 @@ export class CliMcpServerMain {
     };
     server.tool(toolName, description, schema, async (params: any) => {
       const http = await this.getHttp();
+
+      // Validate that queries parameter is provided and valid
+      if (!params.queries || !Array.isArray(params.queries) || params.queries.length === 0) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'Error: queries parameter must be provided as a non-empty array of search terms. Example: ["button", "btn", "click"]',
+            },
+          ],
+        };
+      }
+
+      const searchQueries = params.queries;
 
       // Determine the owners to use for the search
       let ownersToUse = params.owners && params.owners.length > 0 ? params.owners : undefined;
@@ -668,52 +687,127 @@ export class CliMcpServerMain {
         );
       }
 
-      const results = await http.search(params.queryStr, ownersToUse);
-      this.logger.debug(`[MCP-DEBUG] Search results: ${JSON.stringify(results)}`);
-      if (!results?.components || results.components.length === 0) {
-        return { content: [{ type: 'text', text: 'No results found' }] };
+      // Execute searches in parallel
+      this.logger.debug(
+        `[MCP-DEBUG] Executing ${searchQueries.length} search(es) in parallel: ${searchQueries.join(', ')}`
+      );
+
+      try {
+        const searchPromises = searchQueries.map(async (query: string) => {
+          try {
+            const result = await http.search(query, ownersToUse);
+            return {
+              query,
+              success: true,
+              components: result?.components || [],
+              totalCount: result?.components?.length || 0,
+            };
+          } catch (error) {
+            this.logger.warn(`[MCP-DEBUG] Search failed for query "${query}": ${(error as Error).message}`);
+            return {
+              query,
+              success: false,
+              error: (error as Error).message,
+              components: [],
+              totalCount: 0,
+            };
+          }
+        });
+
+        const searchResults = await Promise.all(searchPromises);
+
+        // Process and consolidate results
+        const allComponents = new Set<string>();
+        const resultsByQuery: any[] = [];
+        let totalComponentsFound = 0;
+
+        searchResults.forEach((result) => {
+          resultsByQuery.push({
+            query: result.query,
+            success: result.success,
+            count: result.totalCount,
+            error: result.error || undefined,
+          });
+
+          if (result.success && result.components.length > 0) {
+            result.components.forEach((component: string) => allComponents.add(component));
+            totalComponentsFound += result.totalCount;
+          }
+        });
+
+        // Format the consolidated results
+        if (allComponents.size === 0) {
+          const failedQueries = searchResults.filter((r) => !r.success);
+          let message = 'No results found';
+          if (failedQueries.length > 0) {
+            message += `\n\nSome searches failed:`;
+            failedQueries.forEach((r) => {
+              message += `\n- "${r.query}": ${r.error}`;
+            });
+          }
+          return { content: [{ type: 'text', text: message }] };
+        }
+
+        // Build the response text
+        let responseText = `Found ${allComponents.size} unique components from ${searchQueries.length} parallel search${searchQueries.length > 1 ? 'es' : ''}:\n\n`;
+
+        // Show per-query results summary
+        responseText += 'Search Summary:\n';
+        resultsByQuery.forEach((result) => {
+          if (result.success) {
+            responseText += `- "${result.query}": ${result.count} components\n`;
+          } else {
+            responseText += `- "${result.query}": FAILED (${result.error})\n`;
+          }
+        });
+        responseText += '\nConsolidated Results:\n';
+
+        responseText += Array.from(allComponents).join('\n');
+
+        const formattedResults = {
+          type: 'text',
+          text: responseText,
+        };
+
+        this.logger.debug(
+          `[MCP-DEBUG] Consolidated search results: ${allComponents.size} unique components from ${totalComponentsFound} total results`
+        );
+        return { content: [formattedResults] } as CallToolResult;
+      } catch (error) {
+        this.logger.error(`[MCP-DEBUG] Error during parallel search execution: ${(error as Error).message}`);
+        return { content: [{ type: 'text', text: `Error executing searches: ${(error as Error).message}` }] };
       }
-      const formattedResults = {
-        type: 'text',
-        text: results.components.join('\n'),
-      };
-      return { content: [formattedResults] } as CallToolResult;
     });
   }
 
   private registerRemoteComponentDetailsTool(server: McpServer) {
     const toolName = 'bit_remote_component_details';
     const description =
-      'Get detailed information about a remote component including basic info and its public API schema. Combines the functionality of show and schema commands for remote components.';
+      'Get detailed information about a remote component including basic info, docs, usage examples, and public API schema. Uses global scope to provide comprehensive component details.';
     const schema: Record<string, any> = {
       cwd: z.string().describe('Path to workspace directory'),
       componentName: z.string().describe('Component name or component ID to get details for'),
-      includeSchema: z.boolean().optional().describe('Include component public API schema (default: true)'),
+      includeSchema: z.boolean().optional().describe('Include component public API schema (default: false)'),
     };
 
     server.tool(toolName, description, schema, async (params: any) => {
       try {
-        const { componentName, includeSchema = true, cwd } = params;
+        const { componentName, includeSchema = false, cwd } = params;
 
-        // Get basic component information using show command via direct execution
-        const showArgs = ['show', componentName, '--remote', '--legacy'];
-        const showResult = await this.runBit(showArgs, cwd);
+        // Get enhanced details using remote.show()
+        const result = await getRemoteComponentWithDetails(componentName);
 
-        const result: any = {
-          componentInfo: showResult.content[0].text,
-        };
-
-        // Get schema information if requested
+        // Add schema if requested
         if (includeSchema) {
           try {
             const schemaArgs = ['schema', componentName, '--remote'];
             const schemaResult = await this.runBit(schemaArgs, cwd);
-            result.schema = schemaResult.content[0].text;
+            result.publicAPI = schemaResult.content[0].text;
           } catch (schemaError) {
             this.logger.warn(
               `[MCP-DEBUG] Failed to get schema for ${componentName}: ${(schemaError as Error).message}`
             );
-            result.schemaError = `Failed to retrieve schema: ${(schemaError as Error).message}`;
+            result.publicAPI = `Error fetching schema: ${(schemaError as Error).message}`;
           }
         }
 
@@ -844,29 +938,178 @@ export class CliMcpServerMain {
   private registerComponentDetailsTool(server: McpServer) {
     const toolName = 'bit_component_details';
     const description =
-      'Get detailed information about a specific component including basic info and optionally its public API schema';
+      'Get detailed information about multiple components in parallel. Supports batch requests for efficient component discovery. Limited to 5 components max to prevent context overload.';
     const schema: Record<string, any> = {
       cwd: z.string().describe('Path to workspace directory'),
-      componentName: z.string().describe('Component name or component ID to get details for'),
+      componentIds: z
+        .array(z.string())
+        .describe(
+          'Array of component IDs to get details for. Limited to 5 components max. Examples: ["acme.design/ui/button", "acme.design/forms/input", "teambit.base-ui/navigation/link"]'
+        ),
       includeSchema: z.boolean().optional().describe('Include component public API schema (default: false)'),
     };
 
     server.tool(toolName, description, schema, async (params: any) => {
       try {
-        const includeSchema = params.includeSchema === true;
-        const componentName = params.componentName;
+        // Validate that componentIds parameter is provided and valid
+        if (!params.componentIds || !Array.isArray(params.componentIds) || params.componentIds.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'Error: componentIds parameter must be provided as a non-empty array of component IDs. Example: ["acme.design/ui/button", "acme.design/forms/input"]',
+              },
+            ],
+          };
+        }
 
-        // Get component details using IDE API with includeSchema parameter
-        const ideApiResult = await this.callBitServerIDEAPI(
-          'getCompDetails',
-          [componentName, includeSchema],
-          params.cwd
+        const includeSchema = params.includeSchema === true;
+        const componentIds = params.componentIds;
+
+        // Check limit of 5 components to prevent context overload
+        const maxComponents = 5;
+
+        if (componentIds.length > maxComponents) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error: Too many components requested. Maximum allowed is ${maxComponents} components, but ${componentIds.length} were requested. Please reduce the number of components in your request.`,
+              },
+            ],
+          };
+        }
+
+        // Execute component detail requests in parallel
+        this.logger.debug(
+          `[MCP-DEBUG] Fetching details for ${componentIds.length} component(s) in parallel: ${componentIds.join(', ')}`
         );
 
-        return this.formatAsCallToolResult(ideApiResult);
+        const detailPromises = componentIds.map(async (componentId: string) => {
+          try {
+            const result = await this.callBitServerIDEAPI('getCompDetails', [componentId, includeSchema], params.cwd);
+            return {
+              componentId,
+              success: true,
+              details: result,
+            };
+          } catch (error) {
+            this.logger.warn(
+              `[MCP-DEBUG] Failed to get details for component "${componentId}": ${(error as Error).message}`
+            );
+            return {
+              componentId,
+              success: false,
+              error: (error as Error).message,
+            };
+          }
+        });
+
+        const detailResults = await Promise.all(detailPromises);
+
+        // Process and consolidate results
+        const successfulResults = detailResults.filter((r) => r.success);
+        const failedResults = detailResults.filter((r) => !r.success);
+
+        if (successfulResults.length === 0) {
+          let message = 'Failed to get details for any components';
+          if (failedResults.length > 0) {
+            message += '\n\nErrors:';
+            failedResults.forEach((r) => {
+              message += `\n- "${r.componentId}": ${r.error}`;
+            });
+          }
+          return { content: [{ type: 'text', text: message }] };
+        }
+
+        // Build the response
+        const response: any = {
+          summary: {
+            requested: componentIds.length,
+            successful: successfulResults.length,
+            failed: failedResults.length,
+            includeSchema,
+          },
+          components: {},
+        };
+
+        // Add successful component details
+        successfulResults.forEach((result) => {
+          response.components[result.componentId] = result.details;
+        });
+
+        // Add failed components info if any
+        if (failedResults.length > 0) {
+          response.failures = {};
+          failedResults.forEach((result) => {
+            response.failures[result.componentId] = result.error;
+          });
+        }
+
+        this.logger.debug(
+          `[MCP-DEBUG] Component details fetched: ${successfulResults.length} successful, ${failedResults.length} failed`
+        );
+
+        return this.formatAsCallToolResult(response);
       } catch (error) {
         this.logger.error(`[MCP-DEBUG] Error in bit_component_details tool: ${(error as Error).message}`);
         return this.formatErrorAsCallToolResult(error as Error, 'getting component details');
+      }
+    });
+  }
+
+  private registerCreateTool(server: McpServer) {
+    const toolName = 'bit_create';
+    const description = 'Create a new component (source files and config) using a template.';
+    const schema: Record<string, any> = {
+      cwd: z.string().describe('Path to workspace directory'),
+      templateName: z
+        .string()
+        .describe('The template for generating the component (run "bit templates" for a list of available templates)'),
+      componentNames: z.array(z.string()).describe('A list of component names to generate'),
+      namespace: z.string().optional().describe("Sets the component's namespace and nested dirs inside the scope"),
+      scope: z
+        .string()
+        .optional()
+        .describe("Sets the component's scope-name. If not entered, the default-scope will be used"),
+      aspect: z
+        .string()
+        .optional()
+        .describe('Aspect-id of the template. Helpful when multiple aspects use the same template name'),
+      template: z.string().optional().describe('Env-id of the template. Alias for --aspect'),
+      path: z
+        .string()
+        .optional()
+        .describe('Relative path in the workspace. By default the path is <scope>/<namespace>/<name>'),
+      env: z
+        .string()
+        .optional()
+        .describe("Set the component's environment. (overrides the env from variants and the template)"),
+      force: z.boolean().optional().describe('Replace existing files at the target location'),
+    };
+
+    server.tool(toolName, description, schema, async (params: any) => {
+      try {
+        const args = params.componentNames;
+        const flags: Record<string, string | boolean> = {};
+
+        // Add optional flags
+        if (params.namespace) flags.namespace = params.namespace;
+        if (params.scope) flags.scope = params.scope;
+        if (params.aspect) flags.aspect = params.aspect;
+        if (params.template) flags.template = params.template;
+        if (params.path) flags.path = params.path;
+        if (params.env) flags.env = params.env;
+        if (params.force) flags.force = true;
+
+        // Add template name as first argument
+        const allArgs = [params.templateName, ...args];
+
+        const execution = await this.safeBitCommandExecution('create', allArgs, flags, params.cwd, 'create component');
+        return this.formatAsCallToolResult(execution.result);
+      } catch (error) {
+        this.logger.error(`[MCP-DEBUG] Error in bit_create tool: ${(error as Error).message}`);
+        return this.formatErrorAsCallToolResult(error as Error, 'creating component');
       }
     });
   }
@@ -1289,8 +1532,8 @@ export class CliMcpServerMain {
     await McpConfigWriter.writeRulesFile(editor, rulesOptions);
   }
 
-  async getRulesContent(consumerProject: boolean = false): Promise<string> {
-    return McpConfigWriter.getDefaultRulesContent(consumerProject);
+  async getRulesContent(consumerProject: boolean = false, forceStandard: boolean = false): Promise<string> {
+    return McpConfigWriter.getDefaultRulesContent(consumerProject, process.cwd(), forceStandard);
   }
 
   static slots = [];
