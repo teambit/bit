@@ -3,6 +3,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
 
 chai.use(chaiFs);
 
