@@ -75,10 +75,15 @@ describe('Filesystem read count', function () {
         const start = process.hrtime();
         helper.command.runCmd('bit status');
         const [timeInSeconds, nanoseconds] = process.hrtime(start);
-        expect(timeInSeconds).to.be.lessThan(2);
         const timeInMs = timeInSeconds * 1000 + nanoseconds / 1_000_000;
-        // On my Mac M1, as of 2025/03/03, it takes 500ms.
-        console.log('bit status load time in milliseconds: ', Math.floor(timeInMs));
+
+        // Use different thresholds for CI vs local development
+        // CI environments have more variability due to shared resources
+        const isCI = process.env.CI || process.env.CIRCLECI;
+        const maxTimeInSeconds = isCI ? 3 : 2;
+        // On Mac M1, as of 2025/03/03, it takes 500ms.
+        console.log(`bit status load time in milliseconds: ${Math.floor(timeInMs)} (max allowed: ${maxTimeInSeconds}s)`);
+        expect(timeInSeconds).to.be.lessThan(maxTimeInSeconds);
       });
     });
   });
