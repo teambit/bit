@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-import { uniq } from 'lodash';
+import * as _ from 'lodash';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
@@ -386,7 +386,7 @@ describe('merge lanes - unrelated components', function () {
     it('bit log should not show duplications', () => {
       const log = helper.command.logParsed('comp2');
       const hashes = log.map((logEntry) => logEntry.hash);
-      expect(hashes.length).to.equal(uniq(hashes).length);
+      expect(hashes.length).to.equal(_.uniq(hashes).length);
     });
   });
 });
