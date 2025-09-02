@@ -624,13 +624,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/envs"
     },
-    "envs/node-babel-mocha": {
-        "name": "envs/node-babel-mocha",
-        "scope": "teambit.node",
-        "version": "0.1.20",
-        "mainFile": "index.ts",
-        "rootDir": "components/envs/node-babel-mocha"
-    },
     "eslint": {
         "name": "eslint",
         "scope": "teambit.defender",
