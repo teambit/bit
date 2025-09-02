@@ -1536,7 +1536,7 @@ function getDepAspect(remoteScope: string) {
 import { DepDepAspectAspect, DepDepAspectMain } from '@ci/${remoteScope}.dep-dep-aspect';
 import React from 'react';
 import { DepAspectAspect } from './dep-aspect.aspect';
-import chaiFs from 'chai-fs';
+
 export class DepAspectMain {
   static slots = [];
   static dependencies = [DepDepAspectAspect];
