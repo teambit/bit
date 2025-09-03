@@ -1,7 +1,3 @@
----
-applyTo: '**'
----
-
 # Bit MCP Agent Instructions (Git-Integrated Workflow)
 
 ## Core Objectives
