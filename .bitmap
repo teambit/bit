@@ -215,7 +215,7 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "1.12.107",
+        "version": "1.12.108",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -502,7 +502,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.752",
+        "version": "2.0.753",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
@@ -572,7 +572,7 @@
     "doctor": {
         "name": "doctor",
         "scope": "teambit.harmony",
-        "version": "0.0.421",
+        "version": "0.0.422",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/doctor"
     },
