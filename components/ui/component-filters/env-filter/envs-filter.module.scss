@@ -1,4 +1,3 @@
-@import '@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 .envsFilterContainer {
   > div {
     line-height: 16px;
@@ -31,15 +30,13 @@
   }
 }
 
-.envFilterDropdownContainer {
-  width: 100%;
-}
-
 .envFilterDropdown {
   width: 100%;
-  // otherwise when the dropdown is open it clashes with the content of the tree
-  // (this is bizarre, the tree has no position absolute)
-  z-index: $nav-z-index;
+  max-width: 400px;
+}
+
+.doneButton {
+  transition: none;
 }
 
 .envDropdownItemContainer {
@@ -56,31 +53,21 @@
 }
 
 .envDropdownItem {
-  padding-left: 8px;
   display: flex;
   justify-content: space-between;
   width: 100%;
   font-size: var(--bit-p-md, 16px);
 }
 
-.envDropdownItemLabel,
 .envDropdownItemIcon {
   display: flex;
   justify-content: space-between;
   padding-left: 8px;
 }
+
 .description {
   font-size: var(--bit-p-xs, 14px);
-  padding-left: 8px;
-  padding-right: 16px;
   color: var(--bit-text-color-light, #6c707c);
-  width: calc(100% - 24px);
-}
-
-.envDropdownItemContainerWithIcon {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
   width: calc(100% - 24px);
 }
 

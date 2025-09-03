@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import React from 'react';
-import { Toggle } from '@teambit/design.ui.input.toggle';
+import { Toggle } from '@teambit/design.inputs.toggle-switch';
 import type {
   ComponentFilterCriteria,
   ComponentFilterRenderProps,
