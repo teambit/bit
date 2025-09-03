@@ -22,11 +22,13 @@ type Options = {
   versionsFile?: string;
   autoMergeResolve?: MergeStrategy;
   forceTheirs?: boolean;
+  laneName?: string;
 };
 
 export class CiMergeCmd implements Command {
   name = 'merge';
-  description = 'Merges a PR';
+  description = 'Tags and exports new semantic versions after merging a PR to main.';
+  extendedDescription = `By default, bumps patch versions when merging to main. If specific configuration variables are set, it can use commit messages or explicit flags to determine the version bump. Runs install, tag, build, and export, then archives the remote lane and syncs lockfiles. Use in merge-to-main CI pipelines to publish releases.`;
   group = 'collaborate';
 
   options: CommandOptions = [
@@ -56,6 +58,7 @@ export class CiMergeCmd implements Command {
       'in case of merge conflict during checkout, resolve according to the provided strategy: [ours, theirs, manual]',
     ],
     ['', 'force-theirs', 'do not merge during checkout, just overwrite with incoming files'],
+    ['', 'lane-name <name>', 'specify the lane name to delete after merge (auto-detected if not provided)'],
   ];
 
   constructor(
@@ -98,6 +101,7 @@ export class CiMergeCmd implements Command {
       versionsFile: options.versionsFile,
       autoMergeResolve: options.autoMergeResolve,
       forceTheirs: options.forceTheirs,
+      laneName: options.laneName,
     });
   }
 }
