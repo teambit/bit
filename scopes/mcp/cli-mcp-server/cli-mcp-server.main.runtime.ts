@@ -1536,6 +1536,27 @@ export class CliMcpServerMain {
     return McpConfigWriter.getDefaultRulesContent(consumerProject, process.cwd(), forceStandard);
   }
 
+  /**
+   * Get the path to the rules file based on editor type and scope
+   */
+  getRulesFilePath(editor: string, isGlobal: boolean, workspaceDir?: string): string {
+    const editorLower = editor.toLowerCase();
+
+    if (editorLower === 'vscode') {
+      return McpConfigWriter.getVSCodePromptsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'cursor') {
+      return McpConfigWriter.getCursorPromptsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'roo') {
+      return McpConfigWriter.getRooCodePromptsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'cline') {
+      return McpConfigWriter.getClinePromptsPath(isGlobal, workspaceDir);
+    } else if (editorLower === 'claude-code') {
+      return McpConfigWriter.getClaudeCodePromptsPath(isGlobal, workspaceDir);
+    }
+
+    throw new Error(`Editor "${editor}" is not supported yet for rules files.`);
+  }
+
   static slots = [];
   static dependencies = [CLIAspect, LoggerAspect];
   static runtime = MainRuntime;
