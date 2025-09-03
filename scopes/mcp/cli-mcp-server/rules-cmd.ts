@@ -83,7 +83,13 @@ export class McpRulesCmd implements Command {
         );
       }
 
-      return chalk.green(`✓ Successfully wrote ${editorName} Bit MCP rules file (${scope})`);
+      // Get the file path for the rules file to show user where it was written
+      const rulesPath = this.mcpServerMain.getRulesFilePath(editor, isGlobal);
+
+      return chalk.green(
+        `✓ Successfully wrote ${editorName} Bit MCP rules file (${scope})\n` +
+        `  File written to: ${chalk.cyan(rulesPath)}`
+      );
     } catch (error) {
       const editorName = this.mcpServerMain.getEditorDisplayName(editor);
       return chalk.red(`Error writing ${editorName} rules file: ${(error as Error).message}`);
