@@ -1,7 +1,3 @@
----
-applyTo: '**'
----
-
 ## How to Install and Use Bit Components
 
 - Bit Components are reusable pieces of code in the form of node packages.
