@@ -61,9 +61,9 @@ import type { WatchOptions } from '@teambit/watcher';
 import type { ComponentLog, Lane } from '@teambit/objects';
 import type { JsonVinyl } from '@teambit/component.sources';
 import { SourceFile, DataToPersist, PackageJsonFile } from '@teambit/component.sources';
-import { ScopeComponentsImporter } from '@teambit/legacy.scope';
+import { ScopeComponentsImporter, VersionNotFoundOnFS } from '@teambit/legacy.scope';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
-import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
+import { ScopeNotFoundOrDenied, getRemoteByName } from '@teambit/scope.remotes';
 import { isHash } from '@teambit/component-version';
 import type { GlobalConfigMain } from '@teambit/global-config';
 import { ComponentConfigFile } from './component-config-file';
@@ -2178,6 +2178,36 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
     return comp.id.toString();
   }
 
+  /**
+   * Get env manifest from remote component when it's not found locally.
+   * This is needed for extends resolution during bit new.
+   */
+  private async getEnvManifestFromRemote(componentId: ComponentID): Promise<EnvJsonc> {
+    try {
+      const remote = await getRemoteByName(componentId.scope as string, this.consumer);
+      const consumerComponent = await remote.show(componentId);
+      
+      if (!consumerComponent) {
+        throw new BitError(`Component ${componentId.toString()} not found in remote`);
+      }
+      
+      // Look for env.jsonc file in the component files
+      const envJson = consumerComponent.files.find((file) => {
+        return file.relative === 'env.jsonc' || file.relative === 'env.json';
+      });
+      
+      if (!envJson) {
+        throw new BitError(`unable to find env.jsonc file in ${componentId.toString()}`);
+      }
+      
+      const envManifest: EnvJsonc = parse(envJson.contents.toString('utf8'), undefined, true) as EnvJsonc;
+      return envManifest;
+    } catch (error) {
+      this.logger.debug(`Failed to get env manifest from remote for ${componentId.toString()}: ${error}`);
+      throw error;
+    }
+  }
+
   async resolveEnvManifest(envId: string, envExtendsDeps: LegacyDependency[] = []): Promise<EnvJsonc> {
     if (this.aspectLoader.isCoreEnv(envId)) return {};
 
@@ -2199,10 +2229,21 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
 
     // We need to load the env component with the slot and extensions to get the env manifest of the parent
     // already resolved
-    const envComponent = await this.get(resolvedEnvComponentId, undefined, true, true, {
-      executeLoadSlot: true,
-      loadExtensions: true,
-    });
+    let envComponent: Component;
+    try {
+      envComponent = await this.get(resolvedEnvComponentId, undefined, true, true, {
+        executeLoadSlot: true,
+        loadExtensions: true,
+      });
+    } catch (error) {
+      // If component not found in workspace (e.g. during bit new with extends), try remote
+      if (error instanceof VersionNotFoundOnFS || (error as any).name === 'VersionNotFoundOnFS') {
+        this.logger.debug(`env ${resolvedEnvComponentId} not found in workspace, trying remote`);
+        return await this.getEnvManifestFromRemote(resolvedEnvComponentId);
+      } else {
+        throw error;
+      }
+    }
 
     // TODO: caching this
     const alreadyResolved = this.envs.getEnvManifest(envComponent);
